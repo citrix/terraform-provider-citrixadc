@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcDnscnamerec() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnscnamerecFunc,
-		Read:          readDnscnamerecFunc,
-		Delete:        deleteDnscnamerecFunc,
+		CreateContext: createDnscnamerecFunc,
+		ReadContext:   readDnscnamerecFunc,
+		DeleteContext: deleteDnscnamerecFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"aliasname": {
@@ -46,16 +48,11 @@ func resourceCitrixAdcDnscnamerec() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
 
-func createDnscnamerecFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnscnamerecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnscnamerecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnscnamerecName := d.Get("aliasname").(string)
@@ -63,27 +60,26 @@ func createDnscnamerecFunc(d *schema.ResourceData, meta interface{}) error {
 		Aliasname:     dnscnamerecName,
 		Canonicalname: d.Get("canonicalname").(string),
 		Ecssubnet:     d.Get("ecssubnet").(string),
-		Nodeid:        d.Get("nodeid").(int),
-		Ttl:           d.Get("ttl").(int),
-		Type:          d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		dnscnamerec.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnscnamerec.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Dnscnamerec.Type(), dnscnamerecName, &dnscnamerec)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnscnamerecName)
 
-	err = readDnscnamerecFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnscnamerec but we can't read it ?? %s", dnscnamerecName)
-		return nil
-	}
-	return nil
+	return readDnscnamerecFunc(ctx, d, meta)
 }
 
-func readDnscnamerecFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnscnamerecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnscnamerecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnscnamerecName := d.Id()
@@ -97,15 +93,14 @@ func readDnscnamerecFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("aliasname", data["aliasname"])
 	d.Set("canonicalname", data["canonicalname"])
 	d.Set("ecssubnet", data["ecssubnet"])
-	d.Set("nodeid", data["nodeid"])
-	d.Set("ttl", data["ttl"])
-	d.Set("type", data["type"])
+	setToInt("nodeid", d, data["nodeid"])
+	setToInt("ttl", d, data["ttl"])
 
 	return nil
 
 }
 
-func deleteDnscnamerecFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnscnamerecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnscnamerecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnscnamerecName := d.Id()
@@ -116,7 +111,7 @@ func deleteDnscnamerecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.DeleteResourceWithArgsMap(service.Dnscnamerec.Type(), dnscnamerecName, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

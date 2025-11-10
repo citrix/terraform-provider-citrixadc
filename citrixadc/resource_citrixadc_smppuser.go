@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/smpp"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/smpp"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSmppuser() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSmppuserFunc,
-		Read:          readSmppuserFunc,
-		Update:        updateSmppuserFunc,
-		Delete:        deleteSmppuserFunc,
+		CreateContext: createSmppuserFunc,
+		ReadContext:   readSmppuserFunc,
+		UpdateContext: updateSmppuserFunc,
+		DeleteContext: deleteSmppuserFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"username": {
@@ -33,7 +36,7 @@ func resourceCitrixAdcSmppuser() *schema.Resource {
 	}
 }
 
-func createSmppuserFunc(d *schema.ResourceData, meta interface{}) error {
+func createSmppuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSmppuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	smppuserName := d.Get("username").(string)
@@ -44,20 +47,15 @@ func createSmppuserFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("smppuser", smppuserName, &smppuser)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(smppuserName)
 
-	err = readSmppuserFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this smppuser but we can't read it ?? %s", smppuserName)
-		return nil
-	}
-	return nil
+	return readSmppuserFunc(ctx, d, meta)
 }
 
-func readSmppuserFunc(d *schema.ResourceData, meta interface{}) error {
+func readSmppuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSmppuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	smppuserName := d.Id()
@@ -75,7 +73,7 @@ func readSmppuserFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSmppuserFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSmppuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSmppuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	smppuserName := d.Get("username").(string)
@@ -93,19 +91,19 @@ func updateSmppuserFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("smppuser", &smppuser)
 		if err != nil {
-			return fmt.Errorf("Error updating smppuser %s", smppuserName)
+			return diag.Errorf("Error updating smppuser %s", smppuserName)
 		}
 	}
-	return readSmppuserFunc(d, meta)
+	return readSmppuserFunc(ctx, d, meta)
 }
 
-func deleteSmppuserFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSmppuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSmppuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	smppuserName := d.Id()
 	err := client.DeleteResource("smppuser", smppuserName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

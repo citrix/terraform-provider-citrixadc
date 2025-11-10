@@ -61,7 +61,7 @@ type Authenticationazurekeyvault struct {
 	/**
 	* Interval at which access token in obtained.
 	*/
-	Refreshinterval int `json:"refreshinterval,omitempty"`
+	Refreshinterval *int `json:"refreshinterval,omitempty"`
 	/**
 	* TenantID of the application. This is usually specific to providers such as Microsoft and usually refers to the deployment identifier.
 	*/

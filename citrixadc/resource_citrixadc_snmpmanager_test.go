@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -27,7 +27,7 @@ const testAccSnmpmanager_basic = `
 
 resource "citrixadc_snmpmanager" "tf_snmpmanager" {
 	ipaddress          = "192.168.2.4"
-  }
+	}
   	
 `
 
@@ -36,15 +36,15 @@ const testAccSnmpmanager_update = `
 resource "citrixadc_snmpmanager" "tf_snmpmanager" {
 	ipaddress          = "192.168.2.4"
 	netmask            = "255.255.255.252"
-  }
+	}
 	
 `
 
 func TestAccSnmpmanager_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSnmpmanagerDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSnmpmanagerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnmpmanager_basic,
@@ -86,8 +86,12 @@ func testAccCheckSnmpmanagerExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		snmpmanagerName := rs.Primary.ID
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		dataArr, err := nsClient.FindAllResources(service.Snmpmanager.Type())
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Snmpmanager.Type())
 
 		if err != nil {
 			return err
@@ -110,7 +114,11 @@ func testAccCheckSnmpmanagerExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckSnmpmanagerDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_snmpmanager" {
@@ -123,7 +131,7 @@ func testAccCheckSnmpmanagerDestroy(s *terraform.State) error {
 
 		snmpmanagerName := rs.Primary.ID
 
-		dataArr, err := nsClient.FindAllResources(service.Snmpmanager.Type())
+		dataArr, err := client.FindAllResources(service.Snmpmanager.Type())
 
 		if err != nil {
 			return err

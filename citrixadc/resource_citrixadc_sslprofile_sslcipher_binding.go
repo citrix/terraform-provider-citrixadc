@@ -1,12 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -14,11 +15,11 @@ import (
 func resourceCitrixAdcSslprofile_sslcipher_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslprofile_sslcipher_bindingFunc,
-		Read:          readSslprofile_sslcipher_bindingFunc,
-		Delete:        deleteSslprofile_sslcipher_bindingFunc,
+		CreateContext: createSslprofile_sslcipher_bindingFunc,
+		ReadContext:   readSslprofile_sslcipher_bindingFunc,
+		DeleteContext: deleteSslprofile_sslcipher_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ciphername": {
@@ -40,7 +41,7 @@ func resourceCitrixAdcSslprofile_sslcipher_binding() *schema.Resource {
 	}
 }
 
-func createSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslprofile_sslcipher_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslprofile_sslcipher_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	profileName := d.Get("name").(string)
@@ -57,20 +58,15 @@ func createSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.UpdateUnnamedResource(service.Sslprofile_sslcipher_binding.Type(), &sslprofile_sslcipher_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSslprofile_sslcipher_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslprofile_sslcipher_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSslprofile_sslcipher_bindingFunc(ctx, d, meta)
 }
 
-func readSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslprofile_sslcipher_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslprofile_sslcipher_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -78,11 +74,11 @@ func readSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interface
 	idSlice := strings.Split(bindingId, ",")
 
 	if len(idSlice) < 2 {
-		return fmt.Errorf("Cannot deduce ciphername from id string")
+		return diag.Errorf("Cannot deduce ciphername from id string")
 	}
 
 	if len(idSlice) > 2 {
-		return fmt.Errorf("Too many separators \",\" in id string")
+		return diag.Errorf("Too many separators \",\" in id string")
 	}
 
 	profileName := idSlice[0]
@@ -102,7 +98,7 @@ func readSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interface
 		} else {
 			// Unexpected error
 			log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -136,13 +132,13 @@ func readSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interface
 
 	d.Set("name", data["name"])
 	d.Set("ciphername", data["cipheraliasname"])
-	d.Set("cipherpriority", data["cipherpriority"])
+	setToInt("cipherpriority", d, data["cipherpriority"])
 
 	return nil
 
 }
 
-func deleteSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslprofile_sslcipher_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslprofile_sslcipher_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -157,7 +153,7 @@ func deleteSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgs(service.Sslprofile_sslcipher_binding.Type(), profileName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -45,9 +45,9 @@ const testAccAuthenticationemailaction_update = `
 
 func TestAccAuthenticationemailaction_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthenticationemailactionDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthenticationemailactionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationemailaction_add,
@@ -90,8 +90,12 @@ func testAccCheckAuthenticationemailactionExist(n string, id *string) resource.T
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("authenticationemailaction", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("authenticationemailaction", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -106,7 +110,11 @@ func testAccCheckAuthenticationemailactionExist(n string, id *string) resource.T
 }
 
 func testAccCheckAuthenticationemailactionDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authenticationemailaction" {
@@ -117,7 +125,7 @@ func testAccCheckAuthenticationemailactionDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("authenticationemailaction", rs.Primary.ID)
+		_, err := client.FindResource("authenticationemailaction", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authenticationemailaction %s still exists", rs.Primary.ID)
 		}

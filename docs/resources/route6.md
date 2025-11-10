@@ -35,6 +35,7 @@ resource "citrixadc_route6" "tf_route6" {
 * `ownergroup` - (Optional) The owner node group in a Cluster for this route6. If owner node group is not specified then the route is treated as Striped route. Minimum length =  1
 * `routetype` - (Optional) Type of IPv6 routes to remove from the routing table of the Citrix ADC. Possible values: [ CONNECTED, STATIC, DYNAMIC, OSPF, ISIS, BGP, RIP, ND-RA-ROUTE, FIB6 ]
 * `detail` - (Optional) To get a detailed view.
+* `mgmt` - (Optional) Route in management plane.
 
 
 ## Attribute Reference

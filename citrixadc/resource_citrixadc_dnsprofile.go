@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnsprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsprofileFunc,
-		Read:          readDnsprofileFunc,
-		Update:        updateDnsprofileFunc,
-		Delete:        deleteDnsprofileFunc,
+		CreateContext: createDnsprofileFunc,
+		ReadContext:   readDnsprofileFunc,
+		UpdateContext: updateDnsprofileFunc,
+		DeleteContext: deleteDnsprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"cacheecsresponses": {
@@ -94,43 +97,43 @@ func resourceCitrixAdcDnsprofile() *schema.Resource {
 	}
 }
 
-func createDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsprofileName := d.Get("dnsprofilename").(string)
 	dnsprofile := dns.Dnsprofile{
-		Cacheecsresponses:            d.Get("cacheecsresponses").(string),
-		Cachenegativeresponses:       d.Get("cachenegativeresponses").(string),
-		Cacherecords:                 d.Get("cacherecords").(string),
-		Dnsanswerseclogging:          d.Get("dnsanswerseclogging").(string),
-		Dnserrorlogging:              d.Get("dnserrorlogging").(string),
-		Dnsextendedlogging:           d.Get("dnsextendedlogging").(string),
-		Dnsprofilename:               d.Get("dnsprofilename").(string),
-		Dnsquerylogging:              d.Get("dnsquerylogging").(string),
-		Dropmultiqueryrequest:        d.Get("dropmultiqueryrequest").(string),
-		Recursiveresolution:          d.Get("recursiveresolution").(string),
-		Insertecs:                    d.Get("insertecs").(string),
-		Replaceecs:                   d.Get("replaceecs").(string),
-		Maxcacheableecsprefixlength:  d.Get("maxcacheableecsprefixlength").(int),
-		Maxcacheableecsprefixlength6: d.Get("maxcacheableecsprefixlength6").(int),
+		Cacheecsresponses:      d.Get("cacheecsresponses").(string),
+		Cachenegativeresponses: d.Get("cachenegativeresponses").(string),
+		Cacherecords:           d.Get("cacherecords").(string),
+		Dnsanswerseclogging:    d.Get("dnsanswerseclogging").(string),
+		Dnserrorlogging:        d.Get("dnserrorlogging").(string),
+		Dnsextendedlogging:     d.Get("dnsextendedlogging").(string),
+		Dnsprofilename:         d.Get("dnsprofilename").(string),
+		Dnsquerylogging:        d.Get("dnsquerylogging").(string),
+		Dropmultiqueryrequest:  d.Get("dropmultiqueryrequest").(string),
+		Recursiveresolution:    d.Get("recursiveresolution").(string),
+		Insertecs:              d.Get("insertecs").(string),
+		Replaceecs:             d.Get("replaceecs").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("maxcacheableecsprefixlength"); !raw.IsNull() {
+		dnsprofile.Maxcacheableecsprefixlength = intPtr(d.Get("maxcacheableecsprefixlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxcacheableecsprefixlength6"); !raw.IsNull() {
+		dnsprofile.Maxcacheableecsprefixlength6 = intPtr(d.Get("maxcacheableecsprefixlength6").(int))
 	}
 
 	_, err := client.AddResource(service.Dnsprofile.Type(), dnsprofileName, &dnsprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnsprofileName)
 
-	err = readDnsprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsprofile but we can't read it ?? %s", dnsprofileName)
-		return nil
-	}
-	return nil
+	return readDnsprofileFunc(ctx, d, meta)
 }
 
-func readDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsprofileName := d.Id()
@@ -154,14 +157,14 @@ func readDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("recursiveresolution", data["recursiveresolution"])
 	d.Set("insertecs", data["insertecs"])
 	d.Set("replaceecs", data["replaceecs"])
-	d.Set("maxcacheableecsprefixlength", data["maxcacheableecsprefixlength"])
-	d.Set("maxcacheableecsprefixlength6", data["maxcacheableecsprefixlength6"])
+	setToInt("maxcacheableecsprefixlength", d, data["maxcacheableecsprefixlength"])
+	setToInt("maxcacheableecsprefixlength6", d, data["maxcacheableecsprefixlength6"])
 
 	return nil
 
 }
 
-func updateDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsprofileName := d.Get("dnsprofilename").(string)
@@ -227,31 +230,31 @@ func updateDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxcacheableecsprefixlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxcacheableecsprefixlength has changed for dnsprofile %s, starting update", dnsprofileName)
-		dnsprofile.Maxcacheableecsprefixlength = d.Get("maxcacheableecsprefixlength").(int)
+		dnsprofile.Maxcacheableecsprefixlength = intPtr(d.Get("maxcacheableecsprefixlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxcacheableecsprefixlength6") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxcacheableecsprefixlength6 has changed for dnsprofile %s, starting update", dnsprofileName)
-		dnsprofile.Maxcacheableecsprefixlength6 = d.Get("maxcacheableecsprefixlength6").(int)
+		dnsprofile.Maxcacheableecsprefixlength6 = intPtr(d.Get("maxcacheableecsprefixlength6").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnsprofile.Type(), dnsprofileName, &dnsprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating dnsprofile %s", dnsprofileName)
+			return diag.Errorf("Error updating dnsprofile %s", dnsprofileName)
 		}
 	}
-	return readDnsprofileFunc(d, meta)
+	return readDnsprofileFunc(ctx, d, meta)
 }
 
-func deleteDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsprofileName := d.Id()
 	err := client.DeleteResource(service.Dnsprofile.Type(), dnsprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

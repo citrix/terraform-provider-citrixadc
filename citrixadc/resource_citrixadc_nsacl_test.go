@@ -20,15 +20,30 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+const testAccNsacl_basic = `
+
+
+resource "citrixadc_nsacl" "foo" {
+
+  aclaction = "DENY"
+  aclname = "test_acl"
+  destipval = "192.168.1.33"
+  protocol = "TCP"
+  srcportval = "45-1024"
+  priority = "100"
+
+}
+`
 
 func TestAccNsacl_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNsaclDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNsaclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsacl_basic,
@@ -70,8 +85,12 @@ func testAccCheckNsaclExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Nsacl.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsacl.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -86,7 +105,11 @@ func testAccCheckNsaclExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckNsaclDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_nsacl" {
@@ -97,7 +120,7 @@ func testAccCheckNsaclDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Nsacl.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Nsacl.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -106,21 +129,6 @@ func testAccCheckNsaclDestroy(s *terraform.State) error {
 
 	return nil
 }
-
-const testAccNsacl_basic = `
-
-
-resource "citrixadc_nsacl" "foo" {
-
-  aclaction = "DENY"
-  aclname = "test_acl"
-  destipval = "192.168.1.33"
-  protocol = "TCP"
-  srcportval = "45-1024"
-  priority = "100"
-
-}
-`
 
 const testAccNsaclEnableDisable_enabled = `
 resource "citrixadc_nsacl" "tf_test_acc_nsacl" {
@@ -146,9 +154,9 @@ resource "citrixadc_nsacl" "tf_test_acc_nsacl" {
 
 func TestAccNsacl_enable_disable(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNsaclDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNsaclDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
 			{
@@ -172,6 +180,96 @@ func TestAccNsacl_enable_disable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsaclExist("citrixadc_nsacl.tf_test_acc_nsacl", nil),
 					resource.TestCheckResourceAttr("citrixadc_nsacl.tf_test_acc_nsacl", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsacl_dataset = `
+
+resource "citrixadc_policydataset" "tf_srcip_dataset" {
+  name    = "tf_srcip_dataset"
+  type    = "ipv4"
+  comment = "hello"
+}
+
+resource "citrixadc_policydataset_value_binding" "tf_value1" {
+  name = citrixadc_policydataset.tf_srcip_dataset.name
+  value    = "192.168.1.1"
+}
+
+resource "citrixadc_policydataset" "tf_srcport_dataset" {
+  name    = "tf_srcport_dataset"
+  type    = "number"
+  comment = "hello"
+}
+
+resource "citrixadc_policydataset_value_binding" "tf_value2" {
+  name = citrixadc_policydataset.tf_srcport_dataset.name
+  value    = "8080"
+}
+
+resource "citrixadc_policydataset" "tf_destip_dataset" {
+  name    = "tf_destip_dataset"
+  type    = "ipv4"
+  comment = "hello"
+}
+
+resource "citrixadc_policydataset_value_binding" "tf_value3" {
+  name = citrixadc_policydataset.tf_destip_dataset.name
+  value    = "192.168.1.1"
+}
+
+resource "citrixadc_policydataset" "tf_destport_dataset" {
+  name    = "tf_destport_dataset"
+  type    = "number"
+  comment = "hello"
+}
+
+resource "citrixadc_policydataset_value_binding" "tf_value4" {
+  name = citrixadc_policydataset.tf_destport_dataset.name
+  value    = "8081"
+}
+
+resource "citrixadc_nsacl" "test_acl" {
+
+  aclaction = "DENY"
+  aclname = "test_acl"
+  srcipdataset = citrixadc_policydataset.tf_srcip_dataset.name
+  protocol = "TCP"
+  srcportdataset = citrixadc_policydataset.tf_srcport_dataset.name
+  priority = "100"
+  destipdataset = citrixadc_policydataset.tf_destip_dataset.name
+  destportdataset = citrixadc_policydataset.tf_destport_dataset.name
+
+}
+`
+
+func TestAccNsacl_dataset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNsaclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsacl_dataset,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsaclExist("citrixadc_nsacl.test_acl", nil),
+					resource.TestCheckResourceAttr(
+						"citrixadc_nsacl.test_acl", "srcipdataset", "tf_srcip_dataset"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_nsacl.test_acl", "srcportdataset", "tf_srcport_dataset"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_nsacl.test_acl", "destipdataset", "tf_destip_dataset"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_nsacl.test_acl", "destportdataset", "tf_destport_dataset"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_nsacl.test_acl", "protocol", "TCP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_nsacl.test_acl", "priority", "100"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_nsacl.test_acl", "aclname", "test_acl"),
 				),
 			},
 		},

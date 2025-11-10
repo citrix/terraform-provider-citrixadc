@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAuthenticationvserver_authenticationradiuspolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationvserver_authenticationradiuspolicy_bindingFunc,
-		Read:          readAuthenticationvserver_authenticationradiuspolicy_bindingFunc,
-		Delete:        deleteAuthenticationvserver_authenticationradiuspolicy_bindingFunc,
+		CreateContext: createAuthenticationvserver_authenticationradiuspolicy_bindingFunc,
+		ReadContext:   readAuthenticationvserver_authenticationradiuspolicy_bindingFunc,
+		DeleteContext: deleteAuthenticationvserver_authenticationradiuspolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,7 +75,7 @@ func resourceCitrixAdcAuthenticationvserver_authenticationradiuspolicy_binding()
 	}
 }
 
-func createAuthenticationvserver_authenticationradiuspolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationvserver_authenticationradiuspolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationvserver_authenticationradiuspolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -86,26 +88,24 @@ func createAuthenticationvserver_authenticationradiuspolicy_bindingFunc(d *schem
 		Name:                   d.Get("name").(string),
 		Nextfactor:             d.Get("nextfactor").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		authenticationvserver_authenticationradiuspolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Authenticationvserver_authenticationradiuspolicy_binding.Type(), &authenticationvserver_authenticationradiuspolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAuthenticationvserver_authenticationradiuspolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationvserver_authenticationradiuspolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAuthenticationvserver_authenticationradiuspolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAuthenticationvserver_authenticationradiuspolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationvserver_authenticationradiuspolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationvserver_authenticationradiuspolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -126,7 +126,7 @@ func readAuthenticationvserver_authenticationradiuspolicy_bindingFunc(d *schema.
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -170,7 +170,7 @@ func readAuthenticationvserver_authenticationradiuspolicy_bindingFunc(d *schema.
 
 }
 
-func deleteAuthenticationvserver_authenticationradiuspolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationvserver_authenticationradiuspolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationvserver_authenticationradiuspolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -194,7 +194,7 @@ func deleteAuthenticationvserver_authenticationradiuspolicy_bindingFunc(d *schem
 
 	err := client.DeleteResourceWithArgs(service.Authenticationvserver_authenticationradiuspolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

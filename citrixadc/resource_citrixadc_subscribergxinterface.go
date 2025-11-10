@@ -1,21 +1,24 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/subscriber"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/subscriber"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSubscribergxinterface() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSubscribergxinterfaceFunc,
-		Read:          readSubscribergxinterfaceFunc,
-		Update:        updateSubscribergxinterfaceFunc,
-		Delete:        deleteSubscribergxinterfaceFunc,
+		CreateContext: createSubscribergxinterfaceFunc,
+		ReadContext:   readSubscribergxinterfaceFunc,
+		UpdateContext: updateSubscribergxinterfaceFunc,
+		DeleteContext: deleteSubscribergxinterfaceFunc,
 		Schema: map[string]*schema.Schema{
 			"cerrequesttimeout": {
 				Type:     schema.TypeInt,
@@ -107,47 +110,61 @@ func resourceCitrixAdcSubscribergxinterface() *schema.Resource {
 	}
 }
 
-func createSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func createSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSubscribergxinterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	subscribergxinterfaceName := resource.PrefixedUniqueId("tf-subscribergxinterface-")
 
 	subscribergxinterface := subscriber.Subscribergxinterface{
-		Cerrequesttimeout:         d.Get("cerrequesttimeout").(int),
 		Healthcheck:               d.Get("healthcheck").(string),
-		Healthcheckttl:            d.Get("healthcheckttl").(int),
 		Holdonsubscriberabsence:   d.Get("holdonsubscriberabsence").(string),
-		Idlettl:                   d.Get("idlettl").(int),
-		Negativettl:               d.Get("negativettl").(int),
 		Negativettllimitedsuccess: d.Get("negativettllimitedsuccess").(string),
-		Nodeid:                    d.Get("nodeid").(int),
 		Pcrfrealm:                 d.Get("pcrfrealm").(string),
 		Purgesdbongxfailure:       d.Get("purgesdbongxfailure").(string),
-		Requestretryattempts:      d.Get("requestretryattempts").(int),
-		Requesttimeout:            d.Get("requesttimeout").(int),
-		Revalidationtimeout:       d.Get("revalidationtimeout").(int),
 		Service:                   d.Get("service").(string),
 		Servicepathavp:            toIntegerList(d.Get("servicepathavp").([]interface{})),
-		Servicepathvendorid:       d.Get("servicepathvendorid").(int),
 		Vserver:                   d.Get("vserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cerrequesttimeout"); !raw.IsNull() {
+		subscribergxinterface.Cerrequesttimeout = intPtr(d.Get("cerrequesttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("healthcheckttl"); !raw.IsNull() {
+		subscribergxinterface.Healthcheckttl = intPtr(d.Get("healthcheckttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("idlettl"); !raw.IsNull() {
+		subscribergxinterface.Idlettl = intPtr(d.Get("idlettl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("negativettl"); !raw.IsNull() {
+		subscribergxinterface.Negativettl = intPtr(d.Get("negativettl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		subscribergxinterface.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("requestretryattempts"); !raw.IsNull() {
+		subscribergxinterface.Requestretryattempts = intPtr(d.Get("requestretryattempts").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("requesttimeout"); !raw.IsNull() {
+		subscribergxinterface.Requesttimeout = intPtr(d.Get("requesttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("revalidationtimeout"); !raw.IsNull() {
+		subscribergxinterface.Revalidationtimeout = intPtr(d.Get("revalidationtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("servicepathvendorid"); !raw.IsNull() {
+		subscribergxinterface.Servicepathvendorid = intPtr(d.Get("servicepathvendorid").(int))
 	}
 
 	err := client.UpdateUnnamedResource("subscribergxinterface", &subscribergxinterface)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(subscribergxinterfaceName)
 
-	err = readSubscribergxinterfaceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this subscribergxinterface but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSubscribergxinterfaceFunc(ctx, d, meta)
 }
 
-func readSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func readSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSubscribergxinterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading subscribergxinterface state")
@@ -157,29 +174,29 @@ func readSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) err
 		d.SetId("")
 		return nil
 	}
-	d.Set("cerrequesttimeout", data["cerrequesttimeout"])
+	setToInt("cerrequesttimeout", d, data["cerrequesttimeout"])
 	d.Set("healthcheck", data["healthcheck"])
-	d.Set("healthcheckttl", data["healthcheckttl"])
+	setToInt("healthcheckttl", d, data["healthcheckttl"])
 	d.Set("holdonsubscriberabsence", data["holdonsubscriberabsence"])
-	d.Set("idlettl", data["idlettl"])
-	d.Set("negativettl", data["negativettl"])
+	setToInt("idlettl", d, data["idlettl"])
+	setToInt("negativettl", d, data["negativettl"])
 	d.Set("negativettllimitedsuccess", data["negativettllimitedsuccess"])
-	d.Set("nodeid", data["nodeid"])
+	setToInt("nodeid", d, data["nodeid"])
 	d.Set("pcrfrealm", data["pcrfrealm"])
 	d.Set("purgesdbongxfailure", data["purgesdbongxfailure"])
-	d.Set("requestretryattempts", data["requestretryattempts"])
-	d.Set("requesttimeout", data["requesttimeout"])
-	d.Set("revalidationtimeout", data["revalidationtimeout"])
+	setToInt("requestretryattempts", d, data["requestretryattempts"])
+	setToInt("requesttimeout", d, data["requesttimeout"])
+	setToInt("revalidationtimeout", d, data["revalidationtimeout"])
 	d.Set("service", data["service"])
 	d.Set("servicepathavp", data["servicepathavp"])
-	d.Set("servicepathvendorid", data["servicepathvendorid"])
+	setToInt("servicepathvendorid", d, data["servicepathvendorid"])
 	d.Set("vserver", data["vserver"])
 
 	return nil
 
 }
 
-func updateSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSubscribergxinterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -187,7 +204,7 @@ func updateSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) e
 	hasChange := false
 	if d.HasChange("cerrequesttimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cerrequesttimeout has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Cerrequesttimeout = d.Get("cerrequesttimeout").(int)
+		subscribergxinterface.Cerrequesttimeout = intPtr(d.Get("cerrequesttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("healthcheck") {
@@ -197,7 +214,7 @@ func updateSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("healthcheckttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Healthcheckttl has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Healthcheckttl = d.Get("healthcheckttl").(int)
+		subscribergxinterface.Healthcheckttl = intPtr(d.Get("healthcheckttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("holdonsubscriberabsence") {
@@ -207,12 +224,12 @@ func updateSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("idlettl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Idlettl has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Idlettl = d.Get("idlettl").(int)
+		subscribergxinterface.Idlettl = intPtr(d.Get("idlettl").(int))
 		hasChange = true
 	}
 	if d.HasChange("negativettl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Negativettl has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Negativettl = d.Get("negativettl").(int)
+		subscribergxinterface.Negativettl = intPtr(d.Get("negativettl").(int))
 		hasChange = true
 	}
 	if d.HasChange("negativettllimitedsuccess") {
@@ -222,7 +239,7 @@ func updateSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("nodeid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nodeid has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Nodeid = d.Get("nodeid").(int)
+		subscribergxinterface.Nodeid = intPtr(d.Get("nodeid").(int))
 		hasChange = true
 	}
 	if d.HasChange("pcrfrealm") {
@@ -237,17 +254,17 @@ func updateSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("requestretryattempts") {
 		log.Printf("[DEBUG]  citrixadc-provider: Requestretryattempts has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Requestretryattempts = d.Get("requestretryattempts").(int)
+		subscribergxinterface.Requestretryattempts = intPtr(d.Get("requestretryattempts").(int))
 		hasChange = true
 	}
 	if d.HasChange("requesttimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Requesttimeout has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Requesttimeout = d.Get("requesttimeout").(int)
+		subscribergxinterface.Requesttimeout = intPtr(d.Get("requesttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("revalidationtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Revalidationtimeout has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Revalidationtimeout = d.Get("revalidationtimeout").(int)
+		subscribergxinterface.Revalidationtimeout = intPtr(d.Get("revalidationtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("service") {
@@ -262,7 +279,7 @@ func updateSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("servicepathvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Servicepathvendorid has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Servicepathvendorid = d.Get("servicepathvendorid").(int)
+		subscribergxinterface.Servicepathvendorid = intPtr(d.Get("servicepathvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("vserver") {
@@ -274,13 +291,13 @@ func updateSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) e
 	if hasChange {
 		err := client.UpdateUnnamedResource("subscribergxinterface", &subscribergxinterface)
 		if err != nil {
-			return fmt.Errorf("Error updating subscribergxinterface")
+			return diag.Errorf("Error updating subscribergxinterface")
 		}
 	}
-	return readSubscribergxinterfaceFunc(d, meta)
+	return readSubscribergxinterfaceFunc(ctx, d, meta)
 }
 
-func deleteSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSubscribergxinterfaceFunc")
 	//subscribergxinterface does not support DELETE operation
 	d.SetId("")

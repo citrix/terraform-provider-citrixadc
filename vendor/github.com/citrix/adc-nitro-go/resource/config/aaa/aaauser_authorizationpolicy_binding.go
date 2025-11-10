@@ -27,8 +27,8 @@ type Aaauserauthorizationpolicybinding struct {
 	/**
 	* Integer specifying the priority of the policy.  A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies max priority is 64000. 
 	*/
-	Priority int `json:"priority,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Priority *int `json:"priority,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Bindpoint to which the policy is bound.
 	*/

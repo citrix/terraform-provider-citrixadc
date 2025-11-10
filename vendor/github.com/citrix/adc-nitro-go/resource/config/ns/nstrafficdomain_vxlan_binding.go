@@ -23,11 +23,11 @@ type Nstrafficdomainvxlanbinding struct {
 	/**
 	* ID of the VXLAN to bind to this traffic domain. More than one VXLAN can be bound to a traffic domain, but the same VXLAN cannot be a part of multiple traffic domains.
 	*/
-	Vxlan int `json:"vxlan,omitempty"`
+	Vxlan *int `json:"vxlan,omitempty"`
 	/**
 	* Integer value that uniquely identifies a traffic domain.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 
 
 }

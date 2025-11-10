@@ -32,34 +32,34 @@ type Lsntransportprofile struct {
 	* Timeout, in seconds, for an idle LSN session. If an LSN session is idle for a time that exceeds this value, the Citrix ADC removes the session.
 		This timeout does not apply for a TCP LSN session when a FIN or RST message is received from either of the endpoints. 
 	*/
-	Sessiontimeout int `json:"sessiontimeout,omitempty"`
+	Sessiontimeout *int `json:"sessiontimeout,omitempty"`
 	/**
 	* Timeout, in seconds, for a TCP LSN session after a FIN or RST message is received from one of the endpoints.
 		If a TCP LSN session is idle (after the Citrix ADC receives a FIN or RST message) for a time that exceeds this value, the Citrix ADC ADC removes the session.
 		Since the LSN feature of the Citrix ADC does not maintain state information of any TCP LSN sessions, this timeout accommodates the transmission of the FIN or RST, and ACK messages from the other endpoint so that both endpoints can properly close the connection.
 	*/
-	Finrsttimeout int `json:"finrsttimeout,omitempty"`
+	Finrsttimeout *int `json:"finrsttimeout,omitempty"`
 	/**
 	* STUN protocol timeout
 	*/
-	Stuntimeout int `json:"stuntimeout,omitempty"`
+	Stuntimeout *int `json:"stuntimeout,omitempty"`
 	/**
 	* SYN Idle timeout
 	*/
-	Synidletimeout int `json:"synidletimeout,omitempty"`
+	Synidletimeout *int `json:"synidletimeout,omitempty"`
 	/**
 	* Maximum number of LSN NAT ports to be used at a time by each subscriber for the specified protocol. For example, each subscriber can be limited to a maximum of 500 TCP NAT ports. When the LSN NAT mappings for a subscriber reach the limit, the Citrix ADC does not allocate additional NAT ports for that subscriber.
 	*/
-	Portquota int `json:"portquota"` // Zero is a valid value
+	Portquota *int `json:"portquota"` // Zero is a valid value
 	/**
 	* Maximum number of concurrent LSN sessions allowed for each subscriber for the specified protocol. 
 		When the number of LSN sessions reaches the limit for a subscriber, the Citrix ADC does not allow the subscriber to open additional sessions.
 	*/
-	Sessionquota int `json:"sessionquota"` // Zero is a valid value
+	Sessionquota *int `json:"sessionquota"` // Zero is a valid value
 	/**
 	* Maximum number of concurrent LSN sessions(for the specified protocol) allowed for all subscriber of a group to which this profile has bound. This limit will get split across the Citrix ADCs packet engines and rounded down. When the number of LSN sessions reaches the limit for a group in packet engine, the Citrix ADC does not allow the subscriber of that group to open additional sessions through that packet engine.
 	*/
-	Groupsessionlimit int `json:"groupsessionlimit"` // Zero is a valid value
+	Groupsessionlimit *int `json:"groupsessionlimit"` // Zero is a valid value
 	/**
 	* Enable port parity between a subscriber port and its mapped LSN NAT port. For example, if a subscriber initiates a connection from an odd numbered port, the Citrix ADC allocates an odd numbered LSN NAT port for this connection. 
 		You must set this parameter for proper functioning of protocols that require the source port to be even or odd numbered, for example, in peer-to-peer applications that use RTP or RTCP protocol.

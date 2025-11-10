@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnspolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnspolicyFunc,
-		Read:          readDnspolicyFunc,
-		Update:        updateDnspolicyFunc,
-		Delete:        deleteDnspolicyFunc,
+		CreateContext: createDnspolicyFunc,
+		ReadContext:   readDnspolicyFunc,
+		UpdateContext: updateDnspolicyFunc,
+		DeleteContext: deleteDnspolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -71,7 +74,7 @@ func resourceCitrixAdcDnspolicy() *schema.Resource {
 	}
 }
 
-func createDnspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnspolicyName := d.Get("name").(string)
@@ -89,20 +92,15 @@ func createDnspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnspolicy.Type(), dnspolicyName, &dnspolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnspolicyName)
 
-	err = readDnspolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnspolicy but we can't read it ?? %s", dnspolicyName)
-		return nil
-	}
-	return nil
+	return readDnspolicyFunc(ctx, d, meta)
 }
 
-func readDnspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnspolicyName := d.Id()
@@ -127,7 +125,7 @@ func readDnspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateDnspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnspolicyName := d.Get("name").(string)
@@ -180,19 +178,19 @@ func updateDnspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnspolicy.Type(), dnspolicyName, &dnspolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating dnspolicy %s", dnspolicyName)
+			return diag.Errorf("Error updating dnspolicy %s", dnspolicyName)
 		}
 	}
-	return readDnspolicyFunc(d, meta)
+	return readDnspolicyFunc(ctx, d, meta)
 }
 
-func deleteDnspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnspolicyName := d.Id()
 	err := client.DeleteResource(service.Dnspolicy.Type(), dnspolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

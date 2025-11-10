@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -34,6 +34,7 @@ resource "citrixadc_ssldtlsprofile" "tf_ssldtlsprofile" {
 	maxretrytime = 5
 	pmtudiscovery = "DISABLED"
 	terminatesession = "ENABLED"
+	initialretrytimeout = 2
 }
 `
 
@@ -48,14 +49,15 @@ const testAccSsldtlsprofile_basic_update = `
 		maxretrytime = 6
 		pmtudiscovery = "ENABLED"
 		terminatesession = "DISABLED"
+		initialretrytimeout = 3
 	}
 `
 
 func TestAccSsldtlsprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSsldtlsprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSsldtlsprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSsldtlsprofile_basic,
@@ -70,6 +72,7 @@ func TestAccSsldtlsprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "maxretrytime", "5"),
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "pmtudiscovery", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "terminatesession", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "initialretrytimeout", "2"),
 				),
 			},
 			{
@@ -85,6 +88,7 @@ func TestAccSsldtlsprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "maxretrytime", "6"),
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "pmtudiscovery", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "terminatesession", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "initialretrytimeout", "3"),
 				),
 			},
 		},
@@ -110,8 +114,12 @@ func testAccCheckSsldtlsprofileExist(n string, id *string) resource.TestCheckFun
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Ssldtlsprofile.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Ssldtlsprofile.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -126,7 +134,11 @@ func testAccCheckSsldtlsprofileExist(n string, id *string) resource.TestCheckFun
 }
 
 func testAccCheckSsldtlsprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_ssldtlsprofile" {
@@ -137,7 +149,7 @@ func testAccCheckSsldtlsprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Ssldtlsprofile.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Ssldtlsprofile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("ssldtlsprofile %s still exists", rs.Primary.ID)
 		}

@@ -154,7 +154,7 @@ type Analyticsprofile struct {
 	/**
 	* This option is for configuring the metrics export frequency in seconds, frequency value must be in [30,300] seconds range
 	*/
-	Metricsexportfrequency int `json:"metricsexportfrequency,omitempty"`
+	Metricsexportfrequency *int `json:"metricsexportfrequency,omitempty"`
 	/**
 	* If the endpoint requires some metadata to be present before the actual json data, specify the same.
 	*/

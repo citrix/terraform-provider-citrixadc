@@ -1,24 +1,32 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcL3param() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createL3paramFunc,
-		Read:          readL3paramFunc,
-		Update:        updateL3paramFunc,
-		Delete:        deleteL3paramFunc,
+		CreateContext: createL3paramFunc,
+		ReadContext:   readL3paramFunc,
+		UpdateContext: updateL3paramFunc,
+		DeleteContext: deleteL3paramFunc,
 		Schema: map[string]*schema.Schema{
+			"implicitpbr": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"acllogtime": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -98,20 +106,18 @@ func resourceCitrixAdcL3param() *schema.Resource {
 	}
 }
 
-func createL3paramFunc(d *schema.ResourceData, meta interface{}) error {
+func createL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createL3paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 	l3paramName := resource.PrefixedUniqueId("tf-l3param-")
 
 	l3param := network.L3param{
-		Acllogtime:           d.Get("acllogtime").(int),
 		Allowclasseipv4:      d.Get("allowclasseipv4").(string),
 		Dropdfflag:           d.Get("dropdfflag").(string),
 		Dropipfragments:      d.Get("dropipfragments").(string),
 		Dynamicrouting:       d.Get("dynamicrouting").(string),
 		Externalloopback:     d.Get("externalloopback").(string),
 		Forwardicmpfragments: d.Get("forwardicmpfragments").(string),
-		Icmpgenratethreshold: d.Get("icmpgenratethreshold").(int),
 		Implicitaclallow:     d.Get("implicitaclallow").(string),
 		Ipv6dynamicrouting:   d.Get("ipv6dynamicrouting").(string),
 		Miproundrobin:        d.Get("miproundrobin").(string),
@@ -119,24 +125,25 @@ func createL3paramFunc(d *schema.ResourceData, meta interface{}) error {
 		Srcnat:               d.Get("srcnat").(string),
 		Tnlpmtuwoconn:        d.Get("tnlpmtuwoconn").(string),
 		Usipserverstraypkt:   d.Get("usipserverstraypkt").(string),
+		Implicitpbr:          d.Get("implicitpbr").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("acllogtime"); !raw.IsNull() {
+		l3param.Acllogtime = intPtr(d.Get("acllogtime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("icmpgenratethreshold"); !raw.IsNull() {
+		l3param.Icmpgenratethreshold = intPtr(d.Get("icmpgenratethreshold").(int))
+	}
 	err := client.UpdateUnnamedResource(service.L3param.Type(), &l3param)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(l3paramName)
 
-	err = readL3paramFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this l3param but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readL3paramFunc(ctx, d, meta)
 }
 
-func readL3paramFunc(d *schema.ResourceData, meta interface{}) error {
+func readL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readL3paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading l3param state")
@@ -146,14 +153,15 @@ func readL3paramFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("acllogtime", data["acllogtime"])
+	setToInt("acllogtime", d, data["acllogtime"])
 	d.Set("allowclasseipv4", data["allowclasseipv4"])
+	d.Set("implicitpbr", data["implicitpbr"])
 	d.Set("dropdfflag", data["dropdfflag"])
 	d.Set("dropipfragments", data["dropipfragments"])
 	d.Set("dynamicrouting", data["dynamicrouting"])
 	d.Set("externalloopback", data["externalloopback"])
 	d.Set("forwardicmpfragments", data["forwardicmpfragments"])
-	d.Set("icmpgenratethreshold", data["icmpgenratethreshold"])
+	setToInt("icmpgenratethreshold", d, data["icmpgenratethreshold"])
 	d.Set("implicitaclallow", data["implicitaclallow"])
 	d.Set("ipv6dynamicrouting", data["ipv6dynamicrouting"])
 	d.Set("miproundrobin", data["miproundrobin"])
@@ -166,15 +174,20 @@ func readL3paramFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateL3paramFunc(d *schema.ResourceData, meta interface{}) error {
+func updateL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateL3paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	l3param := network.L3param{}
 	hasChange := false
+	if d.HasChange("implicitpbr") {
+		log.Printf("[DEBUG]  citrixadc-provider: Implicitpbr has changed for l3param, starting update")
+		l3param.Implicitpbr = d.Get("implicitpbr").(string)
+		hasChange = true
+	}
 	if d.HasChange("acllogtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Acllogtime has changed for l3param, starting update")
-		l3param.Acllogtime = d.Get("acllogtime").(int)
+		l3param.Acllogtime = intPtr(d.Get("acllogtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("allowclasseipv4") {
@@ -209,7 +222,7 @@ func updateL3paramFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("icmpgenratethreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Icmpgenratethreshold has changed for l3param, starting update")
-		l3param.Icmpgenratethreshold = d.Get("icmpgenratethreshold").(int)
+		l3param.Icmpgenratethreshold = intPtr(d.Get("icmpgenratethreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("implicitaclallow") {
@@ -251,13 +264,13 @@ func updateL3paramFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.L3param.Type(), &l3param)
 		if err != nil {
-			return fmt.Errorf("Error updating l3param")
+			return diag.Errorf("Error updating l3param")
 		}
 	}
-	return readL3paramFunc(d, meta)
+	return readL3paramFunc(ctx, d, meta)
 }
 
-func deleteL3paramFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteL3paramFunc")
 	// l3param does not support delete operation
 	d.SetId("")

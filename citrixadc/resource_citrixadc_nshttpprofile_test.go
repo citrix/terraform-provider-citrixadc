@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccNshttpprofile_add = `
@@ -41,7 +41,7 @@ const testAccNshttpprofile_add = `
 		maxduplicateheaderfields = 10
 		passprotocolupgrade = "DISABLED"
 		http2extendedconnect = "DISABLED"
-	}  
+	}
 `
 const testAccNshttpprofile_update = `
 	resource "citrixadc_nshttpprofile" "foo" {
@@ -60,14 +60,14 @@ const testAccNshttpprofile_update = `
 		maxduplicateheaderfields = 12
 		passprotocolupgrade = "ENABLED"
 		http2extendedconnect = "ENABLED"
-	}  
+	}
 `
 
 func TestAccNshttpprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNshttpprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNshttpprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNshttpprofile_add,
@@ -134,8 +134,12 @@ func testAccCheckNshttpprofileExist(n string, id *string) resource.TestCheckFunc
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Nshttpprofile.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nshttpprofile.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -150,7 +154,11 @@ func testAccCheckNshttpprofileExist(n string, id *string) resource.TestCheckFunc
 }
 
 func testAccCheckNshttpprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_nshttpprofile" {
@@ -161,7 +169,7 @@ func testAccCheckNshttpprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Nshttpprofile.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Nshttpprofile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("NS HTTP Profile %s still exists", rs.Primary.ID)
 		}

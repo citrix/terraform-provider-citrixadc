@@ -24,7 +24,7 @@ type Vpnvservervpnurlbinding struct {
 	* The intranet URL.
 	*/
 	Urlname string `json:"urlname,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

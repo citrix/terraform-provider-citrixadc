@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -74,9 +74,9 @@ const testAccVxlanvlanmap_vxlan_binding_basic_step2 = `
 
 func TestAccVxlanvlanmap_vxlan_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVxlanvlanmap_vxlan_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckVxlanvlanmap_vxlan_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVxlanvlanmap_vxlan_binding_basic,
@@ -113,7 +113,11 @@ func testAccCheckVxlanvlanmap_vxlan_bindingExist(n string, id *string) resource.
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -153,7 +157,11 @@ func testAccCheckVxlanvlanmap_vxlan_bindingExist(n string, id *string) resource.
 
 func testAccCheckVxlanvlanmap_vxlan_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -193,7 +201,11 @@ func testAccCheckVxlanvlanmap_vxlan_bindingNotExist(n string, id string) resourc
 }
 
 func testAccCheckVxlanvlanmap_vxlan_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_vxlanvlanmap_vxlan_binding" {
@@ -204,7 +216,7 @@ func testAccCheckVxlanvlanmap_vxlan_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("vxlanvlanmap_vxlan_binding", rs.Primary.ID)
+		_, err := client.FindResource("vxlanvlanmap_vxlan_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("vxlanvlanmap_vxlan_binding %s still exists", rs.Primary.ID)
 		}

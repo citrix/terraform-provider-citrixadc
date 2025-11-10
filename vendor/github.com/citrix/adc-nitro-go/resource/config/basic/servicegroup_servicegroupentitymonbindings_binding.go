@@ -36,15 +36,15 @@ type Servicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* Total number of probes sent to monitor this service.
 	*/
-	Monitortotalprobes int `json:"monitortotalprobes,omitempty"`
+	Monitortotalprobes *int `json:"monitortotalprobes,omitempty"`
 	/**
 	* Total number of failed probes
 	*/
-	Monitortotalfailedprobes int `json:"monitortotalfailedprobes,omitempty"`
+	Monitortotalfailedprobes *int `json:"monitortotalfailedprobes,omitempty"`
 	/**
 	* Total number of currently failed probes
 	*/
-	Monitorcurrentfailedprobes int `json:"monitorcurrentfailedprobes,omitempty"`
+	Monitorcurrentfailedprobes *int `json:"monitorcurrentfailedprobes,omitempty"`
 	/**
 	* The string form of monstatcode.
 	*/
@@ -52,7 +52,7 @@ type Servicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* Response time of this monitor in milli sec.
 	*/
-	Responsetime int `json:"responsetime,omitempty"`
+	Responsetime *int `json:"responsetime,omitempty"`
 	/**
 	* Name of the service group.
 	*/
@@ -60,8 +60,8 @@ type Servicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* Port number of the service. Each service must have a unique port number.
 	*/
-	Port int `json:"port,omitempty"`
-	Weight int `json:"weight,omitempty"`
+	Port *int `json:"port,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Unique service identifier. Used when the persistency type for the virtual server is set to Custom Server ID.
 	*/
@@ -69,7 +69,7 @@ type Servicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* The  identifier for the service. This is used when the persistency type is set to Custom Server ID.
 	*/
-	Serverid int `json:"serverid,omitempty"`
+	Serverid *int `json:"serverid,omitempty"`
 	/**
 	* Initial state of the service after binding.
 	*/
@@ -77,7 +77,7 @@ type Servicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* Unique numerical identifier used by hash based load balancing methods to identify a service.
 	*/
-	Hashid int `json:"hashid,omitempty"`
+	Hashid *int `json:"hashid,omitempty"`
 	/**
 	* Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver
 	*/
@@ -85,11 +85,11 @@ type Servicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors
 	*/
-	Dbsttl int `json:"dbsttl,omitempty"`
+	Dbsttl *int `json:"dbsttl,omitempty"`
 	/**
 	* Order number to be assigned to the servicegroup member
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 
 
 }

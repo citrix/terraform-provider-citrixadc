@@ -1,22 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAaapreauthenticationaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaapreauthenticationactionFunc,
-		Read:          readAaapreauthenticationactionFunc,
-		Update:        updateAaapreauthenticationactionFunc,
-		Delete:        deleteAaapreauthenticationactionFunc,
+		CreateContext: createAaapreauthenticationactionFunc,
+		ReadContext:   readAaapreauthenticationactionFunc,
+		UpdateContext: updateAaapreauthenticationactionFunc,
+		DeleteContext: deleteAaapreauthenticationactionFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -47,7 +48,7 @@ func resourceCitrixAdcAaapreauthenticationaction() *schema.Resource {
 	}
 }
 
-func createAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaapreauthenticationactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaapreauthenticationactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationactionName := d.Get("name").(string)
@@ -62,20 +63,15 @@ func createAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface
 
 	_, err := client.AddResource(service.Aaapreauthenticationaction.Type(), aaapreauthenticationactionName, &aaapreauthenticationaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaapreauthenticationactionName)
 
-	err = readAaapreauthenticationactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaapreauthenticationaction but we can't read it ?? %s", aaapreauthenticationactionName)
-		return nil
-	}
-	return nil
+	return readAaapreauthenticationactionFunc(ctx, d, meta)
 }
 
-func readAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaapreauthenticationactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaapreauthenticationactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationactionName := d.Id()
@@ -98,7 +94,7 @@ func readAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface{}
 
 }
 
-func updateAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaapreauthenticationactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaapreauthenticationactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationactionName := d.Get("name").(string)
@@ -131,19 +127,19 @@ func updateAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface
 	if hasChange {
 		_, err := client.UpdateResource(service.Aaapreauthenticationaction.Type(), aaapreauthenticationactionName, &aaapreauthenticationaction)
 		if err != nil {
-			return fmt.Errorf("Error updating aaapreauthenticationaction %s", aaapreauthenticationactionName)
+			return diag.Errorf("Error updating aaapreauthenticationaction %s", aaapreauthenticationactionName)
 		}
 	}
-	return readAaapreauthenticationactionFunc(d, meta)
+	return readAaapreauthenticationactionFunc(ctx, d, meta)
 }
 
-func deleteAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaapreauthenticationactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaapreauthenticationactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationactionName := d.Id()
 	err := client.DeleteResource(service.Aaapreauthenticationaction.Type(), aaapreauthenticationactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccGslbservice_lbmonitor_binding_basic = `
@@ -32,7 +32,7 @@ resource "citrixadc_gslbservice_lbmonitor_binding" "tf_gslbservice_lbmonitor_bin
 	monstate    = "DISABLED"
 	servicename = citrixadc_gslbservice.tf_gslbservice.servicename
 	weight      = "20" 
-  }
+	}
   
   resource "citrixadc_gslbservice" "tf_gslbservice" {
 	ip          = "172.16.1.200"
@@ -40,18 +40,18 @@ resource "citrixadc_gslbservice_lbmonitor_binding" "tf_gslbservice_lbmonitor_bin
 	servicename = "tf_gslb1vservice"
 	servicetype = "HTTP"
 	sitename    = citrixadc_gslbsite.tf_gslbsite.sitename
-  }
+	}
   
   resource "citrixadc_gslbsite" "tf_gslbsite" {
 	sitename      = "tf_sitename"
 	siteipaddress = "10.222.70.210"
 	sitepassword  = "password123"
-  }
+	}
   
   resource "citrixadc_lbmonitor" "tfmonitor1" {
 	monitorname = "tf_monitor"
 	type        = "HTTP"
-  }
+	}
   
 `
 
@@ -62,25 +62,25 @@ resource "citrixadc_gslbservice" "tf_gslbservice" {
 	servicename = "tf_gslb1vservice"
 	servicetype = "HTTP"
 	sitename    = citrixadc_gslbsite.tf_gslbsite.sitename
-  }
+	}
   
   resource "citrixadc_gslbsite" "tf_gslbsite" {
 	sitename      = "tf_sitename"
 	siteipaddress = "10.222.70.210"
 	sitepassword = "password123"
-  }
+	}
   
   resource "citrixadc_lbmonitor" "tfmonitor1" {
 	monitorname = "tf_monitor"
 	type        = "HTTP"
-  }
+	}
 `
 
 func TestAccGslbservice_lbmonitor_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGslbservice_lbmonitor_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckGslbservice_lbmonitor_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGslbservice_lbmonitor_binding_basic,
@@ -117,7 +117,11 @@ func testAccCheckGslbservice_lbmonitor_bindingExist(n string, id *string) resour
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -157,7 +161,11 @@ func testAccCheckGslbservice_lbmonitor_bindingExist(n string, id *string) resour
 
 func testAccCheckGslbservice_lbmonitor_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -197,7 +205,11 @@ func testAccCheckGslbservice_lbmonitor_bindingNotExist(n string, id string) reso
 }
 
 func testAccCheckGslbservice_lbmonitor_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_gslbservice_lbmonitor_binding" {
@@ -208,7 +220,7 @@ func testAccCheckGslbservice_lbmonitor_bindingDestroy(s *terraform.State) error 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Gslbservice_lbmonitor_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Gslbservice_lbmonitor_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("gslbservice_lbmonitor_binding %s still exists", rs.Primary.ID)
 		}

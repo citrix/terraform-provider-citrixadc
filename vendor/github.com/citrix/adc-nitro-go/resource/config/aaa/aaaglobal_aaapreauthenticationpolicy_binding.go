@@ -12,30 +12,28 @@
 *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
-*/
+ */
 
 package aaa
 
 /**
 * Binding class showing the aaapreauthenticationpolicy that can be bound to aaaglobal.
-*/
+ */
 type Aaaglobalaaapreauthenticationpolicybinding struct {
 	/**
 	* Name of the policy to be unbound.
-	*/
+	 */
 	Policy string `json:"policy,omitempty"`
 	/**
 	* Priority of the bound policy
-	*/
-	Priority int `json:"priority,omitempty"`
+	 */
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Bound policy type
-	*/
-	Bindpolicytype int `json:"bindpolicytype,omitempty"`
+	 */
+	Bindpolicytype *int `json:"bindpolicytype,omitempty"`
 	/**
 	* Indicates that a variable is a built-in (SYSTEM INTERNAL) type.
-	*/
+	 */
 	Builtin []string `json:"builtin,omitempty"`
-
-
 }

@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsservicefunction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsservicefunctionFunc,
-		Read:          readNsservicefunctionFunc,
-		Update:        updateNsservicefunctionFunc,
-		Delete:        deleteNsservicefunctionFunc,
+		CreateContext: createNsservicefunctionFunc,
+		ReadContext:   readNsservicefunctionFunc,
+		UpdateContext: updateNsservicefunctionFunc,
+		DeleteContext: deleteNsservicefunctionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"servicefunctionname": {
@@ -36,32 +39,30 @@ func resourceCitrixAdcNsservicefunction() *schema.Resource {
 	}
 }
 
-func createNsservicefunctionFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsservicefunctionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsservicefunctionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsservicefunctionName := d.Get("servicefunctionname").(string)
 
 	nsservicefunction := ns.Nsservicefunction{
-		Ingressvlan:         d.Get("ingressvlan").(int),
 		Servicefunctionname: d.Get("servicefunctionname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ingressvlan"); !raw.IsNull() {
+		nsservicefunction.Ingressvlan = intPtr(d.Get("ingressvlan").(int))
 	}
 
 	_, err := client.AddResource(service.Nsservicefunction.Type(), nsservicefunctionName, &nsservicefunction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsservicefunctionName)
 
-	err = readNsservicefunctionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsservicefunction but we can't read it ?? %s", nsservicefunctionName)
-		return nil
-	}
-	return nil
+	return readNsservicefunctionFunc(ctx, d, meta)
 }
 
-func readNsservicefunctionFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsservicefunctionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsservicefunctionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsservicefunctionName := d.Id()
@@ -72,14 +73,14 @@ func readNsservicefunctionFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("ingressvlan", data["ingressvlan"])
+	setToInt("ingressvlan", d, data["ingressvlan"])
 	d.Set("servicefunctionname", data["servicefunctionname"])
 
 	return nil
 
 }
 
-func updateNsservicefunctionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsservicefunctionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsservicefunctionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsservicefunctionName := d.Get("servicefunctionname").(string)
@@ -90,26 +91,26 @@ func updateNsservicefunctionFunc(d *schema.ResourceData, meta interface{}) error
 	hasChange := false
 	if d.HasChange("ingressvlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ingressvlan has changed for nsservicefunction %s, starting update", nsservicefunctionName)
-		nsservicefunction.Ingressvlan = d.Get("ingressvlan").(int)
+		nsservicefunction.Ingressvlan = intPtr(d.Get("ingressvlan").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Nsservicefunction.Type(), nsservicefunctionName, &nsservicefunction)
 		if err != nil {
-			return fmt.Errorf("Error updating nsservicefunction %s", nsservicefunctionName)
+			return diag.Errorf("Error updating nsservicefunction %s", nsservicefunctionName)
 		}
 	}
-	return readNsservicefunctionFunc(d, meta)
+	return readNsservicefunctionFunc(ctx, d, meta)
 }
 
-func deleteNsservicefunctionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsservicefunctionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsservicefunctionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsservicefunctionName := d.Id()
 	err := client.DeleteResource(service.Nsservicefunction.Type(), nsservicefunctionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

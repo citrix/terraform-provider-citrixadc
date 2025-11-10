@@ -1,6 +1,7 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -9,20 +10,20 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"gopkg.in/yaml.v2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcNintroResource() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNitroResourceFunc,
-		Read:          readNitroResourceFunc,
-		Update:        updateNitroResourceFunc,
-		Delete:        deleteNitroResourceFunc,
+		CreateContext: createNitroResourceFunc,
+		ReadContext:   readNitroResourceFunc,
+		UpdateContext: updateNitroResourceFunc,
+		DeleteContext: deleteNitroResourceFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"workflows_file": {
@@ -50,13 +51,13 @@ func resourceCitrixAdcNintroResource() *schema.Resource {
 	}
 }
 
-func createNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
+func createNitroResourceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createNitroResourceFunc")
 	//client := meta.(*NetScalerNitroClient).client
 
 	workflow, err := readWorkflow(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	// log.Printf("workflows read %v", workflows)
 	log.Printf("workflow read %v", workflow)
@@ -64,29 +65,29 @@ func createNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
 	switch workflow["lifecycle"] {
 	case "object":
 		err := createObjectFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	case "non_updateable_object":
 		err := createObjectFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	case "binding":
 		err := createBindingFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	case "object_by_args":
 		err := createObjectByArgsFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	default:
-		return fmt.Errorf("Lifecycle \"%v\" does not have a create function", workflow["lifecycle"])
+		return diag.Errorf("Lifecycle \"%v\" does not have a create function", workflow["lifecycle"])
 	}
 }
 
-func readNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
+func readNitroResourceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readNitroResourceFunc")
 	//client := meta.(*NetScalerNitroClient).client
 	// id := d.Id()
 
 	workflow, err := readWorkflow(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("workflow read %v", workflow)
@@ -94,50 +95,50 @@ func readNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
 	switch workflow["lifecycle"] {
 	case "object":
 		err := readObjectFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	case "non_updateable_object":
 		err := readObjectFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	case "binding":
 		err := readBindingFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	case "object_by_args":
 		err := readObjectByArgsFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	default:
-		return fmt.Errorf("Lifecycle \"%v\" does not have a read function", workflow["lifecycle"])
+		return diag.Errorf("Lifecycle \"%v\" does not have a read function", workflow["lifecycle"])
 	}
 
 }
 
-func updateNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNitroResourceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In updateNitroResourceFunc")
 
 	workflow, err := readWorkflow(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	log.Printf("workflow read %v", workflow)
 
 	switch workflow["lifecycle"] {
 	case "object":
 		err := updateObjectFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	case "object_by_args":
 		err := updateObjectByArgsFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	default:
-		return fmt.Errorf("Lifecycle \"%v\" does not have an update function", workflow["lifecycle"])
+		return diag.Errorf("Lifecycle \"%v\" does not have an update function", workflow["lifecycle"])
 	}
 }
 
-func deleteNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNitroResourceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteServerFunc")
 
 	workflow, err := readWorkflow(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("workflow read %v", workflow)
@@ -145,18 +146,18 @@ func deleteNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
 	switch workflow["lifecycle"] {
 	case "object":
 		err := deleteObjectFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	case "non_updateable_object":
 		err := deleteObjectFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	case "binding":
 		err := deleteBindingFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	case "object_by_args":
 		err := deleteObjectByArgsFunc(d, meta, workflow)
-		return err
+		return diag.FromErr(err)
 	default:
-		return fmt.Errorf("Lifecycle \"%v\" does not have a delete function", workflow["lifecycle"])
+		return diag.Errorf("Lifecycle \"%v\" does not have a delete function", workflow["lifecycle"])
 	}
 }
 

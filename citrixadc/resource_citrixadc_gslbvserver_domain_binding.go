@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcGslbvserver_domain_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbvserver_domain_bindingFunc,
-		Read:          readGslbvserver_domain_bindingFunc,
-		Delete:        deleteGslbvserver_domain_bindingFunc,
+		CreateContext: createGslbvserver_domain_bindingFunc,
+		ReadContext:   readGslbvserver_domain_bindingFunc,
+		DeleteContext: deleteGslbvserver_domain_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -76,7 +78,7 @@ func resourceCitrixAdcGslbvserver_domain_binding() *schema.Resource {
 	}
 }
 
-func createGslbvserver_domain_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbvserver_domain_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbvserver_domain_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -88,29 +90,31 @@ func createGslbvserver_domain_bindingFunc(d *schema.ResourceData, meta interface
 		Backupipflag:     d.Get("backupipflag").(bool),
 		Cookiedomain:     d.Get("cookiedomain").(string),
 		Cookiedomainflag: d.Get("cookiedomainflag").(bool),
-		Cookietimeout:    d.Get("cookietimeout").(int),
 		Domainname:       d.Get("domainname").(string),
 		Name:             d.Get("name").(string),
-		Sitedomainttl:    d.Get("sitedomainttl").(int),
-		Ttl:              d.Get("ttl").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cookietimeout"); !raw.IsNull() {
+		gslbvserver_domain_binding.Cookietimeout = intPtr(d.Get("cookietimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sitedomainttl"); !raw.IsNull() {
+		gslbvserver_domain_binding.Sitedomainttl = intPtr(d.Get("sitedomainttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		gslbvserver_domain_binding.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Gslbvserver_domain_binding.Type(), &gslbvserver_domain_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readGslbvserver_domain_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this gslbvserver_domain_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readGslbvserver_domain_bindingFunc(ctx, d, meta)
 }
 
-func readGslbvserver_domain_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbvserver_domain_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbvserver_domain_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -131,7 +135,7 @@ func readGslbvserver_domain_bindingFunc(d *schema.ResourceData, meta interface{}
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -166,17 +170,17 @@ func readGslbvserver_domain_bindingFunc(d *schema.ResourceData, meta interface{}
 	d.Set("backupipflag", data["backupipflag"])
 	d.Set("cookiedomain", data["cookiedomain"])
 	d.Set("cookiedomainflag", data["cookiedomainflag"])
-	d.Set("cookietimeout", data["cookietimeout"])
+	setToInt("cookietimeout", d, data["cookietimeout"])
 	d.Set("domainname", data["domainname"])
 	d.Set("name", data["name"])
-	d.Set("sitedomainttl", data["sitedomainttl"])
-	d.Set("ttl", data["ttl"])
+	setToInt("sitedomainttl", d, data["sitedomainttl"])
+	setToInt("ttl", d, data["ttl"])
 
 	return nil
 
 }
 
-func deleteGslbvserver_domain_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbvserver_domain_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteGslbvserver_domain_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -191,7 +195,7 @@ func deleteGslbvserver_domain_bindingFunc(d *schema.ResourceData, meta interface
 
 	err := client.DeleteResourceWithArgs(service.Gslbvserver_domain_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -47,6 +47,7 @@ const testAccBotprofile_tps_binding_basic = `
 		logmessage   = "Hellobinding"
 		threshold    = 3
 		percentage   = 20
+		bot_tps_enabled = "ON"
 	}
 `
 
@@ -71,14 +72,20 @@ const testAccBotprofile_tps_binding_basic_step2 = `
 
 func TestAccBotprofile_tps_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBotprofile_tps_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckBotprofile_tps_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotprofile_tps_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofile_tps_bindingExist("citrixadc_botprofile_tps_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "bot_tps_type", "REQUEST_URL"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "bot_tps", "true"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "logmessage", "Hellobinding"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "threshold", "3"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "percentage", "20"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "bot_tps_enabled", "ON"),
 				),
 			},
 			{
@@ -110,7 +117,11 @@ func testAccCheckBotprofile_tps_bindingExist(n string, id *string) resource.Test
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -150,7 +161,11 @@ func testAccCheckBotprofile_tps_bindingExist(n string, id *string) resource.Test
 
 func testAccCheckBotprofile_tps_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -190,7 +205,11 @@ func testAccCheckBotprofile_tps_bindingNotExist(n string, id string) resource.Te
 }
 
 func testAccCheckBotprofile_tps_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_botprofile_tps_binding" {
@@ -201,7 +220,7 @@ func testAccCheckBotprofile_tps_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("botprofile_tps_binding", rs.Primary.ID)
+		_, err := client.FindResource("botprofile_tps_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("botprofile_tps_binding %s still exists", rs.Primary.ID)
 		}

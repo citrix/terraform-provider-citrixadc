@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	//"strings"
 	"testing"
 )
@@ -50,9 +50,9 @@ const testAccBotglobal_botpolicy_binding_basic_step2 = `
 
 func TestAccBotglobal_botpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBotglobal_botpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckBotglobal_botpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotglobal_botpolicy_binding_basic,
@@ -89,7 +89,11 @@ func testAccCheckBotglobal_botpolicy_bindingExist(n string, id *string) resource
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := rs.Primary.ID
 		typename := rs.Primary.Attributes["type"]
@@ -125,7 +129,11 @@ func testAccCheckBotglobal_botpolicy_bindingExist(n string, id *string) resource
 
 func testAccCheckBotglobal_botpolicy_bindingNotExist(n string, id string, typename string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		policyname := id
 
 		findParams := service.FindParams{
@@ -158,7 +166,11 @@ func testAccCheckBotglobal_botpolicy_bindingNotExist(n string, id string, typena
 }
 
 func testAccCheckBotglobal_botpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_botglobal_botpolicy_binding" {
@@ -169,7 +181,7 @@ func testAccCheckBotglobal_botpolicy_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("botglobal_botpolicy_binding", rs.Primary.ID)
+		_, err := client.FindResource("botglobal_botpolicy_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("botglobal_botpolicy_binding %s still exists", rs.Primary.ID)
 		}

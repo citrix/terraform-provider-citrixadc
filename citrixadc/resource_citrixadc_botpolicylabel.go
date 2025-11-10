@@ -1,21 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcBotpolicylabel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotpolicylabelFunc,
-		Read:          readBotpolicylabelFunc,
-		Delete:        deleteBotpolicylabelFunc,
+		CreateContext: createBotpolicylabelFunc,
+		ReadContext:   readBotpolicylabelFunc,
+		DeleteContext: deleteBotpolicylabelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"labelname": {
@@ -33,7 +34,7 @@ func resourceCitrixAdcBotpolicylabel() *schema.Resource {
 	}
 }
 
-func createBotpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createBotpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var Botpolicylabelname string
@@ -45,20 +46,15 @@ func createBotpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("botpolicylabel", Botpolicylabelname, &Botpolicylabel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(Botpolicylabelname)
 
-	err = readBotpolicylabelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this Botpolicylabel but we can't read it ?? %s", Botpolicylabelname)
-		return nil
-	}
-	return nil
+	return readBotpolicylabelFunc(ctx, d, meta)
 }
 
-func readBotpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readBotpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	Botpolicylabelname := d.Id()
@@ -75,13 +71,13 @@ func readBotpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteBotpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteBotpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	Botpolicylabelname := d.Id()
 	err := client.DeleteResource("botpolicylabel", Botpolicylabelname)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

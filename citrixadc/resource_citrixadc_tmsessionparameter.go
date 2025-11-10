@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/tm"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcTmsessionparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTmsessionparameterFunc,
-		Read:          readTmsessionparameterFunc,
-		Update:        updateTmsessionparameterFunc,
-		Delete:        deleteTmsessionparameterFunc,
+		CreateContext: createTmsessionparameterFunc,
+		ReadContext:   readTmsessionparameterFunc,
+		UpdateContext: updateTmsessionparameterFunc,
+		DeleteContext: deleteTmsessionparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"defaultauthorizationaction": {
 				Type:     schema.TypeString,
@@ -73,7 +76,7 @@ func resourceCitrixAdcTmsessionparameter() *schema.Resource {
 	}
 }
 
-func createTmsessionparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createTmsessionparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTmsessionparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmsessionparameterName := resource.PrefixedUniqueId("tf-tmsessionparameter-")
@@ -84,29 +87,29 @@ func createTmsessionparameterFunc(d *schema.ResourceData, meta interface{}) erro
 		Httponlycookie:             d.Get("httponlycookie").(string),
 		Kcdaccount:                 d.Get("kcdaccount").(string),
 		Persistentcookie:           d.Get("persistentcookie").(string),
-		Persistentcookievalidity:   d.Get("persistentcookievalidity").(int),
-		Sesstimeout:                d.Get("sesstimeout").(int),
 		Sso:                        d.Get("sso").(string),
 		Ssocredential:              d.Get("ssocredential").(string),
 		Ssodomain:                  d.Get("ssodomain").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("persistentcookievalidity"); !raw.IsNull() {
+		tmsessionparameter.Persistentcookievalidity = intPtr(d.Get("persistentcookievalidity").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		tmsessionparameter.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Tmsessionparameter.Type(), &tmsessionparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(tmsessionparameterName)
 
-	err = readTmsessionparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this tmsessionparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readTmsessionparameterFunc(ctx, d, meta)
 }
 
-func readTmsessionparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readTmsessionparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTmsessionparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading tmsessionparameter state")
@@ -121,8 +124,8 @@ func readTmsessionparameterFunc(d *schema.ResourceData, meta interface{}) error 
 	d.Set("httponlycookie", data["httponlycookie"])
 	d.Set("kcdaccount", data["kcdaccount"])
 	d.Set("persistentcookie", data["persistentcookie"])
-	d.Set("persistentcookievalidity", data["persistentcookievalidity"])
-	d.Set("sesstimeout", data["sesstimeout"])
+	setToInt("persistentcookievalidity", d, data["persistentcookievalidity"])
+	setToInt("sesstimeout", d, data["sesstimeout"])
 	d.Set("sso", data["sso"])
 	d.Set("ssocredential", data["ssocredential"])
 	d.Set("ssodomain", data["ssodomain"])
@@ -131,7 +134,7 @@ func readTmsessionparameterFunc(d *schema.ResourceData, meta interface{}) error 
 
 }
 
-func updateTmsessionparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateTmsessionparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateTmsessionparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -164,12 +167,12 @@ func updateTmsessionparameterFunc(d *schema.ResourceData, meta interface{}) erro
 	}
 	if d.HasChange("persistentcookievalidity") {
 		log.Printf("[DEBUG]  citrixadc-provider: Persistentcookievalidity has changed for tmsessionparameter, starting update")
-		tmsessionparameter.Persistentcookievalidity = d.Get("persistentcookievalidity").(int)
+		tmsessionparameter.Persistentcookievalidity = intPtr(d.Get("persistentcookievalidity").(int))
 		hasChange = true
 	}
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for tmsessionparameter, starting update")
-		tmsessionparameter.Sesstimeout = d.Get("sesstimeout").(int)
+		tmsessionparameter.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sso") {
@@ -191,13 +194,13 @@ func updateTmsessionparameterFunc(d *schema.ResourceData, meta interface{}) erro
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Tmsessionparameter.Type(), &tmsessionparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating tmsessionparameter")
+			return diag.Errorf("Error updating tmsessionparameter")
 		}
 	}
-	return readTmsessionparameterFunc(d, meta)
+	return readTmsessionparameterFunc(ctx, d, meta)
 }
 
-func deleteTmsessionparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTmsessionparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTmsessionparameterFunc")
 	// tmsessionparameter does not support DELETE operation
 	d.SetId("")

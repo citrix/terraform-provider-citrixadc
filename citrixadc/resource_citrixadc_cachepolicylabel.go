@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/cache"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcCachepolicylabel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCachepolicylabelFunc,
-		Read:          readCachepolicylabelFunc,
-		Delete:        deleteCachepolicylabelFunc,
+		CreateContext: createCachepolicylabelFunc,
+		ReadContext:   readCachepolicylabelFunc,
+		DeleteContext: deleteCachepolicylabelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"evaluates": {
@@ -33,7 +35,7 @@ func resourceCitrixAdcCachepolicylabel() *schema.Resource {
 	}
 }
 
-func createCachepolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func createCachepolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCachepolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachepolicylabelName := d.Get("labelname").(string)
@@ -44,20 +46,15 @@ func createCachepolicylabelFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Cachepolicylabel.Type(), cachepolicylabelName, &cachepolicylabel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(cachepolicylabelName)
 
-	err = readCachepolicylabelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cachepolicylabel but we can't read it ?? %s", cachepolicylabelName)
-		return nil
-	}
-	return nil
+	return readCachepolicylabelFunc(ctx, d, meta)
 }
 
-func readCachepolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func readCachepolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCachepolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachepolicylabelName := d.Id()
@@ -75,13 +72,13 @@ func readCachepolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteCachepolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCachepolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCachepolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachepolicylabelName := d.Id()
 	err := client.DeleteResource(service.Cachepolicylabel.Type(), cachepolicylabelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

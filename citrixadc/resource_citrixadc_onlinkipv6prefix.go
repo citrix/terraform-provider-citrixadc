@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcOnlinkipv6prefix() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createOnlinkipv6prefixFunc,
-		Read:          readOnlinkipv6prefixFunc,
-		Update:        updateOnlinkipv6prefixFunc,
-		Delete:        deleteOnlinkipv6prefixFunc,
+		CreateContext: createOnlinkipv6prefixFunc,
+		ReadContext:   readOnlinkipv6prefixFunc,
+		UpdateContext: updateOnlinkipv6prefixFunc,
+		DeleteContext: deleteOnlinkipv6prefixFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ipv6prefix": {
@@ -60,7 +63,7 @@ func resourceCitrixAdcOnlinkipv6prefix() *schema.Resource {
 	}
 }
 
-func createOnlinkipv6prefixFunc(d *schema.ResourceData, meta interface{}) error {
+func createOnlinkipv6prefixFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createOnlinkipv6prefixFunc")
 	client := meta.(*NetScalerNitroClient).client
 	onlinkipv6prefixName := d.Get("ipv6prefix").(string)
@@ -71,26 +74,26 @@ func createOnlinkipv6prefixFunc(d *schema.ResourceData, meta interface{}) error 
 		Depricateprefix:          d.Get("depricateprefix").(string),
 		Ipv6prefix:               d.Get("ipv6prefix").(string),
 		Onlinkprefix:             d.Get("onlinkprefix").(string),
-		Prefixpreferredlifetime:  d.Get("prefixpreferredlifetime").(int),
-		Prefixvalidelifetime:     d.Get("prefixvalidelifetime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("prefixpreferredlifetime"); !raw.IsNull() {
+		onlinkipv6prefix.Prefixpreferredlifetime = intPtr(d.Get("prefixpreferredlifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("prefixvalidelifetime"); !raw.IsNull() {
+		onlinkipv6prefix.Prefixvalidelifetime = intPtr(d.Get("prefixvalidelifetime").(int))
 	}
 
 	_, err := client.AddResource(service.Onlinkipv6prefix.Type(), onlinkipv6prefixName, &onlinkipv6prefix)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(onlinkipv6prefixName)
 
-	err = readOnlinkipv6prefixFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this onlinkipv6prefix but we can't read it ?? %s", onlinkipv6prefixName)
-		return nil
-	}
-	return nil
+	return readOnlinkipv6prefixFunc(ctx, d, meta)
 }
 
-func readOnlinkipv6prefixFunc(d *schema.ResourceData, meta interface{}) error {
+func readOnlinkipv6prefixFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readOnlinkipv6prefixFunc")
 	client := meta.(*NetScalerNitroClient).client
 	onlinkipv6prefixName := d.Id()
@@ -107,14 +110,14 @@ func readOnlinkipv6prefixFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("depricateprefix", data["depricateprefix"])
 	d.Set("ipv6prefix", data["ipv6prefix"])
 	d.Set("onlinkprefix", data["onlinkprefix"])
-	d.Set("prefixpreferredlifetime", data["prefixpreferredlifetime"])
-	d.Set("prefixvalidelifetime", data["prefixvalidelifetime"])
+	setToInt("prefixpreferredlifetime", d, data["prefixpreferredlifetime"])
+	setToInt("prefixvalidelifetime", d, data["prefixvalidelifetime"])
 
 	return nil
 
 }
 
-func updateOnlinkipv6prefixFunc(d *schema.ResourceData, meta interface{}) error {
+func updateOnlinkipv6prefixFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateOnlinkipv6prefixFunc")
 	client := meta.(*NetScalerNitroClient).client
 	onlinkipv6prefixName := d.Get("ipv6prefix").(string)
@@ -145,31 +148,31 @@ func updateOnlinkipv6prefixFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("prefixpreferredlifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefixpreferredlifetime has changed for onlinkipv6prefix %s, starting update", onlinkipv6prefixName)
-		onlinkipv6prefix.Prefixpreferredlifetime = d.Get("prefixpreferredlifetime").(int)
+		onlinkipv6prefix.Prefixpreferredlifetime = intPtr(d.Get("prefixpreferredlifetime").(int))
 		hasChange = true
 	}
 	if d.HasChange("prefixvalidelifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefixvalidelifetime has changed for onlinkipv6prefix %s, starting update", onlinkipv6prefixName)
-		onlinkipv6prefix.Prefixvalidelifetime = d.Get("prefixvalidelifetime").(int)
+		onlinkipv6prefix.Prefixvalidelifetime = intPtr(d.Get("prefixvalidelifetime").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Onlinkipv6prefix.Type(), &onlinkipv6prefix)
 		if err != nil {
-			return fmt.Errorf("Error updating onlinkipv6prefix %s", onlinkipv6prefixName)
+			return diag.Errorf("Error updating onlinkipv6prefix %s", onlinkipv6prefixName)
 		}
 	}
-	return readOnlinkipv6prefixFunc(d, meta)
+	return readOnlinkipv6prefixFunc(ctx, d, meta)
 }
 
-func deleteOnlinkipv6prefixFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteOnlinkipv6prefixFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteOnlinkipv6prefixFunc")
 	client := meta.(*NetScalerNitroClient).client
 	onlinkipv6prefixName := d.Id()
 	err := client.DeleteResource(service.Onlinkipv6prefix.Type(), onlinkipv6prefixName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

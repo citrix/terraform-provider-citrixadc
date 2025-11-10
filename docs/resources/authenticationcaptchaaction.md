@@ -27,6 +27,7 @@ resource "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
 * `sitekey` - (Required) Sitekey to identify gateway fqdn while loading captcha.
 * `serverurl` - (Optional) This is the endpoint at which captcha response is validated.
 * `defaultauthenticationgroup` - (Optional) This is the group that is added to user sessions that match current policy.
+* `scorethreshold` - (Optional) This is the score threshold value for recaptcha v3.
 
 
 ## Attribute Reference

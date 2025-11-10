@@ -23,7 +23,7 @@ type Nd6ravariablesbinding struct {
 	/**
 	* The VLAN number.<br/>Minimum value =  1<br/>Maximum value =  4094
 	*/
-	Vlan int `json:"vlan,omitempty"`
+	Vlan *int `json:"vlan,omitempty"`
 
 
 }

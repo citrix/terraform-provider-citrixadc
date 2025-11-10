@@ -39,7 +39,7 @@ type Vpnnexthopserver struct {
 	/**
 	* Port number of the Citrix Gateway proxy in the second DMZ.
 	*/
-	Nexthopport int `json:"nexthopport,omitempty"`
+	Nexthopport *int `json:"nexthopport,omitempty"`
 	/**
 	* Use of a secure port, such as 443, for the double-hop configuration.
 	*/

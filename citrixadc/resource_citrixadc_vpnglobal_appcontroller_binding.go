@@ -1,10 +1,12 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -12,11 +14,11 @@ import (
 func resourceCitrixAdcVpnglobal_appcontroller_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnglobal_appcontroller_bindingFunc,
-		Read:          readVpnglobal_appcontroller_bindingFunc,
-		Delete:        deleteVpnglobal_appcontroller_bindingFunc,
+		CreateContext: createVpnglobal_appcontroller_bindingFunc,
+		ReadContext:   readVpnglobal_appcontroller_bindingFunc,
+		DeleteContext: deleteVpnglobal_appcontroller_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"appcontroller": {
@@ -35,7 +37,7 @@ func resourceCitrixAdcVpnglobal_appcontroller_binding() *schema.Resource {
 	}
 }
 
-func createVpnglobal_appcontroller_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnglobal_appcontroller_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnglobal_appcontroller_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appcontroller := d.Get("appcontroller").(string)
@@ -46,20 +48,15 @@ func createVpnglobal_appcontroller_bindingFunc(d *schema.ResourceData, meta inte
 
 	_, err := client.AddResource(service.Vpnglobal_appcontroller_binding.Type(), appcontroller, &vpnglobal_appcontroller_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appcontroller)
 
-	err = readVpnglobal_appcontroller_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnglobal_appcontroller_binding but we can't read it ?? %s", appcontroller)
-		return nil
-	}
-	return nil
+	return readVpnglobal_appcontroller_bindingFunc(ctx, d, meta)
 }
 
-func readVpnglobal_appcontroller_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnglobal_appcontroller_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnglobal_appcontroller_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appcontroller, _ := url.QueryUnescape(d.Id())
@@ -74,7 +71,7 @@ func readVpnglobal_appcontroller_bindingFunc(d *schema.ResourceData, meta interf
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -112,7 +109,7 @@ func readVpnglobal_appcontroller_bindingFunc(d *schema.ResourceData, meta interf
 
 }
 
-func deleteVpnglobal_appcontroller_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnglobal_appcontroller_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnglobal_appcontroller_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -123,7 +120,7 @@ func deleteVpnglobal_appcontroller_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.DeleteResourceWithArgsMap(service.Vpnglobal_appcontroller_binding.Type(), "", argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

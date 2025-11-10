@@ -1,27 +1,36 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcInat() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createInatFunc,
-		Read:          readInatFunc,
-		Update:        updateInatFunc,
-		Delete:        deleteInatFunc,
+		CreateContext: createInatFunc,
+		ReadContext:   readInatFunc,
+		UpdateContext: updateInatFunc,
+		DeleteContext: deleteInatFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"connfailover": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"ftp": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -88,7 +97,7 @@ func resourceCitrixAdcInat() *schema.Resource {
 	}
 }
 
-func createInatFunc(d *schema.ResourceData, meta interface{}) error {
+func createInatFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createInatFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var inatName string
@@ -106,30 +115,29 @@ func createInatFunc(d *schema.ResourceData, meta interface{}) error {
 		Proxyip:      d.Get("proxyip").(string),
 		Publicip:     d.Get("publicip").(string),
 		Tcpproxy:     d.Get("tcpproxy").(string),
-		Td:           d.Get("td").(int),
 		Tftp:         d.Get("tftp").(string),
 		Useproxyport: d.Get("useproxyport").(string),
 		Usip:         d.Get("usip").(string),
 		Usnip:        d.Get("usnip").(string),
+		Connfailover: d.Get("connfailover").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		inat.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Inat.Type(), inatName, &inat)
 	if err != nil {
 		fmt.Printf("[DEBUG] netscaler-provider add inat failed, name=%s", inatName)
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(inatName)
 
-	err = readInatFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this inat but we can't read it ?? %s", inatName)
-		return nil
-	}
-	return nil
+	return readInatFunc(ctx, d, meta)
 }
 
-func readInatFunc(d *schema.ResourceData, meta interface{}) error {
+func readInatFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readInatFunc")
 	client := meta.(*NetScalerNitroClient).client
 	inatName := d.Id()
@@ -141,6 +149,7 @@ func readInatFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("connfailover", data["connfailover"])
 	d.Set("ftp", data["ftp"])
 	d.Set("mode", data["mode"])
 	d.Set("name", data["name"])
@@ -148,7 +157,7 @@ func readInatFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("proxyip", data["proxyip"])
 	d.Set("publicip", data["publicip"])
 	d.Set("tcpproxy", data["tcpproxy"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("tftp", data["tftp"])
 	d.Set("useproxyport", data["useproxyport"])
 	d.Set("usip", data["usip"])
@@ -158,7 +167,7 @@ func readInatFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateInatFunc(d *schema.ResourceData, meta interface{}) error {
+func updateInatFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In updateInatFunc")
 	client := meta.(*NetScalerNitroClient).client
 	inatName := d.Get("name").(string)
@@ -167,6 +176,11 @@ func updateInatFunc(d *schema.ResourceData, meta interface{}) error {
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("connfailover") {
+		log.Printf("[DEBUG]  citrixadc-provider: Connfailover has changed for inat, starting update")
+		inat.Connfailover = d.Get("connfailover").(string)
+		hasChange = true
+	}
 	if d.HasChange("ftp") {
 		log.Printf("[DEBUG]  netscaler-provider: Ftp has changed for inat %s, starting update", inatName)
 		inat.Ftp = d.Get("ftp").(string)
@@ -199,7 +213,7 @@ func updateInatFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for inat %s, starting update", inatName)
-		inat.Td = d.Get("td").(int)
+		inat.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("tftp") {
@@ -226,19 +240,19 @@ func updateInatFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Inat.Type(), inatName, &inat)
 		if err != nil {
-			return fmt.Errorf("Error updating inat %s", inatName)
+			return diag.Errorf("Error updating inat %s", inatName)
 		}
 	}
-	return readInatFunc(d, meta)
+	return readInatFunc(ctx, d, meta)
 }
 
-func deleteInatFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteInatFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteInatFunc")
 	client := meta.(*NetScalerNitroClient).client
 	inatName := d.Id()
 	err := client.DeleteResource(service.Inat.Type(), inatName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

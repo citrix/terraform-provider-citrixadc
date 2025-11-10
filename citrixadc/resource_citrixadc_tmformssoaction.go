@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/tm"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcTmformssoaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTmformssoactionFunc,
-		Read:          readTmformssoactionFunc,
-		Update:        updateTmformssoactionFunc,
-		Delete:        deleteTmformssoactionFunc,
+		CreateContext: createTmformssoactionFunc,
+		ReadContext:   readTmformssoactionFunc,
+		UpdateContext: updateTmformssoactionFunc,
+		DeleteContext: deleteTmformssoactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"actionurl": {
@@ -66,7 +69,7 @@ func resourceCitrixAdcTmformssoaction() *schema.Resource {
 	}
 }
 
-func createTmformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createTmformssoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTmformssoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmformssoactionName := d.Get("name").(string)
@@ -77,28 +80,26 @@ func createTmformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Namevaluepair:  d.Get("namevaluepair").(string),
 		Nvtype:         d.Get("nvtype").(string),
 		Passwdfield:    d.Get("passwdfield").(string),
-		Responsesize:   d.Get("responsesize").(int),
 		Ssosuccessrule: d.Get("ssosuccessrule").(string),
 		Submitmethod:   d.Get("submitmethod").(string),
 		Userfield:      d.Get("userfield").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("responsesize"); !raw.IsNull() {
+		tmformssoaction.Responsesize = intPtr(d.Get("responsesize").(int))
+	}
+
 	_, err := client.AddResource(service.Tmformssoaction.Type(), tmformssoactionName, &tmformssoaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(tmformssoactionName)
 
-	err = readTmformssoactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this tmformssoaction but we can't read it ?? %s", tmformssoactionName)
-		return nil
-	}
-	return nil
+	return readTmformssoactionFunc(ctx, d, meta)
 }
 
-func readTmformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readTmformssoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTmformssoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmformssoactionName := d.Id()
@@ -114,7 +115,7 @@ func readTmformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("namevaluepair", data["namevaluepair"])
 	d.Set("nvtype", data["nvtype"])
 	d.Set("passwdfield", data["passwdfield"])
-	d.Set("responsesize", data["responsesize"])
+	setToInt("responsesize", d, data["responsesize"])
 	d.Set("ssosuccessrule", data["ssosuccessrule"])
 	d.Set("submitmethod", data["submitmethod"])
 	d.Set("userfield", data["userfield"])
@@ -123,7 +124,7 @@ func readTmformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateTmformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateTmformssoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateTmformssoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmformssoactionName := d.Get("name").(string)
@@ -154,7 +155,7 @@ func updateTmformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("responsesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Responsesize has changed for tmformssoaction %s, starting update", tmformssoactionName)
-		tmformssoaction.Responsesize = d.Get("responsesize").(int)
+		tmformssoaction.Responsesize = intPtr(d.Get("responsesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("ssosuccessrule") {
@@ -176,19 +177,19 @@ func updateTmformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Tmformssoaction.Type(), &tmformssoaction)
 		if err != nil {
-			return fmt.Errorf("Error updating tmformssoaction %s", tmformssoactionName)
+			return diag.Errorf("Error updating tmformssoaction %s", tmformssoactionName)
 		}
 	}
-	return readTmformssoactionFunc(d, meta)
+	return readTmformssoactionFunc(ctx, d, meta)
 }
 
-func deleteTmformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTmformssoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTmformssoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmformssoactionName := d.Id()
 	err := client.DeleteResource(service.Tmformssoaction.Type(), tmformssoactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

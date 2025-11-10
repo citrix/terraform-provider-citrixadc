@@ -1,12 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -14,11 +15,11 @@ import (
 func resourceCitrixAdcSslvserver_sslpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslvserver_sslpolicy_bindingFunc,
-		Read:          readSslvserver_sslpolicy_bindingFunc,
-		Delete:        deleteSslvserver_sslpolicy_bindingFunc,
+		CreateContext: createSslvserver_sslpolicy_bindingFunc,
+		ReadContext:   readSslvserver_sslpolicy_bindingFunc,
+		DeleteContext: deleteSslvserver_sslpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"gotopriorityexpression": {
@@ -71,7 +72,7 @@ func resourceCitrixAdcSslvserver_sslpolicy_binding() *schema.Resource {
 	}
 }
 
-func createSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslvserver_sslpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslvserver_sslpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vservername := d.Get("vservername")
@@ -93,20 +94,15 @@ func createSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.UpdateUnnamedResource(service.Sslvserver_sslpolicy_binding.Type(), &sslvserver_sslpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSslvserver_sslpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslvserver_sslpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSslvserver_sslpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslvserver_sslpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslvserver_sslpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -114,11 +110,11 @@ func readSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface
 	idSlice := strings.Split(bindingId, ",")
 
 	if len(idSlice) < 2 {
-		return fmt.Errorf("Cannot deduce policyname from id string")
+		return diag.Errorf("Cannot deduce policyname from id string")
 	}
 
 	if len(idSlice) > 2 {
-		return fmt.Errorf("Too many separators \",\" in id string")
+		return diag.Errorf("Too many separators \",\" in id string")
 	}
 
 	vservername := idSlice[0]
@@ -135,7 +131,7 @@ func readSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -166,7 +162,6 @@ func readSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface
 
 	data := dataArr[foundIndex]
 
-	d.Set("name", data["name"])
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("invoke", data["invoke"])
 	d.Set("labelname", data["labelname"])
@@ -180,7 +175,7 @@ func readSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deleteSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslvserver_sslpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslvserver_sslpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -202,7 +197,7 @@ func deleteSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgs(service.Sslvserver_sslpolicy_binding.Type(), vservername, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

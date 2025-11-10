@@ -31,11 +31,11 @@ type Ssldtlsprofile struct {
 	/**
 	* Maximum size of records that can be sent if PMTU is disabled.
 	*/
-	Maxrecordsize int `json:"maxrecordsize,omitempty"`
+	Maxrecordsize *int `json:"maxrecordsize,omitempty"`
 	/**
 	* Wait for the specified time, in seconds, before resending the request.
 	*/
-	Maxretrytime int `json:"maxretrytime,omitempty"`
+	Maxretrytime *int `json:"maxretrytime,omitempty"`
 	/**
 	* Send a Hello Verify request to validate the client.
 	*/
@@ -47,19 +47,19 @@ type Ssldtlsprofile struct {
 	/**
 	* Maximum number of packets to reassemble. This value helps protect against a fragmented packet attack.
 	*/
-	Maxpacketsize int `json:"maxpacketsize,omitempty"`
+	Maxpacketsize *int `json:"maxpacketsize,omitempty"`
 	/**
 	* Maximum number of datagrams that can be queued at DTLS layer for processing
 	*/
-	Maxholdqlen int `json:"maxholdqlen,omitempty"`
+	Maxholdqlen *int `json:"maxholdqlen,omitempty"`
 	/**
 	* Maximum number of bad MAC errors to ignore for a connection prior disconnect. Disabling parameter terminateSession terminates session immediately when bad MAC is detected in the connection.
 	*/
-	Maxbadmacignorecount int `json:"maxbadmacignorecount,omitempty"`
+	Maxbadmacignorecount *int `json:"maxbadmacignorecount,omitempty"`
 	/**
 	* Initial time out value to retransmit the last flight sent from the NetScaler.
 	*/
-	Initialretrytimeout int `json:"initialretrytimeout,omitempty"`
+	Initialretrytimeout *int `json:"initialretrytimeout,omitempty"`
 
 	//------- Read only Parameter ---------;
 

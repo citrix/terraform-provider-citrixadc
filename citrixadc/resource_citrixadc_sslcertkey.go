@@ -1,28 +1,42 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"log"
+	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslcertkey() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslcertkeyFunc,
-		Read:          readSslcertkeyFunc,
-		Update:        updateSslcertkeyFunc,
-		Delete:        deleteSslcertkeyFunc,
+		CreateContext: createSslcertkeyFunc,
+		ReadContext:   readSslcertkeyFunc,
+		UpdateContext: updateSslcertkeyFunc,
+		DeleteContext: deleteSslcertkeyFunc,
 		CustomizeDiff: customizeDiff,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"deletefromdevice": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"deletecertkeyfilesonremoval": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"bundle": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -100,7 +114,7 @@ func resourceCitrixAdcSslcertkey() *schema.Resource {
 	}
 }
 
-func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslcertkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In createSslcertkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslcertkeyName string
@@ -122,16 +136,20 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		// This is always set to false on creation which effectively excludes it from the request JSON
 		// Nodomaincheck is not an object attribute but a flag for the change operation
 		// of the resource
-		Nodomaincheck:      false,
-		Notificationperiod: d.Get("notificationperiod").(int),
-		Ocspstaplingcache:  d.Get("ocspstaplingcache").(bool),
-		Passplain:          d.Get("passplain").(string),
-		Password:           d.Get("password").(bool),
+		Nodomaincheck:               false,
+		Ocspstaplingcache:           d.Get("ocspstaplingcache").(bool),
+		Passplain:                   d.Get("passplain").(string),
+		Password:                    d.Get("password").(bool),
+		Deletecertkeyfilesonremoval: d.Get("deletecertkeyfilesonremoval").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("notificationperiod"); !raw.IsNull() {
+		sslcertkey.Notificationperiod = intPtr(d.Get("notificationperiod").(int))
 	}
 
 	_, err := client.AddResource(service.Sslcertkey.Type(), sslcertkeyName, &sslcertkey)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslcertkeyName)
@@ -139,23 +157,23 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("linkcertkeyname"); ok {
 		if err := handleLinkedCertificate(d, client); err != nil {
 			log.Printf("Error linking certificate during creation\n")
-			err2 := deleteSslcertkeyFunc(d, meta)
-			if err2 != nil {
-				return fmt.Errorf("Delete error:%s while handling linked certificate error: %s", err2.Error(), err.Error())
+			err2 := deleteSslcertkeyFunc(ctx, d, meta)
+			if err2.HasError() {
+
+				for _, d := range err2 {
+					if d.Severity == diag.Error {
+						return diag.Errorf("Delete error:%s while handling linked certificate error: %s", d.Summary, err.Error())
+					}
+				}
 			}
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	err = readSslcertkeyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslcertkey but we can't read it ?? %s", sslcertkeyName)
-		return nil
-	}
-	return nil
+	return readSslcertkeyFunc(ctx, d, meta)
 }
 
-func readSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslcertkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readSslcertkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcertkeyName := d.Id()
@@ -167,6 +185,7 @@ func readSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("certkey", data["certkey"])
+	d.Set("deletecertkeyfilesonremoval", data["deletecertkeyfilesonremoval"])
 	d.Set("bundle", data["bundle"])
 	d.Set("cert", data["cert"])
 	d.Set("certkey", data["certkey"])
@@ -177,7 +196,7 @@ func readSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key", data["key"])
 	d.Set("linkcertkeyname", data["linkcertkeyname"])
 	d.Set("nodomaincheck", data["nodomaincheck"])
-	// d.Set("notificationperiod", data["notificationperiod"])
+	// setToInt("notificationperiod", d, data["notificationperiod"])
 	d.Set("ocspstaplingcache", data["ocspstaplingcache"])
 	// `passplain` and `password` are not returned by NITRO request
 	// commenting out to avoid perpetual divergence between local and remote state
@@ -188,7 +207,7 @@ func readSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslcertkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In updateSslcertkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcertkeyName := d.Get("certkey").(string)
@@ -204,6 +223,11 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	hasUpdate := false //depending on which field changed, we have to use Update or Change API
 	hasChange := false
+	if d.HasChange("deletecertkeyfilesonremoval") {
+		log.Printf("[DEBUG]  citrixadc-provider: Deletecertkeyfilesonremoval has changed for sslcertkey, starting update")
+		sslcertkeyUpdate.Deletecertkeyfilesonremoval = d.Get("deletecertkeyfilesonremoval").(string)
+		hasChange = true
+	}
 	hasClear := false
 	if d.HasChange("expirymonitor") {
 		log.Printf("[DEBUG] netscaler-provider:  Expirymonitor has changed for sslcertkey %s, starting update", sslcertkeyName)
@@ -212,7 +236,7 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("notificationperiod") {
 		log.Printf("[DEBUG] netscaler-provider:  Notificationperiod has changed for sslcertkey %s, starting update", sslcertkeyName)
-		sslcertkeyUpdate.Notificationperiod = d.Get("notificationperiod").(int)
+		sslcertkeyUpdate.Notificationperiod = intPtr(d.Get("notificationperiod").(int))
 		hasUpdate = true
 	}
 	if d.HasChange("cert") {
@@ -255,7 +279,7 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		sslcertkeyUpdate.Expirymonitor = d.Get("expirymonitor").(string) //always expected by NITRO API
 		_, err := client.UpdateResource(service.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyUpdate)
 		if err != nil {
-			return fmt.Errorf("Error updating sslcertkey %s", sslcertkeyName)
+			return diag.Errorf("Error updating sslcertkey %s", sslcertkeyName)
 		}
 	}
 	// nodomaincheck is a flag for the change operation
@@ -265,7 +289,7 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := client.ChangeResource(service.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyChange)
 		if err != nil {
-			return fmt.Errorf("Error changing sslcertkey %s", sslcertkeyName)
+			return diag.Errorf("Error changing sslcertkey %s", sslcertkeyName)
 		}
 	}
 
@@ -273,16 +297,16 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 		err := client.ActOnResource(service.Sslcertkey.Type(), &sslcertkeyClear, "clear")
 		if err != nil {
-			return fmt.Errorf("Error clearing sslcertkey %s", sslcertkeyName)
+			return diag.Errorf("Error clearing sslcertkey %s", sslcertkeyName)
 		}
 	}
 
 	if err := handleLinkedCertificate(d, client); err != nil {
 		log.Printf("Error linking certificate during update\n")
-		return err
+		return diag.FromErr(err)
 	}
 
-	return readSslcertkeyFunc(d, meta)
+	return readSslcertkeyFunc(ctx, d, meta)
 }
 
 func handleLinkedCertificate(d *schema.ResourceData, client *service.NitroClient) error {
@@ -356,17 +380,26 @@ func unlinkCertificate(d *schema.ResourceData, client *service.NitroClient) erro
 	return nil
 }
 
-func deleteSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslcertkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In deleteSslcertkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	if err := unlinkCertificate(d, client); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	sslcertkeyName := d.Id()
-	err := client.DeleteResource(service.Sslcertkey.Type(), sslcertkeyName)
+
+	args := make([]string, 0)
+	if val, ok := d.GetOk("deletefromdevice"); ok {
+		args = append(args, fmt.Sprintf("deletefromdevice:%s", strconv.FormatBool(val.(bool))))
+	}
+	if val, ok := d.GetOk("deletecertkeyfilesonremoval"); ok {
+		args = append(args, fmt.Sprintf("deletecertkeyfilesonremoval:%s", val.(string)))
+	}
+
+	err := client.DeleteResourceWithArgs(service.Sslcertkey.Type(), sslcertkeyName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -374,7 +407,7 @@ func deleteSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func customizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
+func customizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In customizeDiff")
 	o := diff.GetChangedKeysPrefix("")
 

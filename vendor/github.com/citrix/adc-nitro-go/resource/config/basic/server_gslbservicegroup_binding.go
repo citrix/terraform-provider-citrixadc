@@ -35,7 +35,7 @@ type Servergslbservicegroupbinding struct {
 	/**
 	* The port number to be used for the bound service.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* A positive integer to identify the service. Used when the persistency type is set to Custom Server ID.
 	*/
@@ -51,11 +51,11 @@ type Servergslbservicegroupbinding struct {
 	/**
 	* port of the service.
 	*/
-	Dupport int `json:"dup_port,omitempty"`
+	Dupport *int `json:"dup_port,omitempty"`
 	/**
 	* service flags to denote its a db enabled.
 	*/
-	Svrcfgflags int `json:"svrcfgflags,omitempty"`
+	Svrcfgflags *int `json:"svrcfgflags,omitempty"`
 	/**
 	* This field has been intorduced to show the dbs services ip
 	*/
@@ -63,28 +63,28 @@ type Servergslbservicegroupbinding struct {
 	/**
 	* Minimum sum of weights of the monitors that are bound to this service. Used to determine whether to mark a service as UP or DOWN.
 	*/
-	Monthreshold int `json:"monthreshold,omitempty"`
+	Monthreshold *int `json:"monthreshold,omitempty"`
 	/**
 	* Maximum number of simultaneous open connections for the service group.
 	*/
-	Maxclient int `json:"maxclient,omitempty"`
+	Maxclient *int `json:"maxclient,omitempty"`
 	/**
 	* Maximum number of requests that can be sent on a persistent connection to the service group.
 		Note: Connection requests beyond this value are rejected.
 	*/
-	Maxreq int `json:"maxreq,omitempty"`
+	Maxreq *int `json:"maxreq,omitempty"`
 	/**
 	* Maximum bandwidth, in Kbps, allocated for all the services in the service group.
 	*/
-	Maxbandwidth int `json:"maxbandwidth,omitempty"`
+	Maxbandwidth *int `json:"maxbandwidth,omitempty"`
 	/**
 	* Time, in seconds, after which to terminate an idle client connection.
 	*/
-	Clttimeout int `json:"clttimeout,omitempty"`
+	Clttimeout *int `json:"clttimeout,omitempty"`
 	/**
 	* Time, in seconds, after which to terminate an idle server connection.
 	*/
-	Svrtimeout int `json:"svrtimeout,omitempty"`
+	Svrtimeout *int `json:"svrtimeout,omitempty"`
 	/**
 	* Name of the HTTP header whose value must be set to the IP address of the client. Used with the Client IP parameter. If client IP insertion is enabled, and the client IP header is not specified, the value of Client IP Header parameter or the value set by the set ns config command is used as client's IP header name.
 	*/
@@ -104,7 +104,7 @@ type Servergslbservicegroupbinding struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Boundtd int `json:"boundtd,omitempty"`
+	Boundtd *int `json:"boundtd,omitempty"`
 	/**
 	* Name of the server for which to display parameters.
 	*/

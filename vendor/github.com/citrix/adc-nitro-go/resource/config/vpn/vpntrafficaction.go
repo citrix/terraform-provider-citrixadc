@@ -33,7 +33,7 @@ type Vpntrafficaction struct {
 	/**
 	* Maximum amount of time, in minutes, a user can stay logged on to the web application.
 	*/
-	Apptimeout int `json:"apptimeout,omitempty"`
+	Apptimeout *int `json:"apptimeout,omitempty"`
 	/**
 	* Provide single sign-on to the web application.
 		NOTE : Authentication mechanisms like Basic-authentication  require the user credentials to be sent in plaintext which is not secure if the server is running on HTTP (instead of HTTPS).

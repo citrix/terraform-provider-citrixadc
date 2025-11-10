@@ -35,15 +35,15 @@ type Pcpprofile struct {
 	/**
 	* Integer value that identify the minimum mapping lifetime (in seconds) for a pcp profile. default(120s)
 	*/
-	Minmaplife int `json:"minmaplife,omitempty"`
+	Minmaplife *int `json:"minmaplife,omitempty"`
 	/**
 	* Integer value that identify the maximum mapping lifetime (in seconds) for a pcp profile. default(86400s = 24Hours).
 	*/
-	Maxmaplife int `json:"maxmaplife,omitempty"`
+	Maxmaplife *int `json:"maxmaplife,omitempty"`
 	/**
 	* Integer value that identify the number announce message to be send.
 	*/
-	Announcemulticount int `json:"announcemulticount"` // Zero is a valid value
+	Announcemulticount *int `json:"announcemulticount"` // Zero is a valid value
 	/**
 	* This argument is for enabling/disabling the THIRD PARTY opcode of current PCP Profile
 	*/

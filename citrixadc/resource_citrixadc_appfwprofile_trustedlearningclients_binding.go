@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAppfwprofile_trustedlearningclients_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_trustedlearningclients_bindingFunc,
-		Read:          readAppfwprofile_trustedlearningclients_bindingFunc,
-		Delete:        deleteAppfwprofile_trustedlearningclients_bindingFunc,
+		CreateContext: createAppfwprofile_trustedlearningclients_bindingFunc,
+		ReadContext:   readAppfwprofile_trustedlearningclients_bindingFunc,
+		DeleteContext: deleteAppfwprofile_trustedlearningclients_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,7 +75,7 @@ func resourceCitrixAdcAppfwprofile_trustedlearningclients_binding() *schema.Reso
 	}
 }
 
-func createAppfwprofile_trustedlearningclients_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_trustedlearningclients_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_trustedlearningclients_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -92,20 +94,15 @@ func createAppfwprofile_trustedlearningclients_bindingFunc(d *schema.ResourceDat
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_trustedlearningclients_binding.Type(), &appfwprofile_trustedlearningclients_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_trustedlearningclients_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_trustedlearningclients_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_trustedlearningclients_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_trustedlearningclients_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_trustedlearningclients_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_trustedlearningclients_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -126,7 +123,7 @@ func readAppfwprofile_trustedlearningclients_bindingFunc(d *schema.ResourceData,
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -170,7 +167,7 @@ func readAppfwprofile_trustedlearningclients_bindingFunc(d *schema.ResourceData,
 
 }
 
-func deleteAppfwprofile_trustedlearningclients_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_trustedlearningclients_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_trustedlearningclients_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -188,7 +185,7 @@ func deleteAppfwprofile_trustedlearningclients_bindingFunc(d *schema.ResourceDat
 
 	err := client.DeleteResourceWithArgs(service.Appfwprofile_trustedlearningclients_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -37,6 +37,9 @@ const testAccVpnvserver_add = `
 		downstateflush           = "DISABLED"
 		listenpolicy             = "NONE"
 		tcpprofilename           = "nstcp_default_XA_XD_profile"
+		secureprivateaccess		= "ENABLED"
+		accessrestrictedpageredirect = "NS"
+		deviceposture 		  = "DISABLED"
 	}
 `
 
@@ -54,14 +57,16 @@ const testAccVpnvserver_update = `
 		downstateflush           = "ENABLED"
 		listenpolicy             = "NONE"
 		tcpprofilename           = "nstcp_default_XA_XD_profile"
+		secureprivateaccess		= "DISABLED"
+		deviceposture 		  = "ENABLED"
 	}
 `
 
 func TestAccVpnvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpnvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckVpnvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnvserver_add,
@@ -71,6 +76,9 @@ func TestAccVpnvserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "servicetype", "SSL"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "ipv46", "3.3.3.3"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "downstateflush", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "secureprivateaccess", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "deviceposture", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "accessrestrictedpageredirect", "NS"),
 				),
 			},
 			{
@@ -81,6 +89,8 @@ func TestAccVpnvserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "servicetype", "SSL"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "ipv46", "3.3.3.3"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "downstateflush", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "secureprivateaccess", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "deviceposture", "ENABLED"),
 				),
 			},
 		},
@@ -106,8 +116,12 @@ func testAccCheckVpnvserverExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Vpnvserver.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vpnvserver.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -122,7 +136,11 @@ func testAccCheckVpnvserverExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckVpnvserverDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_vpnvserver" {
@@ -133,7 +151,7 @@ func testAccCheckVpnvserverDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Vpnvserver.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Vpnvserver.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("vpnvserver %s still exists", rs.Primary.ID)
 		}

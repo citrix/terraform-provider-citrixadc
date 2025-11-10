@@ -1,27 +1,40 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcGslbparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbparameterFunc,
-		Read:          readGslbparameterFunc,
-		Update:        updateGslbparameterFunc,
-		Delete:        deleteGslbparameterFunc,
+		CreateContext: createGslbparameterFunc,
+		ReadContext:   readGslbparameterFunc,
+		UpdateContext: updateGslbparameterFunc,
+		DeleteContext: deleteGslbparameterFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"undefaction": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"gslbsyncsaveconfigcommand": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"automaticconfigsync": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -96,43 +109,55 @@ func resourceCitrixAdcGslbparameter() *schema.Resource {
 		},
 	}
 }
-func createGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbparameterName := resource.PrefixedUniqueId("tf-gslbparameter-")
 
 	gslbparameter := gslb.Gslbparameter{
-		Automaticconfigsync:   d.Get("automaticconfigsync").(string),
-		Dropldnsreq:           d.Get("dropldnsreq").(string),
-		Gslbconfigsyncmonitor: d.Get("gslbconfigsyncmonitor").(string),
-		Gslbsvcstatedelaytime: d.Get("gslbsvcstatedelaytime").(int),
-		Gslbsyncinterval:      d.Get("gslbsyncinterval").(int),
-		Gslbsynclocfiles:      d.Get("gslbsynclocfiles").(string),
-		Gslbsyncmode:          d.Get("gslbsyncmode").(string),
-		Ldnsentrytimeout:      d.Get("ldnsentrytimeout").(int),
-		Ldnsmask:              d.Get("ldnsmask").(string),
-		Ldnsprobeorder:        toStringList(d.Get("ldnsprobeorder").([]interface{})),
-		Mepkeepalivetimeout:   d.Get("mepkeepalivetimeout").(int),
-		Rtttolerance:          d.Get("rtttolerance").(int),
-		Svcstatelearningtime:  d.Get("svcstatelearningtime").(int),
-		V6ldnsmasklen:         d.Get("v6ldnsmasklen").(int),
+		Automaticconfigsync:       d.Get("automaticconfigsync").(string),
+		Dropldnsreq:               d.Get("dropldnsreq").(string),
+		Gslbconfigsyncmonitor:     d.Get("gslbconfigsyncmonitor").(string),
+		Gslbsynclocfiles:          d.Get("gslbsynclocfiles").(string),
+		Gslbsyncmode:              d.Get("gslbsyncmode").(string),
+		Ldnsmask:                  d.Get("ldnsmask").(string),
+		Ldnsprobeorder:            toStringList(d.Get("ldnsprobeorder").([]interface{})),
+		Gslbsyncsaveconfigcommand: d.Get("gslbsyncsaveconfigcommand").(string),
+		Undefaction:               d.Get("undefaction").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("gslbsvcstatedelaytime"); !raw.IsNull() {
+		gslbparameter.Gslbsvcstatedelaytime = intPtr(d.Get("gslbsvcstatedelaytime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("gslbsyncinterval"); !raw.IsNull() {
+		gslbparameter.Gslbsyncinterval = intPtr(d.Get("gslbsyncinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ldnsentrytimeout"); !raw.IsNull() {
+		gslbparameter.Ldnsentrytimeout = intPtr(d.Get("ldnsentrytimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mepkeepalivetimeout"); !raw.IsNull() {
+		gslbparameter.Mepkeepalivetimeout = intPtr(d.Get("mepkeepalivetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rtttolerance"); !raw.IsNull() {
+		gslbparameter.Rtttolerance = intPtr(d.Get("rtttolerance").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("svcstatelearningtime"); !raw.IsNull() {
+		gslbparameter.Svcstatelearningtime = intPtr(d.Get("svcstatelearningtime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("v6ldnsmasklen"); !raw.IsNull() {
+		gslbparameter.V6ldnsmasklen = intPtr(d.Get("v6ldnsmasklen").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Gslbparameter.Type(), &gslbparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(gslbparameterName)
-	err = readGslbparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just updated this gslbparameter but we can't read it ?? ")
-		return nil
-	}
-	return nil
+	return readGslbparameterFunc(ctx, d, meta)
 }
 
-func readGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading gslbparameter state ")
@@ -143,30 +168,42 @@ func readGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("automaticconfigsync", data["automaticconfigsync"])
+	d.Set("undefaction", data["undefaction"])
+	d.Set("gslbsyncsaveconfigcommand", data["gslbsyncsaveconfigcommand"])
 	d.Set("dropldnsreq", data["dropldnsreq"])
 	d.Set("gslbconfigsyncmonitor", data["gslbconfigsyncmonitor"])
-	d.Set("gslbsvcstatedelaytime", data["gslbsvcstatedelaytime"])
-	d.Set("gslbsyncinterval", data["gslbsyncinterval"])
+	setToInt("gslbsvcstatedelaytime", d, data["gslbsvcstatedelaytime"])
+	setToInt("gslbsyncinterval", d, data["gslbsyncinterval"])
 	d.Set("gslbsynclocfiles", data["gslbsynclocfiles"])
 	d.Set("gslbsyncmode", data["gslbsyncmode"])
-	d.Set("ldnsentrytimeout", data["ldnsentrytimeout"])
+	setToInt("ldnsentrytimeout", d, data["ldnsentrytimeout"])
 	d.Set("ldnsmask", data["ldnsmask"])
 	d.Set("ldnsprobeorder", data["ldnsprobeorder"])
-	d.Set("mepkeepalivetimeout", data["mepkeepalivetimeout"])
-	d.Set("rtttolerance", data["rtttolerance"])
-	d.Set("svcstatelearningtime", data["svcstatelearningtime"])
-	d.Set("v6ldnsmasklen", data["v6ldnsmasklen"])
+	setToInt("mepkeepalivetimeout", d, data["mepkeepalivetimeout"])
+	setToInt("rtttolerance", d, data["rtttolerance"])
+	setToInt("svcstatelearningtime", d, data["svcstatelearningtime"])
+	setToInt("v6ldnsmasklen", d, data["v6ldnsmasklen"])
 
 	return nil
 
 }
 
-func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	gslbparameter := gslb.Gslbparameter{}
 	hasChange := false
+	if d.HasChange("undefaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: Undefaction has changed for gslbparameter, starting update")
+		gslbparameter.Undefaction = d.Get("undefaction").(string)
+		hasChange = true
+	}
+	if d.HasChange("gslbsyncsaveconfigcommand") {
+		log.Printf("[DEBUG]  citrixadc-provider: Gslbsyncsaveconfigcommand has changed for gslbparameter, starting update")
+		gslbparameter.Gslbsyncsaveconfigcommand = d.Get("gslbsyncsaveconfigcommand").(string)
+		hasChange = true
+	}
 	if d.HasChange("automaticconfigsync") {
 		log.Printf("[DEBUG]  citrixadc-provider: Automaticconfigsync has changed for gslbparameter, starting update")
 		gslbparameter.Automaticconfigsync = d.Get("automaticconfigsync").(string)
@@ -184,12 +221,12 @@ func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("gslbsvcstatedelaytime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Gslbsvcstatedelaytime has changed for gslbparameter, starting update")
-		gslbparameter.Gslbsvcstatedelaytime = d.Get("gslbsvcstatedelaytime").(int)
+		gslbparameter.Gslbsvcstatedelaytime = intPtr(d.Get("gslbsvcstatedelaytime").(int))
 		hasChange = true
 	}
 	if d.HasChange("gslbsyncinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Gslbsyncinterval has changed for gslbparameter, starting update")
-		gslbparameter.Gslbsyncinterval = d.Get("gslbsyncinterval").(int)
+		gslbparameter.Gslbsyncinterval = intPtr(d.Get("gslbsyncinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("gslbsynclocfiles") {
@@ -204,7 +241,7 @@ func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ldnsentrytimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ldnsentrytimeout has changed for gslbparameter, starting update")
-		gslbparameter.Ldnsentrytimeout = d.Get("ldnsentrytimeout").(int)
+		gslbparameter.Ldnsentrytimeout = intPtr(d.Get("ldnsentrytimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("ldnsmask") {
@@ -219,35 +256,35 @@ func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("mepkeepalivetimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mepkeepalivetimeout has changed for gslbparameter, starting update")
-		gslbparameter.Mepkeepalivetimeout = d.Get("mepkeepalivetimeout").(int)
+		gslbparameter.Mepkeepalivetimeout = intPtr(d.Get("mepkeepalivetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("rtttolerance") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rtttolerance has changed for gslbparameter, starting update")
-		gslbparameter.Rtttolerance = d.Get("rtttolerance").(int)
+		gslbparameter.Rtttolerance = intPtr(d.Get("rtttolerance").(int))
 		hasChange = true
 	}
 	if d.HasChange("svcstatelearningtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Svcstatelearningtime has changed for gslbparameter, starting update")
-		gslbparameter.Svcstatelearningtime = d.Get("svcstatelearningtime").(int)
+		gslbparameter.Svcstatelearningtime = intPtr(d.Get("svcstatelearningtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("v6ldnsmasklen") {
 		log.Printf("[DEBUG]  citrixadc-provider: V6ldnsmasklen has changed for gslbparameter, starting update")
-		gslbparameter.V6ldnsmasklen = d.Get("v6ldnsmasklen").(int)
+		gslbparameter.V6ldnsmasklen = intPtr(d.Get("v6ldnsmasklen").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Gslbparameter.Type(), &gslbparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating gslbparameter: %s", err.Error())
+			return diag.Errorf("Error updating gslbparameter: %s", err.Error())
 		}
 	}
-	return readGslbparameterFunc(d, meta)
+	return readGslbparameterFunc(ctx, d, meta)
 }
 
-func deleteGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteGslbparameterFunc")
 	// gslbparameter does not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

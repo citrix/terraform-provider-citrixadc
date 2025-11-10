@@ -51,6 +51,9 @@ resource "citrixadc_botprofile_ratelimit_binding" "tf_binding" {
 * `logmessage` - (Optional) Message to be logged for this binding.
 * `rate` - (Optional) Maximum number of requests that are allowed in this session in the given period time.
 * `timeslice` - (Optional) Time interval during which requests are tracked to check if they cross the given rate.
+* `condition` - (Optional) Expression to be used in a rate-limiting condition. This expression result must be a boolean value.
+* `countrycode` - (Optional) Country name which is used for geolocation rate-limiting.
+* `limittype` - (Optional) Rate-Limiting traffic Type
 
 
 ## Attribute Reference

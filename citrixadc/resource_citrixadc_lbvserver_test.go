@@ -25,14 +25,13 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLbvserver_basic = `
 
 	resource "citrixadc_lbvserver" "foo" {
-
 	ipv46 = "10.202.11.11"
 	lbmethod = "ROUNDROBIN"
 	name = "terraform-lb"
@@ -45,7 +44,6 @@ const testAccLbvserver_basic = `
 const testAccLbvserver_basic_step2 = `
 
 	resource "citrixadc_lbvserver" "foo" {
-
 	ipv46 = "10.202.11.11"
 	lbmethod = "ROUNDROBIN"
 	name = "terraform-lb"
@@ -53,14 +51,19 @@ const testAccLbvserver_basic_step2 = `
 	timeout = 0
 	port = 80
 	servicetype = "HTTP"
+	toggleorder = "ASCENDING"
+	probeprotocol = "HTTP"
+	probeport = 8085
+	probesuccessresponsecode = "200 OK"
+	orderthreshold = "10"
 	}
 `
 
 func TestAccLbvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbvserver_basic,
@@ -102,6 +105,16 @@ func TestAccLbvserver_basic(t *testing.T) {
 						"citrixadc_lbvserver.foo", "servicetype", "HTTP"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_lbvserver.foo", "timeout", "0"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "toggleorder", "ASCENDING"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "probeprotocol", "HTTP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "probeport", "8085"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "probesuccessresponsecode", "200 OK"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "orderthreshold", "10"),
 				),
 			},
 		},
@@ -131,9 +144,9 @@ func TestAccLbvserver_quicbridgeprofile(t *testing.T) {
 		t.Skip("No support in CPX")
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbvserver_quicbridgeprofile,
@@ -177,9 +190,9 @@ const sniCertsTemplateConfig = `
 
 func TestAccLbvserver_snicerts(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { doPreChecks(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { doPreChecks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testSslcertificateBindingsConfig(sniCertsTemplateConfig, "", "cert2-cert3"),
@@ -235,9 +248,9 @@ func TestAccLbvserver_standalone_ciphersuites_mixed(t *testing.T) {
 	// 	t.Skip("cluster ADC deployment")
 	// }
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Initial
 			{
@@ -272,9 +285,9 @@ func TestAccLbvserver_cluster_ciphersuites(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Initial
 			{
@@ -312,9 +325,9 @@ func TestAccLbvserver_cluster_ciphers(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Initial
 			{
@@ -365,8 +378,12 @@ func testAccCheckLbvserverExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Lbvserver.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lbvserver.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -381,7 +398,11 @@ func testAccCheckLbvserverExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckLbvserverDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbvserver" {
@@ -392,7 +413,7 @@ func testAccCheckLbvserverDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Lbvserver.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Lbvserver.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -467,7 +488,7 @@ func TestAccLbvserver_AssertNonUpdateableAttributes(t *testing.T) {
 		Ipv46:       "192.23.23.23",
 		Name:        vserverName,
 		Servicetype: "HTTP",
-		Port:        80,
+		Port:        intPtr(80),
 	}
 
 	if _, err := c.client.AddResource(vserverType, vserverName, vserverInstance); err != nil {
@@ -479,25 +500,44 @@ func TestAccLbvserver_AssertNonUpdateableAttributes(t *testing.T) {
 	vserverInstance.Servicetype = ""
 
 	//port
-	vserverInstance.Port = 80
+	vserverInstance.Port = intPtr(80)
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "port")
-	vserverInstance.Port = 0
+
+	vserverInstance = lb.Lbvserver{
+		Ipv46: "192.23.23.23",
+		Name:  vserverName,
+	}
 
 	//servicetype
 	vserverInstance.Servicetype = "TCP"
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "servicetype")
 	vserverInstance.Servicetype = ""
 
+	vserverInstance = lb.Lbvserver{
+		Ipv46: "192.23.23.23",
+		Name:  vserverName,
+	}
+
 	//range
-	vserverInstance.Range = 10
+	vserverInstance.Range = intPtr(10)
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "range")
-	vserverInstance.Range = 0
+	vserverInstance.Range = intPtr(0)
+
+	vserverInstance = lb.Lbvserver{
+		Ipv46: "192.23.23.23",
+		Name:  vserverName,
+	}
 
 	//td
-	vserverInstance.Td = 1
+	vserverInstance.Td = intPtr(1)
 	vserverInstance.Servicetype = ""
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "td")
-	vserverInstance.Td = 0
+	vserverInstance.Td = intPtr(0)
+
+	vserverInstance = lb.Lbvserver{
+		Ipv46: "192.23.23.23",
+		Name:  vserverName,
+	}
 
 	//redirurlflags
 	vserverInstance.Redirurlflags = true
@@ -529,9 +569,9 @@ resource "citrixadc_lbvserver" "tf_acc_lb_vserver" {
 
 func TestAccLbvserver_enable_disable(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
 			{
@@ -572,9 +612,9 @@ resource "citrixadc_lbvserver" "test_non_addressable_lb_vserver" {
 
 func TestAccLbvserver_nonAddressable(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
 			{

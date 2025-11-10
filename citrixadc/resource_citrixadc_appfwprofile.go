@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppfwprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofileFunc,
-		Read:          readAppfwprofileFunc,
-		Update:        updateAppfwprofileFunc,
-		Delete:        deleteAppfwprofileFunc,
+		CreateContext: createAppfwprofileFunc,
+		ReadContext:   readAppfwprofileFunc,
+		UpdateContext: updateAppfwprofileFunc,
+		DeleteContext: deleteAppfwprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"addcookieflags": {
@@ -784,7 +786,7 @@ func resourceCitrixAdcAppfwprofile() *schema.Resource {
 	}
 }
 
-func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwprofileName := d.Get("name").(string)
@@ -792,29 +794,22 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	appfwprofile := appfw.Appfwprofile{
 		Name:                                       appfwprofileName,
 		Postbodylimitaction:                        toStringList(d.Get("postbodylimitaction").([]interface{})),
-		Bufferoverflowmaxquerylength:               d.Get("bufferoverflowmaxquerylength").(int),
 		Cookiehijackingaction:                      toStringList(d.Get("cookiehijackingaction").([]interface{})),
 		Infercontenttypexmlpayloadaction:           toStringList(d.Get("infercontenttypexmlpayloadaction").([]interface{})),
 		Cmdinjectionaction:                         toStringList(d.Get("cmdinjectionaction").([]interface{})),
 		Addcookieflags:                             d.Get("addcookieflags").(string),
 		Archivename:                                d.Get("archivename").(string),
-		Bufferoverflowmaxcookielength:              d.Get("bufferoverflowmaxcookielength").(int),
-		Bufferoverflowmaxheaderlength:              d.Get("bufferoverflowmaxheaderlength").(int),
-		Bufferoverflowmaxurllength:                 d.Get("bufferoverflowmaxurllength").(int),
 		Canonicalizehtmlresponse:                   d.Get("canonicalizehtmlresponse").(string),
 		Checkrequestheaders:                        d.Get("checkrequestheaders").(string),
 		Comment:                                    d.Get("comment").(string),
 		Cookieencryption:                           d.Get("cookieencryption").(string),
 		Cookieproxying:                             d.Get("cookieproxying").(string),
 		Cookietransforms:                           d.Get("cookietransforms").(string),
-		Creditcardmaxallowed:                       d.Get("creditcardmaxallowed").(int),
 		Creditcardxout:                             d.Get("creditcardxout").(string),
 		Crosssitescriptingcheckcompleteurls:        d.Get("crosssitescriptingcheckcompleteurls").(string),
 		Crosssitescriptingtransformunsafehtml:      d.Get("crosssitescriptingtransformunsafehtml").(string),
 		Customsettings:                             d.Get("customsettings").(string),
 		Defaultcharset:                             d.Get("defaultcharset").(string),
-		Defaultfieldformatmaxlength:                d.Get("defaultfieldformatmaxlength").(int),
-		Defaultfieldformatminlength:                d.Get("defaultfieldformatminlength").(int),
 		Defaultfieldformattype:                     d.Get("defaultfieldformattype").(string),
 		Defaults:                                   d.Get("defaults").(string),
 		Dosecurecreditcardlogging:                  d.Get("dosecurecreditcardlogging").(string),
@@ -822,7 +817,6 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Errorurl:                                   d.Get("errorurl").(string),
 		Excludefileuploadfromchecks:                d.Get("excludefileuploadfromchecks").(string),
 		Exemptclosureurlsfromsecuritychecks:        d.Get("exemptclosureurlsfromsecuritychecks").(string),
-		Fileuploadmaxnum:                           d.Get("fileuploadmaxnum").(int),
 		Htmlerrorobject:                            d.Get("htmlerrorobject").(string),
 		Invalidpercenthandling:                     d.Get("invalidpercenthandling").(string),
 		Jsonerrorobject:                            d.Get("jsonerrorobject").(string),
@@ -830,8 +824,6 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Logeverypolicyhit:                          d.Get("logeverypolicyhit").(string),
 		Optimizepartialreqs:                        d.Get("optimizepartialreqs").(string),
 		Percentdecoderecursively:                   d.Get("percentdecoderecursively").(string),
-		Postbodylimit:                              d.Get("postbodylimit").(int),
-		Postbodylimitsignature:                     d.Get("postbodylimitsignature").(int),
 		Refererheadercheck:                         d.Get("refererheadercheck").(string),
 		Requestcontenttype:                         d.Get("requestcontenttype").(string),
 		Responsecontenttype:                        d.Get("responsecontenttype").(string),
@@ -859,9 +851,7 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Xmlsqlinjectiononlycheckfieldswithsqlchars: d.Get("xmlsqlinjectiononlycheckfieldswithsqlchars").(string),
 		Xmlsqlinjectionparsecomments:               d.Get("xmlsqlinjectionparsecomments").(string),
 		Xmlsqlinjectiontype:                        d.Get("xmlsqlinjectiontype").(string),
-		Bufferoverflowmaxtotalheaderlength:         d.Get("bufferoverflowmaxtotalheaderlength").(int),
 		Cmdinjectiontype:                           d.Get("cmdinjectiontype").(string),
-		Htmlerrorstatuscode:                        d.Get("htmlerrorstatuscode").(int),
 		Htmlerrorstatusmessage:                     d.Get("htmlerrorstatusmessage").(string),
 		Sqlinjectiongrammar:                        d.Get("sqlinjectiongrammar").(string),
 		Apispec:                                    d.Get("apispec").(string),
@@ -872,33 +862,84 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Clientipexpression:                         d.Get("clientipexpression").(string),
 		Cmdinjectiongrammar:                        d.Get("cmdinjectiongrammar").(string),
 		Cookiesamesiteattribute:                    d.Get("cookiesamesiteattribute").(string),
-		Defaultfieldformatmaxoccurrences:           d.Get("defaultfieldformatmaxoccurrences").(int),
 		Fakeaccountdetection:                       d.Get("fakeaccountdetection").(string),
 		Fieldscan:                                  d.Get("fieldscan").(string),
-		Fieldscanlimit:                             d.Get("fieldscanlimit").(int),
 		Geolocationlogging:                         d.Get("geolocationlogging").(string),
 		Importprofilename:                          d.Get("importprofilename").(string),
 		Insertcookiesamesiteattribute:              d.Get("insertcookiesamesiteattribute").(string),
 		Jsoncmdinjectiongrammar:                    d.Get("jsoncmdinjectiongrammar").(string),
 		Jsoncmdinjectiontype:                       d.Get("jsoncmdinjectiontype").(string),
-		Jsonerrorstatuscode:                        d.Get("jsonerrorstatuscode").(int),
 		Jsonerrorstatusmessage:                     d.Get("jsonerrorstatusmessage").(string),
 		Jsonfieldscan:                              d.Get("jsonfieldscan").(string),
-		Jsonfieldscanlimit:                         d.Get("jsonfieldscanlimit").(int),
 		Jsonmessagescan:                            d.Get("jsonmessagescan").(string),
-		Jsonmessagescanlimit:                       d.Get("jsonmessagescanlimit").(int),
 		Jsonsqlinjectiongrammar:                    d.Get("jsonsqlinjectiongrammar").(string),
 		Matchurlstring:                             d.Get("matchurlstring").(string),
 		Messagescan:                                d.Get("messagescan").(string),
-		Messagescanlimit:                           d.Get("messagescanlimit").(int),
 		Overwrite:                                  d.Get("overwrite").(bool),
 		Protofileobject:                            d.Get("protofileobject").(string),
 		Relaxationrules:                            d.Get("relaxationrules").(bool),
 		Replaceurlstring:                           d.Get("replaceurlstring").(string),
 		Sessioncookiename:                          d.Get("sessioncookiename").(string),
 		Sqlinjectionruletype:                       d.Get("sqlinjectionruletype").(string),
-		Xmlerrorstatuscode:                         d.Get("xmlerrorstatuscode").(int),
 		Xmlerrorstatusmessage:                      d.Get("xmlerrorstatusmessage").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bufferoverflowmaxquerylength"); !raw.IsNull() {
+		appfwprofile.Bufferoverflowmaxquerylength = intPtr(d.Get("bufferoverflowmaxquerylength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bufferoverflowmaxcookielength"); !raw.IsNull() {
+		appfwprofile.Bufferoverflowmaxcookielength = intPtr(d.Get("bufferoverflowmaxcookielength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bufferoverflowmaxheaderlength"); !raw.IsNull() {
+		appfwprofile.Bufferoverflowmaxheaderlength = intPtr(d.Get("bufferoverflowmaxheaderlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bufferoverflowmaxurllength"); !raw.IsNull() {
+		appfwprofile.Bufferoverflowmaxurllength = intPtr(d.Get("bufferoverflowmaxurllength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("creditcardmaxallowed"); !raw.IsNull() {
+		appfwprofile.Creditcardmaxallowed = intPtr(d.Get("creditcardmaxallowed").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("defaultfieldformatmaxlength"); !raw.IsNull() {
+		appfwprofile.Defaultfieldformatmaxlength = intPtr(d.Get("defaultfieldformatmaxlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("defaultfieldformatminlength"); !raw.IsNull() {
+		appfwprofile.Defaultfieldformatminlength = intPtr(d.Get("defaultfieldformatminlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fileuploadmaxnum"); !raw.IsNull() {
+		appfwprofile.Fileuploadmaxnum = intPtr(d.Get("fileuploadmaxnum").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("postbodylimit"); !raw.IsNull() {
+		appfwprofile.Postbodylimit = intPtr(d.Get("postbodylimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("postbodylimitsignature"); !raw.IsNull() {
+		appfwprofile.Postbodylimitsignature = intPtr(d.Get("postbodylimitsignature").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bufferoverflowmaxtotalheaderlength"); !raw.IsNull() {
+		appfwprofile.Bufferoverflowmaxtotalheaderlength = intPtr(d.Get("bufferoverflowmaxtotalheaderlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("htmlerrorstatuscode"); !raw.IsNull() {
+		appfwprofile.Htmlerrorstatuscode = intPtr(d.Get("htmlerrorstatuscode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("defaultfieldformatmaxoccurrences"); !raw.IsNull() {
+		appfwprofile.Defaultfieldformatmaxoccurrences = intPtr(d.Get("defaultfieldformatmaxoccurrences").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fieldscanlimit"); !raw.IsNull() {
+		appfwprofile.Fieldscanlimit = intPtr(d.Get("fieldscanlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonerrorstatuscode"); !raw.IsNull() {
+		appfwprofile.Jsonerrorstatuscode = intPtr(d.Get("jsonerrorstatuscode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonfieldscanlimit"); !raw.IsNull() {
+		appfwprofile.Jsonfieldscanlimit = intPtr(d.Get("jsonfieldscanlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmessagescanlimit"); !raw.IsNull() {
+		appfwprofile.Jsonmessagescanlimit = intPtr(d.Get("jsonmessagescanlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("messagescanlimit"); !raw.IsNull() {
+		appfwprofile.Messagescanlimit = intPtr(d.Get("messagescanlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlerrorstatuscode"); !raw.IsNull() {
+		appfwprofile.Xmlerrorstatuscode = intPtr(d.Get("xmlerrorstatuscode").(int))
 	}
 
 	appfwprofile.Bufferoverflowaction = toStringList(d.Get("bufferoverflowaction").(*schema.Set).List())
@@ -939,20 +980,15 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwprofileName)
 
-	err = readAppfwprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile but we can't read it ?? %s", appfwprofileName)
-		return nil
-	}
-	return nil
+	return readAppfwprofileFunc(ctx, d, meta)
 }
 
-func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwprofileName := d.Id()
@@ -971,31 +1007,30 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cmdinjectionaction", data["cmdinjectionaction"])
 	d.Set("addcookieflags", data["addcookieflags"])
 	d.Set("archivename", data["archivename"])
-	d.Set("bufferoverflowmaxcookielength", data["bufferoverflowmaxcookielength"])
-	d.Set("bufferoverflowmaxheaderlength", data["bufferoverflowmaxheaderlength"])
-	d.Set("bufferoverflowmaxurllength", data["bufferoverflowmaxurllength"])
+	setToInt("bufferoverflowmaxcookielength", d, data["bufferoverflowmaxcookielength"])
+	setToInt("bufferoverflowmaxheaderlength", d, data["bufferoverflowmaxheaderlength"])
+	setToInt("bufferoverflowmaxurllength", d, data["bufferoverflowmaxurllength"])
 	d.Set("canonicalizehtmlresponse", data["canonicalizehtmlresponse"])
 	d.Set("checkrequestheaders", data["checkrequestheaders"])
 	d.Set("comment", data["comment"])
 	d.Set("cookieencryption", data["cookieencryption"])
 	d.Set("cookieproxying", data["cookieproxying"])
 	d.Set("cookietransforms", data["cookietransforms"])
-	d.Set("creditcardmaxallowed", data["creditcardmaxallowed"])
+	setToInt("creditcardmaxallowed", d, data["creditcardmaxallowed"])
 	d.Set("creditcardxout", data["creditcardxout"])
 	d.Set("crosssitescriptingcheckcompleteurls", data["crosssitescriptingcheckcompleteurls"])
 	d.Set("crosssitescriptingtransformunsafehtml", data["crosssitescriptingtransformunsafehtml"])
 	d.Set("customsettings", data["customsettings"])
 	d.Set("defaultcharset", data["defaultcharset"])
-	d.Set("defaultfieldformatmaxlength", data["defaultfieldformatmaxlength"])
-	d.Set("defaultfieldformatminlength", data["defaultfieldformatminlength"])
-	d.Set("defaultfieldformattype", data["defaultfieldformattype"])
+	setToInt("defaultfieldformatmaxlength", d, data["defaultfieldformatmaxlength"])
+	setToInt("defaultfieldformatminlength", d, data["defaultfieldformatminlength"])
 	d.Set("defaults", data["defaults"])
 	d.Set("dosecurecreditcardlogging", data["dosecurecreditcardlogging"])
 	d.Set("enableformtagging", data["enableformtagging"])
 	d.Set("errorurl", data["errorurl"])
 	d.Set("excludefileuploadfromchecks", data["excludefileuploadfromchecks"])
 	d.Set("exemptclosureurlsfromsecuritychecks", data["exemptclosureurlsfromsecuritychecks"])
-	d.Set("fileuploadmaxnum", data["fileuploadmaxnum"])
+	setToInt("fileuploadmaxnum", d, data["fileuploadmaxnum"])
 	d.Set("htmlerrorobject", data["htmlerrorobject"])
 	d.Set("invalidpercenthandling", data["invalidpercenthandling"])
 	d.Set("jsonerrorobject", data["jsonerrorobject"])
@@ -1004,8 +1039,8 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("optimizepartialreqs", data["optimizepartialreqs"])
 	d.Set("percentdecoderecursively", data["percentdecoderecursively"])
-	d.Set("postbodylimit", data["postbodylimit"])
-	d.Set("postbodylimitsignature", data["postbodylimitsignature"])
+	setToInt("postbodylimit", d, data["postbodylimit"])
+	setToInt("postbodylimitsignature", d, data["postbodylimitsignature"])
 	d.Set("refererheadercheck", data["refererheadercheck"])
 	d.Set("requestcontenttype", data["requestcontenttype"])
 	d.Set("responsecontenttype", data["responsecontenttype"])
@@ -1077,32 +1112,32 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("clientipexpression", data["clientipexpression"])
 	d.Set("cmdinjectiongrammar", data["cmdinjectiongrammar"])
 	d.Set("cookiesamesiteattribute", data["cookiesamesiteattribute"])
-	d.Set("defaultfieldformatmaxoccurrences", data["defaultfieldformatmaxoccurrences"])
+	setToInt("defaultfieldformatmaxoccurrences", d, data["defaultfieldformatmaxoccurrences"])
 	d.Set("fakeaccountdetection", data["fakeaccountdetection"])
 	d.Set("fieldscan", data["fieldscan"])
-	d.Set("fieldscanlimit", data["fieldscanlimit"])
+	setToInt("fieldscanlimit", d, data["fieldscanlimit"])
 	d.Set("geolocationlogging", data["geolocationlogging"])
 	d.Set("importprofilename", data["importprofilename"])
 	d.Set("insertcookiesamesiteattribute", data["insertcookiesamesiteattribute"])
 	d.Set("jsoncmdinjectiongrammar", data["jsoncmdinjectiongrammar"])
 	d.Set("jsoncmdinjectiontype", data["jsoncmdinjectiontype"])
-	d.Set("jsonerrorstatuscode", data["jsonerrorstatuscode"])
+	setToInt("jsonerrorstatuscode", d, data["jsonerrorstatuscode"])
 	d.Set("jsonerrorstatusmessage", data["jsonerrorstatusmessage"])
 	d.Set("jsonfieldscan", data["jsonfieldscan"])
-	d.Set("jsonfieldscanlimit", data["jsonfieldscanlimit"])
+	setToInt("jsonfieldscanlimit", d, data["jsonfieldscanlimit"])
 	d.Set("jsonmessagescan", data["jsonmessagescan"])
-	d.Set("jsonmessagescanlimit", data["jsonmessagescanlimit"])
+	setToInt("jsonmessagescanlimit", d, data["jsonmessagescanlimit"])
 	d.Set("jsonsqlinjectiongrammar", data["jsonsqlinjectiongrammar"])
 	d.Set("matchurlstring", data["matchurlstring"])
 	d.Set("messagescan", data["messagescan"])
-	d.Set("messagescanlimit", data["messagescanlimit"])
+	setToInt("messagescanlimit", d, data["messagescanlimit"])
 	d.Set("overwrite", data["overwrite"])
 	d.Set("protofileobject", data["protofileobject"])
 	d.Set("relaxationrules", data["relaxationrules"])
 	d.Set("replaceurlstring", data["replaceurlstring"])
 	d.Set("sessioncookiename", data["sessioncookiename"])
 	d.Set("sqlinjectionruletype", data["sqlinjectionruletype"])
-	d.Set("xmlerrorstatuscode", data["xmlerrorstatuscode"])
+	setToInt("xmlerrorstatuscode", d, data["xmlerrorstatuscode"])
 	d.Set("xmlerrorstatusmessage", data["xmlerrorstatusmessage"])
 
 	// Add new array/set type attributes
@@ -1118,7 +1153,7 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppfwprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwprofileName := d.Get("name").(string)
@@ -1134,7 +1169,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("bufferoverflowmaxquerylength") {
 		log.Printf("[DEBUG]  citrixadc-provider: bufferoverflowmaxquerylength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxquerylength = d.Get("bufferoverflowmaxquerylength").(int)
+		appfwprofile.Bufferoverflowmaxquerylength = intPtr(d.Get("bufferoverflowmaxquerylength").(int))
 		hasChange = true
 	}
 	if d.HasChange("cookiehijackingaction") {
@@ -1164,17 +1199,17 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("bufferoverflowmaxcookielength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxcookielength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxcookielength = d.Get("bufferoverflowmaxcookielength").(int)
+		appfwprofile.Bufferoverflowmaxcookielength = intPtr(d.Get("bufferoverflowmaxcookielength").(int))
 		hasChange = true
 	}
 	if d.HasChange("bufferoverflowmaxheaderlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxheaderlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxheaderlength = d.Get("bufferoverflowmaxheaderlength").(int)
+		appfwprofile.Bufferoverflowmaxheaderlength = intPtr(d.Get("bufferoverflowmaxheaderlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("bufferoverflowmaxurllength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxurllength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxurllength = d.Get("bufferoverflowmaxurllength").(int)
+		appfwprofile.Bufferoverflowmaxurllength = intPtr(d.Get("bufferoverflowmaxurllength").(int))
 		hasChange = true
 	}
 	if d.HasChange("canonicalizehtmlresponse") {
@@ -1209,7 +1244,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("creditcardmaxallowed") {
 		log.Printf("[DEBUG]  citrixadc-provider: Creditcardmaxallowed has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Creditcardmaxallowed = d.Get("creditcardmaxallowed").(int)
+		appfwprofile.Creditcardmaxallowed = intPtr(d.Get("creditcardmaxallowed").(int))
 		hasChange = true
 	}
 	if d.HasChange("creditcardxout") {
@@ -1239,12 +1274,12 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("defaultfieldformatmaxlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultfieldformatmaxlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Defaultfieldformatmaxlength = d.Get("defaultfieldformatmaxlength").(int)
+		appfwprofile.Defaultfieldformatmaxlength = intPtr(d.Get("defaultfieldformatmaxlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultfieldformatminlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultfieldformatminlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Defaultfieldformatminlength = d.Get("defaultfieldformatminlength").(int)
+		appfwprofile.Defaultfieldformatminlength = intPtr(d.Get("defaultfieldformatminlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultfieldformattype") {
@@ -1284,7 +1319,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("fileuploadmaxnum") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fileuploadmaxnum has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Fileuploadmaxnum = d.Get("fileuploadmaxnum").(int)
+		appfwprofile.Fileuploadmaxnum = intPtr(d.Get("fileuploadmaxnum").(int))
 		hasChange = true
 	}
 	if d.HasChange("htmlerrorobject") {
@@ -1329,12 +1364,12 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("postbodylimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Postbodylimit has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Postbodylimit = d.Get("postbodylimit").(int)
+		appfwprofile.Postbodylimit = intPtr(d.Get("postbodylimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("postbodylimitsignature") {
 		log.Printf("[DEBUG]  citrixadc-provider: Postbodylimitsignature has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Postbodylimitsignature = d.Get("postbodylimitsignature").(int)
+		appfwprofile.Postbodylimitsignature = intPtr(d.Get("postbodylimitsignature").(int))
 		hasChange = true
 	}
 	if d.HasChange("refererheadercheck") {
@@ -1642,7 +1677,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("bufferoverflowmaxtotalheaderlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: bufferoverflowmaxtotalheaderlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxtotalheaderlength = d.Get("bufferoverflowmaxtotalheaderlength").(int)
+		appfwprofile.Bufferoverflowmaxtotalheaderlength = intPtr(d.Get("bufferoverflowmaxtotalheaderlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("cmdinjectiontype") {
@@ -1652,7 +1687,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("htmlerrorstatuscode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Htmlerrorstatuscode has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Htmlerrorstatuscode = d.Get("htmlerrorstatuscode").(int)
+		appfwprofile.Htmlerrorstatuscode = intPtr(d.Get("htmlerrorstatuscode").(int))
 		hasChange = true
 	}
 	if d.HasChange("htmlerrorstatusmessage") {
@@ -1709,7 +1744,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("defaultfieldformatmaxoccurrences") {
 		log.Printf("[DEBUG]  citrixadc-provider: defaultfieldformatmaxoccurrences has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Defaultfieldformatmaxoccurrences = d.Get("defaultfieldformatmaxoccurrences").(int)
+		appfwprofile.Defaultfieldformatmaxoccurrences = intPtr(d.Get("defaultfieldformatmaxoccurrences").(int))
 		hasChange = true
 	}
 	if d.HasChange("fakeaccountdetection") {
@@ -1724,7 +1759,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("fieldscanlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: fieldscanlimit has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Fieldscanlimit = d.Get("fieldscanlimit").(int)
+		appfwprofile.Fieldscanlimit = intPtr(d.Get("fieldscanlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("geolocationlogging") {
@@ -1754,7 +1789,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("jsonerrorstatuscode") {
 		log.Printf("[DEBUG]  citrixadc-provider: jsonerrorstatuscode has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Jsonerrorstatuscode = d.Get("jsonerrorstatuscode").(int)
+		appfwprofile.Jsonerrorstatuscode = intPtr(d.Get("jsonerrorstatuscode").(int))
 		hasChange = true
 	}
 	if d.HasChange("jsonerrorstatusmessage") {
@@ -1769,7 +1804,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("jsonfieldscanlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: jsonfieldscanlimit has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Jsonfieldscanlimit = d.Get("jsonfieldscanlimit").(int)
+		appfwprofile.Jsonfieldscanlimit = intPtr(d.Get("jsonfieldscanlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("jsonmessagescan") {
@@ -1779,7 +1814,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("jsonmessagescanlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: jsonmessagescanlimit has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Jsonmessagescanlimit = d.Get("jsonmessagescanlimit").(int)
+		appfwprofile.Jsonmessagescanlimit = intPtr(d.Get("jsonmessagescanlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("jsonsqlinjectiongrammar") {
@@ -1799,7 +1834,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("messagescanlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: messagescanlimit has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Messagescanlimit = d.Get("messagescanlimit").(int)
+		appfwprofile.Messagescanlimit = intPtr(d.Get("messagescanlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("overwrite") {
@@ -1834,7 +1869,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("xmlerrorstatuscode") {
 		log.Printf("[DEBUG]  citrixadc-provider: xmlerrorstatuscode has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Xmlerrorstatuscode = d.Get("xmlerrorstatuscode").(int)
+		appfwprofile.Xmlerrorstatuscode = intPtr(d.Get("xmlerrorstatuscode").(int))
 		hasChange = true
 	}
 	if d.HasChange("xmlerrorstatusmessage") {
@@ -1883,19 +1918,19 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating appfwprofile %s", appfwprofileName)
+			return diag.Errorf("Error updating appfwprofile %s", appfwprofileName)
 		}
 	}
-	return readAppfwprofileFunc(d, meta)
+	return readAppfwprofileFunc(ctx, d, meta)
 }
 
-func deleteAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwprofileName := d.Id()
 	err := client.DeleteResource(service.Appfwprofile.Type(), appfwprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

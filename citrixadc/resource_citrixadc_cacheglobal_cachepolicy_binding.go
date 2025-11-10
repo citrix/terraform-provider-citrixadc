@@ -1,22 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cache"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCacheglobal_cachepolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCacheglobal_cachepolicy_bindingFunc,
-		Read:          readCacheglobal_cachepolicy_bindingFunc,
-		Delete:        deleteCacheglobal_cachepolicy_bindingFunc,
+		CreateContext: createCacheglobal_cachepolicy_bindingFunc,
+		ReadContext:   readCacheglobal_cachepolicy_bindingFunc,
+		DeleteContext: deleteCacheglobal_cachepolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policy": {
@@ -68,7 +72,7 @@ func resourceCitrixAdcCacheglobal_cachepolicy_binding() *schema.Resource {
 	}
 }
 
-func createCacheglobal_cachepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createCacheglobal_cachepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCacheglobal_cachepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policy := d.Get("policy").(string)
@@ -79,26 +83,24 @@ func createCacheglobal_cachepolicy_bindingFunc(d *schema.ResourceData, meta inte
 		Labeltype:              d.Get("labeltype").(string),
 		Policy:                 d.Get("policy").(string),
 		Precededefrules:        d.Get("precededefrules").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		cacheglobal_cachepolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Cacheglobal_cachepolicy_binding.Type(), &cacheglobal_cachepolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policy)
 
-	err = readCacheglobal_cachepolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cacheglobal_cachepolicy_binding but we can't read it ?? %s", policy)
-		return nil
-	}
-	return nil
+	return readCacheglobal_cachepolicy_bindingFunc(ctx, d, meta)
 }
 
-func readCacheglobal_cachepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readCacheglobal_cachepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCacheglobal_cachepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policy := d.Id()
@@ -115,7 +117,7 @@ func readCacheglobal_cachepolicy_bindingFunc(d *schema.ResourceData, meta interf
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -159,7 +161,7 @@ func readCacheglobal_cachepolicy_bindingFunc(d *schema.ResourceData, meta interf
 
 }
 
-func deleteCacheglobal_cachepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCacheglobal_cachepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCacheglobal_cachepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -172,7 +174,7 @@ func deleteCacheglobal_cachepolicy_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.DeleteResourceWithArgs(service.Cacheglobal_cachepolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

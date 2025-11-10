@@ -31,7 +31,7 @@ type Lbwlm struct {
 	/**
 	* The port of the WLM.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* The LBUID for the Load Balancer to communicate to the Work Load Manager.
 	*/
@@ -39,7 +39,7 @@ type Lbwlm struct {
 	/**
 	* The idle time period after which Citrix ADC would probe the WLM. The value ranges from 1 to 1440 minutes.
 	*/
-	Katimeout int `json:"katimeout,omitempty"`
+	Katimeout *int `json:"katimeout,omitempty"`
 
 	//------- Read only Parameter ---------;
 

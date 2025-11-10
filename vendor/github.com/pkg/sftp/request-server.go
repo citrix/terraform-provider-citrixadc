@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-var maxTxPacket uint32 = 1 << 15
+const defaultMaxTxPacket uint32 = 1 << 15
 
 // Handlers contains the 4 SFTP server request handlers.
 type Handlers struct {
@@ -28,6 +28,7 @@ type RequestServer struct {
 	pktMgr *packetManager
 
 	startDirectory string
+	maxTxPacket    uint32
 
 	mu           sync.RWMutex
 	handleCount  int
@@ -57,6 +58,22 @@ func WithStartDirectory(startDirectory string) RequestServerOption {
 	}
 }
 
+// WithRSMaxTxPacket sets the maximum size of the payload returned to the client,
+// measured in bytes. The default value is 32768 bytes, and this option
+// can only be used to increase it. Setting this option to a larger value
+// should be safe, because the client decides the size of the requested payload.
+//
+// The default maximum packet size is 32768 bytes.
+func WithRSMaxTxPacket(size uint32) RequestServerOption {
+	return func(rs *RequestServer) {
+		if size < defaultMaxTxPacket {
+			return
+		}
+
+		rs.maxTxPacket = size
+	}
+}
+
 // NewRequestServer creates/allocates/returns new RequestServer.
 // Normally there will be one server per user-session.
 func NewRequestServer(rwc io.ReadWriteCloser, h Handlers, options ...RequestServerOption) *RequestServer {
@@ -73,6 +90,7 @@ func NewRequestServer(rwc io.ReadWriteCloser, h Handlers, options ...RequestServ
 		pktMgr:     newPktMgr(svrConn),
 
 		startDirectory: "/",
+		maxTxPacket:    defaultMaxTxPacket,
 
 		openRequests: make(map[string]*Request),
 	}
@@ -219,12 +237,21 @@ func (rs *RequestServer) packetWorker(ctx context.Context, pktChan chan orderedR
 			rpkt = statusFromError(pkt.ID, rs.closeRequest(handle))
 		case *sshFxpRealpathPacket:
 			var realPath string
-			if realPather, ok := rs.Handlers.FileList.(RealPathFileLister); ok {
-				realPath = realPather.RealPath(pkt.getPath())
-			} else {
+			var err error
+
+			switch pather := rs.Handlers.FileList.(type) {
+			case RealPathFileLister:
+				realPath, err = pather.RealPath(pkt.getPath())
+			case legacyRealPathFileLister:
+				realPath = pather.RealPath(pkt.getPath())
+			default:
 				realPath = cleanPathWithBase(rs.startDirectory, pkt.getPath())
 			}
-			rpkt = cleanPacketPath(pkt, realPath)
+			if err != nil {
+				rpkt = statusFromError(pkt.ID, err)
+			} else {
+				rpkt = cleanPacketPath(pkt, realPath)
+			}
 		case *sshFxpOpendirPacket:
 			request := requestFromPacket(ctx, pkt, rs.startDirectory)
 			handle := rs.nextRequest(request)
@@ -251,7 +278,7 @@ func (rs *RequestServer) packetWorker(ctx context.Context, pktChan chan orderedR
 					Method:   "Stat",
 					Filepath: cleanPathWithBase(rs.startDirectory, request.Filepath),
 				}
-				rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID)
+				rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID, rs.maxTxPacket)
 			}
 		case *sshFxpFsetstatPacket:
 			handle := pkt.getHandle()
@@ -263,7 +290,7 @@ func (rs *RequestServer) packetWorker(ctx context.Context, pktChan chan orderedR
 					Method:   "Setstat",
 					Filepath: cleanPathWithBase(rs.startDirectory, request.Filepath),
 				}
-				rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID)
+				rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID, rs.maxTxPacket)
 			}
 		case *sshFxpExtendedPacketPosixRename:
 			request := &Request{
@@ -271,24 +298,24 @@ func (rs *RequestServer) packetWorker(ctx context.Context, pktChan chan orderedR
 				Filepath: cleanPathWithBase(rs.startDirectory, pkt.Oldpath),
 				Target:   cleanPathWithBase(rs.startDirectory, pkt.Newpath),
 			}
-			rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID)
+			rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID, rs.maxTxPacket)
 		case *sshFxpExtendedPacketStatVFS:
 			request := &Request{
 				Method:   "StatVFS",
 				Filepath: cleanPathWithBase(rs.startDirectory, pkt.Path),
 			}
-			rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID)
+			rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID, rs.maxTxPacket)
 		case hasHandle:
 			handle := pkt.getHandle()
 			request, ok := rs.getRequest(handle)
 			if !ok {
 				rpkt = statusFromError(pkt.id(), EBADF)
 			} else {
-				rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID)
+				rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID, rs.maxTxPacket)
 			}
 		case hasPath:
 			request := requestFromPacket(ctx, pkt, rs.startDirectory)
-			rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID)
+			rpkt = request.call(rs.Handlers, pkt, rs.pktMgr.alloc, orderID, rs.maxTxPacket)
 			request.close()
 		default:
 			rpkt = statusFromError(pkt.id(), ErrSSHFxOpUnsupported)

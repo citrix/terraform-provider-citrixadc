@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcBotprofile_blacklist_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotprofile_blacklist_bindingFunc,
-		Read:          readBotprofile_blacklist_bindingFunc,
-		Delete:        deleteBotprofile_blacklist_bindingFunc,
+		CreateContext: createBotprofile_blacklist_bindingFunc,
+		ReadContext:   readBotprofile_blacklist_bindingFunc,
+		DeleteContext: deleteBotprofile_blacklist_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,7 +75,7 @@ func resourceCitrixAdcBotprofile_blacklist_binding() *schema.Resource {
 	}
 }
 
-func createBotprofile_blacklist_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotprofile_blacklist_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotprofile_blacklist_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -92,20 +94,15 @@ func createBotprofile_blacklist_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.UpdateUnnamedResource("botprofile_blacklist_binding", &botprofile_blacklist_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readBotprofile_blacklist_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botprofile_blacklist_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readBotprofile_blacklist_bindingFunc(ctx, d, meta)
 }
 
-func readBotprofile_blacklist_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotprofile_blacklist_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotprofile_blacklist_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -126,7 +123,7 @@ func readBotprofile_blacklist_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -170,7 +167,7 @@ func readBotprofile_blacklist_bindingFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deleteBotprofile_blacklist_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotprofile_blacklist_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotprofile_blacklist_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -188,7 +185,7 @@ func deleteBotprofile_blacklist_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgs("botprofile_blacklist_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

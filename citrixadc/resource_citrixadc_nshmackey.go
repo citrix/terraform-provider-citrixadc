@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/ns"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNshmackey() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNshmackeyFunc,
-		Read:          readNshmackeyFunc,
-		Update:        updateNshmackeyFunc,
-		Delete:        deleteNshmackeyFunc,
+		CreateContext: createNshmackeyFunc,
+		ReadContext:   readNshmackeyFunc,
+		UpdateContext: updateNshmackeyFunc,
+		DeleteContext: deleteNshmackeyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -44,7 +47,7 @@ func resourceCitrixAdcNshmackey() *schema.Resource {
 	}
 }
 
-func createNshmackeyFunc(d *schema.ResourceData, meta interface{}) error {
+func createNshmackeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNshmackeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshmackeyName := d.Get("name").(string)
@@ -57,20 +60,15 @@ func createNshmackeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("nshmackey", nshmackeyName, &nshmackey)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nshmackeyName)
 
-	err = readNshmackeyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nshmackey but we can't read it ?? %s", nshmackeyName)
-		return nil
-	}
-	return nil
+	return readNshmackeyFunc(ctx, d, meta)
 }
 
-func readNshmackeyFunc(d *schema.ResourceData, meta interface{}) error {
+func readNshmackeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNshmackeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshmackeyName := d.Id()
@@ -90,7 +88,7 @@ func readNshmackeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNshmackeyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNshmackeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNshmackeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshmackeyName := d.Get("name").(string)
@@ -118,19 +116,19 @@ func updateNshmackeyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("nshmackey", nshmackeyName, &nshmackey)
 		if err != nil {
-			return fmt.Errorf("Error updating nshmackey %s", nshmackeyName)
+			return diag.Errorf("Error updating nshmackey %s", nshmackeyName)
 		}
 	}
-	return readNshmackeyFunc(d, meta)
+	return readNshmackeyFunc(ctx, d, meta)
 }
 
-func deleteNshmackeyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNshmackeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNshmackeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshmackeyName := d.Id()
 	err := client.DeleteResource("nshmackey", nshmackeyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

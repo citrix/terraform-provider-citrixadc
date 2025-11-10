@@ -23,11 +23,11 @@ type Nstcpbufparam struct {
 	/**
 	* TCP buffering size per connection, in kilobytes.
 	*/
-	Size int `json:"size,omitempty"`
+	Size *int `json:"size,omitempty"`
 	/**
 	* Maximum memory, in megabytes, that can be used for buffering.
 	*/
-	Memlimit int `json:"memlimit"` // Zero is a valid value
+	Memlimit *int `json:"memlimit"` // Zero is a valid value
 
 	//------- Read only Parameter ---------;
 

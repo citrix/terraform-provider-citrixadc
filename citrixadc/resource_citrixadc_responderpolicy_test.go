@@ -21,15 +21,15 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccResponderpolicy_globalbinding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckResponderpolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckResponderpolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponderpolicy_globalbinding_exists,
@@ -75,8 +75,12 @@ func testAccCheckResponderpolicyExist(n string, id *string) resource.TestCheckFu
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Responderpolicy.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Responderpolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -93,7 +97,11 @@ func testAccCheckResponderpolicyExist(n string, id *string) resource.TestCheckFu
 func verifyGlobalBindingExists(bindtype string, policyname string, inverse bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		bindFound := false
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		globalBindings, _ := client.FindResourceArray("responderpolicy_responderglobal_binding", policyname)
 		for _, val := range globalBindings {
 			boundtoSlice := strings.Split(val["boundto"].(string), " ")
@@ -122,7 +130,11 @@ func verifyGlobalBindingExists(bindtype string, policyname string, inverse bool)
 func verifyLbvserverBindingExists(servername string, policyname string, inverse bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		bindFound := false
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		lbVserverBindings, _ := client.FindResourceArray("responderpolicy_lbvserver_binding", policyname)
 		for _, val := range lbVserverBindings {
 			boundtoSlice := strings.Split(val["boundto"].(string), " ")
@@ -149,7 +161,11 @@ func verifyLbvserverBindingExists(servername string, policyname string, inverse 
 }
 
 func testAccCheckResponderpolicyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_responderpolicy" {
@@ -160,7 +176,7 @@ func testAccCheckResponderpolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Responderpolicy.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Responderpolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -172,9 +188,9 @@ func testAccCheckResponderpolicyDestroy(s *terraform.State) error {
 
 func TestAccResponderpolicy_lbvserverbinding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckResponderpolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckResponderpolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponderpolicy_lbvserverbinding_both,
@@ -204,9 +220,9 @@ func TestAccResponderpolicy_lbvserverbinding(t *testing.T) {
 
 func TestAccResponderpolicy_csvserverbinding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckResponderpolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckResponderpolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponderpolicy_csvserverbinding_both,
@@ -247,7 +263,11 @@ func TestAccResponderpolicy_csvserverbinding(t *testing.T) {
 func verifyCsvserverBindingExists(servername string, policyname string, inverse bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		bindFound := false
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		lbVserverBindings, _ := client.FindResourceArray("responderpolicy_csvserver_binding", policyname)
 		for _, val := range lbVserverBindings {
 			boundtoSlice := strings.Split(val["boundto"].(string), " ")
@@ -296,7 +316,7 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
       type = "REQ_OVERRIDE"
       gotopriorityexpression = "END"
       priority = 666
-  }
+	}
 }
 `
 
@@ -323,7 +343,7 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
       type = "REQ_OVERRIDE"
       gotopriorityexpression = "END"
       priority = 777
-  }
+	}
 }
 `
 
@@ -377,7 +397,7 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
       gotopriorityexpression = "END"
       invoke = false
       bindpoint = "REQUEST"
-  }
+	}
 
   lbvserverbinding {
       priority = 100
@@ -385,7 +405,7 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
       gotopriorityexpression = "END"
       invoke = false
       bindpoint = "REQUEST"
-  }
+	}
 }
 `
 
@@ -420,7 +440,7 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
       gotopriorityexpression = "END"
       invoke = false
       bindpoint = "REQUEST"
-  }
+	}
 }
 `
 
@@ -455,7 +475,7 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
       gotopriorityexpression = "END"
       invoke = false
       bindpoint = "REQUEST"
-  }
+	}
 
   csvserverbinding {
       priority = 100
@@ -463,7 +483,7 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
       gotopriorityexpression = "END"
       invoke = false
       bindpoint = "REQUEST"
-  }
+	}
 }
 `
 
@@ -498,7 +518,7 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
       gotopriorityexpression = "END"
       invoke = false
       bindpoint = "REQUEST"
-  }
+	}
 }
 `
 const testAccResponderpolicy_csvserverbinding_none = `

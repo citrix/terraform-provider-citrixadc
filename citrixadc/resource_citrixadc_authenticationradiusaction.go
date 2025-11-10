@@ -1,25 +1,43 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationradiusaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationradiusactionFunc,
-		Read:          readAuthenticationradiusactionFunc,
-		Update:        updateAuthenticationradiusactionFunc,
-		Delete:        deleteAuthenticationradiusactionFunc,
+		CreateContext: createAuthenticationradiusactionFunc,
+		ReadContext:   readAuthenticationradiusactionFunc,
+		UpdateContext: updateAuthenticationradiusactionFunc,
+		DeleteContext: deleteAuthenticationradiusactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"transport": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"targetlbvserver": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"messageauthenticator": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -140,52 +158,69 @@ func resourceCitrixAdcAuthenticationradiusaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationradiusactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationradiusactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiusactionName := d.Get("name").(string)
 	authenticationradiusaction := authentication.Authenticationradiusaction{
 		Accounting:                 d.Get("accounting").(string),
 		Authentication:             d.Get("authentication").(string),
-		Authservretry:              d.Get("authservretry").(int),
-		Authtimeout:                d.Get("authtimeout").(int),
 		Callingstationid:           d.Get("callingstationid").(string),
 		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
-		Ipattributetype:            d.Get("ipattributetype").(int),
-		Ipvendorid:                 d.Get("ipvendorid").(int),
 		Name:                       d.Get("name").(string),
 		Passencoding:               d.Get("passencoding").(string),
-		Pwdattributetype:           d.Get("pwdattributetype").(int),
-		Pwdvendorid:                d.Get("pwdvendorid").(int),
-		Radattributetype:           d.Get("radattributetype").(int),
 		Radgroupseparator:          d.Get("radgroupseparator").(string),
 		Radgroupsprefix:            d.Get("radgroupsprefix").(string),
 		Radkey:                     d.Get("radkey").(string),
 		Radnasid:                   d.Get("radnasid").(string),
 		Radnasip:                   d.Get("radnasip").(string),
-		Radvendorid:                d.Get("radvendorid").(int),
 		Serverip:                   d.Get("serverip").(string),
 		Servername:                 d.Get("servername").(string),
-		Serverport:                 d.Get("serverport").(int),
 		Tunnelendpointclientip:     d.Get("tunnelendpointclientip").(string),
+		Messageauthenticator:       d.Get("messageauthenticator").(string),
+		Targetlbvserver:            d.Get("targetlbvserver").(string),
+		Transport:                  d.Get("transport").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("authservretry"); !raw.IsNull() {
+		authenticationradiusaction.Authservretry = intPtr(d.Get("authservretry").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("authtimeout"); !raw.IsNull() {
+		authenticationradiusaction.Authtimeout = intPtr(d.Get("authtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ipattributetype"); !raw.IsNull() {
+		authenticationradiusaction.Ipattributetype = intPtr(d.Get("ipattributetype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ipvendorid"); !raw.IsNull() {
+		authenticationradiusaction.Ipvendorid = intPtr(d.Get("ipvendorid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pwdattributetype"); !raw.IsNull() {
+		authenticationradiusaction.Pwdattributetype = intPtr(d.Get("pwdattributetype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pwdvendorid"); !raw.IsNull() {
+		authenticationradiusaction.Pwdvendorid = intPtr(d.Get("pwdvendorid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("radattributetype"); !raw.IsNull() {
+		authenticationradiusaction.Radattributetype = intPtr(d.Get("radattributetype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("radvendorid"); !raw.IsNull() {
+		authenticationradiusaction.Radvendorid = intPtr(d.Get("radvendorid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		authenticationradiusaction.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationradiusaction.Type(), authenticationradiusactionName, &authenticationradiusaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationradiusactionName)
 
-	err = readAuthenticationradiusactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationradiusaction but we can't read it ?? %s", authenticationradiusactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationradiusactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationradiusactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationradiusactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiusactionName := d.Id()
@@ -197,34 +232,37 @@ func readAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface{}
 		return nil
 	}
 	d.Set("accounting", data["accounting"])
+	d.Set("transport", data["transport"])
+	d.Set("targetlbvserver", data["targetlbvserver"])
+	d.Set("messageauthenticator", data["messageauthenticator"])
 	d.Set("authentication", data["authentication"])
-	d.Set("authservretry", data["authservretry"])
-	d.Set("authtimeout", data["authtimeout"])
+	setToInt("authservretry", d, data["authservretry"])
+	setToInt("authtimeout", d, data["authtimeout"])
 	d.Set("callingstationid", data["callingstationid"])
 	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
-	d.Set("ipattributetype", data["ipattributetype"])
-	d.Set("ipvendorid", data["ipvendorid"])
+	setToInt("ipattributetype", d, data["ipattributetype"])
+	setToInt("ipvendorid", d, data["ipvendorid"])
 	d.Set("name", data["name"])
 	d.Set("passencoding", data["passencoding"])
-	d.Set("pwdattributetype", data["pwdattributetype"])
-	d.Set("pwdvendorid", data["pwdvendorid"])
-	d.Set("radattributetype", data["radattributetype"])
+	setToInt("pwdattributetype", d, data["pwdattributetype"])
+	setToInt("pwdvendorid", d, data["pwdvendorid"])
+	setToInt("radattributetype", d, data["radattributetype"])
 	d.Set("radgroupseparator", data["radgroupseparator"])
 	d.Set("radgroupsprefix", data["radgroupsprefix"])
 	// d.Set("radkey", data["radkey"]) Everytime it gives different encrypted key
 	d.Set("radnasid", data["radnasid"])
 	d.Set("radnasip", data["radnasip"])
-	d.Set("radvendorid", data["radvendorid"])
+	setToInt("radvendorid", d, data["radvendorid"])
 	d.Set("serverip", data["serverip"])
 	d.Set("servername", data["servername"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("tunnelendpointclientip", data["tunnelendpointclientip"])
 
 	return nil
 
 }
 
-func updateAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationradiusactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationradiusactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiusactionName := d.Get("name").(string)
@@ -233,6 +271,21 @@ func updateAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("transport") {
+		log.Printf("[DEBUG]  citrixadc-provider: Transport has changed for authenticationradiusaction, starting update")
+		authenticationradiusaction.Transport = d.Get("transport").(string)
+		hasChange = true
+	}
+	if d.HasChange("targetlbvserver") {
+		log.Printf("[DEBUG]  citrixadc-provider: Targetlbvserver has changed for authenticationradiusaction, starting update")
+		authenticationradiusaction.Targetlbvserver = d.Get("targetlbvserver").(string)
+		hasChange = true
+	}
+	if d.HasChange("messageauthenticator") {
+		log.Printf("[DEBUG]  citrixadc-provider: Messageauthenticator has changed for authenticationradiusaction, starting update")
+		authenticationradiusaction.Messageauthenticator = d.Get("messageauthenticator").(string)
+		hasChange = true
+	}
 	if d.HasChange("accounting") {
 		log.Printf("[DEBUG]  citrixadc-provider: Accounting has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
 		authenticationradiusaction.Accounting = d.Get("accounting").(string)
@@ -245,12 +298,12 @@ func updateAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("authservretry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authservretry has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
-		authenticationradiusaction.Authservretry = d.Get("authservretry").(int)
+		authenticationradiusaction.Authservretry = intPtr(d.Get("authservretry").(int))
 		hasChange = true
 	}
 	if d.HasChange("authtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authtimeout has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
-		authenticationradiusaction.Authtimeout = d.Get("authtimeout").(int)
+		authenticationradiusaction.Authtimeout = intPtr(d.Get("authtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("callingstationid") {
@@ -265,12 +318,12 @@ func updateAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("ipattributetype") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ipattributetype has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
-		authenticationradiusaction.Ipattributetype = d.Get("ipattributetype").(int)
+		authenticationradiusaction.Ipattributetype = intPtr(d.Get("ipattributetype").(int))
 		hasChange = true
 	}
 	if d.HasChange("ipvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ipvendorid has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
-		authenticationradiusaction.Ipvendorid = d.Get("ipvendorid").(int)
+		authenticationradiusaction.Ipvendorid = intPtr(d.Get("ipvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("passencoding") {
@@ -280,17 +333,17 @@ func updateAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("pwdattributetype") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pwdattributetype has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
-		authenticationradiusaction.Pwdattributetype = d.Get("pwdattributetype").(int)
+		authenticationradiusaction.Pwdattributetype = intPtr(d.Get("pwdattributetype").(int))
 		hasChange = true
 	}
 	if d.HasChange("pwdvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pwdvendorid has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
-		authenticationradiusaction.Pwdvendorid = d.Get("pwdvendorid").(int)
+		authenticationradiusaction.Pwdvendorid = intPtr(d.Get("pwdvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("radattributetype") {
 		log.Printf("[DEBUG]  citrixadc-provider: Radattributetype has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
-		authenticationradiusaction.Radattributetype = d.Get("radattributetype").(int)
+		authenticationradiusaction.Radattributetype = intPtr(d.Get("radattributetype").(int))
 		hasChange = true
 	}
 	if d.HasChange("radgroupseparator") {
@@ -320,7 +373,7 @@ func updateAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("radvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Radvendorid has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
-		authenticationradiusaction.Radvendorid = d.Get("radvendorid").(int)
+		authenticationradiusaction.Radvendorid = intPtr(d.Get("radvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("serverip") {
@@ -335,7 +388,7 @@ func updateAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
-		authenticationradiusaction.Serverport = d.Get("serverport").(int)
+		authenticationradiusaction.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("tunnelendpointclientip") {
@@ -347,19 +400,19 @@ func updateAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationradiusaction.Type(), authenticationradiusactionName, &authenticationradiusaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationradiusaction %s", authenticationradiusactionName)
+			return diag.Errorf("Error updating authenticationradiusaction %s", authenticationradiusactionName)
 		}
 	}
-	return readAuthenticationradiusactionFunc(d, meta)
+	return readAuthenticationradiusactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationradiusactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationradiusactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiusactionName := d.Id()
 	err := client.DeleteResource(service.Authenticationradiusaction.Type(), authenticationradiusactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

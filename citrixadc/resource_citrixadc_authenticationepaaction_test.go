@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -31,6 +31,12 @@ const testAccAuthenticationepaaction_add = `
 		deletefiles     = "old_files"
 		killprocess     = "old_process"
 	}
+
+	resource "citrixadc_authenticationepaaction" "tf_epaaction2" {
+		name            = "tf_epaaction2"
+		deviceposture	 = "DISABLED"
+		defaultepagroup = "new_group"
+	}
 `
 const testAccAuthenticationepaaction_update = `
 
@@ -41,13 +47,19 @@ const testAccAuthenticationepaaction_update = `
 		deletefiles     = "new_files"
 		killprocess     = "new_process"
 	}
+
+	resource "citrixadc_authenticationepaaction" "tf_epaaction2" {
+		name            = "tf_epaaction2"
+		deviceposture	 = "ENABLED"
+		defaultepagroup = "new_group"
+	}
 `
 
 func TestAccAuthenticationepaaction_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthenticationepaactionDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthenticationepaactionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationepaaction_add,
@@ -56,6 +68,9 @@ func TestAccAuthenticationepaaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "name", "tf_epaaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "deletefiles", "old_files"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "killprocess", "old_process"),
+					testAccCheckAuthenticationepaactionExist("citrixadc_authenticationepaaction.tf_epaaction2", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction2", "name", "tf_epaaction2"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction2", "deviceposture", "DISABLED"),
 				),
 			},
 			{
@@ -65,6 +80,9 @@ func TestAccAuthenticationepaaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "name", "tf_epaaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "deletefiles", "new_files"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "killprocess", "new_process"),
+					testAccCheckAuthenticationepaactionExist("citrixadc_authenticationepaaction.tf_epaaction2", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction2", "name", "tf_epaaction2"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction2", "deviceposture", "ENABLED"),
 				),
 			},
 		},
@@ -90,8 +108,12 @@ func testAccCheckAuthenticationepaactionExist(n string, id *string) resource.Tes
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("authenticationepaaction", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("authenticationepaaction", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -106,7 +128,11 @@ func testAccCheckAuthenticationepaactionExist(n string, id *string) resource.Tes
 }
 
 func testAccCheckAuthenticationepaactionDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authenticationepaaction" {
@@ -117,7 +143,7 @@ func testAccCheckAuthenticationepaactionDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("aAuthenticationepaaction", rs.Primary.ID)
+		_, err := client.FindResource("aAuthenticationepaaction", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authenticationepaaction %s still exists", rs.Primary.ID)
 		}

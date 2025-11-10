@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -46,9 +46,9 @@ const testAccAuthenticationvserver_update = `
 
 func TestAccAuthenticationvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthenticationvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthenticationvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationvserver_add,
@@ -91,8 +91,12 @@ func testAccCheckAuthenticationvserverExist(n string, id *string) resource.TestC
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Authenticationvserver.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationvserver.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -107,7 +111,11 @@ func testAccCheckAuthenticationvserverExist(n string, id *string) resource.TestC
 }
 
 func testAccCheckAuthenticationvserverDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authenticationvserver" {
@@ -118,7 +126,7 @@ func testAccCheckAuthenticationvserverDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Authenticationvserver.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Authenticationvserver.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authenticationvserver %s still exists", rs.Primary.ID)
 		}

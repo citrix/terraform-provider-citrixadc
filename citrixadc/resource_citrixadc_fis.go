@@ -1,21 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcFis() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createFisFunc,
-		Read:          readFisFunc,
-		Delete:        deleteFisFunc,
+		CreateContext: createFisFunc,
+		ReadContext:   readFisFunc,
+		DeleteContext: deleteFisFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -34,31 +36,29 @@ func resourceCitrixAdcFis() *schema.Resource {
 	}
 }
 
-func createFisFunc(d *schema.ResourceData, meta interface{}) error {
+func createFisFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createFisFunc")
 	client := meta.(*NetScalerNitroClient).client
 	fisName := d.Get("name").(string)
 	fis := network.Fis{
-		Name:      d.Get("name").(string),
-		Ownernode: d.Get("ownernode").(int),
+		Name: d.Get("name").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		fis.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 
 	_, err := client.AddResource(service.Fis.Type(), fisName, &fis)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(fisName)
 
-	err = readFisFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this fis but we can't read it ?? %s", fisName)
-		return nil
-	}
-	return nil
+	return readFisFunc(ctx, d, meta)
 }
 
-func readFisFunc(d *schema.ResourceData, meta interface{}) error {
+func readFisFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readFisFunc")
 	client := meta.(*NetScalerNitroClient).client
 	fisName := d.Id()
@@ -70,19 +70,19 @@ func readFisFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
-	d.Set("ownernode", data["ownernode"])
+	setToInt("ownernode", d, data["ownernode"])
 
 	return nil
 
 }
 
-func deleteFisFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteFisFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteFisFunc")
 	client := meta.(*NetScalerNitroClient).client
 	fisName := d.Id()
 	err := client.DeleteResource(service.Fis.Type(), fisName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

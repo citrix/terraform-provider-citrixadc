@@ -1,23 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationvserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationvserverFunc,
-		Read:          readAuthenticationvserverFunc,
-		Update:        updateAuthenticationvserverFunc,
-		Delete:        deleteAuthenticationvserverFunc,
+		CreateContext: createAuthenticationvserverFunc,
+		ReadContext:   readAuthenticationvserverFunc,
+		UpdateContext: updateAuthenticationvserverFunc,
+		DeleteContext: deleteAuthenticationvserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -66,11 +70,6 @@ func resourceCitrixAdcAuthenticationvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -105,7 +104,7 @@ func resourceCitrixAdcAuthenticationvserver() *schema.Resource {
 	}
 }
 
-func createAuthenticationvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationvserverName := d.Get("name").(string)
@@ -115,35 +114,40 @@ func createAuthenticationvserverFunc(d *schema.ResourceData, meta interface{}) e
 		Authenticationdomain: d.Get("authenticationdomain").(string),
 		Certkeynames:         d.Get("certkeynames").(string),
 		Comment:              d.Get("comment").(string),
-		Failedlogintimeout:   d.Get("failedlogintimeout").(int),
 		Ipv46:                d.Get("ipv46").(string),
-		Maxloginattempts:     d.Get("maxloginattempts").(int),
 		Name:                 d.Get("name").(string),
-		Newname:              d.Get("newname").(string),
-		Port:                 d.Get("port").(int),
-		Range:                d.Get("range").(int),
 		Samesite:             d.Get("samesite").(string),
 		Servicetype:          d.Get("servicetype").(string),
 		State:                d.Get("state").(string),
-		Td:                   d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("failedlogintimeout"); !raw.IsNull() {
+		authenticationvserver.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxloginattempts"); !raw.IsNull() {
+		authenticationvserver.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		authenticationvserver.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("range"); !raw.IsNull() {
+		authenticationvserver.Range = intPtr(d.Get("range").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		authenticationvserver.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationvserver.Type(), authenticationvserverName, &authenticationvserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationvserverName)
 
-	err = readAuthenticationvserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationvserver but we can't read it ?? %s", authenticationvserverName)
-		return nil
-	}
-	return nil
+	return readAuthenticationvserverFunc(ctx, d, meta)
 }
 
-func readAuthenticationvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationvserverName := d.Id()
@@ -160,22 +164,21 @@ func readAuthenticationvserverFunc(d *schema.ResourceData, meta interface{}) err
 	d.Set("authenticationdomain", data["authenticationdomain"])
 	d.Set("certkeynames", data["certkeynames"])
 	d.Set("comment", data["comment"])
-	d.Set("failedlogintimeout", data["failedlogintimeout"])
+	setToInt("failedlogintimeout", d, data["failedlogintimeout"])
 	d.Set("ipv46", data["ipv46"])
-	d.Set("maxloginattempts", data["maxloginattempts"])
+	setToInt("maxloginattempts", d, data["maxloginattempts"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
-	d.Set("port", data["port"])
-	d.Set("range", data["range"])
+	setToInt("port", d, data["port"])
+	setToInt("range", d, data["range"])
 	d.Set("samesite", data["samesite"])
 	d.Set("servicetype", data["servicetype"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 
 	return nil
 
 }
 
-func updateAuthenticationvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationvserverName := d.Get("name").(string)
@@ -213,7 +216,7 @@ func updateAuthenticationvserverFunc(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("failedlogintimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Failedlogintimeout has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Failedlogintimeout = d.Get("failedlogintimeout").(int)
+		authenticationvserver.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("ipv46") {
@@ -223,22 +226,17 @@ func updateAuthenticationvserverFunc(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("maxloginattempts") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxloginattempts has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Maxloginattempts = d.Get("maxloginattempts").(int)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Newname = d.Get("newname").(string)
+		authenticationvserver.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
 		hasChange = true
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Port = d.Get("port").(int)
+		authenticationvserver.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG]  citrixadc-provider: Range has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Range = d.Get("range").(int)
+		authenticationvserver.Range = intPtr(d.Get("range").(int))
 		hasChange = true
 	}
 	if d.HasChange("samesite") {
@@ -257,31 +255,31 @@ func updateAuthenticationvserverFunc(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Td = d.Get("td").(int)
+		authenticationvserver.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if stateChange {
 		err := doAuthenticationvserverStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling cs vserver %s", authenticationvserverName)
+			return diag.Errorf("Error enabling/disabling cs vserver %s", authenticationvserverName)
 		}
 	}
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationvserver.Type(), authenticationvserverName, &authenticationvserver)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationvserver %s", authenticationvserverName)
+			return diag.Errorf("Error updating authenticationvserver %s", authenticationvserverName)
 		}
 	}
-	return readAuthenticationvserverFunc(d, meta)
+	return readAuthenticationvserverFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationvserverName := d.Id()
 	err := client.DeleteResource(service.Authenticationvserver.Type(), authenticationvserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

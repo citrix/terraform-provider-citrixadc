@@ -27,7 +27,7 @@ type Vpnglobalvpnclientlessaccesspolicybinding struct {
 	/**
 	* Integer specifying the policy's priority. The lower the priority number, the higher the policy's priority. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Bindpoint to which the policy is bound
 	*/

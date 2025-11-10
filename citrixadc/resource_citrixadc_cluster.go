@@ -1,14 +1,14 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/resource/config/router"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"bytes"
 	"fmt"
@@ -18,15 +18,18 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCluster() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createClusterFunc,
-		Read:          readClusterFunc,
-		Update:        updateClusterFunc,
-		Delete:        deleteClusterFunc,
+		CreateContext: createClusterFunc,
+		ReadContext:   readClusterFunc,
+		UpdateContext: updateClusterFunc,
+		DeleteContext: deleteClusterFunc,
 		Schema: map[string]*schema.Schema{
 			"backplanebasedview": {
 				Type:     schema.TypeString,
@@ -291,25 +294,21 @@ func resourceCitrixAdcCluster() *schema.Resource {
 	}
 }
 
-func createClusterFunc(d *schema.ResourceData, meta interface{}) error {
+func createClusterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createClusterFunc")
 	var err error
 	clid := strconv.Itoa(d.Get("clid").(int))
 
 	if err = bootstrapCluster(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(clid)
 
-	err = readClusterFunc(d, meta)
-	if err != nil {
-		return err
-	}
-	return nil
+	return readClusterFunc(ctx, d, meta)
 }
 
-func readClusterFunc(d *schema.ResourceData, meta interface{}) error {
+func readClusterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readClusterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusterId := d.Id()
@@ -318,17 +317,17 @@ func readClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing cluster state %s", clusterId)
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 
 	if len(datalist) == 0 {
-		return fmt.Errorf("[ERROR] could not retrieve cluster instance information.")
+		return diag.Errorf("[ERROR] could not retrieve cluster instance information.")
 	}
 
 	data := datalist[0]
 	clid, err := strconv.Atoi(data["clid"].(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.Set("clid", clid)
 	log.Printf("clid %v", clid)
@@ -352,12 +351,12 @@ func readClusterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err = readClusterNodes(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if isClusterModeL3(d) {
 		err = readClusterNodegroups(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -365,14 +364,16 @@ func readClusterFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateClusterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateClusterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	clid := strconv.Itoa(d.Get("clid").(int))
 
-	clusterinstance := cluster.Clusterinstance{
-		Clid: d.Get("clid").(int),
+	clusterinstance := cluster.Clusterinstance{}
+
+	if raw := d.GetRawConfig().GetAttr("clid"); !raw.IsNull() {
+		clusterinstance.Clid = intPtr(d.Get("clid").(int))
 	}
 	hasChange := false
 	clusterNodegroupChanged := false
@@ -383,17 +384,17 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("clid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clid has changed for clusterinstance %s, starting update", clid)
-		clusterinstance.Clid = d.Get("clid").(int)
+		clusterinstance.Clid = intPtr(d.Get("clid").(int))
 		hasChange = true
 	}
 	if d.HasChange("deadinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Deadinterval has changed for clusterinstance %s, starting update", clid)
-		clusterinstance.Deadinterval = d.Get("deadinterval").(int)
+		clusterinstance.Deadinterval = intPtr(d.Get("deadinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("hellointerval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Hellointerval has changed for clusterinstance %s, starting update", clid)
-		clusterinstance.Hellointerval = d.Get("hellointerval").(int)
+		clusterinstance.Hellointerval = intPtr(d.Get("hellointerval").(int))
 		hasChange = true
 	}
 	if d.HasChange("inc") {
@@ -435,35 +436,35 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Clusterinstance.Type(), clid, &clusterinstance)
 		if err != nil {
-			return fmt.Errorf("Error updating clusterinstance %s. %s", clid, err.Error())
+			return diag.Errorf("Error updating clusterinstance %s. %s", clid, err.Error())
 		}
 	}
 
 	// Add and update nodgroups before nodes
 	if isClusterModeL3(d) && clusterNodegroupChanged {
 		if err := addClusterNodegroups(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := updateClusterNodegroups(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if err := updateClusterNodes(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Delete nodegroups after nodes
 	if isClusterModeL3(d) && clusterNodegroupChanged {
 		if err := deleteClusterNodegroups(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return readClusterFunc(d, meta)
+	return readClusterFunc(ctx, d, meta)
 }
 
-func deleteClusterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteClusterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteClusterFunc")
 	//client := meta.(*NetScalerNitroClient).client
 
@@ -473,7 +474,7 @@ func deleteClusterFunc(d *schema.ResourceData, meta interface{}) error {
 		nodeData := getClusterNodeByid(d, nodeid)
 		err := deleteSingleClusterNode(d, meta, nodeData, true)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -482,7 +483,7 @@ func deleteClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	// Don't wait for CLIP migration on deletion of last node
 	err := deleteSingleClusterNode(d, meta, nodeData, false)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -516,7 +517,7 @@ func clusternodegroupMappingHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
 
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func clusternodeMappingHash(v interface{}) int {
@@ -561,7 +562,7 @@ func clusternodeMappingHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
 
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 type nodePriority struct {
@@ -750,15 +751,22 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 
 	clusterinstance := cluster.Clusterinstance{
 		Backplanebasedview:         d.Get("backplanebasedview").(string),
-		Clid:                       d.Get("clid").(int),
-		Deadinterval:               d.Get("deadinterval").(int),
-		Hellointerval:              d.Get("hellointerval").(int),
 		Inc:                        d.Get("inc").(string),
 		Nodegroup:                  d.Get("nodegroup").(string),
 		Preemption:                 d.Get("preemption").(string),
 		Processlocal:               d.Get("processlocal").(string),
 		Quorumtype:                 d.Get("quorumtype").(string),
 		Retainconnectionsoncluster: d.Get("retainconnectionsoncluster").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("clid"); !raw.IsNull() {
+		clusterinstance.Clid = intPtr(d.Get("clid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("deadinterval"); !raw.IsNull() {
+		clusterinstance.Deadinterval = intPtr(d.Get("deadinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hellointerval"); !raw.IsNull() {
+		clusterinstance.Hellointerval = intPtr(d.Get("hellointerval").(int))
 	}
 	_, err = nodeClient.AddResource("clusterinstance", clusterId, &clusterinstance)
 	if err != nil {
@@ -775,7 +783,7 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 
 		clusternodegroup := cluster.Clusternodegroup{
 			Name:     nodegroupData["name"].(string),
-			Priority: nodegroupData["priority"].(int),
+			Priority: intPtr(nodegroupData["priority"].(int)),
 			State:    nodegroupData["state"].(string),
 			Sticky:   nodegroupData["sticky"].(string),
 			Strict:   nodegroupData["strict"].(string),
@@ -792,17 +800,17 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 	clusternode := cluster.Clusternode{
 		Backplane:            firstNode["backplane"].(string),
 		Clearnodegroupconfig: firstNode["clearnodegroupconfig"].(string),
-		Delay:                firstNode["delay"].(int),
+		Delay:                intPtr(firstNode["delay"].(int)),
 		Ipaddress:            firstNode["ipaddress"].(string),
 		Nodegroup:            firstNode["nodegroup"].(string),
-		Nodeid:               firstNode["nodeid"].(int),
-		Priority:             firstNode["priority"].(int),
+		Nodeid:               intPtr(firstNode["nodeid"].(int)),
+		Priority:             intPtr(firstNode["priority"].(int)),
 		State:                firstNode["state"].(string),
 		Tunnelmode:           firstNode["tunnelmode"].(string),
 	}
 
 	log.Printf("[DEBUG]  citrixadc-provider: Nodeid %v", clusternode.Nodeid)
-	_, err = nodeClient.AddResource("clusternode", strconv.FormatUint(uint64(clusternode.Nodeid), 10), &clusternode)
+	_, err = nodeClient.AddResource("clusternode", strconv.FormatUint(uint64(firstNode["nodeid"].(int)), 10), &clusternode)
 	if err != nil {
 		return err
 	}
@@ -821,8 +829,10 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Enable cluster instance on first node
-	clusterinstanceEnabler := cluster.Clusterinstance{
-		Clid: d.Get("clid").(int),
+	clusterinstanceEnabler := cluster.Clusterinstance{}
+
+	if raw := d.GetRawConfig().GetAttr("clid"); !raw.IsNull() {
+		clusterinstanceEnabler.Clid = intPtr(d.Get("clid").(int))
 	}
 	err = nodeClient.ActOnResource("clusterinstance", &clusterinstanceEnabler, "enable")
 	if err != nil {
@@ -1066,7 +1076,7 @@ func updateSingleClusterNodegroup(d *schema.ResourceData, meta interface{}, node
 
 	clusternodegroup := cluster.Clusternodegroup{
 		Name:     nodegroupData["name"].(string),
-		Priority: nodegroupData["priority"].(int),
+		Priority: intPtr(nodegroupData["priority"].(int)),
 		State:    nodegroupData["state"].(string),
 		Sticky:   nodegroupData["sticky"].(string),
 		Strict:   nodegroupData["strict"].(string),
@@ -1099,7 +1109,7 @@ func addSingleClusterNodegroup(d *schema.ResourceData, meta interface{}, nodegro
 
 	clusternodegroup := cluster.Clusternodegroup{
 		Name:     nodegroupData["name"].(string),
-		Priority: nodegroupData["priority"].(int),
+		Priority: intPtr(nodegroupData["priority"].(int)),
 		State:    nodegroupData["state"].(string),
 		Sticky:   nodegroupData["sticky"].(string),
 		Strict:   nodegroupData["strict"].(string),
@@ -1365,29 +1375,31 @@ func addSingleClusterNode(d *schema.ResourceData, meta interface{}, nodeData map
 	clusternode := cluster.Clusternode{
 		Backplane:            nodeData["backplane"].(string),
 		Clearnodegroupconfig: nodeData["clearnodegroupconfig"].(string),
-		Delay:                nodeData["delay"].(int),
+		Delay:                intPtr(nodeData["delay"].(int)),
 		Ipaddress:            nodeData["ipaddress"].(string),
 		Nodegroup:            nodeData["nodegroup"].(string),
-		Nodeid:               nodeData["nodeid"].(int),
-		Priority:             nodeData["priority"].(int),
+		Nodeid:               intPtr(nodeData["nodeid"].(int)),
+		Priority:             intPtr(nodeData["priority"].(int)),
 		State:                nodeData["state"].(string),
 		Tunnelmode:           nodeData["tunnelmode"].(string),
 	}
 
 	// Add cluster node on cluster configuration coordinator
-	_, err := client.AddResource("clusternode", strconv.FormatUint(uint64(clusternode.Nodeid), 10), &clusternode)
+	_, err := client.AddResource("clusternode", strconv.FormatUint(uint64(nodeData["nodeid"].(int)), 10), &clusternode)
 	if err != nil {
 		return err
 	}
 
 	// Register node ip to the CLIP if flag is set
 	if nodeData["addsnip"].(bool) {
-		nodeNsip := nsip{
-			Ownernode:  strconv.Itoa(nodeData["nodeid"].(int)),
+		nodeNsip := ns.Nsip{
 			Ipaddress:  nodeData["snip_ipaddress"].(string),
 			Mgmtaccess: "ENABLED",
 			Netmask:    nodeData["snip_netmask"].(string),
 			Type:       "SNIP",
+		}
+		if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+			nodeNsip.Ownernode = intPtr(d.Get("ownernode").(int))
 		}
 		log.Printf("[DEBUG]  citrixadc-provider: registering node ip %v", nodeNsip)
 		_, err := client.AddResource(service.Nsip.Type(), nodeData["ipaddress"].(string), &nodeNsip)
@@ -1542,9 +1554,9 @@ func updateSingleClusterNode(d *schema.ResourceData, meta interface{}, nodeData 
 	// Only include attributes that can be present in HTTP PUT operation
 	clusternode := cluster.Clusternode{
 		Backplane:  nodeData["backplane"].(string),
-		Delay:      nodeData["delay"].(int),
-		Nodeid:     nodeData["nodeid"].(int),
-		Priority:   nodeData["priority"].(int),
+		Delay:      intPtr(nodeData["delay"].(int)),
+		Nodeid:     intPtr(nodeData["nodeid"].(int)),
+		Priority:   intPtr(nodeData["priority"].(int)),
 		State:      nodeData["state"].(string),
 		Tunnelmode: nodeData["tunnelmode"].(string),
 	}

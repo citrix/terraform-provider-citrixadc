@@ -24,15 +24,15 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccGslbservice_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGslbserviceDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckGslbserviceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGslbservice_basic,
@@ -74,8 +74,12 @@ func testAccCheckGslbserviceExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Gslbservice.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Gslbservice.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -90,7 +94,11 @@ func testAccCheckGslbserviceExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckGslbserviceDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_gslbservice" {
@@ -101,7 +109,7 @@ func testAccCheckGslbserviceDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Gslbservice.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Gslbservice.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -118,7 +126,7 @@ resource "citrixadc_gslbsite" "foo" {
 	sitename = "Site-GSLB-East-Coast"
 	sitepassword = "password123"
 
-  }
+	}
 
 resource "citrixadc_gslbservice" "foo" {
 
@@ -191,7 +199,7 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 		Sitename:    siteName,
 		Servername:  serverName,
 		Servicetype: "HTTP",
-		Port:        8080,
+		Port:        intPtr(8080),
 	}
 
 	if _, err := c.client.AddResource(serviceType, serviceName, serviceInstance); err != nil {
@@ -202,7 +210,7 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 	// Zero out fields in present service instance
 	serviceInstance.Servername = ""
 	serviceInstance.Servicetype = ""
-	serviceInstance.Port = 0
+	serviceInstance.Port = intPtr(0)
 	serviceInstance.Sitename = ""
 
 	//cnameentry
@@ -226,9 +234,9 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 	serviceInstance.Servicetype = ""
 
 	//port
-	serviceInstance.Port = 9999
+	serviceInstance.Port = intPtr(9999)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "port")
-	serviceInstance.Port = 0
+	serviceInstance.Port = intPtr(0)
 
 	//sitename
 	serviceInstance.Sitename = "other_site_name"
@@ -236,19 +244,19 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 	serviceInstance.Sitename = ""
 
 	//cookietimeout
-	serviceInstance.Cookietimeout = 10
+	serviceInstance.Cookietimeout = intPtr(10)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "cookietimeout")
-	serviceInstance.Cookietimeout = 0
+	serviceInstance.Cookietimeout = intPtr(0)
 
 	//clttimeout
-	serviceInstance.Clttimeout = 10
+	serviceInstance.Clttimeout = intPtr(10)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "clttimeout")
-	serviceInstance.Clttimeout = 0
+	serviceInstance.Clttimeout = intPtr(0)
 
 	//svrtimeout
-	serviceInstance.Svrtimeout = 10
+	serviceInstance.Svrtimeout = intPtr(10)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "svrtimeout")
-	serviceInstance.Svrtimeout = 0
+	serviceInstance.Svrtimeout = intPtr(0)
 }
 
 const testAccGslbserviceEnableDisable_enabled = `
@@ -293,9 +301,9 @@ resource "citrixadc_gslbservice" "tf_test_acc_gslbservice" {
 
 func TestAccGslbservice_enable_disable(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGslbserviceDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckGslbserviceDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
 			{
@@ -327,9 +335,9 @@ func TestAccGslbservice_enable_disable(t *testing.T) {
 
 func TestAccGslbservice_lbmonitorbinding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGslbserviceDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckGslbserviceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGslbservicelbmonitor_two,
@@ -362,7 +370,11 @@ func TestAccGslbservice_lbmonitorbinding(t *testing.T) {
 func verifyLbmonitorbindingExists(servicename, monitor_name string, inverse bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		bindFound := false
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		lbmonitorBindings, _ := client.FindResourceArray("gslbservice_lbmonitor_binding", servicename)
 		for _, val := range lbmonitorBindings {
 			if val["monitor_name"].(string) == monitor_name {
@@ -415,12 +427,12 @@ resource "citrixadc_gslbservice" "tf_test_gslbservice" {
   lbmonitorbinding {
       monitor_name = citrixadc_lbmonitor.tf_test_monitor1.monitorname
       weight = 80
-  }
+	}
 
   lbmonitorbinding {
       monitor_name = citrixadc_lbmonitor.tf_test_monitor2.monitorname
       weight = 20
-  }
+	}
 }
 `
 const testAccGslbservicelbmonitor_one = `
@@ -451,7 +463,7 @@ resource "citrixadc_gslbservice" "tf_test_gslbservice" {
   lbmonitorbinding {
       monitor_name = citrixadc_lbmonitor.tf_test_monitor2.monitorname
       weight = 20
-  }
+	}
 }
 `
 

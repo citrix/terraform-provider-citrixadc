@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaapreauthenticationparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaapreauthenticationparameterFunc,
-		Read:          readAaapreauthenticationparameterFunc,
-		Update:        updateAaapreauthenticationparameterFunc,
-		Delete:        deleteAaapreauthenticationparameterFunc,
+		CreateContext: createAaapreauthenticationparameterFunc,
+		ReadContext:   readAaapreauthenticationparameterFunc,
+		UpdateContext: updateAaapreauthenticationparameterFunc,
+		DeleteContext: deleteAaapreauthenticationparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"deletefiles": {
 				Type:     schema.TypeString,
@@ -43,7 +46,7 @@ func resourceCitrixAdcAaapreauthenticationparameter() *schema.Resource {
 	}
 }
 
-func createAaapreauthenticationparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaapreauthenticationparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaapreauthenticationparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationparameterName := resource.PrefixedUniqueId("tf-aaapreauthenticationparameter-")
@@ -57,20 +60,15 @@ func createAaapreauthenticationparameterFunc(d *schema.ResourceData, meta interf
 
 	err := client.UpdateUnnamedResource(service.Aaapreauthenticationparameter.Type(), &aaapreauthenticationparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaapreauthenticationparameterName)
 
-	err = readAaapreauthenticationparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaapreauthenticationparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAaapreauthenticationparameterFunc(ctx, d, meta)
 }
 
-func readAaapreauthenticationparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaapreauthenticationparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaapreauthenticationparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading aaapreauthenticationparameter state")
@@ -89,7 +87,7 @@ func readAaapreauthenticationparameterFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func updateAaapreauthenticationparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaapreauthenticationparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaapreauthenticationparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationparameter := aaa.Aaapreauthenticationparameter{}
@@ -118,13 +116,13 @@ func updateAaapreauthenticationparameterFunc(d *schema.ResourceData, meta interf
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Aaapreauthenticationparameter.Type(), &aaapreauthenticationparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating aaapreauthenticationparameter")
+			return diag.Errorf("Error updating aaapreauthenticationparameter")
 		}
 	}
-	return readAaapreauthenticationparameterFunc(d, meta)
+	return readAaapreauthenticationparameterFunc(ctx, d, meta)
 }
 
-func deleteAaapreauthenticationparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaapreauthenticationparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaapreauthenticationparameterFunc")
 	// aaapreauthenticationparameter does not suppor DELETE operation
 	d.SetId("")

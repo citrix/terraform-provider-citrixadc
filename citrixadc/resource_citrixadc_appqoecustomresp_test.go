@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -34,9 +34,9 @@ const testAccAppqoecustomresp_basic = `
 func TestAccAppqoecustomresp_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppqoecustomrespDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAppqoecustomrespDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppqoecustomresp_basic,
@@ -67,8 +67,12 @@ func testAccCheckAppqoecustomrespExist(n string, id *string) resource.TestCheckF
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		dataArr, err := nsClient.FindAllResources(service.Appqoecustomresp.Type())
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Appqoecustomresp.Type())
 		if err != nil {
 			return err
 		}
@@ -93,7 +97,11 @@ func testAccCheckAppqoecustomrespExist(n string, id *string) resource.TestCheckF
 }
 
 func testAccCheckAppqoecustomrespDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_appqoecustomresp" {
@@ -104,7 +112,7 @@ func testAccCheckAppqoecustomrespDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Appqoecustomresp.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Appqoecustomresp.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("appqoecustomresp %s still exists", rs.Primary.ID)
 		}

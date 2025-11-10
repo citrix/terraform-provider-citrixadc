@@ -27,7 +27,7 @@ type Csvservergslbvserverbinding struct {
 	/**
 	* Number of hits.
 	*/
-	Hits int `json:"hits,omitempty"`
+	Hits *int `json:"hits,omitempty"`
 	/**
 	* Name of the content switching virtual server to which the content switching policy applies.
 	*/

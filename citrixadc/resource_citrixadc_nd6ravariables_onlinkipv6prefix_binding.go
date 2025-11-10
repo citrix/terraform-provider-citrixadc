@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strconv"
@@ -15,11 +17,11 @@ import (
 func resourceCitrixAdcNd6ravariables_onlinkipv6prefix_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNd6ravariables_onlinkipv6prefix_bindingFunc,
-		Read:          readNd6ravariables_onlinkipv6prefix_bindingFunc,
-		Delete:        deleteNd6ravariables_onlinkipv6prefix_bindingFunc,
+		CreateContext: createNd6ravariables_onlinkipv6prefix_bindingFunc,
+		ReadContext:   readNd6ravariables_onlinkipv6prefix_bindingFunc,
+		DeleteContext: deleteNd6ravariables_onlinkipv6prefix_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ipv6prefix": {
@@ -36,7 +38,7 @@ func resourceCitrixAdcNd6ravariables_onlinkipv6prefix_binding() *schema.Resource
 	}
 }
 
-func createNd6ravariables_onlinkipv6prefix_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createNd6ravariables_onlinkipv6prefix_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNd6ravariables_onlinkipv6prefix_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vlan := strconv.Itoa(d.Get("vlan").(int))
@@ -44,25 +46,23 @@ func createNd6ravariables_onlinkipv6prefix_bindingFunc(d *schema.ResourceData, m
 	bindingId := fmt.Sprintf("%s,%s", vlan, ipv6prefix)
 	nd6ravariables_onlinkipv6prefix_binding := network.Nd6ravariablesonlinkipv6prefixbinding{
 		Ipv6prefix: d.Get("ipv6prefix").(string),
-		Vlan:       d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nd6ravariables_onlinkipv6prefix_binding.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nd6ravariables_onlinkipv6prefix_binding.Type(), &nd6ravariables_onlinkipv6prefix_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readNd6ravariables_onlinkipv6prefix_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nd6ravariables_onlinkipv6prefix_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readNd6ravariables_onlinkipv6prefix_bindingFunc(ctx, d, meta)
 }
 
-func readNd6ravariables_onlinkipv6prefix_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readNd6ravariables_onlinkipv6prefix_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNd6ravariables_onlinkipv6prefix_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -83,7 +83,7 @@ func readNd6ravariables_onlinkipv6prefix_bindingFunc(d *schema.ResourceData, met
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -115,13 +115,13 @@ func readNd6ravariables_onlinkipv6prefix_bindingFunc(d *schema.ResourceData, met
 	data := dataArr[foundIndex]
 
 	d.Set("ipv6prefix", data["ipv6prefix"])
-	d.Set("vlan", data["vlan"])
+	setToInt("vlan", d, data["vlan"])
 
 	return nil
 
 }
 
-func deleteNd6ravariables_onlinkipv6prefix_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNd6ravariables_onlinkipv6prefix_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNd6ravariables_onlinkipv6prefix_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -137,7 +137,7 @@ func deleteNd6ravariables_onlinkipv6prefix_bindingFunc(d *schema.ResourceData, m
 
 	err := client.DeleteResourceWithArgs(service.Nd6ravariables_onlinkipv6prefix_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

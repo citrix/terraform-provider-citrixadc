@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVridparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVridparamFunc,
-		Read:          readVridparamFunc,
-		Update:        updateVridparamFunc,
-		Delete:        deleteVridparamFunc,
+		CreateContext: createVridparamFunc,
+		ReadContext:   readVridparamFunc,
+		UpdateContext: updateVridparamFunc,
+		DeleteContext: deleteVridparamFunc,
 		Schema: map[string]*schema.Schema{
 			"deadinterval": {
 				Type:     schema.TypeInt,
@@ -38,34 +41,34 @@ func resourceCitrixAdcVridparam() *schema.Resource {
 	}
 }
 
-func createVridparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createVridparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVridparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var vridparamName string
 	// there is no primary key in vridparam resource. Hence generate one for terraform state maintenance
 	vridparamName = resource.PrefixedUniqueId("tf-vridparam-")
 	vridparam := network.Vridparam{
-		Deadinterval:  d.Get("deadinterval").(int),
-		Hellointerval: d.Get("hellointerval").(int),
-		Sendtomaster:  d.Get("sendtomaster").(string),
+		Sendtomaster: d.Get("sendtomaster").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("deadinterval"); !raw.IsNull() {
+		vridparam.Deadinterval = intPtr(d.Get("deadinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hellointerval"); !raw.IsNull() {
+		vridparam.Hellointerval = intPtr(d.Get("hellointerval").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vridparam.Type(), &vridparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vridparamName)
 
-	err = readVridparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vridparam but we can't read it ?? %s", vridparamName)
-		return nil
-	}
-	return nil
+	return readVridparamFunc(ctx, d, meta)
 }
 
-func readVridparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readVridparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVridparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading vridparam state")
@@ -75,27 +78,27 @@ func readVridparamFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("deadinterval", data["deadinterval"])
-	d.Set("hellointerval", data["hellointerval"])
+	setToInt("deadinterval", d, data["deadinterval"])
+	setToInt("hellointerval", d, data["hellointerval"])
 	d.Set("sendtomaster", data["sendtomaster"])
 
 	return nil
 
 }
 
-func updateVridparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVridparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVridparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vridparam := network.Vridparam{}
 	hasChange := false
 	if d.HasChange("deadinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Deadinterval has changed for vridparam, starting update")
-		vridparam.Deadinterval = d.Get("deadinterval").(int)
+		vridparam.Deadinterval = intPtr(d.Get("deadinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("hellointerval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Hellointerval has changed for vridparam, starting update")
-		vridparam.Hellointerval = d.Get("hellointerval").(int)
+		vridparam.Hellointerval = intPtr(d.Get("hellointerval").(int))
 		hasChange = true
 	}
 	if d.HasChange("sendtomaster") {
@@ -107,13 +110,13 @@ func updateVridparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Vridparam.Type(), &vridparam)
 		if err != nil {
-			return fmt.Errorf("Error updating vridparam")
+			return diag.Errorf("Error updating vridparam")
 		}
 	}
-	return readVridparamFunc(d, meta)
+	return readVridparamFunc(ctx, d, meta)
 }
 
-func deleteVridparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVridparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVridparamFunc")
 
 	d.SetId("")

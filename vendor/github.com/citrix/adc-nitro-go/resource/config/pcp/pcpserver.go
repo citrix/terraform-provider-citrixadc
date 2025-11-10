@@ -31,7 +31,7 @@ type Pcpserver struct {
 	/**
 	* Port number for the PCP server.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* pcp profile name
 	*/

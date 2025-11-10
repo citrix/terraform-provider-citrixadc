@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationdfaaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationdfaactionFunc,
-		Read:          readAuthenticationdfaactionFunc,
-		Update:        updateAuthenticationdfaactionFunc,
-		Delete:        deleteAuthenticationdfaactionFunc,
+		CreateContext: createAuthenticationdfaactionFunc,
+		ReadContext:   readAuthenticationdfaactionFunc,
+		UpdateContext: updateAuthenticationdfaactionFunc,
+		DeleteContext: deleteAuthenticationdfaactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -50,7 +53,7 @@ func resourceCitrixAdcAuthenticationdfaaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationdfaactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationdfaactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationdfaactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationdfaactionName := d.Get("name").(string)
@@ -64,20 +67,15 @@ func createAuthenticationdfaactionFunc(d *schema.ResourceData, meta interface{})
 
 	_, err := client.AddResource(service.Authenticationdfaaction.Type(), authenticationdfaactionName, &authenticationdfaaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationdfaactionName)
 
-	err = readAuthenticationdfaactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationdfaaction but we can't read it ?? %s", authenticationdfaactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationdfaactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationdfaactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationdfaactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationdfaactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationdfaactionName := d.Id()
@@ -98,7 +96,7 @@ func readAuthenticationdfaactionFunc(d *schema.ResourceData, meta interface{}) e
 
 }
 
-func updateAuthenticationdfaactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationdfaactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationdfaactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationdfaactionName := d.Get("name").(string)
@@ -131,19 +129,19 @@ func updateAuthenticationdfaactionFunc(d *schema.ResourceData, meta interface{})
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationdfaaction.Type(), authenticationdfaactionName, &authenticationdfaaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationdfaaction %s", authenticationdfaactionName)
+			return diag.Errorf("Error updating authenticationdfaaction %s", authenticationdfaactionName)
 		}
 	}
-	return readAuthenticationdfaactionFunc(d, meta)
+	return readAuthenticationdfaactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationdfaactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationdfaactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationdfaactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationdfaactionName := d.Id()
 	err := client.DeleteResource(service.Authenticationdfaaction.Type(), authenticationdfaactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

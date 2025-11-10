@@ -34,6 +34,8 @@ resource "citrixadc_botsettings" "default" {
 * `signatureurl` - (Optional) URL to download the bot signature mapping file from server.
 * `proxyserver` - (Optional) Proxy Server IP to get updated signatures from AWS.
 * `proxyport` - (Optional) Proxy Server Port to get updated signatures from AWS. Range 1-65535 * in CLI is represented as 65535 in NITRO API
+* `proxyusername` - (Optional) Proxy Username.
+* `proxypassword` - (Optional) Password with which user logs on.
 * `trapurlautogenerate` - (Optional) Enable/disable trap URL auto generation. When enabled, trap URL is updated within the configured interval. Default value: OFF Possible values = ON, OFF
 * `trapurlinterval` - (Optional)Time in seconds after which trap URL is updated. Default value: 3600 Minimum value = 300 Maximum value = 86400
 * `trapurllength` - (Optional) Length of the auto-generated trap URL. Default value: 32 Minimum value = 10 Maximum value = 255 

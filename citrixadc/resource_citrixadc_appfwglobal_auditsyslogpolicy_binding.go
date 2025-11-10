@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcAppfwglobal_auditsyslogpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwglobal_auditsyslogpolicy_bindingFunc,
-		Read:          readAppfwglobal_auditsyslogpolicy_bindingFunc,
-		Delete:        deleteAppfwglobal_auditsyslogpolicy_bindingFunc,
+		CreateContext: createAppfwglobal_auditsyslogpolicy_bindingFunc,
+		ReadContext:   readAppfwglobal_auditsyslogpolicy_bindingFunc,
+		DeleteContext: deleteAppfwglobal_auditsyslogpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -72,7 +74,7 @@ func resourceCitrixAdcAppfwglobal_auditsyslogpolicy_binding() *schema.Resource {
 	}
 }
 
-func createAppfwglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwglobal_auditsyslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwglobal_auditsyslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -82,27 +84,25 @@ func createAppfwglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, met
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		State:                  d.Get("state").(string),
 		Type:                   d.Get("type").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		appfwglobal_auditsyslogpolicy_binding.Priority = intPtr(d.Get("priority").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Appfwglobal_auditsyslogpolicy_binding.Type(), &appfwglobal_auditsyslogpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readAppfwglobal_auditsyslogpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwglobal_auditsyslogpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readAppfwglobal_auditsyslogpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwglobal_auditsyslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwglobal_auditsyslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -118,7 +118,7 @@ func readAppfwglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta 
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -162,7 +162,7 @@ func readAppfwglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 }
 
-func deleteAppfwglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwglobal_auditsyslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwglobal_auditsyslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -179,7 +179,7 @@ func deleteAppfwglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, met
 
 	err := client.DeleteResourceWithArgs(service.Appfwglobal_auditsyslogpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

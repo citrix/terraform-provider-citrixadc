@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcBotsignature() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotsignatureFunc,
-		Read:          readBotsignatureFunc,
-		Delete:        deleteBotsignatureFunc,
+		CreateContext: createBotsignatureFunc,
+		ReadContext:   readBotsignatureFunc,
+		DeleteContext: deleteBotsignatureFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -45,7 +47,7 @@ func resourceCitrixAdcBotsignature() *schema.Resource {
 	}
 }
 
-func createBotsignatureFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotsignatureFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotsignatureFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -60,20 +62,15 @@ func createBotsignatureFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ActOnResource("botsignature", &botsignature, "Import")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(botsignatureName)
 
-	err = readBotsignatureFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botsignature but we can't read it ?? %s", botsignatureName)
-		return nil
-	}
-	return nil
+	return readBotsignatureFunc(ctx, d, meta)
 }
 
-func readBotsignatureFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotsignatureFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotsignatureFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botsignatureName := d.Id()
@@ -90,13 +87,13 @@ func readBotsignatureFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteBotsignatureFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotsignatureFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotsignatureFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botsignatureName := d.Id()
 	err := client.DeleteResource("botsignature", botsignatureName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

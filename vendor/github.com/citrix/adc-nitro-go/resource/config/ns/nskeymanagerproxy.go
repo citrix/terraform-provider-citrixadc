@@ -31,11 +31,11 @@ type Nskeymanagerproxy struct {
 	/**
 	* Key Manager proxy server port.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

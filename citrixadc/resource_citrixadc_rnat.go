@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRnat() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRnatFunc,
-		Read:          readRnatFunc,
-		Update:        updateRnatFunc,
-		Delete:        deleteRnatFunc,
+		CreateContext: createRnatFunc,
+		ReadContext:   readRnatFunc,
+		UpdateContext: updateRnatFunc,
+		DeleteContext: deleteRnatFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -53,11 +56,6 @@ func resourceCitrixAdcRnat() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -87,7 +85,7 @@ func resourceCitrixAdcRnat() *schema.Resource {
 	}
 }
 
-func createRnatFunc(d *schema.ResourceData, meta interface{}) error {
+func createRnatFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRnatFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rnatName := d.Get("name").(string)
@@ -98,30 +96,29 @@ func createRnatFunc(d *schema.ResourceData, meta interface{}) error {
 		Name:             d.Get("name").(string),
 		Netmask:          d.Get("netmask").(string),
 		Network:          d.Get("network").(string),
-		Newname:          d.Get("newname").(string),
 		Ownergroup:       d.Get("ownergroup").(string),
-		Redirectport:     d.Get("redirectport").(int),
 		Srcippersistency: d.Get("srcippersistency").(string),
-		Td:               d.Get("td").(int),
 		Useproxyport:     d.Get("useproxyport").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("redirectport"); !raw.IsNull() {
+		rnat.Redirectport = intPtr(d.Get("redirectport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		rnat.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Rnat.Type(), rnatName, &rnat)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(rnatName)
 
-	err = readRnatFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rnat but we can't read it ?? %s", rnatName)
-		return nil
-	}
-	return nil
+	return readRnatFunc(ctx, d, meta)
 }
 
-func readRnatFunc(d *schema.ResourceData, meta interface{}) error {
+func readRnatFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRnatFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rnatName := d.Id()
@@ -138,18 +135,17 @@ func readRnatFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("natip", data["natip"])
 	d.Set("netmask", data["netmask"])
 	d.Set("network", data["network"])
-	d.Set("newname", data["newname"])
 	d.Set("ownergroup", data["ownergroup"])
-	d.Set("redirectport", data["redirectport"])
+	setToInt("redirectport", d, data["redirectport"])
 	d.Set("srcippersistency", data["srcippersistency"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("useproxyport", data["useproxyport"])
 
 	return nil
 
 }
 
-func updateRnatFunc(d *schema.ResourceData, meta interface{}) error {
+func updateRnatFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRnatFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rnatName := d.Get("name").(string)
@@ -168,11 +164,6 @@ func updateRnatFunc(d *schema.ResourceData, meta interface{}) error {
 		rnat.Natip = d.Get("natip").(string)
 		hasChange = true
 	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for rnat %s, starting update", rnatName)
-		rnat.Newname = d.Get("newname").(string)
-		hasChange = true
-	}
 	if d.HasChange("ownergroup") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownergroup has changed for rnat %s, starting update", rnatName)
 		rnat.Ownergroup = d.Get("ownergroup").(string)
@@ -180,7 +171,7 @@ func updateRnatFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("redirectport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Redirectport has changed for rnat %s, starting update", rnatName)
-		rnat.Redirectport = d.Get("redirectport").(int)
+		rnat.Redirectport = intPtr(d.Get("redirectport").(int))
 		hasChange = true
 	}
 	if d.HasChange("srcippersistency") {
@@ -190,7 +181,7 @@ func updateRnatFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for rnat %s, starting update", rnatName)
-		rnat.Td = d.Get("td").(int)
+		rnat.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("useproxyport") {
@@ -202,19 +193,19 @@ func updateRnatFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Rnat.Type(), rnatName, &rnat)
 		if err != nil {
-			return fmt.Errorf("Error updating rnat %s", rnatName)
+			return diag.Errorf("Error updating rnat %s", rnatName)
 		}
 	}
-	return readRnatFunc(d, meta)
+	return readRnatFunc(ctx, d, meta)
 }
 
-func deleteRnatFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRnatFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRnatFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rnatName := d.Id()
 	err := client.DeleteResource(service.Rnat.Type(), rnatName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,22 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppfwjsoncontenttype() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwjsoncontenttypeFunc,
-		Read:          readAppfwjsoncontenttypeFunc,
-		Delete:        deleteAppfwjsoncontenttypeFunc,
+		CreateContext: createAppfwjsoncontenttypeFunc,
+		ReadContext:   readAppfwjsoncontenttypeFunc,
+		DeleteContext: deleteAppfwjsoncontenttypeFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"isregex": {
@@ -33,7 +34,7 @@ func resourceCitrixAdcAppfwjsoncontenttype() *schema.Resource {
 	}
 }
 
-func createAppfwjsoncontenttypeFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwjsoncontenttypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwjsoncontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsoncontenttypeName := d.Get("jsoncontenttypevalue").(string)
@@ -44,20 +45,15 @@ func createAppfwjsoncontenttypeFunc(d *schema.ResourceData, meta interface{}) er
 
 	_, err := client.AddResource(service.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeName, &appfwjsoncontenttype)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwjsoncontenttypeName)
 
-	err = readAppfwjsoncontenttypeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwjsoncontenttype but we can't read it ?? %s", appfwjsoncontenttypeName)
-		return nil
-	}
-	return nil
+	return readAppfwjsoncontenttypeFunc(ctx, d, meta)
 }
 
-func readAppfwjsoncontenttypeFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwjsoncontenttypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwjsoncontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsoncontenttypeName := d.Id()
@@ -75,13 +71,13 @@ func readAppfwjsoncontenttypeFunc(d *schema.ResourceData, meta interface{}) erro
 
 }
 
-func deleteAppfwjsoncontenttypeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwjsoncontenttypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwjsoncontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsoncontenttypeName := d.Id()
 	err := client.DeleteResource(service.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

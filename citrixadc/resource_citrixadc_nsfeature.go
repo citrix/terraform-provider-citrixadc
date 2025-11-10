@@ -1,20 +1,24 @@
 package citrixadc
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsfeature() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsfeatureFunc,
-		Read:          readNsfeatureFunc,
-		Update:        updateNsfeatureFunc,
-		Delete:        deleteNsfeatureFunc,
+		CreateContext: createNsfeatureFunc,
+		ReadContext:   readNsfeatureFunc,
+		UpdateContext: updateNsfeatureFunc,
+		DeleteContext: deleteNsfeatureFunc,
 		Schema: map[string]*schema.Schema{
 			"wl": {
 				Type:     schema.TypeBool,
@@ -241,7 +245,6 @@ var featureList = [...]string{
 	"lb",
 	"cs",
 	"cr",
-	"sc",
 	"cmp",
 	"pq",
 	"ssl",
@@ -282,7 +285,7 @@ var featureList = [...]string{
 	"apigateway",
 }
 
-func createNsfeatureFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsfeatureFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsfeatureFunc")
 	client := meta.(*NetScalerNitroClient).client
 	_ = client
@@ -304,14 +307,14 @@ func createNsfeatureFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := enableNsFeatureList(meta, enableList); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := disableNsFeatureList(meta, disableList); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	err := readNsfeatureFunc(d, meta)
+	err := readNsfeatureFunc(ctx, d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsfeature but we can't read it ?? %s", nsfeatureId)
 		return nil
@@ -319,7 +322,7 @@ func createNsfeatureFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func readNsfeatureFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsfeatureFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsfeatureFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsfeatureId := d.Id()
@@ -356,7 +359,7 @@ func readNsfeatureFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsfeatureFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsfeatureFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsfeatureFunc")
 	//client := meta.(*NetScalerNitroClient).client
 
@@ -376,14 +379,14 @@ func updateNsfeatureFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := enableNsFeatureList(meta, enableList); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := disableNsFeatureList(meta, disableList); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return readNsfeatureFunc(d, meta)
+	return readNsfeatureFunc(ctx, d, meta)
 }
 
 func enableNsFeatureList(meta interface{}, featureList []string) error {
@@ -413,7 +416,7 @@ func disableNsFeatureList(meta interface{}, featureList []string) error {
 	return nil
 }
 
-func deleteNsfeatureFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsfeatureFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsfeatureFunc")
 
 	d.SetId("")

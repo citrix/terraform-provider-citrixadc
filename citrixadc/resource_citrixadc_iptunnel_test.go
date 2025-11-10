@@ -20,44 +20,72 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccIptunnel_basic_step1 = `
 resource "citrixadc_iptunnel" "tf_iptunnel" {
     name = "tf_iptunnel"
+	protocol = "GENEVE"
     remote = "66.0.0.11"
     remotesubnetmask = "255.255.255.255"
     local = "*"
+	vnid = 100
+	tosinherit = "DISABLED"
+	destport = 1088
+	vlantagging = "DISABLED"
 }
 `
 
 const testAccIptunnel_basic_step2 = `
 resource "citrixadc_iptunnel" "tf_iptunnel" {
     name = "tf_iptunnel"
+	protocol = "GENEVE"
     remote = "66.0.0.10"
     remotesubnetmask = "255.255.255.255"
     local = "*"
+	vnid = 100
+	tosinherit = "ENABLED"
+	destport = 2088
+	vlantagging = "ENABLED"
 }
 `
 
 func TestAccIptunnel_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIptunnelDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckIptunnelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIptunnel_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIptunnelExist("citrixadc_iptunnel.tf_iptunnel", nil),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "name", "tf_iptunnel"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "protocol", "GENEVE"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "remote", "66.0.0.11"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "remotesubnetmask", "255.255.255.255"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "local", "*"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "vnid", "100"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "tosinherit", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "destport", "1088"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "vlantagging", "DISABLED"),
 				),
 			},
 			{
 				Config: testAccIptunnel_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIptunnelExist("citrixadc_iptunnel.tf_iptunnel", nil),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "name", "tf_iptunnel"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "protocol", "GENEVE"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "remote", "66.0.0.10"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "remotesubnetmask", "255.255.255.255"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "local", "*"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "vnid", "100"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "tosinherit", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "destport", "2088"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "vlantagging", "ENABLED"),
 				),
 			},
 		},
@@ -83,8 +111,12 @@ func testAccCheckIptunnelExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Iptunnel.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Iptunnel.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -99,7 +131,11 @@ func testAccCheckIptunnelExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckIptunnelDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_iptunnel" {
@@ -110,7 +146,7 @@ func testAccCheckIptunnelDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Iptunnel.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Iptunnel.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("iptunnel %s still exists", rs.Primary.ID)
 		}

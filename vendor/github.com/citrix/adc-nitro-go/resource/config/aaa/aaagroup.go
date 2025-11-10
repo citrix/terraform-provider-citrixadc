@@ -30,7 +30,7 @@ type Aaagroup struct {
 	/**
 	* Weight of this group with respect to other configured aaa groups (lower the number higher the weight)
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Display only the group members who are currently logged in. If there are large number of sessions, this command may provide partial details.
 	*/

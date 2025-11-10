@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -44,7 +44,7 @@ resource "citrixadc_autoscalepolicy" "tf_autoscalepolicy" {
 	name         = "my_autoscaleprofile"
 	rule         = "true"
 	action       = citrixadc_autoscaleaction.tf_autoscaleaction.name
-  }
+	}
 `
 const testAccAutoscalepolicy_update = `
 
@@ -66,14 +66,14 @@ resource "citrixadc_autoscalepolicy" "tf_autoscalepolicy" {
 	name         = "my_autoscaleprofile"
 	rule         = "false"
 	action       = citrixadc_autoscaleaction.tf_autoscaleaction.name
-  }
+	}
 `
 
 func TestAccAutoscalepolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAutoscalepolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAutoscalepolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoscalepolicy_basic,
@@ -116,8 +116,12 @@ func testAccCheckAutoscalepolicyExist(n string, id *string) resource.TestCheckFu
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Autoscalepolicy.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Autoscalepolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -132,7 +136,11 @@ func testAccCheckAutoscalepolicyExist(n string, id *string) resource.TestCheckFu
 }
 
 func testAccCheckAutoscalepolicyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_autoscalepolicy" {
@@ -143,7 +151,7 @@ func testAccCheckAutoscalepolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Autoscalepolicy.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Autoscalepolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("autoscalepolicy %s still exists", rs.Primary.ID)
 		}

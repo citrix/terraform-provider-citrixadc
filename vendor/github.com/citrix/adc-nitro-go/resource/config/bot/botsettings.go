@@ -38,7 +38,7 @@ type Botsettings struct {
 	/**
 	* Timeout, in seconds, after which a user session is terminated.
 	*/
-	Sessiontimeout int `json:"sessiontimeout,omitempty"`
+	Sessiontimeout *int `json:"sessiontimeout,omitempty"`
 	/**
 	* Name of the SessionCookie that the Bot Management feature uses for tracking.
 		Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.
@@ -49,7 +49,7 @@ type Botsettings struct {
 	/**
 	* Number of requests to allow without bot session cookie if device fingerprint is enabled
 	*/
-	Dfprequestlimit int `json:"dfprequestlimit,omitempty"`
+	Dfprequestlimit *int `json:"dfprequestlimit,omitempty"`
 	/**
 	* Flag used to enable/disable bot auto update signatures
 	*/
@@ -65,7 +65,7 @@ type Botsettings struct {
 	/**
 	* Proxy Server Port to get updated signatures from AWS.
 	*/
-	Proxyport int `json:"proxyport,omitempty"`
+	Proxyport *int `json:"proxyport,omitempty"`
 	/**
 	* Enable/disable trap URL auto generation. When enabled, trap URL is updated within the configured interval.
 	*/
@@ -73,11 +73,11 @@ type Botsettings struct {
 	/**
 	* Time in seconds after which trap URL is updated.
 	*/
-	Trapurlinterval int `json:"trapurlinterval,omitempty"`
+	Trapurlinterval *int `json:"trapurlinterval,omitempty"`
 	/**
 	* Length of the auto-generated trap URL.
 	*/
-	Trapurllength int `json:"trapurllength,omitempty"`
+	Trapurllength *int `json:"trapurllength,omitempty"`
 	/**
 	* Proxy Username
 	*/

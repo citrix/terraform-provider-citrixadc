@@ -26,6 +26,10 @@ resource "citrixadc_icaparameter" "tf_icaparameter" {
 * `edtpmtuddftimeout` (Optional) DF enforcement timeout for EDTPMTUDDF. Default value: 100 Minimum value = 10 Maximum value = 65535
 * `hdxinsightnonnsap` - (Optional) Enable/Disable HDXInsight for Non NSAP ICA Sessions. The default value is Yes. Possible values: [ YES, NO ]
 * `l7latencyfrequency` - (Optional) Specify the time interval/period for which L7 Client Latency value is to be calculated. By default, L7 Client Latency is calculated for every packet. The default value is 0. Minimum value =  0 Maximum value =  60
+* `dfpersistence` - (Optional) Enable/Disable DF Persistence
+* `edtlosstolerant` - (Optional) Enable/Disable EDT Loss Tolerant feature
+* `edtpmtuddftimeout` - (Optional) DF enforcement timeout for EDTPMTUDDF
+* `edtpmtudrediscovery` - (Optional) Enable/Disable EDT PMTUD Rediscovery
 
 
 ## Attribute Reference

@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVpnformssoaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnformssoactionFunc,
-		Read:          readVpnformssoactionFunc,
-		Update:        updateVpnformssoactionFunc,
-		Delete:        deleteVpnformssoactionFunc,
+		CreateContext: createVpnformssoactionFunc,
+		ReadContext:   readVpnformssoactionFunc,
+		UpdateContext: updateVpnformssoactionFunc,
+		DeleteContext: deleteVpnformssoactionFunc,
 		Schema: map[string]*schema.Schema{
 			"actionurl": {
 				Type:     schema.TypeString,
@@ -68,7 +71,7 @@ func resourceCitrixAdcVpnformssoaction() *schema.Resource {
 	}
 }
 
-func createVpnformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnformssoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnformssoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var vpnformssoactionName string
@@ -84,28 +87,26 @@ func createVpnformssoactionFunc(d *schema.ResourceData, meta interface{}) error 
 		Namevaluepair:  d.Get("namevaluepair").(string),
 		Nvtype:         d.Get("nvtype").(string),
 		Passwdfield:    d.Get("passwdfield").(string),
-		Responsesize:   d.Get("responsesize").(int),
 		Ssosuccessrule: d.Get("ssosuccessrule").(string),
 		Submitmethod:   d.Get("submitmethod").(string),
 		Userfield:      d.Get("userfield").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("responsesize"); !raw.IsNull() {
+		vpnformssoaction.Responsesize = intPtr(d.Get("responsesize").(int))
+	}
+
 	_, err := client.AddResource(service.Vpnformssoaction.Type(), vpnformssoactionName, &vpnformssoaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnformssoactionName)
 
-	err = readVpnformssoactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnformssoaction but we can't read it ?? %s", vpnformssoactionName)
-		return nil
-	}
-	return nil
+	return readVpnformssoactionFunc(ctx, d, meta)
 }
 
-func readVpnformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnformssoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnformssoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnformssoactionName := d.Id()
@@ -122,7 +123,7 @@ func readVpnformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("namevaluepair", data["namevaluepair"])
 	d.Set("nvtype", data["nvtype"])
 	d.Set("passwdfield", data["passwdfield"])
-	d.Set("responsesize", data["responsesize"])
+	setToInt("responsesize", d, data["responsesize"])
 	d.Set("ssosuccessrule", data["ssosuccessrule"])
 	d.Set("submitmethod", data["submitmethod"])
 	d.Set("userfield", data["userfield"])
@@ -131,7 +132,7 @@ func readVpnformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateVpnformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnformssoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnformssoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnformssoactionName := d.Get("name").(string)
@@ -167,7 +168,7 @@ func updateVpnformssoactionFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("responsesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Responsesize has changed for vpnformssoaction %s, starting update", vpnformssoactionName)
-		vpnformssoaction.Responsesize = d.Get("responsesize").(int)
+		vpnformssoaction.Responsesize = intPtr(d.Get("responsesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("ssosuccessrule") {
@@ -189,19 +190,19 @@ func updateVpnformssoactionFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		_, err := client.UpdateResource(service.Vpnformssoaction.Type(), vpnformssoactionName, &vpnformssoaction)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnformssoaction %s", vpnformssoactionName)
+			return diag.Errorf("Error updating vpnformssoaction %s", vpnformssoactionName)
 		}
 	}
-	return readVpnformssoactionFunc(d, meta)
+	return readVpnformssoactionFunc(ctx, d, meta)
 }
 
-func deleteVpnformssoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnformssoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnformssoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnformssoactionName := d.Id()
 	err := client.DeleteResource(service.Vpnformssoaction.Type(), vpnformssoactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

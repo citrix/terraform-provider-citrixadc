@@ -22,15 +22,15 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccService_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccService_basic,
@@ -66,8 +66,12 @@ func testAccCheckServiceExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Service.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Service.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -82,7 +86,11 @@ func testAccCheckServiceExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckServiceDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_service" {
@@ -93,7 +101,7 @@ func testAccCheckServiceDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Service.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Service.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -147,7 +155,7 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 
 	serviceInstance := basic.Service{
 		Name:        serviceName,
-		Port:        80,
+		Port:        intPtr(80),
 		Ip:          "10.202.22.12",
 		Servicetype: "HTTP",
 	}
@@ -158,7 +166,7 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 	}
 
 	// Zero out immutable members
-	serviceInstance.Port = 0
+	serviceInstance.Port = intPtr(0)
 	serviceInstance.Ip = ""
 	serviceInstance.Servicetype = ""
 
@@ -177,15 +185,26 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "servicetype")
 	serviceInstance.Servicetype = ""
 
+	serviceInstance = basic.Service{
+		Name: serviceName,
+	}
+
 	//port
-	serviceInstance.Port = 88
+	serviceInstance.Port = intPtr(88)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "port")
-	serviceInstance.Port = 0
+
+	serviceInstance = basic.Service{
+		Name: serviceName,
+	}
 
 	//cleartextport
-	serviceInstance.Cleartextport = 98
+	serviceInstance.Cleartextport = intPtr(98)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "cleartextport")
-	serviceInstance.Cleartextport = 0
+	serviceInstance.Cleartextport = intPtr(0)
+
+	serviceInstance = basic.Service{
+		Name: serviceName,
+	}
 
 	//cachetype
 	serviceInstance.Cachetype = "TRANSPARENT"
@@ -193,9 +212,9 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 	serviceInstance.Cachetype = ""
 
 	//td
-	serviceInstance.Td = 2
+	serviceInstance.Td = intPtr(2)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "td")
-	serviceInstance.Td = 0
+	serviceInstance.Td = intPtr(0)
 
 }
 
@@ -256,9 +275,9 @@ resource "citrixadc_service" "tf_acc_service" {
 func TestAccService_enable_disable(t *testing.T) {
 	t.Skip("TODO: Disable")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceEnableDisable_enabled,
@@ -290,9 +309,9 @@ func TestAccService_sslservice(t *testing.T) {
 	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
 	// }
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccService_sslservice_config,
@@ -328,9 +347,9 @@ resource "citrixadc_service" "test_service" {
 
 func TestAccService_rebind_default_monitor(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccService_rebind_default_monitor_step1,

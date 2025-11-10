@@ -1,24 +1,52 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnsparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsparameterFunc,
-		Read:          readDnsparameterFunc,
-		Update:        updateDnsparameterFunc,
-		Delete:        deleteDnsparameterFunc,
+		CreateContext: createDnsparameterFunc,
+		ReadContext:   readDnsparameterFunc,
+		UpdateContext: updateDnsparameterFunc,
+		DeleteContext: deleteDnsparameterFunc,
 		Schema: map[string]*schema.Schema{
+			"zonetransfer": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"resolvermaxtcptimeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"resolvermaxtcpconnections": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"resolvermaxactiveresolutions": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"autosavekeyops": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"cacheecszeroprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -128,52 +156,80 @@ func resourceCitrixAdcDnsparameter() *schema.Resource {
 	}
 }
 
-func createDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	dnsparameterName := resource.PrefixedUniqueId("tf-dnsparameter-")
 
 	dnsparameter := dns.Dnsparameter{
-		Cacheecszeroprefix:         d.Get("cacheecszeroprefix").(string),
-		Cachehitbypass:             d.Get("cachehitbypass").(string),
-		Cachenoexpire:              d.Get("cachenoexpire").(string),
-		Cacherecords:               d.Get("cacherecords").(string),
-		Dns64timeout:               d.Get("dns64timeout").(int),
-		Dnsrootreferral:            d.Get("dnsrootreferral").(string),
-		Dnssec:                     d.Get("dnssec").(string),
-		Ecsmaxsubnets:              d.Get("ecsmaxsubnets").(int),
-		Maxcachesize:               d.Get("maxcachesize").(int),
-		Maxnegativecachesize:       d.Get("maxnegativecachesize").(int),
-		Maxnegcachettl:             d.Get("maxnegcachettl").(int),
-		Maxpipeline:                d.Get("maxpipeline").(int),
-		Maxttl:                     d.Get("maxttl").(int),
-		Maxudppacketsize:           d.Get("maxudppacketsize").(int),
-		Minttl:                     d.Get("minttl").(int),
-		Namelookuppriority:         d.Get("namelookuppriority").(string),
-		Nxdomainratelimitthreshold: d.Get("nxdomainratelimitthreshold").(int),
-		Recursion:                  d.Get("recursion").(string),
-		Resolutionorder:            d.Get("resolutionorder").(string),
-		Retries:                    d.Get("retries").(int),
-		Splitpktqueryprocessing:    d.Get("splitpktqueryprocessing").(string),
+		Cacheecszeroprefix:      d.Get("cacheecszeroprefix").(string),
+		Cachehitbypass:          d.Get("cachehitbypass").(string),
+		Cachenoexpire:           d.Get("cachenoexpire").(string),
+		Cacherecords:            d.Get("cacherecords").(string),
+		Dnsrootreferral:         d.Get("dnsrootreferral").(string),
+		Dnssec:                  d.Get("dnssec").(string),
+		Namelookuppriority:      d.Get("namelookuppriority").(string),
+		Recursion:               d.Get("recursion").(string),
+		Resolutionorder:         d.Get("resolutionorder").(string),
+		Splitpktqueryprocessing: d.Get("splitpktqueryprocessing").(string),
+		Autosavekeyops:          d.Get("autosavekeyops").(string),
+		Zonetransfer:            d.Get("zonetransfer").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("resolvermaxtcptimeout"); !raw.IsNull() {
+		dnsparameter.Resolvermaxtcptimeout = intPtr(d.Get("resolvermaxtcptimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("resolvermaxtcpconnections"); !raw.IsNull() {
+		dnsparameter.Resolvermaxtcpconnections = intPtr(d.Get("resolvermaxtcpconnections").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("resolvermaxactiveresolutions"); !raw.IsNull() {
+		dnsparameter.Resolvermaxactiveresolutions = intPtr(d.Get("resolvermaxactiveresolutions").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dns64timeout"); !raw.IsNull() {
+		dnsparameter.Dns64timeout = intPtr(d.Get("dns64timeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ecsmaxsubnets"); !raw.IsNull() {
+		dnsparameter.Ecsmaxsubnets = intPtr(d.Get("ecsmaxsubnets").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxcachesize"); !raw.IsNull() {
+		dnsparameter.Maxcachesize = intPtr(d.Get("maxcachesize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxnegativecachesize"); !raw.IsNull() {
+		dnsparameter.Maxnegativecachesize = intPtr(d.Get("maxnegativecachesize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxnegcachettl"); !raw.IsNull() {
+		dnsparameter.Maxnegcachettl = intPtr(d.Get("maxnegcachettl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxpipeline"); !raw.IsNull() {
+		dnsparameter.Maxpipeline = intPtr(d.Get("maxpipeline").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxttl"); !raw.IsNull() {
+		dnsparameter.Maxttl = intPtr(d.Get("maxttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxudppacketsize"); !raw.IsNull() {
+		dnsparameter.Maxudppacketsize = intPtr(d.Get("maxudppacketsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minttl"); !raw.IsNull() {
+		dnsparameter.Minttl = intPtr(d.Get("minttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("nxdomainratelimitthreshold"); !raw.IsNull() {
+		dnsparameter.Nxdomainratelimitthreshold = intPtr(d.Get("nxdomainratelimitthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("retries"); !raw.IsNull() {
+		dnsparameter.Retries = intPtr(d.Get("retries").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Dnsparameter.Type(), &dnsparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnsparameterName)
 
-	err = readDnsparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsparameter but we can't read it ?? %s", dnsparameterName)
-		return nil
-	}
-	return nil
+	return readDnsparameterFunc(ctx, d, meta)
 }
 
-func readDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsparameterName := d.Id()
@@ -185,37 +241,67 @@ func readDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("cacheecszeroprefix", data["cacheecszeroprefix"])
+	d.Set("zonetransfer", data["zonetransfer"])
+	setToInt("resolvermaxtcptimeout", d, data["resolvermaxtcptimeout"])
+	setToInt("resolvermaxtcpconnections", d, data["resolvermaxtcpconnections"])
+	setToInt("resolvermaxactiveresolutions", d, data["resolvermaxactiveresolutions"])
+	d.Set("autosavekeyops", data["autosavekeyops"])
 	d.Set("cachehitbypass", data["cachehitbypass"])
 	d.Set("cachenoexpire", data["cachenoexpire"])
 	d.Set("cacherecords", data["cacherecords"])
-	d.Set("dns64timeout", data["dns64timeout"])
+	setToInt("dns64timeout", d, data["dns64timeout"])
 	d.Set("dnsrootreferral", data["dnsrootreferral"])
 	d.Set("dnssec", data["dnssec"])
-	d.Set("ecsmaxsubnets", data["ecsmaxsubnets"])
-	d.Set("maxcachesize", data["maxcachesize"])
-	d.Set("maxnegativecachesize", data["maxnegativecachesize"])
-	d.Set("maxnegcachettl", data["maxnegcachettl"])
-	d.Set("maxpipeline", data["maxpipeline"])
-	d.Set("maxttl", data["maxttl"])
-	d.Set("maxudppacketsize", data["maxudppacketsize"])
-	d.Set("minttl", data["minttl"])
+	setToInt("ecsmaxsubnets", d, data["ecsmaxsubnets"])
+	setToInt("maxcachesize", d, data["maxcachesize"])
+	setToInt("maxnegativecachesize", d, data["maxnegativecachesize"])
+	setToInt("maxnegcachettl", d, data["maxnegcachettl"])
+	setToInt("maxpipeline", d, data["maxpipeline"])
+	setToInt("maxttl", d, data["maxttl"])
+	setToInt("maxudppacketsize", d, data["maxudppacketsize"])
+	setToInt("minttl", d, data["minttl"])
 	d.Set("namelookuppriority", data["namelookuppriority"])
-	d.Set("nxdomainratelimitthreshold", data["nxdomainratelimitthreshold"])
+	setToInt("nxdomainratelimitthreshold", d, data["nxdomainratelimitthreshold"])
 	d.Set("recursion", d.Get("recursion").(string))
 	d.Set("resolutionorder", data["resolutionorder"])
-	d.Set("retries", data["retries"])
+	setToInt("retries", d, data["retries"])
 	d.Set("splitpktqueryprocessing", data["splitpktqueryprocessing"])
 
 	return nil
 
 }
 
-func updateDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnsparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	dnsparameter := dns.Dnsparameter{}
 	hasChange := false
+	if d.HasChange("zonetransfer") {
+		log.Printf("[DEBUG]  citrixadc-provider: Zonetransfer has changed for dnsparameter, starting update")
+		dnsparameter.Zonetransfer = d.Get("zonetransfer").(string)
+		hasChange = true
+	}
+	if d.HasChange("resolvermaxtcptimeout") {
+		log.Printf("[DEBUG]  citrixadc-provider: Resolvermaxtcptimeout has changed for dnsparameter, starting update")
+		dnsparameter.Resolvermaxtcptimeout = intPtr(d.Get("resolvermaxtcptimeout").(int))
+		hasChange = true
+	}
+	if d.HasChange("resolvermaxtcpconnections") {
+		log.Printf("[DEBUG]  citrixadc-provider: Resolvermaxtcpconnections has changed for dnsparameter, starting update")
+		dnsparameter.Resolvermaxtcpconnections = intPtr(d.Get("resolvermaxtcpconnections").(int))
+		hasChange = true
+	}
+	if d.HasChange("resolvermaxactiveresolutions") {
+		log.Printf("[DEBUG]  citrixadc-provider: Resolvermaxactiveresolutions has changed for dnsparameter, starting update")
+		dnsparameter.Resolvermaxactiveresolutions = intPtr(d.Get("resolvermaxactiveresolutions").(int))
+		hasChange = true
+	}
+	if d.HasChange("autosavekeyops") {
+		log.Printf("[DEBUG]  citrixadc-provider: Autosavekeyops has changed for dnsparameter, starting update")
+		dnsparameter.Autosavekeyops = d.Get("autosavekeyops").(string)
+		hasChange = true
+	}
 	if d.HasChange("cacheecszeroprefix") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cacheecszeroprefix has changed for dnsparameter, starting update")
 		dnsparameter.Cacheecszeroprefix = d.Get("cacheecszeroprefix").(string)
@@ -238,7 +324,7 @@ func updateDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("dns64timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dns64timeout has changed for dnsparameter, starting update")
-		dnsparameter.Dns64timeout = d.Get("dns64timeout").(int)
+		dnsparameter.Dns64timeout = intPtr(d.Get("dns64timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("dnsrootreferral") {
@@ -253,42 +339,42 @@ func updateDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ecsmaxsubnets") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ecsmaxsubnets has changed for dnsparameter, starting update")
-		dnsparameter.Ecsmaxsubnets = d.Get("ecsmaxsubnets").(int)
+		dnsparameter.Ecsmaxsubnets = intPtr(d.Get("ecsmaxsubnets").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxcachesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxcachesize has changed for dnsparameter, starting update")
-		dnsparameter.Maxcachesize = d.Get("maxcachesize").(int)
+		dnsparameter.Maxcachesize = intPtr(d.Get("maxcachesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxnegativecachesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxnegativecachesize has changed for dnsparameter, starting update")
-		dnsparameter.Maxnegativecachesize = d.Get("maxnegativecachesize").(int)
+		dnsparameter.Maxnegativecachesize = intPtr(d.Get("maxnegativecachesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxnegcachettl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxnegcachettl has changed for dnsparameter, starting update")
-		dnsparameter.Maxnegcachettl = d.Get("maxnegcachettl").(int)
+		dnsparameter.Maxnegcachettl = intPtr(d.Get("maxnegcachettl").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxpipeline") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxpipeline has changed for dnsparameter, starting update")
-		dnsparameter.Maxpipeline = d.Get("maxpipeline").(int)
+		dnsparameter.Maxpipeline = intPtr(d.Get("maxpipeline").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxttl has changed for dnsparameter, starting update")
-		dnsparameter.Maxttl = d.Get("maxttl").(int)
+		dnsparameter.Maxttl = intPtr(d.Get("maxttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxudppacketsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxudppacketsize has changed for dnsparameter, starting update")
-		dnsparameter.Maxudppacketsize = d.Get("maxudppacketsize").(int)
+		dnsparameter.Maxudppacketsize = intPtr(d.Get("maxudppacketsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("minttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minttl has changed for dnsparameter, starting update")
-		dnsparameter.Minttl = d.Get("minttl").(int)
+		dnsparameter.Minttl = intPtr(d.Get("minttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("namelookuppriority") {
@@ -298,7 +384,7 @@ func updateDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("nxdomainratelimitthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nxdomainratelimitthreshold has changed for dnsparameter, starting update")
-		dnsparameter.Nxdomainratelimitthreshold = d.Get("nxdomainratelimitthreshold").(int)
+		dnsparameter.Nxdomainratelimitthreshold = intPtr(d.Get("nxdomainratelimitthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("recursion") {
@@ -313,7 +399,7 @@ func updateDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("retries") {
 		log.Printf("[DEBUG]  citrixadc-provider: Retries has changed for dnsparameter, starting update")
-		dnsparameter.Retries = d.Get("retries").(int)
+		dnsparameter.Retries = intPtr(d.Get("retries").(int))
 		hasChange = true
 	}
 	if d.HasChange("splitpktqueryprocessing") {
@@ -325,13 +411,13 @@ func updateDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Dnsparameter.Type(), &dnsparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating dnsparameter %s", err.Error())
+			return diag.Errorf("Error updating dnsparameter %s", err.Error())
 		}
 	}
-	return readDnsparameterFunc(d, meta)
+	return readDnsparameterFunc(ctx, d, meta)
 }
 
-func deleteDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsparameterFunc")
 
 	d.SetId("")

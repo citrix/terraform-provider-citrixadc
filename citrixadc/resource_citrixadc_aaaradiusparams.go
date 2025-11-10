@@ -1,24 +1,32 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaaradiusparams() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaaradiusparamsFunc,
-		Read:          readAaaradiusparamsFunc,
-		Update:        updateAaaradiusparamsFunc,
-		Delete:        deleteAaaradiusparamsFunc,
+		CreateContext: createAaaradiusparamsFunc,
+		ReadContext:   readAaaradiusparamsFunc,
+		UpdateContext: updateAaaradiusparamsFunc,
+		DeleteContext: deleteAaaradiusparamsFunc,
 		Schema: map[string]*schema.Schema{
+			"messageauthenticator": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"radkey": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -128,7 +136,7 @@ func resourceCitrixAdcAaaradiusparams() *schema.Resource {
 	}
 }
 
-func createAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaaradiusparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaaradiusparamsName := resource.PrefixedUniqueId("tf-aaaradiusparams-")
@@ -136,43 +144,58 @@ func createAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	aaaradiusparams := aaa.Aaaradiusparams{
 		Accounting:                 d.Get("accounting").(string),
 		Authentication:             d.Get("authentication").(string),
-		Authservretry:              d.Get("authservretry").(int),
-		Authtimeout:                d.Get("authtimeout").(int),
 		Callingstationid:           d.Get("callingstationid").(string),
 		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
-		Ipattributetype:            d.Get("ipattributetype").(int),
-		Ipvendorid:                 d.Get("ipvendorid").(int),
 		Passencoding:               d.Get("passencoding").(string),
-		Pwdattributetype:           d.Get("pwdattributetype").(int),
-		Pwdvendorid:                d.Get("pwdvendorid").(int),
-		Radattributetype:           d.Get("radattributetype").(int),
 		Radgroupseparator:          d.Get("radgroupseparator").(string),
 		Radgroupsprefix:            d.Get("radgroupsprefix").(string),
 		Radkey:                     d.Get("radkey").(string),
 		Radnasid:                   d.Get("radnasid").(string),
 		Radnasip:                   d.Get("radnasip").(string),
-		Radvendorid:                d.Get("radvendorid").(int),
 		Serverip:                   d.Get("serverip").(string),
-		Serverport:                 d.Get("serverport").(int),
 		Tunnelendpointclientip:     d.Get("tunnelendpointclientip").(string),
+		Messageauthenticator:       d.Get("messageauthenticator").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("authservretry"); !raw.IsNull() {
+		aaaradiusparams.Authservretry = intPtr(d.Get("authservretry").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("authtimeout"); !raw.IsNull() {
+		aaaradiusparams.Authtimeout = intPtr(d.Get("authtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ipattributetype"); !raw.IsNull() {
+		aaaradiusparams.Ipattributetype = intPtr(d.Get("ipattributetype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ipvendorid"); !raw.IsNull() {
+		aaaradiusparams.Ipvendorid = intPtr(d.Get("ipvendorid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pwdattributetype"); !raw.IsNull() {
+		aaaradiusparams.Pwdattributetype = intPtr(d.Get("pwdattributetype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pwdvendorid"); !raw.IsNull() {
+		aaaradiusparams.Pwdvendorid = intPtr(d.Get("pwdvendorid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("radattributetype"); !raw.IsNull() {
+		aaaradiusparams.Radattributetype = intPtr(d.Get("radattributetype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("radvendorid"); !raw.IsNull() {
+		aaaradiusparams.Radvendorid = intPtr(d.Get("radvendorid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		aaaradiusparams.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaaradiusparams.Type(), &aaaradiusparams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaaradiusparamsName)
 
-	err = readAaaradiusparamsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaaradiusparams but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAaaradiusparamsFunc(ctx, d, meta)
 }
 
-func readAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaaradiusparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading aaaradiusparams state")
@@ -183,32 +206,33 @@ func readAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("accounting", data["accounting"])
+	d.Set("messageauthenticator", data["messageauthenticator"])
 	d.Set("authentication", data["authentication"])
-	d.Set("authservretry", data["authservretry"])
-	d.Set("authtimeout", data["authtimeout"])
+	setToInt("authservretry", d, data["authservretry"])
+	setToInt("authtimeout", d, data["authtimeout"])
 	d.Set("callingstationid", data["callingstationid"])
 	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
-	d.Set("ipattributetype", data["ipattributetype"])
-	d.Set("ipvendorid", data["ipvendorid"])
+	setToInt("ipattributetype", d, data["ipattributetype"])
+	setToInt("ipvendorid", d, data["ipvendorid"])
 	d.Set("passencoding", data["passencoding"])
-	d.Set("pwdattributetype", data["pwdattributetype"])
-	d.Set("pwdvendorid", data["pwdvendorid"])
-	d.Set("radattributetype", data["radattributetype"])
+	setToInt("pwdattributetype", d, data["pwdattributetype"])
+	setToInt("pwdvendorid", d, data["pwdvendorid"])
+	setToInt("radattributetype", d, data["radattributetype"])
 	d.Set("radgroupseparator", data["radgroupseparator"])
 	d.Set("radgroupsprefix", data["radgroupsprefix"])
 	//d.Set("radkey", data["radkey"])
 	d.Set("radnasid", data["radnasid"])
 	d.Set("radnasip", data["radnasip"])
-	d.Set("radvendorid", data["radvendorid"])
+	setToInt("radvendorid", d, data["radvendorid"])
 	d.Set("serverip", data["serverip"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("tunnelendpointclientip", data["tunnelendpointclientip"])
 
 	return nil
 
 }
 
-func updateAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaaradiusparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -216,6 +240,11 @@ func updateAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 		Radkey: d.Get("radkey").(string),
 	}
 	hasChange := false
+	if d.HasChange("messageauthenticator") {
+		log.Printf("[DEBUG]  citrixadc-provider: Messageauthenticator has changed for aaaradiusparams, starting update")
+		aaaradiusparams.Messageauthenticator = d.Get("messageauthenticator").(string)
+		hasChange = true
+	}
 	if d.HasChange("accounting") {
 		log.Printf("[DEBUG]  citrixadc-provider: Accounting has changed for aaaradiusparams, starting update")
 		aaaradiusparams.Accounting = d.Get("accounting").(string)
@@ -228,12 +257,12 @@ func updateAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("authservretry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authservretry has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Authservretry = d.Get("authservretry").(int)
+		aaaradiusparams.Authservretry = intPtr(d.Get("authservretry").(int))
 		hasChange = true
 	}
 	if d.HasChange("authtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authtimeout has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Authtimeout = d.Get("authtimeout").(int)
+		aaaradiusparams.Authtimeout = intPtr(d.Get("authtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("callingstationid") {
@@ -248,12 +277,12 @@ func updateAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ipattributetype") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ipattributetype has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Ipattributetype = d.Get("ipattributetype").(int)
+		aaaradiusparams.Ipattributetype = intPtr(d.Get("ipattributetype").(int))
 		hasChange = true
 	}
 	if d.HasChange("ipvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ipvendorid has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Ipvendorid = d.Get("ipvendorid").(int)
+		aaaradiusparams.Ipvendorid = intPtr(d.Get("ipvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("passencoding") {
@@ -263,17 +292,17 @@ func updateAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("pwdattributetype") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pwdattributetype has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Pwdattributetype = d.Get("pwdattributetype").(int)
+		aaaradiusparams.Pwdattributetype = intPtr(d.Get("pwdattributetype").(int))
 		hasChange = true
 	}
 	if d.HasChange("pwdvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pwdvendorid has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Pwdvendorid = d.Get("pwdvendorid").(int)
+		aaaradiusparams.Pwdvendorid = intPtr(d.Get("pwdvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("radattributetype") {
 		log.Printf("[DEBUG]  citrixadc-provider: Radattributetype has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Radattributetype = d.Get("radattributetype").(int)
+		aaaradiusparams.Radattributetype = intPtr(d.Get("radattributetype").(int))
 		hasChange = true
 	}
 	if d.HasChange("radgroupseparator") {
@@ -298,7 +327,7 @@ func updateAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("radvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Radvendorid has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Radvendorid = d.Get("radvendorid").(int)
+		aaaradiusparams.Radvendorid = intPtr(d.Get("radvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("serverip") {
@@ -308,7 +337,7 @@ func updateAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Serverport = d.Get("serverport").(int)
+		aaaradiusparams.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("tunnelendpointclientip") {
@@ -320,13 +349,13 @@ func updateAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Aaaradiusparams.Type(), &aaaradiusparams)
 		if err != nil {
-			return fmt.Errorf("Error updating aaaradiusparams")
+			return diag.Errorf("Error updating aaaradiusparams")
 		}
 	}
-	return readAaaradiusparamsFunc(d, meta)
+	return readAaaradiusparamsFunc(ctx, d, meta)
 }
 
-func deleteAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaaradiusparamsFunc")
 	// aaaradiusparams does not support delete operation
 	d.SetId("")

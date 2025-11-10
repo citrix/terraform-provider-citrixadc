@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/citrix/adc-nitro-go/resource/config/filter"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcFilterglobal_filterpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createFilterglobal_filterpolicy_bindingFunc,
-		Read:          readFilterglobal_filterpolicy_bindingFunc,
-		Delete:        deleteFilterglobal_filterpolicy_bindingFunc,
+		CreateContext: createFilterglobal_filterpolicy_bindingFunc,
+		ReadContext:   readFilterglobal_filterpolicy_bindingFunc,
+		DeleteContext: deleteFilterglobal_filterpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -42,32 +44,30 @@ func resourceCitrixAdcFilterglobal_filterpolicy_binding() *schema.Resource {
 	}
 }
 
-func createFilterglobal_filterpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createFilterglobal_filterpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createFilterglobal_filterpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
 	filterglobal_filterpolicy_binding := filter.Filterglobalfilterpolicybinding{
 		Policyname: d.Get("policyname").(string),
-		Priority:   d.Get("priority").(int),
 		State:      d.Get("state").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		filterglobal_filterpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Filterglobal_filterpolicy_binding.Type(), &filterglobal_filterpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readFilterglobal_filterpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this filterglobal_filterpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readFilterglobal_filterpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readFilterglobal_filterpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readFilterglobal_filterpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readFilterglobal_filterpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -82,7 +82,7 @@ func readFilterglobal_filterpolicy_bindingFunc(d *schema.ResourceData, meta inte
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -121,7 +121,7 @@ func readFilterglobal_filterpolicy_bindingFunc(d *schema.ResourceData, meta inte
 
 }
 
-func deleteFilterglobal_filterpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteFilterglobal_filterpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteFilterglobal_filterpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -132,7 +132,7 @@ func deleteFilterglobal_filterpolicy_bindingFunc(d *schema.ResourceData, meta in
 
 	err := client.DeleteResourceWithArgs(service.Filterglobal_filterpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

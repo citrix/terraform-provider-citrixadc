@@ -23,11 +23,11 @@ type Lldpparam struct {
 	/**
 	* A multiplier for calculating the duration for which the receiving device stores the LLDP information in its database before discarding or removing it. The duration is calculated as the holdtimeTxMult (Holdtime Multiplier) parameter value multiplied by the timer (Timer) parameter value.
 	*/
-	Holdtimetxmult int `json:"holdtimetxmult,omitempty"`
+	Holdtimetxmult *int `json:"holdtimetxmult,omitempty"`
 	/**
 	* Interval, in seconds, between LLDP packet data units (LLDPDUs).  that the Citrix ADC sends to a directly connected device.
 	*/
-	Timer int `json:"timer,omitempty"`
+	Timer *int `json:"timer,omitempty"`
 	/**
 	* Global mode of Link Layer Discovery Protocol (LLDP) on the Citrix ADC. The resultant LLDP mode of an interface depends on the LLDP mode configured at the global and the interface levels.
 	*/

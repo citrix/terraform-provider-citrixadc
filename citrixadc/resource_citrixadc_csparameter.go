@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCsparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCsparameterFunc,
-		Read:          readCsparameterFunc,
-		Update:        updateCsparameterFunc,
-		Delete:        deleteCsparameterFunc,
+		CreateContext: createCsparameterFunc,
+		ReadContext:   readCsparameterFunc,
+		UpdateContext: updateCsparameterFunc,
+		DeleteContext: deleteCsparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"stateupdate": {
 				Type:     schema.TypeString,
@@ -28,7 +31,7 @@ func resourceCitrixAdcCsparameter() *schema.Resource {
 	}
 }
 
-func createCsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createCsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCsparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -41,20 +44,15 @@ func createCsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Csparameter.Type(), &csparameter)
 	if err != nil {
-		return fmt.Errorf("Error updating csparameter")
+		return diag.Errorf("Error updating csparameter")
 	}
 
 	d.SetId(csparameterName)
 
-	err = readCsparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this csparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readCsparameterFunc(ctx, d, meta)
 }
 
-func readCsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readCsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCsparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading csparameter state")
@@ -64,14 +62,13 @@ func readCsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
 	d.Set("stateupdate", data["stateupdate"])
 
 	return nil
 
 }
 
-func updateCsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCsparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -87,13 +84,13 @@ func updateCsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Csparameter.Type(), &csparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating csparameter %s", err.Error())
+			return diag.Errorf("Error updating csparameter %s", err.Error())
 		}
 	}
-	return readCsparameterFunc(d, meta)
+	return readCsparameterFunc(ctx, d, meta)
 }
 
-func deleteCsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCsparameterFunc")
 	// csparameter does not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcNsappflowcollector() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsappflowcollectorFunc,
-		Read:          readNsappflowcollectorFunc,
-		Delete:        deleteNsappflowcollectorFunc,
+		CreateContext: createNsappflowcollectorFunc,
+		ReadContext:   readNsappflowcollectorFunc,
+		DeleteContext: deleteNsappflowcollectorFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -41,32 +43,30 @@ func resourceCitrixAdcNsappflowcollector() *schema.Resource {
 	}
 }
 
-func createNsappflowcollectorFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsappflowcollectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsappflowcollectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsappflowcollectorName := d.Get("name").(string)
 	nsappflowcollector := ns.Nsappflowcollector{
 		Ipaddress: d.Get("ipaddress").(string),
 		Name:      d.Get("name").(string),
-		Port:      d.Get("port").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		nsappflowcollector.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource(service.Nsappflowcollector.Type(), nsappflowcollectorName, &nsappflowcollector)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsappflowcollectorName)
 
-	err = readNsappflowcollectorFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsappflowcollector but we can't read it ?? %s", nsappflowcollectorName)
-		return nil
-	}
-	return nil
+	return readNsappflowcollectorFunc(ctx, d, meta)
 }
 
-func readNsappflowcollectorFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsappflowcollectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsappflowcollectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsappflowcollectorName := d.Id()
@@ -79,19 +79,19 @@ func readNsappflowcollectorFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("name", data["name"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 
 	return nil
 
 }
 
-func deleteNsappflowcollectorFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsappflowcollectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsappflowcollectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsappflowcollectorName := d.Id()
 	err := client.DeleteResource(service.Nsappflowcollector.Type(), nsappflowcollectorName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ha"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcHafailover() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createHafailoverFunc,
-		Read:          readHafailoverFunc,
-		Delete:        deleteHafailoverFunc,
+		CreateContext: createHafailoverFunc,
+		ReadContext:   readHafailoverFunc,
+		DeleteContext: deleteHafailoverFunc,
 		Schema: map[string]*schema.Schema{
 			"force": {
 				Type:     schema.TypeBool,
@@ -39,7 +42,7 @@ func resourceCitrixAdcHafailover() *schema.Resource {
 	}
 }
 
-func createHafailoverFunc(d *schema.ResourceData, meta interface{}) error {
+func createHafailoverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createHafailoverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	hafailoverName := resource.PrefixedUniqueId("tf-hafailover-")
@@ -49,25 +52,19 @@ func createHafailoverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	curState, err := readHaNodeState(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if curState != d.Get("state").(string) {
 		err := client.ActOnResource("hafailover", &hafailover, "Force")
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	d.SetId(hafailoverName)
 
-	err = readHafailoverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this hafailover but we can't read it ?? %s", hafailoverName)
-		return nil
-	}
-
-	return nil
+	return readHafailoverFunc(ctx, d, meta)
 }
 
 func readHaNodeState(d *schema.ResourceData, meta interface{}) (string, error) {
@@ -102,12 +99,12 @@ func readHaNodeState(d *schema.ResourceData, meta interface{}) (string, error) {
 
 }
 
-func readHafailoverFunc(d *schema.ResourceData, meta interface{}) error {
+func readHafailoverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readHafailoverFunc")
 
 	state, err := readHaNodeState(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("state", state)
@@ -116,7 +113,7 @@ func readHafailoverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteHafailoverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteHafailoverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteHafailoverFunc")
 
 	d.SetId("")

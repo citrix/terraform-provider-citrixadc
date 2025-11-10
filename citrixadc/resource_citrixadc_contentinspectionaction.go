@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcContentinspectionaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createContentinspectionactionFunc,
-		Read:          readContentinspectionactionFunc,
-		Update:        updateContentinspectionactionFunc,
-		Delete:        deleteContentinspectionactionFunc,
+		CreateContext: createContentinspectionactionFunc,
+		ReadContext:   readContentinspectionactionFunc,
+		UpdateContext: updateContentinspectionactionFunc,
+		DeleteContext: deleteContentinspectionactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -58,7 +61,7 @@ func resourceCitrixAdcContentinspectionaction() *schema.Resource {
 	}
 }
 
-func createContentinspectionactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createContentinspectionactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createContentinspectionactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionactionName := d.Get("name").(string)
@@ -68,26 +71,24 @@ func createContentinspectionactionFunc(d *schema.ResourceData, meta interface{})
 		Name:            d.Get("name").(string),
 		Serverip:        d.Get("serverip").(string),
 		Servername:      d.Get("servername").(string),
-		Serverport:      d.Get("serverport").(int),
 		Type:            d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		contentinspectionaction.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	_, err := client.AddResource("contentinspectionaction", contentinspectionactionName, &contentinspectionaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(contentinspectionactionName)
 
-	err = readContentinspectionactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this contentinspectionaction but we can't read it ?? %s", contentinspectionactionName)
-		return nil
-	}
-	return nil
+	return readContentinspectionactionFunc(ctx, d, meta)
 }
 
-func readContentinspectionactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readContentinspectionactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readContentinspectionactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionactionName := d.Id()
@@ -103,14 +104,14 @@ func readContentinspectionactionFunc(d *schema.ResourceData, meta interface{}) e
 	d.Set("ifserverdown", data["ifserverdown"])
 	d.Set("serverip", data["serverip"])
 	d.Set("servername", data["servername"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("type", data["type"])
 
 	return nil
 
 }
 
-func updateContentinspectionactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateContentinspectionactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateContentinspectionactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionactionName := d.Get("name").(string)
@@ -141,26 +142,26 @@ func updateContentinspectionactionFunc(d *schema.ResourceData, meta interface{})
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for contentinspectionaction %s, starting update", contentinspectionactionName)
-		contentinspectionaction.Serverport = d.Get("serverport").(int)
+		contentinspectionaction.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource("contentinspectionaction", &contentinspectionaction)
 		if err != nil {
-			return fmt.Errorf("Error updating contentinspectionaction %s", contentinspectionactionName)
+			return diag.Errorf("Error updating contentinspectionaction %s", contentinspectionactionName)
 		}
 	}
-	return readContentinspectionactionFunc(d, meta)
+	return readContentinspectionactionFunc(ctx, d, meta)
 }
 
-func deleteContentinspectionactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteContentinspectionactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteContentinspectionactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionactionName := d.Id()
 	err := client.DeleteResource("contentinspectionaction", contentinspectionactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

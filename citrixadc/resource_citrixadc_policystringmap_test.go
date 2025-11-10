@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccPolicystringmap_basic_step1 = `
@@ -42,9 +42,9 @@ resource "citrixadc_policystringmap" "tf_policystringmap" {
 
 func TestAccPolicystringmap_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPolicystringmapDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPolicystringmapDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicystringmap_basic_step1,
@@ -81,8 +81,12 @@ func testAccCheckPolicystringmapExist(n string, id *string) resource.TestCheckFu
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Policystringmap.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Policystringmap.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -97,7 +101,11 @@ func testAccCheckPolicystringmapExist(n string, id *string) resource.TestCheckFu
 }
 
 func testAccCheckPolicystringmapDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_policystringmap" {
@@ -108,7 +116,7 @@ func testAccCheckPolicystringmapDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Policystringmap.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Policystringmap.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("policystringmap %s still exists", rs.Primary.ID)
 		}

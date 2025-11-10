@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -29,12 +29,12 @@ const testAccAaauser_vpnurl_binding_basic = `
 resource "citrixadc_aaauser_vpnurl_binding" "tf_aaauser_vpnurl_binding" {
 	username = citrixadc_aaauser.tf_aaauser.username
 	urlname   = citrixadc_vpnurl.tf_url.urlname
-  }
+	}
   
   resource "citrixadc_aaauser" "tf_aaauser" {
 	username = "user1"
 	password = "my_pass"
-  }
+	}
   resource "citrixadc_vpnurl" "tf_url" {
 	actualurl        = "http://www.citrix.com"
 	appjson          = "xyz"
@@ -45,7 +45,7 @@ resource "citrixadc_aaauser_vpnurl_binding" "tf_aaauser_vpnurl_binding" {
 	ssotype          = "unifiedgateway"
 	urlname          = "Firsturl"
 	vservername      = "server1"
-  }
+	}
 `
 
 const testAccAaauser_vpnurl_binding_basic_step2 = `
@@ -68,9 +68,9 @@ const testAccAaauser_vpnurl_binding_basic_step2 = `
 
 func TestAccAaauser_vpnurl_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAaauser_vpnurl_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAaauser_vpnurl_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAaauser_vpnurl_binding_basic,
@@ -107,7 +107,11 @@ func testAccCheckAaauser_vpnurl_bindingExist(n string, id *string) resource.Test
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -147,7 +151,11 @@ func testAccCheckAaauser_vpnurl_bindingExist(n string, id *string) resource.Test
 
 func testAccCheckAaauser_vpnurl_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -187,7 +195,11 @@ func testAccCheckAaauser_vpnurl_bindingNotExist(n string, id string) resource.Te
 }
 
 func testAccCheckAaauser_vpnurl_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_aaauser_vpnurl_binding" {
@@ -198,7 +210,7 @@ func testAccCheckAaauser_vpnurl_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Aaauser_vpnurl_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Aaauser_vpnurl_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("aaauser_vpnurl_binding %s still exists", rs.Primary.ID)
 		}

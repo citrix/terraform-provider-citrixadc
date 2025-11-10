@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcLocationfile6() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLocationfile6Func,
-		Read:          readLocationfile6Func,
-		Delete:        deleteLocationfile6Func,
+		CreateContext: createLocationfile6Func,
+		ReadContext:   readLocationfile6Func,
+		DeleteContext: deleteLocationfile6Func,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"format": {
@@ -38,7 +40,7 @@ func resourceCitrixAdcLocationfile6() *schema.Resource {
 	}
 }
 
-func createLocationfile6Func(d *schema.ResourceData, meta interface{}) error {
+func createLocationfile6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLocationfileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	locationfileName := d.Get("locationfile").(string)
@@ -49,20 +51,15 @@ func createLocationfile6Func(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Locationfile6.Type(), "", &locationfile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(locationfileName)
 
-	err = readLocationfile6Func(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this locationfile but we can't read it ?? %s", locationfileName)
-		return nil
-	}
-	return nil
+	return readLocationfile6Func(ctx, d, meta)
 }
 
-func readLocationfile6Func(d *schema.ResourceData, meta interface{}) error {
+func readLocationfile6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLocationfileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	locationfileName := d.Id()
@@ -81,12 +78,12 @@ func readLocationfile6Func(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteLocationfile6Func(d *schema.ResourceData, meta interface{}) error {
+func deleteLocationfile6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLocationfileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	err := client.DeleteResource(service.Locationfile6.Type(), "")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

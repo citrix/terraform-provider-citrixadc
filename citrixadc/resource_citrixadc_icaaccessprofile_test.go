@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -29,6 +29,11 @@ const testAccIcaaccessprofile_basic = `
 		name                   = "my_ica_accessprofile"
 		connectclientlptports  = "DEFAULT"
 		localremotedatasharing = "DEFAULT"
+		wiaredirection		 = "DISABLED"
+		smartcardredirection	= "DISABLED"
+		fido2redirection		 = "DISABLED"
+		draganddrop			 = "DISABLED"
+		clienttwaindeviceredirection = "DISABLED"
 	}
 	
 `
@@ -39,15 +44,20 @@ const testAccIcaaccessprofile_update = `
 		name                   = "my_ica_accessprofile"
 		connectclientlptports  = "DISABLED"
 		localremotedatasharing = "DISABLED"
+		wiaredirection		 = "DEFAULT"
+		smartcardredirection	= "DEFAULT"
+		fido2redirection		 = "DEFAULT"
+		draganddrop			 = "DEFAULT"
+		clienttwaindeviceredirection = "DEFAULT"
 	}
 	
 `
 
 func TestAccIcaaccessprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIcaaccessprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckIcaaccessprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIcaaccessprofile_basic,
@@ -56,6 +66,11 @@ func TestAccIcaaccessprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "name", "my_ica_accessprofile"),
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "connectclientlptports", "DEFAULT"),
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "localremotedatasharing", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "wiaredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "smartcardredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "fido2redirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "draganddrop", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "clienttwaindeviceredirection", "DISABLED"),
 				),
 			},
 			{
@@ -65,6 +80,11 @@ func TestAccIcaaccessprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "name", "my_ica_accessprofile"),
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "connectclientlptports", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "localremotedatasharing", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "wiaredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "smartcardredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "fido2redirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "draganddrop", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "clienttwaindeviceredirection", "DEFAULT"),
 				),
 			},
 		},
@@ -90,8 +110,12 @@ func testAccCheckIcaaccessprofileExist(n string, id *string) resource.TestCheckF
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("icaaccessprofile", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("icaaccessprofile", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -106,7 +130,11 @@ func testAccCheckIcaaccessprofileExist(n string, id *string) resource.TestCheckF
 }
 
 func testAccCheckIcaaccessprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_icaaccessprofile" {
@@ -117,7 +145,7 @@ func testAccCheckIcaaccessprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("icaaccessprofile", rs.Primary.ID)
+		_, err := client.FindResource("icaaccessprofile", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("icaaccessprofile %s still exists", rs.Primary.ID)
 		}

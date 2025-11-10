@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccVpnurlpolicy_add = `
@@ -62,9 +62,9 @@ const testAccVpnurlpolicy_update = `
 
 func TestAccVpnurlpolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpnurlpolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckVpnurlpolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnurlpolicy_add,
@@ -107,8 +107,12 @@ func testAccCheckVpnurlpolicyExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("vpnurlpolicy", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("vpnurlpolicy", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -123,7 +127,11 @@ func testAccCheckVpnurlpolicyExist(n string, id *string) resource.TestCheckFunc 
 }
 
 func testAccCheckVpnurlpolicyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_vpnurlpolicy" {
@@ -134,7 +142,7 @@ func testAccCheckVpnurlpolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("vpnurlpolicy", rs.Primary.ID)
+		_, err := client.FindResource("vpnurlpolicy", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("vpnurlpolicy %s still exists", rs.Primary.ID)
 		}

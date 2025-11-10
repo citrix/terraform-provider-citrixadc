@@ -22,15 +22,15 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccGslbvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGslbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckGslbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGslbvserver_basic,
@@ -43,6 +43,10 @@ func TestAccGslbvserver_basic(t *testing.T) {
 						"citrixadc_gslbvserver.foo", "name", "GSLB-East-Coast-Vserver"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_gslbvserver.foo", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_gslbvserver.foo", "toggleorder", "ASCENDING"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_gslbvserver.foo", "orderthreshold", "50"),
 				),
 			},
 		},
@@ -68,8 +72,12 @@ func testAccCheckGslbvserverExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Gslbvserver.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Gslbvserver.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -84,7 +92,11 @@ func testAccCheckGslbvserverExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckGslbvserverDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_gslbvserver" {
@@ -95,7 +107,7 @@ func testAccCheckGslbvserverDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Gslbvserver.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Gslbvserver.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("GSLB vserver %s still exists", rs.Primary.ID)
 		}
@@ -113,14 +125,16 @@ resource "citrixadc_gslbvserver" "foo" {
   dnsrecordtype = "A"
   name = "GSLB-East-Coast-Vserver"
   servicetype = "HTTP"
+  toggleorder = "ASCENDING"
+  orderthreshold = "50"
   domain {
 	  domainname =  "www.fooco.co"
 	  ttl = "60"
-  }
+	}
   domain {
 	  domainname = "www.barco.com"
 	  ttl = "55"
-  }
+	}
 }
 `
 
@@ -179,9 +193,9 @@ resource "citrixadc_gslbvserver" "tf_test_acc_gslbvsever" {
 
 func TestAccGslbvserver_enable_disable(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGslbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckGslbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
 			{

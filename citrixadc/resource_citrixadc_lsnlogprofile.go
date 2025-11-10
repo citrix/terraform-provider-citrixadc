@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lsn"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLsnlogprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnlogprofileFunc,
-		Read:          readLsnlogprofileFunc,
-		Update:        updateLsnlogprofileFunc,
-		Delete:        deleteLsnlogprofileFunc,
+		CreateContext: createLsnlogprofileFunc,
+		ReadContext:   readLsnlogprofileFunc,
+		UpdateContext: updateLsnlogprofileFunc,
+		DeleteContext: deleteLsnlogprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"logprofilename": {
@@ -53,7 +56,7 @@ func resourceCitrixAdcLsnlogprofile() *schema.Resource {
 	}
 }
 
-func createLsnlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnlogprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnlogprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnlogprofileName := d.Get("logprofilename").(string)
@@ -68,20 +71,15 @@ func createLsnlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("lsnlogprofile", lsnlogprofileName, &lsnlogprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsnlogprofileName)
 
-	err = readLsnlogprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnlogprofile but we can't read it ?? %s", lsnlogprofileName)
-		return nil
-	}
-	return nil
+	return readLsnlogprofileFunc(ctx, d, meta)
 }
 
-func readLsnlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnlogprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnlogprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnlogprofileName := d.Id()
@@ -103,7 +101,7 @@ func readLsnlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateLsnlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLsnlogprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLsnlogprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnlogprofileName := d.Get("logprofilename").(string)
@@ -141,19 +139,19 @@ func updateLsnlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("lsnlogprofile", lsnlogprofileName, &lsnlogprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating lsnlogprofile %s", lsnlogprofileName)
+			return diag.Errorf("Error updating lsnlogprofile %s", lsnlogprofileName)
 		}
 	}
-	return readLsnlogprofileFunc(d, meta)
+	return readLsnlogprofileFunc(ctx, d, meta)
 }
 
-func deleteLsnlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnlogprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnlogprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnlogprofileName := d.Id()
 	err := client.DeleteResource("lsnlogprofile", lsnlogprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

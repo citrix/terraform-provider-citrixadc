@@ -31,7 +31,7 @@ type Nsappflowcollector struct {
 	/**
 	* The UDP port on which the AppFlow collector is listening.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 
 	//------- Read only Parameter ---------;
 

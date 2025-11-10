@@ -48,6 +48,7 @@ resource "citrixadc_nsacls" "foo_1" {
 
 * `aclsname` - (Optional) Name for the acls resource.
 * `acls_apply_trigger` - (Optional) Trigger to force `apply` of ACLs. Set to "Yes" to apply all configured ACLs to the NetScaler. This acts as a toggle mechanism. Valid values are "Yes" and "No". Default: "No". (The value automatically resets to "No" after each read operation, allowing subsequent plans to detect changes when set to "Yes" again.)
+* `type` - (Optional) Type of the acl ,default will be CLASSIC. Available options as follows: * CLASSIC - specifies the regular extended acls. * DFD - cluster specific acls,specifies hashmethod for steering of the packet in cluster.
 * `acl` - (Optional) A set of block defining acls.
 The acl block supports the following:
 

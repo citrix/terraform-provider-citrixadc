@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,7 +30,10 @@ resource "citrixadc_cmpparameter" "tf_cmpparameter" {
 	cmplevel    = "optimal"
 	quantumsize = 20
 	servercmp   = "OFF"
-  }
+	randomgzipfilenameminlength = "12"
+	randomgzipfilenamemaxlength = "20"
+	randomgzipfilename = "ENABLED"
+	}
 `
 const testAccCmpparameter_update = `
 
@@ -39,14 +42,17 @@ const testAccCmpparameter_update = `
 		cmplevel    = "bestspeed"
 		quantumsize = 30
 		servercmp   = "ON"
+		randomgzipfilenameminlength = "14"
+		randomgzipfilenamemaxlength = "22"
+		randomgzipfilename = "DISABLED"
 	}
 `
 
 func TestAccCmpparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCmpparameter_basic,
@@ -55,6 +61,9 @@ func TestAccCmpparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "cmplevel", "optimal"),
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "quantumsize", "20"),
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "servercmp", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenameminlength", "12"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenamemaxlength", "20"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilename", "ENABLED"),
 				),
 			},
 			{
@@ -64,6 +73,9 @@ func TestAccCmpparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "cmplevel", "bestspeed"),
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "quantumsize", "30"),
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "servercmp", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenameminlength", "14"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenamemaxlength", "22"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilename", "DISABLED"),
 				),
 			},
 		},
@@ -89,8 +101,12 @@ func testAccCheckCmpparameterExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Cmpparameter.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Cmpparameter.Type(), "")
 
 		if err != nil {
 			return err

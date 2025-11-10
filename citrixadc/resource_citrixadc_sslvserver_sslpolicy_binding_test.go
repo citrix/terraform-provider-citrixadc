@@ -21,15 +21,15 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccSslvserver_sslpolicy_binding_lbvserver(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslvserver_sslpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslvserver_sslpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1,
@@ -49,9 +49,9 @@ func TestAccSslvserver_sslpolicy_binding_lbvserver(t *testing.T) {
 
 func TestAccSslvserver_sslpolicy_binding_csvserver(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslvserver_sslpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslvserver_sslpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslvserver_sslpolicy_binding_csvserver_step1,
@@ -93,7 +93,11 @@ func testAccCheckSslvserver_sslpolicy_bindingExist(n string, id *string) resourc
 		vservername := idSlice[0]
 		policyname := idSlice[1]
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslpolicy_binding",
 			ResourceName:             vservername,
@@ -125,7 +129,11 @@ func testAccCheckSslvserver_sslpolicy_bindingExist(n string, id *string) resourc
 }
 
 func testAccCheckSslvserver_sslpolicy_bindingDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_sslvserver_sslpolicy_binding" {

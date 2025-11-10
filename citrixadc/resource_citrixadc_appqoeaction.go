@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appqoe"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppqoeaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppqoeactionFunc,
-		Read:          readAppqoeactionFunc,
-		Update:        updateAppqoeactionFunc,
-		Delete:        deleteAppqoeactionFunc,
+		CreateContext: createAppqoeactionFunc,
+		ReadContext:   readAppqoeactionFunc,
+		UpdateContext: updateAppqoeactionFunc,
+		DeleteContext: deleteAppqoeactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -106,7 +109,7 @@ func resourceCitrixAdcAppqoeaction() *schema.Resource {
 	}
 }
 
-func createAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppqoeactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppqoeactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoeactionName := d.Get("name").(string)
@@ -165,20 +168,15 @@ func createAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Appqoeaction.Type(), appqoeactionName, &appqoeaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appqoeactionName)
 
-	err = readAppqoeactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appqoeaction but we can't read it ?? %s", appqoeactionName)
-		return nil
-	}
-	return nil
+	return readAppqoeactionFunc(ctx, d, meta)
 }
 
-func readAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppqoeactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppqoeactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoeactionName := d.Id()
@@ -193,25 +191,25 @@ func readAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("altcontentpath", data["altcontentpath"])
 	d.Set("altcontentsvcname", data["altcontentsvcname"])
 	d.Set("customfile", data["customfile"])
-	d.Set("delay", data["delay"])
+	setToInt("delay", d, data["delay"])
 	d.Set("dosaction", data["dosaction"])
 	d.Set("dostrigexpression", data["dostrigexpression"])
-	d.Set("maxconn", data["maxconn"])
+	setToInt("maxconn", d, data["maxconn"])
 	d.Set("name", data["name"])
 	d.Set("numretries", data["numretries"])
-	d.Set("polqdepth", data["polqdepth"])
+	setToInt("polqdepth", d, data["polqdepth"])
 	setToInt("priority", d, data["priority"])
-	d.Set("priqdepth", data["priqdepth"])
+	setToInt("priqdepth", d, data["priqdepth"])
 	d.Set("respondwith", data["respondwith"])
 	d.Set("retryonreset", data["retryonreset"])
-	d.Set("retryontimeout", data["retryontimeout"])
+	setToInt("retryontimeout", d, data["retryontimeout"])
 	d.Set("tcpprofile", data["tcpprofile"])
 
 	return nil
 
 }
 
-func updateAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppqoeactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppqoeactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoeactionName := d.Get("name").(string)
@@ -237,7 +235,7 @@ func updateAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("delay") {
 		log.Printf("[DEBUG]  citrixadc-provider: Delay has changed for appqoeaction %s, starting update", appqoeactionName)
-		appqoeaction.Delay = d.Get("delay").(int)
+		appqoeaction.Delay = intPtr(d.Get("delay").(int))
 		hasChange = true
 	}
 	if d.HasChange("dosaction") {
@@ -252,18 +250,18 @@ func updateAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxconn") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxconn has changed for appqoeaction %s, starting update", appqoeactionName)
-		appqoeaction.Maxconn = d.Get("maxconn").(int)
+		appqoeaction.Maxconn = intPtr(d.Get("maxconn").(int))
 		hasChange = true
 	}
 	if d.HasChange("numretries") {
 		log.Printf("[DEBUG]  citrixadc-provider: Numretries has changed for appqoeaction %s, starting update", appqoeactionName)
 		val, _ := strconv.Atoi(d.Get("numretries").(string))
-		appqoeaction.Numretries = val
+		appqoeaction.Numretries = intPtr(val)
 		hasChange = true
 	}
 	if d.HasChange("polqdepth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Polqdepth has changed for appqoeaction %s, starting update", appqoeactionName)
-		appqoeaction.Polqdepth = d.Get("polqdepth").(int)
+		appqoeaction.Polqdepth = intPtr(d.Get("polqdepth").(int))
 		hasChange = true
 	}
 	if d.HasChange("priority") {
@@ -273,7 +271,7 @@ func updateAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("priqdepth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priqdepth has changed for appqoeaction %s, starting update", appqoeactionName)
-		appqoeaction.Priqdepth = d.Get("priqdepth").(int)
+		appqoeaction.Priqdepth = intPtr(d.Get("priqdepth").(int))
 		hasChange = true
 	}
 	if d.HasChange("respondwith") {
@@ -288,7 +286,7 @@ func updateAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("retryontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Retryontimeout has changed for appqoeaction %s, starting update", appqoeactionName)
-		appqoeaction.Retryontimeout = d.Get("retryontimeout").(int)
+		appqoeaction.Retryontimeout = intPtr(d.Get("retryontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpprofile") {
@@ -300,19 +298,19 @@ func updateAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Appqoeaction.Type(), appqoeactionName, &appqoeaction)
 		if err != nil {
-			return fmt.Errorf("Error updating appqoeaction %s", appqoeactionName)
+			return diag.Errorf("Error updating appqoeaction %s", appqoeactionName)
 		}
 	}
-	return readAppqoeactionFunc(d, meta)
+	return readAppqoeactionFunc(ctx, d, meta)
 }
 
-func deleteAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppqoeactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppqoeactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoeactionName := d.Id()
 	err := client.DeleteResource(service.Appqoeaction.Type(), appqoeactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

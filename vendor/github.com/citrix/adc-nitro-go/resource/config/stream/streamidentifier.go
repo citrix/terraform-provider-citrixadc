@@ -31,11 +31,11 @@ type Streamidentifier struct {
 	/**
 	* Number of minutes of data to use when calculating session statistics (number of requests, bandwidth, and response times). The interval is a moving window that keeps the most recently collected data. Older data is discarded at regular intervals.
 	*/
-	Interval int `json:"interval,omitempty"`
+	Interval *int `json:"interval,omitempty"`
 	/**
 	* Size of the sample from which to select a request for evaluation. The smaller the sample count, the more accurate is the statistical data. To evaluate all requests, set the sample count to 1. However, such a low setting can result in excessive consumption of memory and processing resources.
 	*/
-	Samplecount int `json:"samplecount,omitempty"`
+	Samplecount *int `json:"samplecount,omitempty"`
 	/**
 	* Sort stored records by the specified statistics column, in descending order. Performed during data collection, the sorting enables real-time data evaluation through Citrix ADC policies (for example, compression and caching policies) that use functions such as IS_TOP(n).
 	*/
@@ -60,11 +60,11 @@ type Streamidentifier struct {
 	/**
 	* Maximum per transcation value of metric. Metric to be tracked is specified by tracktransactions attribute.
 	*/
-	Maxtransactionthreshold int `json:"maxtransactionthreshold,omitempty"`
+	Maxtransactionthreshold *int `json:"maxtransactionthreshold,omitempty"`
 	/**
 	* Minimum per transcation value of metric. Metric to be tracked is specified by tracktransactions attribute.
 	*/
-	Mintransactionthreshold int `json:"mintransactionthreshold,omitempty"`
+	Mintransactionthreshold *int `json:"mintransactionthreshold,omitempty"`
 	/**
 	* Non-Breaching transactions to Total transactions threshold expressed in percent.
 		Maximum of 6 decimal places is supported.
@@ -73,7 +73,7 @@ type Streamidentifier struct {
 	/**
 	* Breaching transactions threshold calculated over interval.
 	*/
-	Breachthreshold int `json:"breachthreshold,omitempty"`
+	Breachthreshold *int `json:"breachthreshold,omitempty"`
 	/**
 	* Location where objects collected on the identifier will be logged.
 	*/
@@ -83,11 +83,11 @@ type Streamidentifier struct {
 		Log interval should be greater than or equal to the inteval 
 		of the stream identifier.
 	*/
-	Loginterval int `json:"loginterval,omitempty"`
+	Loginterval *int `json:"loginterval,omitempty"`
 	/**
 	* Maximum number of objects to be logged in the log interval.
 	*/
-	Loglimit int `json:"loglimit,omitempty"`
+	Loglimit *int `json:"loglimit,omitempty"`
 
 	//------- Read only Parameter ---------;
 

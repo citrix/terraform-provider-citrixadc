@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcAaauser_vpnurlpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaauser_vpnurlpolicy_bindingFunc,
-		Read:          readAaauser_vpnurlpolicy_bindingFunc,
-		Delete:        deleteAaauser_vpnurlpolicy_bindingFunc,
+		CreateContext: createAaauser_vpnurlpolicy_bindingFunc,
+		ReadContext:   readAaauser_vpnurlpolicy_bindingFunc,
+		DeleteContext: deleteAaauser_vpnurlpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"username": {
@@ -51,7 +53,7 @@ func resourceCitrixAdcAaauser_vpnurlpolicy_binding() *schema.Resource {
 	}
 }
 
-func createAaauser_vpnurlpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaauser_vpnurlpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaauser_vpnurlpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	username := d.Get("username").(string)
@@ -60,27 +62,25 @@ func createAaauser_vpnurlpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 	aaauser_vpnurlpolicy_binding := aaa.Aaauservpnurlpolicybinding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
 		Username:               d.Get("username").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		aaauser_vpnurlpolicy_binding.Priority = intPtr(d.Get("priority").(int))
+	}
+
 	err := client.UpdateUnnamedResource("aaauser_vpnurlpolicy_binding", &aaauser_vpnurlpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAaauser_vpnurlpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaauser_vpnurlpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAaauser_vpnurlpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAaauser_vpnurlpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaauser_vpnurlpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaauser_vpnurlpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -101,7 +101,7 @@ func readAaauser_vpnurlpolicy_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -142,7 +142,7 @@ func readAaauser_vpnurlpolicy_bindingFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deleteAaauser_vpnurlpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaauser_vpnurlpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaauser_vpnurlpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -161,7 +161,7 @@ func deleteAaauser_vpnurlpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgs("aaauser_vpnurlpolicy_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

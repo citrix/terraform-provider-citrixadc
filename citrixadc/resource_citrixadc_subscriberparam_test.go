@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ resource "citrixadc_subscriberparam" "tf_subscriberparam" {
 	idlettl       = 40
 	idleaction    = "ccrTerminate"
 	ipv6prefixlookuplist = [64]
-  }
+	}
   
 `
 const testAccSubscriberparam_update = `
@@ -41,15 +41,15 @@ resource "citrixadc_subscriberparam" "tf_subscriberparam" {
 	idlettl       = 50
 	idleaction    = "ccrTerminate"
 	ipv6prefixlookuplist = [64]
-  }
+	}
   
 `
 
 func TestAccSubscriberparam_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberparam_basic,
@@ -94,8 +94,12 @@ func testAccCheckSubscriberparamExist(n string, id *string) resource.TestCheckFu
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("subscriberparam", "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("subscriberparam", "")
 
 		if err != nil {
 			return err

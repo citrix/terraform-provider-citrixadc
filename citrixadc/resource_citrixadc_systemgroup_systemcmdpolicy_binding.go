@@ -1,13 +1,15 @@
 package citrixadc
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -15,11 +17,11 @@ import (
 func resourceCitrixAdcSystemgroup_systemcmdpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemgroup_systemcmdpolicy_bindingFunc,
-		Read:          readSystemgroup_systemcmdpolicy_bindingFunc,
-		Delete:        deleteSystemgroup_systemcmdpolicy_bindingFunc,
+		CreateContext: createSystemgroup_systemcmdpolicy_bindingFunc,
+		ReadContext:   readSystemgroup_systemcmdpolicy_bindingFunc,
+		DeleteContext: deleteSystemgroup_systemcmdpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"groupname": {
@@ -41,7 +43,7 @@ func resourceCitrixAdcSystemgroup_systemcmdpolicy_binding() *schema.Resource {
 	}
 }
 
-func createSystemgroup_systemcmdpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemgroup_systemcmdpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemgroup_systemcmdpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	groupname := d.Get("groupname")
@@ -50,25 +52,23 @@ func createSystemgroup_systemcmdpolicy_bindingFunc(d *schema.ResourceData, meta 
 	systemgroup_systemcmdpolicy_binding := system.Systemgroupsystemcmdpolicybinding{
 		Groupname:  d.Get("groupname").(string),
 		Policyname: d.Get("policyname").(string),
-		Priority:   d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		systemgroup_systemcmdpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Systemgroup_systemcmdpolicy_binding.Type(), bindingId, &systemgroup_systemcmdpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSystemgroup_systemcmdpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemgroup_systemcmdpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSystemgroup_systemcmdpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readSystemgroup_systemcmdpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemgroup_systemcmdpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemgroup_systemcmdpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -89,7 +89,7 @@ func readSystemgroup_systemcmdpolicy_bindingFunc(d *schema.ResourceData, meta in
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -128,7 +128,7 @@ func readSystemgroup_systemcmdpolicy_bindingFunc(d *schema.ResourceData, meta in
 
 }
 
-func deleteSystemgroup_systemcmdpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemgroup_systemcmdpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemgroup_systemcmdpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -143,7 +143,7 @@ func deleteSystemgroup_systemcmdpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.DeleteResourceWithArgs(service.Systemgroup_systemcmdpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsxmlnamespace() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsxmlnamespaceFunc,
-		Read:          readNsxmlnamespaceFunc,
-		Update:        updateNsxmlnamespaceFunc,
-		Delete:        deleteNsxmlnamespaceFunc,
+		CreateContext: createNsxmlnamespaceFunc,
+		ReadContext:   readNsxmlnamespaceFunc,
+		UpdateContext: updateNsxmlnamespaceFunc,
+		DeleteContext: deleteNsxmlnamespaceFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"prefix": {
@@ -41,7 +44,7 @@ func resourceCitrixAdcNsxmlnamespace() *schema.Resource {
 	}
 }
 
-func createNsxmlnamespaceFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsxmlnamespaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsxmlnamespaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsxmlnamespaceName := d.Get("prefix").(string)
@@ -53,20 +56,15 @@ func createNsxmlnamespaceFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Nsxmlnamespace.Type(), nsxmlnamespaceName, &nsxmlnamespace)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsxmlnamespaceName)
 
-	err = readNsxmlnamespaceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsxmlnamespace but we can't read it ?? %s", nsxmlnamespaceName)
-		return nil
-	}
-	return nil
+	return readNsxmlnamespaceFunc(ctx, d, meta)
 }
 
-func readNsxmlnamespaceFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsxmlnamespaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsxmlnamespaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsxmlnamespaceName := d.Id()
@@ -85,7 +83,7 @@ func readNsxmlnamespaceFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsxmlnamespaceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsxmlnamespaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsxmlnamespaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsxmlnamespaceName := d.Get("prefix").(string)
@@ -108,19 +106,19 @@ func updateNsxmlnamespaceFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nsxmlnamespace.Type(), nsxmlnamespaceName, &nsxmlnamespace)
 		if err != nil {
-			return fmt.Errorf("Error updating nsxmlnamespace %s", nsxmlnamespaceName)
+			return diag.Errorf("Error updating nsxmlnamespace %s", nsxmlnamespaceName)
 		}
 	}
-	return readNsxmlnamespaceFunc(d, meta)
+	return readNsxmlnamespaceFunc(ctx, d, meta)
 }
 
-func deleteNsxmlnamespaceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsxmlnamespaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsxmlnamespaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsxmlnamespaceName := d.Id()
 	err := client.DeleteResource(service.Nsxmlnamespace.Type(), nsxmlnamespaceName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

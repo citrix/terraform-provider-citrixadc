@@ -1,21 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcDnsptrrec() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsptrrecFunc,
-		Read:          readDnsptrrecFunc,
-		Delete:        deleteDnsptrrecFunc,
+		CreateContext: createDnsptrrecFunc,
+		ReadContext:   readDnsptrrecFunc,
+		DeleteContext: deleteDnsptrrecFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"reversedomain": {
@@ -43,44 +45,38 @@ func resourceCitrixAdcDnsptrrec() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
 
-func createDnsptrrecFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsptrrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsptrrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsptrrecName := d.Get("reversedomain").(string)
 	dnsptrrec := dns.Dnsptrrec{
 		Domain:        d.Get("domain").(string),
 		Ecssubnet:     d.Get("ecssubnet").(string),
-		Nodeid:        d.Get("nodeid").(int),
 		Reversedomain: d.Get("reversedomain").(string),
-		Ttl:           d.Get("ttl").(int),
-		Type:          d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		dnsptrrec.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnsptrrec.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Dnsptrrec.Type(), dnsptrrecName, &dnsptrrec)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnsptrrecName)
 
-	err = readDnsptrrecFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsptrrec but we can't read it ?? %s", dnsptrrecName)
-		return nil
-	}
-	return nil
+	return readDnsptrrecFunc(ctx, d, meta)
 }
 
-func readDnsptrrecFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsptrrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsptrrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsptrrecName := d.Id()
@@ -94,22 +90,21 @@ func readDnsptrrecFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("reversedomain", data["reversedomain"])
 	d.Set("domain", data["domain"])
 	d.Set("ecssubnet", data["ecssubnet"])
-	d.Set("nodeid", data["nodeid"])
+	setToInt("nodeid", d, data["nodeid"])
 	d.Set("reversedomain", data["reversedomain"])
-	d.Set("ttl", data["ttl"])
-	d.Set("type", data["type"])
+	setToInt("ttl", d, data["ttl"])
 
 	return nil
 
 }
 
-func deleteDnsptrrecFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsptrrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsptrrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsptrrecName := d.Id()
 	err := client.DeleteResource(service.Dnsptrrec.Type(), dnsptrrecName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

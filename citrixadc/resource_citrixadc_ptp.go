@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcPtp() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPtpFunc,
-		Read:          readPtpFunc,
-		Update:        updatePtpFunc,
-		Delete:        deletePtpFunc,
+		CreateContext: createPtpFunc,
+		ReadContext:   readPtpFunc,
+		UpdateContext: updatePtpFunc,
+		DeleteContext: deletePtpFunc,
 		Schema: map[string]*schema.Schema{
 			"state": {
 				Type:     schema.TypeString,
@@ -28,7 +31,7 @@ func resourceCitrixAdcPtp() *schema.Resource {
 	}
 }
 
-func createPtpFunc(d *schema.ResourceData, meta interface{}) error {
+func createPtpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPtpFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var ptpName string
@@ -40,20 +43,15 @@ func createPtpFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Ptp.Type(), &ptp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ptpName)
 
-	err = readPtpFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ptp but we can't read it ?? %s", ptpName)
-		return nil
-	}
-	return nil
+	return readPtpFunc(ctx, d, meta)
 }
 
-func readPtpFunc(d *schema.ResourceData, meta interface{}) error {
+func readPtpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readPtpFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading ptp state")
@@ -69,7 +67,7 @@ func readPtpFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updatePtpFunc(d *schema.ResourceData, meta interface{}) error {
+func updatePtpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updatePtpFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -84,13 +82,13 @@ func updatePtpFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Ptp.Type(), &ptp)
 		if err != nil {
-			return fmt.Errorf("Error updating ptp ")
+			return diag.Errorf("Error updating ptp ")
 		}
 	}
-	return readPtpFunc(d, meta)
+	return readPtpFunc(ctx, d, meta)
 }
 
-func deletePtpFunc(d *schema.ResourceData, meta interface{}) error {
+func deletePtpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePtpFunc")
 
 	d.SetId("")

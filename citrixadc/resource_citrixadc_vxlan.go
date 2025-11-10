@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVxlan() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVxlanFunc,
-		Read:          readVxlanFunc,
-		Update:        updateVxlanFunc,
-		Delete:        deleteVxlanFunc,
+		CreateContext: createVxlanFunc,
+		ReadContext:   readVxlanFunc,
+		UpdateContext: updateVxlanFunc,
+		DeleteContext: deleteVxlanFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"vxlanid": {
@@ -67,37 +70,39 @@ func resourceCitrixAdcVxlan() *schema.Resource {
 	}
 }
 
-func createVxlanFunc(d *schema.ResourceData, meta interface{}) error {
+func createVxlanFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVxlanFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vxlanId := d.Get("vxlanid").(int)
 	vxlan := network.Vxlan{
 		Dynamicrouting:     d.Get("dynamicrouting").(string),
-		Id:                 d.Get("vxlanid").(int),
 		Innervlantagging:   d.Get("innervlantagging").(string),
 		Ipv6dynamicrouting: d.Get("ipv6dynamicrouting").(string),
-		Port:               d.Get("port").(int),
 		Protocol:           d.Get("protocol").(string),
 		Type:               d.Get("type").(string),
-		Vlan:               d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vxlanid"); !raw.IsNull() {
+		vxlan.Id = intPtr(d.Get("vxlanid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		vxlan.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		vxlan.Vlan = intPtr(d.Get("vlan").(int))
 	}
 	vxlanIdStr := strconv.Itoa(vxlanId)
 	_, err := client.AddResource(service.Vxlan.Type(), vxlanIdStr, &vxlan)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vxlanIdStr)
 
-	err = readVxlanFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vxlan but we can't read it ?? %d", vxlanId)
-		return nil
-	}
-	return nil
+	return readVxlanFunc(ctx, d, meta)
 }
 
-func readVxlanFunc(d *schema.ResourceData, meta interface{}) error {
+func readVxlanFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVxlanFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vxlanIdStr := d.Id()
@@ -109,25 +114,27 @@ func readVxlanFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("dynamicrouting", data["dynamicrouting"])
-	d.Set("vxlanid", data["id"])
+	setToInt("vxlanid", d, data["id"])
 	d.Set("innervlantagging", data["innervlantagging"])
 	d.Set("ipv6dynamicrouting", data["ipv6dynamicrouting"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 	d.Set("protocol", data["protocol"])
 	d.Set("type", data["type"])
-	d.Set("vlan", data["vlan"])
+	setToInt("vlan", d, data["vlan"])
 
 	return nil
 
 }
 
-func updateVxlanFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVxlanFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVxlanFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vxlanId := d.Get("vxlanid").(int)
 
-	vxlan := network.Vxlan{
-		Id: d.Get("vxlanid").(int),
+	vxlan := network.Vxlan{}
+
+	if raw := d.GetRawConfig().GetAttr("vxlanid"); !raw.IsNull() {
+		vxlan.Id = intPtr(d.Get("vxlanid").(int))
 	}
 	hasChange := false
 	if d.HasChange("dynamicrouting") {
@@ -147,7 +154,7 @@ func updateVxlanFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for vxlan %d, starting update", vxlanId)
-		vxlan.Port = d.Get("port").(int)
+		vxlan.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("protocol") {
@@ -162,26 +169,26 @@ func updateVxlanFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for vxlan %d, starting update", vxlanId)
-		vxlan.Vlan = d.Get("vlan").(int)
+		vxlan.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 	vxlanIdStr := strconv.Itoa(vxlanId)
 	if hasChange {
 		_, err := client.UpdateResource(service.Vxlan.Type(), vxlanIdStr, &vxlan)
 		if err != nil {
-			return fmt.Errorf("Error updating vxlan %d", vxlanId)
+			return diag.Errorf("Error updating vxlan %d", vxlanId)
 		}
 	}
-	return readVxlanFunc(d, meta)
+	return readVxlanFunc(ctx, d, meta)
 }
 
-func deleteVxlanFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVxlanFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVxlanFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vxlanName := d.Id()
 	err := client.DeleteResource(service.Vxlan.Type(), vxlanName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

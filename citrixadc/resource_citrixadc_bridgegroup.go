@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcBridgegroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBridgegroupFunc,
-		Read:          readBridgegroupFunc,
-		Update:        updateBridgegroupFunc,
-		Delete:        deleteBridgegroupFunc,
+		CreateContext: createBridgegroupFunc,
+		ReadContext:   readBridgegroupFunc,
+		UpdateContext: updateBridgegroupFunc,
+		DeleteContext: deleteBridgegroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bridgegroup_id": {
@@ -42,32 +45,30 @@ func resourceCitrixAdcBridgegroup() *schema.Resource {
 	}
 }
 
-func createBridgegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createBridgegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBridgegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bridgegroup_Id := d.Get("bridgegroup_id").(int)
 	bridgegroup := network.Bridgegroup{
 		Dynamicrouting:     d.Get("dynamicrouting").(string),
-		Id:                 d.Get("bridgegroup_id").(int),
 		Ipv6dynamicrouting: d.Get("ipv6dynamicrouting").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bridgegroup_id"); !raw.IsNull() {
+		bridgegroup.Id = intPtr(d.Get("bridgegroup_id").(int))
 	}
 	bridgegroup_IdStr := strconv.Itoa(bridgegroup_Id)
 	_, err := client.AddResource(service.Bridgegroup.Type(), bridgegroup_IdStr, &bridgegroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bridgegroup_IdStr)
 
-	err = readBridgegroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this bridgegroup but we can't read it ?? %s", bridgegroup_IdStr)
-		return nil
-	}
-	return nil
+	return readBridgegroupFunc(ctx, d, meta)
 }
 
-func readBridgegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readBridgegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBridgegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bridgegroup_IdStr := d.Id()
@@ -79,20 +80,22 @@ func readBridgegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("dynamicrouting", data["dynamicrouting"])
-	d.Set("bridgegroup_id", data["id"])
+	setToInt("bridgegroup_id", d, data["id"])
 	d.Set("ipv6dynamicrouting", data["ipv6dynamicrouting"])
 
 	return nil
 
 }
 
-func updateBridgegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateBridgegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateBridgegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bridgegroup_Id := d.Get("bridgegroup_id").(int)
 
-	bridgegroup := network.Bridgegroup{
-		Id: d.Get("bridgegroup_id").(int),
+	bridgegroup := network.Bridgegroup{}
+
+	if raw := d.GetRawConfig().GetAttr("bridgegroup_id"); !raw.IsNull() {
+		bridgegroup.Id = intPtr(d.Get("bridgegroup_id").(int))
 	}
 	hasChange := false
 	if d.HasChange("dynamicrouting") {
@@ -109,19 +112,19 @@ func updateBridgegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Bridgegroup.Type(), bridgegroup_IdStr, &bridgegroup)
 		if err != nil {
-			return fmt.Errorf("Error updating bridgegroup %s", bridgegroup_IdStr)
+			return diag.Errorf("Error updating bridgegroup %s", bridgegroup_IdStr)
 		}
 	}
-	return readBridgegroupFunc(d, meta)
+	return readBridgegroupFunc(ctx, d, meta)
 }
 
-func deleteBridgegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBridgegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBridgegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bridgegroupName := d.Id()
 	err := client.DeleteResource(service.Bridgegroup.Type(), bridgegroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

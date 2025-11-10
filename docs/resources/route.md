@@ -36,6 +36,8 @@ resource "citrixadc_route" "tf_route" {
 * `ownergroup` - (Optional) The owner node group in a Cluster for this route. If owner node group is not specified then the route is treated as Striped route.
 * `routetype` - (Optional) Protocol used by routes that you want to remove from the routing table of the Citrix ADC. Possible values: [ CONNECTED, STATIC, DYNAMIC, OSPF, ISIS, RIP, BGP ]
 * `detail` - (Optional) Display a detailed view.
+* `mgmt` - (Optional) Route in management plane.
+* `protocol` - (Optional) Routing protocol used for advertising this route.
 
 
 ## Attribute Reference

@@ -1,22 +1,53 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcNslicenseserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNslicenseserverFunc,
-		Read:          readNslicenseserverFunc,
-		Delete:        deleteNslicenseserverFunc,
+		CreateContext: createNslicenseserverFunc,
+		ReadContext:   readNslicenseserverFunc,
+		UpdateContext: updateNslicenseserverFunc,
+		DeleteContext: deleteNslicenseserverFunc,
 		Schema: map[string]*schema.Schema{
+			"username": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"password": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"licenseserverip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"licensemode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"deviceprofilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"forceupdateip": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -33,7 +64,6 @@ func resourceCitrixAdcNslicenseserver() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"servername": {
 				Type:     schema.TypeString,
@@ -44,34 +74,39 @@ func resourceCitrixAdcNslicenseserver() *schema.Resource {
 	}
 }
 
-func createNslicenseserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createNslicenseserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNslicenseserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nslicenseserverId := d.Get("servername").(string)
 
 	nslicenseserver := ns.Nslicenseserver{
-		Forceupdateip: d.Get("forceupdateip").(bool),
-		Nodeid:        d.Get("nodeid").(int),
-		Port:          d.Get("port").(int),
-		Servername:    d.Get("servername").(string),
+		Forceupdateip:     d.Get("forceupdateip").(bool),
+		Servername:        d.Get("servername").(string),
+		Deviceprofilename: d.Get("deviceprofilename").(string),
+		Licensemode:       d.Get("licensemode").(string),
+		Licenseserverip:   d.Get("licenseserverip").(string),
+		Password:          d.Get("password").(string),
+		Username:          d.Get("username").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		nslicenseserver.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		nslicenseserver.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource("nslicenseserver", "", &nslicenseserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nslicenseserverId)
 
-	err = readNslicenseserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nslicenseserver but we can't read it ?? %s", nslicenseserverId)
-		return nil
-	}
-	return nil
+	return readNslicenseserverFunc(ctx, d, meta)
 }
 
-func readNslicenseserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readNslicenseserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNslicenseserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nslicenseserverId := d.Id()
@@ -95,8 +130,13 @@ func readNslicenseserverFunc(d *schema.ResourceData, meta interface{}) error {
 		data := licenseServers[0]
 
 		d.Set("forceupdateip", data["forceupdateip"])
-		d.Set("nodeid", data["nodeid"])
-		d.Set("port", data["port"])
+		d.Set("username", data["username"])
+		d.Set("password", data["password"])
+		d.Set("licenseserverip", data["licenseserverip"])
+		d.Set("licensemode", data["licensemode"])
+		d.Set("deviceprofilename", data["deviceprofilename"])
+		setToInt("nodeid", d, data["nodeid"])
+		setToInt("port", d, data["port"])
 		d.Set("servername", data["servername"])
 	}
 
@@ -104,14 +144,43 @@ func readNslicenseserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteNslicenseserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNslicenseserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateNslicenseserverFunc")
+	client := meta.(*NetScalerNitroClient).client
+	nslicenseserver := ns.Nslicenseserver{
+		Servername: d.Get("servername").(string),
+	}
+
+	hasChange := false
+	if d.HasChange("licensemode") {
+		log.Printf("[DEBUG]  citrixadc-provider: Licensemode has changed for nslicenseserver %s, starting update", d.Id())
+		nslicenseserver.Licensemode = d.Get("licensemode").(string)
+		hasChange = true
+	}
+	if d.HasChange("port") {
+		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for nslicenseserver %s, starting update", d.Id())
+		nslicenseserver.Port = intPtr(d.Get("port").(int))
+		hasChange = true
+	}
+
+	if hasChange {
+		_, err := client.UpdateResource("nslicenseserver", "", &nslicenseserver)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return readNslicenseserverFunc(ctx, d, meta)
+}
+
+func deleteNslicenseserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNslicenseserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	args := make([]string, 0, 1)
 	args = append(args, fmt.Sprintf("servername:%s", d.Get("servername").(string)))
 	err := client.DeleteResourceWithArgs("nslicenseserver", "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

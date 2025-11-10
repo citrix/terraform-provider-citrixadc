@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccVpnparameter_add = `
@@ -41,6 +42,12 @@ const testAccVpnparameter_add = `
 		linuxpluginupgrade    = "Always"
 		uitheme               = "DEFAULT"
 		httpport              = [80]
+		secureprivateaccess	= "ENABLED"
+		maxiipperuser         = 5
+		httptrackconnproxy	= "OFF"
+		deviceposture = "DISABLED"
+		backenddtls12 = "DISABLED"
+		accessrestrictedpageredirect = "NS"
 	}
 `
 const testAccVpnparameter_update = `
@@ -61,13 +68,18 @@ const testAccVpnparameter_update = `
 		linuxpluginupgrade    = "Always"
 		uitheme               = "DEFAULT"
 		httpport              = [80]
+		secureprivateaccess	= "DISABLED"
+		maxiipperuser         = 10
+		httptrackconnproxy	= "ON"
+		deviceposture = "ENABLED"
+		backenddtls12 = "ENABLED"
 	}
 `
 
 func TestAccVpnparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		// vpnparameter resource do not have DELETE operation
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -77,6 +89,11 @@ func TestAccVpnparameter_basic(t *testing.T) {
 					testAccCheckVpnparameterExist("citrixadc_vpnparameter.tf_vpnparameter", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "splittunnel", "ON"),
 					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "locallanaccess", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "secureprivateaccess", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "httptrackconnproxy", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "deviceposture", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "backenddtls12", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "accessrestrictedpageredirect", "NS"),
 				),
 			},
 			{
@@ -85,6 +102,10 @@ func TestAccVpnparameter_basic(t *testing.T) {
 					testAccCheckVpnparameterExist("citrixadc_vpnparameter.tf_vpnparameter", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "splittunnel", "OFF"),
 					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "locallanaccess", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "secureprivateaccess", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "httptrackconnproxy", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "deviceposture", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "backenddtls12", "ENABLED"),
 				),
 			},
 		},
@@ -110,8 +131,12 @@ func testAccCheckVpnparameterExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Vpnparameter.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vpnparameter.Type(), "")
 
 		if err != nil {
 			return err

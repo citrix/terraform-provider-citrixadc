@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcLbvserver_spilloverpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbvserver_spilloverpolicy_bindingFunc,
-		Read:          readLbvserver_spilloverpolicy_bindingFunc,
-		Delete:        deleteLbvserver_spilloverpolicy_bindingFunc,
+		CreateContext: createLbvserver_spilloverpolicy_bindingFunc,
+		ReadContext:   readLbvserver_spilloverpolicy_bindingFunc,
+		DeleteContext: deleteLbvserver_spilloverpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": {
@@ -71,7 +73,7 @@ func resourceCitrixAdcLbvserver_spilloverpolicy_binding() *schema.Resource {
 	}
 }
 
-func createLbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbvserver_spilloverpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbvserver_spilloverpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Get("name").(string)
@@ -85,25 +87,23 @@ func createLbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta in
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   lbvserverName,
 		Policyname:             policyName,
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		lbvserver_spilloverpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Lbvserver_spilloverpolicy_binding.Type(), lbvserverName, &lbvserver_spilloverpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLbvserver_spilloverpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbvserver_spilloverpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLbvserver_spilloverpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readLbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbvserver_spilloverpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbvserver_spilloverpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -124,7 +124,7 @@ func readLbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta inte
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -168,7 +168,7 @@ func readLbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta inte
 
 }
 
-func deleteLbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbvserver_spilloverpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbvserver_spilloverpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -190,7 +190,7 @@ func deleteLbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta in
 	}
 	err := client.DeleteResourceWithArgsMap(service.Lbvserver_spilloverpolicy_binding.Type(), lbvserverName, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

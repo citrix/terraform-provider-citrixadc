@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -28,16 +28,16 @@ const testAccLocationfile6_basic = `
 resource "citrixadc_locationfile6" "tf_locationfile6" {
 	locationfile = "/var/netscaler/inbuilt_db/Citrix_Netscaler_InBuilt_GeoIP_DB_IPv6"
 	format       = "netscaler6"
-  }
+	}
   
 `
 
 func TestAccLocationfile6_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource! No such resource")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLocationfile6Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLocationfile6Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationfile6_basic,
@@ -70,8 +70,12 @@ func testAccCheckLocationfile6Exist(n string, id *string) resource.TestCheckFunc
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Locationfile6.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Locationfile6.Type(), "")
 
 		if err != nil {
 			return err
@@ -86,7 +90,11 @@ func testAccCheckLocationfile6Exist(n string, id *string) resource.TestCheckFunc
 }
 
 func testAccCheckLocationfile6Destroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_locationfile" {
@@ -97,7 +105,7 @@ func testAccCheckLocationfile6Destroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Locationfile6.Type(), "")
+		_, err := client.FindResource(service.Locationfile6.Type(), "")
 		if err == nil {
 			return fmt.Errorf("locationfile %s still exists", rs.Primary.ID)
 		}

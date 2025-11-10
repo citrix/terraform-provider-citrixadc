@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -40,7 +40,7 @@ resource "citrixadc_contentinspectioncallout" "tf_contentinspectioncalloout" {
 	serverip    = "2.2.2.2"
 	returntype  = "TEXT"
 	resultexpr  = "true"
-  }
+	}
 `
 
 const testAccContentinspectioncallout_update = `
@@ -61,14 +61,14 @@ resource "citrixadc_contentinspectioncallout" "tf_contentinspectioncalloout" {
 	serverip    = "2.2.2.2"
 	returntype  = "TEXT"
 	resultexpr  = "icap.res.header(\"ISTag\")"
-  }
+	}
 `
 
 func TestAccContentinspectioncallout_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckContentinspectioncalloutDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckContentinspectioncalloutDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContentinspectioncallout_basic,
@@ -117,8 +117,12 @@ func testAccCheckContentinspectioncalloutExist(n string, id *string) resource.Te
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("contentinspectioncallout", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("contentinspectioncallout", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -133,7 +137,11 @@ func testAccCheckContentinspectioncalloutExist(n string, id *string) resource.Te
 }
 
 func testAccCheckContentinspectioncalloutDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_contentinspectioncallout" {
@@ -144,7 +152,7 @@ func testAccCheckContentinspectioncalloutDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("contentinspectioncallout", rs.Primary.ID)
+		_, err := client.FindResource("contentinspectioncallout", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("contentinspectioncallout %s still exists", rs.Primary.ID)
 		}

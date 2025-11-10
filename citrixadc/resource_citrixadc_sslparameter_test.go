@@ -20,27 +20,29 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccSslparameter_basic = `
 	resource "citrixadc_sslparameter" "default" {
 		denysslreneg   = "NONSECURE"
 		defaultprofile = "ENABLED"
+		operationqueuelimit = 4096
 	}
 `
 const testAccSslparameter_basic_update = `
 	resource "citrixadc_sslparameter" "default" {
 		denysslreneg   = "ALL"
 		defaultprofile = "ENABLED"
+		operationqueuelimit = 4088
 	}
 `
 
 func TestAccSslparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		// sslparameter resource do not have DELETE operation
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -50,6 +52,7 @@ func TestAccSslparameter_basic(t *testing.T) {
 					testAccCheckSslparameterExist("citrixadc_sslparameter.default", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "denysslreneg", "NONSECURE"),
 					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "defaultprofile", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "operationqueuelimit", "4096"),
 				),
 			},
 			{
@@ -58,6 +61,7 @@ func TestAccSslparameter_basic(t *testing.T) {
 					testAccCheckSslparameterExist("citrixadc_sslparameter.default", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "denysslreneg", "ALL"),
 					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "defaultprofile", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "operationqueuelimit", "4088"),
 				),
 			},
 		},
@@ -83,8 +87,12 @@ func testAccCheckSslparameterExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Sslparameter.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Sslparameter.Type(), "")
 
 		if err != nil {
 			return err

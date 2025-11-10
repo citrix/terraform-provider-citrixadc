@@ -1,24 +1,42 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cmp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCmpparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCmpparameterFunc,
-		Read:          readCmpparameterFunc,
-		Update:        updateCmpparameterFunc,
-		Delete:        deleteCmpparameterFunc,
+		CreateContext: createCmpparameterFunc,
+		ReadContext:   readCmpparameterFunc,
+		UpdateContext: updateCmpparameterFunc,
+		DeleteContext: deleteCmpparameterFunc,
 		Schema: map[string]*schema.Schema{
+			"randomgzipfilenameminlength": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"randomgzipfilenamemaxlength": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"randomgzipfilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"addvaryheader": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -88,43 +106,55 @@ func resourceCitrixAdcCmpparameter() *schema.Resource {
 	}
 }
 
-func createCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCmpparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmpparameterName := resource.PrefixedUniqueId("tf-cmpparameter-")
 
 	cmpparameter := cmp.Cmpparameter{
-		Addvaryheader:    d.Get("addvaryheader").(string),
-		Cmpbypasspct:     d.Get("cmpbypasspct").(int),
-		Cmplevel:         d.Get("cmplevel").(string),
-		Cmponpush:        d.Get("cmponpush").(string),
-		Externalcache:    d.Get("externalcache").(string),
-		Heurexpiry:       d.Get("heurexpiry").(string),
-		Heurexpiryhistwt: d.Get("heurexpiryhistwt").(int),
-		Heurexpirythres:  d.Get("heurexpirythres").(int),
-		Minressize:       d.Get("minressize").(int),
-		Policytype:       d.Get("policytype").(string),
-		Quantumsize:      d.Get("quantumsize").(int),
-		Servercmp:        d.Get("servercmp").(string),
-		Varyheadervalue:  d.Get("varyheadervalue").(string),
+		Addvaryheader:      d.Get("addvaryheader").(string),
+		Cmplevel:           d.Get("cmplevel").(string),
+		Cmponpush:          d.Get("cmponpush").(string),
+		Externalcache:      d.Get("externalcache").(string),
+		Heurexpiry:         d.Get("heurexpiry").(string),
+		Policytype:         d.Get("policytype").(string),
+		Servercmp:          d.Get("servercmp").(string),
+		Varyheadervalue:    d.Get("varyheadervalue").(string),
+		Randomgzipfilename: d.Get("randomgzipfilename").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("randomgzipfilenameminlength"); !raw.IsNull() {
+		cmpparameter.Randomgzipfilenameminlength = intPtr(d.Get("randomgzipfilenameminlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("randomgzipfilenamemaxlength"); !raw.IsNull() {
+		cmpparameter.Randomgzipfilenamemaxlength = intPtr(d.Get("randomgzipfilenamemaxlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cmpbypasspct"); !raw.IsNull() {
+		cmpparameter.Cmpbypasspct = intPtr(d.Get("cmpbypasspct").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("heurexpiryhistwt"); !raw.IsNull() {
+		cmpparameter.Heurexpiryhistwt = intPtr(d.Get("heurexpiryhistwt").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("heurexpirythres"); !raw.IsNull() {
+		cmpparameter.Heurexpirythres = intPtr(d.Get("heurexpirythres").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minressize"); !raw.IsNull() {
+		cmpparameter.Minressize = intPtr(d.Get("minressize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("quantumsize"); !raw.IsNull() {
+		cmpparameter.Quantumsize = intPtr(d.Get("quantumsize").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(cmpparameterName)
 
-	err = readCmpparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cmpparameter but we can't read it ?? ")
-		return nil
-	}
-	return nil
+	return readCmpparameterFunc(ctx, d, meta)
 }
 
-func readCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCmpparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading cmpparameter state")
@@ -135,16 +165,19 @@ func readCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("addvaryheader", data["addvaryheader"])
-	d.Set("cmpbypasspct", data["cmpbypasspct"])
+	setToInt("randomgzipfilenameminlength", d, data["randomgzipfilenameminlength"])
+	setToInt("randomgzipfilenamemaxlength", d, data["randomgzipfilenamemaxlength"])
+	d.Set("randomgzipfilename", data["randomgzipfilename"])
+	setToInt("cmpbypasspct", d, data["cmpbypasspct"])
 	d.Set("cmplevel", data["cmplevel"])
 	d.Set("cmponpush", data["cmponpush"])
 	d.Set("externalcache", data["externalcache"])
 	d.Set("heurexpiry", data["heurexpiry"])
-	d.Set("heurexpiryhistwt", data["heurexpiryhistwt"])
-	d.Set("heurexpirythres", data["heurexpirythres"])
-	d.Set("minressize", data["minressize"])
+	setToInt("heurexpiryhistwt", d, data["heurexpiryhistwt"])
+	setToInt("heurexpirythres", d, data["heurexpirythres"])
+	setToInt("minressize", d, data["minressize"])
 	d.Set("policytype", data["policytype"])
-	d.Set("quantumsize", data["quantumsize"])
+	setToInt("quantumsize", d, data["quantumsize"])
 	d.Set("servercmp", data["servercmp"])
 	d.Set("varyheadervalue", data["varyheadervalue"])
 
@@ -152,12 +185,27 @@ func readCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCmpparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	cmpparameter := cmp.Cmpparameter{}
 	hasChange := false
+	if d.HasChange("randomgzipfilenameminlength") {
+		log.Printf("[DEBUG]  citrixadc-provider: Randomgzipfilenameminlength has changed for cmpparameter, starting update")
+		cmpparameter.Randomgzipfilenameminlength = intPtr(d.Get("randomgzipfilenameminlength").(int))
+		hasChange = true
+	}
+	if d.HasChange("randomgzipfilenamemaxlength") {
+		log.Printf("[DEBUG]  citrixadc-provider: Randomgzipfilenamemaxlength has changed for cmpparameter, starting update")
+		cmpparameter.Randomgzipfilenamemaxlength = intPtr(d.Get("randomgzipfilenamemaxlength").(int))
+		hasChange = true
+	}
+	if d.HasChange("randomgzipfilename") {
+		log.Printf("[DEBUG]  citrixadc-provider: Randomgzipfilename has changed for cmpparameter, starting update")
+		cmpparameter.Randomgzipfilename = d.Get("randomgzipfilename").(string)
+		hasChange = true
+	}
 	if d.HasChange("addvaryheader") {
 		log.Printf("[DEBUG]  citrixadc-provider: Addvaryheader has changed for cmpparameter, starting update")
 		cmpparameter.Addvaryheader = d.Get("addvaryheader").(string)
@@ -165,7 +213,7 @@ func updateCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("cmpbypasspct") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cmpbypasspct has changed for cmpparameter, starting update")
-		cmpparameter.Cmpbypasspct = d.Get("cmpbypasspct").(int)
+		cmpparameter.Cmpbypasspct = intPtr(d.Get("cmpbypasspct").(int))
 		hasChange = true
 	}
 	if d.HasChange("cmplevel") {
@@ -190,17 +238,17 @@ func updateCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("heurexpiryhistwt") {
 		log.Printf("[DEBUG]  citrixadc-provider: Heurexpiryhistwt has changed for cmpparameter, starting update")
-		cmpparameter.Heurexpiryhistwt = d.Get("heurexpiryhistwt").(int)
+		cmpparameter.Heurexpiryhistwt = intPtr(d.Get("heurexpiryhistwt").(int))
 		hasChange = true
 	}
 	if d.HasChange("heurexpirythres") {
 		log.Printf("[DEBUG]  citrixadc-provider: Heurexpirythres has changed for cmpparameter, starting update")
-		cmpparameter.Heurexpirythres = d.Get("heurexpirythres").(int)
+		cmpparameter.Heurexpirythres = intPtr(d.Get("heurexpirythres").(int))
 		hasChange = true
 	}
 	if d.HasChange("minressize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minressize has changed for cmpparameter, starting update")
-		cmpparameter.Minressize = d.Get("minressize").(int)
+		cmpparameter.Minressize = intPtr(d.Get("minressize").(int))
 		hasChange = true
 	}
 	if d.HasChange("policytype") {
@@ -210,7 +258,7 @@ func updateCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("quantumsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Quantumsize has changed for cmpparameter, starting update")
-		cmpparameter.Quantumsize = d.Get("quantumsize").(int)
+		cmpparameter.Quantumsize = intPtr(d.Get("quantumsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("servercmp") {
@@ -227,13 +275,13 @@ func updateCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating cmpparameter")
+			return diag.Errorf("Error updating cmpparameter")
 		}
 	}
-	return readCmpparameterFunc(d, meta)
+	return readCmpparameterFunc(ctx, d, meta)
 }
 
-func deleteCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCmpparameterFunc")
 	// cmpparameter does not support DELETE operation
 	d.SetId("")

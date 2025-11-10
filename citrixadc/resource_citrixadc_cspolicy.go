@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCspolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCspolicyFunc,
-		Read:          readCspolicyFunc,
-		Update:        updateCspolicyFunc,
-		Delete:        deleteCspolicyFunc,
+		CreateContext: createCspolicyFunc,
+		ReadContext:   readCspolicyFunc,
+		UpdateContext: updateCspolicyFunc,
+		DeleteContext: deleteCspolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -67,7 +70,7 @@ func resourceCitrixAdcCspolicy() *schema.Resource {
 	}
 }
 
-func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createCspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider: In createCspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -80,10 +83,10 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if aok {
 		actionExists := client.ResourceExists(service.Csaction.Type(), action.(string))
 		if !actionExists {
-			return fmt.Errorf("[ERROR] netscaler-provider: Specified Action %s does not exist", action.(string))
+			return diag.Errorf("[ERROR] netscaler-provider: Specified Action %s does not exist", action.(string))
 		}
 		if !rok {
-			return fmt.Errorf("[ERROR] netscaler-provider: Action  %s specified without rule", action.(string))
+			return diag.Errorf("[ERROR] netscaler-provider: Action  %s specified without rule", action.(string))
 		}
 	}
 
@@ -103,7 +106,7 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Cspolicy.Type(), cspolicyName, &cspolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if _, ok := d.GetOk("csvserver"); ok {
@@ -125,21 +128,16 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			err2 := client.DeleteResource(service.Cspolicy.Type(), cspolicyName)
 			if err2 != nil {
-				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to undo add cspolicy after bind cspolicy %s to Csvserver failed err=%v", cspolicyName, err2)
+				return diag.Errorf("[ERROR] netscaler-provider:  Failed to undo add cspolicy after bind cspolicy %s to Csvserver failed err=%v", cspolicyName, err2)
 			}
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind cspolicy %s to Csvserver, err=%v", cspolicyName, err)
+			return diag.Errorf("[ERROR] netscaler-provider:  Failed to bind cspolicy %s to Csvserver, err=%v", cspolicyName, err)
 		}
 	}
 	d.SetId(cspolicyName)
-	err = readCspolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider:  ?? we just created this cspolicy but we can't read it ?? %s", cspolicyName)
-		return nil
-	}
-	return nil
+	return readCspolicyFunc(ctx, d, meta)
 }
 
-func readCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readCspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider: In readCspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cspolicyName := d.Id()
@@ -183,7 +181,7 @@ func readCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider: In updateCspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cspolicyName := d.Get("policyname").(string)
@@ -215,12 +213,6 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider: Priority has changed for cspolicy %s, starting update", cspolicyName)
 		priorityChanged = true
 	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG] netscaler-provider: Newname has changed for cspolicy %s, starting update", cspolicyName)
-		cspolicy.Newname = d.Get("newname").(string)
-		d.SetId(cspolicy.Newname)
-		hasChange = true
-	}
 	if d.HasChange("targetlbvserver") {
 		log.Printf("[DEBUG] netscaler-provider: targetlbvserver has changed for cspolicy %s, starting update", cspolicyName)
 		lbvserverChanged = true
@@ -231,7 +223,7 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 			//First we unbind from cs vserver
 			err := client.UnbindResource(service.Csvserver.Type(), csvserver, service.Cspolicy.Type(), cspolicyName, "policyname")
 			if err != nil {
-				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy from csvserver %s", cspolicyName)
+				return diag.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy from csvserver %s", cspolicyName)
 			}
 			log.Printf("[DEBUG] netscaler-provider: cspolicy has been unbound from csvserver for cspolicy %s ", cspolicyName)
 		}
@@ -240,7 +232,7 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Cspolicy.Type(), cspolicyName, &cspolicy)
 		if err != nil {
-			return fmt.Errorf("[ERROR] netscaler-provider: Error updating cspolicy %s", cspolicyName)
+			return diag.Errorf("[ERROR] netscaler-provider: Error updating cspolicy %s", cspolicyName)
 		}
 		log.Printf("[DEBUG] netscaler-provider: cspolicy has been updated  cspolicy %s ", cspolicyName)
 	}
@@ -254,7 +246,7 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 			cspolicyName = d.Id()
 
 			if !pok && lbok {
-				return fmt.Errorf("[ERROR] netscaler-provider: Need to specify priority if lbvserver is specified")
+				return diag.Errorf("[ERROR] netscaler-provider: Need to specify priority if lbvserver is specified")
 			}
 
 			binding := cs.Csvserverpolicybinding{
@@ -265,16 +257,16 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 			}
 			err := client.BindResource(service.Csvserver.Type(), csvserver, service.Cspolicy.Type(), cspolicyName, &binding)
 			if err != nil {
-				return fmt.Errorf("[ERROR] netscaler-provider: Failed to bind new cspolicy to Csvserver")
+				return diag.Errorf("[ERROR] netscaler-provider: Failed to bind new cspolicy to Csvserver")
 			}
 			log.Printf("[DEBUG] netscaler-provider: cspolicy has been bound to csvserver  cspolicy %s csvserver %s", cspolicyName, csvserver)
 		}
 	}
 
-	return readCspolicyFunc(d, meta)
+	return readCspolicyFunc(ctx, d, meta)
 }
 
-func deleteCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider: In deleteCspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cspolicyName := d.Id()
@@ -284,12 +276,12 @@ func deleteCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("csvserver"); ok {
 		err := client.UnbindResource(service.Csvserver.Type(), csvserver, service.Cspolicy.Type(), cspolicyName, "policyname")
 		if err != nil {
-			return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy \"%s\" from csvserver \"%v\": %v ", cspolicyName, csvserver, err.Error())
+			return diag.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy \"%s\" from csvserver \"%v\": %v ", cspolicyName, csvserver, err.Error())
 		}
 	}
 	err := client.DeleteResource(service.Cspolicy.Type(), cspolicyName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] netscaler-provider: Error  deleting cspolicy %s", cspolicyName)
+		return diag.Errorf("[ERROR] netscaler-provider: Error  deleting cspolicy %s", cspolicyName)
 	}
 
 	d.SetId("")

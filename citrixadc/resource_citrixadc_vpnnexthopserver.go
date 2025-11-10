@@ -1,21 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpnnexthopserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnnexthopserverFunc,
-		Read:          readVpnnexthopserverFunc,
-		Delete:        deleteVpnnexthopserverFunc,
+		CreateContext: createVpnnexthopserverFunc,
+		ReadContext:   readVpnnexthopserverFunc,
+		DeleteContext: deleteVpnnexthopserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -58,7 +60,7 @@ func resourceCitrixAdcVpnnexthopserver() *schema.Resource {
 	}
 }
 
-func createVpnnexthopserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnnexthopserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnnexthopserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnnexthopserverName := d.Get("name").(string)
@@ -66,27 +68,25 @@ func createVpnnexthopserverFunc(d *schema.ResourceData, meta interface{}) error 
 		Name:           d.Get("name").(string),
 		Nexthopfqdn:    d.Get("nexthopfqdn").(string),
 		Nexthopip:      d.Get("nexthopip").(string),
-		Nexthopport:    d.Get("nexthopport").(int),
 		Resaddresstype: d.Get("resaddresstype").(string),
 		Secure:         d.Get("secure").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("nexthopport"); !raw.IsNull() {
+		vpnnexthopserver.Nexthopport = intPtr(d.Get("nexthopport").(int))
+	}
+
 	_, err := client.AddResource("vpnnexthopserver", vpnnexthopserverName, &vpnnexthopserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnnexthopserverName)
 
-	err = readVpnnexthopserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnnexthopserver but we can't read it ?? %s", vpnnexthopserverName)
-		return nil
-	}
-	return nil
+	return readVpnnexthopserverFunc(ctx, d, meta)
 }
 
-func readVpnnexthopserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnnexthopserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnnexthopserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnnexthopserverName := d.Id()
@@ -100,7 +100,7 @@ func readVpnnexthopserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("nexthopfqdn", data["nexthopfqdn"])
 	d.Set("nexthopip", data["nexthopip"])
-	d.Set("nexthopport", data["nexthopport"])
+	setToInt("nexthopport", d, data["nexthopport"])
 	d.Set("resaddresstype", data["resaddresstype"])
 	d.Set("secure", data["secure"])
 
@@ -108,13 +108,13 @@ func readVpnnexthopserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteVpnnexthopserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnnexthopserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnnexthopserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnnexthopserverName := d.Id()
 	err := client.DeleteResource(service.Vpnnexthopserver.Type(), vpnnexthopserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

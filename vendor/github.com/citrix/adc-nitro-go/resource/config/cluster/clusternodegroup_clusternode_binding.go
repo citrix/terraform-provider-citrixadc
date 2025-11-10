@@ -23,7 +23,7 @@ type Clusternodegroupclusternodebinding struct {
 	/**
 	* Nodes in the nodegroup
 	*/
-	Node int `json:"node,omitempty"`
+	Node *int `json:"node,omitempty"`
 	/**
 	* Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.
 	*/

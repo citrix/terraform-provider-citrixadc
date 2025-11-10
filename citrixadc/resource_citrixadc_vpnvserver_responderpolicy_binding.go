@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcVpnvserver_responderpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnvserver_responderpolicy_bindingFunc,
-		Read:          readVpnvserver_responderpolicy_bindingFunc,
-		Delete:        deleteVpnvserver_responderpolicy_bindingFunc,
+		CreateContext: createVpnvserver_responderpolicy_bindingFunc,
+		ReadContext:   readVpnvserver_responderpolicy_bindingFunc,
+		DeleteContext: deleteVpnvserver_responderpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,7 +69,7 @@ func resourceCitrixAdcVpnvserver_responderpolicy_binding() *schema.Resource {
 	}
 }
 
-func createVpnvserver_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnvserver_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnvserver_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -79,26 +81,24 @@ func createVpnvserver_responderpolicy_bindingFunc(d *schema.ResourceData, meta i
 		Groupextraction:        d.Get("groupextraction").(bool),
 		Name:                   d.Get("name").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vpnvserver_responderpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnvserver_responderpolicy_binding.Type(), &vpnvserver_responderpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readVpnvserver_responderpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnvserver_responderpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readVpnvserver_responderpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readVpnvserver_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnvserver_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnvserver_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -119,7 +119,7 @@ func readVpnvserver_responderpolicy_bindingFunc(d *schema.ResourceData, meta int
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -162,7 +162,7 @@ func readVpnvserver_responderpolicy_bindingFunc(d *schema.ResourceData, meta int
 
 }
 
-func deleteVpnvserver_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnvserver_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnvserver_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -186,7 +186,7 @@ func deleteVpnvserver_responderpolicy_bindingFunc(d *schema.ResourceData, meta i
 
 	err := client.DeleteResourceWithArgs(service.Vpnvserver_responderpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

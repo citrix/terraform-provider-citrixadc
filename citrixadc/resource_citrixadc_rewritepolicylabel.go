@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRewritepolicylabel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRewritepolicylabelFunc,
-		Read:          readRewritepolicylabelFunc,
-		Delete:        deleteRewritepolicylabelFunc,
+		CreateContext: createRewritepolicylabelFunc,
+		ReadContext:   readRewritepolicylabelFunc,
+		DeleteContext: deleteRewritepolicylabelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -40,11 +43,10 @@ func resourceCitrixAdcRewritepolicylabel() *schema.Resource {
 	}
 }
 
-func createRewritepolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func createRewritepolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRewritepolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rewritepolicylabelName := d.Get("labelname").(string)
-	d.Set("name", rewritepolicylabelName)
 
 	rewritepolicylabel := rewrite.Rewritepolicylabel{
 		Comment:   d.Get("comment").(string),
@@ -54,20 +56,15 @@ func createRewritepolicylabelFunc(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := client.AddResource(service.Rewritepolicylabel.Type(), rewritepolicylabelName, &rewritepolicylabel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(rewritepolicylabelName)
 
-	err = readRewritepolicylabelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rewritepolicylabel but we can't read it ?? %s", rewritepolicylabelName)
-		return nil
-	}
-	return nil
+	return readRewritepolicylabelFunc(ctx, d, meta)
 }
 
-func readRewritepolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func readRewritepolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRewritepolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rewritepolicylabelName := d.Id()
@@ -78,7 +75,6 @@ func readRewritepolicylabelFunc(d *schema.ResourceData, meta interface{}) error 
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
 	d.Set("labelname", data["labelname"])
 	d.Set("transform", data["transform"])
@@ -87,13 +83,13 @@ func readRewritepolicylabelFunc(d *schema.ResourceData, meta interface{}) error 
 
 }
 
-func deleteRewritepolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRewritepolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRewritepolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rewritepolicylabelName := d.Id()
 	err := client.DeleteResource(service.Rewritepolicylabel.Type(), rewritepolicylabelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

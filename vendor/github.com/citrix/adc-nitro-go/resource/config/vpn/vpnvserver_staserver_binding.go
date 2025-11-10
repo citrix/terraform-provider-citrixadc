@@ -32,7 +32,7 @@ type Vpnvserverstaserverbinding struct {
 	* State of the STA Server. If Authority ID is set then STA Server is UP else DOWN.
 	*/
 	Stastate string `json:"stastate,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Type of the STA server address(ipv4/v6).
 	*/

@@ -1,25 +1,41 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcPolicydataset() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPolicydatasetFunc,
-		Read:          readPolicydatasetFunc,
-		Delete:        deletePolicydatasetFunc,
+		CreateContext: createPolicydatasetFunc,
+		ReadContext:   readPolicydatasetFunc,
+		UpdateContext: updatePolicydatasetFunc,
+		DeleteContext: deletePolicydatasetFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"patsetfile": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"dynamic": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -40,7 +56,7 @@ func resourceCitrixAdcPolicydataset() *schema.Resource {
 	}
 }
 
-func createPolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
+func createPolicydatasetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPolicydatasetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var policydatasetName string
@@ -51,27 +67,24 @@ func createPolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", policydatasetName)
 	}
 	policydataset := policy.Policydataset{
-		Comment: d.Get("comment").(string),
-		Name:    d.Get("name").(string),
-		Type:    d.Get("type").(string),
+		Comment:    d.Get("comment").(string),
+		Name:       d.Get("name").(string),
+		Type:       d.Get("type").(string),
+		Dynamic:    d.Get("dynamic").(string),
+		Patsetfile: d.Get("patsetfile").(string),
 	}
 
 	_, err := client.AddResource(service.Policydataset.Type(), policydatasetName, &policydataset)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policydatasetName)
 
-	err = readPolicydatasetFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this policydataset but we can't read it ?? %s", policydatasetName)
-		return nil
-	}
-	return nil
+	return readPolicydatasetFunc(ctx, d, meta)
 }
 
-func readPolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
+func readPolicydatasetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readPolicydatasetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policydatasetName := d.Id()
@@ -83,6 +96,8 @@ func readPolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("patsetfile", data["patsetfile"])
+	d.Set("dynamic", data["dynamic"])
 	d.Set("comment", data["comment"])
 	d.Set("name", data["name"])
 	d.Set("type", data["type"])
@@ -91,13 +106,36 @@ func readPolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deletePolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
+func updatePolicydatasetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG]  citrixadc-provider: In updatePolicydatasetFunc")
+	client := meta.(*NetScalerNitroClient).client
+	policydatasetName := d.Id()
+	policydataset := policy.Policydataset{
+		Name: policydatasetName,
+	}
+	hasChange := false
+	if d.HasChange("dynamic") {
+		log.Printf("[DEBUG]  citrixadc-provider: Dynamic has changed for policydataset %s, starting update", policydatasetName)
+		policydataset.Dynamic = d.Get("dynamic").(string)
+		hasChange = true
+	}
+
+	if hasChange {
+		_, err := client.UpdateResource(service.Policydataset.Type(), policydatasetName, &policydataset)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	return readPolicydatasetFunc(ctx, d, meta)
+}
+
+func deletePolicydatasetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePolicydatasetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policydatasetName := d.Id()
 	err := client.DeleteResource(service.Policydataset.Type(), policydatasetName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

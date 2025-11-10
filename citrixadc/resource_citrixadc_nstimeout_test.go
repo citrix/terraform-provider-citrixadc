@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -32,7 +32,7 @@ resource "citrixadc_nstimeout" "tf_nstimeout" {
 	server     = 2000
 	httpclient = 2000
 	reducedrsttimeout = 10
-  }
+	}
   
 `
 const testAccNstimeout_update = `
@@ -44,15 +44,15 @@ resource "citrixadc_nstimeout" "tf_nstimeout" {
 	server     = 2400
 	httpclient = 2500
 	reducedrsttimeout = 15
-  }
+	}
   
 `
 
 func TestAccNstimeout_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNstimeout_basic,
@@ -99,8 +99,12 @@ func testAccCheckNstimeoutExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Nstimeout.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nstimeout.Type(), "")
 
 		if err != nil {
 			return err

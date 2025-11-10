@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAppfwprofile_logexpression_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_logexpression_bindingFunc,
-		Read:          readAppfwprofile_logexpression_bindingFunc,
-		Delete:        deleteAppfwprofile_logexpression_bindingFunc,
+		CreateContext: createAppfwprofile_logexpression_bindingFunc,
+		ReadContext:   readAppfwprofile_logexpression_bindingFunc,
+		DeleteContext: deleteAppfwprofile_logexpression_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -79,7 +81,7 @@ func resourceCitrixAdcAppfwprofile_logexpression_binding() *schema.Resource {
 	}
 }
 
-func createAppfwprofile_logexpression_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_logexpression_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_logexpression_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -99,20 +101,15 @@ func createAppfwprofile_logexpression_bindingFunc(d *schema.ResourceData, meta i
 
 	err := client.UpdateUnnamedResource("appfwprofile_logexpression_binding", &appfwprofile_logexpression_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_logexpression_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_logexpression_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_logexpression_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_logexpression_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_logexpression_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_logexpression_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -133,7 +130,7 @@ func readAppfwprofile_logexpression_bindingFunc(d *schema.ResourceData, meta int
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -178,7 +175,7 @@ func readAppfwprofile_logexpression_bindingFunc(d *schema.ResourceData, meta int
 
 }
 
-func deleteAppfwprofile_logexpression_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_logexpression_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_logexpression_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -196,7 +193,7 @@ func deleteAppfwprofile_logexpression_bindingFunc(d *schema.ResourceData, meta i
 
 	err := client.DeleteResourceWithArgs("appfwprofile_logexpression_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

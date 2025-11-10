@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAppfwprofile_jsondosurl_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_jsondosurl_bindingFunc,
-		Read:          readAppfwprofile_jsondosurl_bindingFunc,
-		Delete:        deleteAppfwprofile_jsondosurl_bindingFunc,
+		CreateContext: createAppfwprofile_jsondosurl_bindingFunc,
+		ReadContext:   readAppfwprofile_jsondosurl_bindingFunc,
+		DeleteContext: deleteAppfwprofile_jsondosurl_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -145,7 +147,7 @@ func resourceCitrixAdcAppfwprofile_jsondosurl_binding() *schema.Resource {
 	}
 }
 
-func createAppfwprofile_jsondosurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_jsondosurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_jsondosurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -156,17 +158,11 @@ func createAppfwprofile_jsondosurl_bindingFunc(d *schema.ResourceData, meta inte
 		Comment:                     d.Get("comment").(string),
 		Isautodeployed:              d.Get("isautodeployed").(string),
 		Jsondosurl:                  d.Get("jsondosurl").(string),
-		Jsonmaxarraylength:          d.Get("jsonmaxarraylength").(int),
 		Jsonmaxarraylengthcheck:     d.Get("jsonmaxarraylengthcheck").(string),
-		Jsonmaxcontainerdepth:       d.Get("jsonmaxcontainerdepth").(int),
 		Jsonmaxcontainerdepthcheck:  d.Get("jsonmaxcontainerdepthcheck").(string),
-		Jsonmaxdocumentlength:       d.Get("jsonmaxdocumentlength").(int),
 		Jsonmaxdocumentlengthcheck:  d.Get("jsonmaxdocumentlengthcheck").(string),
-		Jsonmaxobjectkeycount:       d.Get("jsonmaxobjectkeycount").(int),
 		Jsonmaxobjectkeycountcheck:  d.Get("jsonmaxobjectkeycountcheck").(string),
-		Jsonmaxobjectkeylength:      d.Get("jsonmaxobjectkeylength").(int),
 		Jsonmaxobjectkeylengthcheck: d.Get("jsonmaxobjectkeylengthcheck").(string),
-		Jsonmaxstringlength:         d.Get("jsonmaxstringlength").(int),
 		Jsonmaxstringlengthcheck:    d.Get("jsonmaxstringlengthcheck").(string),
 		Name:                        d.Get("name").(string),
 		Resourceid:                  d.Get("resourceid").(string),
@@ -174,22 +170,36 @@ func createAppfwprofile_jsondosurl_bindingFunc(d *schema.ResourceData, meta inte
 		State:                       d.Get("state").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("jsonmaxarraylength"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxarraylength = intPtr(d.Get("jsonmaxarraylength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmaxcontainerdepth"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxcontainerdepth = intPtr(d.Get("jsonmaxcontainerdepth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmaxdocumentlength"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxdocumentlength = intPtr(d.Get("jsonmaxdocumentlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmaxobjectkeycount"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxobjectkeycount = intPtr(d.Get("jsonmaxobjectkeycount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmaxobjectkeylength"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxobjectkeylength = intPtr(d.Get("jsonmaxobjectkeylength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmaxstringlength"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxstringlength = intPtr(d.Get("jsonmaxstringlength").(int))
+	}
+
 	err := client.UpdateUnnamedResource("appfwprofile_jsondosurl_binding", &appfwprofile_jsondosurl_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_jsondosurl_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_jsondosurl_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_jsondosurl_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_jsondosurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_jsondosurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_jsondosurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -210,7 +220,7 @@ func readAppfwprofile_jsondosurl_bindingFunc(d *schema.ResourceData, meta interf
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -245,17 +255,17 @@ func readAppfwprofile_jsondosurl_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("comment", data["comment"])
 	// d.Set("isautodeployed", data["isautodeployed"])
 	d.Set("jsondosurl", data["jsondosurl"])
-	d.Set("jsonmaxarraylength", data["jsonmaxarraylength"])
+	setToInt("jsonmaxarraylength", d, data["jsonmaxarraylength"])
 	d.Set("jsonmaxarraylengthcheck", data["jsonmaxarraylengthcheck"])
-	d.Set("jsonmaxcontainerdepth", data["jsonmaxcontainerdepth"])
+	setToInt("jsonmaxcontainerdepth", d, data["jsonmaxcontainerdepth"])
 	d.Set("jsonmaxcontainerdepthcheck", data["jsonmaxcontainerdepthcheck"])
-	d.Set("jsonmaxdocumentlength", data["jsonmaxdocumentlength"])
+	setToInt("jsonmaxdocumentlength", d, data["jsonmaxdocumentlength"])
 	d.Set("jsonmaxdocumentlengthcheck", data["jsonmaxdocumentlengthcheck"])
-	d.Set("jsonmaxobjectkeycount", data["jsonmaxobjectkeycount"])
+	setToInt("jsonmaxobjectkeycount", d, data["jsonmaxobjectkeycount"])
 	d.Set("jsonmaxobjectkeycountcheck", data["jsonmaxobjectkeycountcheck"])
-	d.Set("jsonmaxobjectkeylength", data["jsonmaxobjectkeylength"])
+	setToInt("jsonmaxobjectkeylength", d, data["jsonmaxobjectkeylength"])
 	d.Set("jsonmaxobjectkeylengthcheck", data["jsonmaxobjectkeylengthcheck"])
-	d.Set("jsonmaxstringlength", data["jsonmaxstringlength"])
+	setToInt("jsonmaxstringlength", d, data["jsonmaxstringlength"])
 	d.Set("jsonmaxstringlengthcheck", data["jsonmaxstringlengthcheck"])
 	d.Set("name", data["name"])
 	d.Set("resourceid", data["resourceid"])
@@ -266,7 +276,7 @@ func readAppfwprofile_jsondosurl_bindingFunc(d *schema.ResourceData, meta interf
 
 }
 
-func deleteAppfwprofile_jsondosurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_jsondosurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_jsondosurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -284,7 +294,7 @@ func deleteAppfwprofile_jsondosurl_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.DeleteResourceWithArgs("appfwprofile_jsondosurl_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

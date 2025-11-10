@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcForwardingsession() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createForwardingsessionFunc,
-		Read:          readForwardingsessionFunc,
-		Update:        updateForwardingsessionFunc,
-		Delete:        deleteForwardingsessionFunc,
+		CreateContext: createForwardingsessionFunc,
+		ReadContext:   readForwardingsessionFunc,
+		UpdateContext: updateForwardingsessionFunc,
+		DeleteContext: deleteForwardingsessionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,7 +76,7 @@ func resourceCitrixAdcForwardingsession() *schema.Resource {
 	}
 }
 
-func createForwardingsessionFunc(d *schema.ResourceData, meta interface{}) error {
+func createForwardingsessionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createForwardingsessionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	forwardingsessionName := d.Get("name").(string)
@@ -87,25 +90,23 @@ func createForwardingsessionFunc(d *schema.ResourceData, meta interface{}) error
 		Network:          d.Get("network").(string),
 		Processlocal:     d.Get("processlocal").(string),
 		Sourceroutecache: d.Get("sourceroutecache").(string),
-		Td:               d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		forwardingsession.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Forwardingsession.Type(), forwardingsessionName, &forwardingsession)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(forwardingsessionName)
 
-	err = readForwardingsessionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this forwardingsession but we can't read it ?? %s", forwardingsessionName)
-		return nil
-	}
-	return nil
+	return readForwardingsessionFunc(ctx, d, meta)
 }
 
-func readForwardingsessionFunc(d *schema.ResourceData, meta interface{}) error {
+func readForwardingsessionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readForwardingsessionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	forwardingsessionName := d.Id()
@@ -124,13 +125,13 @@ func readForwardingsessionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("network", data["network"])
 	d.Set("processlocal", data["processlocal"])
 	d.Set("sourceroutecache", data["sourceroutecache"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 
 	return nil
 
 }
 
-func updateForwardingsessionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateForwardingsessionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateForwardingsessionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	forwardingsessionName := d.Get("name").(string)
@@ -166,26 +167,26 @@ func updateForwardingsessionFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for forwardingsession %s, starting update", forwardingsessionName)
-		forwardingsession.Td = d.Get("td").(int)
+		forwardingsession.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Forwardingsession.Type(), forwardingsessionName, &forwardingsession)
 		if err != nil {
-			return fmt.Errorf("Error updating forwardingsession %s", forwardingsessionName)
+			return diag.Errorf("Error updating forwardingsession %s", forwardingsessionName)
 		}
 	}
-	return readForwardingsessionFunc(d, meta)
+	return readForwardingsessionFunc(ctx, d, meta)
 }
 
-func deleteForwardingsessionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteForwardingsessionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteForwardingsessionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	forwardingsessionName := d.Id()
 	err := client.DeleteResource(service.Forwardingsession.Type(), forwardingsessionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

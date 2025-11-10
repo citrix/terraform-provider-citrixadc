@@ -47,7 +47,7 @@ type Vpnformssoaction struct {
 	/**
 	* Maximum number of bytes to allow in the response size. Specifies the number of bytes in the response to be parsed for extracting the forms.
 	*/
-	Responsesize int `json:"responsesize,omitempty"`
+	Responsesize *int `json:"responsesize,omitempty"`
 	/**
 	* How to process the name-value pair. Available settings function as follows:
 		* STATIC - The administrator-configured values are used.

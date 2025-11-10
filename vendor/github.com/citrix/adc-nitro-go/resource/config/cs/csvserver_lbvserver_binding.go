@@ -27,7 +27,7 @@ type Csvserverlbvserverbinding struct {
 	/**
 	* Number of hits.
 	*/
-	Hits int `json:"hits,omitempty"`
+	Hits *int `json:"hits,omitempty"`
 	/**
 	* Vserver Id of vserver
 	*/

@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -27,6 +27,9 @@ const testAccNslicenseparameters_add = `
 	resource "citrixadc_nslicenseparameters" "tf_nslicenseparameters" {
 		alert1gracetimeout = 8
 		alert2gracetimeout = 200
+		licenseexpiryalerttime = 30
+		inventoryrefreshinterval = 50
+		heartbeatinterval = 45
 	}
 `
 const testAccNslicenseparameters_update = `
@@ -34,14 +37,17 @@ const testAccNslicenseparameters_update = `
 	resource "citrixadc_nslicenseparameters" "tf_nslicenseparameters" {
 		alert1gracetimeout = 6
 		alert2gracetimeout = 240
+		licenseexpiryalerttime = 40
+		inventoryrefreshinterval = 60
+		heartbeatinterval = 55
 	}
 `
 
 func TestAccNslicenseparameters_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNslicenseparameters_add,
@@ -49,6 +55,9 @@ func TestAccNslicenseparameters_basic(t *testing.T) {
 					testAccCheckNslicenseparametersExist("citrixadc_nslicenseparameters.tf_nslicenseparameters", nil),
 					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "alert1gracetimeout", "8"),
 					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "alert2gracetimeout", "200"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "licenseexpiryalerttime", "30"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "inventoryrefreshinterval", "50"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "heartbeatinterval", "45"),
 				),
 			},
 			{
@@ -57,6 +66,9 @@ func TestAccNslicenseparameters_basic(t *testing.T) {
 					testAccCheckNslicenseparametersExist("citrixadc_nslicenseparameters.tf_nslicenseparameters", nil),
 					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "alert1gracetimeout", "6"),
 					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "alert2gracetimeout", "240"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "licenseexpiryalerttime", "40"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "inventoryrefreshinterval", "60"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "heartbeatinterval", "55"),
 				),
 			},
 		},
@@ -82,8 +94,12 @@ func testAccCheckNslicenseparametersExist(n string, id *string) resource.TestChe
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("nslicenseparameters", "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("nslicenseparameters", "")
 
 		if err != nil {
 			return err

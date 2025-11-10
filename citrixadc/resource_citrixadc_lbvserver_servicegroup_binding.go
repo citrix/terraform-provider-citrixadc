@@ -1,12 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -14,11 +15,11 @@ import (
 func resourceCitrixAdcLbvserver_servicegroup_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbvserver_servicegroup_bindingFunc,
-		Read:          readLbvserver_servicegroup_bindingFunc,
-		Delete:        deleteLbvserver_servicegroup_bindingFunc,
+		CreateContext: createLbvserver_servicegroup_bindingFunc,
+		ReadContext:   readLbvserver_servicegroup_bindingFunc,
+		DeleteContext: deleteLbvserver_servicegroup_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,7 +41,7 @@ func resourceCitrixAdcLbvserver_servicegroup_binding() *schema.Resource {
 	}
 }
 
-func createLbvserver_servicegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbvserver_servicegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbvserver_servicegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -52,25 +53,23 @@ func createLbvserver_servicegroup_bindingFunc(d *schema.ResourceData, meta inter
 	lbvserver_servicegroup_binding := lb.Lbvserverservicegroupbinding{
 		Name:             d.Get("name").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
-		Order:            d.Get("order").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		lbvserver_servicegroup_binding.Order = intPtr(d.Get("order").(int))
 	}
 
 	_, err := client.AddResource(service.Lbvserver_servicegroup_binding.Type(), name, &lbvserver_servicegroup_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLbvserver_servicegroup_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbvserver_servicegroup_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLbvserver_servicegroup_bindingFunc(ctx, d, meta)
 }
 
-func readLbvserver_servicegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbvserver_servicegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbvserver_servicegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -89,7 +88,7 @@ func readLbvserver_servicegroup_bindingFunc(d *schema.ResourceData, meta interfa
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -123,13 +122,13 @@ func readLbvserver_servicegroup_bindingFunc(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] citrixadc-provider: Reading lbvserver_servicegroup_binding state %s", bindingId)
 	d.Set("name", data["name"])
 	d.Set("servicegroupname", data["servicegroupname"])
-	d.Set("order", data["order"])
+	setToInt("order", d, data["order"])
 
 	return nil
 
 }
 
-func deleteLbvserver_servicegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbvserver_servicegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbvserver_servicegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -143,7 +142,7 @@ func deleteLbvserver_servicegroup_bindingFunc(d *schema.ResourceData, meta inter
 
 	err := client.DeleteResourceWithArgs("lbvserver_servicegroup_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

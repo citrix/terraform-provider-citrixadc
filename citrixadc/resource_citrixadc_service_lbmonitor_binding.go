@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcService_lbmonitor_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createService_lbmonitor_bindingFunc,
-		Read:          readService_lbmonitor_bindingFunc,
-		Delete:        deleteService_lbmonitor_bindingFunc,
+		CreateContext: createService_lbmonitor_bindingFunc,
+		ReadContext:   readService_lbmonitor_bindingFunc,
+		DeleteContext: deleteService_lbmonitor_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -54,7 +56,7 @@ func resourceCitrixAdcService_lbmonitor_binding() *schema.Resource {
 	}
 }
 
-func createService_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createService_lbmonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createService_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -65,25 +67,23 @@ func createService_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{
 		Monstate:    d.Get("monstate").(string),
 		Name:        d.Get("name").(string),
 		Passive:     d.Get("passive").(bool),
-		Weight:      d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		service_lbmonitor_binding.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Service_lbmonitor_binding.Type(), &service_lbmonitor_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readService_lbmonitor_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this service_lbmonitor_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readService_lbmonitor_bindingFunc(ctx, d, meta)
 }
 
-func readService_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readService_lbmonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readService_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -104,7 +104,7 @@ func readService_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{})
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -145,7 +145,7 @@ func readService_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{})
 
 }
 
-func deleteService_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteService_lbmonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteService_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -160,7 +160,7 @@ func deleteService_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{
 
 	err := client.DeleteResourceWithArgs(service.Service_lbmonitor_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

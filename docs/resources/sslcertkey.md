@@ -36,6 +36,8 @@ resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 * `linkcertkeyname` - (Optional) Name of the Certificate Authority certificate-key pair to which to link a certificate-key pair.
 * `nodomaincheck` - (Optional) Override the check for matching domain names during a certificate update operation.
 * `ocspstaplingcache` - (Optional) Clear cached ocspStapling response in certkey.
+* `deletecertkeyfilesonremoval` - (Optional) This option is used to automatically delete certificate/key files from physical device when the added certkey is removed. When deleteCertKeyFilesOnRemoval option is used at rm certkey command, it overwrites the deleteCertKeyFilesOnRemoval setting used at add/set certkey command
+* `deletefromdevice` - (Optional) Delete cert/key file from file system.
 
 
 ## Attribute Reference

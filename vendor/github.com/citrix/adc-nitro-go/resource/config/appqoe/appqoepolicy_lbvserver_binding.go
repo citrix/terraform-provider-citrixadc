@@ -27,8 +27,8 @@ type Appqoepolicylbvserverbinding struct {
 	/**
 	* Specifies the binding  of the policy. use only in display
 	*/
-	Bindpriority int `json:"bindpriority,omitempty"`
-	Activepolicy int `json:"activepolicy,omitempty"`
+	Bindpriority *int `json:"bindpriority,omitempty"`
+	Activepolicy *int `json:"activepolicy,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

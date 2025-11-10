@@ -21,6 +21,9 @@ resource "citrixadc_nslicenseparameters" "tf_nslicenseparameters" {
 
 * `alert1gracetimeout` - (Optional) If ADC remains in grace for the configured hours then first grace alert will be raised. Minimum value =  0 Maximum value =  24
 * `alert2gracetimeout` - (Optional) If ADC remains in grace for the configured hours then major grace alert will be raised. Minimum value =  24 Maximum value =  720
+* `heartbeatinterval` - (Optional) Heartbeat between ADC and Licenseserver is configurable and applicable in case of pooled licensing
+* `inventoryrefreshinterval` - (Optional) Inventory refresh interval between ADC and Licenseserver is configurable and applicable in case of pooled licensing
+* `licenseexpiryalerttime` - (Optional) If ADC license contract expiry date is nearer then GUI/SNMP license expiry alert will be raised
 
 
 ## Attribute Reference

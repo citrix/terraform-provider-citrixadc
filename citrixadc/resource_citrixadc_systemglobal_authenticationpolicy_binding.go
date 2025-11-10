@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSystemglobal_authenticationpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemglobal_authenticationpolicy_bindingFunc,
-		Read:          readSystemglobal_authenticationpolicy_bindingFunc,
-		Delete:        deleteSystemglobal_authenticationpolicy_bindingFunc,
+		CreateContext: createSystemglobal_authenticationpolicy_bindingFunc,
+		ReadContext:   readSystemglobal_authenticationpolicy_bindingFunc,
+		DeleteContext: deleteSystemglobal_authenticationpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -64,7 +66,7 @@ func resourceCitrixAdcSystemglobal_authenticationpolicy_binding() *schema.Resour
 	}
 }
 
-func createSystemglobal_authenticationpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemglobal_authenticationpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemglobal_authenticationpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -75,25 +77,23 @@ func createSystemglobal_authenticationpolicy_bindingFunc(d *schema.ResourceData,
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Nextfactor:             d.Get("nextfactor").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		systemglobal_authenticationpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Systemglobal_authenticationpolicy_binding.Type(), &systemglobal_authenticationpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readSystemglobal_authenticationpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemglobal_authenticationpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readSystemglobal_authenticationpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readSystemglobal_authenticationpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemglobal_authenticationpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemglobal_authenticationpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -109,7 +109,7 @@ func readSystemglobal_authenticationpolicy_bindingFunc(d *schema.ResourceData, m
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -152,7 +152,7 @@ func readSystemglobal_authenticationpolicy_bindingFunc(d *schema.ResourceData, m
 
 }
 
-func deleteSystemglobal_authenticationpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemglobal_authenticationpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemglobal_authenticationpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -163,7 +163,7 @@ func deleteSystemglobal_authenticationpolicy_bindingFunc(d *schema.ResourceData,
 
 	err := client.DeleteResourceWithArgs(service.Systemglobal_authenticationpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

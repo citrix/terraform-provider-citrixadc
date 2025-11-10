@@ -1,24 +1,32 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcGslbservicegroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbservicegroupFunc,
-		Read:          readGslbservicegroupFunc,
-		Update:        updateGslbservicegroupFunc,
-		Delete:        deleteGslbservicegroupFunc,
+		CreateContext: createGslbservicegroupFunc,
+		ReadContext:   readGslbservicegroupFunc,
+		UpdateContext: updateGslbservicegroupFunc,
+		DeleteContext: deleteGslbservicegroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"autodelayedtrofs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"servicegroupname": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -168,7 +176,7 @@ func resourceCitrixAdcGslbservicegroup() *schema.Resource {
 	}
 }
 
-func createGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbservicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbservicegroupName := d.Get("servicegroupname").(string)
@@ -178,22 +186,13 @@ func createGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 		Autoscale:        d.Get("autoscale").(string),
 		Cip:              d.Get("cip").(string),
 		Cipheader:        d.Get("cipheader").(string),
-		Clttimeout:       d.Get("clttimeout").(int),
 		Comment:          d.Get("comment").(string),
-		Delay:            d.Get("delay").(int),
 		Downstateflush:   d.Get("downstateflush").(string),
-		Dupweight:        d.Get("dupweight").(int),
 		Graceful:         d.Get("graceful").(string),
-		Hashid:           d.Get("hashid").(int),
 		Healthmonitor:    d.Get("healthmonitor").(string),
 		Includemembers:   d.Get("includemembers").(bool),
-		Maxbandwidth:     d.Get("maxbandwidth").(int),
-		Maxclient:        d.Get("maxclient").(int),
 		Monitornamesvc:   d.Get("monitornamesvc").(string),
-		Monthreshold:     d.Get("monthreshold").(int),
-		Port:             d.Get("port").(int),
 		Publicip:         d.Get("publicip").(string),
-		Publicport:       d.Get("publicport").(int),
 		Servername:       d.Get("servername").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
 		Servicetype:      d.Get("servicetype").(string),
@@ -201,26 +200,53 @@ func createGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 		Sitepersistence:  d.Get("sitepersistence").(string),
 		Siteprefix:       d.Get("siteprefix").(string),
 		State:            d.Get("state").(string),
-		Svrtimeout:       d.Get("svrtimeout").(int),
-		Weight:           d.Get("weight").(int),
+		Autodelayedtrofs: d.Get("autodelayedtrofs").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("clttimeout"); !raw.IsNull() {
+		gslbservicegroup.Clttimeout = intPtr(d.Get("clttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("delay"); !raw.IsNull() {
+		gslbservicegroup.Delay = intPtr(d.Get("delay").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dupweight"); !raw.IsNull() {
+		gslbservicegroup.Dupweight = intPtr(d.Get("dupweight").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hashid"); !raw.IsNull() {
+		gslbservicegroup.Hashid = intPtr(d.Get("hashid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxbandwidth"); !raw.IsNull() {
+		gslbservicegroup.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxclient"); !raw.IsNull() {
+		gslbservicegroup.Maxclient = intPtr(d.Get("maxclient").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("monthreshold"); !raw.IsNull() {
+		gslbservicegroup.Monthreshold = intPtr(d.Get("monthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		gslbservicegroup.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("publicport"); !raw.IsNull() {
+		gslbservicegroup.Publicport = intPtr(d.Get("publicport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("svrtimeout"); !raw.IsNull() {
+		gslbservicegroup.Svrtimeout = intPtr(d.Get("svrtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		gslbservicegroup.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	_, err := client.AddResource("gslbservicegroup", gslbservicegroupName, &gslbservicegroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(gslbservicegroupName)
 
-	err = readGslbservicegroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this gslbservicegroup but we can't read it ?? %s", gslbservicegroupName)
-		return nil
-	}
-	return nil
+	return readGslbservicegroupFunc(ctx, d, meta)
 }
 
-func readGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbservicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbservicegroupName := d.Id()
@@ -232,26 +258,27 @@ func readGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("servicegroupname", data["servicegroupname"])
+	d.Set("autodelayedtrofs", data["autodelayedtrofs"])
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("autoscale", data["autoscale"])
 	d.Set("cip", data["cip"])
 	d.Set("cipheader", data["cipheader"])
-	d.Set("clttimeout", data["clttimeout"])
+	setToInt("clttimeout", d, data["clttimeout"])
 	d.Set("comment", data["comment"])
-	d.Set("delay", data["delay"])
+	setToInt("delay", d, data["delay"])
 	d.Set("downstateflush", data["downstateflush"])
-	d.Set("dupweight", data["dupweight"])
+	setToInt("dupweight", d, data["dupweight"])
 	d.Set("graceful", data["graceful"])
-	d.Set("hashid", data["hashid"])
+	setToInt("hashid", d, data["hashid"])
 	d.Set("healthmonitor", data["healthmonitor"])
 	d.Set("includemembers", data["includemembers"])
-	d.Set("maxbandwidth", data["maxbandwidth"])
-	d.Set("maxclient", data["maxclient"])
+	setToInt("maxbandwidth", d, data["maxbandwidth"])
+	setToInt("maxclient", d, data["maxclient"])
 	d.Set("monitornamesvc", data["monitornamesvc"])
-	d.Set("monthreshold", data["monthreshold"])
-	d.Set("port", data["port"])
+	setToInt("monthreshold", d, data["monthreshold"])
+	setToInt("port", d, data["port"])
 	d.Set("publicip", data["publicip"])
-	d.Set("publicport", data["publicport"])
+	setToInt("publicport", d, data["publicport"])
 	d.Set("servername", data["servername"])
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("servicetype", data["servicetype"])
@@ -259,14 +286,14 @@ func readGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sitepersistence", data["sitepersistence"])
 	d.Set("siteprefix", data["siteprefix"])
 	d.Set("state", data["state"])
-	d.Set("svrtimeout", data["svrtimeout"])
+	setToInt("svrtimeout", d, data["svrtimeout"])
 	setToInt("weight", d, data["weight"])
 
 	return nil
 
 }
 
-func updateGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateGslbservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateGslbservicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbservicegroupName := d.Get("servicegroupname").(string)
@@ -297,7 +324,7 @@ func updateGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clttimeout has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Clttimeout = d.Get("clttimeout").(int)
+		gslbservicegroup.Clttimeout = intPtr(d.Get("clttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("comment") {
@@ -307,7 +334,7 @@ func updateGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("delay") {
 		log.Printf("[DEBUG]  citrixadc-provider: Delay has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Delay = d.Get("delay").(int)
+		gslbservicegroup.Delay = intPtr(d.Get("delay").(int))
 		hasChange = true
 	}
 	if d.HasChange("downstateflush") {
@@ -317,7 +344,7 @@ func updateGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("dupweight") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dupweight has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Dupweight = d.Get("dupweight").(int)
+		gslbservicegroup.Dupweight = intPtr(d.Get("dupweight").(int))
 		hasChange = true
 	}
 	if d.HasChange("graceful") {
@@ -327,7 +354,7 @@ func updateGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("hashid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Hashid has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Hashid = d.Get("hashid").(int)
+		gslbservicegroup.Hashid = intPtr(d.Get("hashid").(int))
 		hasChange = true
 	}
 	if d.HasChange("healthmonitor") {
@@ -342,12 +369,12 @@ func updateGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxbandwidth has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Maxbandwidth = d.Get("maxbandwidth").(int)
+		gslbservicegroup.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxclient") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxclient has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Maxclient = d.Get("maxclient").(int)
+		gslbservicegroup.Maxclient = intPtr(d.Get("maxclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("monitornamesvc") {
@@ -357,12 +384,12 @@ func updateGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("monthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Monthreshold has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Monthreshold = d.Get("monthreshold").(int)
+		gslbservicegroup.Monthreshold = intPtr(d.Get("monthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Port = d.Get("port").(int)
+		gslbservicegroup.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("publicip") {
@@ -372,7 +399,7 @@ func updateGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("publicport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Publicport has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Publicport = d.Get("publicport").(int)
+		gslbservicegroup.Publicport = intPtr(d.Get("publicport").(int))
 		hasChange = true
 	}
 	if d.HasChange("servicetype") {
@@ -402,31 +429,31 @@ func updateGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("svrtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Svrtimeout has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Svrtimeout = d.Get("svrtimeout").(int)
+		gslbservicegroup.Svrtimeout = intPtr(d.Get("svrtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG]  citrixadc-provider: Weight has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Weight = d.Get("weight").(int)
+		gslbservicegroup.Weight = intPtr(d.Get("weight").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource("gslbservicegroup", gslbservicegroupName, &gslbservicegroup)
 		if err != nil {
-			return fmt.Errorf("Error updating gslbservicegroup %s", gslbservicegroupName)
+			return diag.Errorf("Error updating gslbservicegroup %s", gslbservicegroupName)
 		}
 	}
-	return readGslbservicegroupFunc(d, meta)
+	return readGslbservicegroupFunc(ctx, d, meta)
 }
 
-func deleteGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteGslbservicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbservicegroupName := d.Id()
 	err := client.DeleteResource("gslbservicegroup", gslbservicegroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

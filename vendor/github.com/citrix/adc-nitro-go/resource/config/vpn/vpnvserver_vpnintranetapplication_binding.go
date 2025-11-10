@@ -24,7 +24,7 @@ type Vpnvservervpnintranetapplicationbinding struct {
 	* The intranet VPN application.
 	*/
 	Intranetapplication string `json:"intranetapplication,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

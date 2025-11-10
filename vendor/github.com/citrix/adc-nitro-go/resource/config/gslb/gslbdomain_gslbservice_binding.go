@@ -36,7 +36,7 @@ type Gslbdomaingslbservicebinding struct {
 	/**
 	* Port Number
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* The state of the vserver
 	*/
@@ -44,15 +44,15 @@ type Gslbdomaingslbservicebinding struct {
 	/**
 	* weight assigned
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* dynamic weight
 	*/
-	Dynamicconfwt int `json:"dynamicconfwt,omitempty"`
+	Dynamicconfwt *int `json:"dynamicconfwt,omitempty"`
 	/**
 	* cumlative weight
 	*/
-	Cumulativeweight int `json:"cumulativeweight,omitempty"`
+	Cumulativeweight *int `json:"cumulativeweight,omitempty"`
 	/**
 	* GSLB server state
 	*/
@@ -60,7 +60,7 @@ type Gslbdomaingslbservicebinding struct {
 	/**
 	* The threshold value of the service
 	*/
-	Gslbthreshold int `json:"gslbthreshold,omitempty"`
+	Gslbthreshold *int `json:"gslbthreshold,omitempty"`
 	/**
 	* The cname of the gslb service
 	*/
@@ -68,7 +68,7 @@ type Gslbdomaingslbservicebinding struct {
 	/**
 	* Order number assigned to the service when it is bound to the gslb vserver.
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 	/**
 	* Name of the Domain
 	*/

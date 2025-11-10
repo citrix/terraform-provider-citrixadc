@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"net/url"
 	"testing"
@@ -64,9 +64,9 @@ const testAccLbroute_basic = `
 
 func TestAccLbroute_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbrouteDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbrouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbroute_basic,
@@ -97,7 +97,11 @@ func testAccCheckLbrouteExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 		lbrouteName := rs.Primary.ID
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		argsMap := make(map[string]string)
 		argsMap["network"] = url.QueryEscape(rs.Primary.Attributes["network"])
 		argsMap["netmask"] = url.QueryEscape(rs.Primary.Attributes["netmask"])
@@ -105,7 +109,7 @@ func testAccCheckLbrouteExist(n string, id *string) resource.TestCheckFunc {
 			ResourceType: service.Lbroute.Type(),
 			ArgsMap:      argsMap,
 		}
-		dataArray, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArray, err := client.FindResourceArrayWithParams(findParams)
 		if err != nil {
 			log.Printf("[WARN] citrix-provider: acceptance test: Clearing lb route state %s", lbrouteName)
 			return nil
@@ -124,7 +128,11 @@ func testAccCheckLbrouteExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckLbrouteDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbroute" {
 			continue
@@ -140,7 +148,7 @@ func testAccCheckLbrouteDestroy(s *terraform.State) error {
 			ResourceType: service.Lbroute.Type(),
 			ArgsMap:      argsMap,
 		}
-		_, err := nsClient.FindResourceArrayWithParams(findParams)
+		_, err := client.FindResourceArrayWithParams(findParams)
 
 		if err == nil {
 			return fmt.Errorf("Lbroute %s still exists", rs.Primary.ID)

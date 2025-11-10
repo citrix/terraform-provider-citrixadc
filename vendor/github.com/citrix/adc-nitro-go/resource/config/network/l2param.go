@@ -23,11 +23,11 @@ type L2param struct {
 	/**
 	* When mbf_instant_learning is enabled, learn any changes in peer's MAC after this time interval, which is in 10ms ticks.
 	*/
-	Mbfpeermacupdate int `json:"mbfpeermacupdate"` // Zero is a valid value
+	Mbfpeermacupdate *int `json:"mbfpeermacupdate"` // Zero is a valid value
 	/**
 	* Maximum bridge collision for loop detection 
 	*/
-	Maxbridgecollision int `json:"maxbridgecollision"` // Zero is a valid value
+	Maxbridgecollision *int `json:"maxbridgecollision"` // Zero is a valid value
 	/**
 	* Set/reset proxy ARP in bridge group deployment
 	*/
@@ -79,7 +79,7 @@ type L2param struct {
 	/**
 	* Time-out value for the bridge table entries, in seconds. The new value applies only to the entries that are dynamically learned after the new value is set. Previously existing bridge table entries expire after the previously configured time-out value.
 	*/
-	Bridgeagetimeout int `json:"bridgeagetimeout,omitempty"`
+	Bridgeagetimeout *int `json:"bridgeagetimeout,omitempty"`
 	/**
 	* Control source parameters (IP and Port) for FreeBSD initiated traffic. If enabled proxy the source parameters based on netprofile source ip. If netprofile does not have ip configured, then it will continue to use NSIP as earlier.
 	*/

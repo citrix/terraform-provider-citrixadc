@@ -1,31 +1,34 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/resource/config/responder"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"bytes"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcResponderpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createResponderpolicyFunc,
-		Read:          readResponderpolicyFunc,
-		Update:        updateResponderpolicyFunc,
-		Delete:        deleteResponderpolicyFunc,
+		CreateContext: createResponderpolicyFunc,
+		ReadContext:   readResponderpolicyFunc,
+		UpdateContext: updateResponderpolicyFunc,
+		DeleteContext: deleteResponderpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -211,7 +214,7 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 	}
 }
 
-func createResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createResponderpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createResponderpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var responderpolicyName string
@@ -233,32 +236,27 @@ func createResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Responderpolicy.Type(), responderpolicyName, &responderpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := updateLbvserverBindings(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := updateGlobalBinding(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := updateCsvserverBindings(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(responderpolicyName)
 
-	err = readResponderpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this responderpolicy but we can't read it ?? %s", responderpolicyName)
-		return nil
-	}
-	return nil
+	return readResponderpolicyFunc(ctx, d, meta)
 }
 
-func readResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readResponderpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readResponderpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderpolicyName := d.Id()
@@ -280,24 +278,24 @@ func readResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("globalbinding"); ok {
 		if err := readGlobalBinding(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if _, ok := d.GetOk("lbvserverbinding"); ok {
 		if err := readLbvserverBindings(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if _, ok := d.GetOk("csvserverbinding"); ok {
 		if err := readCsvserverBindings(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	return nil
 
 }
 
-func updateResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateResponderpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateResponderpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderpolicyName := d.Get("name").(string)
@@ -345,48 +343,48 @@ func updateResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Responderpolicy.Type(), responderpolicyName, &responderpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating responderpolicy %s", responderpolicyName)
+			return diag.Errorf("Error updating responderpolicy %s", responderpolicyName)
 		}
 	}
 
 	if err := updateGlobalBinding(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if d.HasChange("lbvserverbinding") {
 		if err := updateLbvserverBindings(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChange("csvserverbinding") {
 		if err := updateCsvserverBindings(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return readResponderpolicyFunc(d, meta)
+	return readResponderpolicyFunc(ctx, d, meta)
 }
 
-func deleteResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteResponderpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteResponderpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	// Delete bindings prior to deleting policy
 	if err := deleteGlobalBinding(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := deleteLbvserverBindings(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := deleteCsvserverBindings(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Delete policy
 	responderpolicyName := d.Id()
 	err := client.DeleteResource(service.Responderpolicy.Type(), responderpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -415,7 +413,7 @@ func globalbindingMappingHash(v interface{}) int {
 	if d, ok := m["type"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func addSingleGlobalBinding(d *schema.ResourceData, meta interface{}, binding map[string]interface{}) error {
@@ -612,7 +610,7 @@ func lbVserverMappingHash(v interface{}) int {
 	if d, ok := m["priority"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
 	}
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func readLbvserverBindings(d *schema.ResourceData, meta interface{}) error {

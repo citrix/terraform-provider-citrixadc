@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVpnclientlessaccessprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnclientlessaccessprofileFunc,
-		Read:          readVpnclientlessaccessprofileFunc,
-		Update:        updateVpnclientlessaccessprofileFunc,
-		Delete:        deleteVpnclientlessaccessprofileFunc,
+		CreateContext: createVpnclientlessaccessprofileFunc,
+		ReadContext:   readVpnclientlessaccessprofileFunc,
+		UpdateContext: updateVpnclientlessaccessprofileFunc,
+		DeleteContext: deleteVpnclientlessaccessprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"clientconsumedcookies": {
@@ -86,7 +89,7 @@ func resourceCitrixAdcVpnclientlessaccessprofile() *schema.Resource {
 	}
 }
 
-func createVpnclientlessaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnclientlessaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnclientlessaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var vpnclientlessaccessprofileName string
@@ -113,20 +116,15 @@ func createVpnclientlessaccessprofileFunc(d *schema.ResourceData, meta interface
 
 	_, err := client.AddResource(service.Vpnclientlessaccessprofile.Type(), vpnclientlessaccessprofileName, &vpnclientlessaccessprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnclientlessaccessprofileName)
 
-	err = readVpnclientlessaccessprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnclientlessaccessprofile but we can't read it ?? %s", vpnclientlessaccessprofileName)
-		return nil
-	}
-	return nil
+	return readVpnclientlessaccessprofileFunc(ctx, d, meta)
 }
 
-func readVpnclientlessaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnclientlessaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnclientlessaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnclientlessaccessprofileName := d.Id()
@@ -155,7 +153,7 @@ func readVpnclientlessaccessprofileFunc(d *schema.ResourceData, meta interface{}
 
 }
 
-func updateVpnclientlessaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnclientlessaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnclientlessaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnclientlessaccessprofileName := d.Get("profilename").(string)
@@ -228,19 +226,19 @@ func updateVpnclientlessaccessprofileFunc(d *schema.ResourceData, meta interface
 	if hasChange {
 		_, err := client.UpdateResource(service.Vpnclientlessaccessprofile.Type(), vpnclientlessaccessprofileName, &vpnclientlessaccessprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnclientlessaccessprofile %s", vpnclientlessaccessprofileName)
+			return diag.Errorf("Error updating vpnclientlessaccessprofile %s", vpnclientlessaccessprofileName)
 		}
 	}
-	return readVpnclientlessaccessprofileFunc(d, meta)
+	return readVpnclientlessaccessprofileFunc(ctx, d, meta)
 }
 
-func deleteVpnclientlessaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnclientlessaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnclientlessaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnclientlessaccessprofileName := d.Id()
 	err := client.DeleteResource(service.Vpnclientlessaccessprofile.Type(), vpnclientlessaccessprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

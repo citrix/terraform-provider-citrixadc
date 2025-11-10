@@ -1,25 +1,44 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationoauthaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationoauthactionFunc,
-		Read:          readAuthenticationoauthactionFunc,
-		Update:        updateAuthenticationoauthactionFunc,
-		Delete:        deleteAuthenticationoauthactionFunc,
+		CreateContext: createAuthenticationoauthactionFunc,
+		ReadContext:   readAuthenticationoauthactionFunc,
+		UpdateContext: updateAuthenticationoauthactionFunc,
+		DeleteContext: deleteAuthenticationoauthactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"requestattribute": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"oauthmiscflags": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"intunedeviceidexpression": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -241,12 +260,15 @@ func resourceCitrixAdcAuthenticationoauthaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationoauthactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationoauthactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthactionName := d.Get("name").(string)
 	authenticationoauthaction := authentication.Authenticationoauthaction{
 		Allowedalgorithms:          toStringList(d.Get("allowedalgorithms").([]interface{})),
+		Intunedeviceidexpression:   d.Get("intunedeviceidexpression").(string),
+		Oauthmiscflags:             toStringList(d.Get("oauthmiscflags").([]interface{})),
+		Requestattribute:           d.Get("requestattribute").(string),
 		Attribute1:                 d.Get("attribute1").(string),
 		Attribute10:                d.Get("attribute10").(string),
 		Attribute11:                d.Get("attribute11").(string),
@@ -281,9 +303,7 @@ func createAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{
 		Name:                       d.Get("name").(string),
 		Oauthtype:                  d.Get("oauthtype").(string),
 		Pkce:                       d.Get("pkce").(string),
-		Refreshinterval:            d.Get("refreshinterval").(int),
 		Resourceuri:                d.Get("resourceuri").(string),
-		Skewtime:                   d.Get("skewtime").(int),
 		Tenantid:                   d.Get("tenantid").(string),
 		Tokenendpoint:              d.Get("tokenendpoint").(string),
 		Tokenendpointauthmethod:    d.Get("tokenendpointauthmethod").(string),
@@ -291,22 +311,24 @@ func createAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{
 		Usernamefield:              d.Get("usernamefield").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("refreshinterval"); !raw.IsNull() {
+		authenticationoauthaction.Refreshinterval = intPtr(d.Get("refreshinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("skewtime"); !raw.IsNull() {
+		authenticationoauthaction.Skewtime = intPtr(d.Get("skewtime").(int))
+	}
+
 	_, err := client.AddResource(service.Authenticationoauthaction.Type(), authenticationoauthactionName, &authenticationoauthaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationoauthactionName)
 
-	err = readAuthenticationoauthactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationoauthaction but we can't read it ?? %s", authenticationoauthactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationoauthactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationoauthactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationoauthactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthactionName := d.Id()
@@ -318,6 +340,9 @@ func readAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("requestattribute", data["requestattribute"])
+	d.Set("oauthmiscflags", data["oauthmiscflags"])
+	d.Set("intunedeviceidexpression", data["intunedeviceidexpression"])
 	d.Set("allowedalgorithms", data["allowedalgorithms"])
 	d.Set("attribute1", data["attribute1"])
 	d.Set("attribute10", data["attribute10"])
@@ -353,9 +378,9 @@ func readAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{})
 	d.Set("name", data["name"])
 	d.Set("oauthtype", data["oauthtype"])
 	d.Set("pkce", data["pkce"])
-	d.Set("refreshinterval", data["refreshinterval"])
+	setToInt("refreshinterval", d, data["refreshinterval"])
 	d.Set("resourceuri", data["resourceuri"])
-	d.Set("skewtime", data["skewtime"])
+	setToInt("skewtime", d, data["skewtime"])
 	d.Set("tenantid", data["tenantid"])
 	d.Set("tokenendpoint", data["tokenendpoint"])
 	d.Set("tokenendpointauthmethod", data["tokenendpointauthmethod"])
@@ -366,7 +391,7 @@ func readAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{})
 
 }
 
-func updateAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationoauthactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationoauthactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthactionName := d.Get("name").(string)
@@ -375,6 +400,21 @@ func updateAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("requestattribute") {
+		log.Printf("[DEBUG]  citrixadc-provider: Requestattribute has changed for authenticationoauthaction, starting update")
+		authenticationoauthaction.Requestattribute = d.Get("requestattribute").(string)
+		hasChange = true
+	}
+	if d.HasChange("oauthmiscflags") {
+		log.Printf("[DEBUG]  citrixadc-provider: Oauthmiscflags has changed for authenticationoauthaction, starting update")
+		authenticationoauthaction.Oauthmiscflags = toStringList(d.Get("oauthmiscflags").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("intunedeviceidexpression") {
+		log.Printf("[DEBUG]  citrixadc-provider: Intunedeviceidexpression has changed for authenticationoauthaction, starting update")
+		authenticationoauthaction.Intunedeviceidexpression = d.Get("intunedeviceidexpression").(string)
+		hasChange = true
+	}
 	if d.HasChange("allowedalgorithms") {
 		log.Printf("[DEBUG]  citrixadc-provider: Allowedalgorithms has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
 		authenticationoauthaction.Allowedalgorithms = toStringList(d.Get("allowedalgorithms").([]interface{}))
@@ -547,7 +587,7 @@ func updateAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("refreshinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Refreshinterval has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
-		authenticationoauthaction.Refreshinterval = d.Get("refreshinterval").(int)
+		authenticationoauthaction.Refreshinterval = intPtr(d.Get("refreshinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("resourceuri") {
@@ -557,7 +597,7 @@ func updateAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("skewtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
-		authenticationoauthaction.Skewtime = d.Get("skewtime").(int)
+		authenticationoauthaction.Skewtime = intPtr(d.Get("skewtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("tenantid") {
@@ -589,19 +629,19 @@ func updateAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationoauthaction.Type(), authenticationoauthactionName, &authenticationoauthaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationoauthaction %s", authenticationoauthactionName)
+			return diag.Errorf("Error updating authenticationoauthaction %s", authenticationoauthactionName)
 		}
 	}
-	return readAuthenticationoauthactionFunc(d, meta)
+	return readAuthenticationoauthactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationoauthactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationoauthactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthactionName := d.Id()
 	err := client.DeleteResource(service.Authenticationoauthaction.Type(), authenticationoauthactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

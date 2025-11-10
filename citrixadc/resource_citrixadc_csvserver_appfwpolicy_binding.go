@@ -1,23 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcCsvserver_appfwpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCsvserver_appfwpolicy_bindingFunc,
-		Read:          readCsvserver_appfwpolicy_bindingFunc,
-		Delete:        deleteCsvserver_appfwpolicy_bindingFunc,
+		CreateContext: createCsvserver_appfwpolicy_bindingFunc,
+		ReadContext:   readCsvserver_appfwpolicy_bindingFunc,
+		DeleteContext: deleteCsvserver_appfwpolicy_bindingFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -75,7 +76,7 @@ func resourceCitrixAdcCsvserver_appfwpolicy_binding() *schema.Resource {
 	}
 }
 
-func createCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createCsvserver_appfwpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCsvserver_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	csvserverName := d.Get("name").(string)
@@ -90,26 +91,24 @@ func createCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   csvserverName,
 		Policyname:             appfwPolicyName,
-		Priority:               d.Get("priority").(int),
 		Targetlbvserver:        d.Get("targetlbvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		csvserver_appfwpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Csvserver_appfwpolicy_binding.Type(), csvserverName, &csvserver_appfwpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readCsvserver_appfwpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this csvserver_appfwpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readCsvserver_appfwpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readCsvserver_appfwpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCsvserver_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -130,7 +129,7 @@ func readCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interfac
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -175,7 +174,7 @@ func readCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func deleteCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCsvserver_appfwpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCsvserver_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -188,7 +187,7 @@ func deleteCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 	args["policyname"] = appfwPolicyName
 	err := client.DeleteResourceWithArgsMap(service.Csvserver_appfwpolicy_binding.Type(), csvserverName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

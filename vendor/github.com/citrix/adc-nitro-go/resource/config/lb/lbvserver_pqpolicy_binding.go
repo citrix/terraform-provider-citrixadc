@@ -32,7 +32,7 @@ type Lbvserverpqpolicybinding struct {
 	/**
 	* Integer specifying the policy's priority. The lower the priority number, the higher the policy's priority.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:
 		* NEXT - Evaluate the policy with the next higher priority number.

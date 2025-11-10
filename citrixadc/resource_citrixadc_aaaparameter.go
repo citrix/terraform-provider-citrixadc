@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaaparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaaparameterFunc,
-		Read:          readAaaparameterFunc,
-		Update:        updateAaaparameterFunc,
-		Delete:        deleteAaaparameterFunc,
+		CreateContext: createAaaparameterFunc,
+		ReadContext:   readAaaparameterFunc,
+		UpdateContext: updateAaaparameterFunc,
+		DeleteContext: deleteAaaparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"aaadloglevel": {
 				Type:     schema.TypeString,
@@ -149,7 +152,7 @@ func resourceCitrixAdcAaaparameter() *schema.Resource {
 	}
 }
 
-func createAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaaparameterName := resource.PrefixedUniqueId("tf-aaaparameter-")
@@ -165,39 +168,49 @@ func createAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		Enableenhancedauthfeedback: d.Get("enableenhancedauthfeedback").(string),
 		Enablesessionstickiness:    d.Get("enablesessionstickiness").(string),
 		Enablestaticpagecaching:    d.Get("enablestaticpagecaching").(string),
-		Failedlogintimeout:         d.Get("failedlogintimeout").(int),
 		Ftmode:                     d.Get("ftmode").(string),
 		Loginencryption:            d.Get("loginencryption").(string),
-		Maxaaausers:                d.Get("maxaaausers").(int),
-		Maxkbquestions:             d.Get("maxkbquestions").(int),
-		Maxloginattempts:           d.Get("maxloginattempts").(int),
-		Maxsamldeflatesize:         d.Get("maxsamldeflatesize").(int),
 		Persistentloginattempts:    d.Get("persistentloginattempts").(string),
-		Pwdexpirynotificationdays:  d.Get("pwdexpirynotificationdays").(int),
 		Samesite:                   d.Get("samesite").(string),
-		Tokenintrospectioninterval: d.Get("tokenintrospectioninterval").(int),
 		Httponlycookie:             d.Get("httponlycookie").(string),
 		Enhancedepa:                d.Get("enhancedepa").(string),
 		Wafprotection:              toStringList(d.Get("wafprotection").([]interface{})),
 		Securityinsights:           d.Get("securityinsights").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("failedlogintimeout"); !raw.IsNull() {
+		aaaparameter.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxaaausers"); !raw.IsNull() {
+		aaaparameter.Maxaaausers = intPtr(d.Get("maxaaausers").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxkbquestions"); !raw.IsNull() {
+		aaaparameter.Maxkbquestions = intPtr(d.Get("maxkbquestions").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxloginattempts"); !raw.IsNull() {
+		aaaparameter.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxsamldeflatesize"); !raw.IsNull() {
+		aaaparameter.Maxsamldeflatesize = intPtr(d.Get("maxsamldeflatesize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pwdexpirynotificationdays"); !raw.IsNull() {
+		aaaparameter.Pwdexpirynotificationdays = intPtr(d.Get("pwdexpirynotificationdays").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tokenintrospectioninterval"); !raw.IsNull() {
+		aaaparameter.Tokenintrospectioninterval = intPtr(d.Get("tokenintrospectioninterval").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Aaaparameter.Type(), &aaaparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaaparameterName)
 
-	err = readAaaparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaaparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAaaparameterFunc(ctx, d, meta)
 }
 
-func readAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading aaaparameter state")
@@ -217,17 +230,17 @@ func readAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enableenhancedauthfeedback", data["enableenhancedauthfeedback"])
 	d.Set("enablesessionstickiness", data["enablesessionstickiness"])
 	d.Set("enablestaticpagecaching", data["enablestaticpagecaching"])
-	d.Set("failedlogintimeout", data["failedlogintimeout"])
+	setToInt("failedlogintimeout", d, data["failedlogintimeout"])
 	d.Set("ftmode", data["ftmode"])
 	d.Set("loginencryption", data["loginencryption"])
-	d.Set("maxaaausers", data["maxaaausers"])
-	d.Set("maxkbquestions", data["maxkbquestions"])
-	d.Set("maxloginattempts", data["maxloginattempts"])
-	d.Set("maxsamldeflatesize", data["maxsamldeflatesize"])
+	setToInt("maxaaausers", d, data["maxaaausers"])
+	setToInt("maxkbquestions", d, data["maxkbquestions"])
+	setToInt("maxloginattempts", d, data["maxloginattempts"])
+	setToInt("maxsamldeflatesize", d, data["maxsamldeflatesize"])
 	d.Set("persistentloginattempts", data["persistentloginattempts"])
-	d.Set("pwdexpirynotificationdays", data["pwdexpirynotificationdays"])
+	setToInt("pwdexpirynotificationdays", d, data["pwdexpirynotificationdays"])
 	d.Set("samesite", data["samesite"])
-	d.Set("tokenintrospectioninterval", data["tokenintrospectioninterval"])
+	setToInt("tokenintrospectioninterval", d, data["tokenintrospectioninterval"])
 	d.Set("httponlycookie", data["httponlycookie"])
 	d.Set("enhancedepa", data["enhancedepa"])
 	d.Set("wafprotection", data["wafprotection"])
@@ -237,7 +250,7 @@ func readAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -295,8 +308,8 @@ func updateAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("failedlogintimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Failedlogintimeout has changed for aaaparameter, starting update")
-		aaaparameter.Failedlogintimeout = d.Get("failedlogintimeout").(int)
-		aaaparameter.Maxloginattempts = d.Get("maxloginattempts").(int)
+		aaaparameter.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
+		aaaparameter.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
 		hasChange = true
 	}
 	if d.HasChange("ftmode") {
@@ -311,22 +324,22 @@ func updateAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxaaausers") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxaaausers has changed for aaaparameter, starting update")
-		aaaparameter.Maxaaausers = d.Get("maxaaausers").(int)
+		aaaparameter.Maxaaausers = intPtr(d.Get("maxaaausers").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxkbquestions") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxkbquestions has changed for aaaparameter, starting update")
-		aaaparameter.Maxkbquestions = d.Get("maxkbquestions").(int)
+		aaaparameter.Maxkbquestions = intPtr(d.Get("maxkbquestions").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxloginattempts") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxloginattempts has changed for aaaparameter, starting update")
-		aaaparameter.Maxloginattempts = d.Get("maxloginattempts").(int)
+		aaaparameter.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxsamldeflatesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxsamldeflatesize has changed for aaaparameter, starting update")
-		aaaparameter.Maxsamldeflatesize = d.Get("maxsamldeflatesize").(int)
+		aaaparameter.Maxsamldeflatesize = intPtr(d.Get("maxsamldeflatesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("persistentloginattempts") {
@@ -336,7 +349,7 @@ func updateAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("pwdexpirynotificationdays") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pwdexpirynotificationdays has changed for aaaparameter, starting update")
-		aaaparameter.Pwdexpirynotificationdays = d.Get("pwdexpirynotificationdays").(int)
+		aaaparameter.Pwdexpirynotificationdays = intPtr(d.Get("pwdexpirynotificationdays").(int))
 		hasChange = true
 	}
 	if d.HasChange("samesite") {
@@ -346,7 +359,7 @@ func updateAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("tokenintrospectioninterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tokenintrospectioninterval has changed for aaaparameter, starting update")
-		aaaparameter.Tokenintrospectioninterval = d.Get("tokenintrospectioninterval").(int)
+		aaaparameter.Tokenintrospectioninterval = intPtr(d.Get("tokenintrospectioninterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("httponlycookie") {
@@ -373,13 +386,13 @@ func updateAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Aaaparameter.Type(), &aaaparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating aaaparameter")
+			return diag.Errorf("Error updating aaaparameter")
 		}
 	}
-	return readAaaparameterFunc(d, meta)
+	return readAaaparameterFunc(ctx, d, meta)
 }
 
-func deleteAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaaparameterFunc")
 	// aaaparameter does not support DELETE operation
 	d.SetId("")

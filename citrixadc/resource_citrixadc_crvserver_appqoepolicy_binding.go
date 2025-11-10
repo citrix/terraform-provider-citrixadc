@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/cr"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcCrvserver_appqoepolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCrvserver_appqoepolicy_bindingFunc,
-		Read:          readCrvserver_appqoepolicy_bindingFunc,
-		Delete:        deleteCrvserver_appqoepolicy_bindingFunc,
+		CreateContext: createCrvserver_appqoepolicy_bindingFunc,
+		ReadContext:   readCrvserver_appqoepolicy_bindingFunc,
+		DeleteContext: deleteCrvserver_appqoepolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": {
@@ -79,7 +81,7 @@ func resourceCitrixAdcCrvserver_appqoepolicy_binding() *schema.Resource {
 	}
 }
 
-func createCrvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createCrvserver_appqoepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCrvserver_appqoepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -93,26 +95,24 @@ func createCrvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta inter
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   name.(string),
 		Policyname:             policyname.(string),
-		Priority:               d.Get("priority").(int),
 		Targetvserver:          d.Get("targetvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		crvserver_appqoepolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource("crvserver_appqoepolicy_binding", bindingId, &crvserver_appqoepolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readCrvserver_appqoepolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this crvserver_appqoepolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readCrvserver_appqoepolicy_bindingFunc(ctx, d, meta)
 }
 
-func readCrvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readCrvserver_appqoepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCrvserver_appqoepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -133,7 +133,7 @@ func readCrvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta interfa
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -178,7 +178,7 @@ func readCrvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta interfa
 
 }
 
-func deleteCrvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCrvserver_appqoepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCrvserver_appqoepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -198,7 +198,7 @@ func deleteCrvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta inter
 	}
 	err := client.DeleteResourceWithArgs("crvserver_appqoepolicy_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

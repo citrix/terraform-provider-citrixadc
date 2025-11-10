@@ -31,11 +31,11 @@ type Lsnrtspalgsessiondatachannelbinding struct {
 	/**
 	* port for the channel.
 	*/
-	Channelport int `json:"channelport,omitempty"`
+	Channelport *int `json:"channelport,omitempty"`
 	/**
 	* Natted port for the channel.
 	*/
-	Channelnatport int `json:"channelnatport,omitempty"`
+	Channelnatport *int `json:"channelnatport,omitempty"`
 	/**
 	* Channel transport protocol.
 	*/
@@ -43,11 +43,11 @@ type Lsnrtspalgsessiondatachannelbinding struct {
 	/**
 	* Flags for the call entry.
 	*/
-	Channelflags int `json:"channelflags,omitempty"`
+	Channelflags *int `json:"channelflags,omitempty"`
 	/**
 	* Timeout for the channel.
 	*/
-	Channeltimeout int `json:"channeltimeout,omitempty"`
+	Channeltimeout *int `json:"channeltimeout,omitempty"`
 	/**
 	* Session ID for the RTSP call.
 	*/

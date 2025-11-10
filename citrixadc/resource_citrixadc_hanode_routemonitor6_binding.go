@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ha"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strconv"
@@ -15,13 +17,19 @@ import (
 func resourceCitrixAdcHanode_routemonitor6_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createHanode_routemonitor6_bindingFunc,
-		Read:          readHanode_routemonitor6_bindingFunc,
-		Delete:        deleteHanode_routemonitor6_bindingFunc,
+		CreateContext: createHanode_routemonitor6_bindingFunc,
+		ReadContext:   readHanode_routemonitor6_bindingFunc,
+		DeleteContext: deleteHanode_routemonitor6_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"netmask": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"hanode_id": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -36,33 +44,32 @@ func resourceCitrixAdcHanode_routemonitor6_binding() *schema.Resource {
 	}
 }
 
-func createHanode_routemonitor6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createHanode_routemonitor6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createHanode_routemonitor6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	id := strconv.Itoa(d.Get("hanode_id").(int))
 	routemonitor := d.Get("routemonitor").(string)
 	bindingId := fmt.Sprintf("%s,%s", id, routemonitor)
 	hanode_routemonitor6_binding := ha.Hanoderoutemonitor6binding{
-		Id:           d.Get("hanode_id").(int),
 		Routemonitor: d.Get("routemonitor").(string),
+		Netmask:      d.Get("netmask").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("hanode_id"); !raw.IsNull() {
+		hanode_routemonitor6_binding.Id = intPtr(d.Get("hanode_id").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Hanode_routemonitor6_binding.Type(), &hanode_routemonitor6_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readHanode_routemonitor6_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this hanode_routemonitor6_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readHanode_routemonitor6_bindingFunc(ctx, d, meta)
 }
 
-func readHanode_routemonitor6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readHanode_routemonitor6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readHanode_routemonitor6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -83,7 +90,7 @@ func readHanode_routemonitor6_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -115,13 +122,14 @@ func readHanode_routemonitor6_bindingFunc(d *schema.ResourceData, meta interface
 	data := dataArr[foundIndex]
 
 	d.Set("hanode_id", data["id"])
+	d.Set("netmask", data["netmask"])
 	d.Set("routemonitor", data["routemonitor"])
 
 	return nil
 
 }
 
-func deleteHanode_routemonitor6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteHanode_routemonitor6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteHanode_routemonitor6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -136,7 +144,7 @@ func deleteHanode_routemonitor6_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgs(service.Hanode_routemonitor6_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

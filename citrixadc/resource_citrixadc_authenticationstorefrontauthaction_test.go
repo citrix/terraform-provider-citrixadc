@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -41,9 +41,9 @@ const testAccAuthenticationstorefrontauthaction_update = `
 
 func TestAccAuthenticationstorefrontauthaction_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthenticationstorefrontauthactionDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthenticationstorefrontauthactionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationstorefrontauthaction_add,
@@ -84,8 +84,12 @@ func testAccCheckAuthenticationstorefrontauthactionExist(n string, id *string) r
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("authenticationstorefrontauthaction", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("authenticationstorefrontauthaction", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -100,7 +104,11 @@ func testAccCheckAuthenticationstorefrontauthactionExist(n string, id *string) r
 }
 
 func testAccCheckAuthenticationstorefrontauthactionDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authenticationstorefrontauthaction" {
@@ -111,7 +119,7 @@ func testAccCheckAuthenticationstorefrontauthactionDestroy(s *terraform.State) e
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("authenticationstorefrontauthaction", rs.Primary.ID)
+		_, err := client.FindResource("authenticationstorefrontauthaction", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authenticationstorefrontauthaction %s still exists", rs.Primary.ID)
 		}

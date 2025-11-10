@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcVpnglobal_authenticationtacacspolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnglobal_authenticationtacacspolicy_bindingFunc,
-		Read:          readVpnglobal_authenticationtacacspolicy_bindingFunc,
-		Delete:        deleteVpnglobal_authenticationtacacspolicy_bindingFunc,
+		CreateContext: createVpnglobal_authenticationtacacspolicy_bindingFunc,
+		ReadContext:   readVpnglobal_authenticationtacacspolicy_bindingFunc,
+		DeleteContext: deleteVpnglobal_authenticationtacacspolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -54,7 +56,7 @@ func resourceCitrixAdcVpnglobal_authenticationtacacspolicy_binding() *schema.Res
 	}
 }
 
-func createVpnglobal_authenticationtacacspolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnglobal_authenticationtacacspolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnglobal_authenticationtacacspolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -62,26 +64,24 @@ func createVpnglobal_authenticationtacacspolicy_bindingFunc(d *schema.ResourceDa
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Groupextraction:        d.Get("groupextraction").(bool),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vpnglobal_authenticationtacacspolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnglobal_authenticationtacacspolicy_binding.Type(), &vpnglobal_authenticationtacacspolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readVpnglobal_authenticationtacacspolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnglobal_authenticationtacacspolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readVpnglobal_authenticationtacacspolicy_bindingFunc(ctx, d, meta)
 }
 
-func readVpnglobal_authenticationtacacspolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnglobal_authenticationtacacspolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnglobal_authenticationtacacspolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -97,7 +97,7 @@ func readVpnglobal_authenticationtacacspolicy_bindingFunc(d *schema.ResourceData
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -138,7 +138,7 @@ func readVpnglobal_authenticationtacacspolicy_bindingFunc(d *schema.ResourceData
 
 }
 
-func deleteVpnglobal_authenticationtacacspolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnglobal_authenticationtacacspolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnglobal_authenticationtacacspolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -155,7 +155,7 @@ func deleteVpnglobal_authenticationtacacspolicy_bindingFunc(d *schema.ResourceDa
 
 	err := client.DeleteResourceWithArgs(service.Vpnglobal_authenticationtacacspolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

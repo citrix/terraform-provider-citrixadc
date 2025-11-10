@@ -27,7 +27,7 @@ type Vpnglobalauthenticationlocalpolicybinding struct {
 	/**
 	* Integer specifying the policy's priority. The lower the priority number, the higher the policy's priority. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Bind the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only to a primary authentication server but also to a secondary authentication server. User groups are aggregated across both authentication servers. The user name must be exactly the same on both authentication servers, but the authentication servers can require different passwords.
 	*/

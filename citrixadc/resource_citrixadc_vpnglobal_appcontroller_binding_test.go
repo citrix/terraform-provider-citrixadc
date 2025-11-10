@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"net/url"
 	"testing"
@@ -35,9 +35,9 @@ const testAccVpnglobal_appcontroller_binding_basic = `
 
 func TestAccVpnglobal_appcontroller_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpnglobal_appcontroller_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckVpnglobal_appcontroller_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnglobal_appcontroller_binding_basic,
@@ -68,7 +68,11 @@ func testAccCheckVpnglobal_appcontroller_bindingExist(n string, id *string) reso
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		appcontroller, _ := url.QueryUnescape(rs.Primary.ID)
 
@@ -107,7 +111,11 @@ func testAccCheckVpnglobal_appcontroller_bindingExist(n string, id *string) reso
 }
 
 func testAccCheckVpnglobal_appcontroller_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_vpnglobal_appcontroller_binding" {
@@ -118,7 +126,7 @@ func testAccCheckVpnglobal_appcontroller_bindingDestroy(s *terraform.State) erro
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Vpnglobal_appcontroller_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Vpnglobal_appcontroller_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("vpnglobal_appcontroller_binding %s still exists", rs.Primary.ID)
 		}

@@ -20,31 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
-
-func TestAccNstcpprofile_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNstcpprofileDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNstcpprofile_basic_step1,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile", nil),
-				),
-			},
-			{
-				Config: testAccNstcpprofile_basic_step2,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile", nil),
-				),
-			},
-		},
-	})
-}
 
 const testAccNstcpprofile_mpcapablecbit = `
 
@@ -61,9 +39,9 @@ func TestAccNstcpprofile_mpcapablecbit(t *testing.T) {
 		t.Skip("No support in CPX")
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNstcpprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNstcpprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNstcpprofile_mpcapablecbit,
@@ -95,8 +73,12 @@ func testAccCheckNstcpprofileExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Nstcpprofile.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nstcpprofile.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -111,7 +93,11 @@ func testAccCheckNstcpprofileExist(n string, id *string) resource.TestCheckFunc 
 }
 
 func testAccCheckNstcpprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_nstcpprofile" {
@@ -122,7 +108,7 @@ func testAccCheckNstcpprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Nstcpprofile.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Nstcpprofile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -138,6 +124,7 @@ resource "citrixadc_nstcpprofile" "tf_test_profile" {
     name = "test_tf_profile"
     ws = "ENABLED"
     ackaggregation = "DISABLED"
+	rfc5961compliance = "DISABLED"
 }
 `
 
@@ -147,5 +134,30 @@ resource "citrixadc_nstcpprofile" "tf_test_profile" {
     name = "test_tf_profile"
     ws = "ENABLED"
     ackaggregation = "ENABLED"
+	rfc5961compliance = "ENABLED"
 }
 `
+
+func TestAccNstcpprofile_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNstcpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstcpprofile_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_test_profile", "rfc5961compliance", "DISABLED"),
+				),
+			},
+			{
+				Config: testAccNstcpprofile_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_test_profile", "rfc5961compliance", "ENABLED"),
+				),
+			},
+		},
+	})
+}

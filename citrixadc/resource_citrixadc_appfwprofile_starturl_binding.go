@@ -1,14 +1,16 @@
 package citrixadc
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -16,9 +18,9 @@ import (
 func resourceCitrixAdcAppfwprofileStarturlBinding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofileStarturlBindingFunc,
-		Read:          readAppfwprofileStarturlBindingFunc,
-		Delete:        deleteAppfwprofileStarturlBindingFunc,
+		CreateContext: createAppfwprofileStarturlBindingFunc,
+		ReadContext:   readAppfwprofileStarturlBindingFunc,
+		DeleteContext: deleteAppfwprofileStarturlBindingFunc,
 		Schema: map[string]*schema.Schema{
 			"alertonly": {
 				Type:     schema.TypeString,
@@ -65,7 +67,7 @@ func resourceCitrixAdcAppfwprofileStarturlBinding() *schema.Resource {
 	}
 }
 
-func createAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofileStarturlBindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofileStarturlBindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -88,20 +90,15 @@ func createAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_starturl_binding.Type(), &appfwprofileStarturlBinding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingID)
 
-	err = readAppfwprofileStarturlBindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofileStarturlBinding but we can't read it ?? %s", bindingID)
-		return nil
-	}
-	return nil
+	return readAppfwprofileStarturlBindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofileStarturlBindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofileStarturlBindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -109,7 +106,7 @@ func readAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interface{
 	idSlice := strings.SplitN(bindingID, ",", 2)
 
 	if len(idSlice) < 2 {
-		return fmt.Errorf("Cannot deduce appfwprofile and starturl from ID string")
+		return diag.Errorf("Cannot deduce appfwprofile and starturl from ID string")
 	}
 
 	profileName := idSlice[0]
@@ -128,7 +125,7 @@ func readAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interface{
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -155,7 +152,7 @@ func readAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func deleteAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofileStarturlBindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofileStarturlBindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -163,7 +160,7 @@ func deleteAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interfac
 	idSlice := strings.SplitN(bindingID, ",", 2)
 
 	if len(idSlice) < 2 {
-		return fmt.Errorf("Cannot deduce appfwprofile and starturl from ID string")
+		return diag.Errorf("Cannot deduce appfwprofile and starturl from ID string")
 	}
 
 	profileName := idSlice[0]
@@ -174,7 +171,7 @@ func deleteAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.DeleteResourceWithArgs(service.Appfwprofile_starturl_binding.Type(), profileName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationldappolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationldappolicyFunc,
-		Read:          readAuthenticationldappolicyFunc,
-		Update:        updateAuthenticationldappolicyFunc,
-		Delete:        deleteAuthenticationldappolicyFunc,
+		CreateContext: createAuthenticationldappolicyFunc,
+		ReadContext:   readAuthenticationldappolicyFunc,
+		UpdateContext: updateAuthenticationldappolicyFunc,
+		DeleteContext: deleteAuthenticationldappolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,7 +43,7 @@ func resourceCitrixAdcAuthenticationldappolicy() *schema.Resource {
 	}
 }
 
-func createAuthenticationldappolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationldappolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationldappolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationldappolicyName := d.Get("name").(string)
@@ -52,20 +55,15 @@ func createAuthenticationldappolicyFunc(d *schema.ResourceData, meta interface{}
 
 	_, err := client.AddResource(service.Authenticationldappolicy.Type(), authenticationldappolicyName, &authenticationldappolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationldappolicyName)
 
-	err = readAuthenticationldappolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationldappolicy but we can't read it ?? %s", authenticationldappolicyName)
-		return nil
-	}
-	return nil
+	return readAuthenticationldappolicyFunc(ctx, d, meta)
 }
 
-func readAuthenticationldappolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationldappolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationldappolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationldappolicyName := d.Id()
@@ -84,7 +82,7 @@ func readAuthenticationldappolicyFunc(d *schema.ResourceData, meta interface{}) 
 
 }
 
-func updateAuthenticationldappolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationldappolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationldappolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationldappolicyName := d.Get("name").(string)
@@ -107,19 +105,19 @@ func updateAuthenticationldappolicyFunc(d *schema.ResourceData, meta interface{}
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationldappolicy.Type(), authenticationldappolicyName, &authenticationldappolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationldappolicy %s", authenticationldappolicyName)
+			return diag.Errorf("Error updating authenticationldappolicy %s", authenticationldappolicyName)
 		}
 	}
-	return readAuthenticationldappolicyFunc(d, meta)
+	return readAuthenticationldappolicyFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationldappolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationldappolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationldappolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationldappolicyName := d.Id()
 	err := client.DeleteResource(service.Authenticationldappolicy.Type(), authenticationldappolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

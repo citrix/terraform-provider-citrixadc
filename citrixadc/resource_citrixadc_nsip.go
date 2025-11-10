@@ -1,79 +1,34 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/service"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
 	"log"
-)
 
-// nsip struct is defined here to add MPTCPadvertise support.
-// Once this attribute available in the main builds, respective go-notro file will be taken care.
-type nsip struct {
-	Advertiseondefaultpartition string      `json:"advertiseondefaultpartition,omitempty"`
-	Arp                         string      `json:"arp,omitempty"`
-	Arpowner                    int         `json:"arpowner,omitempty"`
-	Arpresponse                 string      `json:"arpresponse,omitempty"`
-	Bgp                         string      `json:"bgp,omitempty"`
-	Decrementttl                string      `json:"decrementttl,omitempty"`
-	Dynamicrouting              string      `json:"dynamicrouting,omitempty"`
-	Flags                       int         `json:"flags,omitempty"`
-	Freeports                   int         `json:"freeports,omitempty"`
-	Ftp                         string      `json:"ftp,omitempty"`
-	Gui                         string      `json:"gui,omitempty"`
-	Hostroute                   string      `json:"hostroute,omitempty"`
-	Hostrtgw                    string      `json:"hostrtgw,omitempty"`
-	Hostrtgwact                 string      `json:"hostrtgwact,omitempty"`
-	Icmp                        string      `json:"icmp,omitempty"`
-	Icmpresponse                string      `json:"icmpresponse,omitempty"`
-	Ipaddress                   string      `json:"ipaddress,omitempty"`
-	Iptype                      interface{} `json:"iptype,omitempty"`
-	Metric                      int         `json:"metric,omitempty"`
-	Mgmtaccess                  string      `json:"mgmtaccess,omitempty"`
-	Netmask                     string      `json:"netmask,omitempty"`
-	Networkroute                string      `json:"networkroute,omitempty"`
-	Operationalarpowner         int         `json:"operationalarpowner,omitempty"`
-	Ospf                        string      `json:"ospf,omitempty"`
-	Ospfarea                    int         `json:"ospfarea,omitempty"`
-	Ospfareaval                 int         `json:"ospfareaval,omitempty"`
-	Ospflsatype                 string      `json:"ospflsatype,omitempty"`
-	Ownerdownresponse           string      `json:"ownerdownresponse,omitempty"`
-	Ownernode                   string      `json:"ownernode,omitempty"`
-	Restrictaccess              string      `json:"restrictaccess,omitempty"`
-	Rip                         string      `json:"rip,omitempty"`
-	Riserhimsgcode              int         `json:"riserhimsgcode,omitempty"`
-	Snmp                        string      `json:"snmp,omitempty"`
-	Ssh                         string      `json:"ssh,omitempty"`
-	State                       string      `json:"state,omitempty"`
-	Tag                         int         `json:"tag,omitempty"`
-	Td                          int         `json:"td,omitempty"`
-	Telnet                      string      `json:"telnet,omitempty"`
-	Type                        string      `json:"type,omitempty"`
-	Viprtadv2bsd                bool        `json:"viprtadv2bsd,omitempty"`
-	Vipvsercount                int         `json:"vipvsercount,omitempty"`
-	Vipvserdowncount            int         `json:"vipvserdowncount,omitempty"`
-	Vipvsrvrrhiactivecount      int         `json:"vipvsrvrrhiactivecount,omitempty"`
-	Vipvsrvrrhiactiveupcount    int         `json:"vipvsrvrrhiactiveupcount,omitempty"`
-	Vrid                        int         `json:"vrid,omitempty"`
-	Vserver                     string      `json:"vserver,omitempty"`
-	Vserverrhilevel             string      `json:"vserverrhilevel,omitempty"`
-	Vserverrhimode              string      `json:"vserverrhimode,omitempty"`
-	Mptcpadvertise              string      `json:"mptcpadvertise,omitempty"`
-}
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
 
 func resourceCitrixAdcNsip() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsipFunc,
-		Read:          readNsipFunc,
-		Update:        updateNsipFunc,
-		Delete:        deleteNsipFunc,
+		CreateContext: createNsipFunc,
+		ReadContext:   readNsipFunc,
+		UpdateContext: updateNsipFunc,
+		DeleteContext: deleteNsipFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"arpowner": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -182,7 +137,7 @@ func resourceCitrixAdcNsip() *schema.Resource {
 				Computed: true,
 			},
 			"ownernode": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -262,13 +217,13 @@ func resourceCitrixAdcNsip() *schema.Resource {
 	}
 }
 
-func createNsipFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var ipaddress string
 	ipaddress = d.Get("ipaddress").(string)
 
-	nsip := nsip{
+	nsip := ns.Nsip{
 		Advertiseondefaultpartition: d.Get("advertiseondefaultpartition").(string),
 		Arp:                         d.Get("arp").(string),
 		Arpresponse:                 d.Get("arpresponse").(string),
@@ -282,58 +237,110 @@ func createNsipFunc(d *schema.ResourceData, meta interface{}) error {
 		Icmp:                        d.Get("icmp").(string),
 		Icmpresponse:                d.Get("icmpresponse").(string),
 		Ipaddress:                   ipaddress,
-		Metric:                      d.Get("metric").(int),
 		Mgmtaccess:                  d.Get("mgmtaccess").(string),
 		Netmask:                     d.Get("netmask").(string),
 		Networkroute:                d.Get("networkroute").(string),
 		Ospf:                        d.Get("ospf").(string),
-		Ospfarea:                    d.Get("ospfarea").(int),
 		Ospflsatype:                 d.Get("ospflsatype").(string),
 		Ownerdownresponse:           d.Get("ownerdownresponse").(string),
-		Ownernode:                   d.Get("ownernode").(string),
 		Restrictaccess:              d.Get("restrictaccess").(string),
 		Rip:                         d.Get("rip").(string),
 		Snmp:                        d.Get("snmp").(string),
 		Ssh:                         d.Get("ssh").(string),
 		State:                       d.Get("state").(string),
-		Tag:                         d.Get("tag").(int),
-		Td:                          d.Get("td").(int),
 		Telnet:                      d.Get("telnet").(string),
 		Type:                        d.Get("type").(string),
-		Vrid:                        d.Get("vrid").(int),
 		Vserver:                     d.Get("vserver").(string),
 		Vserverrhilevel:             d.Get("vserverrhilevel").(string),
-		Vserverrhimode:              d.Get("vserverrhimode").(string),
 		Mptcpadvertise:              d.Get("mptcpadvertise").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("arpowner"); !raw.IsNull() {
+		nsip.Arpowner = intPtr(d.Get("arpowner").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("metric"); !raw.IsNull() {
+		nsip.Metric = intPtr(d.Get("metric").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ospfarea"); !raw.IsNull() {
+		nsip.Ospfarea = intPtr(d.Get("ospfarea").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tag"); !raw.IsNull() {
+		nsip.Tag = intPtr(d.Get("tag").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nsip.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vrid"); !raw.IsNull() {
+		nsip.Vrid = intPtr(d.Get("vrid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		nsip.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 
 	_, err := client.AddResource(service.Nsip.Type(), ipaddress, &nsip)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ipaddress)
 
-	err = readNsipFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsip but we can't read it ?? %s", ipaddress)
-		return nil
-	}
-	return nil
+	return readNsipFunc(ctx, d, meta)
 }
 
-func readNsipFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsipName := d.Id()
+	trafficDomain := 0
+	netmask := d.Get("netmask").(string)
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsip state %s", nsipName)
-	data, err := client.FindResource(service.Nsip.Type(), nsipName)
+	argsMap := make(map[string]string)
+	if val, ok := d.GetOk("td"); ok {
+		trafficDomain = val.(int)
+	}
+	argsMap["td"] = fmt.Sprintf("%d", trafficDomain)
+	findParams := service.FindParams{
+		ResourceType:             service.Nsip.Type(),
+		ResourceName:             nsipName,
+		ResourceMissingErrorCode: 258,
+		ArgsMap:                  argsMap,
+	}
+
+	dataArr, err := client.FindResourceArrayWithParams(findParams)
+	// Unexpected error
 	if err != nil {
+		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
+		return diag.FromErr(err)
+	}
+
+	// Resource is missing
+	if len(dataArr) == 0 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams returned empty array")
 		log.Printf("[WARN] citrixadc-provider: Clearing nsip state %s", nsipName)
 		d.SetId("")
 		return nil
 	}
+
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		if v["ipaddress"].(string) == nsipName && v["netmask"].(string) == netmask {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams secondIdComponent not found in array")
+		log.Printf("[WARN] citrixadc-provider: Clearing nsip state %s", nsipName)
+		d.SetId("")
+		return nil
+	}
+	// Fallthrough
+
+	data := dataArr[foundIndex]
 	d.Set("advertiseondefaultpartition", data["advertiseondefaultpartition"])
+	setToInt("arpowner", d, data["arpowner"])
 	d.Set("arp", data["arp"])
 	d.Set("arpresponse", data["arpresponse"])
 	d.Set("bgp", data["bgp"])
@@ -346,44 +353,48 @@ func readNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("icmp", data["icmp"])
 	d.Set("icmpresponse", data["icmpresponse"])
 	d.Set("ipaddress", data["ipaddress"])
-	d.Set("metric", data["metric"])
+	setToInt("metric", d, data["metric"])
 	d.Set("mgmtaccess", data["mgmtaccess"])
 	d.Set("netmask", data["netmask"])
 	d.Set("networkroute", data["networkroute"])
 	d.Set("ospf", data["ospf"])
-	d.Set("ospfarea", data["ospfarea"])
+	setToInt("ospfarea", d, data["ospfarea"])
 	d.Set("ospflsatype", data["ospflsatype"])
 	d.Set("ownerdownresponse", data["ownerdownresponse"])
-	d.Set("ownernode", data["ownernode"])
+	setToInt("ownernode", d, data["ownernode"])
 	d.Set("restrictaccess", data["restrictaccess"])
 	d.Set("rip", data["rip"])
 	d.Set("snmp", data["snmp"])
 	d.Set("ssh", data["ssh"])
 	d.Set("state", data["state"])
-	d.Set("tag", data["tag"])
-	d.Set("td", data["td"])
+	setToInt("tag", d, data["tag"])
+	setToInt("td", d, data["td"])
 	d.Set("telnet", data["telnet"])
 	d.Set("type", data["type"])
-	d.Set("vrid", data["vrid"])
+	setToInt("vrid", d, data["vrid"])
 	d.Set("vserver", data["vserver"])
 	d.Set("vserverrhilevel", data["vserverrhilevel"])
-	d.Set("vserverrhimode", data["vserverrhimode"])
 	d.Set("mptcpadvertise", data["mptcpadvertise"])
 
 	return nil
 
 }
 
-func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipaddress := d.Get("ipaddress").(string)
 
-	nsip := nsip{
+	nsip := ns.Nsip{
 		Ipaddress: d.Get("ipaddress").(string),
 	}
 	stateChange := false
 	hasChange := false
+	if d.HasChange("arpowner") {
+		log.Printf("[DEBUG]  citrixadc-provider: Arpowner has changed for nsip, starting update")
+		nsip.Arpowner = intPtr(d.Get("arpowner").(int))
+		hasChange = true
+	}
 	if d.HasChange("advertiseondefaultpartition") {
 		log.Printf("[DEBUG]  citrixadc-provider: Advertiseondefaultpartition has changed for nsip %s, starting update", ipaddress)
 		nsip.Advertiseondefaultpartition = d.Get("advertiseondefaultpartition").(string)
@@ -446,7 +457,7 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("metric") {
 		log.Printf("[DEBUG]  citrixadc-provider: Metric has changed for nsip %s, starting update", ipaddress)
-		nsip.Metric = d.Get("metric").(int)
+		nsip.Metric = intPtr(d.Get("metric").(int))
 		hasChange = true
 	}
 	if d.HasChange("mgmtaccess") {
@@ -466,7 +477,7 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ospfarea") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ospfarea has changed for nsip %s, starting update", ipaddress)
-		nsip.Ospfarea = d.Get("ospfarea").(int)
+		nsip.Ospfarea = intPtr(d.Get("ospfarea").(int))
 		hasChange = true
 	}
 	if d.HasChange("ospflsatype") {
@@ -481,7 +492,7 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for nsip %s, starting update", ipaddress)
-		nsip.Ownernode = d.Get("ownernode").(string)
+		nsip.Ownernode = intPtr(d.Get("ownernode").(int))
 		hasChange = true
 	}
 	if d.HasChange("restrictaccess") {
@@ -511,12 +522,12 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("tag") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tag has changed for nsip %s, starting update", ipaddress)
-		nsip.Tag = d.Get("tag").(int)
+		nsip.Tag = intPtr(d.Get("tag").(int))
 		hasChange = true
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for nsip %s, starting update", ipaddress)
-		nsip.Td = d.Get("td").(int)
+		nsip.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("telnet") {
@@ -531,7 +542,7 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("vrid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vrid has changed for nsip %s, starting update", ipaddress)
-		nsip.Vrid = d.Get("vrid").(int)
+		nsip.Vrid = intPtr(d.Get("vrid").(int))
 		hasChange = true
 	}
 	if d.HasChange("vserver") {
@@ -544,11 +555,6 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 		nsip.Vserverrhilevel = d.Get("vserverrhilevel").(string)
 		hasChange = true
 	}
-	if d.HasChange("vserverrhimode") {
-		log.Printf("[DEBUG]  citrixadc-provider: Vserverrhimode has changed for nsip %s, starting update", ipaddress)
-		nsip.Vserverrhimode = d.Get("vserverrhimode").(string)
-		hasChange = true
-	}
 	if d.HasChange("mptcpadvertise") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mptcpadvertise has changed for nsip %s, starting update", ipaddress)
 		nsip.Mptcpadvertise = d.Get("mptcpadvertise").(string)
@@ -558,26 +564,32 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nsip.Type(), ipaddress, &nsip)
 		if err != nil {
-			return fmt.Errorf("Error updating nsip %s: %s", ipaddress, err.Error())
+			return diag.Errorf("Error updating nsip %s: %s", ipaddress, err.Error())
 		}
 	}
 
 	if stateChange {
 		err := doNsipStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling nsip %s", ipaddress)
+			return diag.Errorf("Error enabling/disabling nsip %s", ipaddress)
 		}
 	}
-	return readNsipFunc(d, meta)
+	return readNsipFunc(ctx, d, meta)
 }
 
-func deleteNsipFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipaddress := d.Id()
-	err := client.DeleteResource(service.Nsip.Type(), ipaddress)
+	trafficDomain := 0
+	if val, ok := d.GetOk("td"); ok {
+		trafficDomain = val.(int)
+	}
+	argsMap := make(map[string]string)
+	argsMap["td"] = fmt.Sprintf("%d", trafficDomain)
+	err := client.DeleteResourceWithArgsMap(service.Nsip.Type(), ipaddress, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -590,9 +602,9 @@ func doNsipStateChange(d *schema.ResourceData, client *service.NitroClient) erro
 
 	// We need a new instance of the struct since
 	// ActOnResource will fail if we put in superfluous attributes
-	nsip := nsip{
+	nsip := ns.Nsip{
 		Ipaddress: d.Get("ipaddress").(string),
-		Td:        d.Get("td").(int),
+		Td:        intPtr(d.Get("td").(int)),
 	}
 
 	newstate := d.Get("state")

@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/ns"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsencryptionkey() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsencryptionkeyFunc,
-		Read:          readNsencryptionkeyFunc,
-		Update:        updateNsencryptionkeyFunc,
-		Delete:        deleteNsencryptionkeyFunc,
+		CreateContext: createNsencryptionkeyFunc,
+		ReadContext:   readNsencryptionkeyFunc,
+		UpdateContext: updateNsencryptionkeyFunc,
+		DeleteContext: deleteNsencryptionkeyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -55,7 +58,7 @@ func resourceCitrixAdcNsencryptionkey() *schema.Resource {
 	}
 }
 
-func createNsencryptionkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsencryptionkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsencryptionkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsencryptionkeyName := d.Get("name").(string)
@@ -70,20 +73,15 @@ func createNsencryptionkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("nsencryptionkey", nsencryptionkeyName, &nsencryptionkey)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsencryptionkeyName)
 
-	err = readNsencryptionkeyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsencryptionkey but we can't read it ?? %s", nsencryptionkeyName)
-		return nil
-	}
-	return nil
+	return readNsencryptionkeyFunc(ctx, d, meta)
 }
 
-func readNsencryptionkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsencryptionkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsencryptionkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsencryptionkeyName := d.Id()
@@ -105,7 +103,7 @@ func readNsencryptionkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsencryptionkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsencryptionkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsencryptionkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsencryptionkeyName := d.Get("name").(string)
@@ -138,19 +136,19 @@ func updateNsencryptionkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("nsencryptionkey", nsencryptionkeyName, &nsencryptionkey)
 		if err != nil {
-			return fmt.Errorf("Error updating nsencryptionkey %s", nsencryptionkeyName)
+			return diag.Errorf("Error updating nsencryptionkey %s", nsencryptionkeyName)
 		}
 	}
-	return readNsencryptionkeyFunc(d, meta)
+	return readNsencryptionkeyFunc(ctx, d, meta)
 }
 
-func deleteNsencryptionkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsencryptionkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsencryptionkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsencryptionkeyName := d.Id()
 	err := client.DeleteResource("nsencryptionkey", nsencryptionkeyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

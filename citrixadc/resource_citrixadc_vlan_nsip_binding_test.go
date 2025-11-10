@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccVlan_nsip_binding_basic_step1 = `
@@ -65,9 +65,9 @@ resource "citrixadc_nsip" "tf_snip" {
 
 func TestAccVlan_nsip_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVlan_nsip_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckVlan_nsip_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVlan_nsip_binding_basic_step1,
@@ -104,7 +104,11 @@ func testAccCheckVlan_nsip_bindingExist(n string, id *string) resource.TestCheck
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -152,7 +156,11 @@ func testAccCheckVlan_nsip_bindingExist(n string, id *string) resource.TestCheck
 func testAccCheckVlan_nsip_bindingNotExist(bindingId string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		idSlice := strings.SplitN(bindingId, ",", 2)
 
@@ -196,7 +204,11 @@ func testAccCheckVlan_nsip_bindingNotExist(bindingId string) resource.TestCheckF
 }
 
 func testAccCheckVlan_nsip_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_vlan_nsip_binding" {
@@ -207,7 +219,7 @@ func testAccCheckVlan_nsip_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Vlan_nsip_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Vlan_nsip_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("vlan_nsip_binding %s still exists", rs.Primary.ID)
 		}

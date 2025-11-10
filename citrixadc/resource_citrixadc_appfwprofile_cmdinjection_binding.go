@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAppfwprofile_cmdinjection_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_cmdinjection_bindingFunc,
-		Read:          readAppfwprofile_cmdinjection_bindingFunc,
-		Delete:        deleteAppfwprofile_cmdinjection_bindingFunc,
+		CreateContext: createAppfwprofile_cmdinjection_bindingFunc,
+		ReadContext:   readAppfwprofile_cmdinjection_bindingFunc,
+		DeleteContext: deleteAppfwprofile_cmdinjection_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -109,7 +111,7 @@ func resourceCitrixAdcAppfwprofile_cmdinjection_binding() *schema.Resource {
 	}
 }
 
-func createAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_cmdinjection_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_cmdinjection_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appFwName := d.Get("name").(string)
@@ -141,20 +143,15 @@ func createAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta in
 
 	err := client.UpdateUnnamedResource("appfwprofile_cmdinjection_binding", &appfwprofile_cmdinjection_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_cmdinjection_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_cmdinjection_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_cmdinjection_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_cmdinjection_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_cmdinjection_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -195,7 +192,7 @@ func readAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta inte
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -252,7 +249,7 @@ func readAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta inte
 
 }
 
-func deleteAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_cmdinjection_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_cmdinjection_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -277,7 +274,7 @@ func deleteAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta in
 
 	err := client.DeleteResourceWithArgsMap("appfwprofile_cmdinjection_binding", appFwName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

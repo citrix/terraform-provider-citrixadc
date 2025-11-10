@@ -1,23 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cmp"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCmppolicylabel_cmppolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCmppolicylabel_cmppolicy_bindingFunc,
-		Read:          readCmppolicylabel_cmppolicy_bindingFunc,
-		Delete:        deleteCmppolicylabel_cmppolicy_bindingFunc,
+		CreateContext: createCmppolicylabel_cmppolicy_bindingFunc,
+		ReadContext:   readCmppolicylabel_cmppolicy_bindingFunc,
+		DeleteContext: deleteCmppolicylabel_cmppolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -63,7 +67,7 @@ func resourceCitrixAdcCmppolicylabel_cmppolicy_binding() *schema.Resource {
 	}
 }
 
-func createCmppolicylabel_cmppolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createCmppolicylabel_cmppolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCmppolicylabel_cmppolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	labelname := d.Get("labelname").(string)
@@ -76,25 +80,23 @@ func createCmppolicylabel_cmppolicy_bindingFunc(d *schema.ResourceData, meta int
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		cmppolicylabel_cmppolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Cmppolicylabel_cmppolicy_binding.Type(), &cmppolicylabel_cmppolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readCmppolicylabel_cmppolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cmppolicylabel_cmppolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readCmppolicylabel_cmppolicy_bindingFunc(ctx, d, meta)
 }
 
-func readCmppolicylabel_cmppolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readCmppolicylabel_cmppolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCmppolicylabel_cmppolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -115,7 +117,7 @@ func readCmppolicylabel_cmppolicy_bindingFunc(d *schema.ResourceData, meta inter
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -158,7 +160,7 @@ func readCmppolicylabel_cmppolicy_bindingFunc(d *schema.ResourceData, meta inter
 
 }
 
-func deleteCmppolicylabel_cmppolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCmppolicylabel_cmppolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCmppolicylabel_cmppolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -174,7 +176,7 @@ func deleteCmppolicylabel_cmppolicy_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.DeleteResourceWithArgs(service.Cmppolicylabel_cmppolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

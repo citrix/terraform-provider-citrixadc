@@ -36,7 +36,7 @@ type Uservserver struct {
 	/**
 	* Port number for the virtual server.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* Name of the default Load Balancing virtual server used for load balancing of services. The protocol type of default Load Balancing virtual server should be a user type.
 	*/

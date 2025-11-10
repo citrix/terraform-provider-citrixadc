@@ -1,23 +1,25 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	//"net/url"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVpnglobal_intranetip6_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnglobal_intranetip6_bindingFunc,
-		Read:          readVpnglobal_intranetip6_bindingFunc,
-		Delete:        deleteVpnglobal_intranetip6_bindingFunc,
+		CreateContext: createVpnglobal_intranetip6_bindingFunc,
+		ReadContext:   readVpnglobal_intranetip6_bindingFunc,
+		DeleteContext: deleteVpnglobal_intranetip6_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"intranetip6": {
@@ -42,7 +44,7 @@ func resourceCitrixAdcVpnglobal_intranetip6_binding() *schema.Resource {
 	}
 }
 
-func createVpnglobal_intranetip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnglobal_intranetip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnglobal_intranetip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	intranetip6 := d.Get("intranetip6").(string)
@@ -50,25 +52,23 @@ func createVpnglobal_intranetip6_bindingFunc(d *schema.ResourceData, meta interf
 	vpnglobal_intranetip6_binding := vpn.Vpnglobalintranetip6binding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Intranetip6:            d.Get("intranetip6").(string),
-		Numaddr:                d.Get("numaddr").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("numaddr"); !raw.IsNull() {
+		vpnglobal_intranetip6_binding.Numaddr = intPtr(d.Get("numaddr").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnglobal_intranetip6_binding.Type(), &vpnglobal_intranetip6_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(intranetip6)
 
-	err = readVpnglobal_intranetip6_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnglobal_intranetip6_binding but we can't read it ?? %s", intranetip6)
-		return nil
-	}
-	return nil
+	return readVpnglobal_intranetip6_bindingFunc(ctx, d, meta)
 }
 
-func readVpnglobal_intranetip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnglobal_intranetip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnglobal_intranetip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	intranetip6 := d.Id()
@@ -84,7 +84,7 @@ func readVpnglobal_intranetip6_bindingFunc(d *schema.ResourceData, meta interfac
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -117,13 +117,13 @@ func readVpnglobal_intranetip6_bindingFunc(d *schema.ResourceData, meta interfac
 
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("intranetip6", data["intranetip6"])
-	d.Set("numaddr", data["numaddr"])
+	setToInt("numaddr", d, data["numaddr"])
 
 	return nil
 
 }
 
-func deleteVpnglobal_intranetip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnglobal_intranetip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnglobal_intranetip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -137,7 +137,7 @@ func deleteVpnglobal_intranetip6_bindingFunc(d *schema.ResourceData, meta interf
 
 	err := client.DeleteResourceWithArgs(service.Vpnglobal_intranetip6_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

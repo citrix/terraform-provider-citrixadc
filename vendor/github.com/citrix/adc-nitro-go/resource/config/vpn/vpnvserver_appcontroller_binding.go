@@ -24,7 +24,7 @@ type Vpnvserverappcontrollerbinding struct {
 	* Configured App Controller server in XenMobile deployment.
 	*/
 	Appcontroller string `json:"appcontroller,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

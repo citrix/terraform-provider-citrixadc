@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -29,6 +29,8 @@ const testAccauditsyslogparams_basic = `
 		dateformat = "DDMMYYYY"
 		loglevel   = ["EMERGENCY"]
 		tcp        = "ALL"
+		protocolviolations = "NONE"
+		streamanalytics = "DISABLED"
 	}
 `
 const testAccauditsyslogparams_update = `
@@ -37,14 +39,16 @@ const testAccauditsyslogparams_update = `
 		dateformat = "MMDDYYYY"
 		loglevel   = ["EMERGENCY"]
 		tcp        = "NONE"
+		protocolviolations = "ALL"
+		streamanalytics = "ENABLED"
 	}
 `
 
 func TestAccauditsyslogparams_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccauditsyslogparams_basic,
@@ -52,6 +56,8 @@ func TestAccauditsyslogparams_basic(t *testing.T) {
 					testAccCheckauditsyslogparamsExist("citrixadc_auditsyslogparams.tf_auditsyslogparams", nil),
 					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "dateformat", "DDMMYYYY"),
 					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "tcp", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "protocolviolations", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "streamanalytics", "DISABLED"),
 				),
 			},
 			{
@@ -60,6 +66,8 @@ func TestAccauditsyslogparams_basic(t *testing.T) {
 					testAccCheckauditsyslogparamsExist("citrixadc_auditsyslogparams.tf_auditsyslogparams", nil),
 					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "dateformat", "MMDDYYYY"),
 					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "tcp", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "protocolviolations", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "streamanalytics", "ENABLED"),
 				),
 			},
 		},
@@ -85,8 +93,12 @@ func testAccCheckauditsyslogparamsExist(n string, id *string) resource.TestCheck
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Auditsyslogparams.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Auditsyslogparams.Type(), "")
 
 		if err != nil {
 			return err

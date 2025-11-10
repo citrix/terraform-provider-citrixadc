@@ -35,11 +35,11 @@ type Lbmonitormetricbinding struct {
 	/**
 	* The weight for the specified service metric with respect to others.
 	*/
-	Metricweight int `json:"metricweight,omitempty"`
+	Metricweight *int `json:"metricweight,omitempty"`
 	/**
 	* Threshold to be used for that metric.
 	*/
-	Metricthreshold int `json:"metricthreshold,omitempty"`
+	Metricthreshold *int `json:"metricthreshold,omitempty"`
 	/**
 	* Name of the monitor.
 	*/

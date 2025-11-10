@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcVpnvserver_authenticationcertpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnvserver_authenticationcertpolicy_bindingFunc,
-		Read:          readVpnvserver_authenticationcertpolicy_bindingFunc,
-		Delete:        deleteVpnvserver_authenticationcertpolicy_bindingFunc,
+		CreateContext: createVpnvserver_authenticationcertpolicy_bindingFunc,
+		ReadContext:   readVpnvserver_authenticationcertpolicy_bindingFunc,
+		DeleteContext: deleteVpnvserver_authenticationcertpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,7 +69,7 @@ func resourceCitrixAdcVpnvserver_authenticationcertpolicy_binding() *schema.Reso
 	}
 }
 
-func createVpnvserver_authenticationcertpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnvserver_authenticationcertpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnvserver_authenticationcertpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -79,26 +81,24 @@ func createVpnvserver_authenticationcertpolicy_bindingFunc(d *schema.ResourceDat
 		Groupextraction:        d.Get("groupextraction").(bool),
 		Name:                   d.Get("name").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vpnvserver_authenticationcertpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnvserver_authenticationcertpolicy_binding.Type(), &vpnvserver_authenticationcertpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readVpnvserver_authenticationcertpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnvserver_authenticationcertpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readVpnvserver_authenticationcertpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readVpnvserver_authenticationcertpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnvserver_authenticationcertpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnvserver_authenticationcertpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -119,7 +119,7 @@ func readVpnvserver_authenticationcertpolicy_bindingFunc(d *schema.ResourceData,
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -162,7 +162,7 @@ func readVpnvserver_authenticationcertpolicy_bindingFunc(d *schema.ResourceData,
 
 }
 
-func deleteVpnvserver_authenticationcertpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnvserver_authenticationcertpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnvserver_authenticationcertpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -186,7 +186,7 @@ func deleteVpnvserver_authenticationcertpolicy_bindingFunc(d *schema.ResourceDat
 
 	err := client.DeleteResourceWithArgs(service.Vpnvserver_authenticationcertpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

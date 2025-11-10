@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 func generateCommand(options *Options, args ...string) shell.Command {
@@ -19,6 +21,7 @@ func generateCommand(options *Options, args ...string) shell.Command {
 		WorkingDir: options.TerraformDir,
 		Env:        options.EnvVars,
 		Logger:     options.Logger,
+		Stdin:      options.Stdin,
 	}
 	return cmd
 }
@@ -39,6 +42,9 @@ const (
 
 	// TerraformDefaultPath to run terraform
 	TerraformDefaultPath = "terraform"
+
+	// TerragruntDefaultPath to run terragrunt
+	TerragruntDefaultPath = "terragrunt"
 )
 
 var DefaultExecutable = defaultTerraformExecutable()
@@ -49,8 +55,11 @@ func GetCommonOptions(options *Options, args ...string) (*Options, []string) {
 		options.TerraformBinary = DefaultExecutable
 	}
 
-	if options.TerraformBinary == "terragrunt" {
+	if options.TerraformBinary == TerragruntDefaultPath {
 		args = append(args, "--terragrunt-non-interactive")
+
+		// for newer Terragrunt version, setting simplified log formatting
+		setTerragruntLogFormatting(options)
 	}
 
 	if options.Parallelism > 0 && len(args) > 0 && collections.ListContains(commandsWithParallelism, args[0]) {
@@ -97,23 +106,55 @@ func RunTerraformCommandE(t testing.TestingT, additionalOptions *Options, additi
 
 }
 
+// RunTerraformCommandAndGetStdout runs terraform with the given arguments and options and returns solely its stdout
+// (but not stderr).
+func RunTerraformCommandAndGetStdout(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) string {
+	out, err := RunTerraformCommandAndGetStdoutE(t, additionalOptions, additionalArgs...)
+	require.NoError(t, err)
+	return out
+}
+
 // RunTerraformCommandAndGetStdoutE runs terraform with the given arguments and options and returns solely its stdout
 // (but not stderr).
 func RunTerraformCommandAndGetStdoutE(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (string, error) {
+	out, _, _, err := RunTerraformCommandAndGetStdOutErrCodeE(t, additionalOptions, additionalArgs...)
+	return out, err
+}
+
+// RunTerraformCommandAndGetStdOutErrCode runs terraform with the given arguments and options and returns its stdout, stderr, and exitcode
+func RunTerraformCommandAndGetStdOutErrCode(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (stdout string, stderr string, exit int) {
+	stdout, stderr, exit, err := RunTerraformCommandAndGetStdOutErrCodeE(t, additionalOptions, additionalArgs...)
+	require.NoError(t, err)
+	return stdout, stderr, exit
+}
+
+// RunTerraformCommandAndGetStdOutErrCodeE runs terraform with the given arguments and options and returns its stdout, stderr, and exitcode
+func RunTerraformCommandAndGetStdOutErrCodeE(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (stdout string, stderr string, exit int, err error) {
 	options, args := GetCommonOptions(additionalOptions, additionalArgs...)
 
 	cmd := generateCommand(options, args...)
 	description := fmt.Sprintf("%s %v", options.TerraformBinary, args)
-	return retry.DoWithRetryableErrorsE(t, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
-		s, err := shell.RunCommandAndGetOutputE(t, cmd)
+
+	exit = DefaultErrorExitCode
+	_, err = retry.DoWithRetryableErrorsE(t, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
+		stdout, stderr, err = shell.RunCommandAndGetStdOutErrE(t, cmd)
 		if err != nil {
-			return s, err
+			exitCode, getExitCodeErr := shell.GetExitCodeForRunCommandError(err)
+			if getExitCodeErr == nil {
+				exit = exitCode
+			}
+			return "", err
 		}
-		if err := hasWarning(additionalOptions, s); err != nil {
-			return s, err
+
+		if err = hasWarning(additionalOptions, stdout); err != nil {
+			return "", err
 		}
-		return s, err
+
+		exit = DefaultSuccessExitCode
+		return "", nil
 	})
+
+	return
 }
 
 // GetExitCodeForTerraformCommand runs terraform with the given arguments and options and returns exit code
@@ -158,7 +199,7 @@ func defaultTerraformExecutable() string {
 
 func hasWarning(opts *Options, out string) error {
 	for k, v := range opts.WarningsAsErrors {
-		str := fmt.Sprintf("\nWarning: %s[^\n]*\n", k)
+		str := fmt.Sprintf("\n.*(?i:Warning): %s[^\n]*\n", k)
 		re, err := regexp.Compile(str)
 		if err != nil {
 			return fmt.Errorf("cannot compile regex for warning detection: %w", err)
@@ -170,4 +211,35 @@ func hasWarning(opts *Options, out string) error {
 		return fmt.Errorf("warning(s) were found: %s:\n%s", v, strings.Join(m, ""))
 	}
 	return nil
+}
+
+// setTerragruntLogFormatting sets a default log formatting for terragrunt
+// if it is not already set in options.EnvVars or OS environment vars
+func setTerragruntLogFormatting(options *Options) {
+	const (
+		tgLogFormatKey       = "TERRAGRUNT_LOG_FORMAT"
+		tgLogCustomFormatKey = "TERRAGRUNT_LOG_CUSTOM_FORMAT"
+	)
+
+	if options.EnvVars == nil {
+		options.EnvVars = map[string]string{}
+	}
+
+	_, inOpts := options.EnvVars[tgLogFormatKey]
+	if !inOpts {
+		_, inEnv := os.LookupEnv(tgLogFormatKey)
+		if !inEnv {
+			// key-value format for terragrunt logs to avoid colors and have plain form
+			// https://terragrunt.gruntwork.io/docs/reference/cli-options/#terragrunt-log-format
+			options.EnvVars[tgLogFormatKey] = "key-value"
+		}
+	}
+
+	_, inOpts = options.EnvVars[tgLogCustomFormatKey]
+	if !inOpts {
+		_, inEnv := os.LookupEnv(tgLogCustomFormatKey)
+		if !inEnv {
+			options.EnvVars[tgLogCustomFormatKey] = "%msg(color=disable)"
+		}
+	}
 }

@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -28,7 +28,7 @@ const testAccContentinspectionpolicylabel_basic = `
 resource "citrixadc_contentinspectionpolicylabel" "tf_contentinspectionpolicylabel" {
 	labelname = "my_ci_policylabel"
 	type      = "REQ"
-  }
+	}
   
 `
 const testAccContentinspectionpolicylabel_update = `
@@ -42,9 +42,9 @@ const testAccContentinspectionpolicylabel_update = `
 
 func TestAccContentinspectionpolicylabel_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckContentinspectionpolicylabelDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckContentinspectionpolicylabelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContentinspectionpolicylabel_basic,
@@ -85,8 +85,12 @@ func testAccCheckContentinspectionpolicylabelExist(n string, id *string) resourc
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("contentinspectionpolicylabel", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("contentinspectionpolicylabel", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -101,7 +105,11 @@ func testAccCheckContentinspectionpolicylabelExist(n string, id *string) resourc
 }
 
 func testAccCheckContentinspectionpolicylabelDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_contentinspectionpolicylabel" {
@@ -112,7 +120,7 @@ func testAccCheckContentinspectionpolicylabelDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("contentinspectionpolicylabel", rs.Primary.ID)
+		_, err := client.FindResource("contentinspectionpolicylabel", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("contentinspectionpolicylabel %s still exists", rs.Primary.ID)
 		}

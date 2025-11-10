@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcRnat_nsip_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRnat_nsip_bindingFunc,
-		Read:          readRnat_nsip_bindingFunc,
-		Delete:        deleteRnat_nsip_bindingFunc,
+		CreateContext: createRnat_nsip_bindingFunc,
+		ReadContext:   readRnat_nsip_bindingFunc,
+		DeleteContext: deleteRnat_nsip_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -34,7 +36,7 @@ func resourceCitrixAdcRnat_nsip_binding() *schema.Resource {
 	}
 }
 
-func createRnat_nsip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createRnat_nsip_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRnat_nsip_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name").(string)
@@ -47,20 +49,15 @@ func createRnat_nsip_bindingFunc(d *schema.ResourceData, meta interface{}) error
 
 	err := client.UpdateUnnamedResource("rnat_nsip_binding", &rnat_nsip_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readRnat_nsip_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rnat_nsip_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readRnat_nsip_bindingFunc(ctx, d, meta)
 }
 
-func readRnat_nsip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readRnat_nsip_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRnat_nsip_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -81,7 +78,7 @@ func readRnat_nsip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -119,7 +116,7 @@ func readRnat_nsip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteRnat_nsip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRnat_nsip_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRnat_nsip_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -134,7 +131,7 @@ func deleteRnat_nsip_bindingFunc(d *schema.ResourceData, meta interface{}) error
 
 	err := client.DeleteResourceWithArgs("rnat_nsip_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

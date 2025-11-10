@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcExtendedmemoryparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createExtendedmemoryparamFunc,
-		Read:          readExtendedmemoryparamFunc,
-		Update:        updateExtendedmemoryparamFunc,
-		Delete:        deleteExtendedmemoryparamFunc,
+		CreateContext: createExtendedmemoryparamFunc,
+		ReadContext:   readExtendedmemoryparamFunc,
+		UpdateContext: updateExtendedmemoryparamFunc,
+		DeleteContext: deleteExtendedmemoryparamFunc,
 		Schema: map[string]*schema.Schema{
 			"memlimit": {
 				Type:     schema.TypeInt,
@@ -28,31 +31,28 @@ func resourceCitrixAdcExtendedmemoryparam() *schema.Resource {
 	}
 }
 
-func createExtendedmemoryparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createExtendedmemoryparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createExtendedmemoryparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var extendedmemoryparamName string
 	extendedmemoryparamName = resource.PrefixedUniqueId("tf-extendedmemoryparam-")
-	extendedmemoryparam := basic.Extendedmemoryparam{
-		Memlimit: d.Get("memlimit").(int),
+	extendedmemoryparam := basic.Extendedmemoryparam{}
+
+	if raw := d.GetRawConfig().GetAttr("memlimit"); !raw.IsNull() {
+		extendedmemoryparam.Memlimit = intPtr(d.Get("memlimit").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Extendedmemoryparam.Type(), &extendedmemoryparam)
 	if err != nil {
-		return fmt.Errorf("Error updating extendedmemoryparam")
+		return diag.Errorf("Error updating extendedmemoryparam")
 	}
 
 	d.SetId(extendedmemoryparamName)
 
-	err = readExtendedmemoryparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this extendedmemoryparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readExtendedmemoryparamFunc(ctx, d, meta)
 }
 
-func readExtendedmemoryparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readExtendedmemoryparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readExtendedmemoryparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading extendedmemoryparam state")
@@ -62,13 +62,13 @@ func readExtendedmemoryparamFunc(d *schema.ResourceData, meta interface{}) error
 		d.SetId("")
 		return nil
 	}
-	d.Set("memlimit", data["memlimit"])
+	setToInt("memlimit", d, data["memlimit"])
 
 	return nil
 
 }
 
-func updateExtendedmemoryparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateExtendedmemoryparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateExtendedmemoryparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -76,20 +76,20 @@ func updateExtendedmemoryparamFunc(d *schema.ResourceData, meta interface{}) err
 	hasChange := false
 	if d.HasChange("memlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Memlimit has changed for extendedmemoryparam , starting update")
-		extendedmemoryparam.Memlimit = d.Get("memlimit").(int)
+		extendedmemoryparam.Memlimit = intPtr(d.Get("memlimit").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Extendedmemoryparam.Type(), &extendedmemoryparam)
 		if err != nil {
-			return fmt.Errorf("Error updating extendedmemoryparam %s", err.Error())
+			return diag.Errorf("Error updating extendedmemoryparam %s", err.Error())
 		}
 	}
-	return readExtendedmemoryparamFunc(d, meta)
+	return readExtendedmemoryparamFunc(ctx, d, meta)
 }
 
-func deleteExtendedmemoryparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteExtendedmemoryparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteExtendedmemoryparamFunc")
 
 	d.SetId("")

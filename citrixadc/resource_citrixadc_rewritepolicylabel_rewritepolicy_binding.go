@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcRewritepolicylabel_rewritepolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRewritepolicylabel_rewritepolicy_bindingFunc,
-		Read:          readRewritepolicylabel_rewritepolicy_bindingFunc,
-		Delete:        deleteRewritepolicylabel_rewritepolicy_bindingFunc,
+		CreateContext: createRewritepolicylabel_rewritepolicy_bindingFunc,
+		ReadContext:   readRewritepolicylabel_rewritepolicy_bindingFunc,
+		DeleteContext: deleteRewritepolicylabel_rewritepolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"gotopriorityexpression": {
@@ -64,7 +66,7 @@ func resourceCitrixAdcRewritepolicylabel_rewritepolicy_binding() *schema.Resourc
 	}
 }
 
-func createRewritepolicylabel_rewritepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createRewritepolicylabel_rewritepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRewritepolicylabel_rewritepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	labelname := d.Get("labelname").(string)
@@ -77,25 +79,23 @@ func createRewritepolicylabel_rewritepolicy_bindingFunc(d *schema.ResourceData, 
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		rewritepolicylabel_rewritepolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Rewritepolicylabel_rewritepolicy_binding.Type(), labelname, &rewritepolicylabel_rewritepolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readRewritepolicylabel_rewritepolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rewritepolicylabel_rewritepolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readRewritepolicylabel_rewritepolicy_bindingFunc(ctx, d, meta)
 }
 
-func readRewritepolicylabel_rewritepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readRewritepolicylabel_rewritepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRewritepolicylabel_rewritepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -116,7 +116,7 @@ func readRewritepolicylabel_rewritepolicy_bindingFunc(d *schema.ResourceData, me
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -159,7 +159,7 @@ func readRewritepolicylabel_rewritepolicy_bindingFunc(d *schema.ResourceData, me
 
 }
 
-func deleteRewritepolicylabel_rewritepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRewritepolicylabel_rewritepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRewritepolicylabel_rewritepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -177,7 +177,7 @@ func deleteRewritepolicylabel_rewritepolicy_bindingFunc(d *schema.ResourceData, 
 	}
 	err := client.DeleteResourceWithArgsMap(service.Rewritepolicylabel_rewritepolicy_binding.Type(), name, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

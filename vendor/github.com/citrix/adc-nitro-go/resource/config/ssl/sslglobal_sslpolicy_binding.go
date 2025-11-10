@@ -31,7 +31,7 @@ type Sslglobalsslpolicybinding struct {
 	/**
 	* The priority of the policy binding.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	Globalbindtype string `json:"globalbindtype,omitempty"`
 	/**
 	* Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:

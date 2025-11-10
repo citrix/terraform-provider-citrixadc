@@ -1,24 +1,25 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppflowpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppflowpolicyFunc,
-		Read:          readAppflowpolicyFunc,
-		Update:        updateAppflowpolicyFunc,
-		Delete:        deleteAppflowpolicyFunc,
+		CreateContext: createAppflowpolicyFunc,
+		ReadContext:   readAppflowpolicyFunc,
+		UpdateContext: updateAppflowpolicyFunc,
+		DeleteContext: deleteAppflowpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -50,7 +51,7 @@ func resourceCitrixAdcAppflowpolicy() *schema.Resource {
 	}
 }
 
-func createAppflowpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppflowpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowpolicyName := d.Get("name").(string)
@@ -65,20 +66,15 @@ func createAppflowpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Appflowpolicy.Type(), appflowpolicyName, &appflowpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appflowpolicyName)
 
-	err = readAppflowpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appflowpolicy but we can't read it ?? %s", appflowpolicyName)
-		return nil
-	}
-	return nil
+	return readAppflowpolicyFunc(ctx, d, meta)
 }
 
-func readAppflowpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppflowpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppflowpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowpolicyName := d.Id()
@@ -99,7 +95,7 @@ func readAppflowpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAppflowpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppflowpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppflowpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowpolicyName := d.Get("name").(string)
@@ -132,19 +128,19 @@ func updateAppflowpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Appflowpolicy.Type(), appflowpolicyName, &appflowpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating appflowpolicy %s", appflowpolicyName)
+			return diag.Errorf("Error updating appflowpolicy %s", appflowpolicyName)
 		}
 	}
-	return readAppflowpolicyFunc(d, meta)
+	return readAppflowpolicyFunc(ctx, d, meta)
 }
 
-func deleteAppflowpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppflowpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppflowpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowpolicyName := d.Id()
 	err := client.DeleteResource(service.Appflowpolicy.Type(), appflowpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

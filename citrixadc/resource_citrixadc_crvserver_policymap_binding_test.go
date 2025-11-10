@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -32,19 +32,19 @@ resource "citrixadc_crvserver" "crvserver" {
 	ipv46       = "10.102.80.55"
 	port        = 8090
 	cachetype   = "REVERSE"
-  }
+	}
   resource "citrixadc_policymap" "tf_policymap" {
 	mappolicyname = "ia_mappol123"
 	sd            = "amazon.com"
 	td            = "apple.com"
-  }
+	}
   resource "citrixadc_lbvserver" "foo_lbvserver" {
 	name        = "test_lbvserver"
 	servicetype = "HTTP"
 	ipv46       = "192.122.3.31"
 	port        = 8000
 	comment     = "hello"
-  }
+	}
   resource "citrixadc_service" "tf_service" {
 	lbvserver   = citrixadc_lbvserver.foo_lbvserver.name
 	name        = "tf_service"
@@ -52,7 +52,7 @@ resource "citrixadc_crvserver" "crvserver" {
 	ip          = "10.33.4.5"
 	servicetype = "HTTP"
 	cachetype   = "TRANSPARENT"
-  }
+	}
   resource "citrixadc_crvserver_policymap_binding" "crvserver_policymap_binding" {
 	name          = citrixadc_crvserver.crvserver.name
 	policyname    = citrixadc_policymap.tf_policymap.mappolicyname
@@ -60,7 +60,7 @@ resource "citrixadc_crvserver" "crvserver" {
 	depends_on = [
 	  citrixadc_service.tf_service
 	]
-  }
+	}
   
 `
 
@@ -72,19 +72,19 @@ const testAccCrvserver_policymap_binding_basic_step2 = `
 		ipv46       = "10.102.80.55"
 		port        = 8090
 		cachetype   = "REVERSE"
-	  }
+	}
 	  resource "citrixadc_policymap" "tf_policymap" {
 		mappolicyname = "ia_mappol123"
 		sd            = "amazon.com"
 		td            = "apple.com"
-	  }
+	}
 	  resource "citrixadc_lbvserver" "foo_lbvserver" {
 		name        = "test_lbvserver"
 		servicetype = "HTTP"
 		ipv46       = "192.122.3.31"
 		port        = 8000
 		comment     = "hello"
-	  }
+	}
 	  resource "citrixadc_service" "tf_service" {
 		lbvserver   = citrixadc_lbvserver.foo_lbvserver.name
 		name        = "tf_service"
@@ -92,14 +92,14 @@ const testAccCrvserver_policymap_binding_basic_step2 = `
 		ip          = "10.33.4.5"
 		servicetype = "HTTP"
 		cachetype   = "TRANSPARENT"
-	  }
+	}
 `
 
 func TestAccCrvserver_policymap_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCrvserver_policymap_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckCrvserver_policymap_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrvserver_policymap_binding_basic,
@@ -136,7 +136,11 @@ func testAccCheckCrvserver_policymap_bindingExist(n string, id *string) resource
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -176,7 +180,11 @@ func testAccCheckCrvserver_policymap_bindingExist(n string, id *string) resource
 
 func testAccCheckCrvserver_policymap_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -216,7 +224,11 @@ func testAccCheckCrvserver_policymap_bindingNotExist(n string, id string) resour
 }
 
 func testAccCheckCrvserver_policymap_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_crvserver_policymap_binding" {
@@ -227,7 +239,7 @@ func testAccCheckCrvserver_policymap_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Crvserver_policymap_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Crvserver_policymap_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("crvserver_policymap_binding %s still exists", rs.Primary.ID)
 		}

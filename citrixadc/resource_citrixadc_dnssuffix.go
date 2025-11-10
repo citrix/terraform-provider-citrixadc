@@ -1,21 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcDnssuffix() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnssuffixFunc,
-		Read:          readDnssuffixFunc,
-		Delete:        deleteDnssuffixFunc,
+		CreateContext: createDnssuffixFunc,
+		ReadContext:   readDnssuffixFunc,
+		DeleteContext: deleteDnssuffixFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"dnssuffix": {
@@ -27,7 +29,7 @@ func resourceCitrixAdcDnssuffix() *schema.Resource {
 	}
 }
 
-func createDnssuffixFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnssuffixFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnssuffixFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssuffixName := d.Get("dnssuffix").(string)
@@ -37,20 +39,15 @@ func createDnssuffixFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnssuffix.Type(), dnssuffixName, &dnssuffix)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnssuffixName)
 
-	err = readDnssuffixFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnssuffix but we can't read it ?? %s", dnssuffixName)
-		return nil
-	}
-	return nil
+	return readDnssuffixFunc(ctx, d, meta)
 }
 
-func readDnssuffixFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnssuffixFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnssuffixFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssuffixName := d.Id()
@@ -67,13 +64,13 @@ func readDnssuffixFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteDnssuffixFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnssuffixFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnssuffixFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssuffixName := d.Id()
 	err := client.DeleteResource(service.Dnssuffix.Type(), dnssuffixName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

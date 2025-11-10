@@ -23,7 +23,7 @@ type Vxlanvlanmapvxlanbinding struct {
 	/**
 	* The VXLAN assigned to the vlan inside the cloud.
 	*/
-	Vxlan int `json:"vxlan,omitempty"`
+	Vxlan *int `json:"vxlan,omitempty"`
 	/**
 	* The vlan id or the range of vlan ids in the on-premise network.
 	*/

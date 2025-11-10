@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIpv6() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIpv6Func,
-		Read:          readIpv6Func,
-		Update:        updateIpv6Func,
-		Delete:        deleteIpv6Func,
+		CreateContext: createIpv6Func,
+		ReadContext:   readIpv6Func,
+		UpdateContext: updateIpv6Func,
+		DeleteContext: deleteIpv6Func,
 		Schema: map[string]*schema.Schema{
 			"dodad": {
 				Type:     schema.TypeString,
@@ -62,7 +65,7 @@ func resourceCitrixAdcIpv6() *schema.Resource {
 	}
 }
 
-func createIpv6Func(d *schema.ResourceData, meta interface{}) error {
+func createIpv6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIpv6Func")
 	client := meta.(*NetScalerNitroClient).client
 	ipv6Name := resource.PrefixedUniqueId("tf-ipv6-")
@@ -96,20 +99,15 @@ func createIpv6Func(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Ipv6.Type(), &ipv6)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ipv6Name)
 
-	err = readIpv6Func(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ipv6 but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readIpv6Func(ctx, d, meta)
 }
 
-func readIpv6Func(d *schema.ResourceData, meta interface{}) error {
+func readIpv6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIpv6Func")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading ipv6 state")
@@ -119,21 +117,21 @@ func readIpv6Func(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("dodad", data["dodad"])
 	d.Set("natprefix", data["natprefix"])
-	d.Set("ndbasereachtime", data["ndbasereachtime"])
-	d.Set("ndretransmissiontime", data["ndretransmissiontime"])
+	setToInt("ndbasereachtime", d, data["ndbasereachtime"])
+	setToInt("ndretransmissiontime", d, data["ndretransmissiontime"])
 	d.Set("ralearning", data["ralearning"])
 	d.Set("routerredirection", data["routerredirection"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("usipnatprefix", data["usipnatprefix"])
 
 	return nil
 
 }
 
-func updateIpv6Func(d *schema.ResourceData, meta interface{}) error {
+func updateIpv6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIpv6Func")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -152,12 +150,12 @@ func updateIpv6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ndbasereachtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ndbasereachtime has changed for ipv6, starting update")
-		ipv6["ndbasereachtime"] = d.Get("ndbasereachtime").(int)
+		ipv6["ndbasereachtime"] = intPtr(d.Get("ndbasereachtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("ndretransmissiontime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ndretransmissiontime has changed for ipv6, starting update")
-		ipv6["ndretransmissiontime"] = d.Get("ndretransmissiontime").(int)
+		ipv6["ndretransmissiontime"] = intPtr(d.Get("ndretransmissiontime").(int))
 		hasChange = true
 	}
 	if d.HasChange("ralearning") {
@@ -172,7 +170,7 @@ func updateIpv6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for ipv6, starting update")
-		ipv6["td"] = d.Get("td").(int)
+		ipv6["td"] = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("usipnatprefix") {
@@ -184,13 +182,13 @@ func updateIpv6Func(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Ipv6.Type(), &ipv6)
 		if err != nil {
-			return fmt.Errorf("Error updating ipv6")
+			return diag.Errorf("Error updating ipv6")
 		}
 	}
-	return readIpv6Func(d, meta)
+	return readIpv6Func(ctx, d, meta)
 }
 
-func deleteIpv6Func(d *schema.ResourceData, meta interface{}) error {
+func deleteIpv6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIpv6Func")
 	// ipv6 does not support DELETE operation
 	d.SetId("")

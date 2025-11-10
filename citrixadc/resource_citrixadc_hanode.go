@@ -1,27 +1,36 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ha"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcHanode() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createHanodeFunc,
-		Read:          readHanodeFunc,
-		Update:        updateHanodeFunc,
-		Delete:        deleteHanodeFunc,
+		CreateContext: createHanodeFunc,
+		ReadContext:   readHanodeFunc,
+		UpdateContext: updateHanodeFunc,
+		DeleteContext: deleteHanodeFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"rpcnodepassword": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"ipaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -91,25 +100,39 @@ func resourceCitrixAdcHanode() *schema.Resource {
 	}
 }
 
-func createHanodeFunc(d *schema.ResourceData, meta interface{}) error {
+func createHanodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createHanodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	hanodeName := strconv.Itoa(d.Get("hanode_id").(int))
 
 	hanode := ha.Hanode{
-		Id:                   d.Get("hanode_id").(int),
-		Deadinterval:         d.Get("deadinterval").(int),
 		Inc:                  d.Get("inc").(string),
 		Failsafe:             d.Get("failsafe").(string),
 		Haprop:               d.Get("haprop").(string),
 		Hastatus:             d.Get("hastatus").(string),
 		Hasync:               d.Get("hasync").(string),
-		Hellointerval:        d.Get("hellointerval").(int),
-		Maxflips:             d.Get("maxflips").(int),
-		Maxfliptime:          d.Get("maxfliptime").(int),
 		Syncstatusstrictmode: d.Get("syncstatusstrictmode").(string),
-		Syncvlan:             d.Get("syncvlan").(int),
 		Ipaddress:            d.Get("ipaddress").(string),
+		Rpcnodepassword:      d.Get("rpcnodepassword").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("hanode_id"); !raw.IsNull() {
+		hanode.Id = intPtr(d.Get("hanode_id").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("deadinterval"); !raw.IsNull() {
+		hanode.Deadinterval = intPtr(d.Get("deadinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hellointerval"); !raw.IsNull() {
+		hanode.Hellointerval = intPtr(d.Get("hellointerval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxflips"); !raw.IsNull() {
+		hanode.Maxflips = intPtr(d.Get("maxflips").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxfliptime"); !raw.IsNull() {
+		hanode.Maxfliptime = intPtr(d.Get("maxfliptime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("syncvlan"); !raw.IsNull() {
+		hanode.Syncvlan = intPtr(d.Get("syncvlan").(int))
 	}
 	var err error
 	if d.Get("hanode_id").(int) != 0 {
@@ -118,20 +141,15 @@ func createHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 		err = client.UpdateUnnamedResource(service.Hanode.Type(), &hanode)
 	}
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(hanodeName)
 
-	err = readHanodeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this hanode but we can't read it ?? %s", hanodeName)
-		return nil
-	}
-	return nil
+	return readHanodeFunc(ctx, d, meta)
 }
 
-func readHanodeFunc(d *schema.ResourceData, meta interface{}) error {
+func readHanodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readHanodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	hanodeName := d.Id()
@@ -146,36 +164,39 @@ func readHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 	// FIXME: Revisit once the API is fixed
 	if data["hastatus"] == "UP" {
 		d.Set("hastatus", "ENABLED")
+		d.Set("rpcnodepassword", data["rpcnodepassword"])
 	}
-	d.Set("hanode_id", data["id"])
-	d.Set("deadinterval", data["deadinterval"])
+	setToInt("hanode_id", d, data["id"])
+	setToInt("deadinterval", d, data["deadinterval"])
 	d.Set("failsafe", data["failsafe"])
 	d.Set("haprop", data["haprop"])
 	// d.Set("hastatus", data["hastatus"]) // We recieve "UP" as value from the NetScaler, if the user has given "ENABLED"
 	d.Set("hasync", data["hasync"])
-	d.Set("hellointerval", data["hellointerval"])
+	setToInt("hellointerval", d, data["hellointerval"])
 	d.Set("inc", data["inc"])
-	d.Set("maxflips", data["maxflips"])
-	d.Set("maxfliptime", data["maxfliptime"])
+	setToInt("maxflips", d, data["maxflips"])
+	setToInt("maxfliptime", d, data["maxfliptime"])
 	d.Set("syncstatusstrictmode", data["syncstatusstrictmode"])
-	d.Set("syncvlan", data["syncvlan"])
+	setToInt("syncvlan", d, data["syncvlan"])
 
 	return nil
 
 }
 
-func updateHanodeFunc(d *schema.ResourceData, meta interface{}) error {
+func updateHanodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateHanodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	hanodeName := d.Id()
 
-	hanode := ha.Hanode{
-		Id: d.Get("hanode_id").(int),
+	hanode := ha.Hanode{}
+
+	if raw := d.GetRawConfig().GetAttr("hanode_id"); !raw.IsNull() {
+		hanode.Id = intPtr(d.Get("hanode_id").(int))
 	}
 	hasChange := false
 	if d.HasChange("deadinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Deadinterval has changed for hanode %s, starting update", hanodeName)
-		hanode.Deadinterval = d.Get("deadinterval").(int)
+		hanode.Deadinterval = intPtr(d.Get("deadinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("failsafe") {
@@ -200,7 +221,7 @@ func updateHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("hellointerval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Hellointerval has changed for hanode %s, starting update", hanodeName)
-		hanode.Hellointerval = d.Get("hellointerval").(int)
+		hanode.Hellointerval = intPtr(d.Get("hellointerval").(int))
 		hasChange = true
 	}
 	if d.HasChange("inc") {
@@ -210,12 +231,12 @@ func updateHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxflips") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxflips has changed for hanode %s, starting update", hanodeName)
-		hanode.Maxflips = d.Get("maxflips").(int)
+		hanode.Maxflips = intPtr(d.Get("maxflips").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxfliptime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxfliptime has changed for hanode %s, starting update", hanodeName)
-		hanode.Maxfliptime = d.Get("maxfliptime").(int)
+		hanode.Maxfliptime = intPtr(d.Get("maxfliptime").(int))
 		hasChange = true
 	}
 	if d.HasChange("syncstatusstrictmode") {
@@ -225,26 +246,26 @@ func updateHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("syncvlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Syncvlan has changed for hanode %s, starting update", hanodeName)
-		hanode.Syncvlan = d.Get("syncvlan").(int)
+		hanode.Syncvlan = intPtr(d.Get("syncvlan").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Hanode.Type(), &hanode)
 		if err != nil {
-			return fmt.Errorf("Error updating hanode %s", hanodeName)
+			return diag.Errorf("Error updating hanode %s", hanodeName)
 		}
 	}
-	return readHanodeFunc(d, meta)
+	return readHanodeFunc(ctx, d, meta)
 }
 
-func deleteHanodeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteHanodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteHanodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	hanodeName := d.Id()
 	err := client.DeleteResource(service.Hanode.Type(), hanodeName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

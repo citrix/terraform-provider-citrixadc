@@ -1,25 +1,29 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVlan_nsip6_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVlan_nsip6_bindingFunc,
-		Read:          readVlan_nsip6_bindingFunc,
-		Delete:        deleteVlan_nsip6_bindingFunc,
+		CreateContext: createVlan_nsip6_bindingFunc,
+		ReadContext:   readVlan_nsip6_bindingFunc,
+		DeleteContext: deleteVlan_nsip6_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"vlanid": {
@@ -54,36 +58,36 @@ func resourceCitrixAdcVlan_nsip6_binding() *schema.Resource {
 	}
 }
 
-func createVlan_nsip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVlan_nsip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVlan_nsip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vlanid := strconv.Itoa(d.Get("vlanid").(int))
 	ipaddress := d.Get("ipaddress").(string)
 	bindingId := fmt.Sprintf("%s,%s", vlanid, ipaddress)
 	vlan_nsip6_binding := network.Vlannsip6binding{
-		Id:         d.Get("vlanid").(int),
 		Ipaddress:  d.Get("ipaddress").(string),
 		Netmask:    d.Get("netmask").(string),
 		Ownergroup: d.Get("ownergroup").(string),
-		Td:         d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlanid"); !raw.IsNull() {
+		vlan_nsip6_binding.Id = intPtr(d.Get("vlanid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		vlan_nsip6_binding.Td = intPtr(d.Get("td").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vlan_nsip6_binding.Type(), &vlan_nsip6_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readVlan_nsip6_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vlan_nsip6_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readVlan_nsip6_bindingFunc(ctx, d, meta)
 }
 
-func readVlan_nsip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVlan_nsip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVlan_nsip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -104,7 +108,7 @@ func readVlan_nsip6_bindingFunc(d *schema.ResourceData, meta interface{}) error 
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -135,17 +139,17 @@ func readVlan_nsip6_bindingFunc(d *schema.ResourceData, meta interface{}) error 
 
 	data := dataArr[foundIndex]
 
-	d.Set("id", data["id"])
+	setToInt("vlanid", d, data["id"])
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("netmask", data["netmask"])
 	d.Set("ownergroup", data["ownergroup"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 
 	return nil
 
 }
 
-func deleteVlan_nsip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVlan_nsip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVlan_nsip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -172,7 +176,7 @@ func deleteVlan_nsip6_bindingFunc(d *schema.ResourceData, meta interface{}) erro
 
 	err := client.DeleteResourceWithArgs(service.Vlan_nsip6_binding.Type(), vrid, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

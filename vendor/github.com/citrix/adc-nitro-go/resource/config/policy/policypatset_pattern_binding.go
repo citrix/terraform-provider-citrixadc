@@ -28,7 +28,7 @@ type Policypatsetpatternbinding struct {
 	/**
 	* The index of the string associated with the patset.
 	*/
-	Index int `json:"index,omitempty"`
+	Index *int `json:"index,omitempty"`
 	/**
 	* Character set associated with the characters in the string.
 		Note: UTF-8 characters can be entered directly (if the UI supports it) or can be encoded as a sequence of hexadecimal bytes '\xNN'. For example, the UTF-8 character 'ue' can be encoded as '\xC3\xBC'.

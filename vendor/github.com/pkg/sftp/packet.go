@@ -56,6 +56,11 @@ func marshalFileInfo(b []byte, fi os.FileInfo) []byte {
 	flags, fileStat := fileStatFromInfo(fi)
 
 	b = marshalUint32(b, flags)
+
+	return marshalFileStat(b, flags, fileStat)
+}
+
+func marshalFileStat(b []byte, flags uint32, fileStat *FileStat) []byte {
 	if flags&sshFileXferAttrSize != 0 {
 		b = marshalUint64(b, fileStat.Size)
 	}
@@ -71,6 +76,15 @@ func marshalFileInfo(b []byte, fi os.FileInfo) []byte {
 		b = marshalUint32(b, fileStat.Mtime)
 	}
 
+	if flags&sshFileXferAttrExtended != 0 {
+		b = marshalUint32(b, uint32(len(fileStat.Extended)))
+
+		for _, attr := range fileStat.Extended {
+			b = marshalString(b, attr.ExtType)
+			b = marshalString(b, attr.ExtData)
+		}
+	}
+
 	return b
 }
 
@@ -82,10 +96,9 @@ func marshalStatus(b []byte, err StatusError) []byte {
 }
 
 func marshal(b []byte, v interface{}) []byte {
-	if v == nil {
-		return b
-	}
 	switch v := v.(type) {
+	case nil:
+		return b
 	case uint8:
 		return append(b, v)
 	case uint32:
@@ -94,6 +107,8 @@ func marshal(b []byte, v interface{}) []byte {
 		return marshalUint64(b, v)
 	case string:
 		return marshalString(b, v)
+	case []byte:
+		return append(b, v...)
 	case os.FileInfo:
 		return marshalFileInfo(b, v)
 	default:
@@ -159,38 +174,69 @@ func unmarshalStringSafe(b []byte) (string, []byte, error) {
 	return string(b[:n]), b[n:], nil
 }
 
-func unmarshalAttrs(b []byte) (*FileStat, []byte) {
-	flags, b := unmarshalUint32(b)
+func unmarshalAttrs(b []byte) (*FileStat, []byte, error) {
+	flags, b, err := unmarshalUint32Safe(b)
+	if err != nil {
+		return nil, b, err
+	}
 	return unmarshalFileStat(flags, b)
 }
 
-func unmarshalFileStat(flags uint32, b []byte) (*FileStat, []byte) {
+func unmarshalFileStat(flags uint32, b []byte) (*FileStat, []byte, error) {
 	var fs FileStat
+	var err error
+
 	if flags&sshFileXferAttrSize == sshFileXferAttrSize {
-		fs.Size, b, _ = unmarshalUint64Safe(b)
+		fs.Size, b, err = unmarshalUint64Safe(b)
+		if err != nil {
+			return nil, b, err
+		}
 	}
 	if flags&sshFileXferAttrUIDGID == sshFileXferAttrUIDGID {
-		fs.UID, b, _ = unmarshalUint32Safe(b)
-	}
-	if flags&sshFileXferAttrUIDGID == sshFileXferAttrUIDGID {
-		fs.GID, b, _ = unmarshalUint32Safe(b)
+		fs.UID, b, err = unmarshalUint32Safe(b)
+		if err != nil {
+			return nil, b, err
+		}
+		fs.GID, b, err = unmarshalUint32Safe(b)
+		if err != nil {
+			return nil, b, err
+		}
 	}
 	if flags&sshFileXferAttrPermissions == sshFileXferAttrPermissions {
-		fs.Mode, b, _ = unmarshalUint32Safe(b)
+		fs.Mode, b, err = unmarshalUint32Safe(b)
+		if err != nil {
+			return nil, b, err
+		}
 	}
 	if flags&sshFileXferAttrACmodTime == sshFileXferAttrACmodTime {
-		fs.Atime, b, _ = unmarshalUint32Safe(b)
-		fs.Mtime, b, _ = unmarshalUint32Safe(b)
+		fs.Atime, b, err = unmarshalUint32Safe(b)
+		if err != nil {
+			return nil, b, err
+		}
+		fs.Mtime, b, err = unmarshalUint32Safe(b)
+		if err != nil {
+			return nil, b, err
+		}
 	}
 	if flags&sshFileXferAttrExtended == sshFileXferAttrExtended {
 		var count uint32
-		count, b, _ = unmarshalUint32Safe(b)
+		count, b, err = unmarshalUint32Safe(b)
+		if err != nil {
+			return nil, b, err
+		}
+
 		ext := make([]StatExtended, count)
 		for i := uint32(0); i < count; i++ {
 			var typ string
 			var data string
-			typ, b, _ = unmarshalStringSafe(b)
-			data, b, _ = unmarshalStringSafe(b)
+			typ, b, err = unmarshalStringSafe(b)
+			if err != nil {
+				return nil, b, err
+			}
+			data, b, err = unmarshalStringSafe(b)
+			if err != nil {
+				return nil, b, err
+			}
 			ext[i] = StatExtended{
 				ExtType: typ,
 				ExtData: data,
@@ -198,7 +244,7 @@ func unmarshalFileStat(flags uint32, b []byte) (*FileStat, []byte) {
 		}
 		fs.Extended = ext
 	}
-	return &fs, b
+	return &fs, b, nil
 }
 
 func unmarshalStatus(id uint32, data []byte) error {
@@ -281,6 +327,11 @@ func recvPacket(r io.Reader, alloc *allocator, orderID uint32) (uint8, []byte, e
 		b = make([]byte, length)
 	}
 	if _, err := io.ReadFull(r, b[:length]); err != nil {
+		// ReadFull only returns EOF if it has read no bytes.
+		// In this case, that means a partial packet, and thus unexpected.
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
 		debug("recv packet %d bytes: err %v", length, err)
 		return 0, nil, err
 	}
@@ -522,7 +573,12 @@ func (p *sshFxpRmdirPacket) UnmarshalBinary(b []byte) error {
 }
 
 type sshFxpSymlinkPacket struct {
-	ID         uint32
+	ID uint32
+
+	// The order of the arguments to the SSH_FXP_SYMLINK method was inadvertently reversed.
+	// Unfortunately, the reversal was not noticed until the server was widely deployed.
+	// Covered in Section 4.1 of https://github.com/openssh/openssh-portable/blob/master/PROTOCOL
+
 	Targetpath string
 	Linkpath   string
 }
@@ -662,12 +718,13 @@ type sshFxpOpenPacket struct {
 	ID     uint32
 	Path   string
 	Pflags uint32
-	Flags  uint32 // ignored
+	Flags  uint32
+	Attrs  interface{}
 }
 
 func (p *sshFxpOpenPacket) id() uint32 { return p.ID }
 
-func (p *sshFxpOpenPacket) MarshalBinary() ([]byte, error) {
+func (p *sshFxpOpenPacket) marshalPacket() ([]byte, []byte, error) {
 	l := 4 + 1 + 4 + // uint32(length) + byte(type) + uint32(id)
 		4 + len(p.Path) +
 		4 + 4
@@ -679,7 +736,22 @@ func (p *sshFxpOpenPacket) MarshalBinary() ([]byte, error) {
 	b = marshalUint32(b, p.Pflags)
 	b = marshalUint32(b, p.Flags)
 
-	return b, nil
+	switch attrs := p.Attrs.(type) {
+	case []byte:
+		return b, attrs, nil // may as well short-ciruit this case.
+	case os.FileInfo:
+		_, fs := fileStatFromInfo(attrs) // we throw away the flags, and override with those in packet.
+		return b, marshalFileStat(nil, p.Flags, fs), nil
+	case *FileStat:
+		return b, marshalFileStat(nil, p.Flags, attrs), nil
+	}
+
+	return b, marshal(nil, p.Attrs), nil
+}
+
+func (p *sshFxpOpenPacket) MarshalBinary() ([]byte, error) {
+	header, payload, err := p.marshalPacket()
+	return append(header, payload...), err
 }
 
 func (p *sshFxpOpenPacket) UnmarshalBinary(b []byte) error {
@@ -690,10 +762,23 @@ func (p *sshFxpOpenPacket) UnmarshalBinary(b []byte) error {
 		return err
 	} else if p.Pflags, b, err = unmarshalUint32Safe(b); err != nil {
 		return err
-	} else if p.Flags, _, err = unmarshalUint32Safe(b); err != nil {
+	} else if p.Flags, b, err = unmarshalUint32Safe(b); err != nil {
 		return err
 	}
+	p.Attrs = b
 	return nil
+}
+
+func (p *sshFxpOpenPacket) unmarshalFileStat(flags uint32) (*FileStat, error) {
+	switch attrs := p.Attrs.(type) {
+	case *FileStat:
+		return attrs, nil
+	case []byte:
+		fs, _, err := unmarshalFileStat(flags, attrs)
+		return fs, err
+	default:
+		return nil, fmt.Errorf("invalid type in unmarshalFileStat: %T", attrs)
+	}
 }
 
 type sshFxpReadPacket struct {
@@ -738,7 +823,7 @@ func (p *sshFxpReadPacket) UnmarshalBinary(b []byte) error {
 // So, we need: uint32(length) + byte(type) + uint32(id) + uint32(data_length)
 const dataHeaderLen = 4 + 1 + 4 + 4
 
-func (p *sshFxpReadPacket) getDataSlice(alloc *allocator, orderID uint32) []byte {
+func (p *sshFxpReadPacket) getDataSlice(alloc *allocator, orderID uint32, maxTxPacket uint32) []byte {
 	dataLen := p.Len
 	if dataLen > maxTxPacket {
 		dataLen = maxTxPacket
@@ -924,9 +1009,17 @@ func (p *sshFxpSetstatPacket) marshalPacket() ([]byte, []byte, error) {
 	b = marshalString(b, p.Path)
 	b = marshalUint32(b, p.Flags)
 
-	payload := marshal(nil, p.Attrs)
+	switch attrs := p.Attrs.(type) {
+	case []byte:
+		return b, attrs, nil // may as well short-ciruit this case.
+	case os.FileInfo:
+		_, fs := fileStatFromInfo(attrs) // we throw away the flags, and override with those in packet.
+		return b, marshalFileStat(nil, p.Flags, fs), nil
+	case *FileStat:
+		return b, marshalFileStat(nil, p.Flags, attrs), nil
+	}
 
-	return b, payload, nil
+	return b, marshal(nil, p.Attrs), nil
 }
 
 func (p *sshFxpSetstatPacket) MarshalBinary() ([]byte, error) {
@@ -945,9 +1038,17 @@ func (p *sshFxpFsetstatPacket) marshalPacket() ([]byte, []byte, error) {
 	b = marshalString(b, p.Handle)
 	b = marshalUint32(b, p.Flags)
 
-	payload := marshal(nil, p.Attrs)
+	switch attrs := p.Attrs.(type) {
+	case []byte:
+		return b, attrs, nil // may as well short-ciruit this case.
+	case os.FileInfo:
+		_, fs := fileStatFromInfo(attrs) // we throw away the flags, and override with those in packet.
+		return b, marshalFileStat(nil, p.Flags, fs), nil
+	case *FileStat:
+		return b, marshalFileStat(nil, p.Flags, attrs), nil
+	}
 
-	return b, payload, nil
+	return b, marshal(nil, p.Attrs), nil
 }
 
 func (p *sshFxpFsetstatPacket) MarshalBinary() ([]byte, error) {
@@ -968,6 +1069,18 @@ func (p *sshFxpSetstatPacket) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
+func (p *sshFxpSetstatPacket) unmarshalFileStat(flags uint32) (*FileStat, error) {
+	switch attrs := p.Attrs.(type) {
+	case *FileStat:
+		return attrs, nil
+	case []byte:
+		fs, _, err := unmarshalFileStat(flags, attrs)
+		return fs, err
+	default:
+		return nil, fmt.Errorf("invalid type in unmarshalFileStat: %T", attrs)
+	}
+}
+
 func (p *sshFxpFsetstatPacket) UnmarshalBinary(b []byte) error {
 	var err error
 	if p.ID, b, err = unmarshalUint32Safe(b); err != nil {
@@ -979,6 +1092,18 @@ func (p *sshFxpFsetstatPacket) UnmarshalBinary(b []byte) error {
 	}
 	p.Attrs = b
 	return nil
+}
+
+func (p *sshFxpFsetstatPacket) unmarshalFileStat(flags uint32) (*FileStat, error) {
+	switch attrs := p.Attrs.(type) {
+	case *FileStat:
+		return attrs, nil
+	case []byte:
+		fs, _, err := unmarshalFileStat(flags, attrs)
+		return fs, err
+	default:
+		return nil, fmt.Errorf("invalid type in unmarshalFileStat: %T", attrs)
+	}
 }
 
 type sshFxpHandlePacket struct {
@@ -1242,7 +1367,7 @@ func (p *sshFxpExtendedPacketPosixRename) UnmarshalBinary(b []byte) error {
 }
 
 func (p *sshFxpExtendedPacketPosixRename) respond(s *Server) responsePacket {
-	err := os.Rename(toLocalPath(p.Oldpath), toLocalPath(p.Newpath))
+	err := os.Rename(s.toLocalPath(p.Oldpath), s.toLocalPath(p.Newpath))
 	return statusFromError(p.ID, err)
 }
 
@@ -1271,6 +1396,6 @@ func (p *sshFxpExtendedPacketHardlink) UnmarshalBinary(b []byte) error {
 }
 
 func (p *sshFxpExtendedPacketHardlink) respond(s *Server) responsePacket {
-	err := os.Link(toLocalPath(p.Oldpath), toLocalPath(p.Newpath))
+	err := os.Link(s.toLocalPath(p.Oldpath), s.toLocalPath(p.Newpath))
 	return statusFromError(p.ID, err)
 }

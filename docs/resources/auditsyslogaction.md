@@ -56,6 +56,7 @@ resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 * `httpauthtoken` - (Optional) Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter.
 * `httpendpointurl` - (Optional) The URL at which to upload the logs messages on the endpoint.
 * `streamanalytics` - (Optional) Export log stream analytics statistics to syslog server.
+* `protocolviolations` - (Optional) Log protocol violations
 
 ## Attributes
 

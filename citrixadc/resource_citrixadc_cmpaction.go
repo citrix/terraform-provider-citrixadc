@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cmp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCmpaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCmpactionFunc,
-		Read:          readCmpactionFunc,
-		Update:        updateCmpactionFunc,
-		Delete:        deleteCmpactionFunc,
+		CreateContext: createCmpactionFunc,
+		ReadContext:   readCmpactionFunc,
+		UpdateContext: updateCmpactionFunc,
+		DeleteContext: deleteCmpactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -49,7 +52,7 @@ func resourceCitrixAdcCmpaction() *schema.Resource {
 	}
 }
 
-func createCmpactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createCmpactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCmpactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmpactionName := d.Get("name").(string)
@@ -63,20 +66,15 @@ func createCmpactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Cmpaction.Type(), cmpactionName, &cmpaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(cmpactionName)
 
-	err = readCmpactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cmpaction but we can't read it ?? %s", cmpactionName)
-		return nil
-	}
-	return nil
+	return readCmpactionFunc(ctx, d, meta)
 }
 
-func readCmpactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readCmpactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCmpactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmpactionName := d.Id()
@@ -97,7 +95,7 @@ func readCmpactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateCmpactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCmpactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCmpactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmpactionName := d.Get("name").(string)
@@ -125,19 +123,19 @@ func updateCmpactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Cmpaction.Type(), &cmpaction)
 		if err != nil {
-			return fmt.Errorf("Error updating cmpaction %s", cmpactionName)
+			return diag.Errorf("Error updating cmpaction %s", cmpactionName)
 		}
 	}
-	return readCmpactionFunc(d, meta)
+	return readCmpactionFunc(ctx, d, meta)
 }
 
-func deleteCmpactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCmpactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCmpactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmpactionName := d.Id()
 	err := client.DeleteResource(service.Cmpaction.Type(), cmpactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -2,14 +2,23 @@ package terraform
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
+)
+
+const skipJsonLogLine = " msg="
+
+var (
+	// ansiLineRegex matches lines starting with ANSI escape codes for text formatting (e.g., colors, styles).
+	ansiLineRegex = regexp.MustCompile(`(?m)^\x1b\[[0-9;]*m.*`)
+	// tgLogLevel matches log lines containing fields for time, level, prefix, binary, and message, each with non-whitespace values.
+	tgLogLevel = regexp.MustCompile(`.*time=\S+ level=\S+ prefix=\S+ binary=\S+ msg=.*`)
 )
 
 // Output calls terraform output for the given variable and return its string value representation.
@@ -51,31 +60,6 @@ func OutputRequiredE(t testing.TestingT, options *Options, key string) (string, 
 	return out, nil
 }
 
-// parseListOfMaps takes a list of maps and parses the types.
-// It is mainly a wrapper for parseMap to support lists.
-func parseListOfMaps(l []interface{}) ([]map[string]interface{}, error) {
-	var result []map[string]interface{}
-
-	for _, v := range l {
-
-		asMap, isMap := v.(map[string]interface{})
-		if !isMap {
-			err := errors.New("Type switching to map[string]interface{} failed.")
-			return nil, err
-		}
-
-		m, err := parseMap(asMap)
-
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, m)
-	}
-
-	return result, nil
-
-}
-
 // parseMap takes a map of interfaces and parses the types.
 // It is recursive which allows it to support complex nested structures.
 // At this time, this function uses https://golang.org/pkg/strconv/#ParseInt
@@ -100,18 +84,13 @@ func parseMap(m map[string]interface{}) (map[string]interface{}, error) {
 			}
 			result[k] = nestedMap
 		case []interface{}:
-			nestedList, err := parseListOfMaps(vt)
+			nestedList, err := parseList(vt)
 			if err != nil {
 				return nil, err
 			}
 			result[k] = nestedList
 		case float64:
-			testInt, err := strconv.ParseInt((fmt.Sprintf("%v", vt)), 10, 0)
-			if err == nil {
-				result[k] = int(testInt)
-			} else {
-				result[k] = vt
-			}
+			result[k] = parseFloat(vt)
 		default:
 			result[k] = vt
 		}
@@ -119,6 +98,32 @@ func parseMap(m map[string]interface{}) (map[string]interface{}, error) {
 	}
 
 	return result, nil
+}
+
+func parseList(items []interface{}) (_ []interface{}, err error) {
+	for i, v := range items {
+		rv := reflect.ValueOf(v)
+		switch rv.Kind() {
+		case reflect.Map:
+			items[i], err = parseMap(rv.Interface().(map[string]interface{}))
+		case reflect.Slice, reflect.Array:
+			items[i], err = parseList(rv.Interface().([]interface{}))
+		case reflect.Float64:
+			items[i] = parseFloat(v)
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	return items, nil
+}
+
+func parseFloat(v interface{}) interface{} {
+	testInt, err := strconv.ParseInt((fmt.Sprintf("%v", v)), 10, 0)
+	if err == nil {
+		return int(testInt)
+	}
+	return v
 }
 
 // OutputMapOfObjects calls terraform output for the given variable and returns its value as a map of lists/maps.
@@ -280,7 +285,11 @@ func OutputJsonE(t testing.TestingT, options *Options, key string) (string, erro
 		args = append(args, key)
 	}
 
-	return RunTerraformCommandAndGetStdoutE(t, options, args...)
+	rawJson, err := RunTerraformCommandAndGetStdoutE(t, options, prepend(options.ExtraArgs.Output, args...)...)
+	if err != nil {
+		return rawJson, err
+	}
+	return cleanJson(rawJson)
 }
 
 // OutputStruct calls terraform output for the given variable and stores the
@@ -301,25 +310,8 @@ func OutputStructE(t testing.TestingT, options *Options, key string, v interface
 	if err != nil {
 		return err
 	}
-	out = cleanOutput(out)
 
 	return json.Unmarshal([]byte(out), &v)
-}
-
-// cleanOutput removes lines containing "INFO" and non-printable ASCII characters from the output.
-func cleanOutput(out string) string {
-	var result []rune
-	for _, line := range strings.Split(out, "\n") {
-		if strings.Contains(line, "INFO") {
-			continue
-		}
-		for _, r := range line {
-			if r >= 32 && r < 127 { // Keep printable ASCII characters only
-				result = append(result, r)
-			}
-		}
-	}
-	return string(result)
 }
 
 // OutputForKeysE calls terraform output for the given key list and returns values as a map.
@@ -329,7 +321,6 @@ func OutputForKeysE(t testing.TestingT, options *Options, keys []string) (map[st
 	if err != nil {
 		return nil, err
 	}
-	out = cleanOutput(out)
 
 	outputMap := map[string]map[string]interface{}{}
 	if err := json.Unmarshal([]byte(out), &outputMap); err != nil {
@@ -366,4 +357,34 @@ func OutputAll(t testing.TestingT, options *Options) map[string]interface{} {
 // OutputAllE calls terraform and returns all the outputs as a map
 func OutputAllE(t testing.TestingT, options *Options) (map[string]interface{}, error) {
 	return OutputForKeysE(t, options, nil)
+}
+
+// clean the ANSI characters from the JSON and update formating
+func cleanJson(input string) (string, error) {
+	// Remove ANSI escape codes
+	cleaned := ansiLineRegex.ReplaceAllString(input, "")
+	cleaned = tgLogLevel.ReplaceAllString(cleaned, "")
+
+	lines := strings.Split(cleaned, "\n")
+	var result []string
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" && !strings.Contains(trimmed, skipJsonLogLine) {
+			result = append(result, trimmed)
+		}
+	}
+	ansiClean := strings.Join(result, "\n")
+
+	var jsonObj interface{}
+	if err := json.Unmarshal([]byte(ansiClean), &jsonObj); err != nil {
+		return "", err
+	}
+
+	// Format JSON output with indentation
+	normalized, err := json.MarshalIndent(jsonObj, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(normalized), nil
 }

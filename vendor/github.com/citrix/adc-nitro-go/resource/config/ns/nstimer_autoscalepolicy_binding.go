@@ -27,7 +27,7 @@ type Nstimerautoscalepolicybinding struct {
 	/**
 	* Specifies the priority of the timer policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
@@ -39,11 +39,11 @@ type Nstimerautoscalepolicybinding struct {
 	/**
 	* Denotes the sample size. Sample size value of 'x' means that previous '(x - 1)' policy's rule evaluation results and the current evaluation result are present with the binding. For example, sample size of 10 means that there is a state of previous 9 policy evaluation results and also the current policy evaluation result.
 	*/
-	Samplesize int `json:"samplesize,omitempty"`
+	Samplesize *int `json:"samplesize,omitempty"`
 	/**
 	* Denotes the threshold. If the rule of the policy in the binding relation evaluates 'threshold size' number of times in 'sample size' to true, then the corresponding action is taken. Its value needs to be less than or equal to the sample size value.
 	*/
-	Threshold int `json:"threshold,omitempty"`
+	Threshold *int `json:"threshold,omitempty"`
 	/**
 	* Timer name.
 	*/

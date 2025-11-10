@@ -1,24 +1,52 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/ica"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/ica"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIcaaccessprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIcaaccessprofileFunc,
-		Read:          readIcaaccessprofileFunc,
-		Update:        updateIcaaccessprofileFunc,
-		Delete:        deleteIcaaccessprofileFunc,
+		CreateContext: createIcaaccessprofileFunc,
+		ReadContext:   readIcaaccessprofileFunc,
+		UpdateContext: updateIcaaccessprofileFunc,
+		DeleteContext: deleteIcaaccessprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"wiaredirection": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"smartcardredirection": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"fido2redirection": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"draganddrop": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"clienttwaindeviceredirection": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -73,39 +101,39 @@ func resourceCitrixAdcIcaaccessprofile() *schema.Resource {
 	}
 }
 
-func createIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIcaaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icaaccessprofileName := d.Get("name").(string)
 	icaaccessprofile := ica.Icaaccessprofile{
-		Clientaudioredirection:     d.Get("clientaudioredirection").(string),
-		Clientclipboardredirection: d.Get("clientclipboardredirection").(string),
-		Clientcomportredirection:   d.Get("clientcomportredirection").(string),
-		Clientdriveredirection:     d.Get("clientdriveredirection").(string),
-		Clientprinterredirection:   d.Get("clientprinterredirection").(string),
-		Clientusbdriveredirection:  d.Get("clientusbdriveredirection").(string),
-		Connectclientlptports:      d.Get("connectclientlptports").(string),
-		Localremotedatasharing:     d.Get("localremotedatasharing").(string),
-		Multistream:                d.Get("multistream").(string),
-		Name:                       d.Get("name").(string),
+		Clientaudioredirection:       d.Get("clientaudioredirection").(string),
+		Clientclipboardredirection:   d.Get("clientclipboardredirection").(string),
+		Clientcomportredirection:     d.Get("clientcomportredirection").(string),
+		Clientdriveredirection:       d.Get("clientdriveredirection").(string),
+		Clientprinterredirection:     d.Get("clientprinterredirection").(string),
+		Clientusbdriveredirection:    d.Get("clientusbdriveredirection").(string),
+		Connectclientlptports:        d.Get("connectclientlptports").(string),
+		Localremotedatasharing:       d.Get("localremotedatasharing").(string),
+		Multistream:                  d.Get("multistream").(string),
+		Name:                         d.Get("name").(string),
+		Clienttwaindeviceredirection: d.Get("clienttwaindeviceredirection").(string),
+		Draganddrop:                  d.Get("draganddrop").(string),
+		Fido2redirection:             d.Get("fido2redirection").(string),
+		Smartcardredirection:         d.Get("smartcardredirection").(string),
+		Wiaredirection:               d.Get("wiaredirection").(string),
 	}
 
 	_, err := client.AddResource("icaaccessprofile", icaaccessprofileName, &icaaccessprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(icaaccessprofileName)
 
-	err = readIcaaccessprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this icaaccessprofile but we can't read it ?? %s", icaaccessprofileName)
-		return nil
-	}
-	return nil
+	return readIcaaccessprofileFunc(ctx, d, meta)
 }
 
-func readIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIcaaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icaaccessprofileName := d.Id()
@@ -117,6 +145,11 @@ func readIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("wiaredirection", data["wiaredirection"])
+	d.Set("smartcardredirection", data["smartcardredirection"])
+	d.Set("fido2redirection", data["fido2redirection"])
+	d.Set("draganddrop", data["draganddrop"])
+	d.Set("clienttwaindeviceredirection", data["clienttwaindeviceredirection"])
 	d.Set("clientaudioredirection", data["clientaudioredirection"])
 	d.Set("clientclipboardredirection", data["clientclipboardredirection"])
 	d.Set("clientcomportredirection", data["clientcomportredirection"])
@@ -131,7 +164,7 @@ func readIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIcaaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icaaccessprofileName := d.Get("name").(string)
@@ -140,6 +173,31 @@ func updateIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error 
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("wiaredirection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Wiaredirection has changed for icaaccessprofile, starting update")
+		icaaccessprofile.Wiaredirection = d.Get("wiaredirection").(string)
+		hasChange = true
+	}
+	if d.HasChange("smartcardredirection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Smartcardredirection has changed for icaaccessprofile, starting update")
+		icaaccessprofile.Smartcardredirection = d.Get("smartcardredirection").(string)
+		hasChange = true
+	}
+	if d.HasChange("fido2redirection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Fido2redirection has changed for icaaccessprofile, starting update")
+		icaaccessprofile.Fido2redirection = d.Get("fido2redirection").(string)
+		hasChange = true
+	}
+	if d.HasChange("draganddrop") {
+		log.Printf("[DEBUG]  citrixadc-provider: Draganddrop has changed for icaaccessprofile, starting update")
+		icaaccessprofile.Draganddrop = d.Get("draganddrop").(string)
+		hasChange = true
+	}
+	if d.HasChange("clienttwaindeviceredirection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Clienttwaindeviceredirection has changed for icaaccessprofile, starting update")
+		icaaccessprofile.Clienttwaindeviceredirection = d.Get("clienttwaindeviceredirection").(string)
+		hasChange = true
+	}
 	if d.HasChange("clientaudioredirection") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clientaudioredirection has changed for icaaccessprofile %s, starting update", icaaccessprofileName)
 		icaaccessprofile.Clientaudioredirection = d.Get("clientaudioredirection").(string)
@@ -189,19 +247,19 @@ func updateIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource("icaaccessprofile", &icaaccessprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating icaaccessprofile %s", icaaccessprofileName)
+			return diag.Errorf("Error updating icaaccessprofile %s", icaaccessprofileName)
 		}
 	}
-	return readIcaaccessprofileFunc(d, meta)
+	return readIcaaccessprofileFunc(ctx, d, meta)
 }
 
-func deleteIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIcaaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icaaccessprofileName := d.Id()
 	err := client.DeleteResource("icaaccessprofile", icaaccessprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

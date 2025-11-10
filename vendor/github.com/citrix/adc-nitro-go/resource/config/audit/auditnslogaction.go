@@ -37,11 +37,11 @@ type Auditnslogaction struct {
 	/**
 	* Time, in seconds, for which the Citrix ADC waits before sending another DNS query to resolve the host name of the audit server if the last query failed.
 	*/
-	Domainresolveretry int `json:"domainresolveretry,omitempty"`
+	Domainresolveretry *int `json:"domainresolveretry,omitempty"`
 	/**
 	* Port on which the nslog server accepts connections.
 	*/
-	Serverport int `json:"serverport,omitempty"`
+	Serverport *int `json:"serverport,omitempty"`
 	/**
 	* Audit log level, which specifies the types of events to log.
 		Available settings function as follows:

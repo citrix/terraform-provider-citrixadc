@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAuthenticationvserver_auditsyslogpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationvserver_auditsyslogpolicy_bindingFunc,
-		Read:          readAuthenticationvserver_auditsyslogpolicy_bindingFunc,
-		Delete:        deleteAuthenticationvserver_auditsyslogpolicy_bindingFunc,
+		CreateContext: createAuthenticationvserver_auditsyslogpolicy_bindingFunc,
+		ReadContext:   readAuthenticationvserver_auditsyslogpolicy_bindingFunc,
+		DeleteContext: deleteAuthenticationvserver_auditsyslogpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,7 +75,7 @@ func resourceCitrixAdcAuthenticationvserver_auditsyslogpolicy_binding() *schema.
 	}
 }
 
-func createAuthenticationvserver_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationvserver_auditsyslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationvserver_auditsyslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -86,26 +88,24 @@ func createAuthenticationvserver_auditsyslogpolicy_bindingFunc(d *schema.Resourc
 		Name:                   d.Get("name").(string),
 		Nextfactor:             d.Get("nextfactor").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		authenticationvserver_auditsyslogpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Authenticationvserver_auditsyslogpolicy_binding.Type(), &authenticationvserver_auditsyslogpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAuthenticationvserver_auditsyslogpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationvserver_auditsyslogpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAuthenticationvserver_auditsyslogpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAuthenticationvserver_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationvserver_auditsyslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationvserver_auditsyslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -126,7 +126,7 @@ func readAuthenticationvserver_auditsyslogpolicy_bindingFunc(d *schema.ResourceD
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -170,7 +170,7 @@ func readAuthenticationvserver_auditsyslogpolicy_bindingFunc(d *schema.ResourceD
 
 }
 
-func deleteAuthenticationvserver_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationvserver_auditsyslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationvserver_auditsyslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -193,7 +193,7 @@ func deleteAuthenticationvserver_auditsyslogpolicy_bindingFunc(d *schema.Resourc
 	}
 	err := client.DeleteResourceWithArgs(service.Authenticationvserver_auditsyslogpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

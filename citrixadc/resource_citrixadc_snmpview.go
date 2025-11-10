@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSnmpview() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSnmpviewFunc,
-		Read:          readSnmpviewFunc,
-		Update:        updateSnmpviewFunc,
-		Delete:        deleteSnmpviewFunc,
+		CreateContext: createSnmpviewFunc,
+		ReadContext:   readSnmpviewFunc,
+		UpdateContext: updateSnmpviewFunc,
+		DeleteContext: deleteSnmpviewFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,7 +42,7 @@ func resourceCitrixAdcSnmpview() *schema.Resource {
 	}
 }
 
-func createSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
+func createSnmpviewFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpviewFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpviewName := d.Get("name").(string)
@@ -52,20 +54,15 @@ func createSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Snmpview.Type(), snmpviewName, &snmpview)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(snmpviewName)
 
-	err = readSnmpviewFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmpview but we can't read it ?? %s", snmpviewName)
-		return nil
-	}
-	return nil
+	return readSnmpviewFunc(ctx, d, meta)
 }
 
-func readSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
+func readSnmpviewFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmpviewFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpviewName := d.Id()
@@ -84,7 +81,7 @@ func readSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindAllResources %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -111,7 +108,7 @@ func readSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSnmpviewFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpviewFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpviewName := d.Get("name").(string)
@@ -131,13 +128,13 @@ func updateSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Snmpview.Type(), &snmpview)
 		if err != nil {
-			return fmt.Errorf("Error updating snmpview %s", snmpviewName)
+			return diag.Errorf("Error updating snmpview %s", snmpviewName)
 		}
 	}
-	return readSnmpviewFunc(d, meta)
+	return readSnmpviewFunc(ctx, d, meta)
 }
 
-func deleteSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSnmpviewFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpviewFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpviewName := d.Id()
@@ -148,7 +145,7 @@ func deleteSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.DeleteResourceWithArgs(service.Snmpview.Type(), snmpviewName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

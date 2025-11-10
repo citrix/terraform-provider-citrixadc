@@ -45,7 +45,7 @@ type Gslbvserverspilloverpolicybinding struct {
 	/**
 	* Priority.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Name of the virtual server on which to perform the binding operation.
 	*/
@@ -53,7 +53,7 @@ type Gslbvserverspilloverpolicybinding struct {
 	/**
 	* Order number to be assigned to the service when it is bound to the lb vserver.
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 
 
 }

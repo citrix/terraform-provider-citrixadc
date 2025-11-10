@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,9 +15,9 @@ import (
 func resourceCitrixAdcSslprofile_ecccurve_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslprofile_ecccurve_bindingFunc,
-		Read:          readSslprofile_ecccurve_bindingFunc,
-		Delete:        deleteSslprofile_ecccurve_bindingFunc,
+		CreateContext: createSslprofile_ecccurve_bindingFunc,
+		ReadContext:   readSslprofile_ecccurve_bindingFunc,
+		DeleteContext: deleteSslprofile_ecccurve_bindingFunc,
 		Schema: map[string]*schema.Schema{
 			"remove_existing_ecccurve_binding": {
 				Type:     schema.TypeBool,
@@ -37,7 +39,7 @@ func resourceCitrixAdcSslprofile_ecccurve_binding() *schema.Resource {
 	}
 }
 
-func createSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslprofile_ecccurve_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslprofile_ecccurve_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -52,7 +54,7 @@ func createSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interfac
 		defaultEcccurves, err := getDefault_SslprofileEcccurveBindings(d, meta)
 		log.Printf("[DEBUG] citrixadc-provider: defaultSslprofileEcccurveBindings: %v", defaultEcccurves)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		for _, ecccurvename := range defaultEcccurves {
 			deleteSingleSslprofileEcccurveBindings(d, meta, ecccurvename)
@@ -63,13 +65,13 @@ func createSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interfac
 		sslprofile_ecccurve_binding.Ecccurvename = ecccurvename_items.(string)
 		_, err := client.AddResource(service.Sslprofile_ecccurve_binding.Type(), bindingId, &sslprofile_ecccurve_binding)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	d.SetId(bindingId)
 
-	err := readSslprofile_ecccurve_bindingFunc(d, meta)
+	err := readSslprofile_ecccurve_bindingFunc(ctx, d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslprofile_ecccurve_binding but we can't read it ?? %s", bindingId)
 		return nil
@@ -113,7 +115,7 @@ func deleteSingleSslprofileEcccurveBindings(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func readSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslprofile_ecccurve_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslprofile_ecccurve_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -133,7 +135,7 @@ func readSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interface{
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -157,7 +159,7 @@ func readSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func deleteSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslprofile_ecccurve_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslprofile_ecccurve_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -172,7 +174,7 @@ func deleteSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interfac
 
 		err := client.DeleteResourceWithArgs(service.Sslprofile_ecccurve_binding.Type(), name, args)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	d.SetId("")

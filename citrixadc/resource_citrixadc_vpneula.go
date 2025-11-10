@@ -1,21 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVpneula() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpneulaFunc,
-		Read:          readVpneulaFunc,
-		Delete:        deleteVpneulaFunc,
+		CreateContext: createVpneulaFunc,
+		ReadContext:   readVpneulaFunc,
+		DeleteContext: deleteVpneulaFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -26,7 +30,7 @@ func resourceCitrixAdcVpneula() *schema.Resource {
 	}
 }
 
-func createVpneulaFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpneulaFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpneulaFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var vpneulaName string
@@ -42,20 +46,15 @@ func createVpneulaFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Vpneula.Type(), vpneulaName, &vpneula)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpneulaName)
 
-	err = readVpneulaFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpneula but we can't read it ?? %s", vpneulaName)
-		return nil
-	}
-	return nil
+	return readVpneulaFunc(ctx, d, meta)
 }
 
-func readVpneulaFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpneulaFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpneulaFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpneulaName := d.Id()
@@ -72,13 +71,13 @@ func readVpneulaFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteVpneulaFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpneulaFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpneulaFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpneulaName := d.Id()
 	err := client.DeleteResource(service.Vpneula.Type(), vpneulaName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

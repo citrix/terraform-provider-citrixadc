@@ -1,23 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcContentinspectionprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createContentinspectionprofileFunc,
-		Read:          readContentinspectionprofileFunc,
-		Update:        updateContentinspectionprofileFunc,
-		Delete:        deleteContentinspectionprofileFunc,
+		CreateContext: createContentinspectionprofileFunc,
+		ReadContext:   readContentinspectionprofileFunc,
+		UpdateContext: updateContentinspectionprofileFunc,
+		DeleteContext: deleteContentinspectionprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -59,36 +61,36 @@ func resourceCitrixAdcContentinspectionprofile() *schema.Resource {
 	}
 }
 
-func createContentinspectionprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createContentinspectionprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createContentinspectionprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionprofileName := d.Get("name").(string)
 	contentinspectionprofile := contentinspection.Contentinspectionprofile{
 		Egressinterface:  d.Get("egressinterface").(string),
-		Egressvlan:       d.Get("egressvlan").(int),
 		Ingressinterface: d.Get("ingressinterface").(string),
-		Ingressvlan:      d.Get("ingressvlan").(int),
 		Iptunnel:         d.Get("iptunnel").(string),
 		Name:             d.Get("name").(string),
 		Type:             d.Get("type").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("egressvlan"); !raw.IsNull() {
+		contentinspectionprofile.Egressvlan = intPtr(d.Get("egressvlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ingressvlan"); !raw.IsNull() {
+		contentinspectionprofile.Ingressvlan = intPtr(d.Get("ingressvlan").(int))
+	}
+
 	_, err := client.AddResource("contentinspectionprofile", contentinspectionprofileName, &contentinspectionprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(contentinspectionprofileName)
 
-	err = readContentinspectionprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this contentinspectionprofile but we can't read it ?? %s", contentinspectionprofileName)
-		return nil
-	}
-	return nil
+	return readContentinspectionprofileFunc(ctx, d, meta)
 }
 
-func readContentinspectionprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readContentinspectionprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readContentinspectionprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionprofileName := d.Id()
@@ -100,9 +102,9 @@ func readContentinspectionprofileFunc(d *schema.ResourceData, meta interface{}) 
 		return nil
 	}
 	d.Set("egressinterface", data["egressinterface"])
-	d.Set("egressvlan", data["egressvlan"])
+	setToInt("egressvlan", d, data["egressvlan"])
 	d.Set("ingressinterface", data["ingressinterface"])
-	d.Set("ingressvlan", data["ingressvlan"])
+	setToInt("ingressvlan", d, data["ingressvlan"])
 	d.Set("iptunnel", data["iptunnel"])
 	d.Set("name", data["name"])
 	d.Set("type", data["type"])
@@ -111,7 +113,7 @@ func readContentinspectionprofileFunc(d *schema.ResourceData, meta interface{}) 
 
 }
 
-func updateContentinspectionprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateContentinspectionprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateContentinspectionprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionprofileName := d.Get("name").(string)
@@ -127,7 +129,7 @@ func updateContentinspectionprofileFunc(d *schema.ResourceData, meta interface{}
 	}
 	if d.HasChange("egressvlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Egressvlan has changed for contentinspectionprofile %s, starting update", contentinspectionprofileName)
-		contentinspectionprofile.Egressvlan = d.Get("egressvlan").(int)
+		contentinspectionprofile.Egressvlan = intPtr(d.Get("egressvlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("ingressinterface") {
@@ -137,7 +139,7 @@ func updateContentinspectionprofileFunc(d *schema.ResourceData, meta interface{}
 	}
 	if d.HasChange("ingressvlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ingressvlan has changed for contentinspectionprofile %s, starting update", contentinspectionprofileName)
-		contentinspectionprofile.Ingressvlan = d.Get("ingressvlan").(int)
+		contentinspectionprofile.Ingressvlan = intPtr(d.Get("ingressvlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("iptunnel") {
@@ -149,19 +151,19 @@ func updateContentinspectionprofileFunc(d *schema.ResourceData, meta interface{}
 	if hasChange {
 		err := client.UpdateUnnamedResource("contentinspectionprofile", &contentinspectionprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating contentinspectionprofile %s", contentinspectionprofileName)
+			return diag.Errorf("Error updating contentinspectionprofile %s", contentinspectionprofileName)
 		}
 	}
-	return readContentinspectionprofileFunc(d, meta)
+	return readContentinspectionprofileFunc(ctx, d, meta)
 }
 
-func deleteContentinspectionprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteContentinspectionprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteContentinspectionprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionprofileName := d.Id()
 	err := client.DeleteResource("contentinspectionprofile", contentinspectionprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,25 +1,39 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationsamlaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationsamlactionFunc,
-		Read:          readAuthenticationsamlactionFunc,
-		Update:        updateAuthenticationsamlactionFunc,
-		Delete:        deleteAuthenticationsamlactionFunc,
+		CreateContext: createAuthenticationsamlactionFunc,
+		ReadContext:   readAuthenticationsamlactionFunc,
+		UpdateContext: updateAuthenticationsamlactionFunc,
+		DeleteContext: deleteAuthenticationsamlactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"statechecks": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"preferredbindtype": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -261,76 +275,82 @@ func resourceCitrixAdcAuthenticationsamlaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationsamlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlactionName := d.Get("name").(string)
 	authenticationsamlaction := authentication.Authenticationsamlaction{
-		Artifactresolutionserviceurl:   d.Get("artifactresolutionserviceurl").(string),
-		Attribute1:                     d.Get("attribute1").(string),
-		Attribute10:                    d.Get("attribute10").(string),
-		Attribute11:                    d.Get("attribute11").(string),
-		Attribute12:                    d.Get("attribute12").(string),
-		Attribute13:                    d.Get("attribute13").(string),
-		Attribute14:                    d.Get("attribute14").(string),
-		Attribute15:                    d.Get("attribute15").(string),
-		Attribute16:                    d.Get("attribute16").(string),
-		Attribute2:                     d.Get("attribute2").(string),
-		Attribute3:                     d.Get("attribute3").(string),
-		Attribute4:                     d.Get("attribute4").(string),
-		Attribute5:                     d.Get("attribute5").(string),
-		Attribute6:                     d.Get("attribute6").(string),
-		Attribute7:                     d.Get("attribute7").(string),
-		Attribute8:                     d.Get("attribute8").(string),
-		Attribute9:                     d.Get("attribute9").(string),
-		Attributeconsumingserviceindex: d.Get("attributeconsumingserviceindex").(int),
-		Attributes:                     d.Get("attributes").(string),
-		Audience:                       d.Get("audience").(string),
-		Authnctxclassref:               toStringList(d.Get("authnctxclassref").([]interface{})),
-		Customauthnctxclassref:         d.Get("customauthnctxclassref").(string),
-		Defaultauthenticationgroup:     d.Get("defaultauthenticationgroup").(string),
-		Digestmethod:                   d.Get("digestmethod").(string),
-		Enforceusername:                d.Get("enforceusername").(string),
-		Forceauthn:                     d.Get("forceauthn").(string),
-		Groupnamefield:                 d.Get("groupnamefield").(string),
-		Logoutbinding:                  d.Get("logoutbinding").(string),
-		Logouturl:                      d.Get("logouturl").(string),
-		Metadatarefreshinterval:        d.Get("metadatarefreshinterval").(int),
-		Metadataurl:                    d.Get("metadataurl").(string),
-		Name:                           d.Get("name").(string),
-		Relaystaterule:                 d.Get("relaystaterule").(string),
-		Requestedauthncontext:          d.Get("requestedauthncontext").(string),
-		Samlacsindex:                   d.Get("samlacsindex").(int),
-		Samlbinding:                    d.Get("samlbinding").(string),
-		Samlidpcertname:                d.Get("samlidpcertname").(string),
-		Samlissuername:                 d.Get("samlissuername").(string),
-		Samlredirecturl:                d.Get("samlredirecturl").(string),
-		Samlrejectunsignedassertion:    d.Get("samlrejectunsignedassertion").(string),
-		Samlsigningcertname:            d.Get("samlsigningcertname").(string),
-		Samltwofactor:                  d.Get("samltwofactor").(string),
-		Samluserfield:                  d.Get("samluserfield").(string),
-		Sendthumbprint:                 d.Get("sendthumbprint").(string),
-		Signaturealg:                   d.Get("signaturealg").(string),
-		Skewtime:                       d.Get("skewtime").(int),
-		Storesamlresponse:              d.Get("storesamlresponse").(string),
+		Artifactresolutionserviceurl: d.Get("artifactresolutionserviceurl").(string),
+		Attribute1:                   d.Get("attribute1").(string),
+		Attribute10:                  d.Get("attribute10").(string),
+		Attribute11:                  d.Get("attribute11").(string),
+		Attribute12:                  d.Get("attribute12").(string),
+		Attribute13:                  d.Get("attribute13").(string),
+		Attribute14:                  d.Get("attribute14").(string),
+		Attribute15:                  d.Get("attribute15").(string),
+		Attribute16:                  d.Get("attribute16").(string),
+		Attribute2:                   d.Get("attribute2").(string),
+		Attribute3:                   d.Get("attribute3").(string),
+		Attribute4:                   d.Get("attribute4").(string),
+		Attribute5:                   d.Get("attribute5").(string),
+		Attribute6:                   d.Get("attribute6").(string),
+		Attribute7:                   d.Get("attribute7").(string),
+		Attribute8:                   d.Get("attribute8").(string),
+		Attribute9:                   d.Get("attribute9").(string),
+		Attributes:                   d.Get("attributes").(string),
+		Audience:                     d.Get("audience").(string),
+		Authnctxclassref:             toStringList(d.Get("authnctxclassref").([]interface{})),
+		Preferredbindtype:            toStringList(d.Get("preferredbindtype").([]interface{})),
+		Statechecks:                  d.Get("statechecks").(string),
+		Customauthnctxclassref:       d.Get("customauthnctxclassref").(string),
+		Defaultauthenticationgroup:   d.Get("defaultauthenticationgroup").(string),
+		Digestmethod:                 d.Get("digestmethod").(string),
+		Enforceusername:              d.Get("enforceusername").(string),
+		Forceauthn:                   d.Get("forceauthn").(string),
+		Groupnamefield:               d.Get("groupnamefield").(string),
+		Logoutbinding:                d.Get("logoutbinding").(string),
+		Logouturl:                    d.Get("logouturl").(string),
+		Metadataurl:                  d.Get("metadataurl").(string),
+		Name:                         d.Get("name").(string),
+		Relaystaterule:               d.Get("relaystaterule").(string),
+		Requestedauthncontext:        d.Get("requestedauthncontext").(string),
+		Samlbinding:                  d.Get("samlbinding").(string),
+		Samlidpcertname:              d.Get("samlidpcertname").(string),
+		Samlissuername:               d.Get("samlissuername").(string),
+		Samlredirecturl:              d.Get("samlredirecturl").(string),
+		Samlrejectunsignedassertion:  d.Get("samlrejectunsignedassertion").(string),
+		Samlsigningcertname:          d.Get("samlsigningcertname").(string),
+		Samltwofactor:                d.Get("samltwofactor").(string),
+		Samluserfield:                d.Get("samluserfield").(string),
+		Sendthumbprint:               d.Get("sendthumbprint").(string),
+		Signaturealg:                 d.Get("signaturealg").(string),
+		Storesamlresponse:            d.Get("storesamlresponse").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("attributeconsumingserviceindex"); !raw.IsNull() {
+		authenticationsamlaction.Attributeconsumingserviceindex = intPtr(d.Get("attributeconsumingserviceindex").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("metadatarefreshinterval"); !raw.IsNull() {
+		authenticationsamlaction.Metadatarefreshinterval = intPtr(d.Get("metadatarefreshinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("samlacsindex"); !raw.IsNull() {
+		authenticationsamlaction.Samlacsindex = intPtr(d.Get("samlacsindex").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("skewtime"); !raw.IsNull() {
+		authenticationsamlaction.Skewtime = intPtr(d.Get("skewtime").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName, &authenticationsamlaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationsamlactionName)
 
-	err = readAuthenticationsamlactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationsamlaction but we can't read it ?? %s", authenticationsamlactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationsamlactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationsamlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlactionName := d.Id()
@@ -342,6 +362,8 @@ func readAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) 
 		return nil
 	}
 	d.Set("artifactresolutionserviceurl", data["artifactresolutionserviceurl"])
+	d.Set("statechecks", data["statechecks"])
+	d.Set("preferredbindtype", data["preferredbindtype"])
 	d.Set("attribute1", data["attribute1"])
 	d.Set("attribute10", data["attribute10"])
 	d.Set("attribute11", data["attribute11"])
@@ -358,7 +380,7 @@ func readAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) 
 	d.Set("attribute7", data["attribute7"])
 	d.Set("attribute8", data["attribute8"])
 	d.Set("attribute9", data["attribute9"])
-	d.Set("attributeconsumingserviceindex", data["attributeconsumingserviceindex"])
+	setToInt("attributeconsumingserviceindex", d, data["attributeconsumingserviceindex"])
 	d.Set("attributes", data["attributes"])
 	d.Set("audience", data["audience"])
 	d.Set("authnctxclassref", data["authnctxclassref"])
@@ -370,12 +392,12 @@ func readAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) 
 	d.Set("groupnamefield", data["groupnamefield"])
 	d.Set("logoutbinding", data["logoutbinding"])
 	d.Set("logouturl", data["logouturl"])
-	d.Set("metadatarefreshinterval", data["metadatarefreshinterval"])
+	setToInt("metadatarefreshinterval", d, data["metadatarefreshinterval"])
 	d.Set("metadataurl", data["metadataurl"])
 	d.Set("name", data["name"])
 	d.Set("relaystaterule", data["relaystaterule"])
 	d.Set("requestedauthncontext", data["requestedauthncontext"])
-	d.Set("samlacsindex", data["samlacsindex"])
+	setToInt("samlacsindex", d, data["samlacsindex"])
 	d.Set("samlbinding", data["samlbinding"])
 	d.Set("samlidpcertname", data["samlidpcertname"])
 	d.Set("samlissuername", data["samlissuername"])
@@ -386,14 +408,14 @@ func readAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) 
 	d.Set("samluserfield", data["samluserfield"])
 	d.Set("sendthumbprint", data["sendthumbprint"])
 	d.Set("signaturealg", data["signaturealg"])
-	d.Set("skewtime", data["skewtime"])
+	setToInt("skewtime", d, data["skewtime"])
 	d.Set("storesamlresponse", data["storesamlresponse"])
 
 	return nil
 
 }
 
-func updateAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationsamlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlactionName := d.Get("name").(string)
@@ -402,6 +424,16 @@ func updateAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("statechecks") {
+		log.Printf("[DEBUG]  citrixadc-provider: Statechecks has changed for authenticationsamlaction, starting update")
+		authenticationsamlaction.Statechecks = d.Get("statechecks").(string)
+		hasChange = true
+	}
+	if d.HasChange("preferredbindtype") {
+		log.Printf("[DEBUG]  citrixadc-provider: Preferredbindtype has changed for authenticationsamlaction, starting update")
+		authenticationsamlaction.Preferredbindtype = toStringList(d.Get("preferredbindtype").([]interface{}))
+		hasChange = true
+	}
 	if d.HasChange("artifactresolutionserviceurl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Artifactresolutionserviceurl has changed for authenticationsamlaction %s, starting update", authenticationsamlactionName)
 		authenticationsamlaction.Artifactresolutionserviceurl = d.Get("artifactresolutionserviceurl").(string)
@@ -489,7 +521,7 @@ func updateAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}
 	}
 	if d.HasChange("attributeconsumingserviceindex") {
 		log.Printf("[DEBUG]  citrixadc-provider: Attributeconsumingserviceindex has changed for authenticationsamlaction %s, starting update", authenticationsamlactionName)
-		authenticationsamlaction.Attributeconsumingserviceindex = d.Get("attributeconsumingserviceindex").(int)
+		authenticationsamlaction.Attributeconsumingserviceindex = intPtr(d.Get("attributeconsumingserviceindex").(int))
 		hasChange = true
 	}
 	if d.HasChange("attributes") {
@@ -549,7 +581,7 @@ func updateAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}
 	}
 	if d.HasChange("metadatarefreshinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Metadatarefreshinterval has changed for authenticationsamlaction %s, starting update", authenticationsamlactionName)
-		authenticationsamlaction.Metadatarefreshinterval = d.Get("metadatarefreshinterval").(int)
+		authenticationsamlaction.Metadatarefreshinterval = intPtr(d.Get("metadatarefreshinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("metadataurl") {
@@ -569,7 +601,7 @@ func updateAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}
 	}
 	if d.HasChange("samlacsindex") {
 		log.Printf("[DEBUG]  citrixadc-provider: Samlacsindex has changed for authenticationsamlaction %s, starting update", authenticationsamlactionName)
-		authenticationsamlaction.Samlacsindex = d.Get("samlacsindex").(int)
+		authenticationsamlaction.Samlacsindex = intPtr(d.Get("samlacsindex").(int))
 		hasChange = true
 	}
 	if d.HasChange("samlbinding") {
@@ -624,7 +656,7 @@ func updateAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}
 	}
 	if d.HasChange("skewtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for authenticationsamlaction %s, starting update", authenticationsamlactionName)
-		authenticationsamlaction.Skewtime = d.Get("skewtime").(int)
+		authenticationsamlaction.Skewtime = intPtr(d.Get("skewtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("storesamlresponse") {
@@ -636,19 +668,19 @@ func updateAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName, &authenticationsamlaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationsamlaction %s", authenticationsamlactionName)
+			return diag.Errorf("Error updating authenticationsamlaction %s", authenticationsamlactionName)
 		}
 	}
-	return readAuthenticationsamlactionFunc(d, meta)
+	return readAuthenticationsamlactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationsamlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlactionName := d.Id()
 	err := client.DeleteResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

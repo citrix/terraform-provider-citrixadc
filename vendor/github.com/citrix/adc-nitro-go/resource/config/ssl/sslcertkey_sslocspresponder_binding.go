@@ -27,7 +27,7 @@ type Sslcertkeysslocspresponderbinding struct {
 	/**
 	* ocsp priority
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Name of the certificate-key pair.
 	*/

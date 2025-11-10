@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcInterface() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createInterfaceFunc,
-		Read:          readInterfaceFunc,
-		Update:        updateInterfaceFunc,
-		Delete:        deleteInterfaceFunc,
+		CreateContext: createInterfaceFunc,
+		ReadContext:   readInterfaceFunc,
+		UpdateContext: updateInterfaceFunc,
+		DeleteContext: deleteInterfaceFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"autoneg": {
@@ -154,55 +157,67 @@ func resourceCitrixAdcInterface() *schema.Resource {
 	}
 }
 
-func createInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func createInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createInterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	interfaceId := d.Get("interface_id").(string)
 
 	Interface := network.Interface{
-		Autoneg:         d.Get("autoneg").(string),
-		Bandwidthhigh:   d.Get("bandwidthhigh").(int),
-		Bandwidthnormal: d.Get("bandwidthnormal").(int),
-		Duplex:          d.Get("duplex").(string),
-		Flowctl:         d.Get("flowctl").(string),
-		Haheartbeat:     d.Get("haheartbeat").(string),
-		Hamonitor:       d.Get("hamonitor").(string),
-		Id:              d.Get("interface_id").(string),
-		Ifalias:         d.Get("ifalias").(string),
-		Lacpkey:         d.Get("lacpkey").(int),
-		Lacpmode:        d.Get("lacpmode").(string),
-		Lacppriority:    d.Get("lacppriority").(int),
-		Lacptimeout:     d.Get("lacptimeout").(string),
-		Lagtype:         d.Get("lagtype").(string),
-		Linkredundancy:  d.Get("linkredundancy").(string),
-		Lldpmode:        d.Get("lldpmode").(string),
-		Lrsetpriority:   d.Get("lrsetpriority").(int),
-		Mtu:             d.Get("mtu").(int),
-		Ringsize:        d.Get("ringsize").(int),
-		Ringtype:        d.Get("ringtype").(string),
-		Speed:           d.Get("speed").(string),
-		Tagall:          d.Get("tagall").(string),
-		Throughput:      d.Get("throughput").(int),
-		Trunk:           d.Get("trunk").(string),
-		Trunkmode:       d.Get("trunkmode").(string),
+		Autoneg:        d.Get("autoneg").(string),
+		Duplex:         d.Get("duplex").(string),
+		Flowctl:        d.Get("flowctl").(string),
+		Haheartbeat:    d.Get("haheartbeat").(string),
+		Hamonitor:      d.Get("hamonitor").(string),
+		Id:             d.Get("interface_id").(string),
+		Ifalias:        d.Get("ifalias").(string),
+		Lacpmode:       d.Get("lacpmode").(string),
+		Lacptimeout:    d.Get("lacptimeout").(string),
+		Lagtype:        d.Get("lagtype").(string),
+		Linkredundancy: d.Get("linkredundancy").(string),
+		Lldpmode:       d.Get("lldpmode").(string),
+		Ringtype:       d.Get("ringtype").(string),
+		Speed:          d.Get("speed").(string),
+		Tagall:         d.Get("tagall").(string),
+		Trunk:          d.Get("trunk").(string),
+		Trunkmode:      d.Get("trunkmode").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bandwidthhigh"); !raw.IsNull() {
+		Interface.Bandwidthhigh = intPtr(d.Get("bandwidthhigh").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bandwidthnormal"); !raw.IsNull() {
+		Interface.Bandwidthnormal = intPtr(d.Get("bandwidthnormal").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("lacpkey"); !raw.IsNull() {
+		Interface.Lacpkey = intPtr(d.Get("lacpkey").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("lacppriority"); !raw.IsNull() {
+		Interface.Lacppriority = intPtr(d.Get("lacppriority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("lrsetpriority"); !raw.IsNull() {
+		Interface.Lrsetpriority = intPtr(d.Get("lrsetpriority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mtu"); !raw.IsNull() {
+		Interface.Mtu = intPtr(d.Get("mtu").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ringsize"); !raw.IsNull() {
+		Interface.Ringsize = intPtr(d.Get("ringsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("throughput"); !raw.IsNull() {
+		Interface.Throughput = intPtr(d.Get("throughput").(int))
 	}
 
 	_, err := client.UpdateResource(service.Interface.Type(), "", &Interface)
 	if err != nil {
-		return fmt.Errorf("Error creating Interface %s. %s", interfaceId, err.Error())
+		return diag.Errorf("Error creating Interface %s. %s", interfaceId, err.Error())
 	}
 
 	d.SetId(interfaceId)
 
-	err = readInterfaceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this Interface but we can't read it ?? %s", interfaceId)
-		return nil
-	}
-	return nil
+	return readInterfaceFunc(ctx, d, meta)
 }
 
-func readInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func readInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readInterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	interfaceId := d.Id()
@@ -223,35 +238,35 @@ func readInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	if !foundInterface {
 		log.Printf("[WARN] citrixadc-provider: Clearing interface state %s", interfaceId)
 		d.SetId("")
-		return fmt.Errorf("Could not read interface %v", interfaceId)
+		return diag.Errorf("Could not read interface %v", interfaceId)
 	}
 	// Fallthrough
 
 	data := array[foundIndex]
 
 	d.Set("autoneg", data["autoneg"])
-	d.Set("bandwidthhigh", data["bandwidthhigh"])
-	d.Set("bandwidthnormal", data["bandwidthnormal"])
+	setToInt("bandwidthhigh", d, data["bandwidthhigh"])
+	setToInt("bandwidthnormal", d, data["bandwidthnormal"])
 	d.Set("duplex", data["actduplex"])
 	d.Set("flowctl", data["actflowctl"])
 	d.Set("haheartbeat", data["haheartbeat"])
 	d.Set("hamonitor", data["hamonitor"])
 	d.Set("interface_id", interfaceId)
 	d.Set("ifalias", data["ifalias"])
-	d.Set("lacpkey", data["lacpkey"])
+	setToInt("lacpkey", d, data["lacpkey"])
 	d.Set("lacpmode", data["lacpmode"])
-	d.Set("lacppriority", data["lacppriority"])
+	setToInt("lacppriority", d, data["lacppriority"])
 	d.Set("lacptimeout", data["lacptimeout"])
 	d.Set("lagtype", data["lagtype"])
 	d.Set("linkredundancy", data["linkredundancy"])
 	d.Set("lldpmode", data["lldpmode"])
-	d.Set("lrsetpriority", data["lrsetpriority"])
+	setToInt("lrsetpriority", d, data["lrsetpriority"])
 	setToInt("mtu", d, data["mtu"])
-	d.Set("ringsize", data["ringsize"])
+	setToInt("ringsize", d, data["ringsize"])
 	d.Set("ringtype", data["ringtype"])
 	d.Set("speed", data["actspeed"])
 	d.Set("tagall", data["tagall"])
-	d.Set("throughput", data["actthroughput"])
+	setToInt("throughput", d, data["actthroughput"])
 	d.Set("trunk", data["trunk"])
 	d.Set("trunkmode", data["trunkmode"])
 
@@ -259,7 +274,7 @@ func readInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateInterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	interfaceId := d.Get("interface_id").(string)
@@ -276,12 +291,12 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("bandwidthhigh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bandwidthhigh has changed for Interface %s, starting update", interfaceId)
-		Interface.Bandwidthhigh = d.Get("bandwidthhigh").(int)
+		Interface.Bandwidthhigh = intPtr(d.Get("bandwidthhigh").(int))
 		hasChange = true
 	}
 	if d.HasChange("bandwidthnormal") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bandwidthnormal has changed for Interface %s, starting update", interfaceId)
-		Interface.Bandwidthnormal = d.Get("bandwidthnormal").(int)
+		Interface.Bandwidthnormal = intPtr(d.Get("bandwidthnormal").(int))
 		hasChange = true
 	}
 	if d.HasChange("duplex") {
@@ -316,7 +331,7 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("lacpkey") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lacpkey has changed for Interface %s, starting update", interfaceId)
-		Interface.Lacpkey = d.Get("lacpkey").(int)
+		Interface.Lacpkey = intPtr(d.Get("lacpkey").(int))
 		hasChange = true
 	}
 	if d.HasChange("lacpmode") {
@@ -326,7 +341,7 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("lacppriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lacppriority has changed for Interface %s, starting update", interfaceId)
-		Interface.Lacppriority = d.Get("lacppriority").(int)
+		Interface.Lacppriority = intPtr(d.Get("lacppriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("lacptimeout") {
@@ -351,17 +366,17 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("lrsetpriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lrsetpriority has changed for Interface %s, starting update", interfaceId)
-		Interface.Lrsetpriority = d.Get("lrsetpriority").(int)
+		Interface.Lrsetpriority = intPtr(d.Get("lrsetpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("mtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mtu has changed for Interface %s, starting update", interfaceId)
-		Interface.Mtu = d.Get("mtu").(int)
+		Interface.Mtu = intPtr(d.Get("mtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("ringsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ringsize has changed for Interface %s, starting update", interfaceId)
-		Interface.Ringsize = d.Get("ringsize").(int)
+		Interface.Ringsize = intPtr(d.Get("ringsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("ringtype") {
@@ -381,7 +396,7 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("throughput") {
 		log.Printf("[DEBUG]  citrixadc-provider: Throughput has changed for Interface %s, starting update", interfaceId)
-		Interface.Throughput = d.Get("throughput").(int)
+		Interface.Throughput = intPtr(d.Get("throughput").(int))
 		hasChange = true
 	}
 	if d.HasChange("trunk") {
@@ -401,17 +416,17 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	if stateChange {
 		err := doInterfaceStateChange(d, client)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Interface.Type(), "", &Interface)
 		if err != nil {
-			return fmt.Errorf("Error updating Interface %s. %s", interfaceId, err.Error())
+			return diag.Errorf("Error updating Interface %s. %s", interfaceId, err.Error())
 		}
 	}
-	return readInterfaceFunc(d, meta)
+	return readInterfaceFunc(ctx, d, meta)
 }
 
 func doInterfaceStateChange(d *schema.ResourceData, client *service.NitroClient) error {
@@ -441,7 +456,7 @@ func doInterfaceStateChange(d *schema.ResourceData, client *service.NitroClient)
 
 	return nil
 }
-func deleteInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteInterfaceFunc")
 	// We cannot really delete the interface.
 	// Hardware changes can only delete interfaces

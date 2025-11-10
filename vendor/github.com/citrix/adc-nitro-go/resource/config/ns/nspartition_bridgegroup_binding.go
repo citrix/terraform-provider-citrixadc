@@ -23,7 +23,7 @@ type Nspartitionbridgegroupbinding struct {
 	/**
 	* Identifier of the bridge group that is assigned to this partition.
 	*/
-	Bridgegroup int `json:"bridgegroup,omitempty"`
+	Bridgegroup *int `json:"bridgegroup,omitempty"`
 	/**
 	* Name of the Partition. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 	*/

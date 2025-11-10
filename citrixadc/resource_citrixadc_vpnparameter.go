@@ -1,24 +1,57 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVpnparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnparameterFunc,
-		Read:          readVpnparameterFunc,
-		Update:        updateVpnparameterFunc,
-		Delete:        deleteVpnparameterFunc, // Thought vpnparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createVpnparameterFunc,
+		ReadContext:   readVpnparameterFunc,
+		UpdateContext: updateVpnparameterFunc,
+		DeleteContext: deleteVpnparameterFunc, // Thought vpnparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
+			"secureprivateaccess": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"maxiipperuser": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"httptrackconnproxy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"deviceposture": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"backenddtls12": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"accessrestrictedpageredirect": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"advancedclientlessvpnmode": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -442,114 +475,129 @@ func resourceCitrixAdcVpnparameter() *schema.Resource {
 	}
 }
 
-func createVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var vpnparameterName string
 	// there is no primary key in VPNPARAMETER resource. Hence generate one for terraform state maintenance
 	vpnparameterName = resource.PrefixedUniqueId("tf-vpnparameter-")
 	vpnparameter := vpn.Vpnparameter{
-		Advancedclientlessvpnmode:  d.Get("advancedclientlessvpnmode").(string),
-		Allowedlogingroups:         d.Get("allowedlogingroups").(string),
-		Allprotocolproxy:           d.Get("allprotocolproxy").(string),
-		Alwaysonprofilename:        d.Get("alwaysonprofilename").(string),
-		Apptokentimeout:            d.Get("apptokentimeout").(int),
-		Authorizationgroup:         d.Get("authorizationgroup").(string),
-		Autoproxyurl:               d.Get("autoproxyurl").(string),
-		Backendcertvalidation:      d.Get("backendcertvalidation").(string),
-		Backendserversni:           d.Get("backendserversni").(string),
-		Citrixreceiverhome:         d.Get("citrixreceiverhome").(string),
-		Clientchoices:              d.Get("clientchoices").(string),
-		Clientcleanupprompt:        d.Get("clientcleanupprompt").(string),
-		Clientconfiguration:        toStringList(d.Get("clientconfiguration").([]interface{})),
-		Clientdebug:                d.Get("clientdebug").(string),
-		Clientidletimeout:          d.Get("clientidletimeout").(int),
-		Clientlessmodeurlencoding:  d.Get("clientlessmodeurlencoding").(string),
-		Clientlesspersistentcookie: d.Get("clientlesspersistentcookie").(string),
-		Clientlessvpnmode:          d.Get("clientlessvpnmode").(string),
-		Clientoptions:              toStringList(d.Get("clientoptions").([]interface{})),
-		Clientsecurity:             d.Get("clientsecurity").(string),
-		Clientsecuritygroup:        d.Get("clientsecuritygroup").(string),
-		Clientsecuritylog:          d.Get("clientsecuritylog").(string),
-		Clientsecuritymessage:      d.Get("clientsecuritymessage").(string),
-		Clientversions:             d.Get("clientversions").(string),
-		Defaultauthorizationaction: d.Get("defaultauthorizationaction").(string),
-		Dnsvservername:             d.Get("dnsvservername").(string),
-		Emailhome:                  d.Get("emailhome").(string),
-		Encryptcsecexp:             d.Get("encryptcsecexp").(string),
-		Epaclienttype:              d.Get("epaclienttype").(string),
-		Forcecleanup:               toStringList(d.Get("forcecleanup").([]interface{})),
-		Forcedtimeout:              d.Get("forcedtimeout").(int),
-		Forcedtimeoutwarning:       d.Get("forcedtimeoutwarning").(int),
-		Fqdnspoofedip:              d.Get("fqdnspoofedip").(string),
-		Ftpproxy:                   d.Get("ftpproxy").(string),
-		Gopherproxy:                d.Get("gopherproxy").(string),
-		Homepage:                   d.Get("homepage").(string),
-		Httpport:                   toIntegerList(d.Get("httpport").([]interface{})),
-		Httpproxy:                  d.Get("httpproxy").(string),
-		Icaproxy:                   d.Get("icaproxy").(string),
-		Icasessiontimeout:          d.Get("icasessiontimeout").(string),
-		Icauseraccounting:          d.Get("icauseraccounting").(string),
-		Iconwithreceiver:           d.Get("iconwithreceiver").(string),
-		Iipdnssuffix:               d.Get("iipdnssuffix").(string),
-		Kcdaccount:                 d.Get("kcdaccount").(string),
-		Killconnections:            d.Get("killconnections").(string),
-		Linuxpluginupgrade:         d.Get("linuxpluginupgrade").(string),
-		Locallanaccess:             d.Get("locallanaccess").(string),
-		Loginscript:                d.Get("loginscript").(string),
-		Logoutscript:               d.Get("logoutscript").(string),
-		Macpluginupgrade:           d.Get("macpluginupgrade").(string),
-		Mdxtokentimeout:            d.Get("mdxtokentimeout").(int),
-		Netmask:                    d.Get("netmask").(string),
-		Ntdomain:                   d.Get("ntdomain").(string),
-		Pcoipprofilename:           d.Get("pcoipprofilename").(string),
-		Proxy:                      d.Get("proxy").(string),
-		Proxyexception:             d.Get("proxyexception").(string),
-		Proxylocalbypass:           d.Get("proxylocalbypass").(string),
-		Rdpclientprofilename:       d.Get("rdpclientprofilename").(string),
-		Rfc1918:                    d.Get("rfc1918").(string),
-		Samesite:                   d.Get("samesite").(string),
-		Securebrowse:               d.Get("securebrowse").(string),
-		Sesstimeout:                d.Get("sesstimeout").(int),
-		Smartgroup:                 d.Get("smartgroup").(string),
-		Socksproxy:                 d.Get("socksproxy").(string),
-		Splitdns:                   d.Get("splitdns").(string),
-		Splittunnel:                d.Get("splittunnel").(string),
-		Spoofiip:                   d.Get("spoofiip").(string),
-		Sslproxy:                   d.Get("sslproxy").(string),
-		Sso:                        d.Get("sso").(string),
-		Ssocredential:              d.Get("ssocredential").(string),
-		Storefronturl:              d.Get("storefronturl").(string),
-		Transparentinterception:    d.Get("transparentinterception").(string),
-		Uitheme:                    d.Get("uitheme").(string),
-		Useiip:                     d.Get("useiip").(string),
-		Usemip:                     d.Get("usemip").(string),
-		Userdomains:                d.Get("userdomains").(string),
-		Wihome:                     d.Get("wihome").(string),
-		Wihomeaddresstype:          d.Get("wihomeaddresstype").(string),
-		Windowsautologon:           d.Get("windowsautologon").(string),
-		Windowsclienttype:          d.Get("windowsclienttype").(string),
-		Windowspluginupgrade:       d.Get("windowspluginupgrade").(string),
-		Winsip:                     d.Get("winsip").(string),
-		Wiportalmode:               d.Get("wiportalmode").(string),
+		Advancedclientlessvpnmode:    d.Get("advancedclientlessvpnmode").(string),
+		Allowedlogingroups:           d.Get("allowedlogingroups").(string),
+		Allprotocolproxy:             d.Get("allprotocolproxy").(string),
+		Alwaysonprofilename:          d.Get("alwaysonprofilename").(string),
+		Authorizationgroup:           d.Get("authorizationgroup").(string),
+		Autoproxyurl:                 d.Get("autoproxyurl").(string),
+		Backendcertvalidation:        d.Get("backendcertvalidation").(string),
+		Backendserversni:             d.Get("backendserversni").(string),
+		Citrixreceiverhome:           d.Get("citrixreceiverhome").(string),
+		Clientchoices:                d.Get("clientchoices").(string),
+		Clientcleanupprompt:          d.Get("clientcleanupprompt").(string),
+		Clientconfiguration:          toStringList(d.Get("clientconfiguration").([]interface{})),
+		Clientdebug:                  d.Get("clientdebug").(string),
+		Clientlessmodeurlencoding:    d.Get("clientlessmodeurlencoding").(string),
+		Clientlesspersistentcookie:   d.Get("clientlesspersistentcookie").(string),
+		Clientlessvpnmode:            d.Get("clientlessvpnmode").(string),
+		Clientoptions:                toStringList(d.Get("clientoptions").([]interface{})),
+		Clientsecurity:               d.Get("clientsecurity").(string),
+		Clientsecuritygroup:          d.Get("clientsecuritygroup").(string),
+		Clientsecuritylog:            d.Get("clientsecuritylog").(string),
+		Clientsecuritymessage:        d.Get("clientsecuritymessage").(string),
+		Clientversions:               d.Get("clientversions").(string),
+		Defaultauthorizationaction:   d.Get("defaultauthorizationaction").(string),
+		Dnsvservername:               d.Get("dnsvservername").(string),
+		Emailhome:                    d.Get("emailhome").(string),
+		Encryptcsecexp:               d.Get("encryptcsecexp").(string),
+		Epaclienttype:                d.Get("epaclienttype").(string),
+		Forcecleanup:                 toStringList(d.Get("forcecleanup").([]interface{})),
+		Fqdnspoofedip:                d.Get("fqdnspoofedip").(string),
+		Ftpproxy:                     d.Get("ftpproxy").(string),
+		Gopherproxy:                  d.Get("gopherproxy").(string),
+		Homepage:                     d.Get("homepage").(string),
+		Httpport:                     toIntegerList(d.Get("httpport").([]interface{})),
+		Httpproxy:                    d.Get("httpproxy").(string),
+		Icaproxy:                     d.Get("icaproxy").(string),
+		Icasessiontimeout:            d.Get("icasessiontimeout").(string),
+		Icauseraccounting:            d.Get("icauseraccounting").(string),
+		Iconwithreceiver:             d.Get("iconwithreceiver").(string),
+		Iipdnssuffix:                 d.Get("iipdnssuffix").(string),
+		Kcdaccount:                   d.Get("kcdaccount").(string),
+		Killconnections:              d.Get("killconnections").(string),
+		Linuxpluginupgrade:           d.Get("linuxpluginupgrade").(string),
+		Locallanaccess:               d.Get("locallanaccess").(string),
+		Loginscript:                  d.Get("loginscript").(string),
+		Logoutscript:                 d.Get("logoutscript").(string),
+		Macpluginupgrade:             d.Get("macpluginupgrade").(string),
+		Netmask:                      d.Get("netmask").(string),
+		Ntdomain:                     d.Get("ntdomain").(string),
+		Pcoipprofilename:             d.Get("pcoipprofilename").(string),
+		Proxy:                        d.Get("proxy").(string),
+		Proxyexception:               d.Get("proxyexception").(string),
+		Proxylocalbypass:             d.Get("proxylocalbypass").(string),
+		Rdpclientprofilename:         d.Get("rdpclientprofilename").(string),
+		Rfc1918:                      d.Get("rfc1918").(string),
+		Samesite:                     d.Get("samesite").(string),
+		Securebrowse:                 d.Get("securebrowse").(string),
+		Smartgroup:                   d.Get("smartgroup").(string),
+		Socksproxy:                   d.Get("socksproxy").(string),
+		Splitdns:                     d.Get("splitdns").(string),
+		Splittunnel:                  d.Get("splittunnel").(string),
+		Spoofiip:                     d.Get("spoofiip").(string),
+		Sslproxy:                     d.Get("sslproxy").(string),
+		Sso:                          d.Get("sso").(string),
+		Ssocredential:                d.Get("ssocredential").(string),
+		Storefronturl:                d.Get("storefronturl").(string),
+		Transparentinterception:      d.Get("transparentinterception").(string),
+		Uitheme:                      d.Get("uitheme").(string),
+		Useiip:                       d.Get("useiip").(string),
+		Usemip:                       d.Get("usemip").(string),
+		Userdomains:                  d.Get("userdomains").(string),
+		Wihome:                       d.Get("wihome").(string),
+		Wihomeaddresstype:            d.Get("wihomeaddresstype").(string),
+		Windowsautologon:             d.Get("windowsautologon").(string),
+		Windowsclienttype:            d.Get("windowsclienttype").(string),
+		Windowspluginupgrade:         d.Get("windowspluginupgrade").(string),
+		Winsip:                       d.Get("winsip").(string),
+		Wiportalmode:                 d.Get("wiportalmode").(string),
+		Accessrestrictedpageredirect: d.Get("accessrestrictedpageredirect").(string),
+		Backenddtls12:                d.Get("backenddtls12").(string),
+		Deviceposture:                d.Get("deviceposture").(string),
+		Httptrackconnproxy:           d.Get("httptrackconnproxy").(string),
+		Secureprivateaccess:          d.Get("secureprivateaccess").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("maxiipperuser"); !raw.IsNull() {
+		vpnparameter.Maxiipperuser = intPtr(d.Get("maxiipperuser").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("apptokentimeout"); !raw.IsNull() {
+		vpnparameter.Apptokentimeout = intPtr(d.Get("apptokentimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("clientidletimeout"); !raw.IsNull() {
+		vpnparameter.Clientidletimeout = intPtr(d.Get("clientidletimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("forcedtimeout"); !raw.IsNull() {
+		vpnparameter.Forcedtimeout = intPtr(d.Get("forcedtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("forcedtimeoutwarning"); !raw.IsNull() {
+		vpnparameter.Forcedtimeoutwarning = intPtr(d.Get("forcedtimeoutwarning").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mdxtokentimeout"); !raw.IsNull() {
+		vpnparameter.Mdxtokentimeout = intPtr(d.Get("mdxtokentimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		vpnparameter.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnparameter.Type(), &vpnparameter)
 	if err != nil {
-		return fmt.Errorf("Error updating vpnparameter")
+		return diag.Errorf("Error updating vpnparameter")
 	}
 
 	d.SetId(vpnparameterName)
 
-	err = readVpnparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnparameter but we can't read it ?? %s", vpnparameterName)
-		return nil
-	}
-	return nil
+	return readVpnparameterFunc(ctx, d, meta)
 }
 
-func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading vpnparameter state")
@@ -560,10 +608,16 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("advancedclientlessvpnmode", data["advancedclientlessvpnmode"])
+	d.Set("secureprivateaccess", data["secureprivateaccess"])
+	setToInt("maxiipperuser", d, data["maxiipperuser"])
+	d.Set("httptrackconnproxy", data["httptrackconnproxy"])
+	d.Set("deviceposture", data["deviceposture"])
+	d.Set("backenddtls12", data["backenddtls12"])
+	d.Set("accessrestrictedpageredirect", data["accessrestrictedpageredirect"])
 	d.Set("allowedlogingroups", data["allowedlogingroups"])
 	d.Set("allprotocolproxy", data["allprotocolproxy"])
 	d.Set("alwaysonprofilename", data["alwaysonprofilename"])
-	d.Set("apptokentimeout", data["apptokentimeout"])
+	setToInt("apptokentimeout", d, data["apptokentimeout"])
 	d.Set("authorizationgroup", data["authorizationgroup"])
 	d.Set("autoproxyurl", data["autoproxyurl"])
 	d.Set("backendcertvalidation", data["backendcertvalidation"])
@@ -573,7 +627,7 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("clientcleanupprompt", data["clientcleanupprompt"])
 	d.Set("clientconfiguration", data["clientconfiguration"])
 	d.Set("clientdebug", data["clientdebug"])
-	d.Set("clientidletimeout", data["clientidletimeout"])
+	setToInt("clientidletimeout", d, data["clientidletimeout"])
 	d.Set("clientlessmodeurlencoding", data["clientlessmodeurlencoding"])
 	d.Set("clientlesspersistentcookie", data["clientlesspersistentcookie"])
 	d.Set("clientlessvpnmode", data["clientlessvpnmode"])
@@ -589,13 +643,12 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("encryptcsecexp", data["encryptcsecexp"])
 	d.Set("epaclienttype", data["epaclienttype"])
 	d.Set("forcecleanup", data["forcecleanup"])
-	d.Set("forcedtimeout", data["forcedtimeout"])
-	d.Set("forcedtimeoutwarning", data["forcedtimeoutwarning"])
+	setToInt("forcedtimeout", d, data["forcedtimeout"])
+	setToInt("forcedtimeoutwarning", d, data["forcedtimeoutwarning"])
 	d.Set("fqdnspoofedip", data["fqdnspoofedip"])
 	d.Set("ftpproxy", data["ftpproxy"])
 	d.Set("gopherproxy", data["gopherproxy"])
 	d.Set("homepage", data["homepage"])
-	d.Set("httpport", data["httpport"])
 	d.Set("httpproxy", data["httpproxy"])
 	d.Set("icaproxy", data["icaproxy"])
 	d.Set("icasessiontimeout", data["icasessiontimeout"])
@@ -609,7 +662,7 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("loginscript", data["loginscript"])
 	d.Set("logoutscript", data["logoutscript"])
 	d.Set("macpluginupgrade", data["macpluginupgrade"])
-	d.Set("mdxtokentimeout", data["mdxtokentimeout"])
+	setToInt("mdxtokentimeout", d, data["mdxtokentimeout"])
 	d.Set("netmask", data["netmask"])
 	d.Set("ntdomain", data["ntdomain"])
 	d.Set("pcoipprofilename", data["pcoipprofilename"])
@@ -620,7 +673,7 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("rfc1918", data["rfc1918"])
 	d.Set("samesite", data["samesite"])
 	d.Set("securebrowse", data["securebrowse"])
-	d.Set("sesstimeout", data["sesstimeout"])
+	setToInt("sesstimeout", d, data["sesstimeout"])
 	d.Set("smartgroup", data["smartgroup"])
 	d.Set("socksproxy", data["socksproxy"])
 	d.Set("splitdns", data["splitdns"])
@@ -642,16 +695,50 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("windowspluginupgrade", data["windowspluginupgrade"])
 	d.Set("winsip", data["winsip"])
 	d.Set("wiportalmode", data["wiportalmode"])
+	// Convert httpport from []string to []int before setting
+	if httpPort, ok := data["httpport"]; ok && httpPort != nil {
+		d.Set("httpport", stringListToIntList(httpPort.([]interface{})))
+	}
 
 	return nil
 
 }
 
-func updateVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnparameter := vpn.Vpnparameter{}
 	hasChange := false
+	if d.HasChange("secureprivateaccess") {
+		log.Printf("[DEBUG]  citrixadc-provider: Secureprivateaccess has changed for vpnparameter, starting update")
+		vpnparameter.Secureprivateaccess = d.Get("secureprivateaccess").(string)
+		hasChange = true
+	}
+	if d.HasChange("maxiipperuser") {
+		log.Printf("[DEBUG]  citrixadc-provider: Maxiipperuser has changed for vpnparameter, starting update")
+		vpnparameter.Maxiipperuser = intPtr(d.Get("maxiipperuser").(int))
+		hasChange = true
+	}
+	if d.HasChange("httptrackconnproxy") {
+		log.Printf("[DEBUG]  citrixadc-provider: Httptrackconnproxy has changed for vpnparameter, starting update")
+		vpnparameter.Httptrackconnproxy = d.Get("httptrackconnproxy").(string)
+		hasChange = true
+	}
+	if d.HasChange("deviceposture") {
+		log.Printf("[DEBUG]  citrixadc-provider: Deviceposture has changed for vpnparameter, starting update")
+		vpnparameter.Deviceposture = d.Get("deviceposture").(string)
+		hasChange = true
+	}
+	if d.HasChange("backenddtls12") {
+		log.Printf("[DEBUG]  citrixadc-provider: Backenddtls12 has changed for vpnparameter, starting update")
+		vpnparameter.Backenddtls12 = d.Get("backenddtls12").(string)
+		hasChange = true
+	}
+	if d.HasChange("accessrestrictedpageredirect") {
+		log.Printf("[DEBUG]  citrixadc-provider: Accessrestrictedpageredirect has changed for vpnparameter, starting update")
+		vpnparameter.Accessrestrictedpageredirect = d.Get("accessrestrictedpageredirect").(string)
+		hasChange = true
+	}
 	if d.HasChange("advancedclientlessvpnmode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Advancedclientlessvpnmode has changed for vpnparameter vpnparameter, starting update")
 		vpnparameter.Advancedclientlessvpnmode = d.Get("advancedclientlessvpnmode").(string)
@@ -674,7 +761,7 @@ func updateVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("apptokentimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Apptokentimeout has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Apptokentimeout = d.Get("apptokentimeout").(int)
+		vpnparameter.Apptokentimeout = intPtr(d.Get("apptokentimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("authorizationgroup") {
@@ -724,7 +811,7 @@ func updateVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("clientidletimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clientidletimeout has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Clientidletimeout = d.Get("clientidletimeout").(int)
+		vpnparameter.Clientidletimeout = intPtr(d.Get("clientidletimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("clientlessmodeurlencoding") {
@@ -804,12 +891,12 @@ func updateVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("forcedtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Forcedtimeout has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Forcedtimeout = d.Get("forcedtimeout").(int)
+		vpnparameter.Forcedtimeout = intPtr(d.Get("forcedtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("forcedtimeoutwarning") {
 		log.Printf("[DEBUG]  citrixadc-provider: Forcedtimeoutwarning has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Forcedtimeoutwarning = d.Get("forcedtimeoutwarning").(int)
+		vpnparameter.Forcedtimeoutwarning = intPtr(d.Get("forcedtimeoutwarning").(int))
 		hasChange = true
 	}
 	if d.HasChange("fqdnspoofedip") {
@@ -904,7 +991,7 @@ func updateVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("mdxtokentimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mdxtokentimeout has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Mdxtokentimeout = d.Get("mdxtokentimeout").(int)
+		vpnparameter.Mdxtokentimeout = intPtr(d.Get("mdxtokentimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("netmask") {
@@ -959,7 +1046,7 @@ func updateVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Sesstimeout = d.Get("sesstimeout").(int)
+		vpnparameter.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("smartgroup") {
@@ -1071,13 +1158,13 @@ func updateVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Vpnparameter.Type(), &vpnparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnparameter %s", err.Error())
+			return diag.Errorf("Error updating vpnparameter %s", err.Error())
 		}
 	}
-	return readVpnparameterFunc(d, meta)
+	return readVpnparameterFunc(ctx, d, meta)
 }
 
-func deleteVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnparameterFunc")
 	// vpnparameter do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

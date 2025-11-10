@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strconv"
 	"testing"
 )
@@ -39,9 +39,9 @@ const testAccCacheforwardproxy_update = `
 
 func TestAccCacheforwardproxy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCacheforwardproxyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckCacheforwardproxyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCacheforwardproxy_basic,
@@ -82,8 +82,12 @@ func testAccCheckCacheforwardproxyExist(n string, id *string) resource.TestCheck
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		dataArr, err := nsClient.FindAllResources(service.Cacheforwardproxy.Type())
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Cacheforwardproxy.Type())
 
 		if err != nil {
 			return err
@@ -106,7 +110,11 @@ func testAccCheckCacheforwardproxyExist(n string, id *string) resource.TestCheck
 }
 
 func testAccCheckCacheforwardproxyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_cacheforwardproxy" {
@@ -117,7 +125,7 @@ func testAccCheckCacheforwardproxyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		dataArr, err := nsClient.FindAllResources(service.Cacheforwardproxy.Type())
+		dataArr, err := client.FindAllResources(service.Cacheforwardproxy.Type())
 
 		if err != nil {
 			return err

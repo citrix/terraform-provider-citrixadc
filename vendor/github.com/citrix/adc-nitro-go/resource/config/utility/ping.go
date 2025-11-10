@@ -21,11 +21,11 @@ type Ping struct {
 	/**
 	* Number of packets to send. The default value is infinite. For Nitro API, defalut value is taken as 5.
 	*/
-	C int `json:"c,omitempty"`
+	C *int `json:"c,omitempty"`
 	/**
 	* Waiting time, in seconds. The default value is 1 second.
 	*/
-	I int `json:"i,omitempty"`
+	I *int `json:"i,omitempty"`
 	/**
 	* Network interface on which to ping, if you have multiple interfaces.
 	*/
@@ -45,7 +45,7 @@ type Ping struct {
 	/**
 	* Data size, in bytes. The default value is 56.
 	*/
-	S int `json:"s,omitempty"`
+	S *int `json:"s,omitempty"`
 	/**
 	* Source IP address to be used in the outgoing query packets. If the IP addrESS does not belongs to this appliance, an error is returned and nothing is sent.
 	*/
@@ -53,11 +53,11 @@ type Ping struct {
 	/**
 	* Traffic Domain Id
 	*/
-	T int `json:"T,omitempty"`
+	T *int `json:"T,omitempty"`
 	/**
 	* Time-out, in seconds, before ping exits.
 	*/
-	T_ int `json:"t,omitempty"`
+	T_ *int `json:"t,omitempty"`
 	/**
 	* Address of host to ping.
 	*/

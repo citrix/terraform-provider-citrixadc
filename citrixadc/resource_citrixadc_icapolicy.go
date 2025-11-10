@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/ica"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/ica"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIcapolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIcapolicyFunc,
-		Read:          readIcapolicyFunc,
-		Update:        updateIcapolicyFunc,
-		Delete:        deleteIcapolicyFunc,
+		CreateContext: createIcapolicyFunc,
+		ReadContext:   readIcapolicyFunc,
+		UpdateContext: updateIcapolicyFunc,
+		DeleteContext: deleteIcapolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -46,7 +49,7 @@ func resourceCitrixAdcIcapolicy() *schema.Resource {
 	}
 }
 
-func createIcapolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createIcapolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIcapolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icapolicyName := d.Get("name").(string)
@@ -60,20 +63,15 @@ func createIcapolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("icapolicy", icapolicyName, &icapolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(icapolicyName)
 
-	err = readIcapolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this icapolicy but we can't read it ?? %s", icapolicyName)
-		return nil
-	}
-	return nil
+	return readIcapolicyFunc(ctx, d, meta)
 }
 
-func readIcapolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readIcapolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIcapolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icapolicyName := d.Id()
@@ -94,7 +92,7 @@ func readIcapolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateIcapolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIcapolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIcapolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icapolicyName := d.Get("name").(string)
@@ -127,19 +125,19 @@ func updateIcapolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("icapolicy", &icapolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating icapolicy %s", icapolicyName)
+			return diag.Errorf("Error updating icapolicy %s", icapolicyName)
 		}
 	}
-	return readIcapolicyFunc(d, meta)
+	return readIcapolicyFunc(ctx, d, meta)
 }
 
-func deleteIcapolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIcapolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIcapolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icapolicyName := d.Id()
 	err := client.DeleteResource("icapolicy", icapolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

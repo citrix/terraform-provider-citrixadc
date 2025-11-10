@@ -1,24 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVpnvserver_feopolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnvserver_feopolicy_bindingFunc,
-		Read:          readVpnvserver_feopolicy_bindingFunc,
-		Delete:        deleteVpnvserver_feopolicy_bindingFunc,
+		CreateContext: createVpnvserver_feopolicy_bindingFunc,
+		ReadContext:   readVpnvserver_feopolicy_bindingFunc,
+		DeleteContext: deleteVpnvserver_feopolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,7 +71,7 @@ func resourceCitrixAdcVpnvserver_feopolicy_binding() *schema.Resource {
 	}
 }
 
-func createVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnvserver_feopolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnvserver_feopolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -79,26 +83,24 @@ func createVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interfa
 		Groupextraction:        d.Get("groupextraction").(bool),
 		Name:                   d.Get("name").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vpnvserver_feopolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnvserver_feopolicy_binding.Type(), &vpnvserver_feopolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readVpnvserver_feopolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnvserver_feopolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readVpnvserver_feopolicy_bindingFunc(ctx, d, meta)
 }
 
-func readVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnvserver_feopolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnvserver_feopolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -119,7 +121,7 @@ func readVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -154,7 +156,7 @@ func readVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("groupextraction", data["groupextraction"])
 	d.Set("name", data["name"])
-	d.Set("policyname", data["policy"]) // we are getting policy as policyname
+	d.Set("policy", data["policyname"]) // we are getting policy as policyname
 	setToInt("priority", d, data["priority"])
 	d.Set("secondary", data["secondary"])
 
@@ -162,7 +164,7 @@ func readVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deleteVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnvserver_feopolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnvserver_feopolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -185,7 +187,7 @@ func deleteVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interfa
 	}
 	err := client.DeleteResourceWithArgs(service.Vpnvserver_feopolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -24,7 +24,7 @@ type Vpnvservervpnnexthopserverbinding struct {
 	* The name of the next hop server bound to the VPN virtual server.
 	*/
 	Nexthopserver string `json:"nexthopserver,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

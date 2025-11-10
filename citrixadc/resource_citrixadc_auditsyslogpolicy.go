@@ -1,30 +1,33 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"bytes"
 	"fmt"
 	"log"
 	"net/url"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuditsyslogpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuditsyslogpolicyFunc,
-		Read:          readAuditsyslogpolicyFunc,
-		Update:        updateAuditsyslogpolicyFunc,
-		Delete:        deleteAuditsyslogpolicyFunc,
+		CreateContext: createAuditsyslogpolicyFunc,
+		ReadContext:   readAuditsyslogpolicyFunc,
+		UpdateContext: updateAuditsyslogpolicyFunc,
+		DeleteContext: deleteAuditsyslogpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -82,7 +85,7 @@ func resourceCitrixAdcAuditsyslogpolicy() *schema.Resource {
 	}
 }
 
-func createAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuditsyslogpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuditsyslogpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var auditsyslogpolicyName string
@@ -100,24 +103,19 @@ func createAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 
 	_, err := client.AddResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyName, &auditsyslogpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := syncSystemglobalAuditsyslogpolicyBinding(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(auditsyslogpolicyName)
 
-	err = readAuditsyslogpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this auditsyslogpolicy but we can't read it ?? %s", auditsyslogpolicyName)
-		return nil
-	}
-	return nil
+	return readAuditsyslogpolicyFunc(ctx, d, meta)
 }
 
-func readAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuditsyslogpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuditsyslogpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogpolicyName := d.Id()
@@ -134,14 +132,14 @@ func readAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("rule", data["rule"])
 
 	if err := readSystemglobalAuditsyslogpolicyBinding(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 
 }
 
-func updateAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuditsyslogpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuditsyslogpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogpolicyName := d.Get("name").(string)
@@ -169,18 +167,18 @@ func updateAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 	if hasChange {
 		_, err := client.UpdateResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyName, &auditsyslogpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating auditsyslogpolicy %s: %s", auditsyslogpolicyName, err.Error())
+			return diag.Errorf("Error updating auditsyslogpolicy %s: %s", auditsyslogpolicyName, err.Error())
 		}
 	}
 
 	if err := syncSystemglobalAuditsyslogpolicyBinding(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return readAuditsyslogpolicyFunc(d, meta)
+	return readAuditsyslogpolicyFunc(ctx, d, meta)
 }
 
-func deleteAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuditsyslogpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditsyslogpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogpolicyName := d.Id()
@@ -191,13 +189,13 @@ func deleteAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 		h := v.(*schema.Set).List()[0]
 		err := deleteSystemglobalAuditsyslogpolicyBinding(d, meta, h.(map[string]interface{}))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	err := client.DeleteResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -304,7 +302,7 @@ func addSystemglobalAuditsyslogpolicyBinding(d *schema.ResourceData, meta interf
 		bindingStruct.Gotopriorityexpression = d.(string)
 	}
 	if d, ok := binding["priority"]; ok {
-		bindingStruct.Priority = d.(int)
+		bindingStruct.Priority = intPtr(d.(int))
 	}
 
 	if err := client.UpdateUnnamedResource("systemglobal_auditsyslogpolicy_binding", bindingStruct); err != nil {
@@ -351,5 +349,5 @@ func auditsyslogpolicyGlobalbindingMappingHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
 	}
 
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }

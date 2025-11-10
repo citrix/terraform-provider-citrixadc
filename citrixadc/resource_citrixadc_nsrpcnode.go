@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsrpcnode() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsrpcnodeFunc,
-		Read:          readNsrpcnodeFunc,
-		Update:        updateNsrpcnodeFunc,
-		Delete:        deleteNsrpcnodeFunc,
+		CreateContext: createNsrpcnodeFunc,
+		ReadContext:   readNsrpcnodeFunc,
+		UpdateContext: updateNsrpcnodeFunc,
+		DeleteContext: deleteNsrpcnodeFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ipaddress": {
@@ -51,7 +53,7 @@ func resourceCitrixAdcNsrpcnode() *schema.Resource {
 	}
 }
 
-func createNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsrpcnodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsrpcnodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsrpcnodeIpaddress := d.Get("ipaddress").(string)
@@ -66,20 +68,15 @@ func createNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nsrpcnode.Type(), &nsrpcnode)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsrpcnodeIpaddress)
 
-	err = readNsrpcnodeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsrpcnode but we can't read it ?? %s", nsrpcnodeIpaddress)
-		return nil
-	}
-	return nil
+	return readNsrpcnodeFunc(ctx, d, meta)
 }
 
-func readNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsrpcnodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsrpcnodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsrpcnodeIpaddress := d.Id()
@@ -104,7 +101,7 @@ func readNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(dataArray) != 1 {
-		return fmt.Errorf("[ERROR] Read multiple nsprcnode instances %v", dataArray)
+		return diag.Errorf("[ERROR] Read multiple nsprcnode instances %v", dataArray)
 	}
 	data := dataArray[0]
 
@@ -119,7 +116,7 @@ func readNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsrpcnodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsrpcnodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsrpcnodeIpaddress := d.Get("ipaddress").(string)
@@ -153,13 +150,13 @@ func updateNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nsrpcnode.Type(), &nsrpcnode)
 		if err != nil {
-			return fmt.Errorf("Error updating nsrpcnode %s. %s", nsrpcnodeIpaddress, err.Error())
+			return diag.Errorf("Error updating nsrpcnode %s. %s", nsrpcnodeIpaddress, err.Error())
 		}
 	}
-	return readNsrpcnodeFunc(d, meta)
+	return readNsrpcnodeFunc(ctx, d, meta)
 }
 
-func deleteNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsrpcnodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsrpcnodeFunc")
 	// Rpc node always exists in ADC
 	// Just remove the reference from local state

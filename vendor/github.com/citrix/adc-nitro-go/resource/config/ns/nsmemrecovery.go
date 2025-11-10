@@ -23,6 +23,6 @@ type Nsmemrecovery struct {
 	/**
 	* Percentage of memory to be recovered from freepools
 	*/
-	Percentage int `json:"percentage,omitempty"`
+	Percentage *int `json:"percentage,omitempty"`
 
 }

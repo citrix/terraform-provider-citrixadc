@@ -27,7 +27,7 @@ type Lsnsipalgcall struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

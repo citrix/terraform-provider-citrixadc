@@ -24,8 +24,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccServicegroup_servicegroupmember_binding_ipv4_step1 = `
@@ -39,6 +39,7 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
     servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
     ip = "10.78.22.33"
     port = 80
+	order = 100
 }
 `
 
@@ -52,15 +53,16 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 
 func TestAccServicegroup_servicegroupmember_binding_ipv4(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckServicegroup_servicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicegroup_servicegroupmember_binding_ipv4_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,10.78.22.33,80", true),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "order", "100"),
 				),
 			},
 			{
@@ -97,9 +99,9 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 
 func TestAccServicegroup_servicegroupmember_binding_ipv6(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckServicegroup_servicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicegroup_servicegroupmember_binding_ipv6_step1,
@@ -154,9 +156,9 @@ resource "citrixadc_server" "tf_server" {
 func TestAccServicegroup_servicegroupmember_binding_server_no_port(t *testing.T) {
 	t.Skip("TODO: Read error")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckServicegroup_servicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicegroup_servicegroupmember_binding_server_no_port_step1,
@@ -210,9 +212,9 @@ resource "citrixadc_server" "tf_server" {
 
 func TestAccServicegroup_servicegroupmember_binding_server_with_port(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckServicegroup_servicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicegroup_servicegroupmember_binding_server_with_port_step1,
@@ -274,9 +276,9 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 func TestAccServicegroup_servicegroupmember_binding_mixed_bindings(t *testing.T) {
 	t.Skip("TODO:")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckServicegroup_servicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicegroup_servicegroupmember_binding_mixed_bindings_step1,
@@ -317,7 +319,11 @@ func testAccCheckServicegroup_servicegroupmember_bindingExist(n string, id *stri
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 		idSlice := strings.SplitN(bindingId, ",", 3)
@@ -326,7 +332,6 @@ func testAccCheckServicegroup_servicegroupmember_bindingExist(n string, id *stri
 		servername := idSlice[1]
 
 		port := 0
-		var err error
 		if len(idSlice) == 3 {
 			if port, err = strconv.Atoi(idSlice[2]); err != nil {
 				return err
@@ -375,7 +380,11 @@ func testAccCheckServicegroup_servicegroupmember_bindingExist(n string, id *stri
 func testAccCheckServicegroup_servicegroupmember_binding_not_exists(bindingId string, invert bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		idSlice := strings.SplitN(bindingId, ",", 3)
 		servicegroupname := idSlice[0]
@@ -383,7 +392,6 @@ func testAccCheckServicegroup_servicegroupmember_binding_not_exists(bindingId st
 		servername := idSlice[1]
 
 		port := 0
-		var err error
 		if len(idSlice) == 3 {
 			if port, err = strconv.Atoi(idSlice[2]); err != nil {
 				return err
@@ -434,7 +442,11 @@ func testAccCheckServicegroup_servicegroupmember_binding_not_exists(bindingId st
 }
 
 func testAccCheckServicegroup_servicegroupmember_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_servicegroup_servicegroupmember_binding" {
@@ -445,7 +457,7 @@ func testAccCheckServicegroup_servicegroupmember_bindingDestroy(s *terraform.Sta
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Servicegroup_servicegroupmember_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Servicegroup_servicegroupmember_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("servicegroup_servicegroupmember_binding %s still exists", rs.Primary.ID)
 		}

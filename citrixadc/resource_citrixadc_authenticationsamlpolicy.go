@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationsamlpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationsamlpolicyFunc,
-		Read:          readAuthenticationsamlpolicyFunc,
-		Update:        updateAuthenticationsamlpolicyFunc,
-		Delete:        deleteAuthenticationsamlpolicyFunc,
+		CreateContext: createAuthenticationsamlpolicyFunc,
+		ReadContext:   readAuthenticationsamlpolicyFunc,
+		UpdateContext: updateAuthenticationsamlpolicyFunc,
+		DeleteContext: deleteAuthenticationsamlpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -41,7 +44,7 @@ func resourceCitrixAdcAuthenticationsamlpolicy() *schema.Resource {
 	}
 }
 
-func createAuthenticationsamlpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationsamlpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationsamlpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlpolicyName := d.Get("name").(string)
@@ -53,20 +56,15 @@ func createAuthenticationsamlpolicyFunc(d *schema.ResourceData, meta interface{}
 
 	_, err := client.AddResource(service.Authenticationsamlpolicy.Type(), authenticationsamlpolicyName, &authenticationsamlpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationsamlpolicyName)
 
-	err = readAuthenticationsamlpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationsamlpolicy but we can't read it ?? %s", authenticationsamlpolicyName)
-		return nil
-	}
-	return nil
+	return readAuthenticationsamlpolicyFunc(ctx, d, meta)
 }
 
-func readAuthenticationsamlpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationsamlpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationsamlpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlpolicyName := d.Id()
@@ -85,7 +83,7 @@ func readAuthenticationsamlpolicyFunc(d *schema.ResourceData, meta interface{}) 
 
 }
 
-func updateAuthenticationsamlpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationsamlpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationsamlpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlpolicyName := d.Get("name").(string)
@@ -108,19 +106,19 @@ func updateAuthenticationsamlpolicyFunc(d *schema.ResourceData, meta interface{}
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationsamlpolicy.Type(), authenticationsamlpolicyName, &authenticationsamlpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationsamlpolicy %s", authenticationsamlpolicyName)
+			return diag.Errorf("Error updating authenticationsamlpolicy %s", authenticationsamlpolicyName)
 		}
 	}
-	return readAuthenticationsamlpolicyFunc(d, meta)
+	return readAuthenticationsamlpolicyFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationsamlpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationsamlpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationsamlpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlpolicyName := d.Id()
 	err := client.DeleteResource(service.Authenticationsamlpolicy.Type(), authenticationsamlpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

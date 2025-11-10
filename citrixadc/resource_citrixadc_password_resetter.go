@@ -1,17 +1,21 @@
 package citrixadc
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	_ "fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcPasswordResetter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPasswordResetter,
+		CreateContext: createPasswordResetter,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -36,7 +40,7 @@ func resourceCitrixAdcPasswordResetter() *schema.Resource {
 	}
 }
 
-func createPasswordResetter(d *schema.ResourceData, meta interface{}) error {
+func createPasswordResetter(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPasswordResetter")
 	client := meta.(*NetScalerNitroClient).client
 	id := resource.PrefixedUniqueId("tf-password-resetter-")
@@ -49,7 +53,7 @@ func createPasswordResetter(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("login", "", &payload)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(id)

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccNssimpleacl_add = `
@@ -46,9 +47,9 @@ const testAccNssimpleacl_update = `
 
 func TestAccNssimpleacl_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNssimpleaclDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNssimpleaclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNssimpleacl_add,
@@ -94,8 +95,12 @@ func testAccCheckNssimpleaclExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Nssimpleacl.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nssimpleacl.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -110,7 +115,11 @@ func testAccCheckNssimpleaclExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckNssimpleaclDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_nssimpleacl" {
@@ -121,7 +130,7 @@ func testAccCheckNssimpleaclDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Nssimpleacl.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Nssimpleacl.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("nssimpleacl %s still exists", rs.Primary.ID)
 		}

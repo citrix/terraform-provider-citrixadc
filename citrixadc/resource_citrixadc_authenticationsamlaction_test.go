@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -32,6 +32,8 @@ const testAccAuthenticationsamlaction_add = `
 		requestedauthncontext = "minimum"
 		digestmethod          = "SHA1"
 		signaturealg          = "RSA-SHA256"
+		statechecks      = "false"
+		preferredbindtype	= ["SSOREDIRECT"]
 	}
 `
 const testAccAuthenticationsamlaction_update = `
@@ -43,14 +45,16 @@ const testAccAuthenticationsamlaction_update = `
 		requestedauthncontext = "minimum"
 		digestmethod          = "SHA256"
 		signaturealg          = "RSA-SHA256"
+		statechecks      = "true"
+		preferredbindtype	= ["LOGOUTPOST"]
 	}
 `
 
 func TestAccAuthenticationsamlaction_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthenticationsamlactionDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthenticationsamlactionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationsamlaction_add,
@@ -59,6 +63,7 @@ func TestAccAuthenticationsamlaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "name", "tf_samlaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "samltwofactor", "ON"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "digestmethod", "SHA1"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "statechecks", "false"),
 				),
 			},
 			{
@@ -68,6 +73,7 @@ func TestAccAuthenticationsamlaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "name", "tf_samlaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "samltwofactor", "OFF"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "digestmethod", "SHA256"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "statechecks", "true"),
 				),
 			},
 		},
@@ -93,8 +99,12 @@ func testAccCheckAuthenticationsamlactionExist(n string, id *string) resource.Te
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Authenticationsamlaction.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationsamlaction.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -109,7 +119,11 @@ func testAccCheckAuthenticationsamlactionExist(n string, id *string) resource.Te
 }
 
 func testAccCheckAuthenticationsamlactionDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authenticationsamlaction" {
@@ -120,7 +134,7 @@ func testAccCheckAuthenticationsamlactionDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Authenticationsamlaction.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Authenticationsamlaction.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authenticationsamlaction %s still exists", rs.Primary.ID)
 		}

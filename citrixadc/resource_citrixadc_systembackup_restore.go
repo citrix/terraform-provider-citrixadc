@@ -1,19 +1,23 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSystembackupRestore() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystembackupRestoreFunc,
+		CreateContext: createSystembackupRestoreFunc,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -31,7 +35,7 @@ func resourceCitrixAdcSystembackupRestore() *schema.Resource {
 	}
 }
 
-func createSystembackupRestoreFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystembackupRestoreFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystembackupRestoreFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systembackupName := resource.PrefixedUniqueId(d.Get("filename").(string) + "-")
@@ -43,7 +47,7 @@ func createSystembackupRestoreFunc(d *schema.ResourceData, meta interface{}) err
 
 	err := client.ActOnResource(service.Systembackup.Type(), &systembackup, "restore")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(systembackupName)

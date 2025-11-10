@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -48,9 +48,9 @@ const testAccSslcipher_sslciphersuite_binding_basic_step2 = `
 
 func TestAccSslcipher_sslciphersuite_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslcipher_sslciphersuite_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslcipher_sslciphersuite_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslcipher_sslciphersuite_binding_basic,
@@ -87,7 +87,11 @@ func testAccCheckSslcipher_sslciphersuite_bindingExist(n string, id *string) res
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -127,7 +131,11 @@ func testAccCheckSslcipher_sslciphersuite_bindingExist(n string, id *string) res
 
 func testAccCheckSslcipher_sslciphersuite_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -167,7 +175,11 @@ func testAccCheckSslcipher_sslciphersuite_bindingNotExist(n string, id string) r
 }
 
 func testAccCheckSslcipher_sslciphersuite_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_sslcipher_sslciphersuite_binding" {
@@ -178,7 +190,7 @@ func testAccCheckSslcipher_sslciphersuite_bindingDestroy(s *terraform.State) err
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Sslcipher_sslciphersuite_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Sslcipher_sslciphersuite_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("sslcipher_sslciphersuite_binding %s still exists", rs.Primary.ID)
 		}

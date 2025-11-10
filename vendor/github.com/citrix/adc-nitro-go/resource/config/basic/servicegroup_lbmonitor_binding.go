@@ -27,7 +27,7 @@ type Servicegrouplbmonitorbinding struct {
 	/**
 	* weight of the monitor that is bound to servicegroup.
 	*/
-	Monweight int `json:"monweight,omitempty"`
+	Monweight *int `json:"monweight,omitempty"`
 	/**
 	* Monitor state.
 	*/
@@ -35,7 +35,7 @@ type Servicegrouplbmonitorbinding struct {
 	/**
 	* Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached.
 	*/
@@ -47,7 +47,7 @@ type Servicegrouplbmonitorbinding struct {
 	/**
 	* Port number of the service. Each service must have a unique port number.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* Unique service identifier. Used when the persistency type for the virtual server is set to Custom Server ID.
 	*/
@@ -55,7 +55,7 @@ type Servicegrouplbmonitorbinding struct {
 	/**
 	* The  identifier for the service. This is used when the persistency type is set to Custom Server ID.
 	*/
-	Serverid int `json:"serverid,omitempty"`
+	Serverid *int `json:"serverid,omitempty"`
 	/**
 	* Initial state of the service after binding.
 	*/
@@ -63,7 +63,7 @@ type Servicegrouplbmonitorbinding struct {
 	/**
 	* Unique numerical identifier used by hash based load balancing methods to identify a service.
 	*/
-	Hashid int `json:"hashid,omitempty"`
+	Hashid *int `json:"hashid,omitempty"`
 	/**
 	* Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver
 	*/
@@ -71,11 +71,11 @@ type Servicegrouplbmonitorbinding struct {
 	/**
 	* Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors
 	*/
-	Dbsttl int `json:"dbsttl,omitempty"`
+	Dbsttl *int `json:"dbsttl,omitempty"`
 	/**
 	* Order number to be assigned to the servicegroup member
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 
 
 }

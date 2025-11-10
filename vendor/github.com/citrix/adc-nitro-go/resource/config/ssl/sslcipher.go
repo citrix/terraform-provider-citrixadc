@@ -38,7 +38,7 @@ type Sslcipher struct {
 	/**
 	* This indicates priority assigned to the particular cipher
 	*/
-	Cipherpriority int `json:"cipherpriority,omitempty"`
+	Cipherpriority *int `json:"cipherpriority,omitempty"`
 	/**
 	* Name of the profile to which cipher is attached.
 	*/

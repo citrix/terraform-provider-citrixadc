@@ -1,22 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaaglobal_aaapreauthenticationpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaaglobal_aaapreauthenticationpolicy_bindingFunc,
-		Read:          readAaaglobal_aaapreauthenticationpolicy_bindingFunc,
-		Delete:        deleteAaaglobal_aaapreauthenticationpolicy_bindingFunc,
+		CreateContext: createAaaglobal_aaapreauthenticationpolicy_bindingFunc,
+		ReadContext:   readAaaglobal_aaapreauthenticationpolicy_bindingFunc,
+		DeleteContext: deleteAaaglobal_aaapreauthenticationpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"builtin": {
@@ -40,32 +44,30 @@ func resourceCitrixAdcAaaglobal_aaapreauthenticationpolicy_binding() *schema.Res
 	}
 }
 
-func createAaaglobal_aaapreauthenticationpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaaglobal_aaapreauthenticationpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaaglobal_aaapreauthenticationpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policy := d.Get("policy").(string)
 	aaaglobal_aaapreauthenticationpolicy_binding := aaa.Aaaglobalaaapreauthenticationpolicybinding{
-		Builtin:  toStringList(d.Get("builtin").([]interface{})),
-		Policy:   d.Get("policy").(string),
-		Priority: d.Get("priority").(int),
+		Builtin: toStringList(d.Get("builtin").([]interface{})),
+		Policy:  d.Get("policy").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		aaaglobal_aaapreauthenticationpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaaglobal_aaapreauthenticationpolicy_binding.Type(), &aaaglobal_aaapreauthenticationpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policy)
 
-	err = readAaaglobal_aaapreauthenticationpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaaglobal_aaapreauthenticationpolicy_binding but we can't read it ?? %s", policy)
-		return nil
-	}
-	return nil
+	return readAaaglobal_aaapreauthenticationpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAaaglobal_aaapreauthenticationpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaaglobal_aaapreauthenticationpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaaglobal_aaapreauthenticationpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policy := d.Id()
@@ -81,7 +83,7 @@ func readAaaglobal_aaapreauthenticationpolicy_bindingFunc(d *schema.ResourceData
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -120,7 +122,7 @@ func readAaaglobal_aaapreauthenticationpolicy_bindingFunc(d *schema.ResourceData
 
 }
 
-func deleteAaaglobal_aaapreauthenticationpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaaglobal_aaapreauthenticationpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaaglobal_aaapreauthenticationpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -131,7 +133,7 @@ func deleteAaaglobal_aaapreauthenticationpolicy_bindingFunc(d *schema.ResourceDa
 
 	err := client.DeleteResourceWithArgs(service.Aaaglobal_aaapreauthenticationpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_gslbsite_binding_basic = `
@@ -30,7 +30,7 @@ const testAccClusternodegroup_gslbsite_binding_basic = `
 resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
 	gslbsite = citrixadc_gslbsite.site_remote.sitename
 	name     = "my_group"
-  }
+	}
   
   resource "citrixadc_gslbsite" "site_remote" {
 	sitename        = "my_local_site"
@@ -38,7 +38,7 @@ resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslb
 	sessionexchange = "DISABLED"
 	sitetype        = "LOCAL"
 	sitepassword    = "password123"
-  }
+	}
 `
 
 const testAccClusternodegroup_gslbsite_binding_basic_step2 = `
@@ -48,7 +48,7 @@ resource "citrixadc_gslbsite" "site_remote" {
 	sessionexchange = "DISABLED"
 	sitetype        = "LOCAL"
 	sitepassword    = "password123"
-  }
+	}
 `
 
 func TestAccClusternodegroup_gslbsite_binding_basic(t *testing.T) {
@@ -56,9 +56,9 @@ func TestAccClusternodegroup_gslbsite_binding_basic(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckClusternodegroup_gslbsite_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckClusternodegroup_gslbsite_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusternodegroup_gslbsite_binding_basic,
@@ -95,7 +95,11 @@ func testAccCheckClusternodegroup_gslbsite_bindingExist(n string, id *string) re
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -135,7 +139,11 @@ func testAccCheckClusternodegroup_gslbsite_bindingExist(n string, id *string) re
 
 func testAccCheckClusternodegroup_gslbsite_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -175,7 +183,11 @@ func testAccCheckClusternodegroup_gslbsite_bindingNotExist(n string, id string) 
 }
 
 func testAccCheckClusternodegroup_gslbsite_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_clusternodegroup_gslbsite_binding" {
@@ -186,7 +198,7 @@ func testAccCheckClusternodegroup_gslbsite_bindingDestroy(s *terraform.State) er
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Clusternodegroup_gslbsite_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Clusternodegroup_gslbsite_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("clusternodegroup_gslbsite_binding %s still exists", rs.Primary.ID)
 		}

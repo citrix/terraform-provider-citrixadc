@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcMapdomain() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createMapdomainFunc,
-		Read:          readMapdomainFunc,
-		Delete:        deleteMapdomainFunc,
+		CreateContext: createMapdomainFunc,
+		ReadContext:   readMapdomainFunc,
+		DeleteContext: deleteMapdomainFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -33,7 +35,7 @@ func resourceCitrixAdcMapdomain() *schema.Resource {
 	}
 }
 
-func createMapdomainFunc(d *schema.ResourceData, meta interface{}) error {
+func createMapdomainFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createMapdomainFunc")
 	client := meta.(*NetScalerNitroClient).client
 	mapdomainName := d.Get("name").(string)
@@ -44,20 +46,15 @@ func createMapdomainFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("mapdomain", mapdomainName, &mapdomain)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(mapdomainName)
 
-	err = readMapdomainFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this mapdomain but we can't read it ?? %s", mapdomainName)
-		return nil
-	}
-	return nil
+	return readMapdomainFunc(ctx, d, meta)
 }
 
-func readMapdomainFunc(d *schema.ResourceData, meta interface{}) error {
+func readMapdomainFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readMapdomainFunc")
 	client := meta.(*NetScalerNitroClient).client
 	mapdomainName := d.Id()
@@ -75,13 +72,13 @@ func readMapdomainFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteMapdomainFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteMapdomainFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteMapdomainFunc")
 	client := meta.(*NetScalerNitroClient).client
 	mapdomainName := d.Id()
 	err := client.DeleteResource("mapdomain", mapdomainName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -29,7 +29,7 @@ const testAccUserprotocol_basic = `
 		transport = "TCP"
 		extension = "my_extension"
 		comment   = "my_comment"
-	} 
+	}
 `
 const testAccUserprotocol_update = `
 
@@ -38,15 +38,15 @@ const testAccUserprotocol_update = `
 		transport = "SSL"
 		extension = "my_extension_mqtt"
 		comment   = "my_new_comment"
-	} 
+	}
 `
 
 func TestAccUserprotocol_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckUserprotocolDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckUserprotocolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserprotocol_basic,
@@ -91,8 +91,12 @@ func testAccCheckUserprotocolExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("userprotocol", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("userprotocol", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -107,7 +111,11 @@ func testAccCheckUserprotocolExist(n string, id *string) resource.TestCheckFunc 
 }
 
 func testAccCheckUserprotocolDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_userprotocol" {
@@ -118,7 +126,7 @@ func testAccCheckUserprotocolDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("userprotocol", rs.Primary.ID)
+		_, err := client.FindResource("userprotocol", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("userprotocol %s still exists", rs.Primary.ID)
 		}

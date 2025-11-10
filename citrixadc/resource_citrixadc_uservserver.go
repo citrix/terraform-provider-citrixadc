@@ -1,25 +1,29 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/user"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcUservserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createUservserverFunc,
-		Read:          readUservserverFunc,
-		Update:        updateUservserverFunc,
-		Delete:        deleteUservserverFunc,
+		CreateContext: createUservserverFunc,
+		ReadContext:   readUservserverFunc,
+		UpdateContext: updateUservserverFunc,
+		DeleteContext: deleteUservserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"defaultlb": {
@@ -64,7 +68,7 @@ func resourceCitrixAdcUservserver() *schema.Resource {
 	}
 }
 
-func createUservserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createUservserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createUservserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	uservserverName := d.Get("name").(string)
@@ -74,27 +78,25 @@ func createUservserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Ipaddress:    d.Get("ipaddress").(string),
 		Name:         d.Get("name").(string),
 		Params:       d.Get("params").(string),
-		Port:         d.Get("port").(int),
 		State:        d.Get("state").(string),
 		Userprotocol: d.Get("userprotocol").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		uservserver.Port = intPtr(d.Get("port").(int))
+	}
+
 	_, err := client.AddResource("uservserver", uservserverName, &uservserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(uservserverName)
 
-	err = readUservserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this uservserver but we can't read it ?? %s", uservserverName)
-		return nil
-	}
-	return nil
+	return readUservserverFunc(ctx, d, meta)
 }
 
-func readUservserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readUservserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readUservserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	uservserverName := d.Id()
@@ -110,7 +112,7 @@ func readUservserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("name", data["name"])
 	d.Set("params", data["params"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 	d.Set("state", data["state"])
 	d.Set("userprotocol", data["userprotocol"])
 
@@ -118,7 +120,7 @@ func readUservserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateUservserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateUservserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateUservserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	uservserverName := d.Get("name").(string)
@@ -159,25 +161,25 @@ func updateUservserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if stateChange {
 		err := doUservserverStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling user vserver %s", uservserverName)
+			return diag.Errorf("Error enabling/disabling user vserver %s", uservserverName)
 		}
 	}
 	if hasChange {
 		_, err := client.UpdateResource("uservserver", uservserverName, &uservserver)
 		if err != nil {
-			return fmt.Errorf("Error updating uservserver %s", uservserverName)
+			return diag.Errorf("Error updating uservserver %s", uservserverName)
 		}
 	}
-	return readUservserverFunc(d, meta)
+	return readUservserverFunc(ctx, d, meta)
 }
 
-func deleteUservserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteUservserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteUservserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	uservserverName := d.Id()
 	err := client.DeleteResource("uservserver", uservserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

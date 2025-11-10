@@ -46,6 +46,7 @@ resource "citrixadc_botprofile_tps_binding" "tf_binding" {
 * `logmessage` - (Optional) Message to be logged for this binding.
 * `percentage` - (Optional) Maximum percentage increase in the requests from (or to) a IP, Geolocation, URL or Host in 30 minutes interval.
 * `threshold` - (Optional) Maximum number of requests that are allowed from (or to) a IP, Geolocation, URL or Host in 1 second time interval.
+* `bot_tps_enabled` - (Optional) Enabled or disabled TPS binding.
 
 
 ## Attribute Reference

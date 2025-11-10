@@ -1,21 +1,23 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRadiusnode() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRadiusnodeFunc,
-		Read:          readRadiusnodeFunc,
-		Update:        updateRadiusnodeFunc,
-		Delete:        deleteRadiusnodeFunc,
+		CreateContext: createRadiusnodeFunc,
+		ReadContext:   readRadiusnodeFunc,
+		UpdateContext: updateRadiusnodeFunc,
+		DeleteContext: deleteRadiusnodeFunc,
 		Schema: map[string]*schema.Schema{
 			"nodeprefix": {
 				Type:     schema.TypeString,
@@ -32,7 +34,7 @@ func resourceCitrixAdcRadiusnode() *schema.Resource {
 	}
 }
 
-func createRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
+func createRadiusnodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRadiusnodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	radiusnodeName := d.Get("nodeprefix").(string)
@@ -43,20 +45,15 @@ func createRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("radiusnode", radiusnodeName, &radiusnode)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(radiusnodeName)
 
-	err = readRadiusnodeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this radiusnode but we can't read it ?? %s", radiusnodeName)
-		return nil
-	}
-	return nil
+	return readRadiusnodeFunc(ctx, d, meta)
 }
 
-func readRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
+func readRadiusnodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRadiusnodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	radiusnodeName := d.Id()
@@ -74,7 +71,7 @@ func readRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
+func updateRadiusnodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRadiusnodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	radiusnodeName := d.Get("nodeprefix").(string)
@@ -92,19 +89,19 @@ func updateRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("radiusnode", radiusnodeName, &radiusnode)
 		if err != nil {
-			return fmt.Errorf("Error updating radiusnode %s", radiusnodeName)
+			return diag.Errorf("Error updating radiusnode %s", radiusnodeName)
 		}
 	}
-	return readRadiusnodeFunc(d, meta)
+	return readRadiusnodeFunc(ctx, d, meta)
 }
 
-func deleteRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRadiusnodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRadiusnodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	radiusnodeName := d.Id()
 	err := client.DeleteResource("radiusnode", radiusnodeName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

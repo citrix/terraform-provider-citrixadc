@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -28,7 +28,7 @@ const testAccLocationfileImport6_basic = `
 resource "citrixadc_locationfile6_import" "tf_locationfile6_import" {
 	locationfile = "file6"
 	src          = "local://my_location_file6"
-  }
+	}
   
   
 `
@@ -36,9 +36,9 @@ resource "citrixadc_locationfile6_import" "tf_locationfile6_import" {
 func TestAccLocationfile6Import_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationfileImport6_basic,
@@ -71,8 +71,12 @@ func testAccCheckLocationfile6ImportExist(n string, id *string) resource.TestChe
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Locationfile6.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Locationfile6.Type(), "")
 
 		if err != nil {
 			return err

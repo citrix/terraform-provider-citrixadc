@@ -1,6 +1,7 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -8,17 +9,18 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppfwprofile_cookieconsistency_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_cookieconsistency_bindingFunc,
-		Read:          readAppfwprofile_cookieconsistency_bindingFunc,
-		Delete:        deleteAppfwprofile_cookieconsistency_bindingFunc,
+		CreateContext: createAppfwprofile_cookieconsistency_bindingFunc,
+		ReadContext:   readAppfwprofile_cookieconsistency_bindingFunc,
+		DeleteContext: deleteAppfwprofile_cookieconsistency_bindingFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -76,7 +78,7 @@ func resourceCitrixAdcAppfwprofile_cookieconsistency_binding() *schema.Resource 
 	}
 }
 
-func createAppfwprofile_cookieconsistency_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_cookieconsistency_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_cookieconsistency_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appFwName := d.Get("name").(string)
@@ -96,19 +98,14 @@ func createAppfwprofile_cookieconsistency_bindingFunc(d *schema.ResourceData, me
 
 	_, err := client.AddResource(service.Appfwprofile_cookieconsistency_binding.Type(), appFwName, &appfwprofile_cookieconsistency_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_cookieconsistency_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_cookieconsistency_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_cookieconsistency_bindingFunc(ctx, d, meta)
 }
-func readAppfwprofile_cookieconsistency_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_cookieconsistency_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_cookieconsistency_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -128,7 +125,7 @@ func readAppfwprofile_cookieconsistency_bindingFunc(d *schema.ResourceData, meta
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -173,7 +170,7 @@ func readAppfwprofile_cookieconsistency_bindingFunc(d *schema.ResourceData, meta
 
 }
 
-func deleteAppfwprofile_cookieconsistency_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_cookieconsistency_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_cookieconsistency_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -186,7 +183,7 @@ func deleteAppfwprofile_cookieconsistency_bindingFunc(d *schema.ResourceData, me
 
 	err := client.DeleteResourceWithArgsMap(service.Appfwprofile_cookieconsistency_binding.Type(), appFwName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

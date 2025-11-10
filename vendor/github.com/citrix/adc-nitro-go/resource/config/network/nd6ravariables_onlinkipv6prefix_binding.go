@@ -27,7 +27,7 @@ type Nd6ravariablesonlinkipv6prefixbinding struct {
 	/**
 	* The VLAN number.
 	*/
-	Vlan int `json:"vlan,omitempty"`
+	Vlan *int `json:"vlan,omitempty"`
 
 
 }

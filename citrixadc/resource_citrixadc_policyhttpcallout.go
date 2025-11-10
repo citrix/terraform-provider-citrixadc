@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcPolicyhttpcallout() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPolicyhttpcalloutFunc,
-		Read:          readPolicyhttpcalloutFunc,
-		Update:        updatePolicyhttpcalloutFunc,
-		Delete:        deletePolicyhttpcalloutFunc,
+		CreateContext: createPolicyhttpcalloutFunc,
+		ReadContext:   readPolicyhttpcalloutFunc,
+		UpdateContext: updatePolicyhttpcalloutFunc,
+		DeleteContext: deletePolicyhttpcalloutFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bodyexpr": {
@@ -108,7 +111,7 @@ func resourceCitrixAdcPolicyhttpcallout() *schema.Resource {
 	}
 }
 
-func createPolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error {
+func createPolicyhttpcalloutFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPolicyhttpcalloutFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var policyhttpcalloutName string
@@ -119,40 +122,40 @@ func createPolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error
 		d.Set("name", policyhttpcalloutName)
 	}
 	policyhttpcallout := policy.Policyhttpcallout{
-		Bodyexpr:     d.Get("bodyexpr").(string),
-		Cacheforsecs: d.Get("cacheforsecs").(int),
-		Comment:      d.Get("comment").(string),
-		Fullreqexpr:  d.Get("fullreqexpr").(string),
-		Headers:      toStringList(d.Get("headers").([]interface{})),
-		Hostexpr:     d.Get("hostexpr").(string),
-		Httpmethod:   d.Get("httpmethod").(string),
-		Ipaddress:    d.Get("ipaddress").(string),
-		Name:         d.Get("name").(string),
-		Parameters:   toStringList(d.Get("parameters").([]interface{})),
-		Port:         d.Get("port").(int),
-		Resultexpr:   d.Get("resultexpr").(string),
-		Returntype:   d.Get("returntype").(string),
-		Scheme:       d.Get("scheme").(string),
-		Urlstemexpr:  d.Get("urlstemexpr").(string),
-		Vserver:      d.Get("vserver").(string),
+		Bodyexpr:    d.Get("bodyexpr").(string),
+		Comment:     d.Get("comment").(string),
+		Fullreqexpr: d.Get("fullreqexpr").(string),
+		Headers:     toStringList(d.Get("headers").([]interface{})),
+		Hostexpr:    d.Get("hostexpr").(string),
+		Httpmethod:  d.Get("httpmethod").(string),
+		Ipaddress:   d.Get("ipaddress").(string),
+		Name:        d.Get("name").(string),
+		Parameters:  toStringList(d.Get("parameters").([]interface{})),
+		Resultexpr:  d.Get("resultexpr").(string),
+		Returntype:  d.Get("returntype").(string),
+		Scheme:      d.Get("scheme").(string),
+		Urlstemexpr: d.Get("urlstemexpr").(string),
+		Vserver:     d.Get("vserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cacheforsecs"); !raw.IsNull() {
+		policyhttpcallout.Cacheforsecs = intPtr(d.Get("cacheforsecs").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		policyhttpcallout.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource(service.Policyhttpcallout.Type(), policyhttpcalloutName, &policyhttpcallout)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyhttpcalloutName)
 
-	err = readPolicyhttpcalloutFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this policyhttpcallout but we can't read it ?? %s", policyhttpcalloutName)
-		return nil
-	}
-	return nil
+	return readPolicyhttpcalloutFunc(ctx, d, meta)
 }
 
-func readPolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error {
+func readPolicyhttpcalloutFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readPolicyhttpcalloutFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyhttpcalloutName := d.Id()
@@ -165,7 +168,7 @@ func readPolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("bodyexpr", data["bodyexpr"])
-	d.Set("cacheforsecs", data["cacheforsecs"])
+	setToInt("cacheforsecs", d, data["cacheforsecs"])
 	d.Set("comment", data["comment"])
 	d.Set("fullreqexpr", data["fullreqexpr"])
 	d.Set("headers", data["headers"])
@@ -174,7 +177,7 @@ func readPolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("name", data["name"])
 	d.Set("parameters", data["parameters"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 	d.Set("resultexpr", data["resultexpr"])
 	d.Set("returntype", data["returntype"])
 	d.Set("scheme", data["scheme"])
@@ -185,7 +188,7 @@ func readPolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updatePolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error {
+func updatePolicyhttpcalloutFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updatePolicyhttpcalloutFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyhttpcalloutName := d.Get("name").(string)
@@ -201,7 +204,7 @@ func updatePolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("cacheforsecs") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cacheforsecs has changed for policyhttpcallout %s, starting update", policyhttpcalloutName)
-		policyhttpcallout.Cacheforsecs = d.Get("cacheforsecs").(int)
+		policyhttpcallout.Cacheforsecs = intPtr(d.Get("cacheforsecs").(int))
 		hasChange = true
 	}
 	if d.HasChange("comment") {
@@ -246,7 +249,7 @@ func updatePolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for policyhttpcallout %s, starting update", policyhttpcalloutName)
-		policyhttpcallout.Port = d.Get("port").(int)
+		policyhttpcallout.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("resultexpr") {
@@ -278,19 +281,19 @@ func updatePolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error
 	if hasChange {
 		_, err := client.UpdateResource(service.Policyhttpcallout.Type(), policyhttpcalloutName, &policyhttpcallout)
 		if err != nil {
-			return fmt.Errorf("Error updating policyhttpcallout %s", policyhttpcalloutName)
+			return diag.Errorf("Error updating policyhttpcallout %s", policyhttpcalloutName)
 		}
 	}
-	return readPolicyhttpcalloutFunc(d, meta)
+	return readPolicyhttpcalloutFunc(ctx, d, meta)
 }
 
-func deletePolicyhttpcalloutFunc(d *schema.ResourceData, meta interface{}) error {
+func deletePolicyhttpcalloutFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePolicyhttpcalloutFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyhttpcalloutName := d.Id()
 	err := client.DeleteResource(service.Policyhttpcallout.Type(), policyhttpcalloutName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

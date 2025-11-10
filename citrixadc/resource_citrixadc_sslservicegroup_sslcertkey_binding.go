@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcSslservicegroup_sslcertkey_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslservicegroup_sslcertkey_bindingFunc,
-		Read:          readSslservicegroup_sslcertkey_bindingFunc,
-		Delete:        deleteSslservicegroup_sslcertkey_bindingFunc,
+		CreateContext: createSslservicegroup_sslcertkey_bindingFunc,
+		ReadContext:   readSslservicegroup_sslcertkey_bindingFunc,
+		DeleteContext: deleteSslservicegroup_sslcertkey_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ca": {
@@ -59,7 +61,7 @@ func resourceCitrixAdcSslservicegroup_sslcertkey_binding() *schema.Resource {
 	}
 }
 
-func createSslservicegroup_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslservicegroup_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslservicegroup_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	servicegroupname := d.Get("servicegroupname").(string)
@@ -76,20 +78,15 @@ func createSslservicegroup_sslcertkey_bindingFunc(d *schema.ResourceData, meta i
 
 	_, err := client.AddResource(service.Sslservicegroup_sslcertkey_binding.Type(), servicegroupname, &sslservicegroup_sslcertkey_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSslservicegroup_sslcertkey_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslservicegroup_sslcertkey_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSslservicegroup_sslcertkey_bindingFunc(ctx, d, meta)
 }
 
-func readSslservicegroup_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslservicegroup_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslservicegroup_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -110,7 +107,7 @@ func readSslservicegroup_sslcertkey_bindingFunc(d *schema.ResourceData, meta int
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -152,7 +149,7 @@ func readSslservicegroup_sslcertkey_bindingFunc(d *schema.ResourceData, meta int
 
 }
 
-func deleteSslservicegroup_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslservicegroup_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslservicegroup_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -164,10 +161,14 @@ func deleteSslservicegroup_sslcertkey_bindingFunc(d *schema.ResourceData, meta i
 
 	argsMap := make(map[string]string)
 	argsMap["certkeyname"] = url.QueryEscape(certkeyname)
+	if v, ok := d.GetOk("ca"); ok {
+		argsMap["ca"] = url.QueryEscape(fmt.Sprintf("%v", v))
+
+	}
 
 	err := client.DeleteResourceWithArgsMap(service.Sslservicegroup_sslcertkey_binding.Type(), name, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

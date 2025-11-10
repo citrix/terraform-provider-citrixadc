@@ -1,26 +1,39 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslvserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslvserverFunc,
-		Read:          readSslvserverFunc,
-		Update:        updateSslvserverFunc,
-		Delete:        deleteSslvserverFunc,
+		CreateContext: createSslvserverFunc,
+		ReadContext:   readSslvserverFunc,
+		UpdateContext: updateSslvserverFunc,
+		DeleteContext: deleteSslvserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"sslclientlogs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"defaultsni": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"cipherredirect": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -225,7 +238,7 @@ func resourceCitrixAdcSslvserver() *schema.Resource {
 	}
 }
 
-func createSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslvserverName string
@@ -236,64 +249,74 @@ func createSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	sslvserver := ssl.Sslvserver{
-		Cipherredirect:                    d.Get("cipherredirect").(string),
-		Cipherurl:                         d.Get("cipherurl").(string),
-		Cleartextport:                     d.Get("cleartextport").(int),
-		Clientauth:                        d.Get("clientauth").(string),
-		Clientcert:                        d.Get("clientcert").(string),
-		Dh:                                d.Get("dh").(string),
-		Dhcount:                           d.Get("dhcount").(int),
-		Dhekeyexchangewithpsk:             d.Get("dhekeyexchangewithpsk").(string),
-		Dhfile:                            d.Get("dhfile").(string),
-		Dhkeyexpsizelimit:                 d.Get("dhkeyexpsizelimit").(string),
-		Dtls1:                             d.Get("dtls1").(string),
-		Dtls12:                            d.Get("dtls12").(string),
-		Dtlsprofilename:                   d.Get("dtlsprofilename").(string),
-		Ersa:                              d.Get("ersa").(string),
-		Ersacount:                         d.Get("ersacount").(int),
-		Hsts:                              d.Get("hsts").(string),
-		Includesubdomains:                 d.Get("includesubdomains").(string),
-		Maxage:                            d.Get("maxage").(int),
-		Ocspstapling:                      d.Get("ocspstapling").(string),
-		Preload:                           d.Get("preload").(string),
-		Pushenctrigger:                    d.Get("pushenctrigger").(string),
-		Redirectportrewrite:               d.Get("redirectportrewrite").(string),
-		Sendclosenotify:                   d.Get("sendclosenotify").(string),
-		Sessreuse:                         d.Get("sessreuse").(string),
-		Sesstimeout:                       d.Get("sesstimeout").(int),
-		Snienable:                         d.Get("snienable").(string),
-		Ssl2:                              d.Get("ssl2").(string),
-		Ssl3:                              d.Get("ssl3").(string),
-		Sslprofile:                        d.Get("sslprofile").(string),
-		Sslredirect:                       d.Get("sslredirect").(string),
-		Sslv2redirect:                     d.Get("sslv2redirect").(string),
-		Sslv2url:                          d.Get("sslv2url").(string),
-		Strictsigdigestcheck:              d.Get("strictsigdigestcheck").(string),
-		Tls1:                              d.Get("tls1").(string),
-		Tls11:                             d.Get("tls11").(string),
-		Tls12:                             d.Get("tls12").(string),
-		Tls13:                             d.Get("tls13").(string),
-		Tls13sessionticketsperauthcontext: d.Get("tls13sessionticketsperauthcontext").(int),
-		Vservername:                       d.Get("vservername").(string),
-		Zerorttearlydata:                  d.Get("zerorttearlydata").(string),
+		Cipherredirect:        d.Get("cipherredirect").(string),
+		Cipherurl:             d.Get("cipherurl").(string),
+		Clientauth:            d.Get("clientauth").(string),
+		Clientcert:            d.Get("clientcert").(string),
+		Dh:                    d.Get("dh").(string),
+		Dhekeyexchangewithpsk: d.Get("dhekeyexchangewithpsk").(string),
+		Dhfile:                d.Get("dhfile").(string),
+		Dhkeyexpsizelimit:     d.Get("dhkeyexpsizelimit").(string),
+		Dtls1:                 d.Get("dtls1").(string),
+		Dtls12:                d.Get("dtls12").(string),
+		Dtlsprofilename:       d.Get("dtlsprofilename").(string),
+		Ersa:                  d.Get("ersa").(string),
+		Hsts:                  d.Get("hsts").(string),
+		Includesubdomains:     d.Get("includesubdomains").(string),
+		Ocspstapling:          d.Get("ocspstapling").(string),
+		Preload:               d.Get("preload").(string),
+		Pushenctrigger:        d.Get("pushenctrigger").(string),
+		Redirectportrewrite:   d.Get("redirectportrewrite").(string),
+		Sendclosenotify:       d.Get("sendclosenotify").(string),
+		Sessreuse:             d.Get("sessreuse").(string),
+		Snienable:             d.Get("snienable").(string),
+		Ssl2:                  d.Get("ssl2").(string),
+		Ssl3:                  d.Get("ssl3").(string),
+		Sslprofile:            d.Get("sslprofile").(string),
+		Sslredirect:           d.Get("sslredirect").(string),
+		Sslv2redirect:         d.Get("sslv2redirect").(string),
+		Sslv2url:              d.Get("sslv2url").(string),
+		Strictsigdigestcheck:  d.Get("strictsigdigestcheck").(string),
+		Tls1:                  d.Get("tls1").(string),
+		Tls11:                 d.Get("tls11").(string),
+		Tls12:                 d.Get("tls12").(string),
+		Tls13:                 d.Get("tls13").(string),
+		Vservername:           d.Get("vservername").(string),
+		Zerorttearlydata:      d.Get("zerorttearlydata").(string),
+		Defaultsni:            d.Get("defaultsni").(string),
+		Sslclientlogs:         d.Get("sslclientlogs").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cleartextport"); !raw.IsNull() {
+		sslvserver.Cleartextport = intPtr(d.Get("cleartextport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dhcount"); !raw.IsNull() {
+		sslvserver.Dhcount = intPtr(d.Get("dhcount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ersacount"); !raw.IsNull() {
+		sslvserver.Ersacount = intPtr(d.Get("ersacount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxage"); !raw.IsNull() {
+		sslvserver.Maxage = intPtr(d.Get("maxage").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		sslvserver.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tls13sessionticketsperauthcontext"); !raw.IsNull() {
+		sslvserver.Tls13sessionticketsperauthcontext = intPtr(d.Get("tls13sessionticketsperauthcontext").(int))
 	}
 
 	_, err := client.UpdateResource(service.Sslvserver.Type(), sslvserverName, &sslvserver)
 	if err != nil {
-		return fmt.Errorf("Error updating sslvserver %v: %v", sslvserverName, err)
+		return diag.Errorf("Error updating sslvserver %v: %v", sslvserverName, err)
 	}
 
 	d.SetId(sslvserverName)
 
-	err = readSslvserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just updated this sslvserver but we can't read it ?? %s", sslvserverName)
-		return nil
-	}
-	return nil
+	return readSslvserverFunc(ctx, d, meta)
 }
 
-func readSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslvserverName := d.Id()
@@ -356,11 +379,14 @@ func readSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	d.Set("sslclientlogs", data["sslclientlogs"])
+	d.Set("defaultsni", data["defaultsni"])
+
 	return nil
 
 }
 
-func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslvserverName := d.Get("vservername").(string)
@@ -369,6 +395,16 @@ func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Vservername: d.Get("vservername").(string),
 	}
 	hasChange := false
+	if d.HasChange("sslclientlogs") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sslclientlogs has changed for sslvserver, starting update")
+		sslvserver.Sslclientlogs = d.Get("sslclientlogs").(string)
+		hasChange = true
+	}
+	if d.HasChange("defaultsni") {
+		log.Printf("[DEBUG]  citrixadc-provider: Defaultsni has changed for sslvserver, starting update")
+		sslvserver.Defaultsni = d.Get("defaultsni").(string)
+		hasChange = true
+	}
 	if d.HasChange("cipherredirect") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cipherredirect has changed for sslvserver %s, starting update", sslvserverName)
 		sslvserver.Cipherredirect = d.Get("cipherredirect").(string)
@@ -381,7 +417,7 @@ func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("cleartextport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cleartextport has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Cleartextport = d.Get("cleartextport").(int)
+		sslvserver.Cleartextport = intPtr(d.Get("cleartextport").(int))
 		hasChange = true
 	}
 	if d.HasChange("clientauth") {
@@ -401,7 +437,7 @@ func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("dhcount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dhcount has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Dhcount = d.Get("dhcount").(int)
+		sslvserver.Dhcount = intPtr(d.Get("dhcount").(int))
 		hasChange = true
 	}
 	if d.HasChange("dhekeyexchangewithpsk") {
@@ -441,7 +477,7 @@ func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ersacount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ersacount has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Ersacount = d.Get("ersacount").(int)
+		sslvserver.Ersacount = intPtr(d.Get("ersacount").(int))
 		hasChange = true
 	}
 	if d.HasChange("hsts") {
@@ -456,7 +492,7 @@ func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxage") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxage has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Maxage = d.Get("maxage").(int)
+		sslvserver.Maxage = intPtr(d.Get("maxage").(int))
 		hasChange = true
 	}
 	if d.HasChange("ocspstapling") {
@@ -491,7 +527,7 @@ func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Sesstimeout = d.Get("sesstimeout").(int)
+		sslvserver.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("snienable") {
@@ -556,7 +592,7 @@ func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("tls13sessionticketsperauthcontext") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tls13sessionticketsperauthcontext has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Tls13sessionticketsperauthcontext = d.Get("tls13sessionticketsperauthcontext").(int)
+		sslvserver.Tls13sessionticketsperauthcontext = intPtr(d.Get("tls13sessionticketsperauthcontext").(int))
 		hasChange = true
 	}
 	if d.HasChange("vservername") {
@@ -573,13 +609,13 @@ func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Sslvserver.Type(), sslvserverName, &sslvserver)
 		if err != nil {
-			return fmt.Errorf("Error updating sslvserver %s", sslvserverName)
+			return diag.Errorf("Error updating sslvserver %s", sslvserverName)
 		}
 	}
-	return readSslvserverFunc(d, meta)
+	return readSslvserverFunc(ctx, d, meta)
 }
 
-func deleteSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslvserverFunc")
 	// sslvserver does not have DELETE operation, but this function is required to set the ID to ""
 
@@ -595,7 +631,7 @@ func deleteSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 		err := client.ActOnResource("sslvserver", sslvserverunset, "unset")
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 

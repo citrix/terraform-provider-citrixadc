@@ -85,6 +85,12 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 * `nodefaultecccurvebindings` - (Optional) (bool) Set to `true` to unbind the default ECC curve, otherwise set to `false`. Possible values: [ true, false ]
 * `nodefaultcipherbindings` - (Optional) (bool) Set to `true` to unbind the default ciphers, otherwise set to `false`. Possible values: [ true, false ]
 * `nodefaultbindings` - (Optional) Set to "YES" to unbind both the default ECC curve and cipher, or "NO" to keep them bound. Possible values: [ "YES", "NO" ]
+* `allowextendedmastersecret` - (Optional) When set to YES, attempt to use the TLS Extended Master Secret (EMS, as described in RFC 7627) when negotiating TLS 1.0, TLS 1.1 and TLS 1.2 connection parameters. EMS must be supported by both the TLS client and server in order to be enabled during a handshake. This setting applies to both frontend and backend SSL profiles.
+* `allowunknownsni` - (Optional) Controls how the handshake is handled when the server name extension does not match any of the bound certificates. These checks are performed only if the session is SNI enabled (i.e. when profile bound to vserver has SNIEnable and Client Hello arrived with SNI extension). Available settings function as follows : ENABLED   - handshakes with an unknown SNI are allowed to continue, if a default cert is bound. DISLABED  - handshakes with an unknown SNI are not allowed to continue.
+* `defaultsni` - (Optional) Default domain name supported by the SSL virtual server. The parameter is effective, when zero touch certificate management is active for the SSL virtual server i.e. no manual SNI cert or default server cert is bound to the v-server. For SSL transactions, when SNI is not presented by the client, server-certificate corresponding to the default SNI, if available in the cert-store, is selected else connection is terminated.
+* `encryptedclienthello` - (Optional) State of TLS 1.3 Encrypted Client Hello Support
+* `maxrenegrate` - (Optional) Maximum number of renegotiation requests allowed, in one second, to each SSL entity to which this profile is bound. When set to 0, an unlimited number of renegotiation requests are allowed. Applicable only when Deny SSL renegotiation is set to a value other than ALL.
+* `sslclientlogs` - (Optional) When enabled, NetScaler will log the session ID and SNI name during SSL handshakes on both the external and internal interfaces.
 * `ecccurvebindings` - (Required) A set of ECC curve names to be bound to this SSL profile. (deprecates soon)
 
 !>

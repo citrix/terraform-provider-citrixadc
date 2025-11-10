@@ -31,11 +31,11 @@ type Cspolicycrvserverbinding struct {
 	/**
 	* priority of bound policy
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Total number of hits.
 	*/
-	Hits int `json:"hits,omitempty"`
+	Hits *int `json:"hits,omitempty"`
 	/**
 	* The invocation type.
 	*/

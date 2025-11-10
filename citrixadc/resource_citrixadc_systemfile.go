@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"encoding/base64"
-	"fmt"
 	"log"
 	"net/url"
 	"path"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSystemfile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemfileFunc,
-		Read:          readSystemfileFunc,
-		Delete:        deleteSystemfileFunc,
+		CreateContext: createSystemfileFunc,
+		ReadContext:   readSystemfileFunc,
+		DeleteContext: deleteSystemfileFunc,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				fullpath := d.Id()
@@ -55,7 +57,7 @@ func resourceCitrixAdcSystemfile() *schema.Resource {
 	}
 }
 
-func createSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemfileFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -67,7 +69,7 @@ func createSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 	fullPath := path.Join(filelocation, filename)
 
 	if fileencoding != "BASE64" {
-		return fmt.Errorf("file encoding %s is not supported", fileencoding)
+		return diag.Errorf("file encoding %s is not supported", fileencoding)
 	}
 
 	// Encode file contents to base64
@@ -82,20 +84,15 @@ func createSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Systemfile.Type(), "", &systemfile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(fullPath)
 
-	err = readSystemfileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemfile but we can't read it ?? %s", fullPath)
-		return err
-	}
-	return nil
+	return readSystemfileFunc(ctx, d, meta)
 }
 
-func readSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemfileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemfileName := d.Id()
@@ -104,11 +101,11 @@ func readSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	argsMap["filelocation"] = url.QueryEscape(d.Get("filelocation").(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	argsMap["filename"] = url.QueryEscape(d.Get("filename").(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	findParams := service.FindParams{
 		ResourceType: "systemfile",
@@ -126,14 +123,14 @@ func readSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(dataArray) > 1 {
-		return fmt.Errorf("multiple entries found for file")
+		return diag.Errorf("multiple entries found for file")
 	}
 
 	data := dataArray[0]
 
 	bytes, err := base64.StdEncoding.DecodeString(data["filecontent"].(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("filecontent", string(bytes))
@@ -145,7 +142,7 @@ func readSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemfileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	argsMap := make(map[string]string)
@@ -153,7 +150,7 @@ func deleteSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 	filename := d.Get("filename").(string)
 	err := client.DeleteResourceWithArgsMap("systemfile", filename, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

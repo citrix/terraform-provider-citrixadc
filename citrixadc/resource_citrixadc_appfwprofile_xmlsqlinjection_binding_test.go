@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccAppfwprofile_xmlsqlinjection_binding_basic = `
@@ -58,9 +58,9 @@ const testAccAppfwprofile_xmlsqlinjection_binding_basic_step2 = `
 
 func TestAccAppfwprofile_xmlsqlinjection_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppfwprofile_xmlsqlinjection_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAppfwprofile_xmlsqlinjection_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppfwprofile_xmlsqlinjection_binding_basic,
@@ -113,7 +113,11 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingExist(n string, id *string)
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -155,7 +159,11 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingExist(n string, id *string)
 
 func testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist(n string, id string, locationName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -197,7 +205,11 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist(n string, id strin
 }
 
 func testAccCheckAppfwprofile_xmlsqlinjection_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_appfwprofile_xmlsqlinjection_binding" {
@@ -213,7 +225,7 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingDestroy(s *terraform.State)
 		idSlice := strings.Split(bindingId, ",")
 
 		name := idSlice[0]
-		_, err := nsClient.FindResource(service.Appfwprofile_xmlsqlinjection_binding.Type(), name)
+		_, err := client.FindResource(service.Appfwprofile_xmlsqlinjection_binding.Type(), name)
 		if err == nil {
 			return fmt.Errorf("appfwprofile_xmlsqlinjection_binding %s still exists", name)
 		}

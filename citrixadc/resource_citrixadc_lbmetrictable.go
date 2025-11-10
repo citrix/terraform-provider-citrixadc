@@ -1,21 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcLbmetrictable() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbmetrictableFunc,
-		Read:          readLbmetrictableFunc,
-		Delete:        deleteLbmetrictableFunc,
+		CreateContext: createLbmetrictableFunc,
+		ReadContext:   readLbmetrictableFunc,
+		DeleteContext: deleteLbmetrictableFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"metrictable": {
@@ -27,7 +28,7 @@ func resourceCitrixAdcLbmetrictable() *schema.Resource {
 	}
 }
 
-func createLbmetrictableFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbmetrictableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbmetrictableFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -39,20 +40,15 @@ func createLbmetrictableFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("lbmetrictable", lbmetrictableName, &lbmetrictable)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lbmetrictableName)
 
-	err = readLbmetrictableFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbmetrictable but we can't read it ?? %s", lbmetrictableName)
-		return nil
-	}
-	return nil
+	return readLbmetrictableFunc(ctx, d, meta)
 }
 
-func readLbmetrictableFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbmetrictableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbmetrictableFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbmetrictableName := d.Id()
@@ -69,13 +65,13 @@ func readLbmetrictableFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteLbmetrictableFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbmetrictableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbmetrictableFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbmetrictableName := d.Id()
 	err := client.DeleteResource("lbmetrictable", lbmetrictableName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

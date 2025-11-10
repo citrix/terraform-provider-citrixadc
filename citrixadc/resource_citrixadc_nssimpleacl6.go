@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcNssimpleacl6() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNssimpleacl6Func,
-		Read:          readNssimpleacl6Func,
-		Delete:        deleteNssimpleacl6Func,
+		CreateContext: createNssimpleacl6Func,
+		ReadContext:   readNssimpleacl6Func,
+		DeleteContext: deleteNssimpleacl6Func,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"aclname": {
@@ -71,37 +73,39 @@ func resourceCitrixAdcNssimpleacl6() *schema.Resource {
 	}
 }
 
-func createNssimpleacl6Func(d *schema.ResourceData, meta interface{}) error {
+func createNssimpleacl6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNssimpleacl6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nssimpleacl6Name := d.Get("aclname").(string)
 	nssimpleacl6 := ns.Nssimpleacl6{
 		Aclaction:   d.Get("aclaction").(string),
 		Aclname:     d.Get("aclname").(string),
-		Destport:    d.Get("destport").(int),
 		Estsessions: d.Get("estsessions").(bool),
 		Protocol:    d.Get("protocol").(string),
 		Srcipv6:     d.Get("srcipv6").(string),
-		Td:          d.Get("td").(int),
-		Ttl:         d.Get("ttl").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("destport"); !raw.IsNull() {
+		nssimpleacl6.Destport = intPtr(d.Get("destport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nssimpleacl6.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		nssimpleacl6.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Nssimpleacl6.Type(), nssimpleacl6Name, &nssimpleacl6)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nssimpleacl6Name)
 
-	err = readNssimpleacl6Func(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nssimpleacl6 but we can't read it ?? %s", nssimpleacl6Name)
-		return nil
-	}
-	return nil
+	return readNssimpleacl6Func(ctx, d, meta)
 }
 
-func readNssimpleacl6Func(d *schema.ResourceData, meta interface{}) error {
+func readNssimpleacl6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNssimpleacl6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nssimpleacl6Name := d.Id()
@@ -115,24 +119,27 @@ func readNssimpleacl6Func(d *schema.ResourceData, meta interface{}) error {
 	d.Set("aclname", data["aclname"])
 	d.Set("aclaction", data["aclaction"])
 	d.Set("aclname", data["aclname"])
-	d.Set("destport", data["destport"])
+	setToInt("destport", d, data["destport"])
 	d.Set("estsessions", data["estsessions"])
 	d.Set("protocol", data["protocol"])
 	d.Set("srcipv6", data["srcipv6"])
-	d.Set("td", data["td"])
-	d.Set("ttl", data["ttl"])
+	setToInt("td", d, data["td"])
+	// setToInt("ttl", d, data["ttl"])
+	// Setting ttl value from user configuration as API returns time to live value which keeps changing.
+	// Say if ttl is set to 600, API may return 599 in next read call.
+	setToInt("ttl", d, d.Get("ttl").(int))
 
 	return nil
 
 }
 
-func deleteNssimpleacl6Func(d *schema.ResourceData, meta interface{}) error {
+func deleteNssimpleacl6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNssimpleacl6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nssimpleacl6Name := d.Id()
 	err := client.DeleteResource(service.Nssimpleacl6.Type(), nssimpleacl6Name)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -27,7 +27,7 @@ type Bridgegroupnsipbinding struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* The network mask for the subnet defined for the bridge group.
 	*/
@@ -43,7 +43,7 @@ type Bridgegroupnsipbinding struct {
 	/**
 	* The integer that uniquely identifies the bridge group.
 	*/
-	Id int `json:"id,omitempty"`
+	Id *int `json:"id,omitempty"`
 
 
 }

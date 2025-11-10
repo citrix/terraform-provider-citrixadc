@@ -21,15 +21,15 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccSystemfile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSystemfileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSystemfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSystemfile_basic_step1,
@@ -73,8 +73,12 @@ func testAccCheckSystemfileExist(n string, id *string, pathData []string) resour
 			ResourceType: "systemfile",
 			ArgsMap:      argsMap,
 		}
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		dataArray, err := nsClient.FindResourceArrayWithParams(findParams)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArray, err := client.FindResourceArrayWithParams(findParams)
 
 		if err != nil {
 			return err
@@ -89,7 +93,11 @@ func testAccCheckSystemfileExist(n string, id *string, pathData []string) resour
 }
 
 func testAccCheckSystemfileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_systemfile" {
@@ -100,7 +108,7 @@ func testAccCheckSystemfileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Systemfile.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Systemfile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

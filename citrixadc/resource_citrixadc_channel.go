@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcChannel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createChannelFunc,
-		Read:          readChannelFunc,
-		Update:        updateChannelFunc,
-		Delete:        deleteChannelFunc,
+		CreateContext: createChannelFunc,
+		ReadContext:   readChannelFunc,
+		UpdateContext: updateChannelFunc,
+		DeleteContext: deleteChannelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"channel_id": {
@@ -126,50 +129,56 @@ func resourceCitrixAdcChannel() *schema.Resource {
 	}
 }
 
-func createChannelFunc(d *schema.ResourceData, meta interface{}) error {
+func createChannelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createChannelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	channelName := d.Get("channel_id").(string)
 
 	channel := network.Channel{
-		Bandwidthhigh:   d.Get("bandwidthhigh").(int),
-		Bandwidthnormal: d.Get("bandwidthnormal").(int),
-		Conndistr:       d.Get("conndistr").(string),
-		Flowctl:         d.Get("flowctl").(string),
-		Haheartbeat:     d.Get("haheartbeat").(string),
-		Hamonitor:       d.Get("hamonitor").(string),
-		Id:              d.Get("channel_id").(string),
-		Ifalias:         d.Get("ifalias").(string),
-		Ifnum:           toStringList(d.Get("ifnum").([]interface{})),
-		Lamac:           d.Get("lamac").(string),
-		Linkredundancy:  d.Get("linkredundancy").(string),
-		Lrminthroughput: d.Get("lrminthroughput").(int),
-		Macdistr:        d.Get("macdistr").(string),
-		Mode:            d.Get("mode").(string),
-		Mtu:             d.Get("mtu").(int),
-		Speed:           d.Get("speed").(string),
-		State:           d.Get("state").(string),
-		Tagall:          d.Get("tagall").(string),
-		Throughput:      d.Get("throughput").(int),
-		Trunk:           d.Get("trunk").(string),
+		Conndistr:      d.Get("conndistr").(string),
+		Flowctl:        d.Get("flowctl").(string),
+		Haheartbeat:    d.Get("haheartbeat").(string),
+		Hamonitor:      d.Get("hamonitor").(string),
+		Id:             d.Get("channel_id").(string),
+		Ifalias:        d.Get("ifalias").(string),
+		Ifnum:          toStringList(d.Get("ifnum").([]interface{})),
+		Lamac:          d.Get("lamac").(string),
+		Linkredundancy: d.Get("linkredundancy").(string),
+		Macdistr:       d.Get("macdistr").(string),
+		Mode:           d.Get("mode").(string),
+		Speed:          d.Get("speed").(string),
+		State:          d.Get("state").(string),
+		Tagall:         d.Get("tagall").(string),
+		Trunk:          d.Get("trunk").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bandwidthhigh"); !raw.IsNull() {
+		channel.Bandwidthhigh = intPtr(d.Get("bandwidthhigh").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bandwidthnormal"); !raw.IsNull() {
+		channel.Bandwidthnormal = intPtr(d.Get("bandwidthnormal").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("lrminthroughput"); !raw.IsNull() {
+		channel.Lrminthroughput = intPtr(d.Get("lrminthroughput").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mtu"); !raw.IsNull() {
+		channel.Mtu = intPtr(d.Get("mtu").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("throughput"); !raw.IsNull() {
+		channel.Throughput = intPtr(d.Get("throughput").(int))
 	}
 
 	_, err := client.AddResource(service.Channel.Type(), channelName, &channel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(channelName)
 
-	err = readChannelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this channel but we can't read it ?? %s", channelName)
-		return nil
-	}
-	return nil
+	return readChannelFunc(ctx, d, meta)
 }
 
-func readChannelFunc(d *schema.ResourceData, meta interface{}) error {
+func readChannelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readChannelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	channelName := d.Id()
@@ -182,8 +191,8 @@ func readChannelFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("channel_id", data["id"])
-	d.Set("bandwidthhigh", data["bandwidthhigh"])
-	d.Set("bandwidthnormal", data["bandwidthnormal"])
+	setToInt("bandwidthhigh", d, data["bandwidthhigh"])
+	setToInt("bandwidthnormal", d, data["bandwidthnormal"])
 	d.Set("conndistr", data["conndistr"])
 	d.Set("flowctl", data["flowctl"])
 	d.Set("haheartbeat", data["haheartbeat"])
@@ -193,21 +202,21 @@ func readChannelFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ifnum", data["ifnum"])
 	d.Set("lamac", data["lamac"])
 	d.Set("linkredundancy", data["linkredundancy"])
-	d.Set("lrminthroughput", data["lrminthroughput"])
+	setToInt("lrminthroughput", d, data["lrminthroughput"])
 	d.Set("macdistr", data["macdistr"])
 	//d.Set("mode", data["mode"])
 	setToInt("mtu", d, data["mtu"])
 	d.Set("speed", d.Get("speed").(string))
 	d.Set("state", data["state"])
 	d.Set("tagall", data["tagall"])
-	d.Set("throughput", data["throughput"])
+	setToInt("throughput", d, data["throughput"])
 	d.Set("trunk", data["trunk"])
 
 	return nil
 
 }
 
-func updateChannelFunc(d *schema.ResourceData, meta interface{}) error {
+func updateChannelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateChannelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	channelName := d.Get("channel_id").(string)
@@ -218,12 +227,12 @@ func updateChannelFunc(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	if d.HasChange("bandwidthhigh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bandwidthhigh has changed for channel %s, starting update", channelName)
-		channel.Bandwidthhigh = d.Get("bandwidthhigh").(int)
+		channel.Bandwidthhigh = intPtr(d.Get("bandwidthhigh").(int))
 		hasChange = true
 	}
 	if d.HasChange("bandwidthnormal") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bandwidthnormal has changed for channel %s, starting update", channelName)
-		channel.Bandwidthnormal = d.Get("bandwidthnormal").(int)
+		channel.Bandwidthnormal = intPtr(d.Get("bandwidthnormal").(int))
 		hasChange = true
 	}
 	if d.HasChange("conndistr") {
@@ -268,7 +277,7 @@ func updateChannelFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("lrminthroughput") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lrminthroughput has changed for channel %s, starting update", channelName)
-		channel.Lrminthroughput = d.Get("lrminthroughput").(int)
+		channel.Lrminthroughput = intPtr(d.Get("lrminthroughput").(int))
 		hasChange = true
 	}
 	if d.HasChange("macdistr") {
@@ -283,7 +292,7 @@ func updateChannelFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("mtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mtu has changed for channel %s, starting update", channelName)
-		channel.Mtu = d.Get("mtu").(int)
+		channel.Mtu = intPtr(d.Get("mtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("speed") {
@@ -303,7 +312,7 @@ func updateChannelFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("throughput") {
 		log.Printf("[DEBUG]  citrixadc-provider: Throughput has changed for channel %s, starting update", channelName)
-		channel.Throughput = d.Get("throughput").(int)
+		channel.Throughput = intPtr(d.Get("throughput").(int))
 		hasChange = true
 	}
 	if d.HasChange("trunk") {
@@ -315,19 +324,19 @@ func updateChannelFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Channel.Type(), &channel)
 		if err != nil {
-			return fmt.Errorf("Error updating channel %s", channelName)
+			return diag.Errorf("Error updating channel %s", channelName)
 		}
 	}
-	return readChannelFunc(d, meta)
+	return readChannelFunc(ctx, d, meta)
 }
 
-func deleteChannelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteChannelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteChannelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	channelName := d.Id()
 	err := client.DeleteResource(service.Channel.Type(), channelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

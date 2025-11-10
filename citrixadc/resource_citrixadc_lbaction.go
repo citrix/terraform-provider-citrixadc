@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLbaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbactionFunc,
-		Read:          readLbactionFunc,
-		Update:        updateLbactionFunc,
-		Delete:        deleteLbactionFunc,
+		CreateContext: createLbactionFunc,
+		ReadContext:   readLbactionFunc,
+		UpdateContext: updateLbactionFunc,
+		DeleteContext: deleteLbactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -29,11 +32,6 @@ func resourceCitrixAdcLbaction() *schema.Resource {
 				Required: true,
 				Computed: false,
 				ForceNew: true,
-			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -51,7 +49,7 @@ func resourceCitrixAdcLbaction() *schema.Resource {
 	}
 }
 
-func createLbactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -60,27 +58,21 @@ func createLbactionFunc(d *schema.ResourceData, meta interface{}) error {
 	lbaction := lb.Lbaction{
 		Comment: d.Get("comment").(string),
 		Name:    d.Get("name").(string),
-		Newname: d.Get("newname").(string),
 		Type:    d.Get("type").(string),
 		Value:   toIntegerList(d.Get("value").([]interface{})),
 	}
 
 	_, err := client.AddResource("lbaction", lbactionName, &lbaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lbactionName)
 
-	err = readLbactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbaction but we can't read it ?? %s", lbactionName)
-		return nil
-	}
-	return nil
+	return readLbactionFunc(ctx, d, meta)
 }
 
-func readLbactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbactionName := d.Id()
@@ -94,7 +86,6 @@ func readLbactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
-	d.Set("newname", data["newname"])
 	d.Set("type", data["type"])
 	d.Set("value", stringListToIntList(data["value"].([]interface{})))
 
@@ -102,7 +93,7 @@ func readLbactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateLbactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLbactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLbactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbactionName := d.Get("name").(string)
@@ -121,11 +112,6 @@ func updateLbactionFunc(d *schema.ResourceData, meta interface{}) error {
 		lbaction.Name = d.Get("name").(string)
 		hasChange = true
 	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for lbaction %s, starting update", lbactionName)
-		lbaction.Newname = d.Get("newname").(string)
-		hasChange = true
-	}
 	if d.HasChange("type") {
 		log.Printf("[DEBUG]  citrixadc-provider: Type has changed for lbaction %s, starting update", lbactionName)
 		lbaction.Type = d.Get("type").(string)
@@ -140,19 +126,19 @@ func updateLbactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("lbaction", lbactionName, &lbaction)
 		if err != nil {
-			return fmt.Errorf("Error updating lbaction %s", lbactionName)
+			return diag.Errorf("Error updating lbaction %s", lbactionName)
 		}
 	}
-	return readLbactionFunc(d, meta)
+	return readLbactionFunc(ctx, d, meta)
 }
 
-func deleteLbactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbactionName := d.Id()
 	err := client.DeleteResource("lbaction", lbactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

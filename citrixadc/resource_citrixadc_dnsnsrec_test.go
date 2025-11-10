@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"fmt"
 	"strings"
@@ -58,9 +58,9 @@ resource "citrixadc_dnsnsrec" "tf_dnsnsrec2" {
 
 func TestAccDnsnsrec_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDnsnsrecDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckDnsnsrecDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDnsnsrec_basic_step1,
@@ -99,7 +99,11 @@ func testAccCheckDnsnsrecExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		dnsnsrecId := rs.Primary.ID
 
@@ -133,7 +137,11 @@ func testAccCheckDnsnsrecExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckDnsnsrecDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_dnsnsrec" {
@@ -144,7 +152,7 @@ func testAccCheckDnsnsrecDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Dnsnsrec.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Dnsnsrec.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("dnsnsrec %s still exists", rs.Primary.ID)
 		}

@@ -31,7 +31,7 @@ type Dnsglobaldnspolicybinding struct {
 	/**
 	* Specifies the priority of the policy with which it is bound. Maximum allowed priority should be less than 65535
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:
 		* NEXT - Evaluate the policy with the next higher priority number.
@@ -63,11 +63,11 @@ type Dnsglobaldnspolicybinding struct {
 	/**
 	* The number of policies bound to the bindpoint.
 	*/
-	Numpol int `json:"numpol,omitempty"`
+	Numpol *int `json:"numpol,omitempty"`
 	/**
 	* flowtype of the bound rewrite policy.
 	*/
-	Flowtype int `json:"flowtype,omitempty"`
+	Flowtype *int `json:"flowtype,omitempty"`
 	Globalbindtype string `json:"globalbindtype,omitempty"`
 
 

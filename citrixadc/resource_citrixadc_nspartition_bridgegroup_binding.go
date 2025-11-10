@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcNspartition_bridgegroup_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNspartition_bridgegroup_bindingFunc,
-		Read:          readNspartition_bridgegroup_bindingFunc,
-		Delete:        deleteNspartition_bridgegroup_bindingFunc,
+		CreateContext: createNspartition_bridgegroup_bindingFunc,
+		ReadContext:   readNspartition_bridgegroup_bindingFunc,
+		DeleteContext: deleteNspartition_bridgegroup_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"partitionname": {
@@ -37,33 +39,31 @@ func resourceCitrixAdcNspartition_bridgegroup_binding() *schema.Resource {
 	}
 }
 
-func createNspartition_bridgegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createNspartition_bridgegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNspartition_bridgegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	partitionname := d.Get("partitionname")
 	bridgegroup := strconv.Itoa(d.Get("bridgegroup").(int))
 	bindingId := fmt.Sprintf("%s,%s", partitionname, bridgegroup)
 	nspartition_bridgegroup_binding := ns.Nspartitionbridgegroupbinding{
-		Bridgegroup:   d.Get("bridgegroup").(int),
 		Partitionname: d.Get("partitionname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bridgegroup"); !raw.IsNull() {
+		nspartition_bridgegroup_binding.Bridgegroup = intPtr(d.Get("bridgegroup").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nspartition_bridgegroup_binding.Type(), &nspartition_bridgegroup_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readNspartition_bridgegroup_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nspartition_bridgegroup_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readNspartition_bridgegroup_bindingFunc(ctx, d, meta)
 }
 
-func readNspartition_bridgegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readNspartition_bridgegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNspartition_bridgegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -84,7 +84,7 @@ func readNspartition_bridgegroup_bindingFunc(d *schema.ResourceData, meta interf
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -115,14 +115,14 @@ func readNspartition_bridgegroup_bindingFunc(d *schema.ResourceData, meta interf
 
 	data := dataArr[foundIndex]
 
-	d.Set("bridgegroup", data["bridgegroup"])
+	setToInt("bridgegroup", d, data["bridgegroup"])
 	d.Set("partitionname", data["partitionname"])
 
 	return nil
 
 }
 
-func deleteNspartition_bridgegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNspartition_bridgegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNspartition_bridgegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -137,7 +137,7 @@ func deleteNspartition_bridgegroup_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.DeleteResourceWithArgs(service.Nspartition_bridgegroup_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

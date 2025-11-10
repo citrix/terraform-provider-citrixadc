@@ -31,7 +31,7 @@ type Vlanchannelbinding struct {
 	/**
 	* Specifies the virtual LAN ID.
 	*/
-	Id int `json:"id,omitempty"`
+	Id *int `json:"id,omitempty"`
 	/**
 	* The owner node group in a Cluster for this vlan.
 	*/

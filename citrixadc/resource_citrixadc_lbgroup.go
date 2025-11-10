@@ -1,25 +1,31 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLbgroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbgroupFunc,
-		Read:          readLbgroupFunc,
-		Update:        updateLbgroupFunc,
-		Delete:        deleteLbgroupFunc,
+		CreateContext: createLbgroupFunc,
+		ReadContext:   readLbgroupFunc,
+		UpdateContext: updateLbgroupFunc,
+		DeleteContext: deleteLbgroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"mastervserver": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -79,41 +85,43 @@ func resourceCitrixAdcLbgroup() *schema.Resource {
 	}
 }
 
-func createLbgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createLbgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	LbgroupName := d.Get("name").(string)
 	Lbgroup := lb.Lbgroup{
-		Name:                     d.Get("name").(string),
-		Persistencetype:          d.Get("persistencetype").(string),
-		Persistencebackup:        d.Get("persistencebackup").(string),
-		Backuppersistencetimeout: d.Get("backuppersistencetimeout").(int),
-		Persistmask:              d.Get("persistmask").(string),
-		Cookiename:               d.Get("cookiename").(string),
-		V6persistmasklen:         d.Get("v6persistmasklen").(int),
-		Cookiedomain:             d.Get("cookiedomain").(string),
-		Timeout:                  d.Get("timeout").(int),
-		Rule:                     d.Get("rule").(string),
-		Usevserverpersistency:    d.Get("usevserverpersistency").(string),
+		Name:                  d.Get("name").(string),
+		Persistencetype:       d.Get("persistencetype").(string),
+		Persistencebackup:     d.Get("persistencebackup").(string),
+		Persistmask:           d.Get("persistmask").(string),
+		Cookiename:            d.Get("cookiename").(string),
+		Cookiedomain:          d.Get("cookiedomain").(string),
+		Rule:                  d.Get("rule").(string),
+		Usevserverpersistency: d.Get("usevserverpersistency").(string),
+		Mastervserver:         d.Get("mastervserver").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("backuppersistencetimeout"); !raw.IsNull() {
+		Lbgroup.Backuppersistencetimeout = intPtr(d.Get("backuppersistencetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("v6persistmasklen"); !raw.IsNull() {
+		Lbgroup.V6persistmasklen = intPtr(d.Get("v6persistmasklen").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		Lbgroup.Timeout = intPtr(d.Get("timeout").(int))
 	}
 
 	_, err := client.AddResource("lbgroup", LbgroupName, &Lbgroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(LbgroupName)
 
-	err = readLbgroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this Lbgroup but we can't read it ?? %s", LbgroupName)
-		return nil
-	}
-	return nil
+	return readLbgroupFunc(ctx, d, meta)
 }
 
-func readLbgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readLbgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	LbgroupName := d.Id()
@@ -125,21 +133,22 @@ func readLbgroupFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("mastervserver", data["mastervserver"])
 	d.Set("persistencetype", data["persistencetype"])
 	d.Set("persistencebackup", data["persistencebackup"])
-	d.Set("backuppersistencetimeout", data["backuppersistencetimeout"])
+	setToInt("backuppersistencetimeout", d, data["backuppersistencetimeout"])
 	d.Set("persistmask", data["persistmask"])
 	d.Set("cookiename", data["cookiename"])
-	d.Set("v6persistmasklen", data["v6persistmasklen"])
+	setToInt("v6persistmasklen", d, data["v6persistmasklen"])
 	d.Set("cookiedomain", data["cookiedomain"])
-	d.Set("timeout", data["timeout"])
+	setToInt("timeout", d, data["timeout"])
 	d.Set("rule", data["rule"])
 	d.Set("usevserverpersistency", data["usevserverpersistency"])
 
 	return nil
 }
 
-func updateLbgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In updateLbgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	LbgroupName := d.Get("name").(string)
@@ -149,7 +158,11 @@ func updateLbgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	hasChange := false
-
+	if d.HasChange("mastervserver") {
+		log.Printf("[DEBUG]  citrixadc-provider: Mastervserver has changed for Lbgroup, starting update")
+		Lbgroup.Mastervserver = d.Get("mastervserver").(string)
+		hasChange = true
+	}
 	if d.HasChange("persistencetype") {
 		log.Printf("[DEBUG]  netscaler-provider: Persistencetype has changed for Lbgroup %s, starting update", LbgroupName)
 		Lbgroup.Persistencetype = d.Get("persistencetype").(string)
@@ -162,7 +175,7 @@ func updateLbgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("backuppersistencetimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Backuppersistencetimeout has changed for Lbgroup %s, starting update", LbgroupName)
-		Lbgroup.Backuppersistencetimeout = d.Get("backuppersistencetimeout").(int)
+		Lbgroup.Backuppersistencetimeout = intPtr(d.Get("backuppersistencetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("persistmask") {
@@ -177,7 +190,7 @@ func updateLbgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("v6persistmasklen") {
 		log.Printf("[DEBUG]  netscaler-provider: V6persistmasklen has changed for Lbgroup %s, starting update", LbgroupName)
-		Lbgroup.V6persistmasklen = d.Get("v6persistmasklen").(int)
+		Lbgroup.V6persistmasklen = intPtr(d.Get("v6persistmasklen").(int))
 		hasChange = true
 	}
 	if d.HasChange("cookiedomain") {
@@ -187,7 +200,7 @@ func updateLbgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Timeout has changed for Lbgroup %s, starting update", LbgroupName)
-		Lbgroup.Timeout = d.Get("timeout").(int)
+		Lbgroup.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("rule") {
@@ -204,20 +217,20 @@ func updateLbgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("lbgroup", LbgroupName, &Lbgroup)
 		if err != nil {
-			return fmt.Errorf("Error updating Lbgroup %s", LbgroupName)
+			return diag.Errorf("Error updating Lbgroup %s", LbgroupName)
 		}
 	}
 
-	return readLbgroupFunc(d, meta)
+	return readLbgroupFunc(ctx, d, meta)
 }
 
-func deleteLbgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteLbgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	LbgroupName := d.Id()
 	err := client.DeleteResource("lbgroup", LbgroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

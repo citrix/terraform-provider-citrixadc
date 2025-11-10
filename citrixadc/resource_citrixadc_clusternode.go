@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 )
@@ -13,14 +15,19 @@ import (
 func resourceCitrixAdcClusternode() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createClusternodeFunc,
-		Read:          readClusternodeFunc,
-		Update:        updateClusternodeFunc,
-		Delete:        deleteClusternodeFunc,
+		CreateContext: createClusternodeFunc,
+		ReadContext:   readClusternodeFunc,
+		UpdateContext: updateClusternodeFunc,
+		DeleteContext: deleteClusternodeFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"force": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"nodeid": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -70,38 +77,40 @@ func resourceCitrixAdcClusternode() *schema.Resource {
 	}
 }
 
-func createClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
+func createClusternodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createClusternodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusternodeId := strconv.Itoa(d.Get("nodeid").(int))
 
 	clusternode := cluster.Clusternode{
 		Backplane:  d.Get("backplane").(string),
-		Delay:      d.Get("delay").(int),
 		Ipaddress:  d.Get("ipaddress").(string),
 		Nodegroup:  d.Get("nodegroup").(string),
-		Nodeid:     d.Get("nodeid").(int),
-		Priority:   d.Get("priority").(int),
 		State:      d.Get("state").(string),
 		Tunnelmode: d.Get("tunnelmode").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("delay"); !raw.IsNull() {
+		clusternode.Delay = intPtr(d.Get("delay").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		clusternode.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		clusternode.Priority = intPtr(d.Get("priority").(int))
+	}
+
 	_, err := client.AddResource(service.Clusternode.Type(), clusternodeId, &clusternode)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(clusternodeId)
 
-	err = readClusternodeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this clusternode but we can't read it ?? %s", clusternodeId)
-		return nil
-	}
-	return nil
+	return readClusternodeFunc(ctx, d, meta)
 }
 
-func readClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
+func readClusternodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readClusternodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusternodeId := d.Id()
@@ -112,9 +121,9 @@ func readClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("nodeid", data["nodeid"])
+	setToInt("nodeid", d, data["nodeid"])
 	d.Set("backplane", data["backplane"])
-	d.Set("delay", data["delay"])
+	setToInt("delay", d, data["delay"])
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("nodegroup", data["nodegroup"])
 	setToInt("priority", d, data["priority"])
@@ -125,13 +134,15 @@ func readClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
+func updateClusternodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateClusternodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusternodeId := strconv.Itoa(d.Get("nodeid").(int))
 
-	clusternode := cluster.Clusternode{
-		Nodeid: d.Get("nodeid").(int),
+	clusternode := cluster.Clusternode{}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		clusternode.Nodeid = intPtr(d.Get("nodeid").(int))
 	}
 	hasChange := false
 	if d.HasChange("backplane") {
@@ -141,7 +152,7 @@ func updateClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("delay") {
 		log.Printf("[DEBUG]  citrixadc-provider: Delay has changed for clusternode %s, starting update", clusternodeId)
-		clusternode.Delay = d.Get("delay").(int)
+		clusternode.Delay = intPtr(d.Get("delay").(int))
 		hasChange = true
 	}
 	if d.HasChange("nodegroup") {
@@ -151,12 +162,12 @@ func updateClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("nodeid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nodeid has changed for clusternode %s, starting update", clusternodeId)
-		clusternode.Nodeid = d.Get("nodeid").(int)
+		clusternode.Nodeid = intPtr(d.Get("nodeid").(int))
 		hasChange = true
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for clusternode %s, starting update", clusternodeId)
-		clusternode.Priority = d.Get("priority").(int)
+		clusternode.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("state") {
@@ -173,13 +184,13 @@ func updateClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Clusternode.Type(), clusternodeId, &clusternode)
 		if err != nil {
-			return fmt.Errorf("Error updating clusternode %s", clusternodeId)
+			return diag.Errorf("Error updating clusternode %s", clusternodeId)
 		}
 	}
-	return readClusternodeFunc(d, meta)
+	return readClusternodeFunc(ctx, d, meta)
 }
 
-func deleteClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteClusternodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteClusternodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusternodeId := d.Id()
@@ -189,9 +200,12 @@ func deleteClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		args = append(args, fmt.Sprintf("clearnodegroupconfig:YES"))
 	}
+	if v, ok := d.GetOk("force"); ok {
+		args = append(args, fmt.Sprintf("force:%t", v.(bool)))
+	}
 	err := client.DeleteResourceWithArgs(service.Clusternode.Type(), clusternodeId, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

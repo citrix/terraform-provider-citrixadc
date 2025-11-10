@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAppfwglobal_appfwpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwglobal_appfwpolicy_bindingFunc,
-		Read:          readAppfwglobal_appfwpolicy_bindingFunc,
-		Delete:        deleteAppfwglobal_appfwpolicy_bindingFunc,
+		CreateContext: createAppfwglobal_appfwpolicy_bindingFunc,
+		ReadContext:   readAppfwglobal_appfwpolicy_bindingFunc,
+		DeleteContext: deleteAppfwglobal_appfwpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -79,7 +81,7 @@ func resourceCitrixAdcAppfwglobal_appfwpolicy_binding() *schema.Resource {
 	}
 }
 
-func createAppfwglobal_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwglobal_appfwpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwglobal_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -93,27 +95,25 @@ func createAppfwglobal_appfwpolicy_bindingFunc(d *schema.ResourceData, meta inte
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             policyname,
-		Priority:               d.Get("priority").(int),
 		State:                  d.Get("state").(string),
 		Type:                   bindpoint_type,
 	}
 
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		appfwglobal_appfwpolicy_binding.Priority = intPtr(d.Get("priority").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Appfwglobal_appfwpolicy_binding.Type(), &appfwglobal_appfwpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwglobal_appfwpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwglobal_appfwpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readAppfwglobal_appfwpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwglobal_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwglobal_appfwpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwglobal_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -133,7 +133,7 @@ func readAppfwglobal_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -178,7 +178,7 @@ func readAppfwglobal_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 
 }
 
-func deleteAppfwglobal_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwglobal_appfwpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwglobal_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -200,7 +200,7 @@ func deleteAppfwglobal_appfwpolicy_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.DeleteResourceWithArgs(service.Appfwglobal_appfwpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

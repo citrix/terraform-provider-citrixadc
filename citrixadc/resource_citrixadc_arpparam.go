@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcArpparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createArpparamFunc,
-		Read:          readArpparamFunc,
-		Update:        updateArpparamFunc,
-		Delete:        deleteArpparamFunc,
+		CreateContext: createArpparamFunc,
+		ReadContext:   readArpparamFunc,
+		UpdateContext: updateArpparamFunc,
+		DeleteContext: deleteArpparamFunc,
 		Schema: map[string]*schema.Schema{
 			"spoofvalidation": {
 				Type:     schema.TypeString,
@@ -34,7 +37,7 @@ func resourceCitrixAdcArpparam() *schema.Resource {
 	}
 }
 
-func createArpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createArpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createArpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var arpparamName string
@@ -42,25 +45,23 @@ func createArpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	arpparamName = resource.PrefixedUniqueId("tf-arpparam-")
 	arpparam := network.Arpparam{
 		Spoofvalidation: d.Get("spoofvalidation").(string),
-		Timeout:         d.Get("timeout").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		arpparam.Timeout = intPtr(d.Get("timeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Arpparam.Type(), &arpparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(arpparamName)
 
-	err = readArpparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this arpparam but we can't read it ?? %s", arpparamName)
-		return nil
-	}
-	return nil
+	return readArpparamFunc(ctx, d, meta)
 }
 
-func readArpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readArpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readArpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading arpparam state")
@@ -78,7 +79,7 @@ func readArpparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateArpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateArpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateArpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -91,20 +92,20 @@ func updateArpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for arpparam, starting update")
-		arpparam.Timeout = d.Get("timeout").(int)
+		arpparam.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Arpparam.Type(), &arpparam)
 		if err != nil {
-			return fmt.Errorf("Error updating arpparam")
+			return diag.Errorf("Error updating arpparam")
 		}
 	}
-	return readArpparamFunc(d, meta)
+	return readArpparamFunc(ctx, d, meta)
 }
 
-func deleteArpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteArpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteArpparamFunc")
 
 	d.SetId("")

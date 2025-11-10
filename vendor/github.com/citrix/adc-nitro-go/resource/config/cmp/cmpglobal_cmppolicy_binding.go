@@ -28,7 +28,7 @@ type Cmpglobalcmppolicybinding struct {
 	* Positive integer specifying the priority of the policy. The lower the number, the higher the priority. By default, polices within a label are evaluated in the order of their priority numbers.
 		In the configuration utility, you can click the Priority field and edit the priority level or drag the entry to a new position in the list. If you drag the entry to a new position, the priority level is updated automatically.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Bind point to which the policy is bound.
 	*/
@@ -36,7 +36,7 @@ type Cmpglobalcmppolicybinding struct {
 	/**
 	* The number of policies bound to the bindpoint.
 	*/
-	Numpol int `json:"numpol,omitempty"`
+	Numpol *int `json:"numpol,omitempty"`
 	Globalbindtype string `json:"globalbindtype,omitempty"`
 	/**
 	* Expression or other value specifying the priority of the next policy, within the policy label, to evaluate if the current policy evaluates to TRUE.  Specify one of the following values:

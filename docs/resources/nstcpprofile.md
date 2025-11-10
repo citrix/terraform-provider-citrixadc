@@ -78,6 +78,7 @@ resource "citrixadc_nstcpprofile" "tf_nsprofile" {
 * `mpcapablecbit` - (Optional) Set C bit in MP-CAPABLE Syn-Ack sent by Citrix ADC. Default value: DISABLED Possible values: [ ENABLED, DISABLED ]
 * `sendclientportintcpoption` - (optional) Send Client Port number along with Client IP in TCP-Options. ClientIpTcpOption must be ENABLED. Default value: DISABLED Possible values = [ ENABLED, DISABLED ]
 * `slowstartthreshold` - (optional) TCP Slow Start Threhsold Value. Default value: 524288, Minimum value = 8190, Maximum value = 20971520
+* `rfc5961compliance` - (Optional) Enable or disable RFC 5961 compliance to protect against tcp spoofing(RST/SYN/Data). When enabled, will be compliant with RFC 5961.
 
 
 ## Attribute Reference

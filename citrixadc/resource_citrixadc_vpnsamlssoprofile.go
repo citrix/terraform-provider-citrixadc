@@ -1,24 +1,25 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpnsamlssoprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnsamlssoprofileFunc,
-		Read:          readVpnsamlssoprofileFunc,
-		Update:        updateVpnsamlssoprofileFunc,
-		Delete:        deleteVpnsamlssoprofileFunc,
+		CreateContext: createVpnsamlssoprofileFunc,
+		ReadContext:   readVpnsamlssoprofileFunc,
+		UpdateContext: updateVpnsamlssoprofileFunc,
+		DeleteContext: deleteVpnsamlssoprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -431,7 +432,7 @@ func resourceCitrixAdcVpnsamlssoprofile() *schema.Resource {
 	}
 }
 
-func createVpnsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnsamlssoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnsamlssoprofileName := d.Get("name").(string)
@@ -516,25 +517,23 @@ func createVpnsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error
 		Signassertion:               d.Get("signassertion").(string),
 		Signaturealg:                d.Get("signaturealg").(string),
 		Signatureservice:            d.Get("signatureservice").(string),
-		Skewtime:                    d.Get("skewtime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("skewtime"); !raw.IsNull() {
+		vpnsamlssoprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 	}
 
 	_, err := client.AddResource(service.Vpnsamlssoprofile.Type(), vpnsamlssoprofileName, &vpnsamlssoprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnsamlssoprofileName)
 
-	err = readVpnsamlssoprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnsamlssoprofile but we can't read it ?? %s", vpnsamlssoprofileName)
-		return nil
-	}
-	return nil
+	return readVpnsamlssoprofileFunc(ctx, d, meta)
 }
 
-func readVpnsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnsamlssoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnsamlssoprofileName := d.Id()
@@ -625,13 +624,13 @@ func readVpnsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("signassertion", data["signassertion"])
 	d.Set("signaturealg", data["signaturealg"])
 	d.Set("signatureservice", data["signatureservice"])
-	d.Set("skewtime", data["skewtime"])
+	setToInt("skewtime", d, data["skewtime"])
 
 	return nil
 
 }
 
-func updateVpnsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnsamlssoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnsamlssoprofileName := d.Get("name").(string)
@@ -1037,26 +1036,26 @@ func updateVpnsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("skewtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for vpnsamlssoprofile %s, starting update", vpnsamlssoprofileName)
-		vpnsamlssoprofile.Skewtime = d.Get("skewtime").(int)
+		vpnsamlssoprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Vpnsamlssoprofile.Type(), vpnsamlssoprofileName, &vpnsamlssoprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnsamlssoprofile %s", vpnsamlssoprofileName)
+			return diag.Errorf("Error updating vpnsamlssoprofile %s", vpnsamlssoprofileName)
 		}
 	}
-	return readVpnsamlssoprofileFunc(d, meta)
+	return readVpnsamlssoprofileFunc(ctx, d, meta)
 }
 
-func deleteVpnsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnsamlssoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnsamlssoprofileName := d.Id()
 	err := client.DeleteResource(service.Vpnsamlssoprofile.Type(), vpnsamlssoprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

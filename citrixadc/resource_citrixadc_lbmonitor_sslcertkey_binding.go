@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcLbmonitor_sslcertkey_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbmonitor_sslcertkey_bindingFunc,
-		Read:          readLbmonitor_sslcertkey_bindingFunc,
-		Delete:        deleteLbmonitor_sslcertkey_bindingFunc,
+		CreateContext: createLbmonitor_sslcertkey_bindingFunc,
+		ReadContext:   readLbmonitor_sslcertkey_bindingFunc,
+		DeleteContext: deleteLbmonitor_sslcertkey_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ca": {
@@ -53,7 +55,7 @@ func resourceCitrixAdcLbmonitor_sslcertkey_binding() *schema.Resource {
 	}
 }
 
-func createLbmonitor_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbmonitor_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbmonitor_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	monitorName := d.Get("monitorname").(string)
@@ -70,20 +72,15 @@ func createLbmonitor_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfa
 
 	_, err := client.AddResource("lbmonitor_sslcertkey_binding", monitorName, &lbmonitor_sslcertkey_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLbmonitor_sslcertkey_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbmonitor_sslcertkey_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLbmonitor_sslcertkey_bindingFunc(ctx, d, meta)
 }
 
-func readLbmonitor_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbmonitor_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbmonitor_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -105,7 +102,7 @@ func readLbmonitor_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -146,7 +143,7 @@ func readLbmonitor_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deleteLbmonitor_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbmonitor_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbmonitor_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -165,7 +162,7 @@ func deleteLbmonitor_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgsMap("lbmonitor_sslcertkey_binding", monitorName, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

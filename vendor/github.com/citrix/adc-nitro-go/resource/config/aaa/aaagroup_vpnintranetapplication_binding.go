@@ -24,7 +24,7 @@ type Aaagroupvpnintranetapplicationbinding struct {
 	* Bind the group to the specified intranet VPN application.
 	*/
 	Intranetapplication string `json:"intranetapplication,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the group that you are binding.
 	*/

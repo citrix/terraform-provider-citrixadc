@@ -1,26 +1,39 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNscapacity() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNscapacityFunc,
-		Read:          readNscapacityFunc,
-		Update:        createNscapacityFunc,
-		Delete:        deleteNscapacityFunc,
+		CreateContext: createNscapacityFunc,
+		ReadContext:   readNscapacityFunc,
+		UpdateContext: createNscapacityFunc,
+		DeleteContext: deleteNscapacityFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"username": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"password": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"bandwidth": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -55,42 +68,43 @@ func resourceCitrixAdcNscapacity() *schema.Resource {
 	}
 }
 
-func createNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
+func createNscapacityFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNscapacityFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	nscapacityId := resource.PrefixedUniqueId("tf-nscapacity-")
 	nscapacity := ns.Nscapacity{
-		Bandwidth: d.Get("bandwidth").(int),
-		Edition:   d.Get("edition").(string),
-		Nodeid:    d.Get("nodeid").(int),
-		Platform:  d.Get("platform").(string),
-		Unit:      d.Get("unit").(string),
-		Vcpu:      d.Get("vcpu").(bool),
+		Edition:  d.Get("edition").(string),
+		Platform: d.Get("platform").(string),
+		Unit:     d.Get("unit").(string),
+		Vcpu:     d.Get("vcpu").(bool),
+		Password: d.Get("password").(string),
+		Username: d.Get("username").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bandwidth"); !raw.IsNull() {
+		nscapacity.Bandwidth = intPtr(d.Get("bandwidth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		nscapacity.Nodeid = intPtr(d.Get("nodeid").(int))
 	}
 
 	err := client.UpdateUnnamedResource("nscapacity", &nscapacity)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nscapacityId)
 
 	warm := true
 	if err = rebootNetScaler(d, meta, warm); err != nil {
-		return fmt.Errorf("Error warm rebooting ADC. %s", err.Error())
+		return diag.Errorf("Error warm rebooting ADC. %s", err.Error())
 	}
 
-	err = readNscapacityFunc(d, meta)
-
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nscapacity but we can't read it ?? %s", nscapacityId)
-		return err
-	}
-	return nil
+	return readNscapacityFunc(ctx, d, meta)
 }
 
-func deleteNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNscapacityFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNscapacityFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -116,7 +130,7 @@ func deleteNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ActOnResource("nscapacity", &nscapacity, "unset")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -124,7 +138,7 @@ func deleteNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func readNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
+func readNscapacityFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNscapacityFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -162,6 +176,9 @@ func readNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("edition", "")
 		d.Set("unit", "")
 	}
+
+	d.Set("username", data["username"])
+	d.Set("password", data["password"])
 
 	return nil
 

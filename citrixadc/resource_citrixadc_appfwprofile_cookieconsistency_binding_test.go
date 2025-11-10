@@ -22,8 +22,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccAppfwprofile_cookieconsistency_binding_basic_step1 = `
@@ -51,9 +51,9 @@ const testAccAppfwprofile_cookieconsistency_binding_basic_step2 = `
 
 func TestAccAppfwprofile_cookieconsistency_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppfwprofile_cookieconsistency_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAppfwprofile_cookieconsistency_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1,
@@ -96,7 +96,11 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingExist(n string, id *strin
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		bindingId := rs.Primary.ID
 		idSlice := strings.SplitN(bindingId, ",", 2)
 		appFwName := idSlice[0]
@@ -107,7 +111,7 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingExist(n string, id *strin
 			ResourceName:             appFwName,
 			ResourceMissingErrorCode: 258,
 		}
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		// Unexpected error
 		if err != nil {
@@ -135,7 +139,10 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingExist(n string, id *strin
 
 func testAccCheckAppfwprofile_cookieconsistency_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -175,7 +182,11 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingNotExist(n string, id str
 }
 
 func testAccCheckAppfwprofile_cookieconsistency_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_appfwprofile_cookieconsistency_binding" {
@@ -186,7 +197,7 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingDestroy(s *terraform.Stat
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Appfwprofile_cookieconsistency_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Appfwprofile_cookieconsistency_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("appfwprofile_cookieconsistency_binding %s still exists", rs.Primary.ID)
 		}

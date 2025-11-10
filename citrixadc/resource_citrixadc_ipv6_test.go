@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -29,7 +29,7 @@ resource "citrixadc_ipv6" "tf_ipv6" {
 	ralearning        = "DISABLED"
 	ndbasereachtime   = 4000
 	routerredirection = "DISABLED"
-  }
+	}
   
 `
 const testAccIpv6_update = `
@@ -38,15 +38,15 @@ resource "citrixadc_ipv6" "tf_ipv6" {
 	ralearning        = "ENABLED"
 	ndbasereachtime   = 4000
 	routerredirection = "ENABLED"
-  }
+	}
 `
 
 func TestAccIpv6_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIpv6Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckIpv6Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIpv6_basic,
@@ -89,8 +89,12 @@ func testAccCheckIpv6Exist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Ipv6.Type(), rs.Primary.Attributes["td"])
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Ipv6.Type(), rs.Primary.Attributes["td"])
 
 		if err != nil {
 			return err
@@ -105,7 +109,11 @@ func testAccCheckIpv6Exist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckIpv6Destroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_ipv6" {
@@ -116,7 +124,7 @@ func testAccCheckIpv6Destroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Ipv6.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Ipv6.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("ipv6 %s still exists", rs.Primary.ID)
 		}

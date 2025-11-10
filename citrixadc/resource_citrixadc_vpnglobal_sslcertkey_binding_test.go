@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"net/url"
 	"testing"
 )
@@ -30,10 +30,10 @@ resource "citrixadc_sslcertkey" "foo" {
 	certkey = "sample_ssl_cert"
 	cert    = "/var/tmp/certificate1.crt"
 	key     = "/var/tmp/key1.pem"
-  }
+	}
   resource "citrixadc_vpnglobal_sslcertkey_binding" "tf_vpnglobal_sslcertkey_binding" {
 	certkeyname = citrixadc_sslcertkey.foo.certkey
-  }
+	}
 `
 
 const testAccVpnglobal_sslcertkey_binding_basic_step2 = `
@@ -42,15 +42,15 @@ const testAccVpnglobal_sslcertkey_binding_basic_step2 = `
 		certkey = "sample_ssl_cert"
 		cert    = "/var/tmp/certificate1.crt"
 		key     = "/var/tmp/key1.pem"
-	  }
+	}
 	  
 `
 
 func TestAccVpnglobal_sslcertkey_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { PreCheckSslceriKey(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpnglobal_sslcertkey_bindingDestroy,
+		PreCheck:          func() { PreCheckSslceriKey(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckVpnglobal_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnglobal_sslcertkey_binding_basic,
@@ -87,7 +87,11 @@ func testAccCheckVpnglobal_sslcertkey_bindingExist(n string, id *string) resourc
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		certkeyname, _ := url.QueryUnescape(rs.Primary.ID)
 
 		findParams := service.FindParams{
@@ -142,7 +146,11 @@ func PreCheckSslceriKey(t *testing.T) {
 
 func testAccCheckVpnglobal_sslcertkey_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		certkeyname := id
 
 		findParams := service.FindParams{
@@ -174,7 +182,11 @@ func testAccCheckVpnglobal_sslcertkey_bindingNotExist(n string, id string) resou
 }
 
 func testAccCheckVpnglobal_sslcertkey_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_vpnglobal_sslcertkey_binding" {
@@ -185,7 +197,7 @@ func testAccCheckVpnglobal_sslcertkey_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("Vpnglobal_sslcertkey_binding", rs.Primary.ID)
+		_, err := client.FindResource("Vpnglobal_sslcertkey_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("vpnglobal_sslcertkey_binding %s still exists", rs.Primary.ID)
 		}

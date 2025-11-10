@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLbsipparameters() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbsipparametersFunc,
-		Read:          readLbsipparametersFunc,
-		Update:        updateLbsipparametersFunc,
-		Delete:        deleteLbsipparametersFunc, // Thought lbsipparameters resource does not have a DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createLbsipparametersFunc,
+		ReadContext:   readLbsipparametersFunc,
+		UpdateContext: updateLbsipparametersFunc,
+		DeleteContext: deleteLbsipparametersFunc, // Thought lbsipparameters resource does not have a DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
 			"addrportvip": {
 				Type:     schema.TypeString,
@@ -58,7 +61,7 @@ func resourceCitrixAdcLbsipparameters() *schema.Resource {
 	}
 }
 
-func createLbsipparametersFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbsipparametersFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbsipparametersFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var lbsipparametersName string
@@ -67,31 +70,39 @@ func createLbsipparametersFunc(d *schema.ResourceData, meta interface{}) error {
 	lbsipparametersName = resource.PrefixedUniqueId("tf-lbsipparameters-")
 
 	lbsipparameters := lb.Lbsipparameters{
-		Addrportvip:         d.Get("addrportvip").(string),
-		Retrydur:            d.Get("retrydur").(int),
-		Rnatdstport:         d.Get("rnatdstport").(int),
-		Rnatsecuredstport:   d.Get("rnatsecuredstport").(int),
-		Rnatsecuresrcport:   d.Get("rnatsecuresrcport").(int),
-		Rnatsrcport:         d.Get("rnatsrcport").(int),
-		Sip503ratethreshold: d.Get("sip503ratethreshold").(int),
+		Addrportvip: d.Get("addrportvip").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("retrydur"); !raw.IsNull() {
+		lbsipparameters.Retrydur = intPtr(d.Get("retrydur").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rnatdstport"); !raw.IsNull() {
+		lbsipparameters.Rnatdstport = intPtr(d.Get("rnatdstport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rnatsecuredstport"); !raw.IsNull() {
+		lbsipparameters.Rnatsecuredstport = intPtr(d.Get("rnatsecuredstport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rnatsecuresrcport"); !raw.IsNull() {
+		lbsipparameters.Rnatsecuresrcport = intPtr(d.Get("rnatsecuresrcport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rnatsrcport"); !raw.IsNull() {
+		lbsipparameters.Rnatsrcport = intPtr(d.Get("rnatsrcport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sip503ratethreshold"); !raw.IsNull() {
+		lbsipparameters.Sip503ratethreshold = intPtr(d.Get("sip503ratethreshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Lbsipparameters.Type(), &lbsipparameters)
 	if err != nil {
-		return fmt.Errorf("Error updating lbsipparameters")
+		return diag.Errorf("Error updating lbsipparameters")
 	}
 
 	d.SetId(lbsipparametersName)
 
-	err = readLbsipparametersFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just updated the lbsipparameters but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readLbsipparametersFunc(ctx, d, meta)
 }
 
-func readLbsipparametersFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbsipparametersFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbsipparametersFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading lbsipparameters state")
@@ -102,17 +113,17 @@ func readLbsipparametersFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("addrportvip", data["addrportvip"])
-	d.Set("retrydur", data["retrydur"])
-	d.Set("rnatdstport", data["rnatdstport"])
-	d.Set("rnatsecuredstport", data["rnatsecuredstport"])
-	d.Set("rnatsecuresrcport", data["rnatsecuresrcport"])
-	d.Set("rnatsrcport", data["rnatsrcport"])
-	d.Set("sip503ratethreshold", data["sip503ratethreshold"])
+	setToInt("retrydur", d, data["retrydur"])
+	setToInt("rnatdstport", d, data["rnatdstport"])
+	setToInt("rnatsecuredstport", d, data["rnatsecuredstport"])
+	setToInt("rnatsecuresrcport", d, data["rnatsecuresrcport"])
+	setToInt("rnatsrcport", d, data["rnatsrcport"])
+	setToInt("sip503ratethreshold", d, data["sip503ratethreshold"])
 
 	return nil
 }
 
-func updateLbsipparametersFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLbsipparametersFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLbsipparametersFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -126,45 +137,45 @@ func updateLbsipparametersFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("retrydur") {
 		log.Printf("[DEBUG]  citrixadc-provider: Retrydur has changed for lbsipparameters, starting update")
-		lbsipparameters.Retrydur = d.Get("retrydur").(int)
+		lbsipparameters.Retrydur = intPtr(d.Get("retrydur").(int))
 		hasChange = true
 	}
 	if d.HasChange("rnatdstport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rnatdstport has changed for lbsipparameters, starting update")
-		lbsipparameters.Rnatdstport = d.Get("rnatdstport").(int)
+		lbsipparameters.Rnatdstport = intPtr(d.Get("rnatdstport").(int))
 		hasChange = true
 	}
 	if d.HasChange("rnatsecuredstport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rnatsecuredstport has changed for lbsipparameters, starting update")
-		lbsipparameters.Rnatsecuredstport = d.Get("rnatsecuredstport").(int)
+		lbsipparameters.Rnatsecuredstport = intPtr(d.Get("rnatsecuredstport").(int))
 		hasChange = true
 	}
 	if d.HasChange("rnatsecuresrcport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rnatsecuresrcport has changed for lbsipparameters, starting update")
-		lbsipparameters.Rnatsecuresrcport = d.Get("rnatsecuresrcport").(int)
+		lbsipparameters.Rnatsecuresrcport = intPtr(d.Get("rnatsecuresrcport").(int))
 		hasChange = true
 	}
 	if d.HasChange("rnatsrcport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rnatsrcport has changed for lbsipparameters, starting update")
-		lbsipparameters.Rnatsrcport = d.Get("rnatsrcport").(int)
+		lbsipparameters.Rnatsrcport = intPtr(d.Get("rnatsrcport").(int))
 		hasChange = true
 	}
 	if d.HasChange("sip503ratethreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sip503ratethreshold has changed for lbsipparameters, starting update")
-		lbsipparameters.Sip503ratethreshold = d.Get("sip503ratethreshold").(int)
+		lbsipparameters.Sip503ratethreshold = intPtr(d.Get("sip503ratethreshold").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Lbsipparameters.Type(), &lbsipparameters)
 		if err != nil {
-			return fmt.Errorf("Error updating lbsipparameters: %s", err.Error())
+			return diag.Errorf("Error updating lbsipparameters: %s", err.Error())
 		}
 	}
-	return readLbsipparametersFunc(d, meta)
+	return readLbsipparametersFunc(ctx, d, meta)
 }
 
-func deleteLbsipparametersFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbsipparametersFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbsipparametersFunc")
 	// lbsipparameters do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

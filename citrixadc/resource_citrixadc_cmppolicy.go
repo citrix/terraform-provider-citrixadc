@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cmp"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCmppolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCmppolicyFunc,
-		Read:          readCmppolicyFunc,
-		Update:        updateCmppolicyFunc,
-		Delete:        deleteCmppolicyFunc,
+		CreateContext: createCmppolicyFunc,
+		ReadContext:   readCmppolicyFunc,
+		UpdateContext: updateCmppolicyFunc,
+		DeleteContext: deleteCmppolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,7 +42,7 @@ func resourceCitrixAdcCmppolicy() *schema.Resource {
 	}
 }
 
-func createCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createCmppolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCmppolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmppolicyName := d.Get("name").(string)
@@ -52,20 +54,15 @@ func createCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Cmppolicy.Type(), cmppolicyName, &cmppolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(cmppolicyName)
 
-	err = readCmppolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cmppolicy but we can't read it ?? %s", cmppolicyName)
-		return nil
-	}
-	return nil
+	return readCmppolicyFunc(ctx, d, meta)
 }
 
-func readCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readCmppolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCmppolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmppolicyName := d.Id()
@@ -85,7 +82,7 @@ func readCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCmppolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCmppolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmppolicyName := d.Get("name").(string)
@@ -113,19 +110,19 @@ func updateCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Cmppolicy.Type(), cmppolicyName, &cmppolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating cmppolicy %s", cmppolicyName)
+			return diag.Errorf("Error updating cmppolicy %s", cmppolicyName)
 		}
 	}
-	return readCmppolicyFunc(d, meta)
+	return readCmppolicyFunc(ctx, d, meta)
 }
 
-func deleteCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCmppolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCmppolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmppolicyName := d.Id()
 	err := client.DeleteResource(service.Cmppolicy.Type(), cmppolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

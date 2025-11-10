@@ -1,18 +1,22 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/utility"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcPinger() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPingerFunc,
+		CreateContext: createPingerFunc,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -75,23 +79,32 @@ func resourceCitrixAdcPinger() *schema.Resource {
 	}
 }
 
-func createPingerFunc(d *schema.ResourceData, meta interface{}) error {
+func createPingerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPingerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pingerId := resource.PrefixedUniqueId("tf-pinger-")
 	ping := utility.Ping{
-		C:        d.Get("c").(int),
 		HostName: d.Get("hostname").(string),
-		I:        d.Get("i").(int),
 		N:        d.Get("n").(bool),
 		P:        d.Get("p").(string),
 		Q:        d.Get("q").(bool),
-		S:        d.Get("s").(int),
-		T:        d.Get("t").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("c"); !raw.IsNull() {
+		ping.C = intPtr(d.Get("c").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("i"); !raw.IsNull() {
+		ping.I = intPtr(d.Get("i").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("s"); !raw.IsNull() {
+		ping.S = intPtr(d.Get("s").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("t"); !raw.IsNull() {
+		ping.T = intPtr(d.Get("t").(int))
 	}
 
 	if err := client.ActOnResource("ping", &ping, ""); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(pingerId)

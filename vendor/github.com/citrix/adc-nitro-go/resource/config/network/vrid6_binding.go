@@ -23,7 +23,7 @@ type Vrid6binding struct {
 	/**
 	* Integer value that uniquely identifies a VMAC6 address.<br/>Minimum value =  1<br/>Maximum value =  255
 	*/
-	Id int `json:"id,omitempty"`
+	Id *int `json:"id,omitempty"`
 
 
 }

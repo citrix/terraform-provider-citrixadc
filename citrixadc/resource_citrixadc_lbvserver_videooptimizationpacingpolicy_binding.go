@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcLbvserver_videooptimizationpacingpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbvserver_videooptimizationpacingpolicy_bindingFunc,
-		Read:          readLbvserver_videooptimizationpacingpolicy_bindingFunc,
-		Delete:        deleteLbvserver_videooptimizationpacingpolicy_bindingFunc,
+		CreateContext: createLbvserver_videooptimizationpacingpolicy_bindingFunc,
+		ReadContext:   readLbvserver_videooptimizationpacingpolicy_bindingFunc,
+		DeleteContext: deleteLbvserver_videooptimizationpacingpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": {
@@ -71,7 +73,7 @@ func resourceCitrixAdcLbvserver_videooptimizationpacingpolicy_binding() *schema.
 	}
 }
 
-func createLbvserver_videooptimizationpacingpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbvserver_videooptimizationpacingpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbvserver_videooptimizationpacingpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Get("name").(string)
@@ -85,25 +87,23 @@ func createLbvserver_videooptimizationpacingpolicy_bindingFunc(d *schema.Resourc
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   lbvserverName,
 		Policyname:             policyName,
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		lbvserver_videooptimizationpacingpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource("lbvserver_videooptimizationpacingpolicy_binding", lbvserverName, &lbvserver_videooptimizationpacingpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLbvserver_videooptimizationpacingpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbvserver_videooptimizationpacingpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLbvserver_videooptimizationpacingpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readLbvserver_videooptimizationpacingpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbvserver_videooptimizationpacingpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbvserver_videooptimizationpacingpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -124,7 +124,7 @@ func readLbvserver_videooptimizationpacingpolicy_bindingFunc(d *schema.ResourceD
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -168,7 +168,7 @@ func readLbvserver_videooptimizationpacingpolicy_bindingFunc(d *schema.ResourceD
 
 }
 
-func deleteLbvserver_videooptimizationpacingpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbvserver_videooptimizationpacingpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbvserver_videooptimizationpacingpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -190,7 +190,7 @@ func deleteLbvserver_videooptimizationpacingpolicy_bindingFunc(d *schema.Resourc
 	}
 	err := client.DeleteResourceWithArgsMap("lbvserver_videooptimizationpacingpolicy_binding", lbvserverName, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcNstrafficdomain() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNstrafficdomainFunc,
-		Read:          readNstrafficdomainFunc,
-		Delete:        deleteNstrafficdomainFunc,
+		CreateContext: createNstrafficdomainFunc,
+		ReadContext:   readNstrafficdomainFunc,
+		DeleteContext: deleteNstrafficdomainFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"td": {
@@ -42,33 +44,31 @@ func resourceCitrixAdcNstrafficdomain() *schema.Resource {
 	}
 }
 
-func createNstrafficdomainFunc(d *schema.ResourceData, meta interface{}) error {
+func createNstrafficdomainFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNstrafficdomainFunc")
 	client := meta.(*NetScalerNitroClient).client
 	td_Id := d.Get("td").(int)
 	nstrafficdomain := ns.Nstrafficdomain{
 		Aliasname: d.Get("aliasname").(string),
-		Td:        d.Get("td").(int),
 		Vmac:      d.Get("vmac").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nstrafficdomain.Td = intPtr(d.Get("td").(int))
 	}
 	td_IdStr := strconv.Itoa(td_Id)
 
 	_, err := client.AddResource(service.Nstrafficdomain.Type(), td_IdStr, &nstrafficdomain)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(td_IdStr)
 
-	err = readNstrafficdomainFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nstrafficdomain but we can't read it ?? %s", td_IdStr)
-		return nil
-	}
-	return nil
+	return readNstrafficdomainFunc(ctx, d, meta)
 }
 
-func readNstrafficdomainFunc(d *schema.ResourceData, meta interface{}) error {
+func readNstrafficdomainFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNstrafficdomainFunc")
 	client := meta.(*NetScalerNitroClient).client
 	td_IdStr := d.Id()
@@ -80,20 +80,20 @@ func readNstrafficdomainFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("aliasname", data["aliasname"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("vmac", data["vmac"])
 
 	return nil
 
 }
 
-func deleteNstrafficdomainFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNstrafficdomainFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNstrafficdomainFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstrafficdomainName := d.Id()
 	err := client.DeleteResource(service.Nstrafficdomain.Type(), nstrafficdomainName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

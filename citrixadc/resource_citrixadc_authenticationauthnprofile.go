@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationauthnprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationauthnprofileFunc,
-		Read:          readAuthenticationauthnprofileFunc,
-		Update:        updateAuthenticationauthnprofileFunc,
-		Delete:        deleteAuthenticationauthnprofileFunc,
+		CreateContext: createAuthenticationauthnprofileFunc,
+		ReadContext:   readAuthenticationauthnprofileFunc,
+		UpdateContext: updateAuthenticationauthnprofileFunc,
+		DeleteContext: deleteAuthenticationauthnprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -49,34 +52,32 @@ func resourceCitrixAdcAuthenticationauthnprofile() *schema.Resource {
 	}
 }
 
-func createAuthenticationauthnprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationauthnprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationauthnprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationauthnprofileName := d.Get("name").(string)
 	authenticationauthnprofile := authentication.Authenticationauthnprofile{
 		Authenticationdomain: d.Get("authenticationdomain").(string),
 		Authenticationhost:   d.Get("authenticationhost").(string),
-		Authenticationlevel:  d.Get("authenticationlevel").(int),
 		Authnvsname:          d.Get("authnvsname").(string),
 		Name:                 d.Get("name").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("authenticationlevel"); !raw.IsNull() {
+		authenticationauthnprofile.Authenticationlevel = intPtr(d.Get("authenticationlevel").(int))
+	}
+
 	_, err := client.AddResource(service.Authenticationauthnprofile.Type(), authenticationauthnprofileName, &authenticationauthnprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationauthnprofileName)
 
-	err = readAuthenticationauthnprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationauthnprofile but we can't read it ?? %s", authenticationauthnprofileName)
-		return nil
-	}
-	return nil
+	return readAuthenticationauthnprofileFunc(ctx, d, meta)
 }
 
-func readAuthenticationauthnprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationauthnprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationauthnprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationauthnprofileName := d.Id()
@@ -90,7 +91,7 @@ func readAuthenticationauthnprofileFunc(d *schema.ResourceData, meta interface{}
 	d.Set("name", data["name"])
 	d.Set("authenticationdomain", data["authenticationdomain"])
 	d.Set("authenticationhost", data["authenticationhost"])
-	d.Set("authenticationlevel", data["authenticationlevel"])
+	setToInt("authenticationlevel", d, data["authenticationlevel"])
 	d.Set("authnvsname", data["authnvsname"])
 	d.Set("name", data["name"])
 
@@ -98,7 +99,7 @@ func readAuthenticationauthnprofileFunc(d *schema.ResourceData, meta interface{}
 
 }
 
-func updateAuthenticationauthnprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationauthnprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationauthnprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationauthnprofileName := d.Get("name").(string)
@@ -119,26 +120,26 @@ func updateAuthenticationauthnprofileFunc(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("authenticationlevel") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authenticationlevel has changed for authenticationauthnprofile %s, starting update", authenticationauthnprofileName)
-		authenticationauthnprofile.Authenticationlevel = d.Get("authenticationlevel").(int)
+		authenticationauthnprofile.Authenticationlevel = intPtr(d.Get("authenticationlevel").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationauthnprofile.Type(), authenticationauthnprofileName, &authenticationauthnprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationauthnprofile %s", authenticationauthnprofileName)
+			return diag.Errorf("Error updating authenticationauthnprofile %s", authenticationauthnprofileName)
 		}
 	}
-	return readAuthenticationauthnprofileFunc(d, meta)
+	return readAuthenticationauthnprofileFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationauthnprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationauthnprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationauthnprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationauthnprofileName := d.Id()
 	err := client.DeleteResource(service.Authenticationauthnprofile.Type(), authenticationauthnprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

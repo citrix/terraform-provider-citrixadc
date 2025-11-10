@@ -26,8 +26,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"gopkg.in/yaml.v2"
 )
 
@@ -38,13 +38,13 @@ resource "citrixadc_nitro_resource" "tf_lbvserver" {
 
     attributes = {
       ipv46       = "10.10.10.33"
-    }
+	}
 
     non_updateable_attributes = {
       name        = "tf_lbvserver"
       servicetype = "HTTP"
       port        = 80
-    }
+	}
 }
 `
 const testAccNitroResource_object_basic_step2 = `
@@ -54,13 +54,13 @@ resource "citrixadc_nitro_resource" "tf_lbvserver" {
 
     attributes = {
       ipv46       = "10.10.10.44"
-    }
+	}
 
     non_updateable_attributes = {
       name        = "tf_lbvserver"
       servicetype = "HTTP"
       port        = 80
-    }
+	}
 }
 `
 const testAccNitroResource_object_basic_step3 = `
@@ -70,21 +70,21 @@ resource "citrixadc_nitro_resource" "tf_lbvserver" {
 
     attributes = {
       ipv46       = "10.10.10.44"
-    }
+	}
 
     non_updateable_attributes = {
       name        = "tf_lbvserver"
       servicetype = "HTTP"
       port        = 90
-    }
+	}
 }
 `
 
 func TestAccNitroResource_object_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckObjectDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNitroResource_object_basic_step1,
@@ -145,7 +145,11 @@ func testAccCheckObjectExists(n string, id *string) resource.TestCheckFunc {
 			return err
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             wf["endpoint"].(string),
@@ -153,7 +157,7 @@ func testAccCheckObjectExists(n string, id *string) resource.TestCheckFunc {
 			ResourceMissingErrorCode: wf["resource_missing_errorcode"].(int),
 		}
 
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		if err != nil {
 			return err
@@ -172,7 +176,11 @@ func testAccCheckObjectExists(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckObjectDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_nitro_resource" {
@@ -196,7 +204,7 @@ func testAccCheckObjectDestroy(s *terraform.State) error {
 			ResourceMissingErrorCode: wf["resource_missing_errorcode"].(int),
 		}
 
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		if err != nil {
 			return err
@@ -235,7 +243,7 @@ resource "citrixadc_nitro_resource" "tf_lbvserver_service_bind" {
         name = citrixadc_lbvserver.tf_lbvserver.name
         servicename = citrixadc_service.tf_service.name
         weight = 2
-    }
+	}
 }
 `
 
@@ -264,15 +272,15 @@ resource "citrixadc_nitro_resource" "tf_lbvserver_service_bind" {
         name = citrixadc_lbvserver.tf_lbvserver.name
         servicename = citrixadc_service.tf_service.name
         weight = 3
-    }
+	}
 }
 `
 
 func TestAccNitroResource_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckBindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNitroResource_binding_basic_step1,
@@ -321,7 +329,11 @@ func testAccCheckBindingExists(n string, id *string) resource.TestCheckFunc {
 		primaryId := idSlice[0]
 		secondaryId := idSlice[1]
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             wf["endpoint"].(string),
@@ -379,7 +391,11 @@ func testAccCheckBindingDestroy(s *terraform.State) error {
 		primaryId := idSlice[0]
 		secondaryId := idSlice[1]
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             wf["endpoint"].(string),
@@ -454,11 +470,11 @@ resource "citrixadc_nitro_resource" "tf_snmpmanager" {
 
   attributes = {
     domainresolveretry   = 10
-  }
+	}
 
   non_updateable_attributes = {
     ipaddress = "helo1234.com"
-  }
+	}
 }
 `
 const testAccNitroResource_object_by_args_basic_step2 = `
@@ -469,11 +485,11 @@ resource "citrixadc_nitro_resource" "tf_snmpmanager" {
 
   attributes = {
     domainresolveretry   = 30
-  }
+	}
 
   non_updateable_attributes = {
     ipaddress = "helo1234.com"
-  }
+	}
 }
 `
 
@@ -485,19 +501,19 @@ resource "citrixadc_nitro_resource" "tf_snmpmanager" {
 
   attributes = {
     domainresolveretry   = 30
-  }
+	}
 
   non_updateable_attributes = {
     ipaddress = "helo123456.com"
-  }
+	}
 }
 `
 
 func TestAccNitroResource_object_by_args_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckObjectByArgsDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckObjectByArgsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNitroResource_object_by_args_basic_step1,
@@ -569,7 +585,11 @@ func testAccCheckObjectByArgsExists(n string, id *string) resource.TestCheckFunc
 			ResourceMissingErrorCode: wf["resource_missing_errorcode"].(int),
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		// Unexpected error
@@ -623,7 +643,11 @@ func testAccCheckObjectByArgsDestroy(s *terraform.State) error {
 			ResourceMissingErrorCode: wf["resource_missing_errorcode"].(int),
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		// Unexpected error

@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -62,9 +62,9 @@ const testAccResponderpolicylabel_responderpolicy_binding_basic_step2 = `
 
 func TestAccResponderpolicylabel_responderpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckResponderpolicylabel_responderpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckResponderpolicylabel_responderpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponderpolicylabel_responderpolicy_binding_basic,
@@ -101,7 +101,11 @@ func testAccCheckResponderpolicylabel_responderpolicy_bindingExist(n string, id 
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -141,7 +145,11 @@ func testAccCheckResponderpolicylabel_responderpolicy_bindingExist(n string, id 
 
 func testAccCheckResponderpolicylabel_responderpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -181,7 +189,11 @@ func testAccCheckResponderpolicylabel_responderpolicy_bindingNotExist(n string, 
 }
 
 func testAccCheckResponderpolicylabel_responderpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_responderpolicylabel_responderpolicy_binding" {
@@ -192,7 +204,7 @@ func testAccCheckResponderpolicylabel_responderpolicy_bindingDestroy(s *terrafor
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Responderpolicylabel_responderpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Responderpolicylabel_responderpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("responderpolicylabel_responderpolicy_binding %s still exists", rs.Primary.ID)
 		}

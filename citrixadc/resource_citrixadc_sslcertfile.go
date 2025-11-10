@@ -1,22 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	// "github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslcertfile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslcertfileFunc,
-		Read:          readSslcertfileFunc,
-		Delete:        deleteSslcertfileFunc,
+		CreateContext: createSslcertfileFunc,
+		ReadContext:   readSslcertfileFunc,
+		DeleteContext: deleteSslcertfileFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -32,7 +36,7 @@ func resourceCitrixAdcSslcertfile() *schema.Resource {
 	}
 }
 
-func createSslcertfileFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslcertfileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslcertfileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcertfileName := d.Get("name").(string)
@@ -43,20 +47,15 @@ func createSslcertfileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ActOnResource(service.Sslcertfile.Type(), &sslcertfile, "import")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslcertfileName)
 
-	err = readSslcertfileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslcertfile but we can't read it ?? %s", sslcertfileName)
-		return nil
-	}
-	return nil
+	return readSslcertfileFunc(ctx, d, meta)
 }
 
-func readSslcertfileFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslcertfileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslcertfileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcertfileName := d.Id()
@@ -98,14 +97,14 @@ func readSslcertfileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteSslcertfileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslcertfileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslcertfileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("name:%v", d.Get("name").(string)))
 	err := client.DeleteResourceWithArgs(service.Sslcertfile.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

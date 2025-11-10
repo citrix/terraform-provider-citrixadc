@@ -1,26 +1,47 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpnvserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnvserverFunc,
-		Read:          readVpnvserverFunc,
-		Update:        updateVpnvserverFunc,
-		Delete:        deleteVpnvserverFunc,
+		CreateContext: createVpnvserverFunc,
+		ReadContext:   readVpnvserverFunc,
+		UpdateContext: updateVpnvserverFunc,
+		DeleteContext: deleteVpnvserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"secureprivateaccess": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"quicprofilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"deviceposture": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"accessrestrictedpageredirect": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -176,11 +197,6 @@ func resourceCitrixAdcVpnvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			// "newname": {
-			// 	Type:     schema.TypeString,
-			// 	Optional: true,
-			// 	Computed: true,
-			// },
 			"pcoipvserverprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -240,72 +256,82 @@ func resourceCitrixAdcVpnvserver() *schema.Resource {
 	}
 }
 
-func createVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnvserverName := d.Get("name").(string)
 	vpnvserver := vpn.Vpnvserver{
-		Advancedepa:              d.Get("advancedepa").(string),
-		Appflowlog:               d.Get("appflowlog").(string),
-		Authentication:           d.Get("authentication").(string),
-		Authnprofile:             d.Get("authnprofile").(string),
-		Certkeynames:             d.Get("certkeynames").(string),
-		Cginfrahomepageredirect:  d.Get("cginfrahomepageredirect").(string),
-		Comment:                  d.Get("comment").(string),
-		Deploymenttype:           d.Get("deploymenttype").(string),
-		Devicecert:               d.Get("devicecert").(string),
-		Doublehop:                d.Get("doublehop").(string),
-		Downstateflush:           d.Get("downstateflush").(string),
-		Dtls:                     d.Get("dtls").(string),
-		Failedlogintimeout:       d.Get("failedlogintimeout").(int),
-		Httpprofilename:          d.Get("httpprofilename").(string),
-		Icaonly:                  d.Get("icaonly").(string),
-		Icaproxysessionmigration: d.Get("icaproxysessionmigration").(string),
-		Icmpvsrresponse:          d.Get("icmpvsrresponse").(string),
-		Ipset:                    d.Get("ipset").(string),
-		Ipv46:                    d.Get("ipv46").(string),
-		L2conn:                   d.Get("l2conn").(string),
-		Linuxepapluginupgrade:    d.Get("linuxepapluginupgrade").(string),
-		Listenpolicy:             d.Get("listenpolicy").(string),
-		Listenpriority:           d.Get("listenpriority").(int),
-		Loginonce:                d.Get("loginonce").(string),
-		Logoutonsmartcardremoval: d.Get("logoutonsmartcardremoval").(string),
-		Macepapluginupgrade:      d.Get("macepapluginupgrade").(string),
-		Maxaaausers:              d.Get("maxaaausers").(int),
-		Maxloginattempts:         d.Get("maxloginattempts").(int),
-		Name:                     vpnvserverName,
-		Netprofile:               d.Get("netprofile").(string),
-		// Newname:                  d.Get("newname").(string),
-		Pcoipvserverprofilename: d.Get("pcoipvserverprofilename").(string),
-		Port:                    d.Get("port").(int),
-		Range:                   d.Get("range").(int),
-		Rdpserverprofilename:    d.Get("rdpserverprofilename").(string),
-		Rhistate:                d.Get("rhistate").(string),
-		Samesite:                d.Get("samesite").(string),
-		Servicetype:             d.Get("servicetype").(string),
-		State:                   d.Get("state").(string),
-		Tcpprofilename:          d.Get("tcpprofilename").(string),
-		Userdomains:             d.Get("userdomains").(string),
-		Vserverfqdn:             d.Get("vserverfqdn").(string),
-		Windowsepapluginupgrade: d.Get("windowsepapluginupgrade").(string),
+		Advancedepa:                  d.Get("advancedepa").(string),
+		Appflowlog:                   d.Get("appflowlog").(string),
+		Authentication:               d.Get("authentication").(string),
+		Authnprofile:                 d.Get("authnprofile").(string),
+		Certkeynames:                 d.Get("certkeynames").(string),
+		Cginfrahomepageredirect:      d.Get("cginfrahomepageredirect").(string),
+		Comment:                      d.Get("comment").(string),
+		Deploymenttype:               d.Get("deploymenttype").(string),
+		Devicecert:                   d.Get("devicecert").(string),
+		Doublehop:                    d.Get("doublehop").(string),
+		Downstateflush:               d.Get("downstateflush").(string),
+		Dtls:                         d.Get("dtls").(string),
+		Httpprofilename:              d.Get("httpprofilename").(string),
+		Icaonly:                      d.Get("icaonly").(string),
+		Icaproxysessionmigration:     d.Get("icaproxysessionmigration").(string),
+		Icmpvsrresponse:              d.Get("icmpvsrresponse").(string),
+		Ipset:                        d.Get("ipset").(string),
+		Ipv46:                        d.Get("ipv46").(string),
+		L2conn:                       d.Get("l2conn").(string),
+		Linuxepapluginupgrade:        d.Get("linuxepapluginupgrade").(string),
+		Listenpolicy:                 d.Get("listenpolicy").(string),
+		Loginonce:                    d.Get("loginonce").(string),
+		Logoutonsmartcardremoval:     d.Get("logoutonsmartcardremoval").(string),
+		Macepapluginupgrade:          d.Get("macepapluginupgrade").(string),
+		Name:                         vpnvserverName,
+		Netprofile:                   d.Get("netprofile").(string),
+		Pcoipvserverprofilename:      d.Get("pcoipvserverprofilename").(string),
+		Rdpserverprofilename:         d.Get("rdpserverprofilename").(string),
+		Rhistate:                     d.Get("rhistate").(string),
+		Samesite:                     d.Get("samesite").(string),
+		Servicetype:                  d.Get("servicetype").(string),
+		State:                        d.Get("state").(string),
+		Tcpprofilename:               d.Get("tcpprofilename").(string),
+		Userdomains:                  d.Get("userdomains").(string),
+		Vserverfqdn:                  d.Get("vserverfqdn").(string),
+		Windowsepapluginupgrade:      d.Get("windowsepapluginupgrade").(string),
+		Accessrestrictedpageredirect: d.Get("accessrestrictedpageredirect").(string),
+		Deviceposture:                d.Get("deviceposture").(string),
+		Quicprofilename:              d.Get("quicprofilename").(string),
+		Secureprivateaccess:          d.Get("secureprivateaccess").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("failedlogintimeout"); !raw.IsNull() {
+		vpnvserver.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("listenpriority"); !raw.IsNull() {
+		vpnvserver.Listenpriority = intPtr(d.Get("listenpriority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxaaausers"); !raw.IsNull() {
+		vpnvserver.Maxaaausers = intPtr(d.Get("maxaaausers").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxloginattempts"); !raw.IsNull() {
+		vpnvserver.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		vpnvserver.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("range"); !raw.IsNull() {
+		vpnvserver.Range = intPtr(d.Get("range").(int))
 	}
 
 	_, err := client.AddResource(service.Vpnvserver.Type(), vpnvserverName, &vpnvserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnvserverName)
 
-	err = readVpnvserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnvserver but we can't read it ?? %s", vpnvserverName)
-		return nil
-	}
-	return nil
+	return readVpnvserverFunc(ctx, d, meta)
 }
 
-func readVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnvserverName := d.Id()
@@ -317,6 +343,10 @@ func readVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("secureprivateaccess", data["secureprivateaccess"])
+	d.Set("quicprofilename", data["quicprofilename"])
+	d.Set("deviceposture", data["deviceposture"])
+	d.Set("accessrestrictedpageredirect", data["accessrestrictedpageredirect"])
 	d.Set("advancedepa", data["advancedepa"])
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("authentication", data["authentication"])
@@ -329,7 +359,7 @@ func readVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("doublehop", data["doublehop"])
 	d.Set("downstateflush", data["downstateflush"])
 	d.Set("dtls", data["dtls"])
-	d.Set("failedlogintimeout", data["failedlogintimeout"])
+	setToInt("failedlogintimeout", d, data["failedlogintimeout"])
 	d.Set("httpprofilename", data["httpprofilename"])
 	d.Set("icaonly", data["icaonly"])
 	d.Set("icaproxysessionmigration", data["icaproxysessionmigration"])
@@ -339,18 +369,16 @@ func readVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("l2conn", data["l2conn"])
 	d.Set("linuxepapluginupgrade", data["linuxepapluginupgrade"])
 	d.Set("listenpolicy", data["listenpolicy"])
-	d.Set("listenpriority", data["listenpriority"])
+	setToInt("listenpriority", d, data["listenpriority"])
 	d.Set("loginonce", data["loginonce"])
 	d.Set("logoutonsmartcardremoval", data["logoutonsmartcardremoval"])
 	d.Set("macepapluginupgrade", data["macepapluginupgrade"])
-	d.Set("maxaaausers", data["maxaaausers"])
-	d.Set("maxloginattempts", data["maxloginattempts"])
-	// d.Set("name", data["name"])
+	setToInt("maxaaausers", d, data["maxaaausers"])
+	setToInt("maxloginattempts", d, data["maxloginattempts"])
 	d.Set("netprofile", data["netprofile"])
-	// d.Set("newname", data["newname"])
 	d.Set("pcoipvserverprofilename", data["pcoipvserverprofilename"])
-	d.Set("port", data["port"])
-	d.Set("range", data["range"])
+	setToInt("port", d, data["port"])
+	setToInt("range", d, data["range"])
 	d.Set("rdpserverprofilename", data["rdpserverprofilename"])
 	d.Set("rhistate", data["rhistate"])
 	d.Set("samesite", data["samesite"])
@@ -365,7 +393,7 @@ func readVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnvserverName := d.Get("name").(string)
@@ -374,6 +402,26 @@ func updateVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Name: vpnvserverName,
 	}
 	hasChange := false
+	if d.HasChange("secureprivateaccess") {
+		log.Printf("[DEBUG]  citrixadc-provider: Secureprivateaccess has changed for vpnvserver, starting update")
+		vpnvserver.Secureprivateaccess = d.Get("secureprivateaccess").(string)
+		hasChange = true
+	}
+	if d.HasChange("quicprofilename") {
+		log.Printf("[DEBUG]  citrixadc-provider: Quicprofilename has changed for vpnvserver, starting update")
+		vpnvserver.Quicprofilename = d.Get("quicprofilename").(string)
+		hasChange = true
+	}
+	if d.HasChange("deviceposture") {
+		log.Printf("[DEBUG]  citrixadc-provider: Deviceposture has changed for vpnvserver, starting update")
+		vpnvserver.Deviceposture = d.Get("deviceposture").(string)
+		hasChange = true
+	}
+	if d.HasChange("accessrestrictedpageredirect") {
+		log.Printf("[DEBUG]  citrixadc-provider: Accessrestrictedpageredirect has changed for vpnvserver, starting update")
+		vpnvserver.Accessrestrictedpageredirect = d.Get("accessrestrictedpageredirect").(string)
+		hasChange = true
+	}
 	if d.HasChange("advancedepa") {
 		log.Printf("[DEBUG]  citrixadc-provider: Advancedepa has changed for vpnvserver %s, starting update", vpnvserverName)
 		vpnvserver.Advancedepa = d.Get("advancedepa").(string)
@@ -436,7 +484,7 @@ func updateVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("failedlogintimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Failedlogintimeout has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Failedlogintimeout = d.Get("failedlogintimeout").(int)
+		vpnvserver.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("httpprofilename") {
@@ -486,7 +534,7 @@ func updateVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("listenpriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Listenpriority has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Listenpriority = d.Get("listenpriority").(int)
+		vpnvserver.Listenpriority = intPtr(d.Get("listenpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("loginonce") {
@@ -506,29 +554,19 @@ func updateVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxaaausers") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxaaausers has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Maxaaausers = d.Get("maxaaausers").(int)
+		vpnvserver.Maxaaausers = intPtr(d.Get("maxaaausers").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxloginattempts") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxloginattempts has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Maxloginattempts = d.Get("maxloginattempts").(int)
+		vpnvserver.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
 		hasChange = true
 	}
-	// if d.HasChange("name") {
-	// 	log.Printf("[DEBUG]  citrixadc-provider: Name has changed for vpnvserver %s, starting update", vpnvserverName)
-	// 	vpnvserver.Name = d.Get("name").(string)
-	// 	hasChange = true
-	// }
 	if d.HasChange("netprofile") {
 		log.Printf("[DEBUG]  citrixadc-provider: Netprofile has changed for vpnvserver %s, starting update", vpnvserverName)
 		vpnvserver.Netprofile = d.Get("netprofile").(string)
 		hasChange = true
 	}
-	// if d.HasChange("newname") {
-	// 	log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for vpnvserver %s, starting update", vpnvserverName)
-	// 	vpnvserver.Newname = d.Get("newname").(string)
-	// 	hasChange = true
-	// }
 	if d.HasChange("pcoipvserverprofilename") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pcoipvserverprofilename has changed for vpnvserver %s, starting update", vpnvserverName)
 		vpnvserver.Pcoipvserverprofilename = d.Get("pcoipvserverprofilename").(string)
@@ -536,12 +574,12 @@ func updateVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Port = d.Get("port").(int)
+		vpnvserver.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG]  citrixadc-provider: Range has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Range = d.Get("range").(int)
+		vpnvserver.Range = intPtr(d.Get("range").(int))
 		hasChange = true
 	}
 	if d.HasChange("rdpserverprofilename") {
@@ -593,19 +631,19 @@ func updateVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Vpnvserver.Type(), vpnvserverName, &vpnvserver)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnvserver %s", vpnvserverName)
+			return diag.Errorf("Error updating vpnvserver %s", vpnvserverName)
 		}
 	}
-	return readVpnvserverFunc(d, meta)
+	return readVpnvserverFunc(ctx, d, meta)
 }
 
-func deleteVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnvserverName := d.Id()
 	err := client.DeleteResource(service.Vpnvserver.Type(), vpnvserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

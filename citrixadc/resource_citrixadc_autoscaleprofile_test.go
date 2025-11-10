@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -32,7 +32,7 @@ resource "citrixadc_autoscaleprofile" "tf_autoscaleprofile" {
 	apikey       = "7c177611-4a18-42b0-a7c5-bfd811fd590f"
 	url          = "www.service.example.com"
 	sharedsecret = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
-  }
+	}
 `
 const testAccAutoscaleprofile_update = `
 
@@ -43,14 +43,14 @@ resource "citrixadc_autoscaleprofile" "tf_autoscaleprofile" {
 	apikey       = "88e0ae91-4cd0-4dd5-8fa1-dcd38165f4a2"
 	url          = "www.service2.example.com"
 	sharedsecret = "vruE8whIW8qnAvUGtT3EpmeIFp690nGo"
-  }
+	}
 `
 
 func TestAccAutoscaleprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAutoscaleprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAutoscaleprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoscaleprofile_basic,
@@ -97,8 +97,12 @@ func testAccCheckAutoscaleprofileExist(n string, id *string) resource.TestCheckF
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Autoscaleprofile.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Autoscaleprofile.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -113,7 +117,11 @@ func testAccCheckAutoscaleprofileExist(n string, id *string) resource.TestCheckF
 }
 
 func testAccCheckAutoscaleprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_autoscaleprofile" {
@@ -124,7 +132,7 @@ func testAccCheckAutoscaleprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Autoscaleprofile.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Autoscaleprofile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("autoscaleprofile %s still exists", rs.Primary.ID)
 		}

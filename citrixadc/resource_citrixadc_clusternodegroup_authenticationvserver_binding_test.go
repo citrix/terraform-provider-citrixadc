@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -29,7 +29,7 @@ const testAccClusternodegroup_authenticationvserver_binding_basic = `
 resource "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {
 	name     = "my_authentication_group"
 	vserver = "my_authentication_server"
-  }
+	}
   
 `
 
@@ -42,9 +42,9 @@ func TestAccClusternodegroup_authenticationvserver_binding_basic(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckClusternodegroup_authenticationvserver_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckClusternodegroup_authenticationvserver_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusternodegroup_authenticationvserver_binding_basic,
@@ -81,7 +81,11 @@ func testAccCheckClusternodegroup_authenticationvserver_bindingExist(n string, i
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -121,7 +125,11 @@ func testAccCheckClusternodegroup_authenticationvserver_bindingExist(n string, i
 
 func testAccCheckClusternodegroup_authenticationvserver_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -161,7 +169,11 @@ func testAccCheckClusternodegroup_authenticationvserver_bindingNotExist(n string
 }
 
 func testAccCheckClusternodegroup_authenticationvserver_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_clusternodegroup_authenticationvserver_binding" {
@@ -172,7 +184,7 @@ func testAccCheckClusternodegroup_authenticationvserver_bindingDestroy(s *terraf
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Clusternodegroup_authenticationvserver_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Clusternodegroup_authenticationvserver_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("clusternodegroup_authenticationvserver_binding %s still exists", rs.Primary.ID)
 		}

@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcSystemuser_nspartition_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemuser_nspartition_bindingFunc,
-		Read:          readSystemuser_nspartition_bindingFunc,
-		Delete:        deleteSystemuser_nspartition_bindingFunc,
+		CreateContext: createSystemuser_nspartition_bindingFunc,
+		ReadContext:   readSystemuser_nspartition_bindingFunc,
+		DeleteContext: deleteSystemuser_nspartition_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"partitionname": {
@@ -34,7 +36,7 @@ func resourceCitrixAdcSystemuser_nspartition_binding() *schema.Resource {
 	}
 }
 
-func createSystemuser_nspartition_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemuser_nspartition_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemuser_nspartition_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	username := d.Get("username").(string)
@@ -47,20 +49,15 @@ func createSystemuser_nspartition_bindingFunc(d *schema.ResourceData, meta inter
 
 	err := client.UpdateUnnamedResource(service.Systemuser_nspartition_binding.Type(), &systemuser_nspartition_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSystemuser_nspartition_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemuser_nspartition_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSystemuser_nspartition_bindingFunc(ctx, d, meta)
 }
 
-func readSystemuser_nspartition_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemuser_nspartition_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemuser_nspartition_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -81,7 +78,7 @@ func readSystemuser_nspartition_bindingFunc(d *schema.ResourceData, meta interfa
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -119,7 +116,7 @@ func readSystemuser_nspartition_bindingFunc(d *schema.ResourceData, meta interfa
 
 }
 
-func deleteSystemuser_nspartition_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemuser_nspartition_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemuser_nspartition_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -134,7 +131,7 @@ func deleteSystemuser_nspartition_bindingFunc(d *schema.ResourceData, meta inter
 
 	err := client.DeleteResourceWithArgs(service.Systemuser_nspartition_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcL2param() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createL2paramFunc,
-		Read:          readL2paramFunc,
-		Update:        updateL2paramFunc,
-		Delete:        deleteL2paramFunc,
+		CreateContext: createL2paramFunc,
+		ReadContext:   readL2paramFunc,
+		UpdateContext: updateL2paramFunc,
+		DeleteContext: deleteL2paramFunc,
 		Schema: map[string]*schema.Schema{
 			"bdggrpproxyarp": {
 				Type:     schema.TypeString,
@@ -103,7 +106,7 @@ func resourceCitrixAdcL2param() *schema.Resource {
 	}
 }
 
-func createL2paramFunc(d *schema.ResourceData, meta interface{}) error {
+func createL2paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createL2paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 	l2paramName := resource.PrefixedUniqueId("tf-l2param-")
@@ -111,13 +114,10 @@ func createL2paramFunc(d *schema.ResourceData, meta interface{}) error {
 	l2param := network.L2param{
 		Bdggrpproxyarp:          d.Get("bdggrpproxyarp").(string),
 		Bdgsetting:              d.Get("bdgsetting").(string),
-		Bridgeagetimeout:        d.Get("bridgeagetimeout").(int),
 		Garponvridintf:          d.Get("garponvridintf").(string),
 		Garpreply:               d.Get("garpreply").(string),
 		Macmodefwdmypkt:         d.Get("macmodefwdmypkt").(string),
-		Maxbridgecollision:      d.Get("maxbridgecollision").(int),
 		Mbfinstlearning:         d.Get("mbfinstlearning").(string),
-		Mbfpeermacupdate:        d.Get("mbfpeermacupdate").(int),
 		Proxyarp:                d.Get("proxyarp").(string),
 		Returntoethernetsender:  d.Get("returntoethernetsender").(string),
 		Rstintfonhafo:           d.Get("rstintfonhafo").(string),
@@ -127,22 +127,27 @@ func createL2paramFunc(d *schema.ResourceData, meta interface{}) error {
 		Usenetprofilebsdtraffic: d.Get("usenetprofilebsdtraffic").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("bridgeagetimeout"); !raw.IsNull() {
+		l2param.Bridgeagetimeout = intPtr(d.Get("bridgeagetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxbridgecollision"); !raw.IsNull() {
+		l2param.Maxbridgecollision = intPtr(d.Get("maxbridgecollision").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mbfpeermacupdate"); !raw.IsNull() {
+		l2param.Mbfpeermacupdate = intPtr(d.Get("mbfpeermacupdate").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.L2param.Type(), &l2param)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(l2paramName)
 
-	err = readL2paramFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this l2param but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readL2paramFunc(ctx, d, meta)
 }
 
-func readL2paramFunc(d *schema.ResourceData, meta interface{}) error {
+func readL2paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readL2paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading l2param state")
@@ -154,13 +159,13 @@ func readL2paramFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("bdggrpproxyarp", data["bdggrpproxyarp"])
 	d.Set("bdgsetting", data["bdgsetting"])
-	d.Set("bridgeagetimeout", data["bridgeagetimeout"])
+	setToInt("bridgeagetimeout", d, data["bridgeagetimeout"])
 	d.Set("garponvridintf", data["garponvridintf"])
 	d.Set("garpreply", data["garpreply"])
 	d.Set("macmodefwdmypkt", data["macmodefwdmypkt"])
-	d.Set("maxbridgecollision", data["maxbridgecollision"])
+	setToInt("maxbridgecollision", d, data["maxbridgecollision"])
 	d.Set("mbfinstlearning", data["mbfinstlearning"])
-	d.Set("mbfpeermacupdate", data["mbfpeermacupdate"])
+	setToInt("mbfpeermacupdate", d, data["mbfpeermacupdate"])
 	d.Set("proxyarp", data["proxyarp"])
 	d.Set("returntoethernetsender", data["returntoethernetsender"])
 	d.Set("rstintfonhafo", data["rstintfonhafo"])
@@ -173,7 +178,7 @@ func readL2paramFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateL2paramFunc(d *schema.ResourceData, meta interface{}) error {
+func updateL2paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateL2paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -191,7 +196,7 @@ func updateL2paramFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("bridgeagetimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bridgeagetimeout has changed for l2param, starting update")
-		l2param.Bridgeagetimeout = d.Get("bridgeagetimeout").(int)
+		l2param.Bridgeagetimeout = intPtr(d.Get("bridgeagetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("garponvridintf") {
@@ -211,7 +216,7 @@ func updateL2paramFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxbridgecollision") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxbridgecollision has changed for l2param, starting update")
-		l2param.Maxbridgecollision = d.Get("maxbridgecollision").(int)
+		l2param.Maxbridgecollision = intPtr(d.Get("maxbridgecollision").(int))
 		hasChange = true
 	}
 	if d.HasChange("mbfinstlearning") {
@@ -221,7 +226,7 @@ func updateL2paramFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("mbfpeermacupdate") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mbfpeermacupdate has changed for l2param, starting update")
-		l2param.Mbfpeermacupdate = d.Get("mbfpeermacupdate").(int)
+		l2param.Mbfpeermacupdate = intPtr(d.Get("mbfpeermacupdate").(int))
 		hasChange = true
 	}
 	if d.HasChange("proxyarp") {
@@ -263,13 +268,13 @@ func updateL2paramFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.L2param.Type(), &l2param)
 		if err != nil {
-			return fmt.Errorf("Error updating l2param")
+			return diag.Errorf("Error updating l2param")
 		}
 	}
-	return readL2paramFunc(d, meta)
+	return readL2paramFunc(ctx, d, meta)
 }
 
-func deleteL2paramFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteL2paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteL2paramFunc")
 	// l2param does not suppor DELETE operation
 	d.SetId("")

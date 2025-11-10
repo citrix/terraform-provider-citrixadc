@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/authentication"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/authentication"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationoauthidppolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationoauthidppolicyFunc,
-		Read:          readAuthenticationoauthidppolicyFunc,
-		Update:        updateAuthenticationoauthidppolicyFunc,
-		Delete:        deleteAuthenticationoauthidppolicyFunc,
+		CreateContext: createAuthenticationoauthidppolicyFunc,
+		ReadContext:   readAuthenticationoauthidppolicyFunc,
+		UpdateContext: updateAuthenticationoauthidppolicyFunc,
+		DeleteContext: deleteAuthenticationoauthidppolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -45,11 +48,6 @@ func resourceCitrixAdcAuthenticationoauthidppolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"undefaction": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -59,7 +57,7 @@ func resourceCitrixAdcAuthenticationoauthidppolicy() *schema.Resource {
 	}
 }
 
-func createAuthenticationoauthidppolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationoauthidppolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationoauthidppolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthidppolicyName := d.Get("name").(string)
@@ -68,27 +66,21 @@ func createAuthenticationoauthidppolicyFunc(d *schema.ResourceData, meta interfa
 		Comment:     d.Get("comment").(string),
 		Logaction:   d.Get("logaction").(string),
 		Name:        d.Get("name").(string),
-		Newname:     d.Get("newname").(string),
 		Rule:        d.Get("rule").(string),
 		Undefaction: d.Get("undefaction").(string),
 	}
 
 	_, err := client.AddResource("authenticationoauthidppolicy", authenticationoauthidppolicyName, &authenticationoauthidppolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationoauthidppolicyName)
 
-	err = readAuthenticationoauthidppolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationoauthidppolicy but we can't read it ?? %s", authenticationoauthidppolicyName)
-		return nil
-	}
-	return nil
+	return readAuthenticationoauthidppolicyFunc(ctx, d, meta)
 }
 
-func readAuthenticationoauthidppolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationoauthidppolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationoauthidppolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthidppolicyName := d.Id()
@@ -103,7 +95,6 @@ func readAuthenticationoauthidppolicyFunc(d *schema.ResourceData, meta interface
 	d.Set("comment", data["comment"])
 	d.Set("logaction", data["logaction"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("rule", data["rule"])
 	d.Set("undefaction", data["undefaction"])
 
@@ -111,7 +102,7 @@ func readAuthenticationoauthidppolicyFunc(d *schema.ResourceData, meta interface
 
 }
 
-func updateAuthenticationoauthidppolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationoauthidppolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationoauthidppolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthidppolicyName := d.Get("name").(string)
@@ -135,11 +126,6 @@ func updateAuthenticationoauthidppolicyFunc(d *schema.ResourceData, meta interfa
 		authenticationoauthidppolicy.Logaction = d.Get("logaction").(string)
 		hasChange = true
 	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for authenticationoauthidppolicy %s, starting update", authenticationoauthidppolicyName)
-		authenticationoauthidppolicy.Newname = d.Get("newname").(string)
-		hasChange = true
-	}
 	if d.HasChange("rule") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rule has changed for authenticationoauthidppolicy %s, starting update", authenticationoauthidppolicyName)
 		authenticationoauthidppolicy.Rule = d.Get("rule").(string)
@@ -154,19 +140,19 @@ func updateAuthenticationoauthidppolicyFunc(d *schema.ResourceData, meta interfa
 	if hasChange {
 		_, err := client.UpdateResource("authenticationoauthidppolicy", authenticationoauthidppolicyName, &authenticationoauthidppolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationoauthidppolicy %s", authenticationoauthidppolicyName)
+			return diag.Errorf("Error updating authenticationoauthidppolicy %s", authenticationoauthidppolicyName)
 		}
 	}
-	return readAuthenticationoauthidppolicyFunc(d, meta)
+	return readAuthenticationoauthidppolicyFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationoauthidppolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationoauthidppolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationoauthidppolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthidppolicyName := d.Id()
 	err := client.DeleteResource("authenticationoauthidppolicy", authenticationoauthidppolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -27,7 +27,7 @@ type Aaauserintranetip6binding struct {
 	/**
 	* Numbers of ipv6 address bound starting with intranetip6
 	*/
-	Numaddr int `json:"numaddr,omitempty"`
+	Numaddr *int `json:"numaddr,omitempty"`
 	/**
 	* User account to which to bind the policy.
 	*/

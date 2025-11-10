@@ -27,8 +27,8 @@ type Authenticationvserverauthenticationsmartaccesspolicybinding struct {
 	/**
 	* The priority, if any, of the vpn vserver policy.
 	*/
-	Priority int `json:"priority,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Priority *int `json:"priority,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the authentication virtual server to which to bind the policy.
 	*/

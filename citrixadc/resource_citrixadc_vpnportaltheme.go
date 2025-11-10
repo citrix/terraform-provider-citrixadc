@@ -1,19 +1,21 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpnportaltheme() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnportalthemeFunc,
-		Read:          readVpnportalthemeFunc,
-		Delete:        deleteVpnportalthemeFunc,
+		CreateContext: createVpnportalthemeFunc,
+		ReadContext:   readVpnportalthemeFunc,
+		DeleteContext: deleteVpnportalthemeFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -31,7 +33,7 @@ func resourceCitrixAdcVpnportaltheme() *schema.Resource {
 	}
 }
 
-func createVpnportalthemeFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnportalthemeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnportalthemeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnportalthemeName := d.Get("name").(string)
@@ -42,20 +44,15 @@ func createVpnportalthemeFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Vpnportaltheme.Type(), vpnportalthemeName, &vpnportaltheme)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnportalthemeName)
 
-	err = readVpnportalthemeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnportaltheme but we can't read it ?? %s", vpnportalthemeName)
-		return nil
-	}
-	return nil
+	return readVpnportalthemeFunc(ctx, d, meta)
 }
 
-func readVpnportalthemeFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnportalthemeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnportalthemeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnportalthemeName := d.Id()
@@ -73,13 +70,13 @@ func readVpnportalthemeFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteVpnportalthemeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnportalthemeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnportalthemeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnportalthemeName := d.Id()
 	err := client.DeleteResource(service.Vpnportaltheme.Type(), vpnportalthemeName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

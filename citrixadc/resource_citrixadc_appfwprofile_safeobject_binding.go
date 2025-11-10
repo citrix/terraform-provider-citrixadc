@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAppfwprofile_safeobject_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_safeobject_bindingFunc,
-		Read:          readAppfwprofile_safeobject_bindingFunc,
-		Delete:        deleteAppfwprofile_safeobject_bindingFunc,
+		CreateContext: createAppfwprofile_safeobject_bindingFunc,
+		ReadContext:   readAppfwprofile_safeobject_bindingFunc,
+		DeleteContext: deleteAppfwprofile_safeobject_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -92,7 +94,7 @@ func resourceCitrixAdcAppfwprofile_safeobject_binding() *schema.Resource {
 	}
 }
 
-func createAppfwprofile_safeobject_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_safeobject_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_safeobject_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -104,7 +106,6 @@ func createAppfwprofile_safeobject_bindingFunc(d *schema.ResourceData, meta inte
 		Asexpression:   d.Get("as_expression").(string),
 		Comment:        d.Get("comment").(string),
 		Isautodeployed: d.Get("isautodeployed").(string),
-		Maxmatchlength: d.Get("maxmatchlength").(int),
 		Name:           d.Get("name").(string),
 		Resourceid:     d.Get("resourceid").(string),
 		Ruletype:       d.Get("ruletype").(string),
@@ -112,22 +113,21 @@ func createAppfwprofile_safeobject_bindingFunc(d *schema.ResourceData, meta inte
 		State:          d.Get("state").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("maxmatchlength"); !raw.IsNull() {
+		appfwprofile_safeobject_binding.Maxmatchlength = intPtr(d.Get("maxmatchlength").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Appfwprofile_safeobject_binding.Type(), &appfwprofile_safeobject_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_safeobject_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_safeobject_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_safeobject_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_safeobject_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_safeobject_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_safeobject_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -148,7 +148,7 @@ func readAppfwprofile_safeobject_bindingFunc(d *schema.ResourceData, meta interf
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -184,7 +184,7 @@ func readAppfwprofile_safeobject_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("as_expression", data["as_expression"])
 	d.Set("comment", data["comment"])
 	// d.Set("isautodeployed", data["isautodeployed"])
-	d.Set("maxmatchlength", data["maxmatchlength"])
+	setToInt("maxmatchlength", d, data["maxmatchlength"])
 	d.Set("name", data["name"])
 	d.Set("resourceid", data["resourceid"])
 	d.Set("ruletype", data["ruletype"])
@@ -195,7 +195,7 @@ func readAppfwprofile_safeobject_bindingFunc(d *schema.ResourceData, meta interf
 
 }
 
-func deleteAppfwprofile_safeobject_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_safeobject_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_safeobject_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -213,7 +213,7 @@ func deleteAppfwprofile_safeobject_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.DeleteResourceWithArgs(service.Appfwprofile_safeobject_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

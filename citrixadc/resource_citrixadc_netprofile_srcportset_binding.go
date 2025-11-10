@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcNetprofile_srcportset_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNetprofile_srcportset_bindingFunc,
-		Read:          readNetprofile_srcportset_bindingFunc,
-		Delete:        deleteNetprofile_srcportset_bindingFunc,
+		CreateContext: createNetprofile_srcportset_bindingFunc,
+		ReadContext:   readNetprofile_srcportset_bindingFunc,
+		DeleteContext: deleteNetprofile_srcportset_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,7 +38,7 @@ func resourceCitrixAdcNetprofile_srcportset_binding() *schema.Resource {
 	}
 }
 
-func createNetprofile_srcportset_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createNetprofile_srcportset_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNetprofile_srcportset_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -49,20 +51,15 @@ func createNetprofile_srcportset_bindingFunc(d *schema.ResourceData, meta interf
 
 	err := client.UpdateUnnamedResource(service.Netprofile_srcportset_binding.Type(), &netprofile_srcportset_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readNetprofile_srcportset_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this netprofile_srcportset_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readNetprofile_srcportset_bindingFunc(ctx, d, meta)
 }
 
-func readNetprofile_srcportset_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readNetprofile_srcportset_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNetprofile_srcportset_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -83,7 +80,7 @@ func readNetprofile_srcportset_bindingFunc(d *schema.ResourceData, meta interfac
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -121,7 +118,7 @@ func readNetprofile_srcportset_bindingFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func deleteNetprofile_srcportset_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNetprofile_srcportset_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNetprofile_srcportset_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -136,7 +133,7 @@ func deleteNetprofile_srcportset_bindingFunc(d *schema.ResourceData, meta interf
 
 	err := client.DeleteResourceWithArgs(service.Netprofile_srcportset_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

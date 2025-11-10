@@ -27,7 +27,7 @@ type Videooptimizationparameter struct {
 	/**
 	* QUIC Video Pacing Rate (Kbps).
 	*/
-	Quicpacingrate int `json:"quicpacingrate,omitempty"`
+	Quicpacingrate *int `json:"quicpacingrate,omitempty"`
 
 	//------- Read only Parameter ---------;
 

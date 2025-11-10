@@ -21,6 +21,7 @@ resource "citrixadc_hanode_routemonitor6_binding" "tf_hanode_routemonitor6_bindi
 
 * `hanode_id` - (Required) Number that uniquely identifies the local node. The ID of the local node is always 0.
 * `routemonitor` - (Required) The IP address (IPv4 or IPv6).
+* `netmask` - (Optional) The netmask.
 
 
 ## Attribute Reference

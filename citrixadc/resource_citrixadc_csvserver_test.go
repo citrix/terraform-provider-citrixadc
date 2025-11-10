@@ -22,15 +22,35 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+const testAccCsvserver_basic = `
+
+resource "citrixadc_csvserver" "foo" {
+
+  ipv46 = "10.202.11.11"
+  name = "terraform-cs"
+  port = 8080
+  servicetype = "HTTP"
+  v6persistmasklen = 128
+  timeout = 180
+  probesuccessresponsecode = "200-399"
+  probeprotocol = "HTTP"
+  probeport = 8085
+  persistencebackup = "NONE"
+  dtls = "OFF"
+  backuppersistencetimeout = 30
+
+}
+`
 
 func TestAccCsvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCsvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckCsvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCsvserver_basic,
@@ -45,6 +65,22 @@ func TestAccCsvserver_basic(t *testing.T) {
 						"citrixadc_csvserver.foo", "port", "8080"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_csvserver.foo", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "v6persistmasklen", "128"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "timeout", "180"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "probesuccessresponsecode", "200-399"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "probeprotocol", "HTTP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "probeport", "8085"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "persistencebackup", "NONE"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "dtls", "OFF"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "backuppersistencetimeout", "30"),
 				),
 			},
 		},
@@ -56,8 +92,8 @@ func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 	// 	t.Skip("cluster ADC deployment")
 	// }
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			// Initial
 			{
@@ -89,9 +125,9 @@ func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 
 func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Initial
 			{
@@ -129,9 +165,9 @@ func TestAccCsvserver_cluster_ciphers(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Initial
 			{
@@ -193,8 +229,12 @@ func testAccCheckCsvserverExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Csvserver.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Csvserver.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -209,7 +249,11 @@ func testAccCheckCsvserverExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckCsvserverDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_csvserver" {
@@ -220,7 +264,7 @@ func testAccCheckCsvserverDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Csvserver.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Csvserver.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -229,19 +273,6 @@ func testAccCheckCsvserverDestroy(s *terraform.State) error {
 
 	return nil
 }
-
-const testAccCsvserver_basic = `
-
-
-resource "citrixadc_csvserver" "foo" {
-
-  ipv46 = "10.202.11.11"
-  name = "terraform-cs"
-  port = 8080
-  servicetype = "HTTP"
-
-}
-`
 
 func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 
@@ -265,7 +296,7 @@ func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 		Ipv46:       "192.23.23.23",
 		Name:        vserverName,
 		Servicetype: "HTTP",
-		Port:        80,
+		Port:        intPtr(80),
 	}
 
 	if _, err := c.client.AddResource(vserverType, vserverName, vserverInstance); err != nil {
@@ -274,18 +305,13 @@ func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 	}
 
 	// Set to zero values all immutables already defined
-	vserverInstance.Port = 0
+	vserverInstance.Port = intPtr(0)
 	vserverInstance.Servicetype = ""
 
 	//port
-	vserverInstance.Port = 88
+	vserverInstance.Port = intPtr(88)
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "port")
-	vserverInstance.Port = 0
-
-	//td
-	vserverInstance.Td = 1
-	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "td")
-	vserverInstance.Td = 0
+	vserverInstance.Port = intPtr(0)
 
 	//servicetype
 	vserverInstance.Servicetype = "TCP"
@@ -298,9 +324,14 @@ func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 	vserverInstance.Targettype = ""
 
 	//range
-	vserverInstance.Range = 1
+	vserverInstance.Range = intPtr(1)
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "range")
-	vserverInstance.Range = 0
+	vserverInstance.Range = intPtr(0)
+
+	//td
+	vserverInstance.Td = intPtr(1)
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "td")
+	vserverInstance.Td = intPtr(0)
 }
 
 const testAccCsvserverEnableDisable_enabled = `
@@ -326,9 +357,9 @@ resource "citrixadc_csvserver" "tf_test_acc_csvserver" {
 
 func TestAccCsvserver_enable_disable(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCsvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckCsvserverDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
 			{
@@ -378,7 +409,7 @@ const testAccCsvserver_binding_add = `
 		name        = "testAccLbVserver_new"
 		port        = 80
 		servicetype = "HTTP"
-	  }
+	}
 `
 const testAccCsvserver_binding_update = `
 	resource "citrixadc_csvserver" "testbindingfoo" {
@@ -400,14 +431,14 @@ const testAccCsvserver_binding_update = `
 		name        = "testAccLbVserver_new"
 		port        = 80
 		servicetype = "HTTP"
-	  }
+	}
 `
 
 func TestAccCsvserver_lbvserverbinding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCsvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckCsvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCsvserver_binding_add,
@@ -423,9 +454,9 @@ func TestAccCsvserver_lbvserverbinding(t *testing.T) {
 
 func TestAccCsvserver_snicerts(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { doPreChecks(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { doPreChecks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "", "cert2-cert3"),
@@ -495,9 +526,9 @@ func TestAccCsvserver_sslpolicy(t *testing.T) {
 		t.Skip("TODO fix sslaction for CPX")
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { doPreChecks(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { doPreChecks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: sslpolicy_config_step1,
@@ -557,12 +588,12 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
      priority = 100
 	 gotopriorityexpression = "END"
-  }
+	}
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 200
 	 gotopriorityexpression = "END"
-  }
+	}
 
 }
 `
@@ -597,12 +628,12 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
      priority = 300
 	 gotopriorityexpression = "END"
-  }
+	}
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 100
 	 gotopriorityexpression = "END"
-  }
+	}
 
 }
 `
@@ -637,7 +668,7 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 100
 	 gotopriorityexpression = "END"
-  }
+	}
 
 }
 `
@@ -672,12 +703,12 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
      priority = 300
 	 gotopriorityexpression = "END"
-  }
+	}
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 100
 	 gotopriorityexpression = "END"
-  }
+	}
 
 }
 `
@@ -687,9 +718,9 @@ func TestAccCsvserver_sslpolicy_cluster(t *testing.T) {
 	// 	t.Skip("standalone ADC deployment")
 	// }
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { doPreChecks(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { doPreChecks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: sslpolicy_config_cluster_step1,
@@ -749,12 +780,12 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
      priority = 100
 	 gotopriorityexpression = "END"
-  }
+	}
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 200
 	 gotopriorityexpression = "END"
-  }
+	}
 
 }
 `
@@ -791,12 +822,12 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
      priority = 300
 	 gotopriorityexpression = "END"
-  }
+	}
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 100
 	 gotopriorityexpression = "END"
-  }
+	}
 
 }
 `
@@ -831,7 +862,7 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 100
 	 gotopriorityexpression = "END"
-  }
+	}
 
 }
 `
@@ -866,12 +897,12 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
      priority = 300
 	 gotopriorityexpression = "END"
-  }
+	}
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 100
 	 gotopriorityexpression = "END"
-  }
+	}
 
 }
 `

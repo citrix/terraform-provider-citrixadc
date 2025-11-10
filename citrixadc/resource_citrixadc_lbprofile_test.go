@@ -19,15 +19,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccLbprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbprofile_basic,
@@ -40,6 +40,7 @@ func TestAccLbprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "lbhashfingers", "258"),
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "lbhashalgorithm", "PRAC"),
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "storemqttclientidandusername", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "proximityfromself", "NO"),
 					testAccCheckUserAgent(),
 				),
 			},
@@ -54,6 +55,7 @@ func TestAccLbprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "lbhashfingers", "255"),
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "lbhashalgorithm", "DEFAULT"),
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "storemqttclientidandusername", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "proximityfromself", "YES"),
 					testAccCheckUserAgent(),
 				),
 			},
@@ -80,8 +82,12 @@ func testAccCheckLbprofileExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("lbprofile", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("lbprofile", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -96,7 +102,11 @@ func testAccCheckLbprofileExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckLbprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_Lbprofile" {
@@ -107,7 +117,7 @@ func testAccCheckLbprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("lbprofile", rs.Primary.ID)
+		_, err := client.FindResource("lbprofile", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("Lbprofile %s still exists", rs.Primary.ID)
 		}
@@ -126,6 +136,7 @@ resource "citrixadc_lbprofile" "tf_lbprofile" {
 	lbhashfingers = 258
 	lbhashalgorithm = "PRAC"
 	storemqttclientidandusername = "YES"
+	proximityfromself = "NO"
 }
 
 `
@@ -140,7 +151,7 @@ resource "citrixadc_lbprofile" "tf_lbprofile" {
 	lbhashfingers = 255
 	lbhashalgorithm = "DEFAULT"
 	storemqttclientidandusername = "NO"
-
+	proximityfromself = "YES"
     
 }
 

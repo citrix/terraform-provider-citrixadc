@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcCsvserver_spilloverpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCsvserver_spilloverpolicy_bindingFunc,
-		Read:          readCsvserver_spilloverpolicy_bindingFunc,
-		Delete:        deleteCsvserver_spilloverpolicy_bindingFunc,
+		CreateContext: createCsvserver_spilloverpolicy_bindingFunc,
+		ReadContext:   readCsvserver_spilloverpolicy_bindingFunc,
+		DeleteContext: deleteCsvserver_spilloverpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": {
@@ -77,7 +79,7 @@ func resourceCitrixAdcCsvserver_spilloverpolicy_binding() *schema.Resource {
 	}
 }
 
-func createCsvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createCsvserver_spilloverpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCsvserver_spilloverpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name").(string)
@@ -91,26 +93,24 @@ func createCsvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta in
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Targetlbvserver:        d.Get("targetlbvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		csvserver_spilloverpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Csvserver_spilloverpolicy_binding.Type(), name, &csvserver_spilloverpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readCsvserver_spilloverpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this csvserver_spilloverpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readCsvserver_spilloverpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readCsvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readCsvserver_spilloverpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCsvserver_spilloverpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -131,7 +131,7 @@ func readCsvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta inte
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -176,7 +176,7 @@ func readCsvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta inte
 
 }
 
-func deleteCsvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCsvserver_spilloverpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCsvserver_spilloverpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -198,7 +198,7 @@ func deleteCsvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta in
 	}
 	err := client.DeleteResourceWithArgsMap(service.Csvserver_spilloverpolicy_binding.Type(), name, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

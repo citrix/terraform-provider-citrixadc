@@ -35,7 +35,7 @@ type Sslvserversslcertkeybinding struct {
 	/**
 	* Port on which clear-text data is sent by the appliance to the server. Do not specify this parameter for SSL offloading with end-to-end encryption.
 	*/
-	Cleartextport int `json:"cleartextport,omitempty"`
+	Cleartextport *int `json:"cleartextport,omitempty"`
 	/**
 	* CA certificate.
 	*/

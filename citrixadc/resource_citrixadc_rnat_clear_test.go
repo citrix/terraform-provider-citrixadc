@@ -20,15 +20,15 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func yes(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRnatClearDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckRnatClearDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRnatClear_basic,
@@ -59,9 +59,13 @@ func testAccCheckRnatClearExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		//d, err := nsClient.FindFilteredResourceArray(service.RnatClear.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
-		d, err := nsClient.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0"})
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		//d, err := client.FindFilteredResourceArray(service.RnatClear.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
+		d, err := client.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0"})
 
 		if err != nil {
 			return err
@@ -76,7 +80,11 @@ func testAccCheckRnatClearExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckRnatClearDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_rnat_clear" {
@@ -87,7 +95,7 @@ func testAccCheckRnatClearDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
+		_, err := client.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
 		if err == nil {
 			return fmt.Errorf("RnatClear rule %s still exists", rs.Primary.ID)
 		}
@@ -105,6 +113,6 @@ resource "citrixadc_rnat_clear" "foo" {
 	rnat {
            network = "192.168.96.0"
            netmask = "255.255.240.0"
-         }
+	}
 }
 `

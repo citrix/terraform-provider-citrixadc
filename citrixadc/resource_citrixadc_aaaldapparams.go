@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaaldapparams() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaaldapparamsFunc,
-		Read:          readAaaldapparamsFunc,
-		Update:        updateAaaldapparamsFunc,
-		Delete:        deleteAaaldapparamsFunc,
+		CreateContext: createAaaldapparamsFunc,
+		ReadContext:   readAaaldapparamsFunc,
+		UpdateContext: updateAaaldapparamsFunc,
+		DeleteContext: deleteAaaldapparamsFunc,
 		Schema: map[string]*schema.Schema{
 			"authtimeout": {
 				Type:     schema.TypeInt,
@@ -128,13 +131,12 @@ func resourceCitrixAdcAaaldapparams() *schema.Resource {
 	}
 }
 
-func createAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaaldapparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaaldapparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaaldapparamsName := resource.PrefixedUniqueId("tf-aaaldapparams-")
 
 	aaaldapparams := aaa.Aaaldapparams{
-		Authtimeout:                d.Get("authtimeout").(int),
 		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
 		Groupattrname:              d.Get("groupattrname").(string),
 		Groupnameidentifier:        d.Get("groupnameidentifier").(string),
@@ -145,34 +147,37 @@ func createAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
 		Ldapbinddn:                 d.Get("ldapbinddn").(string),
 		Ldapbinddnpassword:         d.Get("ldapbinddnpassword").(string),
 		Ldaploginname:              d.Get("ldaploginname").(string),
-		Maxnestinglevel:            d.Get("maxnestinglevel").(int),
 		Nestedgroupextraction:      d.Get("nestedgroupextraction").(string),
 		Passwdchange:               d.Get("passwdchange").(string),
 		Searchfilter:               d.Get("searchfilter").(string),
 		Sectype:                    d.Get("sectype").(string),
 		Serverip:                   d.Get("serverip").(string),
-		Serverport:                 d.Get("serverport").(int),
 		Ssonameattribute:           d.Get("ssonameattribute").(string),
 		Subattributename:           d.Get("subattributename").(string),
 		Svrtype:                    d.Get("svrtype").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("authtimeout"); !raw.IsNull() {
+		aaaldapparams.Authtimeout = intPtr(d.Get("authtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxnestinglevel"); !raw.IsNull() {
+		aaaldapparams.Maxnestinglevel = intPtr(d.Get("maxnestinglevel").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		aaaldapparams.Serverport = intPtr(d.Get("serverport").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Aaaldapparams.Type(), &aaaldapparams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaaldapparamsName)
 
-	err = readAaaldapparamsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaaldapparams but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAaaldapparamsFunc(ctx, d, meta)
 }
 
-func readAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaaldapparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaaldapparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading aaaldapparams state")
@@ -182,7 +187,7 @@ func readAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("authtimeout", data["authtimeout"])
+	setToInt("authtimeout", d, data["authtimeout"])
 	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
 	d.Set("groupattrname", data["groupattrname"])
 	d.Set("groupnameidentifier", data["groupnameidentifier"])
@@ -193,13 +198,13 @@ func readAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ldapbinddn", data["ldapbinddn"])
 	d.Set("ldapbinddnpassword", data["ldapbinddnpassword"])
 	d.Set("ldaploginname", data["ldaploginname"])
-	d.Set("maxnestinglevel", data["maxnestinglevel"])
+	setToInt("maxnestinglevel", d, data["maxnestinglevel"])
 	d.Set("nestedgroupextraction", data["nestedgroupextraction"])
 	d.Set("passwdchange", data["passwdchange"])
 	d.Set("searchfilter", data["searchfilter"])
 	d.Set("sectype", data["sectype"])
 	d.Set("serverip", data["serverip"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("ssonameattribute", data["ssonameattribute"])
 	d.Set("subattributename", data["subattributename"])
 	d.Set("svrtype", data["svrtype"])
@@ -208,7 +213,7 @@ func readAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaaldapparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaaldapparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -216,7 +221,7 @@ func updateAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	if d.HasChange("authtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authtimeout has changed for aaaldapparams, starting update")
-		aaaldapparams.Authtimeout = d.Get("authtimeout").(int)
+		aaaldapparams.Authtimeout = intPtr(d.Get("authtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultauthenticationgroup") {
@@ -271,7 +276,7 @@ func updateAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxnestinglevel") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxnestinglevel has changed for aaaldapparams, starting update")
-		aaaldapparams.Maxnestinglevel = d.Get("maxnestinglevel").(int)
+		aaaldapparams.Maxnestinglevel = intPtr(d.Get("maxnestinglevel").(int))
 		hasChange = true
 	}
 	if d.HasChange("nestedgroupextraction") {
@@ -301,7 +306,7 @@ func updateAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for aaaldapparams, starting update")
-		aaaldapparams.Serverport = d.Get("serverport").(int)
+		aaaldapparams.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("ssonameattribute") {
@@ -323,13 +328,13 @@ func updateAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Aaaldapparams.Type(), &aaaldapparams)
 		if err != nil {
-			return fmt.Errorf("Error updating aaaldapparams")
+			return diag.Errorf("Error updating aaaldapparams")
 		}
 	}
-	return readAaaldapparamsFunc(d, meta)
+	return readAaaldapparamsFunc(ctx, d, meta)
 }
 
-func deleteAaaldapparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaaldapparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaaldapparamsFunc")
 	// aaaldapparams does not support DELETE operation
 	d.SetId("")

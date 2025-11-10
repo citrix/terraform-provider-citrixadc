@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -43,9 +43,9 @@ const testAccFilteraction_update = `
 func TestAccFilteraction_basic(t *testing.T) {
 	t.Skip("TODO: Does not support in 13.1!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckFilteractionDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckFilteractionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilteraction_add,
@@ -86,8 +86,12 @@ func testAccCheckFilteractionExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Filteraction.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Filteraction.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -102,7 +106,11 @@ func testAccCheckFilteractionExist(n string, id *string) resource.TestCheckFunc 
 }
 
 func testAccCheckFilteractionDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_filteraction" {
@@ -113,7 +121,7 @@ func testAccCheckFilteractionDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Filteraction.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Filteraction.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("filteraction %s still exists", rs.Primary.ID)
 		}

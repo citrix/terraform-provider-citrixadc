@@ -27,7 +27,7 @@ type Aaagroupintranetip6binding struct {
 	/**
 	* Numbers of ipv6 address bound starting with intranetip6
 	*/
-	Numaddr int `json:"numaddr,omitempty"`
+	Numaddr *int `json:"numaddr,omitempty"`
 	/**
 	* Name of the group that you are binding.
 	*/

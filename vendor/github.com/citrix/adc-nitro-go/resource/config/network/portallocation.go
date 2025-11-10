@@ -31,15 +31,15 @@ type Portallocation struct {
 	/**
 	* Destination Port or Server port configuration
 	*/
-	Destport int `json:"destport,omitempty"`
+	Destport *int `json:"destport,omitempty"`
 	/**
 	* Protocol for the traffic. TCP traffic: 1, All other protocol traffic: 0
 	*/
-	Protocol int `json:"protocol,omitempty"`
+	Protocol *int `json:"protocol,omitempty"`
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

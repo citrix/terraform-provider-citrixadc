@@ -31,6 +31,11 @@ resource "citrixadc_icaaccessprofile" "tf_icaaccessprofile" {
 * `clientprinterredirection` - (Optional) Allow Default access/Disable client printers to be mapped to a server when a user logs on to a session. Possible values: [ DEFAULT, DISABLED ]
 * `multistream` - (Optional) Allow Default access/Disable the multistream feature for the specified users. Possible values: [ DEFAULT, DISABLED ]
 * `clientusbdriveredirection` - (Optional) Allow Default access/Disable the redirection of USB devices to and from the client. Possible values: [ DEFAULT, DISABLED ]
+* `clienttwaindeviceredirection` - (Optional) Allow default access or disable TWAIN devices, such as digital cameras or scanners, on the client device from published image processing applications
+* `draganddrop` - (Optional) Allow default access or disable drag and drop between client and remote applications and desktops
+* `fido2redirection` - (Optional) Allow default access or disable FIDO2 redirection
+* `smartcardredirection` - (Optional) Allow default access or disable smart card redirection. Smart card virtual channel is always allowed in CVAD
+* `wiaredirection` - (Optional) Allow default access or disable WIA scanner redirection
 
 
 ## Attribute Reference

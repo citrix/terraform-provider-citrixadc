@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -61,9 +61,9 @@ const testAccNsassignment_update = `
 func TestAccNsassignment_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNsassignmentDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNsassignmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsassignment_add,
@@ -106,8 +106,12 @@ func testAccCheckNsassignmentExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Nsassignment.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsassignment.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -122,7 +126,11 @@ func testAccCheckNsassignmentExist(n string, id *string) resource.TestCheckFunc 
 }
 
 func testAccCheckNsassignmentDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_nsassignment" {
@@ -133,7 +141,7 @@ func testAccCheckNsassignmentDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Nsassignment.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Nsassignment.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("nsassignment %s still exists", rs.Primary.ID)
 		}

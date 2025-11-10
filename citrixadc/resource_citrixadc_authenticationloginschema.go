@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationloginschema() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationloginschemaFunc,
-		Read:          readAuthenticationloginschemaFunc,
-		Update:        updateAuthenticationloginschemaFunc,
-		Delete:        deleteAuthenticationloginschemaFunc,
+		CreateContext: createAuthenticationloginschemaFunc,
+		ReadContext:   readAuthenticationloginschemaFunc,
+		UpdateContext: updateAuthenticationloginschemaFunc,
+		DeleteContext: deleteAuthenticationloginschemaFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -65,37 +68,39 @@ func resourceCitrixAdcAuthenticationloginschema() *schema.Resource {
 	}
 }
 
-func createAuthenticationloginschemaFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationloginschemaFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationloginschemaFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationloginschemaName := d.Get("name").(string)
 	authenticationloginschema := authentication.Authenticationloginschema{
-		Authenticationschema:    d.Get("authenticationschema").(string),
-		Authenticationstrength:  d.Get("authenticationstrength").(int),
-		Name:                    d.Get("name").(string),
-		Passwdexpression:        d.Get("passwdexpression").(string),
-		Passwordcredentialindex: d.Get("passwordcredentialindex").(int),
-		Ssocredentials:          d.Get("ssocredentials").(string),
-		Usercredentialindex:     d.Get("usercredentialindex").(int),
-		Userexpression:          d.Get("userexpression").(string),
+		Authenticationschema: d.Get("authenticationschema").(string),
+		Name:                 d.Get("name").(string),
+		Passwdexpression:     d.Get("passwdexpression").(string),
+		Ssocredentials:       d.Get("ssocredentials").(string),
+		Userexpression:       d.Get("userexpression").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("authenticationstrength"); !raw.IsNull() {
+		authenticationloginschema.Authenticationstrength = intPtr(d.Get("authenticationstrength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("passwordcredentialindex"); !raw.IsNull() {
+		authenticationloginschema.Passwordcredentialindex = intPtr(d.Get("passwordcredentialindex").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("usercredentialindex"); !raw.IsNull() {
+		authenticationloginschema.Usercredentialindex = intPtr(d.Get("usercredentialindex").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationloginschema.Type(), authenticationloginschemaName, &authenticationloginschema)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationloginschemaName)
 
-	err = readAuthenticationloginschemaFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationloginschema but we can't read it ?? %s", authenticationloginschemaName)
-		return nil
-	}
-	return nil
+	return readAuthenticationloginschemaFunc(ctx, d, meta)
 }
 
-func readAuthenticationloginschemaFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationloginschemaFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationloginschemaFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationloginschemaName := d.Id()
@@ -107,19 +112,19 @@ func readAuthenticationloginschemaFunc(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 	d.Set("authenticationschema", data["authenticationschema"])
-	d.Set("authenticationstrength", data["authenticationstrength"])
+	setToInt("authenticationstrength", d, data["authenticationstrength"])
 	d.Set("name", data["name"])
 	d.Set("passwdexpression", data["passwdexpression"])
-	d.Set("passwordcredentialindex", data["passwordcredentialindex"])
+	setToInt("passwordcredentialindex", d, data["passwordcredentialindex"])
 	d.Set("ssocredentials", data["ssocredentials"])
-	d.Set("usercredentialindex", data["usercredentialindex"])
+	setToInt("usercredentialindex", d, data["usercredentialindex"])
 	d.Set("userexpression", data["userexpression"])
 
 	return nil
 
 }
 
-func updateAuthenticationloginschemaFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationloginschemaFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationloginschemaFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationloginschemaName := d.Get("name").(string)
@@ -135,7 +140,7 @@ func updateAuthenticationloginschemaFunc(d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("authenticationstrength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authenticationstrength has changed for authenticationloginschema %s, starting update", authenticationloginschemaName)
-		authenticationloginschema.Authenticationstrength = d.Get("authenticationstrength").(int)
+		authenticationloginschema.Authenticationstrength = intPtr(d.Get("authenticationstrength").(int))
 		hasChange = true
 	}
 	if d.HasChange("passwdexpression") {
@@ -145,7 +150,7 @@ func updateAuthenticationloginschemaFunc(d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("passwordcredentialindex") {
 		log.Printf("[DEBUG]  citrixadc-provider: Passwordcredentialindex has changed for authenticationloginschema %s, starting update", authenticationloginschemaName)
-		authenticationloginschema.Passwordcredentialindex = d.Get("passwordcredentialindex").(int)
+		authenticationloginschema.Passwordcredentialindex = intPtr(d.Get("passwordcredentialindex").(int))
 		hasChange = true
 	}
 	if d.HasChange("ssocredentials") {
@@ -155,7 +160,7 @@ func updateAuthenticationloginschemaFunc(d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("usercredentialindex") {
 		log.Printf("[DEBUG]  citrixadc-provider: Usercredentialindex has changed for authenticationloginschema %s, starting update", authenticationloginschemaName)
-		authenticationloginschema.Usercredentialindex = d.Get("usercredentialindex").(int)
+		authenticationloginschema.Usercredentialindex = intPtr(d.Get("usercredentialindex").(int))
 		hasChange = true
 	}
 	if d.HasChange("userexpression") {
@@ -167,19 +172,19 @@ func updateAuthenticationloginschemaFunc(d *schema.ResourceData, meta interface{
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationloginschema.Type(), authenticationloginschemaName, &authenticationloginschema)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationloginschema %s", authenticationloginschemaName)
+			return diag.Errorf("Error updating authenticationloginschema %s", authenticationloginschemaName)
 		}
 	}
-	return readAuthenticationloginschemaFunc(d, meta)
+	return readAuthenticationloginschemaFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationloginschemaFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationloginschemaFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationloginschemaFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationloginschemaName := d.Id()
 	err := client.DeleteResource(service.Authenticationloginschema.Type(), authenticationloginschemaName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

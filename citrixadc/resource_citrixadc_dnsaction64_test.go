@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -48,9 +48,9 @@ resource "citrixadc_dnsaction64" "dnsaction64" {
 
 func TestAccDnsaction64_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDnsaction64Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckDnsaction64Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDnsaction64_add,
@@ -95,8 +95,12 @@ func testAccCheckDnsaction64Exist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Dnsaction64.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dnsaction64.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -111,7 +115,11 @@ func testAccCheckDnsaction64Exist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckDnsaction64Destroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_dnsaction64" {
@@ -122,7 +130,7 @@ func testAccCheckDnsaction64Destroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Dnsaction64.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Dnsaction64.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("dnsaction64 %s still exists", rs.Primary.ID)
 		}

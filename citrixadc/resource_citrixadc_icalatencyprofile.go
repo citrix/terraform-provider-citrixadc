@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/ica"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/ica"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIcalatencyprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIcalatencyprofileFunc,
-		Read:          readIcalatencyprofileFunc,
-		Update:        updateIcalatencyprofileFunc,
-		Delete:        deleteIcalatencyprofileFunc,
+		CreateContext: createIcalatencyprofileFunc,
+		ReadContext:   readIcalatencyprofileFunc,
+		UpdateContext: updateIcalatencyprofileFunc,
+		DeleteContext: deleteIcalatencyprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -53,35 +56,39 @@ func resourceCitrixAdcIcalatencyprofile() *schema.Resource {
 	}
 }
 
-func createIcalatencyprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createIcalatencyprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIcalatencyprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icalatencyprofileName := d.Get("name").(string)
 	icalatencyprofile := ica.Icalatencyprofile{
-		L7latencymaxnotifycount:  d.Get("l7latencymaxnotifycount").(int),
-		L7latencymonitoring:      d.Get("l7latencymonitoring").(string),
-		L7latencynotifyinterval:  d.Get("l7latencynotifyinterval").(int),
-		L7latencythresholdfactor: d.Get("l7latencythresholdfactor").(int),
-		L7latencywaittime:        d.Get("l7latencywaittime").(int),
-		Name:                     d.Get("name").(string),
+		L7latencymonitoring: d.Get("l7latencymonitoring").(string),
+		Name:                d.Get("name").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("l7latencymaxnotifycount"); !raw.IsNull() {
+		icalatencyprofile.L7latencymaxnotifycount = intPtr(d.Get("l7latencymaxnotifycount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("l7latencynotifyinterval"); !raw.IsNull() {
+		icalatencyprofile.L7latencynotifyinterval = intPtr(d.Get("l7latencynotifyinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("l7latencythresholdfactor"); !raw.IsNull() {
+		icalatencyprofile.L7latencythresholdfactor = intPtr(d.Get("l7latencythresholdfactor").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("l7latencywaittime"); !raw.IsNull() {
+		icalatencyprofile.L7latencywaittime = intPtr(d.Get("l7latencywaittime").(int))
 	}
 
 	_, err := client.AddResource("icalatencyprofile", icalatencyprofileName, &icalatencyprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(icalatencyprofileName)
 
-	err = readIcalatencyprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this icalatencyprofile but we can't read it ?? %s", icalatencyprofileName)
-		return nil
-	}
-	return nil
+	return readIcalatencyprofileFunc(ctx, d, meta)
 }
 
-func readIcalatencyprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readIcalatencyprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIcalatencyprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icalatencyprofileName := d.Id()
@@ -92,18 +99,18 @@ func readIcalatencyprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("l7latencymaxnotifycount", data["l7latencymaxnotifycount"])
+	setToInt("l7latencymaxnotifycount", d, data["l7latencymaxnotifycount"])
 	d.Set("l7latencymonitoring", data["l7latencymonitoring"])
-	d.Set("l7latencynotifyinterval", data["l7latencynotifyinterval"])
-	d.Set("l7latencythresholdfactor", data["l7latencythresholdfactor"])
-	d.Set("l7latencywaittime", data["l7latencywaittime"])
+	setToInt("l7latencynotifyinterval", d, data["l7latencynotifyinterval"])
+	setToInt("l7latencythresholdfactor", d, data["l7latencythresholdfactor"])
+	setToInt("l7latencywaittime", d, data["l7latencywaittime"])
 	d.Set("name", data["name"])
 
 	return nil
 
 }
 
-func updateIcalatencyprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIcalatencyprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIcalatencyprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icalatencyprofileName := d.Get("name").(string)
@@ -114,7 +121,7 @@ func updateIcalatencyprofileFunc(d *schema.ResourceData, meta interface{}) error
 	hasChange := false
 	if d.HasChange("l7latencymaxnotifycount") {
 		log.Printf("[DEBUG]  citrixadc-provider: L7latencymaxnotifycount has changed for icalatencyprofile %s, starting update", icalatencyprofileName)
-		icalatencyprofile.L7latencymaxnotifycount = d.Get("l7latencymaxnotifycount").(int)
+		icalatencyprofile.L7latencymaxnotifycount = intPtr(d.Get("l7latencymaxnotifycount").(int))
 		hasChange = true
 	}
 	if d.HasChange("l7latencymonitoring") {
@@ -124,36 +131,36 @@ func updateIcalatencyprofileFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("l7latencynotifyinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: L7latencynotifyinterval has changed for icalatencyprofile %s, starting update", icalatencyprofileName)
-		icalatencyprofile.L7latencynotifyinterval = d.Get("l7latencynotifyinterval").(int)
+		icalatencyprofile.L7latencynotifyinterval = intPtr(d.Get("l7latencynotifyinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("l7latencythresholdfactor") {
 		log.Printf("[DEBUG]  citrixadc-provider: L7latencythresholdfactor has changed for icalatencyprofile %s, starting update", icalatencyprofileName)
-		icalatencyprofile.L7latencythresholdfactor = d.Get("l7latencythresholdfactor").(int)
+		icalatencyprofile.L7latencythresholdfactor = intPtr(d.Get("l7latencythresholdfactor").(int))
 		hasChange = true
 	}
 	if d.HasChange("l7latencywaittime") {
 		log.Printf("[DEBUG]  citrixadc-provider: L7latencywaittime has changed for icalatencyprofile %s, starting update", icalatencyprofileName)
-		icalatencyprofile.L7latencywaittime = d.Get("l7latencywaittime").(int)
+		icalatencyprofile.L7latencywaittime = intPtr(d.Get("l7latencywaittime").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource("icalatencyprofile", &icalatencyprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating icalatencyprofile %s", icalatencyprofileName)
+			return diag.Errorf("Error updating icalatencyprofile %s", icalatencyprofileName)
 		}
 	}
-	return readIcalatencyprofileFunc(d, meta)
+	return readIcalatencyprofileFunc(ctx, d, meta)
 }
 
-func deleteIcalatencyprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIcalatencyprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIcalatencyprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icalatencyprofileName := d.Id()
 	err := client.DeleteResource("icalatencyprofile", icalatencyprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

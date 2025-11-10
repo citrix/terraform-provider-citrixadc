@@ -27,7 +27,7 @@ type Crvserverlbvserverbinding struct {
 	/**
 	* Number of hits.
 	*/
-	Hits int `json:"hits,omitempty"`
+	Hits *int `json:"hits,omitempty"`
 	/**
 	* Name of the cache redirection virtual server to which to bind the cache redirection policy.
 	*/

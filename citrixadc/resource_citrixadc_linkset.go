@@ -1,6 +1,7 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
@@ -8,17 +9,18 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLinkset() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLinksetFunc,
-		Read:          readLinksetFunc,
-		Delete:        deleteLinksetFunc,
+		CreateContext: createLinksetFunc,
+		ReadContext:   readLinksetFunc,
+		DeleteContext: deleteLinksetFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"linkset_id": {
@@ -36,7 +38,7 @@ func resourceCitrixAdcLinkset() *schema.Resource {
 	}
 }
 
-func createLinksetFunc(d *schema.ResourceData, meta interface{}) error {
+func createLinksetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLinksetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	linksetName := d.Get("linkset_id").(string)
@@ -46,25 +48,20 @@ func createLinksetFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Linkset.Type(), "", &linkset)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(linksetName)
 
 	err = updateLinksetInterfaceBindings(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	err = readLinksetFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this linkset but we can't read it ?? %s", linksetName)
-		return nil
-	}
-	return nil
+	return readLinksetFunc(ctx, d, meta)
 }
 
-func readLinksetFunc(d *schema.ResourceData, meta interface{}) error {
+func readLinksetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLinksetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	linksetName := d.Id()
@@ -73,7 +70,7 @@ func readLinksetFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err = readLinksetInterfaceBindings(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("linkset_id", data["id"])
@@ -82,13 +79,13 @@ func readLinksetFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteLinksetFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLinksetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLinksetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	linksetName := d.Id()
 	err := client.DeleteResource(service.Linkset.Type(), linksetName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

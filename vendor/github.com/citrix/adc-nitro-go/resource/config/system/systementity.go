@@ -31,7 +31,7 @@ type Systementity struct {
 	/**
 	* Specify core ID of the PE in nCore.
 	*/
-	Core int `json:"core,omitempty"`
+	Core *int `json:"core,omitempty"`
 
 	//------- Read only Parameter ---------;
 

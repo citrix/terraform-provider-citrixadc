@@ -38,11 +38,11 @@ type Vpnvserver struct {
 	* Range of Citrix Gateway virtual server IP addresses. The consecutively numbered range of IP addresses begins with the address specified by the IP Address parameter.
 		In the configuration utility, select Network VServer to enter a range.
 	*/
-	Range int `json:"range,omitempty"`
+	Range *int `json:"range,omitempty"`
 	/**
 	* TCP port on which the virtual server listens.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* The list of IPv4/IPv6 addresses bound to ipset would form a part of listening service on the current vpn vserver
 	*/
@@ -62,7 +62,7 @@ type Vpnvserver struct {
 	/**
 	* Maximum number of concurrent user sessions allowed on this virtual server. The actual number of users allowed to log on to this virtual server depends on the total number of user licenses.
 	*/
-	Maxaaausers int `json:"maxaaausers,omitempty"`
+	Maxaaausers *int `json:"maxaaausers,omitempty"`
 	/**
 	* - When set to ON, it implies Basic mode where the user can log on using either Citrix Receiver or a browser and get access to the published apps configured at the XenApp/XenDEsktop environment pointed out by the WIHome parameter. Users are not allowed to connect using the Citrix Gateway Plug-in and end point scans cannot be configured. Number of users that can log in and access the apps are not limited by the license in this mode.
 		- When set to OFF, it implies Smart Access mode where the user can log on using either Citrix Receiver or a browser or a Citrix Gateway Plug-in. The admin can configure end point scans to be run on the client systems and then use the results to control access to the published apps. In this mode, the client can connect to the gateway in other client modes namely VPN and CVPN. Number of users that can log in and access the resources are limited by the CCU licenses in this mode.
@@ -103,7 +103,7 @@ type Vpnvserver struct {
 	/**
 	* Integer specifying the priority of the listen policy. A higher number specifies a lower priority. If a request matches the listen policies of more than one virtual server, the virtual server whose listen policy has the highest priority (the lowest priority number) accepts the request.
 	*/
-	Listenpriority int `json:"listenpriority,omitempty"`
+	Listenpriority *int `json:"listenpriority,omitempty"`
 	/**
 	* Name of the TCP profile to assign to this virtual server.
 	*/
@@ -150,11 +150,11 @@ type Vpnvserver struct {
 	/**
 	* Maximum number of logon attempts
 	*/
-	Maxloginattempts int `json:"maxloginattempts,omitempty"`
+	Maxloginattempts *int `json:"maxloginattempts,omitempty"`
 	/**
 	* Number of minutes an account will be locked if user exceeds maximum permissible attempts
 	*/
-	Failedlogintimeout int `json:"failedlogintimeout,omitempty"`
+	Failedlogintimeout *int `json:"failedlogintimeout,omitempty"`
 	/**
 	* Use Layer 2 parameters (channel number, MAC address, and VLAN ID) in addition to the 4-tuple (<source IP>:<source port>::<destination IP>:<destination port>) that is used to identify a connection. Allows multiple TCP and non-TCP connections with the same 4-tuple to coexist on the Citrix ADC.
 	*/

@@ -27,11 +27,11 @@ type Sslservicesslpolicybinding struct {
 	/**
 	* The priority of the policies bound to this SSL service
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Whether the bound policy is a inherited policy or not
 	*/
-	Polinherit int `json:"polinherit,omitempty"`
+	Polinherit *int `json:"polinherit,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

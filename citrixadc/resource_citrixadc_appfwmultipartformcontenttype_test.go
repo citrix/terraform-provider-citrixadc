@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -31,9 +31,9 @@ const testAccAppfwmultipartformcontenttype_basic = `
 
 func TestAccAppfwmultipartformcontenttype_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppfwmultipartformcontenttypeDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAppfwmultipartformcontenttypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppfwmultipartformcontenttype_basic,
@@ -66,9 +66,13 @@ func testAccCheckAppfwmultipartformcontenttypeExist(n string, id *string) resour
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		appfwmultipartformcontenttypeName := rs.Primary.ID
-		data, err := nsClient.FindResource("appfwmultipartformcontenttype", appfwmultipartformcontenttypeName)
+		data, err := client.FindResource("appfwmultipartformcontenttype", appfwmultipartformcontenttypeName)
 
 		if err != nil {
 			return err
@@ -83,7 +87,11 @@ func testAccCheckAppfwmultipartformcontenttypeExist(n string, id *string) resour
 }
 
 func testAccCheckAppfwmultipartformcontenttypeDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_appfwmultipartformcontenttype" {
@@ -95,7 +103,7 @@ func testAccCheckAppfwmultipartformcontenttypeDestroy(s *terraform.State) error 
 		}
 
 		appfwmultipartformcontenttypeName := rs.Primary.ID
-		_, err := nsClient.FindResource("appfwmultipartformcontenttype", appfwmultipartformcontenttypeName)
+		_, err := client.FindResource("appfwmultipartformcontenttype", appfwmultipartformcontenttypeName)
 
 		if err == nil {
 			return fmt.Errorf("appfwmultipartformcontenttype %s still exists", rs.Primary.ID)

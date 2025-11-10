@@ -46,7 +46,7 @@ type Lbvserver struct {
 	/**
 	* Port number for the virtual server.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* The list of IPv4/IPv6 addresses bound to ipset would form a part of listening service on the current lb vserver
 	*/
@@ -58,7 +58,7 @@ type Lbvserver struct {
 		Note: The Range parameter assigns multiple IP addresses to one virtual server. To generate an array of virtual servers, each of which owns only one IP address, use brackets in the IP Address and Name parameters to specify the range. For example:
 		add lb vserver my_vserver[1-3] HTTP 192.0.2.[1-3] 80
 	*/
-	Range int `json:"range,omitempty"`
+	Range *int `json:"range,omitempty"`
 	/**
 	* Type of persistence for the virtual server. Available settings function as follows:
 		* SOURCEIP - Connections from the same client IP address belong to the same persistence session.
@@ -78,7 +78,7 @@ type Lbvserver struct {
 	/**
 	* Time period for which a persistence session is in effect.
 	*/
-	Timeout int `json:"timeout,omitempty"`
+	Timeout *int `json:"timeout,omitempty"`
 	/**
 	* Backup persistence type for the virtual server. Becomes operational if the primary persistence mechanism fails.
 	*/
@@ -86,7 +86,7 @@ type Lbvserver struct {
 	/**
 	* Time period for which backup persistence is in effect.
 	*/
-	Backuppersistencetimeout int `json:"backuppersistencetimeout,omitempty"`
+	Backuppersistencetimeout *int `json:"backuppersistencetimeout,omitempty"`
 	/**
 	* Load balancing method.  The available settings function as follows:
 		* ROUNDROBIN - Distribute requests in rotation, regardless of the load. Weights can be assigned to services to enforce weighted round robin distribution.
@@ -111,7 +111,7 @@ type Lbvserver struct {
 	/**
 	* Number of bytes to consider for the hash value used in the URLHASH and DOMAINHASH load balancing methods.
 	*/
-	Hashlength int `json:"hashlength,omitempty"`
+	Hashlength *int `json:"hashlength,omitempty"`
 	/**
 	* IPv4 subnet mask to apply to the destination IP address or source IP address when the load balancing method is DESTINATIONIPHASH or SOURCEIPHASH.
 	*/
@@ -119,7 +119,7 @@ type Lbvserver struct {
 	/**
 	* Number of bits to consider in an IPv6 destination or source IP address, for creating the hash that is required by the DESTINATIONIPHASH and SOURCEIPHASH load balancing methods.
 	*/
-	V6netmasklen int `json:"v6netmasklen,omitempty"`
+	V6netmasklen *int `json:"v6netmasklen,omitempty"`
 	/**
 	* Backup load balancing method. Becomes operational if the primary load balancing me
 		thod fails or cannot be used.
@@ -145,7 +145,7 @@ type Lbvserver struct {
 	/**
 	* Integer specifying the priority of the listen policy. A higher number specifies a lower priority. If a request matches the listen policies of more than one virtual server the virtual server whose listen policy has the highest priority (the lowest priority number) accepts the request.
 	*/
-	Listenpriority int `json:"listenpriority,omitempty"`
+	Listenpriority *int `json:"listenpriority,omitempty"`
 	/**
 	* Expression specifying which part of a server's response to use for creating rule based persistence sessions (persistence type RULE). Can be either an expression or the name of a named expression.
 		Example:
@@ -159,7 +159,7 @@ type Lbvserver struct {
 	/**
 	* Persistence mask for IP based persistence types, for IPv6 virtual servers.
 	*/
-	V6persistmasklen int `json:"v6persistmasklen,omitempty"`
+	V6persistmasklen *int `json:"v6persistmasklen,omitempty"`
 	/**
 	* Use network address translation (NAT) for RTSP data connections.
 	*/
@@ -176,15 +176,15 @@ type Lbvserver struct {
 	/**
 	* TOS ID of the virtual server. Applicable only when the load balancing redirection mode is set to TOS.
 	*/
-	Tosid int `json:"tosid,omitempty"`
+	Tosid *int `json:"tosid,omitempty"`
 	/**
 	* Length of the token to be extracted from the data segment of an incoming packet, for use in the token method of load balancing. The length of the token, specified in bytes, must not be greater than 24 KB. Applicable to virtual servers of type TCP.
 	*/
-	Datalength int `json:"datalength,omitempty"`
+	Datalength *int `json:"datalength,omitempty"`
 	/**
 	* Offset to be considered when extracting a token from the TCP payload. Applicable to virtual servers, of type TCP, using the token method of load balancing. Must be within the first 24 KB of the TCP payload.
 	*/
-	Dataoffset int `json:"dataoffset,omitempty"`
+	Dataoffset *int `json:"dataoffset,omitempty"`
 	/**
 	* Perform load balancing on a per-packet basis, without establishing sessions. Recommended for load balancing of intrusion detection system (IDS) servers and scenarios involving direct server return (DSR), where session information is unnecessary.
 	*/
@@ -216,7 +216,7 @@ type Lbvserver struct {
 	/**
 	* Idle time, in seconds, after which a client connection is terminated.
 	*/
-	Clttimeout int `json:"clttimeout,omitempty"`
+	Clttimeout *int `json:"clttimeout,omitempty"`
 	/**
 	* Type of threshold that, when exceeded, triggers spillover. Available settings function as follows:
 		* CONNECTION - Spillover occurs when the number of client connections exceeds the threshold.
@@ -233,15 +233,15 @@ type Lbvserver struct {
 	/**
 	* Timeout for spillover persistence, in minutes.
 	*/
-	Sopersistencetimeout int `json:"sopersistencetimeout,omitempty"`
+	Sopersistencetimeout *int `json:"sopersistencetimeout,omitempty"`
 	/**
 	* Threshold in percent of active services below which vserver state is made down. If this threshold is 0, vserver state will be up even if one bound service is up.
 	*/
-	Healththreshold int `json:"healththreshold,omitempty"`
+	Healththreshold *int `json:"healththreshold,omitempty"`
 	/**
 	* Threshold at which spillover occurs. Specify an integer for the CONNECTION spillover method, a bandwidth value in kilobits per second for the BANDWIDTH method (do not enter the units), or a percentage for the HEALTH method (do not enter the percentage symbol).
 	*/
-	Sothreshold int `json:"sothreshold,omitempty"`
+	Sothreshold *int `json:"sothreshold,omitempty"`
 	/**
 	* Action to be performed if spillover is to take effect, but no backup chain to spillover is usable or exists
 	*/
@@ -336,7 +336,7 @@ type Lbvserver struct {
 	/**
 	* MySQL protocol version that the virtual server advertises to clients.
 	*/
-	Mysqlprotocolversion int `json:"mysqlprotocolversion,omitempty"`
+	Mysqlprotocolversion *int `json:"mysqlprotocolversion,omitempty"`
 	/**
 	* MySQL server version string that the virtual server advertises to clients.
 	*/
@@ -344,11 +344,11 @@ type Lbvserver struct {
 	/**
 	* Character set that the virtual server advertises to clients.
 	*/
-	Mysqlcharacterset int `json:"mysqlcharacterset,omitempty"`
+	Mysqlcharacterset *int `json:"mysqlcharacterset,omitempty"`
 	/**
 	* Server capabilities that the virtual server advertises to clients.
 	*/
-	Mysqlservercapabilities int `json:"mysqlservercapabilities,omitempty"`
+	Mysqlservercapabilities *int `json:"mysqlservercapabilities,omitempty"`
 	/**
 	* Apply AppFlow logging to the virtual server.
 	*/
@@ -375,7 +375,7 @@ type Lbvserver struct {
 	/**
 	* Number of requests, or percentage of the load on existing services, by which to increase the load on a new service at each interval in slow-start mode. A non-zero value indicates that slow-start is applicable. A zero value indicates that the global RR startup parameter is applied. Changing the value to zero will cause services currently in slow start to take the full traffic as determined by the LB method. Subsequently, any new services added will use the global RR factor.
 	*/
-	Newservicerequest int `json:"newservicerequest,omitempty"`
+	Newservicerequest *int `json:"newservicerequest,omitempty"`
 	/**
 	* Units in which to increment load at each interval in slow-start mode.
 	*/
@@ -383,15 +383,15 @@ type Lbvserver struct {
 	/**
 	* Interval, in seconds, between successive increments in the load on a new service or a service whose state has just changed from DOWN to UP. A value of 0 (zero) specifies manual slow start.
 	*/
-	Newservicerequestincrementinterval int `json:"newservicerequestincrementinterval,omitempty"`
+	Newservicerequestincrementinterval *int `json:"newservicerequestincrementinterval,omitempty"`
 	/**
 	* Minimum number of members expected to be present when vserver is used in Autoscale.
 	*/
-	Minautoscalemembers int `json:"minautoscalemembers,omitempty"`
+	Minautoscalemembers *int `json:"minautoscalemembers,omitempty"`
 	/**
 	* Maximum number of members expected to be present when vserver is used in Autoscale.
 	*/
-	Maxautoscalemembers int `json:"maxautoscalemembers,omitempty"`
+	Maxautoscalemembers *int `json:"maxautoscalemembers,omitempty"`
 	/**
 	* Persist AVP number for Diameter Persistency.
 		In case this AVP is not defined in Base RFC 3588 and it is nested inside a Grouped AVP,
@@ -406,7 +406,7 @@ type Lbvserver struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* Name of the authentication profile to be used when authentication is turned on.
 	*/
@@ -446,7 +446,7 @@ type Lbvserver struct {
 	/**
 	* Port number for the virtual server, from which we absorb the traffic for http redirect
 	*/
-	Redirectfromport int `json:"redirectfromport,omitempty"`
+	Redirectfromport *int `json:"redirectfromport,omitempty"`
 	/**
 	* URL to which all HTTP traffic received on the port specified in the -redirectFromPort parameter is redirected.
 	*/
@@ -462,7 +462,7 @@ type Lbvserver struct {
 	/**
 	* Port number for external TCP probe. NetScaler provides support for external TCP health check of the vserver status over the selected port. This option is only supported for vservers assigned with an IPAddress or ipset.
 	*/
-	Tcpprobeport int `json:"tcpprobeport,omitempty"`
+	Tcpprobeport *int `json:"tcpprobeport,omitempty"`
 	/**
 	* Name of QUIC profile which will be attached to the VServer.
 	*/
@@ -482,7 +482,7 @@ type Lbvserver struct {
 	/**
 	* Citrix ADC provides support for external health check of the vserver status. Select port for HTTP/TCP monitring
 	*/
-	Probeport int `json:"probeport,omitempty"`
+	Probeport *int `json:"probeport,omitempty"`
 	/**
 	* Configure this option to toggle order preference
 	*/
@@ -490,7 +490,7 @@ type Lbvserver struct {
 	/**
 	* This option is used to to specify the threshold of minimum number of services to be UP in an order, for it to be considered in Lb decision.
 	*/
-	Orderthreshold int `json:"orderthreshold,omitempty"`
+	Orderthreshold *int `json:"orderthreshold,omitempty"`
 	/**
 	* The API profile where one or more API specs are bounded to.
 	*/
@@ -506,11 +506,11 @@ type Lbvserver struct {
 	/**
 	* Weight to assign to the specified service.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Order number to be assigned to the service when it is bound to the lb vserver.
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 	/**
 	* The redirect URL to be unset.
 	*/

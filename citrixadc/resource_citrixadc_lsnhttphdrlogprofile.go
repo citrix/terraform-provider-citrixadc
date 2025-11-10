@@ -1,23 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLsnhttphdrlogprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnhttphdrlogprofileFunc,
-		Read:          readLsnhttphdrlogprofileFunc,
-		Update:        updateLsnhttphdrlogprofileFunc,
-		Delete:        deleteLsnhttphdrlogprofileFunc,
+		CreateContext: createLsnhttphdrlogprofileFunc,
+		ReadContext:   readLsnhttphdrlogprofileFunc,
+		UpdateContext: updateLsnhttphdrlogprofileFunc,
+		DeleteContext: deleteLsnhttphdrlogprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"httphdrlogprofilename": {
@@ -49,7 +51,7 @@ func resourceCitrixAdcLsnhttphdrlogprofile() *schema.Resource {
 	}
 }
 
-func createLsnhttphdrlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnhttphdrlogprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnhttphdrlogprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnhttphdrlogprofileName := d.Get("httphdrlogprofilename").(string)
@@ -63,20 +65,15 @@ func createLsnhttphdrlogprofileFunc(d *schema.ResourceData, meta interface{}) er
 
 	_, err := client.AddResource("lsnhttphdrlogprofile", lsnhttphdrlogprofileName, &lsnhttphdrlogprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsnhttphdrlogprofileName)
 
-	err = readLsnhttphdrlogprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnhttphdrlogprofile but we can't read it ?? %s", lsnhttphdrlogprofileName)
-		return nil
-	}
-	return nil
+	return readLsnhttphdrlogprofileFunc(ctx, d, meta)
 }
 
-func readLsnhttphdrlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnhttphdrlogprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnhttphdrlogprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnhttphdrlogprofileName := d.Id()
@@ -97,7 +94,7 @@ func readLsnhttphdrlogprofileFunc(d *schema.ResourceData, meta interface{}) erro
 
 }
 
-func updateLsnhttphdrlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLsnhttphdrlogprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLsnhttphdrlogprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnhttphdrlogprofileName := d.Get("httphdrlogprofilename").(string)
@@ -130,19 +127,19 @@ func updateLsnhttphdrlogprofileFunc(d *schema.ResourceData, meta interface{}) er
 	if hasChange {
 		err := client.UpdateUnnamedResource("lsnhttphdrlogprofile", &lsnhttphdrlogprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating lsnhttphdrlogprofile %s", lsnhttphdrlogprofileName)
+			return diag.Errorf("Error updating lsnhttphdrlogprofile %s", lsnhttphdrlogprofileName)
 		}
 	}
-	return readLsnhttphdrlogprofileFunc(d, meta)
+	return readLsnhttphdrlogprofileFunc(ctx, d, meta)
 }
 
-func deleteLsnhttphdrlogprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnhttphdrlogprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnhttphdrlogprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnhttphdrlogprofileName := d.Id()
 	err := client.DeleteResource("lsnhttphdrlogprofile", lsnhttphdrlogprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

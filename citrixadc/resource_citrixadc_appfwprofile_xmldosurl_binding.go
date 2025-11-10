@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAppfwprofile_xmldosurl_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_xmldosurl_bindingFunc,
-		Read:          readAppfwprofile_xmldosurl_bindingFunc,
-		Delete:        deleteAppfwprofile_xmldosurl_bindingFunc,
+		CreateContext: createAppfwprofile_xmldosurl_bindingFunc,
+		ReadContext:   readAppfwprofile_xmldosurl_bindingFunc,
+		DeleteContext: deleteAppfwprofile_xmldosurl_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -289,7 +291,7 @@ func resourceCitrixAdcAppfwprofile_xmldosurl_binding() *schema.Resource {
 	}
 }
 
-func createAppfwprofile_xmldosurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_xmldosurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_xmldosurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -307,57 +309,87 @@ func createAppfwprofile_xmldosurl_bindingFunc(d *schema.ResourceData, meta inter
 		Xmlblockexternalentities:        d.Get("xmlblockexternalentities").(string),
 		Xmlblockpi:                      d.Get("xmlblockpi").(string),
 		Xmldosurl:                       d.Get("xmldosurl").(string),
-		Xmlmaxattributenamelength:       d.Get("xmlmaxattributenamelength").(int),
 		Xmlmaxattributenamelengthcheck:  d.Get("xmlmaxattributenamelengthcheck").(string),
-		Xmlmaxattributes:                d.Get("xmlmaxattributes").(int),
 		Xmlmaxattributescheck:           d.Get("xmlmaxattributescheck").(string),
-		Xmlmaxattributevaluelength:      d.Get("xmlmaxattributevaluelength").(int),
 		Xmlmaxattributevaluelengthcheck: d.Get("xmlmaxattributevaluelengthcheck").(string),
-		Xmlmaxchardatalength:            d.Get("xmlmaxchardatalength").(int),
 		Xmlmaxchardatalengthcheck:       d.Get("xmlmaxchardatalengthcheck").(string),
-		Xmlmaxelementchildren:           d.Get("xmlmaxelementchildren").(int),
 		Xmlmaxelementchildrencheck:      d.Get("xmlmaxelementchildrencheck").(string),
-		Xmlmaxelementdepth:              d.Get("xmlmaxelementdepth").(int),
 		Xmlmaxelementdepthcheck:         d.Get("xmlmaxelementdepthcheck").(string),
-		Xmlmaxelementnamelength:         d.Get("xmlmaxelementnamelength").(int),
 		Xmlmaxelementnamelengthcheck:    d.Get("xmlmaxelementnamelengthcheck").(string),
-		Xmlmaxelements:                  d.Get("xmlmaxelements").(int),
 		Xmlmaxelementscheck:             d.Get("xmlmaxelementscheck").(string),
-		Xmlmaxentityexpansiondepth:      d.Get("xmlmaxentityexpansiondepth").(int),
 		Xmlmaxentityexpansiondepthcheck: d.Get("xmlmaxentityexpansiondepthcheck").(string),
-		Xmlmaxentityexpansions:          d.Get("xmlmaxentityexpansions").(int),
 		Xmlmaxentityexpansionscheck:     d.Get("xmlmaxentityexpansionscheck").(string),
-		Xmlmaxfilesize:                  d.Get("xmlmaxfilesize").(int),
 		Xmlmaxfilesizecheck:             d.Get("xmlmaxfilesizecheck").(string),
-		Xmlmaxnamespaces:                d.Get("xmlmaxnamespaces").(int),
 		Xmlmaxnamespacescheck:           d.Get("xmlmaxnamespacescheck").(string),
-		Xmlmaxnamespaceurilength:        d.Get("xmlmaxnamespaceurilength").(int),
 		Xmlmaxnamespaceurilengthcheck:   d.Get("xmlmaxnamespaceurilengthcheck").(string),
-		Xmlmaxnodes:                     d.Get("xmlmaxnodes").(int),
 		Xmlmaxnodescheck:                d.Get("xmlmaxnodescheck").(string),
-		Xmlmaxsoaparrayrank:             d.Get("xmlmaxsoaparrayrank").(int),
-		Xmlmaxsoaparraysize:             d.Get("xmlmaxsoaparraysize").(int),
-		Xmlminfilesize:                  d.Get("xmlminfilesize").(int),
 		Xmlminfilesizecheck:             d.Get("xmlminfilesizecheck").(string),
 		Xmlsoaparraycheck:               d.Get("xmlsoaparraycheck").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("xmlmaxattributenamelength"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxattributenamelength = intPtr(d.Get("xmlmaxattributenamelength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxattributes"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxattributes = intPtr(d.Get("xmlmaxattributes").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxattributevaluelength"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxattributevaluelength = intPtr(d.Get("xmlmaxattributevaluelength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxchardatalength"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxchardatalength = intPtr(d.Get("xmlmaxchardatalength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxelementchildren"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxelementchildren = intPtr(d.Get("xmlmaxelementchildren").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxelementdepth"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxelementdepth = intPtr(d.Get("xmlmaxelementdepth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxelementnamelength"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxelementnamelength = intPtr(d.Get("xmlmaxelementnamelength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxelements"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxelements = intPtr(d.Get("xmlmaxelements").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxentityexpansiondepth"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxentityexpansiondepth = intPtr(d.Get("xmlmaxentityexpansiondepth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxentityexpansions"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxentityexpansions = intPtr(d.Get("xmlmaxentityexpansions").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxfilesize"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxfilesize = intPtr(d.Get("xmlmaxfilesize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxnamespaces"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxnamespaces = intPtr(d.Get("xmlmaxnamespaces").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxnamespaceurilength"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxnamespaceurilength = intPtr(d.Get("xmlmaxnamespaceurilength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxnodes"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxnodes = intPtr(d.Get("xmlmaxnodes").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxsoaparrayrank"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxsoaparrayrank = intPtr(d.Get("xmlmaxsoaparrayrank").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxsoaparraysize"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxsoaparraysize = intPtr(d.Get("xmlmaxsoaparraysize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlminfilesize"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlminfilesize = intPtr(d.Get("xmlminfilesize").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Appfwprofile_xmldosurl_binding.Type(), &appfwprofile_xmldosurl_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_xmldosurl_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_xmldosurl_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_xmldosurl_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_xmldosurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_xmldosurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_xmldosurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -378,7 +410,7 @@ func readAppfwprofile_xmldosurl_bindingFunc(d *schema.ResourceData, meta interfa
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -420,37 +452,37 @@ func readAppfwprofile_xmldosurl_bindingFunc(d *schema.ResourceData, meta interfa
 	d.Set("xmlblockexternalentities", data["xmlblockexternalentities"])
 	d.Set("xmlblockpi", data["xmlblockpi"])
 	d.Set("xmldosurl", data["xmldosurl"])
-	d.Set("xmlmaxattributenamelength", data["xmlmaxattributenamelength"])
+	setToInt("xmlmaxattributenamelength", d, data["xmlmaxattributenamelength"])
 	d.Set("xmlmaxattributenamelengthcheck", data["xmlmaxattributenamelengthcheck"])
-	d.Set("xmlmaxattributes", data["xmlmaxattributes"])
+	setToInt("xmlmaxattributes", d, data["xmlmaxattributes"])
 	d.Set("xmlmaxattributescheck", data["xmlmaxattributescheck"])
-	d.Set("xmlmaxattributevaluelength", data["xmlmaxattributevaluelength"])
+	setToInt("xmlmaxattributevaluelength", d, data["xmlmaxattributevaluelength"])
 	d.Set("xmlmaxattributevaluelengthcheck", data["xmlmaxattributevaluelengthcheck"])
-	d.Set("xmlmaxchardatalength", data["xmlmaxchardatalength"])
+	setToInt("xmlmaxchardatalength", d, data["xmlmaxchardatalength"])
 	d.Set("xmlmaxchardatalengthcheck", data["xmlmaxchardatalengthcheck"])
-	d.Set("xmlmaxelementchildren", data["xmlmaxelementchildren"])
+	setToInt("xmlmaxelementchildren", d, data["xmlmaxelementchildren"])
 	d.Set("xmlmaxelementchildrencheck", data["xmlmaxelementchildrencheck"])
-	d.Set("xmlmaxelementdepth", data["xmlmaxelementdepth"])
+	setToInt("xmlmaxelementdepth", d, data["xmlmaxelementdepth"])
 	d.Set("xmlmaxelementdepthcheck", data["xmlmaxelementdepthcheck"])
-	d.Set("xmlmaxelementnamelength", data["xmlmaxelementnamelength"])
+	setToInt("xmlmaxelementnamelength", d, data["xmlmaxelementnamelength"])
 	d.Set("xmlmaxelementnamelengthcheck", data["xmlmaxelementnamelengthcheck"])
-	d.Set("xmlmaxelements", data["xmlmaxelements"])
+	setToInt("xmlmaxelements", d, data["xmlmaxelements"])
 	d.Set("xmlmaxelementscheck", data["xmlmaxelementscheck"])
-	d.Set("xmlmaxentityexpansiondepth", data["xmlmaxentityexpansiondepth"])
+	setToInt("xmlmaxentityexpansiondepth", d, data["xmlmaxentityexpansiondepth"])
 	d.Set("xmlmaxentityexpansiondepthcheck", data["xmlmaxentityexpansiondepthcheck"])
-	d.Set("xmlmaxentityexpansions", data["xmlmaxentityexpansions"])
+	setToInt("xmlmaxentityexpansions", d, data["xmlmaxentityexpansions"])
 	d.Set("xmlmaxentityexpansionscheck", data["xmlmaxentityexpansionscheck"])
-	d.Set("xmlmaxfilesize", data["xmlmaxfilesize"])
+	setToInt("xmlmaxfilesize", d, data["xmlmaxfilesize"])
 	d.Set("xmlmaxfilesizecheck", data["xmlmaxfilesizecheck"])
-	d.Set("xmlmaxnamespaces", data["xmlmaxnamespaces"])
+	setToInt("xmlmaxnamespaces", d, data["xmlmaxnamespaces"])
 	d.Set("xmlmaxnamespacescheck", data["xmlmaxnamespacescheck"])
-	d.Set("xmlmaxnamespaceurilength", data["xmlmaxnamespaceurilength"])
+	setToInt("xmlmaxnamespaceurilength", d, data["xmlmaxnamespaceurilength"])
 	d.Set("xmlmaxnamespaceurilengthcheck", data["xmlmaxnamespaceurilengthcheck"])
-	d.Set("xmlmaxnodes", data["xmlmaxnodes"])
+	setToInt("xmlmaxnodes", d, data["xmlmaxnodes"])
 	d.Set("xmlmaxnodescheck", data["xmlmaxnodescheck"])
-	d.Set("xmlmaxsoaparrayrank", data["xmlmaxsoaparrayrank"])
-	d.Set("xmlmaxsoaparraysize", data["xmlmaxsoaparraysize"])
-	d.Set("xmlminfilesize", data["xmlminfilesize"])
+	setToInt("xmlmaxsoaparrayrank", d, data["xmlmaxsoaparrayrank"])
+	setToInt("xmlmaxsoaparraysize", d, data["xmlmaxsoaparraysize"])
+	setToInt("xmlminfilesize", d, data["xmlminfilesize"])
 	d.Set("xmlminfilesizecheck", data["xmlminfilesizecheck"])
 	d.Set("xmlsoaparraycheck", data["xmlsoaparraycheck"])
 
@@ -458,7 +490,7 @@ func readAppfwprofile_xmldosurl_bindingFunc(d *schema.ResourceData, meta interfa
 
 }
 
-func deleteAppfwprofile_xmldosurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_xmldosurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_xmldosurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -476,7 +508,7 @@ func deleteAppfwprofile_xmldosurl_bindingFunc(d *schema.ResourceData, meta inter
 
 	err := client.DeleteResourceWithArgs(service.Appfwprofile_xmldosurl_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

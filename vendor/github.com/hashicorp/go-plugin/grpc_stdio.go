@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package plugin
 
 import (
@@ -136,12 +139,12 @@ func (c *grpcStdioClient) Run(stdout, stderr io.Writer) {
 				status.Code(err) == codes.Canceled ||
 				status.Code(err) == codes.Unimplemented ||
 				err == context.Canceled {
-				c.log.Warn("received EOF, stopping recv loop", "err", err)
+				c.log.Debug("received EOF, stopping recv loop", "err", err)
 				return
 			}
 
 			c.log.Error("error receiving data", "err", err)
-			continue
+			return
 		}
 
 		// Determine our output writer based on channel
@@ -175,7 +178,7 @@ func copyChan(log hclog.Logger, dst chan<- []byte, src io.Reader) {
 	for {
 		// Make our data buffer. We allocate a new one per loop iteration
 		// so that we can send it over the channel.
-		var data [1024]byte
+		var data [grpcStdioBuffer]byte
 
 		// Read the data, this will block until data is available
 		n, err := bufsrc.Read(data[:])

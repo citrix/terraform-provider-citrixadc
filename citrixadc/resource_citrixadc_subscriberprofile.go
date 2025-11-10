@@ -1,12 +1,14 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/subscriber"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 )
@@ -14,12 +16,12 @@ import (
 func resourceCitrixAdcSubscriberprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSubscriberprofileFunc,
-		Read:          readSubscriberprofileFunc,
-		Update:        updateSubscriberprofileFunc,
-		Delete:        deleteSubscriberprofileFunc,
+		CreateContext: createSubscriberprofileFunc,
+		ReadContext:   readSubscriberprofileFunc,
+		UpdateContext: updateSubscriberprofileFunc,
+		DeleteContext: deleteSubscriberprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ip": {
@@ -57,7 +59,7 @@ func resourceCitrixAdcSubscriberprofile() *schema.Resource {
 	}
 }
 
-func createSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createSubscriberprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSubscriberprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	subscriberprofileName := d.Get("ip").(string)
@@ -67,25 +69,23 @@ func createSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error
 		Subscriberrules:     toStringList(d.Get("subscriberrules").([]interface{})),
 		Subscriptionidtype:  d.Get("subscriptionidtype").(string),
 		Subscriptionidvalue: d.Get("subscriptionidvalue").(string),
-		Vlan:                d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		subscriberprofile.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	_, err := client.AddResource("subscriberprofile", subscriberprofileName, &subscriberprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(subscriberprofileName)
 
-	err = readSubscriberprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this subscriberprofile but we can't read it ?? %s", subscriberprofileName)
-		return nil
-	}
-	return nil
+	return readSubscriberprofileFunc(ctx, d, meta)
 }
 
-func readSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readSubscriberprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSubscriberprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	subscriberprofileName := d.Id()
@@ -130,13 +130,13 @@ func readSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("subscriberrules", data["subscriberrules"])
 	d.Set("subscriptionidtype", data["subscriptionidtype"])
 	d.Set("subscriptionidvalue", data["subscriptionidvalue"])
-	d.Set("vlan", data["vlan"])
+	setToInt("vlan", d, data["vlan"])
 
 	return nil
 
 }
 
-func updateSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSubscriberprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSubscriberprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	subscriberprofileName := d.Get("ip").(string)
@@ -167,20 +167,20 @@ func updateSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for subscriberprofile %s, starting update", subscriberprofileName)
-		subscriberprofile.Vlan = d.Get("vlan").(int)
+		subscriberprofile.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource("subscriberprofile", &subscriberprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating subscriberprofile %s", subscriberprofileName)
+			return diag.Errorf("Error updating subscriberprofile %s", subscriberprofileName)
 		}
 	}
-	return readSubscriberprofileFunc(d, meta)
+	return readSubscriberprofileFunc(ctx, d, meta)
 }
 
-func deleteSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSubscriberprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSubscriberprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	subscriberprofileName := d.Id()
@@ -192,7 +192,7 @@ func deleteSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	err := client.DeleteResourceWithArgs("subscriberprofile", subscriberprofileName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,21 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAaagroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaagroupFunc,
-		Read:          readAaagroupFunc,
-		Delete:        deleteAaagroupFunc,
+		CreateContext: createAaagroupFunc,
+		ReadContext:   readAaagroupFunc,
+		DeleteContext: deleteAaagroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"groupname": {
@@ -37,31 +39,30 @@ func resourceCitrixAdcAaagroup() *schema.Resource {
 	}
 }
 
-func createAaagroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaagroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaagroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaagroupName := d.Get("groupname").(string)
 	aaagroup := aaa.Aaagroup{
 		Groupname: d.Get("groupname").(string),
-		Weight:    d.Get("weight").(int),
+		Loggedin:  d.Get("loggedin").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		aaagroup.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	_, err := client.AddResource(service.Aaagroup.Type(), aaagroupName, &aaagroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaagroupName)
 
-	err = readAaagroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaagroup but we can't read it ?? %s", aaagroupName)
-		return nil
-	}
-	return nil
+	return readAaagroupFunc(ctx, d, meta)
 }
 
-func readAaagroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaagroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaagroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaagroupName := d.Id()
@@ -79,13 +80,13 @@ func readAaagroupFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 
 }
-func deleteAaagroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaagroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaagroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaagroupName := d.Id()
 	err := client.DeleteResource(service.Aaagroup.Type(), aaagroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -27,15 +27,15 @@ type Ipsecalgprofile struct {
 	/**
 	* IKE session timeout in minutes
 	*/
-	Ikesessiontimeout int `json:"ikesessiontimeout,omitempty"`
+	Ikesessiontimeout *int `json:"ikesessiontimeout,omitempty"`
 	/**
 	* ESP session timeout in minutes.
 	*/
-	Espsessiontimeout int `json:"espsessiontimeout,omitempty"`
+	Espsessiontimeout *int `json:"espsessiontimeout,omitempty"`
 	/**
 	* Timeout ESP in seconds as no ESP packets are seen after IKE negotiation
 	*/
-	Espgatetimeout int `json:"espgatetimeout,omitempty"`
+	Espgatetimeout *int `json:"espgatetimeout,omitempty"`
 	/**
 	* Mode in which the connection failover feature must operate for the IPSec Alg. After a failover, established UDP connections and ESP packet flows are kept active and resumed on the secondary appliance. Recomended setting is ENABLED.
 	*/

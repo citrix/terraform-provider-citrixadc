@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcDnspolicylabel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnspolicylabelFunc,
-		Read:          readDnspolicylabelFunc,
-		Delete:        deleteDnspolicylabelFunc,
+		CreateContext: createDnspolicylabelFunc,
+		ReadContext:   readDnspolicylabelFunc,
+		DeleteContext: deleteDnspolicylabelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"labelname": {
@@ -33,7 +35,7 @@ func resourceCitrixAdcDnspolicylabel() *schema.Resource {
 	}
 }
 
-func createDnspolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnspolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnspolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnspolicylabelName := d.Get("labelname").(string)
@@ -44,20 +46,15 @@ func createDnspolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnspolicylabel.Type(), dnspolicylabelName, &dnspolicylabel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnspolicylabelName)
 
-	err = readDnspolicylabelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnspolicylabel but we can't read it ?? %s", dnspolicylabelName)
-		return nil
-	}
-	return nil
+	return readDnspolicylabelFunc(ctx, d, meta)
 }
 
-func readDnspolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnspolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnspolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnspolicylabelName := d.Id()
@@ -75,13 +72,13 @@ func readDnspolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteDnspolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnspolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnspolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnspolicylabelName := d.Id()
 	err := client.DeleteResource(service.Dnspolicylabel.Type(), dnspolicylabelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

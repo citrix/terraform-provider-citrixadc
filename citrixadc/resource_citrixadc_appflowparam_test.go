@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ resource "citrixadc_appflowparam" "tf_appflowparam" {
 	flowrecordinterval  = 200
 	httpcookie          = "ENABLED"
 	httplocation        = "ENABLED"
-  }
+	}
   
 `
 const testAccAppflowparam_update = `
@@ -40,13 +40,13 @@ resource "citrixadc_appflowparam" "tf_appflowparam" {
 	flowrecordinterval  = 100
 	httpcookie          = "DISABLED"
 	httplocation        = "DISABLED"
-  }  
+	}
 `
 
 func TestAccAppflowparam_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppflowparam_basic,
@@ -91,8 +91,12 @@ func testAccCheckAppflowparamExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Appflowparam.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Appflowparam.Type(), "")
 
 		if err != nil {
 			return err

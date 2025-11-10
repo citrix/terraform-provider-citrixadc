@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppfwsettings() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwsettingsFunc,
-		Read:          readAppfwsettingsFunc,
-		Update:        updateAppfwsettingsFunc,
-		Delete:        deleteAppfwsettingsFunc,
+		CreateContext: createAppfwsettingsFunc,
+		ReadContext:   readAppfwsettingsFunc,
+		UpdateContext: updateAppfwsettingsFunc,
+		DeleteContext: deleteAppfwsettingsFunc,
 		Schema: map[string]*schema.Schema{
 			"ceflogging": {
 				Type:     schema.TypeString,
@@ -145,7 +148,7 @@ func resourceCitrixAdcAppfwsettings() *schema.Resource {
 	}
 }
 
-func createAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -159,41 +162,49 @@ func createAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 		Defaultprofile:           d.Get("defaultprofile").(string),
 		Entitydecoding:           d.Get("entitydecoding").(string),
 		Geolocationlogging:       d.Get("geolocationlogging").(string),
-		Importsizelimit:          d.Get("importsizelimit").(int),
-		Learnratelimit:           d.Get("learnratelimit").(int),
 		Logmalformedreq:          d.Get("logmalformedreq").(string),
 		Malformedreqaction:       toStringList(d.Get("malformedreqaction").([]interface{})),
-		Proxyport:                d.Get("proxyport").(int),
 		Proxyserver:              d.Get("proxyserver").(string),
 		Proxyusername:            d.Get("proxyusername").(string),
 		Proxypassword:            d.Get("proxypassword").(string),
 		Cookieflags:              d.Get("cookieflags").(string),
 		Sessioncookiename:        d.Get("sessioncookiename").(string),
-		Sessionlifetime:          d.Get("sessionlifetime").(int),
-		Sessionlimit:             d.Get("sessionlimit").(int),
-		Sessiontimeout:           d.Get("sessiontimeout").(int),
 		Signatureautoupdate:      d.Get("signatureautoupdate").(string),
 		Signatureurl:             d.Get("signatureurl").(string),
 		Undefaction:              d.Get("undefaction").(string),
 		Useconfigurablesecretkey: d.Get("useconfigurablesecretkey").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("importsizelimit"); !raw.IsNull() {
+		appfwsettings.Importsizelimit = intPtr(d.Get("importsizelimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("learnratelimit"); !raw.IsNull() {
+		appfwsettings.Learnratelimit = intPtr(d.Get("learnratelimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("proxyport"); !raw.IsNull() {
+		appfwsettings.Proxyport = intPtr(d.Get("proxyport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sessionlifetime"); !raw.IsNull() {
+		appfwsettings.Sessionlifetime = intPtr(d.Get("sessionlifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sessionlimit"); !raw.IsNull() {
+		appfwsettings.Sessionlimit = intPtr(d.Get("sessionlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sessiontimeout"); !raw.IsNull() {
+		appfwsettings.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Appfwsettings.Type(), &appfwsettings)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwsettingsName)
 
-	err = readAppfwsettingsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwsettings but we can't read it ?? %s", appfwsettingsName)
-		return nil
-	}
-	return nil
+	return readAppfwsettingsFunc(ctx, d, meta)
 }
 
-func readAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwsettingsName := d.Id()
@@ -211,16 +222,16 @@ func readAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("defaultprofile", data["defaultprofile"])
 	d.Set("entitydecoding", data["entitydecoding"])
 	d.Set("geolocationlogging", data["geolocationlogging"])
-	d.Set("importsizelimit", data["importsizelimit"])
-	d.Set("learnratelimit", data["learnratelimit"])
+	setToInt("importsizelimit", d, data["importsizelimit"])
+	setToInt("learnratelimit", d, data["learnratelimit"])
 	d.Set("logmalformedreq", data["logmalformedreq"])
 	d.Set("malformedreqaction", data["malformedreqaction"])
-	d.Set("proxyport", data["proxyport"])
+	setToInt("proxyport", d, data["proxyport"])
 	d.Set("proxyserver", data["proxyserver"])
 	d.Set("sessioncookiename", data["sessioncookiename"])
-	d.Set("sessionlifetime", data["sessionlifetime"])
-	d.Set("sessionlimit", data["sessionlimit"])
-	d.Set("sessiontimeout", data["sessiontimeout"])
+	setToInt("sessionlifetime", d, data["sessionlifetime"])
+	setToInt("sessionlimit", d, data["sessionlimit"])
+	setToInt("sessiontimeout", d, data["sessiontimeout"])
 	d.Set("signatureautoupdate", data["signatureautoupdate"])
 	d.Set("signatureurl", data["signatureurl"])
 	d.Set("undefaction", data["undefaction"])
@@ -233,7 +244,7 @@ func readAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppfwsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -277,12 +288,12 @@ func updateAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("importsizelimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Importsizelimit has changed for appfwsettings, starting update")
-		appfwsettings.Importsizelimit = d.Get("importsizelimit").(int)
+		appfwsettings.Importsizelimit = intPtr(d.Get("importsizelimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("learnratelimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Learnratelimit has changed for appfwsettings, starting update")
-		appfwsettings.Learnratelimit = d.Get("learnratelimit").(int)
+		appfwsettings.Learnratelimit = intPtr(d.Get("learnratelimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("logmalformedreq") {
@@ -297,7 +308,7 @@ func updateAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("proxyport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Proxyport has changed for appfwsettings, starting update")
-		appfwsettings.Proxyport = d.Get("proxyport").(int)
+		appfwsettings.Proxyport = intPtr(d.Get("proxyport").(int))
 		hasChange = true
 	}
 	if d.HasChange("proxyserver") {
@@ -312,17 +323,17 @@ func updateAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("sessionlifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessionlifetime has changed for appfwsettings, starting update")
-		appfwsettings.Sessionlifetime = d.Get("sessionlifetime").(int)
+		appfwsettings.Sessionlifetime = intPtr(d.Get("sessionlifetime").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessionlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessionlimit has changed for appfwsettings, starting update")
-		appfwsettings.Sessionlimit = d.Get("sessionlimit").(int)
+		appfwsettings.Sessionlimit = intPtr(d.Get("sessionlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessiontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessiontimeout has changed for appfwsettings, starting update")
-		appfwsettings.Sessiontimeout = d.Get("sessiontimeout").(int)
+		appfwsettings.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("signatureautoupdate") {
@@ -364,13 +375,13 @@ func updateAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Appfwsettings.Type(), &appfwsettings)
 		if err != nil {
-			return fmt.Errorf("Error updating appfwsettings %s", err.Error())
+			return diag.Errorf("Error updating appfwsettings %s", err.Error())
 		}
 	}
-	return readAppfwsettingsFunc(d, meta)
+	return readAppfwsettingsFunc(ctx, d, meta)
 }
 
-func deleteAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwsettingsFunc")
 
 	d.SetId("")

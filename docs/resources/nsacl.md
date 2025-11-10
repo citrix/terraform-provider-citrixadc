@@ -53,6 +53,16 @@ resource "citrixadc_nsacl" "tf_nsacl" {
 * `ratelimit` - (Optional) 
 * `dfdhash` - (Optional) Specifies the type hashmethod to be applied, to steer the packet to the FP of the packet. Possible values: [ SIP-SPORT-DIP-DPORT, SIP, DIP, SIP-DIP, SIP-SPORT, DIP-DPORT ]
 * `stateful` - (Optional) If stateful option is enabled, transparent sessions are created for the traffic hitting this ACL and not hitting any other features like LB, INAT etc. . Possible values: [ YES, NO ]
+* `destip` - (Optional) IP address or range of IP addresses to match against the destination IP address of an incoming IPv4 packet.  In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.
+* `destipdataset` - (Optional) Policy dataset which can have multiple IP ranges bound to it.
+* `destport` - (Optional) Port number or range of port numbers to match against the destination port number of an incoming IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 40-90.  Note: The destination port can be specified only for TCP and UDP protocols.
+* `destportdataset` - (Optional) Policy dataset which can have multiple port ranges bound to it.
+* `nodeid` - (Optional) Specifies the NodeId to steer the packet to the provided FP.
+* `srcip` - (Optional) IP address or range of IP addresses to match against the source IP address of an incoming IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.
+* `srcipdataset` - (Optional) Policy dataset which can have multiple IP ranges bound to it.
+* `srcport` - (Optional) Port number or range of port numbers to match against the source port number of an incoming IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 40-90.
+* `srcportdataset` - (Optional) Policy dataset which can have multiple port ranges bound to it.
+* `type` - (Optional) Type of the acl ,default will be CLASSIC. Available options as follows: * CLASSIC - specifies the regular extended acls. * DFD - cluster specific acls,specifies hashmethod for steering of the packet in cluster.
 
 
 ## Attribute Reference

@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcNspartition_vlan_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNspartition_vlan_bindingFunc,
-		Read:          readNspartition_vlan_bindingFunc,
-		Delete:        deleteNspartition_vlan_bindingFunc,
+		CreateContext: createNspartition_vlan_bindingFunc,
+		ReadContext:   readNspartition_vlan_bindingFunc,
+		DeleteContext: deleteNspartition_vlan_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"partitionname": {
@@ -37,7 +39,7 @@ func resourceCitrixAdcNspartition_vlan_binding() *schema.Resource {
 	}
 }
 
-func createNspartition_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createNspartition_vlan_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNspartition_vlan_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	partitionname := d.Get("partitionname")
@@ -45,25 +47,23 @@ func createNspartition_vlan_bindingFunc(d *schema.ResourceData, meta interface{}
 	bindingId := fmt.Sprintf("%s,%s", partitionname, vlan)
 	nspartition_vlan_binding := ns.Nspartitionvlanbinding{
 		Partitionname: d.Get("partitionname").(string),
-		Vlan:          d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nspartition_vlan_binding.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nspartition_vlan_binding.Type(), &nspartition_vlan_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readNspartition_vlan_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nspartition_vlan_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readNspartition_vlan_bindingFunc(ctx, d, meta)
 }
 
-func readNspartition_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readNspartition_vlan_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNspartition_vlan_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -84,7 +84,7 @@ func readNspartition_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) 
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -116,13 +116,13 @@ func readNspartition_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) 
 	data := dataArr[foundIndex]
 
 	d.Set("partitionname", data["partitionname"])
-	d.Set("vlan", data["vlan"])
+	setToInt("vlan", d, data["vlan"])
 
 	return nil
 
 }
 
-func deleteNspartition_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNspartition_vlan_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNspartition_vlan_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -137,7 +137,7 @@ func deleteNspartition_vlan_bindingFunc(d *schema.ResourceData, meta interface{}
 
 	err := client.DeleteResourceWithArgs(service.Nspartition_vlan_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

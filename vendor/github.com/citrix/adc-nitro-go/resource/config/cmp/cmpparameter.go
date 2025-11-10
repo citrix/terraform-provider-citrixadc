@@ -30,7 +30,7 @@ type Cmpparameter struct {
 	/**
 	* Minimum quantum of data to be filled before compression begins.
 	*/
-	Quantumsize int `json:"quantumsize,omitempty"`
+	Quantumsize *int `json:"quantumsize,omitempty"`
 	/**
 	* Allow the server to send compressed data to the Citrix ADC. With the default setting, the Citrix ADC appliance handles all compression.
 	*/
@@ -42,19 +42,19 @@ type Cmpparameter struct {
 	/**
 	* Threshold compression ratio for heuristic basefile expiry, multiplied by 100. For example, to set the threshold ratio to 1.25, specify 125.
 	*/
-	Heurexpirythres int `json:"heurexpirythres,omitempty"`
+	Heurexpirythres *int `json:"heurexpirythres,omitempty"`
 	/**
 	* For heuristic basefile expiry, weightage to be given to historical delta compression ratio, specified as percentage.  For example, to give 25% weightage to historical ratio (and therefore 75% weightage to the ratio for current delta compression transaction), specify 25.
 	*/
-	Heurexpiryhistwt int `json:"heurexpiryhistwt,omitempty"`
+	Heurexpiryhistwt *int `json:"heurexpiryhistwt,omitempty"`
 	/**
 	* Smallest response size, in bytes, to be compressed.
 	*/
-	Minressize int `json:"minressize,omitempty"`
+	Minressize *int `json:"minressize,omitempty"`
 	/**
 	* Citrix ADC CPU threshold after which compression is not performed. Range: 0 - 100
 	*/
-	Cmpbypasspct int `json:"cmpbypasspct,omitempty"`
+	Cmpbypasspct *int `json:"cmpbypasspct,omitempty"`
 	/**
 	* Citrix ADC does not wait for the quantum to be filled before starting to compress data. Upon receipt of a packet with a PUSH flag, the appliance immediately begins compression of the accumulated packets.
 	*/
@@ -82,11 +82,11 @@ type Cmpparameter struct {
 	/**
 	* Minimum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.
 	*/
-	Randomgzipfilenameminlength int `json:"randomgzipfilenameminlength,omitempty"`
+	Randomgzipfilenameminlength *int `json:"randomgzipfilenameminlength,omitempty"`
 	/**
 	* Maximum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.
 	*/
-	Randomgzipfilenamemaxlength int `json:"randomgzipfilenamemaxlength,omitempty"`
+	Randomgzipfilenamemaxlength *int `json:"randomgzipfilenamemaxlength,omitempty"`
 
 	//------- Read only Parameter ---------;
 

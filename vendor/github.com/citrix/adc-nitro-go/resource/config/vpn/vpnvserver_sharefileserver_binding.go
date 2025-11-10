@@ -24,7 +24,7 @@ type Vpnvserversharefileserverbinding struct {
 	* Configured ShareFile server in XenMobile deployment. Format IP:PORT / FQDN:PORT
 	*/
 	Sharefile string `json:"sharefile,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

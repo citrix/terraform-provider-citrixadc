@@ -1,25 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package plugin
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"math"
 	"net"
-	"time"
 
 	"github.com/hashicorp/go-plugin/internal/plugin"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
-func dialGRPCConn(tls *tls.Config, dialer func(string, time.Duration) (net.Conn, error)) (*grpc.ClientConn, error) {
+func dialGRPCConn(tls *tls.Config, dialer func(context.Context, string) (net.Conn, error), dialOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	// Build dialing options.
-	opts := make([]grpc.DialOption, 0, 5)
+	opts := make([]grpc.DialOption, 0)
 
 	// We use a custom dialer so that we can connect over unix domain sockets.
-	opts = append(opts, grpc.WithDialer(dialer))
+	opts = append(opts, grpc.WithContextDialer(dialer))
 
 	// Fail right away
 	opts = append(opts, grpc.FailOnNonTempDialError(true))
@@ -27,7 +30,7 @@ func dialGRPCConn(tls *tls.Config, dialer func(string, time.Duration) (net.Conn,
 	// If we have no TLS configuration set, we need to explicitly tell grpc
 	// that we're connecting with an insecure connection.
 	if tls == nil {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		opts = append(opts, grpc.WithTransportCredentials(
 			credentials.NewTLS(tls)))
@@ -36,6 +39,9 @@ func dialGRPCConn(tls *tls.Config, dialer func(string, time.Duration) (net.Conn,
 	opts = append(opts,
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(math.MaxInt32)),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(math.MaxInt32)))
+
+	// Add our custom options if we have any
+	opts = append(opts, dialOpts...)
 
 	// Connect. Note the first parameter is unused because we use a custom
 	// dialer that has the state to see the address.
@@ -50,16 +56,21 @@ func dialGRPCConn(tls *tls.Config, dialer func(string, time.Duration) (net.Conn,
 // newGRPCClient creates a new GRPCClient. The Client argument is expected
 // to be successfully started already with a lock held.
 func newGRPCClient(doneCtx context.Context, c *Client) (*GRPCClient, error) {
-	conn, err := dialGRPCConn(c.config.TLSConfig, c.dialer)
+	conn, err := dialGRPCConn(c.config.TLSConfig, c.dialer, c.config.GRPCDialOptions...)
+	if err != nil {
+		return nil, err
+	}
+
+	muxer, err := c.getGRPCMuxer(c.address)
 	if err != nil {
 		return nil, err
 	}
 
 	// Start the broker.
 	brokerGRPCClient := newGRPCBrokerClient(conn)
-	broker := newGRPCBroker(brokerGRPCClient, c.config.TLSConfig)
+	broker := newGRPCBroker(brokerGRPCClient, c.config.TLSConfig, c.unixSocketCfg, c.runner, muxer)
 	go broker.Run()
-	go brokerGRPCClient.StartStream()
+	go func() { _ = brokerGRPCClient.StartStream() }()
 
 	// Start the stdio client
 	stdioClient, err := newGRPCStdioClient(doneCtx, c.logger.Named("stdio"), conn)
@@ -92,8 +103,8 @@ type GRPCClient struct {
 
 // ClientProtocol impl.
 func (c *GRPCClient) Close() error {
-	c.broker.Close()
-	c.controller.Shutdown(c.doneCtx, &plugin.Empty{})
+	_ = c.broker.Close()
+	_, _ = c.controller.Shutdown(c.doneCtx, &plugin.Empty{})
 	return c.Conn.Close()
 }
 

@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"net/url"
 	"testing"
 )
@@ -36,9 +36,9 @@ resource "citrixadc_dnscnamerec" "dnscnamerec" {
 
 func TestAccDnscnamerec_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDnscnamerecDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckDnscnamerecDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDnscnamerec_basic,
@@ -72,8 +72,12 @@ func testAccCheckDnscnamerecExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Dnscnamerec.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dnscnamerec.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -88,7 +92,11 @@ func testAccCheckDnscnamerecExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckDnscnamerecDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_dnscnamerec" {
@@ -105,7 +113,7 @@ func testAccCheckDnscnamerecDestroy(s *terraform.State) error {
 			ResourceType: service.Dnscnamerec.Type(),
 			ArgsMap:      argsMap,
 		}
-		_, err := nsClient.FindResourceArrayWithParams(findParams)
+		_, err := client.FindResourceArrayWithParams(findParams)
 
 		if err == nil {
 			return fmt.Errorf("dnscnamerec %s still exists", rs.Primary.ID)

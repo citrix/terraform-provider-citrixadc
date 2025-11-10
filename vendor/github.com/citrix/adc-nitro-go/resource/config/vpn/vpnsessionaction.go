@@ -49,7 +49,7 @@ type Vpnsessionaction struct {
 	/**
 	* Number of minutes after which the session times out.
 	*/
-	Sesstimeout int `json:"sesstimeout,omitempty"`
+	Sesstimeout *int `json:"sesstimeout,omitempty"`
 	/**
 	* Specify the client security check for the user device to permit a Citrix Gateway session. The web address or IP address is not included in the expression for the client security check.
 	*/
@@ -114,7 +114,7 @@ type Vpnsessionaction struct {
 	/**
 	* Time, in minutes, after which to time out the user session if Citrix Gateway does not detect mouse or keyboard activity.
 	*/
-	Clientidletimeout int `json:"clientidletimeout,omitempty"`
+	Clientidletimeout *int `json:"clientidletimeout,omitempty"`
 	/**
 	* Set options to apply proxy for accessing the internal resources. Available settings function as follows:
 		* BROWSER - Proxy settings are configured only in Internet Explorer and Firefox browsers.
@@ -253,11 +253,11 @@ type Vpnsessionaction struct {
 	/**
 	* Force a disconnection from the Citrix Gateway Plug-in with Citrix Gateway after a specified number of minutes. If the session closes, the user must log on again.
 	*/
-	Forcedtimeout int `json:"forcedtimeout,omitempty"`
+	Forcedtimeout *int `json:"forcedtimeout,omitempty"`
 	/**
 	* Number of minutes to warn a user before the user session is disconnected.
 	*/
-	Forcedtimeoutwarning int `json:"forcedtimeoutwarning,omitempty"`
+	Forcedtimeoutwarning *int `json:"forcedtimeoutwarning,omitempty"`
 	/**
 	* Single sign-on domain to use for single sign-on to applications in the internal network. This setting can be overwritten by the domain that users specify at the time of logon or by the domain that the authentication server returns.
 	*/

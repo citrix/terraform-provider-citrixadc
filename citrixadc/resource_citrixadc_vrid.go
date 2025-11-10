@@ -1,12 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 )
@@ -14,12 +15,12 @@ import (
 func resourceCitrixAdcVrid() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVridFunc,
-		Read:          readVridFunc,
-		Update:        updateVridFunc,
-		Delete:        deleteVridFunc,
+		CreateContext: createVridFunc,
+		ReadContext:   readVridFunc,
+		UpdateContext: updateVridFunc,
+		DeleteContext: deleteVridFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"vrid_id": {
@@ -72,38 +73,44 @@ func resourceCitrixAdcVrid() *schema.Resource {
 	}
 }
 
-func createVridFunc(d *schema.ResourceData, meta interface{}) error {
+func createVridFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVridFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vridId := d.Get("vrid_id").(int)
 	vrid := network.Vrid{
-		All:                  d.Get("all").(bool),
-		Id:                   d.Get("vrid_id").(int),
-		Ownernode:            d.Get("ownernode").(int),
-		Preemption:           d.Get("preemption").(string),
-		Preemptiondelaytimer: d.Get("preemptiondelaytimer").(int),
-		Priority:             d.Get("priority").(int),
-		Sharing:              d.Get("sharing").(string),
-		Trackifnumpriority:   d.Get("trackifnumpriority").(int),
-		Tracking:             d.Get("tracking").(string),
+		All:        d.Get("all").(bool),
+		Preemption: d.Get("preemption").(string),
+		Sharing:    d.Get("sharing").(string),
+		Tracking:   d.Get("tracking").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vrid_id"); !raw.IsNull() {
+		vrid.Id = intPtr(d.Get("vrid_id").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		vrid.Ownernode = intPtr(d.Get("ownernode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("preemptiondelaytimer"); !raw.IsNull() {
+		vrid.Preemptiondelaytimer = intPtr(d.Get("preemptiondelaytimer").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vrid.Priority = intPtr(d.Get("priority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("trackifnumpriority"); !raw.IsNull() {
+		vrid.Trackifnumpriority = intPtr(d.Get("trackifnumpriority").(int))
 	}
 	vridIdStr := strconv.Itoa(vridId)
 	_, err := client.AddResource(service.Vrid.Type(), vridIdStr, &vrid)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vridIdStr)
 
-	err = readVridFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vrid but we can't read it ?? %s", vridIdStr)
-		return nil
-	}
-	return nil
+	return readVridFunc(ctx, d, meta)
 }
 
-func readVridFunc(d *schema.ResourceData, meta interface{}) error {
+func readVridFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVridFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vridIdStr := d.Id()
@@ -116,25 +123,27 @@ func readVridFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("all", data["all"])
 	setToInt("vrid_id", d, data["id"])
-	d.Set("ownernode", data["ownernode"])
+	setToInt("ownernode", d, data["ownernode"])
 	d.Set("preemption", data["preemption"])
-	d.Set("preemptiondelaytimer", data["preemptiondelaytimer"])
+	setToInt("preemptiondelaytimer", d, data["preemptiondelaytimer"])
 	setToInt("priority", d, data["priority"])
 	d.Set("sharing", data["sharing"])
-	d.Set("trackifnumpriority", data["trackifnumpriority"])
+	setToInt("trackifnumpriority", d, data["trackifnumpriority"])
 	d.Set("tracking", data["tracking"])
 
 	return nil
 
 }
 
-func updateVridFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVridFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVridFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vridId := d.Get("vrid_id").(int)
 
-	vrid := network.Vrid{
-		Id: d.Get("vrid_id").(int),
+	vrid := network.Vrid{}
+
+	if raw := d.GetRawConfig().GetAttr("vrid_id"); !raw.IsNull() {
+		vrid.Id = intPtr(d.Get("vrid_id").(int))
 	}
 	hasChange := false
 	if d.HasChange("all") {
@@ -144,7 +153,7 @@ func updateVridFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for vrid %d, starting update", vridId)
-		vrid.Ownernode = d.Get("ownernode").(int)
+		vrid.Ownernode = intPtr(d.Get("ownernode").(int))
 		hasChange = true
 	}
 	if d.HasChange("preemption") {
@@ -154,12 +163,12 @@ func updateVridFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("preemptiondelaytimer") {
 		log.Printf("[DEBUG]  citrixadc-provider: Preemptiondelaytimer has changed for vrid %d, starting update", vridId)
-		vrid.Preemptiondelaytimer = d.Get("preemptiondelaytimer").(int)
+		vrid.Preemptiondelaytimer = intPtr(d.Get("preemptiondelaytimer").(int))
 		hasChange = true
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for vrid %d, starting update", vridId)
-		vrid.Priority = d.Get("priority").(int)
+		vrid.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("sharing") {
@@ -169,7 +178,7 @@ func updateVridFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("trackifnumpriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Trackifnumpriority has changed for vrid %d, starting update", vridId)
-		vrid.Trackifnumpriority = d.Get("trackifnumpriority").(int)
+		vrid.Trackifnumpriority = intPtr(d.Get("trackifnumpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("tracking") {
@@ -181,19 +190,19 @@ func updateVridFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Vrid.Type(), vridIdStr, &vrid)
 		if err != nil {
-			return fmt.Errorf("Error updating vrid %s", vridIdStr)
+			return diag.Errorf("Error updating vrid %s", vridIdStr)
 		}
 	}
-	return readVridFunc(d, meta)
+	return readVridFunc(ctx, d, meta)
 }
 
-func deleteVridFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVridFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVridFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vridName := d.Id()
 	err := client.DeleteResource(service.Vrid.Type(), vridName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

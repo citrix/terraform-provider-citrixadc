@@ -23,7 +23,7 @@ type Vridbinding struct {
 	/**
 	* Integer value that uniquely identifies the VMAC address.<br/>Minimum value =  1<br/>Maximum value =  255
 	*/
-	Id int `json:"id,omitempty"`
+	Id *int `json:"id,omitempty"`
 
 
 }

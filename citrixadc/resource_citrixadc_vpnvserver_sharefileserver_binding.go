@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcVpnvserver_sharefileserver_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnvserver_sharefileserver_bindingFunc,
-		Read:          readVpnvserver_sharefileserver_bindingFunc,
-		Delete:        deleteVpnvserver_sharefileserver_bindingFunc,
+		CreateContext: createVpnvserver_sharefileserver_bindingFunc,
+		ReadContext:   readVpnvserver_sharefileserver_bindingFunc,
+		DeleteContext: deleteVpnvserver_sharefileserver_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,7 +38,7 @@ func resourceCitrixAdcVpnvserver_sharefileserver_binding() *schema.Resource {
 	}
 }
 
-func createVpnvserver_sharefileserver_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnvserver_sharefileserver_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnvserver_sharefileserver_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -49,20 +51,15 @@ func createVpnvserver_sharefileserver_bindingFunc(d *schema.ResourceData, meta i
 
 	err := client.UpdateUnnamedResource(service.Vpnvserver_sharefileserver_binding.Type(), &vpnvserver_sharefileserver_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readVpnvserver_sharefileserver_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnvserver_sharefileserver_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readVpnvserver_sharefileserver_bindingFunc(ctx, d, meta)
 }
 
-func readVpnvserver_sharefileserver_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnvserver_sharefileserver_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnvserver_sharefileserver_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -83,7 +80,7 @@ func readVpnvserver_sharefileserver_bindingFunc(d *schema.ResourceData, meta int
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -121,7 +118,7 @@ func readVpnvserver_sharefileserver_bindingFunc(d *schema.ResourceData, meta int
 
 }
 
-func deleteVpnvserver_sharefileserver_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnvserver_sharefileserver_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnvserver_sharefileserver_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -136,7 +133,7 @@ func deleteVpnvserver_sharefileserver_bindingFunc(d *schema.ResourceData, meta i
 
 	err := client.DeleteResourceWithArgs(service.Vpnvserver_sharefileserver_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

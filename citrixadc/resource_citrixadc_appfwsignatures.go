@@ -1,23 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppfwsignatures() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwsignaturesFunc,
-		Read:          readAppfwsignaturesFunc,
-		Update:        updateAppfwsignaturesFunc,
-		Delete:        deleteAppfwsignaturesFunc,
+		CreateContext: createAppfwsignaturesFunc,
+		ReadContext:   readAppfwsignaturesFunc,
+		UpdateContext: updateAppfwsignaturesFunc,
+		DeleteContext: deleteAppfwsignaturesFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -100,7 +104,7 @@ func resourceCitrixAdcAppfwsignatures() *schema.Resource {
 	}
 }
 
-func createAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwsignaturesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwsignaturesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwsignaturesName := d.Get("name").(string)
@@ -120,6 +124,7 @@ func createAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 		Category:                d.Get("category").(string),
 		Enabled:                 d.Get("enabled").(string),
 		Action:                  toStringList(d.Get("action").([]interface{})),
+		Ruleid:                  toIntegerList(d.Get("ruleid").([]interface{})),
 	}
 
 	appfwsignatures_update_obj := appfw.Appfwsignatures{
@@ -129,33 +134,20 @@ func createAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures, "Import")
 	if err != nil {
-		return err
-	}
-
-	if _, ok := d.GetOk("ruleid"); ok {
-		appfwsignatures.Ruleid = toIntegerList(d.Get("ruleid").([]interface{}))
-		err := client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures, "Import")
-		if err != nil {
-			return err
-		}
+		return diag.FromErr(err)
 	}
 
 	err = client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures_update_obj, "update")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwsignaturesName)
 
-	err = readAppfwsignaturesFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwsignatures but we can't read it ?? %s", appfwsignaturesName)
-		return nil
-	}
-	return nil
+	return readAppfwsignaturesFunc(ctx, d, meta)
 }
 
-func updateAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppfwsignaturesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppfwsignaturesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwsignaturesName := d.Id()
@@ -237,24 +229,19 @@ func updateAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures, "Import")
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		err = client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures_update_obj, "update")
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	err := readAppfwsignaturesFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just updated this appfwsignatures but we can't read it ?? %s", appfwsignaturesName)
-		return nil
-	}
-	return nil
+	return readAppfwsignaturesFunc(ctx, d, meta)
 }
 
-func readAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwsignaturesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwsignaturesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwsignaturesName := d.Id()
@@ -271,13 +258,13 @@ func readAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwsignaturesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwsignaturesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwsignaturesName := d.Id()
 	err := client.DeleteResource(service.Appfwsignatures.Type(), appfwsignaturesName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

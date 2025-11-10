@@ -65,7 +65,7 @@ type Gslbdomaingslbvserverbinding struct {
 	/**
 	* Persistence id of the gslb vserver
 	*/
-	Persistenceid int `json:"persistenceid,omitempty"`
+	Persistenceid *int `json:"persistenceid,omitempty"`
 	/**
 	* Netmask
 	*/
@@ -73,7 +73,7 @@ type Gslbdomaingslbvserverbinding struct {
 	/**
 	* Number of bits to consider, in an IPv6 source IP address, for creating the hash that is required by the SOURCEIPHASH load balancing method.
 	*/
-	V6netmasklen int `json:"v6netmasklen,omitempty"`
+	V6netmasklen *int `json:"v6netmasklen,omitempty"`
 	/**
 	* Name of the site to which the service belongs.
 	*/
@@ -97,7 +97,7 @@ type Gslbdomaingslbvserverbinding struct {
 	/**
 	* Number of bits to consider in an IPv6 source IP address when creating source IP address based persistence sessions.
 	*/
-	V6persistmasklen int `json:"v6persistmasklen,omitempty"`
+	V6persistmasklen *int `json:"v6persistmasklen,omitempty"`
 	/**
 	* Name of the Domain
 	*/

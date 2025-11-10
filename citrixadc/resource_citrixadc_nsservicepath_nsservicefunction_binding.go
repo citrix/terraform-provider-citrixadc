@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcNsservicepath_nsservicefunction_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsservicepath_nsservicefunction_bindingFunc,
-		Read:          readNsservicepath_nsservicefunction_bindingFunc,
-		Delete:        deleteNsservicepath_nsservicefunction_bindingFunc,
+		CreateContext: createNsservicepath_nsservicefunction_bindingFunc,
+		ReadContext:   readNsservicepath_nsservicefunction_bindingFunc,
+		DeleteContext: deleteNsservicepath_nsservicefunction_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"servicepathname": {
@@ -42,34 +44,32 @@ func resourceCitrixAdcNsservicepath_nsservicefunction_binding() *schema.Resource
 	}
 }
 
-func createNsservicepath_nsservicefunction_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsservicepath_nsservicefunction_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsservicepath_nsservicefunction_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	servicepathname := d.Get("servicepathname")
 	servicefunction := d.Get("servicefunction")
 	bindingId := fmt.Sprintf("%s,%s", servicepathname, servicefunction)
 	nsservicepath_nsservicefunction_binding := ns.Nsservicepathnsservicefunctionbinding{
-		Index:           d.Get("index").(int),
 		Servicefunction: d.Get("servicefunction").(string),
 		Servicepathname: d.Get("servicepathname").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("index"); !raw.IsNull() {
+		nsservicepath_nsservicefunction_binding.Index = intPtr(d.Get("index").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Nsservicepath_nsservicefunction_binding.Type(), &nsservicepath_nsservicefunction_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readNsservicepath_nsservicefunction_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsservicepath_nsservicefunction_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readNsservicepath_nsservicefunction_bindingFunc(ctx, d, meta)
 }
 
-func readNsservicepath_nsservicefunction_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsservicepath_nsservicefunction_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsservicepath_nsservicefunction_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -90,7 +90,7 @@ func readNsservicepath_nsservicefunction_bindingFunc(d *schema.ResourceData, met
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -121,7 +121,7 @@ func readNsservicepath_nsservicefunction_bindingFunc(d *schema.ResourceData, met
 
 	data := dataArr[foundIndex]
 
-	d.Set("index", data["index"])
+	setToInt("index", d, data["index"])
 	d.Set("servicefunction", data["servicefunction"])
 	d.Set("servicepathname", data["servicepathname"])
 
@@ -129,7 +129,7 @@ func readNsservicepath_nsservicefunction_bindingFunc(d *schema.ResourceData, met
 
 }
 
-func deleteNsservicepath_nsservicefunction_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsservicepath_nsservicefunction_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsservicepath_nsservicefunction_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -144,7 +144,7 @@ func deleteNsservicepath_nsservicefunction_bindingFunc(d *schema.ResourceData, m
 
 	err := client.DeleteResourceWithArgs(service.Nsservicepath_nsservicefunction_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

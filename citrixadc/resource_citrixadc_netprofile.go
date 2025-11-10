@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNetprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNetprofileFunc,
-		Read:          readNetprofileFunc,
-		Update:        updateNetprofileFunc,
-		Delete:        deleteNetprofileFunc,
+		CreateContext: createNetprofileFunc,
+		ReadContext:   readNetprofileFunc,
+		UpdateContext: updateNetprofileFunc,
+		DeleteContext: deleteNetprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"mbf": {
@@ -71,7 +74,7 @@ func resourceCitrixAdcNetprofile() *schema.Resource {
 	}
 }
 
-func createNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createNetprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNetprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var netprofileName string
@@ -89,26 +92,24 @@ func createNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Proxyprotocoltxversion:         d.Get("proxyprotocoltxversion").(string),
 		Srcip:                          d.Get("srcip").(string),
 		Srcippersistency:               d.Get("srcippersistency").(string),
-		Td:                             d.Get("td").(int),
 		Proxyprotocolaftertlshandshake: d.Get("proxyprotocolaftertlshandshake").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		netprofile.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Netprofile.Type(), netprofileName, &netprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(netprofileName)
 
-	err = readNetprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this netprofile but we can't read it ?? %s", netprofileName)
-		return nil
-	}
-	return nil
+	return readNetprofileFunc(ctx, d, meta)
 }
 
-func readNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readNetprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNetprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	netprofileName := d.Id()
@@ -127,14 +128,14 @@ func readNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("proxyprotocoltxversion", data["proxyprotocoltxversion"])
 	d.Set("srcip", data["srcip"])
 	d.Set("srcippersistency", data["srcippersistency"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("proxyprotocolaftertlshandshake", data["proxyprotocolaftertlshandshake"])
 
 	return nil
 
 }
 
-func updateNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNetprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNetprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	netprofileName := d.Get("name").(string)
@@ -180,7 +181,7 @@ func updateNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for netprofile %s, starting update", netprofileName)
-		netprofile.Td = d.Get("td").(int)
+		netprofile.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("proxyprotocolaftertlshandshake") {
@@ -192,19 +193,19 @@ func updateNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Netprofile.Type(), netprofileName, &netprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating netprofile %s", netprofileName)
+			return diag.Errorf("Error updating netprofile %s", netprofileName)
 		}
 	}
-	return readNetprofileFunc(d, meta)
+	return readNetprofileFunc(ctx, d, meta)
 }
 
-func deleteNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNetprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNetprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	netprofileName := d.Id()
 	err := client.DeleteResource(service.Netprofile.Type(), netprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ipsec"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIpsecparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIpsecparameterFunc,
-		Read:          readIpsecparameterFunc,
-		Update:        updateIpsecparameterFunc,
-		Delete:        deleteIpsecparameterFunc,
+		CreateContext: createIpsecparameterFunc,
+		ReadContext:   readIpsecparameterFunc,
+		UpdateContext: updateIpsecparameterFunc,
+		DeleteContext: deleteIpsecparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"encalgo": {
 				Type:     schema.TypeList,
@@ -70,7 +73,7 @@ func resourceCitrixAdcIpsecparameter() *schema.Resource {
 	}
 }
 
-func createIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIpsecparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecparameterName := resource.PrefixedUniqueId("tf-ipsecparameter-")
@@ -78,31 +81,37 @@ func createIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	ipsecparameter := ipsec.Ipsecparameter{
 		Encalgo:               toStringList(d.Get("encalgo").([]interface{})),
 		Hashalgo:              toStringList(d.Get("hashalgo").([]interface{})),
-		Ikeretryinterval:      d.Get("ikeretryinterval").(int),
 		Ikeversion:            d.Get("ikeversion").(string),
-		Lifetime:              d.Get("lifetime").(int),
-		Livenesscheckinterval: d.Get("livenesscheckinterval").(int),
 		Perfectforwardsecrecy: d.Get("perfectforwardsecrecy").(string),
-		Replaywindowsize:      d.Get("replaywindowsize").(int),
-		Retransmissiontime:    d.Get("retransmissiontime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ikeretryinterval"); !raw.IsNull() {
+		ipsecparameter.Ikeretryinterval = intPtr(d.Get("ikeretryinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("lifetime"); !raw.IsNull() {
+		ipsecparameter.Lifetime = intPtr(d.Get("lifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("livenesscheckinterval"); !raw.IsNull() {
+		ipsecparameter.Livenesscheckinterval = intPtr(d.Get("livenesscheckinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("replaywindowsize"); !raw.IsNull() {
+		ipsecparameter.Replaywindowsize = intPtr(d.Get("replaywindowsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("retransmissiontime"); !raw.IsNull() {
+		ipsecparameter.Retransmissiontime = intPtr(d.Get("retransmissiontime").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ipsecparameterName)
 
-	err = readIpsecparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ipsecparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readIpsecparameterFunc(ctx, d, meta)
 }
 
-func readIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIpsecparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading ipsecparameter state")
@@ -112,22 +121,21 @@ func readIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
 	d.Set("encalgo", data["encalgo"])
 	d.Set("hashalgo", data["hashalgo"])
-	d.Set("ikeretryinterval", data["ikeretryinterval"])
+	setToInt("ikeretryinterval", d, data["ikeretryinterval"])
 	d.Set("ikeversion", data["ikeversion"])
-	d.Set("lifetime", data["lifetime"])
-	d.Set("livenesscheckinterval", data["livenesscheckinterval"])
+	setToInt("lifetime", d, data["lifetime"])
+	setToInt("livenesscheckinterval", d, data["livenesscheckinterval"])
 	d.Set("perfectforwardsecrecy", data["perfectforwardsecrecy"])
-	d.Set("replaywindowsize", data["replaywindowsize"])
-	d.Set("retransmissiontime", data["retransmissiontime"])
+	setToInt("replaywindowsize", d, data["replaywindowsize"])
+	setToInt("retransmissiontime", d, data["retransmissiontime"])
 
 	return nil
 
 }
 
-func updateIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIpsecparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -145,7 +153,7 @@ func updateIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ikeretryinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ikeretryinterval has changed for ipsecparameter, starting update")
-		ipsecparameter.Ikeretryinterval = d.Get("ikeretryinterval").(int)
+		ipsecparameter.Ikeretryinterval = intPtr(d.Get("ikeretryinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("ikeversion") {
@@ -155,12 +163,12 @@ func updateIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("lifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lifetime has changed for ipsecparameter, starting update")
-		ipsecparameter.Lifetime = d.Get("lifetime").(int)
+		ipsecparameter.Lifetime = intPtr(d.Get("lifetime").(int))
 		hasChange = true
 	}
 	if d.HasChange("livenesscheckinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Livenesscheckinterval has changed for ipsecparameter, starting update")
-		ipsecparameter.Livenesscheckinterval = d.Get("livenesscheckinterval").(int)
+		ipsecparameter.Livenesscheckinterval = intPtr(d.Get("livenesscheckinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("perfectforwardsecrecy") {
@@ -170,25 +178,25 @@ func updateIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("replaywindowsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Replaywindowsize has changed for ipsecparameter, starting update")
-		ipsecparameter.Replaywindowsize = d.Get("replaywindowsize").(int)
+		ipsecparameter.Replaywindowsize = intPtr(d.Get("replaywindowsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("retransmissiontime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Retransmissiontime has changed for ipsecparameter, starting update")
-		ipsecparameter.Retransmissiontime = d.Get("retransmissiontime").(int)
+		ipsecparameter.Retransmissiontime = intPtr(d.Get("retransmissiontime").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating ipsecparameter")
+			return diag.Errorf("Error updating ipsecparameter")
 		}
 	}
-	return readIpsecparameterFunc(d, meta)
+	return readIpsecparameterFunc(ctx, d, meta)
 }
 
-func deleteIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIpsecparameterFunc")
 	//ipsecparameter does not support DELETE operation
 	d.SetId("")

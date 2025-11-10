@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/responder"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcResponderhtmlpage() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createResponderhtmlpageFunc,
-		Read:          readResponderhtmlpageFunc,
-		Delete:        deleteResponderhtmlpageFunc,
+		CreateContext: createResponderhtmlpageFunc,
+		ReadContext:   readResponderhtmlpageFunc,
+		DeleteContext: deleteResponderhtmlpageFunc,
 		Schema: map[string]*schema.Schema{
 			"cacertfile": {
 				Type:     schema.TypeString,
@@ -49,7 +51,7 @@ func resourceCitrixAdcResponderhtmlpage() *schema.Resource {
 	}
 }
 
-func createResponderhtmlpageFunc(d *schema.ResourceData, meta interface{}) error {
+func createResponderhtmlpageFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createResponderhtmlpageFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderhtmlpageName := d.Get("name").(string)
@@ -63,20 +65,15 @@ func createResponderhtmlpageFunc(d *schema.ResourceData, meta interface{}) error
 
 	err := client.ActOnResource(service.Responderhtmlpage.Type(), &responderhtmlpage, "Import")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(responderhtmlpageName)
 
-	err = readResponderhtmlpageFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this responderhtmlpage but we can't read it ?? %s", responderhtmlpageName)
-		return nil
-	}
-	return nil
+	return readResponderhtmlpageFunc(ctx, d, meta)
 }
 
-func readResponderhtmlpageFunc(d *schema.ResourceData, meta interface{}) error {
+func readResponderhtmlpageFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readResponderhtmlpageFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderhtmlpageName := d.Id()
@@ -93,13 +90,13 @@ func readResponderhtmlpageFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteResponderhtmlpageFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteResponderhtmlpageFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteResponderhtmlpageFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderhtmlpageName := d.Id()
 	err := client.DeleteResource(service.Responderhtmlpage.Type(), responderhtmlpageName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

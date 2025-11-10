@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcAppflowglobal_appflowpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppflowglobal_appflowpolicy_bindingFunc,
-		Read:          readAppflowglobal_appflowpolicy_bindingFunc,
-		Delete:        deleteAppflowglobal_appflowpolicy_bindingFunc,
+		CreateContext: createAppflowglobal_appflowpolicy_bindingFunc,
+		ReadContext:   readAppflowglobal_appflowpolicy_bindingFunc,
+		DeleteContext: deleteAppflowglobal_appflowpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"globalbindtype": {
@@ -70,7 +72,7 @@ func resourceCitrixAdcAppflowglobal_appflowpolicy_binding() *schema.Resource {
 	}
 }
 
-func createAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppflowglobal_appflowpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowglobal_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -82,26 +84,24 @@ func createAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta 
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		appflowglobal_appflowpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appflowglobal_appflowpolicy_binding.Type(), &appflowglobal_appflowpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readAppflowglobal_appflowpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appflowglobal_appflowpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readAppflowglobal_appflowpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppflowglobal_appflowpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppflowglobal_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -118,7 +118,7 @@ func readAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta in
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -162,7 +162,7 @@ func readAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta in
 
 }
 
-func deleteAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppflowglobal_appflowpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppflowglobal_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -182,7 +182,7 @@ func deleteAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.DeleteResourceWithArgs(service.Appflowglobal_appflowpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcAppflowpolicylabel_appflowpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppflowpolicylabel_appflowpolicy_bindingFunc,
-		Read:          readAppflowpolicylabel_appflowpolicy_bindingFunc,
-		Delete:        deleteAppflowpolicylabel_appflowpolicy_bindingFunc,
+		CreateContext: createAppflowpolicylabel_appflowpolicy_bindingFunc,
+		ReadContext:   readAppflowpolicylabel_appflowpolicy_bindingFunc,
+		DeleteContext: deleteAppflowpolicylabel_appflowpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"labelname": {
@@ -64,7 +66,7 @@ func resourceCitrixAdcAppflowpolicylabel_appflowpolicy_binding() *schema.Resourc
 	}
 }
 
-func createAppflowpolicylabel_appflowpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppflowpolicylabel_appflowpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowpolicylabel_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	labelname := d.Get("labelname")
@@ -77,25 +79,23 @@ func createAppflowpolicylabel_appflowpolicy_bindingFunc(d *schema.ResourceData, 
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		appflowpolicylabel_appflowpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appflowpolicylabel_appflowpolicy_binding.Type(), &appflowpolicylabel_appflowpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppflowpolicylabel_appflowpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appflowpolicylabel_appflowpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppflowpolicylabel_appflowpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAppflowpolicylabel_appflowpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppflowpolicylabel_appflowpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppflowpolicylabel_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -116,7 +116,7 @@ func readAppflowpolicylabel_appflowpolicy_bindingFunc(d *schema.ResourceData, me
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -159,7 +159,7 @@ func readAppflowpolicylabel_appflowpolicy_bindingFunc(d *schema.ResourceData, me
 
 }
 
-func deleteAppflowpolicylabel_appflowpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppflowpolicylabel_appflowpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppflowpolicylabel_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -174,7 +174,7 @@ func deleteAppflowpolicylabel_appflowpolicy_bindingFunc(d *schema.ResourceData, 
 
 	err := client.DeleteResourceWithArgs(service.Appflowpolicylabel_appflowpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

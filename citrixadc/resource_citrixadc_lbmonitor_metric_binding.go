@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLbmonitor_metric_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbmonitor_metric_bindingFunc,
-		Read:          readLbmonitor_metric_bindingFunc,
-		Delete:        deleteLbmonitor_metric_bindingFunc,
+		CreateContext: createLbmonitor_metric_bindingFunc,
+		ReadContext:   readLbmonitor_metric_bindingFunc,
+		DeleteContext: deleteLbmonitor_metric_bindingFunc,
 		Schema: map[string]*schema.Schema{
 			"monitorname": {
 				Type:     schema.TypeString,
@@ -37,12 +40,13 @@ func resourceCitrixAdcLbmonitor_metric_binding() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 		},
 	}
 }
 
-func createLbmonitor_metric_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbmonitor_metric_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbmonitor_metric_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbmonitorName := d.Get("monitorname").(string)
@@ -50,28 +54,28 @@ func createLbmonitor_metric_bindingFunc(d *schema.ResourceData, meta interface{}
 	bindingId := fmt.Sprintf("%s,%s", lbmonitorName, metricName)
 
 	lbmonitor_metric_binding := lb.Lbmonitormetricbinding{
-		Metric:          metricName,
-		Metricthreshold: d.Get("metricthreshold").(int),
-		Monitorname:     lbmonitorName,
-		Metricweight:    d.Get("metricweight").(int),
+		Metric:      metricName,
+		Monitorname: lbmonitorName,
+	}
+
+	if raw := d.GetRawConfig().GetAttr("metricthreshold"); !raw.IsNull() {
+		lbmonitor_metric_binding.Metricthreshold = intPtr(d.Get("metricthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("metricweight"); !raw.IsNull() {
+		lbmonitor_metric_binding.Metricweight = intPtr(d.Get("metricweight").(int))
 	}
 
 	err := client.UpdateUnnamedResource("lbmonitor_metric_binding", &lbmonitor_metric_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLbmonitor_metric_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbmonitor_metric_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLbmonitor_metric_bindingFunc(ctx, d, meta)
 }
 
-func readLbmonitor_metric_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbmonitor_metric_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbmonitor_metric_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -91,7 +95,7 @@ func readLbmonitor_metric_bindingFunc(d *schema.ResourceData, meta interface{}) 
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 	// Resource is missing
 	if len(dataArr) == 0 {
@@ -123,14 +127,14 @@ func readLbmonitor_metric_bindingFunc(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("monitorname", data["monitorname"])
 	d.Set("metric", data["metric"])
-	d.Set("metricthreshold", data["metricthreshold"])
-	d.Set("metricweight", data["metricweight"])
+	setToInt("metricthreshold", d, data["metricthreshold"])
+	setToInt("metricweight", d, data["metricweight"])
 
 	return nil
 
 }
 
-func deleteLbmonitor_metric_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbmonitor_metric_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbmonitor_metric_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -143,7 +147,7 @@ func deleteLbmonitor_metric_bindingFunc(d *schema.ResourceData, meta interface{}
 	args["metric"] = metricName
 	err := client.DeleteResourceWithArgsMap("lbmonitor_metric_binding", lbmonitorName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

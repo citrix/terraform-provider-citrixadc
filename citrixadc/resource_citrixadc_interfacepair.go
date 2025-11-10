@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 )
@@ -13,9 +15,9 @@ import (
 func resourceCitrixAdcInterfacepair() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createInterfacepairFunc,
-		Read:          readInterfacepairFunc,
-		Delete:        deleteInterfacepairFunc,
+		CreateContext: createInterfacepairFunc,
+		ReadContext:   readInterfacepairFunc,
+		DeleteContext: deleteInterfacepairFunc,
 		Schema: map[string]*schema.Schema{
 			"interface_id": {
 				Type:     schema.TypeInt,
@@ -32,32 +34,30 @@ func resourceCitrixAdcInterfacepair() *schema.Resource {
 	}
 }
 
-func createInterfacepairFunc(d *schema.ResourceData, meta interface{}) error {
+func createInterfacepairFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createInterfacepairFunc")
 	client := meta.(*NetScalerNitroClient).client
 	interfacepairName := strconv.Itoa(d.Get("interface_id").(int))
 
 	interfacepair := network.Interfacepair{
-		Id:    d.Get("interface_id").(int),
 		Ifnum: toStringList(d.Get("ifnum").([]interface{})),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("interface_id"); !raw.IsNull() {
+		interfacepair.Id = intPtr(d.Get("interface_id").(int))
 	}
 
 	_, err := client.AddResource(service.Interfacepair.Type(), interfacepairName, &interfacepair)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(interfacepairName)
 
-	err = readInterfacepairFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this interfacepair but we can't read it ?? %s", interfacepairName)
-		return nil
-	}
-	return nil
+	return readInterfacepairFunc(ctx, d, meta)
 }
 
-func readInterfacepairFunc(d *schema.ResourceData, meta interface{}) error {
+func readInterfacepairFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readInterfacepairFunc")
 	client := meta.(*NetScalerNitroClient).client
 	interfacepairName := d.Id()
@@ -75,13 +75,13 @@ func readInterfacepairFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteInterfacepairFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteInterfacepairFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteInterfacepairFunc")
 	client := meta.(*NetScalerNitroClient).client
 	interfacepairName := d.Id()
 	err := client.DeleteResource(service.Interfacepair.Type(), interfacepairName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

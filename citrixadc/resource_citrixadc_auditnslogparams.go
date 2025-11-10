@@ -1,24 +1,32 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuditnslogparams() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuditnslogparamsFunc,
-		Read:          readAuditnslogparamsFunc,
-		Update:        updateAuditnslogparamsFunc,
-		Delete:        deleteAuditnslogparamsFunc,
+		CreateContext: createAuditnslogparamsFunc,
+		ReadContext:   readAuditnslogparamsFunc,
+		UpdateContext: updateAuditnslogparamsFunc,
+		DeleteContext: deleteAuditnslogparamsFunc,
 		Schema: map[string]*schema.Schema{
+			"protocolviolations": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"acl": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -104,7 +112,7 @@ func resourceCitrixAdcAuditnslogparams() *schema.Resource {
 	}
 }
 
-func createAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuditnslogparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditnslogparamsName := resource.PrefixedUniqueId("tf-auditnslogparams-")
@@ -117,9 +125,9 @@ func createAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error 
 		Dateformat:           d.Get("dateformat").(string),
 		Logfacility:          d.Get("logfacility").(string),
 		Loglevel:             toStringList(d.Get("loglevel").([]interface{})),
+		Protocolviolations:   d.Get("protocolviolations").(string),
 		Lsn:                  d.Get("lsn").(string),
 		Serverip:             d.Get("serverip").(string),
-		Serverport:           d.Get("serverport").(int),
 		Sslinterception:      d.Get("sslinterception").(string),
 		Subscriberlog:        d.Get("subscriberlog").(string),
 		Tcp:                  d.Get("tcp").(string),
@@ -128,22 +136,21 @@ func createAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error 
 		Userdefinedauditlog:  d.Get("userdefinedauditlog").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		auditnslogparams.Serverport = intPtr(d.Get("serverport").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Auditnslogparams.Type(), &auditnslogparams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(auditnslogparamsName)
 
-	err = readAuditnslogparamsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this auditnslogparams but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAuditnslogparamsFunc(ctx, d, meta)
 }
 
-func readAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuditnslogparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading auditnslogparams state")
@@ -154,6 +161,7 @@ func readAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("acl", data["acl"])
+	d.Set("protocolviolations", data["protocolviolations"])
 	d.Set("alg", data["alg"])
 	d.Set("appflowexport", data["appflowexport"])
 	d.Set("contentinspectionlog", data["contentinspectionlog"])
@@ -162,7 +170,7 @@ func readAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("loglevel", data["loglevel"])
 	d.Set("lsn", data["lsn"])
 	d.Set("serverip", data["serverip"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("sslinterception", data["sslinterception"])
 	d.Set("subscriberlog", data["subscriberlog"])
 	d.Set("tcp", data["tcp"])
@@ -174,12 +182,17 @@ func readAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuditnslogparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	auditnslogparams := audit.Auditnslogparams{}
 	hasChange := false
+	if d.HasChange("protocolviolations") {
+		log.Printf("[DEBUG]  citrixadc-provider: Protocolviolations has changed for auditnslogparams, starting update")
+		auditnslogparams.Protocolviolations = d.Get("protocolviolations").(string)
+		hasChange = true
+	}
 	if d.HasChange("acl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Acl has changed for auditnslogparams, starting update")
 		auditnslogparams.Acl = d.Get("acl").(string)
@@ -227,7 +240,7 @@ func updateAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for auditnslogparams, starting update")
-		auditnslogparams.Serverport = d.Get("serverport").(int)
+		auditnslogparams.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("sslinterception") {
@@ -264,13 +277,13 @@ func updateAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Auditnslogparams.Type(), &auditnslogparams)
 		if err != nil {
-			return fmt.Errorf("Error updating auditnslogparams")
+			return diag.Errorf("Error updating auditnslogparams")
 		}
 	}
-	return readAuditnslogparamsFunc(d, meta)
+	return readAuditnslogparamsFunc(ctx, d, meta)
 }
 
-func deleteAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditnslogparamsFunc")
 	// auditnslogparams does not support DELETE operation
 	d.SetId("")

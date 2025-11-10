@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppflowparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppflowparamFunc,
-		Read:          readAppflowparamFunc,
-		Update:        updateAppflowparamFunc,
-		Delete:        deleteAppflowparamFunc,
+		CreateContext: createAppflowparamFunc,
+		ReadContext:   readAppflowparamFunc,
+		UpdateContext: updateAppflowparamFunc,
+		DeleteContext: deleteAppflowparamFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"aaausername": {
@@ -281,7 +284,7 @@ func resourceCitrixAdcAppflowparam() *schema.Resource {
 	}
 }
 
-func createAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -290,17 +293,14 @@ func createAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	appflowparam := appflow.Appflowparam{
 		Aaausername:                         d.Get("aaausername").(string),
 		Analyticsauthtoken:                  d.Get("analyticsauthtoken").(string),
-		Appnamerefresh:                      d.Get("appnamerefresh").(int),
 		Auditlogs:                           d.Get("auditlogs").(string),
 		Cacheinsight:                        d.Get("cacheinsight").(string),
 		Clienttrafficonly:                   d.Get("clienttrafficonly").(string),
 		Connectionchaining:                  d.Get("connectionchaining").(string),
 		Cqareporting:                        d.Get("cqareporting").(string),
 		Distributedtracing:                  d.Get("distributedtracing").(string),
-		Disttracingsamplingrate:             d.Get("disttracingsamplingrate").(int),
 		Emailaddress:                        d.Get("emailaddress").(string),
 		Events:                              d.Get("events").(string),
-		Flowrecordinterval:                  d.Get("flowrecordinterval").(int),
 		Gxsessionreporting:                  d.Get("gxsessionreporting").(string),
 		Httpauthorization:                   d.Get("httpauthorization").(string),
 		Httpcontenttype:                     d.Get("httpcontenttype").(string),
@@ -322,41 +322,60 @@ func createAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 		Logstreamovernsip:                   d.Get("logstreamovernsip").(string),
 		Lsnlogging:                          d.Get("lsnlogging").(string),
 		Metrics:                             d.Get("metrics").(string),
-		Observationdomainid:                 d.Get("observationdomainid").(int),
 		Observationdomainname:               d.Get("observationdomainname").(string),
-		Observationpointid:                  d.Get("observationpointid").(int),
-		Securityinsightrecordinterval:       d.Get("securityinsightrecordinterval").(int),
 		Securityinsighttraffic:              d.Get("securityinsighttraffic").(string),
 		Skipcacheredirectionhttptransaction: d.Get("skipcacheredirectionhttptransaction").(string),
 		Subscriberawareness:                 d.Get("subscriberawareness").(string),
 		Subscriberidobfuscation:             d.Get("subscriberidobfuscation").(string),
 		Subscriberidobfuscationalgo:         d.Get("subscriberidobfuscationalgo").(string),
-		Tcpattackcounterinterval:            d.Get("tcpattackcounterinterval").(int),
-		Templaterefresh:                     d.Get("templaterefresh").(int),
 		Timeseriesovernsip:                  d.Get("timeseriesovernsip").(string),
-		Udppmtu:                             d.Get("udppmtu").(int),
 		Urlcategory:                         d.Get("urlcategory").(string),
-		Usagerecordinterval:                 d.Get("usagerecordinterval").(int),
 		Videoinsight:                        d.Get("videoinsight").(string),
 		Websaasappusagereporting:            d.Get("websaasappusagereporting").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("appnamerefresh"); !raw.IsNull() {
+		appflowparam.Appnamerefresh = intPtr(d.Get("appnamerefresh").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("disttracingsamplingrate"); !raw.IsNull() {
+		appflowparam.Disttracingsamplingrate = intPtr(d.Get("disttracingsamplingrate").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("flowrecordinterval"); !raw.IsNull() {
+		appflowparam.Flowrecordinterval = intPtr(d.Get("flowrecordinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("observationdomainid"); !raw.IsNull() {
+		appflowparam.Observationdomainid = intPtr(d.Get("observationdomainid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("observationpointid"); !raw.IsNull() {
+		appflowparam.Observationpointid = intPtr(d.Get("observationpointid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("securityinsightrecordinterval"); !raw.IsNull() {
+		appflowparam.Securityinsightrecordinterval = intPtr(d.Get("securityinsightrecordinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpattackcounterinterval"); !raw.IsNull() {
+		appflowparam.Tcpattackcounterinterval = intPtr(d.Get("tcpattackcounterinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("templaterefresh"); !raw.IsNull() {
+		appflowparam.Templaterefresh = intPtr(d.Get("templaterefresh").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("udppmtu"); !raw.IsNull() {
+		appflowparam.Udppmtu = intPtr(d.Get("udppmtu").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("usagerecordinterval"); !raw.IsNull() {
+		appflowparam.Usagerecordinterval = intPtr(d.Get("usagerecordinterval").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Appflowparam.Type(), &appflowparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appflowparamName)
 
-	err = readAppflowparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appflowparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAppflowparamFunc(ctx, d, meta)
 }
 
-func readAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppflowparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading appflowparam state")
@@ -366,20 +385,19 @@ func readAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
 	d.Set("aaausername", data["aaausername"])
 	d.Set("analyticsauthtoken", data["analyticsauthtoken"])
-	d.Set("appnamerefresh", data["appnamerefresh"])
+	setToInt("appnamerefresh", d, data["appnamerefresh"])
 	d.Set("auditlogs", data["auditlogs"])
 	d.Set("cacheinsight", data["cacheinsight"])
 	d.Set("clienttrafficonly", data["clienttrafficonly"])
 	d.Set("connectionchaining", data["connectionchaining"])
 	d.Set("cqareporting", data["cqareporting"])
 	d.Set("distributedtracing", data["distributedtracing"])
-	d.Set("disttracingsamplingrate", data["disttracingsamplingrate"])
+	setToInt("disttracingsamplingrate", d, data["disttracingsamplingrate"])
 	d.Set("emailaddress", data["emailaddress"])
 	d.Set("events", data["events"])
-	d.Set("flowrecordinterval", data["flowrecordinterval"])
+	setToInt("flowrecordinterval", d, data["flowrecordinterval"])
 	d.Set("gxsessionreporting", data["gxsessionreporting"])
 	d.Set("httpauthorization", data["httpauthorization"])
 	d.Set("httpcontenttype", data["httpcontenttype"])
@@ -401,21 +419,21 @@ func readAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("logstreamovernsip", data["logstreamovernsip"])
 	d.Set("lsnlogging", data["lsnlogging"])
 	d.Set("metrics", data["metrics"])
-	d.Set("observationdomainid", data["observationdomainid"])
+	setToInt("observationdomainid", d, data["observationdomainid"])
 	d.Set("observationdomainname", data["observationdomainname"])
-	d.Set("observationpointid", data["observationpointid"])
-	d.Set("securityinsightrecordinterval", data["securityinsightrecordinterval"])
+	setToInt("observationpointid", d, data["observationpointid"])
+	setToInt("securityinsightrecordinterval", d, data["securityinsightrecordinterval"])
 	d.Set("securityinsighttraffic", data["securityinsighttraffic"])
 	d.Set("skipcacheredirectionhttptransaction", data["skipcacheredirectionhttptransaction"])
 	d.Set("subscriberawareness", data["subscriberawareness"])
 	d.Set("subscriberidobfuscation", data["subscriberidobfuscation"])
 	d.Set("subscriberidobfuscationalgo", data["subscriberidobfuscationalgo"])
-	d.Set("tcpattackcounterinterval", data["tcpattackcounterinterval"])
-	d.Set("templaterefresh", data["templaterefresh"])
+	setToInt("tcpattackcounterinterval", d, data["tcpattackcounterinterval"])
+	setToInt("templaterefresh", d, data["templaterefresh"])
 	d.Set("timeseriesovernsip", data["timeseriesovernsip"])
-	d.Set("udppmtu", data["udppmtu"])
+	setToInt("udppmtu", d, data["udppmtu"])
 	d.Set("urlcategory", data["urlcategory"])
-	d.Set("usagerecordinterval", data["usagerecordinterval"])
+	setToInt("usagerecordinterval", d, data["usagerecordinterval"])
 	d.Set("videoinsight", data["videoinsight"])
 	d.Set("websaasappusagereporting", data["websaasappusagereporting"])
 
@@ -423,7 +441,7 @@ func readAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppflowparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowparam := appflow.Appflowparam{}
@@ -441,7 +459,7 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("appnamerefresh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Appnamerefresh has changed for appflowparam, starting update")
-		appflowparam.Appnamerefresh = d.Get("appnamerefresh").(int)
+		appflowparam.Appnamerefresh = intPtr(d.Get("appnamerefresh").(int))
 		hasChange = true
 	}
 	if d.HasChange("auditlogs") {
@@ -476,7 +494,7 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("disttracingsamplingrate") {
 		log.Printf("[DEBUG]  citrixadc-provider: Disttracingsamplingrate has changed for appflowparam, starting update")
-		appflowparam.Disttracingsamplingrate = d.Get("disttracingsamplingrate").(int)
+		appflowparam.Disttracingsamplingrate = intPtr(d.Get("disttracingsamplingrate").(int))
 		hasChange = true
 	}
 	if d.HasChange("emailaddress") {
@@ -491,7 +509,7 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("flowrecordinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Flowrecordinterval has changed for appflowparam, starting update")
-		appflowparam.Flowrecordinterval = d.Get("flowrecordinterval").(int)
+		appflowparam.Flowrecordinterval = intPtr(d.Get("flowrecordinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("gxsessionreporting") {
@@ -601,7 +619,7 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("observationdomainid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Observationdomainid has changed for appflowparam, starting update")
-		appflowparam.Observationdomainid = d.Get("observationdomainid").(int)
+		appflowparam.Observationdomainid = intPtr(d.Get("observationdomainid").(int))
 		hasChange = true
 	}
 	if d.HasChange("observationdomainname") {
@@ -611,12 +629,12 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("observationpointid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Observationpointid has changed for appflowparam, starting update")
-		appflowparam.Observationpointid = d.Get("observationpointid").(int)
+		appflowparam.Observationpointid = intPtr(d.Get("observationpointid").(int))
 		hasChange = true
 	}
 	if d.HasChange("securityinsightrecordinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Securityinsightrecordinterval has changed for appflowparam, starting update")
-		appflowparam.Securityinsightrecordinterval = d.Get("securityinsightrecordinterval").(int)
+		appflowparam.Securityinsightrecordinterval = intPtr(d.Get("securityinsightrecordinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("securityinsighttraffic") {
@@ -646,12 +664,12 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("tcpattackcounterinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tcpattackcounterinterval has changed for appflowparam, starting update")
-		appflowparam.Tcpattackcounterinterval = d.Get("tcpattackcounterinterval").(int)
+		appflowparam.Tcpattackcounterinterval = intPtr(d.Get("tcpattackcounterinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("templaterefresh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Templaterefresh has changed for appflowparam, starting update")
-		appflowparam.Templaterefresh = d.Get("templaterefresh").(int)
+		appflowparam.Templaterefresh = intPtr(d.Get("templaterefresh").(int))
 		hasChange = true
 	}
 	if d.HasChange("timeseriesovernsip") {
@@ -661,7 +679,7 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("udppmtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: Udppmtu has changed for appflowparam, starting update")
-		appflowparam.Udppmtu = d.Get("udppmtu").(int)
+		appflowparam.Udppmtu = intPtr(d.Get("udppmtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("urlcategory") {
@@ -671,7 +689,7 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("usagerecordinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Usagerecordinterval has changed for appflowparam, starting update")
-		appflowparam.Usagerecordinterval = d.Get("usagerecordinterval").(int)
+		appflowparam.Usagerecordinterval = intPtr(d.Get("usagerecordinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("videoinsight") {
@@ -688,13 +706,13 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Appflowparam.Type(), &appflowparam)
 		if err != nil {
-			return fmt.Errorf("Error updating appflowparam")
+			return diag.Errorf("Error updating appflowparam")
 		}
 	}
-	return readAppflowparamFunc(d, meta)
+	return readAppflowparamFunc(ctx, d, meta)
 }
 
-func deleteAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppflowparamFunc")
 	// appflow parameter does not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

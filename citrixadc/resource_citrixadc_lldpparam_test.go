@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -27,21 +27,21 @@ const testAccLldpparam_basic = `
 		holdtimetxmult = 3
 		mode           = "TRANSMITTER"
 		timer          = 40
-	} 
+	}
 `
 const testAccLldpparam_update = `
 	resource "citrixadc_lldpparam" "tf_lldpparam" {
 		holdtimetxmult = 10
 		mode           = "RECEIVER"
 		timer          = 60
-	} 
+	}
 `
 
 func TestAccLldpparam_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLldpparam_basic,
@@ -84,8 +84,12 @@ func testAccCheckLldpparamExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("lldpparam", "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("lldpparam", "")
 
 		if err != nil {
 			return err

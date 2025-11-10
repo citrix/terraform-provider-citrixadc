@@ -1,22 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/citrix/adc-nitro-go/resource/config/analytics"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAnalyticsglobal_analyticsprofile_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAnalyticsglobal_analyticsprofile_bindingFunc,
-		Read:          readAnalyticsglobal_analyticsprofile_bindingFunc,
-		Delete:        deleteAnalyticsglobal_analyticsprofile_bindingFunc,
+		CreateContext: createAnalyticsglobal_analyticsprofile_bindingFunc,
+		ReadContext:   readAnalyticsglobal_analyticsprofile_bindingFunc,
+		DeleteContext: deleteAnalyticsglobal_analyticsprofile_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"analyticsprofile": {
@@ -28,7 +32,7 @@ func resourceCitrixAdcAnalyticsglobal_analyticsprofile_binding() *schema.Resourc
 	}
 }
 
-func createAnalyticsglobal_analyticsprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAnalyticsglobal_analyticsprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAnalyticsglobal_analyticsprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -40,20 +44,15 @@ func createAnalyticsglobal_analyticsprofile_bindingFunc(d *schema.ResourceData, 
 
 	err := client.UpdateUnnamedResource("analyticsglobal_analyticsprofile_binding", &analyticsglobal_analyticsprofile_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(analyticsprofile)
 
-	err = readAnalyticsglobal_analyticsprofile_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this analyticsglobal_analyticsprofile_binding but we can't read it ?? %s", analyticsprofile)
-		return nil
-	}
-	return nil
+	return readAnalyticsglobal_analyticsprofile_bindingFunc(ctx, d, meta)
 }
 
-func readAnalyticsglobal_analyticsprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAnalyticsglobal_analyticsprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAnalyticsglobal_analyticsprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	analyticsprofile := d.Id()
@@ -69,7 +68,7 @@ func readAnalyticsglobal_analyticsprofile_bindingFunc(d *schema.ResourceData, me
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -106,7 +105,7 @@ func readAnalyticsglobal_analyticsprofile_bindingFunc(d *schema.ResourceData, me
 
 }
 
-func deleteAnalyticsglobal_analyticsprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAnalyticsglobal_analyticsprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAnalyticsglobal_analyticsprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -117,7 +116,7 @@ func deleteAnalyticsglobal_analyticsprofile_bindingFunc(d *schema.ResourceData, 
 
 	err := client.DeleteResourceWithArgs("analyticsglobal_analyticsprofile_binding", "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

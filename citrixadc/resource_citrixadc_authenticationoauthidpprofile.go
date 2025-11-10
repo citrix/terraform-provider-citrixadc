@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/authentication"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/authentication"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationoauthidpprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationoauthidpprofileFunc,
-		Read:          readAuthenticationoauthidpprofileFunc,
-		Update:        updateAuthenticationoauthidpprofileFunc,
-		Delete:        deleteAuthenticationoauthidpprofileFunc,
+		CreateContext: createAuthenticationoauthidpprofileFunc,
+		ReadContext:   readAuthenticationoauthidpprofileFunc,
+		UpdateContext: updateAuthenticationoauthidpprofileFunc,
+		DeleteContext: deleteAuthenticationoauthidpprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -104,7 +107,7 @@ func resourceCitrixAdcAuthenticationoauthidpprofile() *schema.Resource {
 	}
 }
 
-func createAuthenticationoauthidpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationoauthidpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationoauthidpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthidpprofileName := d.Get("name").(string)
@@ -119,30 +122,30 @@ func createAuthenticationoauthidpprofileFunc(d *schema.ResourceData, meta interf
 		Issuer:                     d.Get("issuer").(string),
 		Name:                       d.Get("name").(string),
 		Redirecturl:                d.Get("redirecturl").(string),
-		Refreshinterval:            d.Get("refreshinterval").(int),
 		Relyingpartymetadataurl:    d.Get("relyingpartymetadataurl").(string),
 		Sendpassword:               d.Get("sendpassword").(string),
 		Signaturealg:               d.Get("signaturealg").(string),
 		Signatureservice:           d.Get("signatureservice").(string),
-		Skewtime:                   d.Get("skewtime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("refreshinterval"); !raw.IsNull() {
+		authenticationoauthidpprofile.Refreshinterval = intPtr(d.Get("refreshinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("skewtime"); !raw.IsNull() {
+		authenticationoauthidpprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 	}
 
 	_, err := client.AddResource("authenticationoauthidpprofile", authenticationoauthidpprofileName, &authenticationoauthidpprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationoauthidpprofileName)
 
-	err = readAuthenticationoauthidpprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationoauthidpprofile but we can't read it ?? %s", authenticationoauthidpprofileName)
-		return nil
-	}
-	return nil
+	return readAuthenticationoauthidpprofileFunc(ctx, d, meta)
 }
 
-func readAuthenticationoauthidpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationoauthidpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationoauthidpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthidpprofileName := d.Id()
@@ -163,18 +166,18 @@ func readAuthenticationoauthidpprofileFunc(d *schema.ResourceData, meta interfac
 	d.Set("issuer", data["issuer"])
 	d.Set("name", data["name"])
 	d.Set("redirecturl", data["redirecturl"])
-	d.Set("refreshinterval", data["refreshinterval"])
+	setToInt("refreshinterval", d, data["refreshinterval"])
 	d.Set("relyingpartymetadataurl", data["relyingpartymetadataurl"])
 	d.Set("sendpassword", data["sendpassword"])
 	d.Set("signaturealg", data["signaturealg"])
 	d.Set("signatureservice", data["signatureservice"])
-	d.Set("skewtime", data["skewtime"])
+	setToInt("skewtime", d, data["skewtime"])
 
 	return nil
 
 }
 
-func updateAuthenticationoauthidpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationoauthidpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationoauthidpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthidpprofileName := d.Get("name").(string)
@@ -230,7 +233,7 @@ func updateAuthenticationoauthidpprofileFunc(d *schema.ResourceData, meta interf
 	}
 	if d.HasChange("refreshinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Refreshinterval has changed for authenticationoauthidpprofile %s, starting update", authenticationoauthidpprofileName)
-		authenticationoauthidpprofile.Refreshinterval = d.Get("refreshinterval").(int)
+		authenticationoauthidpprofile.Refreshinterval = intPtr(d.Get("refreshinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("relyingpartymetadataurl") {
@@ -255,26 +258,26 @@ func updateAuthenticationoauthidpprofileFunc(d *schema.ResourceData, meta interf
 	}
 	if d.HasChange("skewtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for authenticationoauthidpprofile %s, starting update", authenticationoauthidpprofileName)
-		authenticationoauthidpprofile.Skewtime = d.Get("skewtime").(int)
+		authenticationoauthidpprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource("authenticationoauthidpprofile", authenticationoauthidpprofileName, &authenticationoauthidpprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationoauthidpprofile %s", authenticationoauthidpprofileName)
+			return diag.Errorf("Error updating authenticationoauthidpprofile %s", authenticationoauthidpprofileName)
 		}
 	}
-	return readAuthenticationoauthidpprofileFunc(d, meta)
+	return readAuthenticationoauthidpprofileFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationoauthidpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationoauthidpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationoauthidpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationoauthidpprofileName := d.Id()
 	err := client.DeleteResource("authenticationoauthidpprofile", authenticationoauthidpprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

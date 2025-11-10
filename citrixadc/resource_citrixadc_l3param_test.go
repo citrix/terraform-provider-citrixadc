@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -29,6 +29,7 @@ const testAccL3param_basic = `
 		icmpgenratethreshold = 150
 		overridernat         = "DISABLED"
 		dropdfflag           = "DISABLED"
+		implicitpbr		 = "DISABLED"
 	}
   
 `
@@ -38,15 +39,16 @@ const testAccL3param_update = `
 		icmpgenratethreshold = 200
 		overridernat         = "ENABLED"
 		dropdfflag           = "ENABLED"
+		implicitpbr		 = "ENABLED"
 	}
   
 `
 
 func TestAccL3param_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccL3param_basic,
@@ -56,6 +58,7 @@ func TestAccL3param_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "icmpgenratethreshold", "150"),
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "overridernat", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "dropdfflag", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "implicitpbr", "DISABLED"),
 				),
 			},
 			{
@@ -66,6 +69,7 @@ func TestAccL3param_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "icmpgenratethreshold", "200"),
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "overridernat", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "dropdfflag", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "implicitpbr", "ENABLED"),
 				),
 			},
 		},
@@ -91,8 +95,12 @@ func testAccCheckL3paramExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.L3param.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.L3param.Type(), "")
 
 		if err != nil {
 			return err

@@ -23,7 +23,7 @@ type Nsevents struct {
 	/**
 	* Event number starting from which events must be shown.
 	*/
-	Eventno int `json:"eventno,omitempty"`
+	Eventno *int `json:"eventno,omitempty"`
 
 	//------- Read only Parameter ---------;
 

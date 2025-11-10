@@ -1,24 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVxlan_srcip_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVxlan_srcip_bindingFunc,
-		Read:          readVxlan_srcip_bindingFunc,
-		Delete:        deleteVxlan_srcip_bindingFunc,
+		CreateContext: createVxlan_srcip_bindingFunc,
+		ReadContext:   readVxlan_srcip_bindingFunc,
+		DeleteContext: deleteVxlan_srcip_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"vxlanid": {
@@ -37,33 +41,31 @@ func resourceCitrixAdcVxlan_srcip_binding() *schema.Resource {
 	}
 }
 
-func createVxlan_srcip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVxlan_srcip_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVxlan_srcip_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vxlanid := strconv.Itoa(d.Get("vxlanid").(int))
 	srcip := d.Get("srcip").(string)
 	bindingId := fmt.Sprintf("%s,%s", vxlanid, srcip)
 	vxlan_srcip_binding := network.Vxlansrcipbinding{
-		Id:    d.Get("vxlanid").(int),
 		Srcip: d.Get("srcip").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vxlanid"); !raw.IsNull() {
+		vxlan_srcip_binding.Id = intPtr(d.Get("vxlanid").(int))
 	}
 
 	err := client.UpdateUnnamedResource("vxlan_srcip_binding", &vxlan_srcip_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readVxlan_srcip_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vxlan_srcip_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readVxlan_srcip_bindingFunc(ctx, d, meta)
 }
 
-func readVxlan_srcip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVxlan_srcip_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVxlan_srcip_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -84,7 +86,7 @@ func readVxlan_srcip_bindingFunc(d *schema.ResourceData, meta interface{}) error
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -115,14 +117,14 @@ func readVxlan_srcip_bindingFunc(d *schema.ResourceData, meta interface{}) error
 
 	data := dataArr[foundIndex]
 
-	d.Set("vxlanid", data["id"])
+	setToInt("vxlanid", d, data["id"])
 	d.Set("srcip", data["srcip"])
 
 	return nil
 
 }
 
-func deleteVxlan_srcip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVxlan_srcip_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVxlan_srcip_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -137,7 +139,7 @@ func deleteVxlan_srcip_bindingFunc(d *schema.ResourceData, meta interface{}) err
 
 	err := client.DeleteResourceWithArgs("vxlan_srcip_binding", vxlanid, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcInatparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createInatparamFunc,
-		Read:          readInatparamFunc,
-		Update:        updateInatparamFunc,
-		Delete:        deleteInatparamFunc,
+		CreateContext: createInatparamFunc,
+		ReadContext:   readInatparamFunc,
+		UpdateContext: updateInatparamFunc,
+		DeleteContext: deleteInatparamFunc,
 		Schema: map[string]*schema.Schema{
 			"nat46fragheader": {
 				Type:     schema.TypeString,
@@ -52,7 +55,7 @@ func resourceCitrixAdcInatparam() *schema.Resource {
 	}
 }
 
-func createInatparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createInatparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createInatparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	inatparamName := resource.PrefixedUniqueId("tf-inatparam-")
@@ -80,20 +83,15 @@ func createInatparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Inatparam.Type(), &inatparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(inatparamName)
 
-	err = readInatparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this inatparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readInatparamFunc(ctx, d, meta)
 }
 
-func readInatparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readInatparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readInatparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading inatparam state")
@@ -105,16 +103,16 @@ func readInatparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("nat46fragheader", data["nat46fragheader"])
 	d.Set("nat46ignoretos", data["nat46ignoretos"])
-	d.Set("nat46v6mtu", data["nat46v6mtu"])
+	setToInt("nat46v6mtu", d, data["nat46v6mtu"])
 	d.Set("nat46v6prefix", data["nat46v6prefix"])
 	d.Set("nat46zerochecksum", data["nat46zerochecksum"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 
 	return nil
 
 }
 
-func updateInatparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateInatparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateInatparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -133,7 +131,7 @@ func updateInatparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("nat46v6mtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: nat46v6mtu has changed for inatparam, starting update")
-		inatparam["nat46v6mtu"] = d.Get("nat46v6mtu").(int)
+		inatparam["nat46v6mtu"] = intPtr(d.Get("nat46v6mtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("nat46v6prefix") {
@@ -148,20 +146,20 @@ func updateInatparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for inatparam, starting update")
-		inatparam["td"] = d.Get("td").(int)
+		inatparam["td"] = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Inatparam.Type(), &inatparam)
 		if err != nil {
-			return fmt.Errorf("Error updating inatparam")
+			return diag.Errorf("Error updating inatparam")
 		}
 	}
-	return readInatparamFunc(d, meta)
+	return readInatparamFunc(ctx, d, meta)
 }
 
-func deleteInatparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteInatparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteInatparamFunc")
 	//inatparam does not support DELETE operation
 	d.SetId("")

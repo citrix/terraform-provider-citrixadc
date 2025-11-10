@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAppfwprofile_xmlattachmenturl_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_xmlattachmenturl_bindingFunc,
-		Read:          readAppfwprofile_xmlattachmenturl_bindingFunc,
-		Delete:        deleteAppfwprofile_xmlattachmenturl_bindingFunc,
+		CreateContext: createAppfwprofile_xmlattachmenturl_bindingFunc,
+		ReadContext:   readAppfwprofile_xmlattachmenturl_bindingFunc,
+		DeleteContext: deleteAppfwprofile_xmlattachmenturl_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -97,7 +99,7 @@ func resourceCitrixAdcAppfwprofile_xmlattachmenturl_binding() *schema.Resource {
 	}
 }
 
-func createAppfwprofile_xmlattachmenturl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_xmlattachmenturl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_xmlattachmenturl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -114,26 +116,24 @@ func createAppfwprofile_xmlattachmenturl_bindingFunc(d *schema.ResourceData, met
 		Xmlattachmentcontenttype:      d.Get("xmlattachmentcontenttype").(string),
 		Xmlattachmentcontenttypecheck: d.Get("xmlattachmentcontenttypecheck").(string),
 		Xmlattachmenturl:              d.Get("xmlattachmenturl").(string),
-		Xmlmaxattachmentsize:          d.Get("xmlmaxattachmentsize").(int),
 		Xmlmaxattachmentsizecheck:     d.Get("xmlmaxattachmentsizecheck").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("xmlmaxattachmentsize"); !raw.IsNull() {
+		appfwprofile_xmlattachmenturl_binding.Xmlmaxattachmentsize = intPtr(d.Get("xmlmaxattachmentsize").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_xmlattachmenturl_binding.Type(), &appfwprofile_xmlattachmenturl_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_xmlattachmenturl_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_xmlattachmenturl_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_xmlattachmenturl_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_xmlattachmenturl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_xmlattachmenturl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_xmlattachmenturl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -154,7 +154,7 @@ func readAppfwprofile_xmlattachmenturl_bindingFunc(d *schema.ResourceData, meta 
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -195,14 +195,14 @@ func readAppfwprofile_xmlattachmenturl_bindingFunc(d *schema.ResourceData, meta 
 	d.Set("xmlattachmentcontenttype", data["xmlattachmentcontenttype"])
 	d.Set("xmlattachmentcontenttypecheck", data["xmlattachmentcontenttypecheck"])
 	d.Set("xmlattachmenturl", data["xmlattachmenturl"])
-	d.Set("xmlmaxattachmentsize", data["xmlmaxattachmentsize"])
+	setToInt("xmlmaxattachmentsize", d, data["xmlmaxattachmentsize"])
 	d.Set("xmlmaxattachmentsizecheck", data["xmlmaxattachmentsizecheck"])
 
 	return nil
 
 }
 
-func deleteAppfwprofile_xmlattachmenturl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_xmlattachmenturl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_xmlattachmenturl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -220,7 +220,7 @@ func deleteAppfwprofile_xmlattachmenturl_bindingFunc(d *schema.ResourceData, met
 
 	err := client.DeleteResourceWithArgs(service.Appfwprofile_xmlattachmenturl_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

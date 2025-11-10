@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -28,21 +28,21 @@ resource "citrixadc_dnspolicy" "dnspolicy" {
 	name = "policy_A"
 	rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
 	drop = "YES"
-  }
+	}
 `
 const testAccDnspolicy_update = `
 resource "citrixadc_dnspolicy" "dnspolicy" {
 	name = "policy_A"
 	rule = "dns.req.question.type.ne(aaaa)"
 	drop = "NO"
-  }
+	}
 `
 
 func TestAccDnspolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDnspolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckDnspolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDnspolicy_add,
@@ -85,8 +85,12 @@ func testAccCheckDnspolicyExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Dnspolicy.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dnspolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -101,7 +105,11 @@ func testAccCheckDnspolicyExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckDnspolicyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_dnspolicy" {
@@ -112,7 +120,7 @@ func testAccCheckDnspolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Dnspolicy.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Dnspolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("dnspolicy %s still exists", rs.Primary.ID)
 		}

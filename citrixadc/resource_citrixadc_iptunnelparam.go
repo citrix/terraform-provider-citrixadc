@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIptunnelparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIptunnelparamFunc,
-		Read:          readIptunnelparamFunc,
-		Update:        updateIptunnelparamFunc,
-		Delete:        deleteIptunnelparamFunc,
+		CreateContext: createIptunnelparamFunc,
+		ReadContext:   readIptunnelparamFunc,
+		UpdateContext: updateIptunnelparamFunc,
+		DeleteContext: deleteIptunnelparamFunc,
 		Schema: map[string]*schema.Schema{
 			"dropfrag": {
 				Type:     schema.TypeString,
@@ -63,39 +66,37 @@ func resourceCitrixAdcIptunnelparam() *schema.Resource {
 	}
 }
 
-func createIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createIptunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIptunnelparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var iptunnelparamName string
 	// there is no primary key in iptunnelparam resource. Hence generate one for terraform state maintenance
 	iptunnelparamName = resource.PrefixedUniqueId("tf-iptunnelparam-")
 	iptunnelparam := network.Iptunnelparam{
-		Dropfrag:             d.Get("dropfrag").(string),
-		Dropfragcputhreshold: d.Get("dropfragcputhreshold").(int),
-		Enablestrictrx:       d.Get("enablestrictrx").(string),
-		Enablestricttx:       d.Get("enablestricttx").(string),
-		Mac:                  d.Get("mac").(string),
-		Srcip:                d.Get("srcip").(string),
-		Srciproundrobin:      d.Get("srciproundrobin").(string),
-		Useclientsourceip:    d.Get("useclientsourceip").(string),
+		Dropfrag:          d.Get("dropfrag").(string),
+		Enablestrictrx:    d.Get("enablestrictrx").(string),
+		Enablestricttx:    d.Get("enablestricttx").(string),
+		Mac:               d.Get("mac").(string),
+		Srcip:             d.Get("srcip").(string),
+		Srciproundrobin:   d.Get("srciproundrobin").(string),
+		Useclientsourceip: d.Get("useclientsourceip").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("dropfragcputhreshold"); !raw.IsNull() {
+		iptunnelparam.Dropfragcputhreshold = intPtr(d.Get("dropfragcputhreshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(iptunnelparamName)
 
-	err = readIptunnelparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this iptunnelparam but we can't read it ?? %s", iptunnelparamName)
-		return nil
-	}
-	return nil
+	return readIptunnelparamFunc(ctx, d, meta)
 }
 
-func readIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readIptunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIptunnelparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading iptunnelparam state")
@@ -106,7 +107,7 @@ func readIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("dropfrag", data["dropfrag"])
-	d.Set("dropfragcputhreshold", data["dropfragcputhreshold"])
+	setToInt("dropfragcputhreshold", d, data["dropfragcputhreshold"])
 	d.Set("enablestrictrx", data["enablestrictrx"])
 	d.Set("enablestricttx", data["enablestricttx"])
 	d.Set("mac", data["mac"])
@@ -118,7 +119,7 @@ func readIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIptunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIptunnelparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -131,7 +132,7 @@ func updateIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("dropfragcputhreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dropfragcputhreshold has changed for iptunnelparam, starting update")
-		iptunnelparam.Dropfragcputhreshold = d.Get("dropfragcputhreshold").(int)
+		iptunnelparam.Dropfragcputhreshold = intPtr(d.Get("dropfragcputhreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("enablestrictrx") {
@@ -168,13 +169,13 @@ func updateIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
 		if err != nil {
-			return fmt.Errorf("Error updating iptunnelparam")
+			return diag.Errorf("Error updating iptunnelparam")
 		}
 	}
-	return readIptunnelparamFunc(d, meta)
+	return readIptunnelparamFunc(ctx, d, meta)
 }
 
-func deleteIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIptunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIptunnelparamFunc")
 
 	d.SetId("")

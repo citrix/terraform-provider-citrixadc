@@ -1,20 +1,21 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpnpcoipvserverprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnpcoipvserverprofileFunc,
-		Read:          readVpnpcoipvserverprofileFunc,
-		Update:        updateVpnpcoipvserverprofileFunc,
-		Delete:        deleteVpnpcoipvserverprofileFunc,
+		CreateContext: createVpnpcoipvserverprofileFunc,
+		ReadContext:   readVpnpcoipvserverprofileFunc,
+		UpdateContext: updateVpnpcoipvserverprofileFunc,
+		DeleteContext: deleteVpnpcoipvserverprofileFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -36,32 +37,30 @@ func resourceCitrixAdcVpnpcoipvserverprofile() *schema.Resource {
 	}
 }
 
-func createVpnpcoipvserverprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnpcoipvserverprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnpcoipvserverprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnpcoipvserverprofileName := d.Get("name").(string)
 	vpnpcoipvserverprofile := vpn.Vpnpcoipvserverprofile{
 		Logindomain: d.Get("logindomain").(string),
 		Name:        d.Get("name").(string),
-		Udpport:     d.Get("udpport").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("udpport"); !raw.IsNull() {
+		vpnpcoipvserverprofile.Udpport = intPtr(d.Get("udpport").(int))
 	}
 
 	_, err := client.AddResource("vpnpcoipvserverprofile", vpnpcoipvserverprofileName, &vpnpcoipvserverprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnpcoipvserverprofileName)
 
-	err = readVpnpcoipvserverprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnpcoipvserverprofile but we can't read it ?? %s", vpnpcoipvserverprofileName)
-		return nil
-	}
-	return nil
+	return readVpnpcoipvserverprofileFunc(ctx, d, meta)
 }
 
-func readVpnpcoipvserverprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnpcoipvserverprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnpcoipvserverprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnpcoipvserverprofileName := d.Id()
@@ -75,13 +74,13 @@ func readVpnpcoipvserverprofileFunc(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", data["name"])
 	d.Set("logindomain", data["logindomain"])
 	d.Set("name", data["name"])
-	d.Set("udpport", data["udpport"])
+	setToInt("udpport", d, data["udpport"])
 
 	return nil
 
 }
 
-func updateVpnpcoipvserverprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnpcoipvserverprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnpcoipvserverprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnpcoipvserverprofileName := d.Get("name").(string)
@@ -97,26 +96,26 @@ func updateVpnpcoipvserverprofileFunc(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("udpport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Udpport has changed for vpnpcoipvserverprofile %s, starting update", vpnpcoipvserverprofileName)
-		vpnpcoipvserverprofile.Udpport = d.Get("udpport").(int)
+		vpnpcoipvserverprofile.Udpport = intPtr(d.Get("udpport").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource("vpnpcoipvserverprofile", vpnpcoipvserverprofileName, &vpnpcoipvserverprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnpcoipvserverprofile %s", vpnpcoipvserverprofileName)
+			return diag.Errorf("Error updating vpnpcoipvserverprofile %s", vpnpcoipvserverprofileName)
 		}
 	}
-	return readVpnpcoipvserverprofileFunc(d, meta)
+	return readVpnpcoipvserverprofileFunc(ctx, d, meta)
 }
 
-func deleteVpnpcoipvserverprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnpcoipvserverprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnpcoipvserverprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnpcoipvserverprofileName := d.Id()
 	err := client.DeleteResource("vpnpcoipvserverprofile", vpnpcoipvserverprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

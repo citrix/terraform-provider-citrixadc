@@ -1,22 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSslaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslactionFunc,
-		Read:          readSslactionFunc,
-		Delete:        deleteSslactionFunc,
+		CreateContext: createSslactionFunc,
+		ReadContext:   readSslactionFunc,
+		DeleteContext: deleteSslactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -190,7 +191,7 @@ func resourceCitrixAdcSslaction() *schema.Resource {
 	}
 }
 
-func createSslactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslactionName := d.Get("name").(string)
@@ -228,20 +229,15 @@ func createSslactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Sslaction.Type(), sslactionName, &sslaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslactionName)
 
-	err = readSslactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslaction but we can't read it ?? %s", sslactionName)
-		return nil
-	}
-	return nil
+	return readSslactionFunc(ctx, d, meta)
 }
 
-func readSslactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslactionName := d.Id()
@@ -286,13 +282,13 @@ func readSslactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteSslactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslactionName := d.Id()
 	err := client.DeleteResource(service.Sslaction.Type(), sslactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

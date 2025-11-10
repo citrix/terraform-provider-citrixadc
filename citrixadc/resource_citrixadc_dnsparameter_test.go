@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccDnsparameter_basic_step1 = `
@@ -47,6 +47,11 @@ resource "citrixadc_dnsparameter" "tf_dnsparameter" {
   resolutionorder            = "OnlyAAAAQuery"
   retries                    = 2
   splitpktqueryprocessing    = "DROP"
+  zonetransfer 			  = "DISABLED"
+  resolvermaxtcptimeout	   = 10
+  resolvermaxtcpconnections  = 100
+  resolvermaxactiveresolutions = 500
+  autosavekeyops 			  = "DISABLED"
 }
 
 
@@ -75,6 +80,11 @@ resource "citrixadc_dnsparameter" "tf_dnsparameter" {
   resolutionorder            = "OnlyAQuery"
   retries                    = 5
   splitpktqueryprocessing    = "ALLOW"
+  zonetransfer 			  = "ENABLED"
+  resolvermaxtcptimeout	   = 20
+  resolvermaxtcpconnections  = 110
+  resolvermaxactiveresolutions = 510
+  autosavekeyops 			  = "ENABLED"
 }
 
 
@@ -82,8 +92,8 @@ resource "citrixadc_dnsparameter" "tf_dnsparameter" {
 
 func TestAccDnsparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDnsparameter_basic_step1,
@@ -109,6 +119,11 @@ func TestAccDnsparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "resolutionorder", "OnlyAAAAQuery"),
 					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "retries", "2"),
 					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "splitpktqueryprocessing", "DROP"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "zonetransfer", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "resolvermaxtcptimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "resolvermaxtcpconnections", "100"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "resolvermaxactiveresolutions", "500"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "autosavekeyops", "DISABLED"),
 				),
 			},
 			{
@@ -135,6 +150,11 @@ func TestAccDnsparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "resolutionorder", "OnlyAQuery"),
 					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "retries", "5"),
 					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "splitpktqueryprocessing", "ALLOW"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "zonetransfer", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "resolvermaxtcptimeout", "20"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "resolvermaxtcpconnections", "110"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "resolvermaxactiveresolutions", "510"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_dnsparameter", "autosavekeyops", "ENABLED"),
 				),
 			},
 		},
@@ -160,8 +180,12 @@ func testAccCheckDnsparameterExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Dnsparameter.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dnsparameter.Type(), "")
 
 		if err != nil {
 			return err

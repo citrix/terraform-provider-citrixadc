@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcContentinspectionparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createContentinspectionparameterFunc,
-		Read:          readContentinspectionparameterFunc,
-		Update:        updateContentinspectionparameterFunc,
-		Delete:        deleteContentinspectionparameterFunc,
+		CreateContext: createContentinspectionparameterFunc,
+		ReadContext:   readContentinspectionparameterFunc,
+		UpdateContext: updateContentinspectionparameterFunc,
+		DeleteContext: deleteContentinspectionparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"undefaction": {
 				Type:     schema.TypeString,
@@ -27,7 +30,7 @@ func resourceCitrixAdcContentinspectionparameter() *schema.Resource {
 	}
 }
 
-func createContentinspectionparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createContentinspectionparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createContentinspectionparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionparameterName := resource.PrefixedUniqueId("tf-contentinspectionparameter-")
@@ -38,20 +41,15 @@ func createContentinspectionparameterFunc(d *schema.ResourceData, meta interface
 
 	err := client.UpdateUnnamedResource("contentinspectionparameter", &contentinspectionparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(contentinspectionparameterName)
 
-	err = readContentinspectionparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this contentinspectionparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readContentinspectionparameterFunc(ctx, d, meta)
 }
 
-func readContentinspectionparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readContentinspectionparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readContentinspectionparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading contentinspectionparameter state")
@@ -67,7 +65,7 @@ func readContentinspectionparameterFunc(d *schema.ResourceData, meta interface{}
 
 }
 
-func updateContentinspectionparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateContentinspectionparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateContentinspectionparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -82,13 +80,13 @@ func updateContentinspectionparameterFunc(d *schema.ResourceData, meta interface
 	if hasChange {
 		err := client.UpdateUnnamedResource("contentinspectionparameter", &contentinspectionparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating contentinspectionparameter")
+			return diag.Errorf("Error updating contentinspectionparameter")
 		}
 	}
-	return readContentinspectionparameterFunc(d, meta)
+	return readContentinspectionparameterFunc(ctx, d, meta)
 }
 
-func deleteContentinspectionparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteContentinspectionparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteContentinspectionparameterFunc")
 	//contentinspectionparameter does not support DELETE operation
 	d.SetId("")

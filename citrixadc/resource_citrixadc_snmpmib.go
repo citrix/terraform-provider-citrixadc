@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSnmpmib() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSnmpmibFunc,
-		Read:          readSnmpmibFunc,
-		Update:        updateSnmpmibFunc,
-		Delete:        deleteSnmpmibFunc, // Thought snmpmib resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createSnmpmibFunc,
+		ReadContext:   readSnmpmibFunc,
+		UpdateContext: updateSnmpmibFunc,
+		DeleteContext: deleteSnmpmibFunc, // Thought snmpmib resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
 			"contact": {
 				Type:     schema.TypeString,
@@ -48,7 +51,7 @@ func resourceCitrixAdcSnmpmib() *schema.Resource {
 	}
 }
 
-func createSnmpmibFunc(d *schema.ResourceData, meta interface{}) error {
+func createSnmpmibFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpmibFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -56,29 +59,27 @@ func createSnmpmibFunc(d *schema.ResourceData, meta interface{}) error {
 	snmpmibName := resource.PrefixedUniqueId("tf-snmpmib-")
 
 	snmpmib := snmp.Snmpmib{
-		Contact:   d.Get("contact").(string),
-		Customid:  d.Get("customid").(string),
-		Location:  d.Get("location").(string),
-		Name:      d.Get("name").(string),
-		Ownernode: d.Get("ownernode").(int),
+		Contact:  d.Get("contact").(string),
+		Customid: d.Get("customid").(string),
+		Location: d.Get("location").(string),
+		Name:     d.Get("name").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		snmpmib.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Snmpmib.Type(), &snmpmib)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(snmpmibName)
 
-	err = readSnmpmibFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmpmib but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSnmpmibFunc(ctx, d, meta)
 }
 
-func readSnmpmibFunc(d *schema.ResourceData, meta interface{}) error {
+func readSnmpmibFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmpmibFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading snmpmib state")
@@ -92,13 +93,13 @@ func readSnmpmibFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("customid", data["customid"])
 	d.Set("location", data["location"])
 	d.Set("name", data["name"])
-	d.Set("ownernode", data["ownernode"])
+	setToInt("ownernode", d, data["ownernode"])
 
 	return nil
 
 }
 
-func updateSnmpmibFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSnmpmibFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpmibFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpmib := snmp.Snmpmib{}
@@ -126,20 +127,20 @@ func updateSnmpmibFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for snmpmib, starting update")
-		snmpmib.Ownernode = d.Get("ownernode").(int)
+		snmpmib.Ownernode = intPtr(d.Get("ownernode").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Snmpmib.Type(), &snmpmib)
 		if err != nil {
-			return fmt.Errorf("Error updating snmpmib")
+			return diag.Errorf("Error updating snmpmib")
 		}
 	}
-	return readSnmpmibFunc(d, meta)
+	return readSnmpmibFunc(ctx, d, meta)
 }
 
-func deleteSnmpmibFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSnmpmibFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpmibFunc")
 	// snmpmib do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -29,13 +29,13 @@ const testAccGslbvserver_gslbservice_binding_basic = `
 resource "citrixadc_gslbvserver_gslbservice_binding" "tf_gslbvserver_gslbservice_binding"{
 	name = citrixadc_gslbvserver.tf_gslbvserver.name
 	servicename = citrixadc_gslbservice.gslb_svc1.servicename
-  }
+	}
   resource "citrixadc_gslbsite" "site_local" {
 	sitename        = "Site-Local"
 	siteipaddress   = "172.31.96.234"
 	sessionexchange = "DISABLED"
 	sitepassword    = "password123"
-  }
+	}
   
   resource "citrixadc_gslbservice" "gslb_svc1" {
 	ip          = "172.16.1.121"
@@ -43,7 +43,7 @@ resource "citrixadc_gslbvserver_gslbservice_binding" "tf_gslbvserver_gslbservice
 	servicename = "gslb1vservice"
 	servicetype = "HTTP"
 	sitename    = citrixadc_gslbsite.site_local.sitename
-  }
+	}
   
   resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 	dnsrecordtype = "A"
@@ -57,7 +57,7 @@ resource "citrixadc_gslbvserver_gslbservice_binding" "tf_gslbvserver_gslbservice
 	  domainname = "www.barco.com"
 	  ttl        = "65"
 	}
-  }
+	}
   
   
 `
@@ -68,7 +68,7 @@ const testAccGslbvserver_gslbservice_binding_basic_step2 = `
 	siteipaddress   = "172.31.96.234"
 	sessionexchange = "DISABLED"
 	sitepassword    = "password123"
-  }
+	}
   
   resource "citrixadc_gslbservice" "gslb_svc1" {
 	ip          = "172.16.1.121"
@@ -76,7 +76,7 @@ const testAccGslbvserver_gslbservice_binding_basic_step2 = `
 	servicename = "gslb1vservice"
 	servicetype = "HTTP"
 	sitename    = citrixadc_gslbsite.site_local.sitename
-  }
+	}
   
   resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 	dnsrecordtype = "A"
@@ -90,16 +90,16 @@ const testAccGslbvserver_gslbservice_binding_basic_step2 = `
 	  domainname = "www.barco.com"
 	  ttl        = "65"
 	}
-  }
+	}
   
   
 `
 
 func TestAccGslbvserver_gslbservice_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGslbvserver_gslbservice_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckGslbvserver_gslbservice_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGslbvserver_gslbservice_binding_basic,
@@ -136,7 +136,11 @@ func testAccCheckGslbvserver_gslbservice_bindingExist(n string, id *string) reso
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -176,7 +180,11 @@ func testAccCheckGslbvserver_gslbservice_bindingExist(n string, id *string) reso
 
 func testAccCheckGslbvserver_gslbservice_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -216,7 +224,11 @@ func testAccCheckGslbvserver_gslbservice_bindingNotExist(n string, id string) re
 }
 
 func testAccCheckGslbvserver_gslbservice_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_gslbvserver_gslbservice_binding" {
@@ -227,7 +239,7 @@ func testAccCheckGslbvserver_gslbservice_bindingDestroy(s *terraform.State) erro
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Gslbvserver_gslbservice_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Gslbvserver_gslbservice_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("gslbvserver_gslbservice_binding %s still exists", rs.Primary.ID)
 		}

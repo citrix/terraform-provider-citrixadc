@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -29,7 +29,7 @@ resource "citrixadc_smppparam" "tf_smppparam" {
 	msgqueue   = "OFF"
 	addrnpi    = 40
 	addrton    = 40
-  }
+	}
   
 `
 const testAccSmppparam_update = `
@@ -39,15 +39,15 @@ resource "citrixadc_smppparam" "tf_smppparam" {
 	msgqueue   = "ON"
 	addrnpi    = 50
 	addrton    = 50
-  }
+	}
   
 `
 
 func TestAccSmppparam_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSmppparam_basic,
@@ -92,8 +92,12 @@ func testAccCheckSmppparamExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("smppparam", "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("smppparam", "")
 
 		if err != nil {
 			return err

@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcLsnip6profile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnip6profileFunc,
-		Read:          readLsnip6profileFunc,
-		Delete:        deleteLsnip6profileFunc,
+		CreateContext: createLsnip6profileFunc,
+		ReadContext:   readLsnip6profileFunc,
+		DeleteContext: deleteLsnip6profileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -41,7 +43,7 @@ func resourceCitrixAdcLsnip6profile() *schema.Resource {
 	}
 }
 
-func createLsnip6profileFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnip6profileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnip6profileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnip6profileName := d.Get("name").(string)
@@ -54,20 +56,15 @@ func createLsnip6profileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("lsnip6profile", lsnip6profileName, &lsnip6profile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsnip6profileName)
 
-	err = readLsnip6profileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnip6profile but we can't read it ?? %s", lsnip6profileName)
-		return nil
-	}
-	return nil
+	return readLsnip6profileFunc(ctx, d, meta)
 }
 
-func readLsnip6profileFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnip6profileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnip6profileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnip6profileName := d.Id()
@@ -86,13 +83,13 @@ func readLsnip6profileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteLsnip6profileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnip6profileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnip6profileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnip6profileName := d.Id()
 	err := client.DeleteResource("lsnip6profile", lsnip6profileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

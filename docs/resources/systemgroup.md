@@ -41,6 +41,8 @@ In a command policy block the following attributes are allowed:
 
 * `policyname` - (Optional) Name of the policy to bind.
 * `priority` - (Optional) Priority for the biding.
+* `daystoexpire` - (Optional) Password days to expire for system groups. The daystoexpire value ranges from 30 to 255.
+* `warnpriorndays` - (Optional) Number of days before which password expiration warning would be thrown with respect to daystoexpire. The warnpriorndays value ranges from 5 to 40.
 
 
 ## Attribute Reference

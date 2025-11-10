@@ -1,27 +1,39 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"errors"
-	"fmt"
 	"log"
 	"net/url"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsip6() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsip6Func,
-		Read:          readNsip6Func,
-		Update:        updateNsip6Func,
-		Delete:        deleteNsip6Func,
+		CreateContext: createNsip6Func,
+		ReadContext:   readNsip6Func,
+		UpdateContext: updateNsip6Func,
+		DeleteContext: deleteNsip6Func,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"ndowner": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"icmpresponse": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"advertiseondefaultpartition": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -190,7 +202,7 @@ func resourceCitrixAdcNsip6() *schema.Resource {
 	}
 }
 
-func createNsip6Func(d *schema.ResourceData, meta interface{}) error {
+func createNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsip6Func")
 	client := meta.(*NetScalerNitroClient).client
 	ipv6address := d.Get("ipv6address").(string)
@@ -205,46 +217,60 @@ func createNsip6Func(d *schema.ResourceData, meta interface{}) error {
 		Ip6hostrtgw:                 d.Get("ip6hostrtgw").(string),
 		Ipv6address:                 d.Get("ipv6address").(string),
 		Map:                         d.Get("map").(string),
-		Metric:                      d.Get("metric").(int),
 		Mgmtaccess:                  d.Get("mgmtaccess").(string),
 		Nd:                          d.Get("nd").(string),
 		Networkroute:                d.Get("networkroute").(string),
 		Ospf6lsatype:                d.Get("ospf6lsatype").(string),
-		Ospfarea:                    d.Get("ospfarea").(int),
 		Ownerdownresponse:           d.Get("ownerdownresponse").(string),
-		Ownernode:                   d.Get("ownernode").(int),
 		Restrictaccess:              d.Get("restrictaccess").(string),
 		Scope:                       d.Get("scope").(string),
 		Snmp:                        d.Get("snmp").(string),
 		Ssh:                         d.Get("ssh").(string),
 		State:                       d.Get("state").(string),
-		Tag:                         d.Get("tag").(int),
-		Td:                          d.Get("td").(int),
 		Telnet:                      d.Get("telnet").(string),
 		Type:                        d.Get("type").(string),
-		Vlan:                        d.Get("vlan").(int),
-		Vrid6:                       d.Get("vrid6").(int),
 		Vserver:                     d.Get("vserver").(string),
 		Vserverrhilevel:             d.Get("vserverrhilevel").(string),
 		Mptcpadvertise:              d.Get("mptcpadvertise").(string),
+		Icmpresponse:                d.Get("icmpresponse").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("ndowner"); !raw.IsNull() {
+		nsip6.Ndowner = intPtr(d.Get("ndowner").(int))
+	}
+
+	if raw := d.GetRawConfig().GetAttr("metric"); !raw.IsNull() {
+		nsip6.Metric = intPtr(d.Get("metric").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ospfarea"); !raw.IsNull() {
+		nsip6.Ospfarea = intPtr(d.Get("ospfarea").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		nsip6.Ownernode = intPtr(d.Get("ownernode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tag"); !raw.IsNull() {
+		nsip6.Tag = intPtr(d.Get("tag").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nsip6.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nsip6.Vlan = intPtr(d.Get("vlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vrid6"); !raw.IsNull() {
+		nsip6.Vrid6 = intPtr(d.Get("vrid6").(int))
 	}
 
 	_, err := client.AddResource(service.Nsip6.Type(), ipv6address, &nsip6)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ipv6address)
 
-	err = readNsip6Func(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsip6 but we can't read it ?? %s", ipv6address)
-		return nil
-	}
-	return nil
+	return readNsip6Func(ctx, d, meta)
 }
 
-func readNsip6Func(d *schema.ResourceData, meta interface{}) error {
+func readNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsip6Func")
 	client := meta.(*NetScalerNitroClient).client
 	ipv6address := d.Id()
@@ -271,6 +297,8 @@ func readNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	data := array[foundIndex]
 
 	d.Set("advertiseondefaultpartition", data["advertiseondefaultpartition"])
+	setToInt("ndowner", d, data["ndowner"])
+	d.Set("icmpresponse", data["icmpresponse"])
 	d.Set("decrementhoplimit", data["decrementhoplimit"])
 	d.Set("dynamicrouting", data["dynamicrouting"])
 	d.Set("ftp", data["ftp"])
@@ -280,33 +308,33 @@ func readNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ip6hostrtgw", data["ip6hostrtgw"])
 	d.Set("ipv6address", data["ipv6address"])
 	d.Set("map", data["map"])
-	d.Set("metric", data["metric"])
+	setToInt("metric", d, data["metric"])
 	d.Set("mgmtaccess", data["mgmtaccess"])
 	d.Set("nd", data["nd"])
 	d.Set("networkroute", data["networkroute"])
 	d.Set("ospf6lsatype", data["ospf6lsatype"])
-	d.Set("ospfarea", data["ospfarea"])
+	setToInt("ospfarea", d, data["ospfarea"])
 	d.Set("ownerdownresponse", data["ownerdownresponse"])
-	d.Set("ownernode", data["ownernode"])
+	setToInt("ownernode", d, data["ownernode"])
 	d.Set("restrictaccess", data["restrictaccess"])
 	d.Set("scope", data["scope"])
 	d.Set("snmp", data["snmp"])
 	d.Set("ssh", data["ssh"])
 	d.Set("state", data["state"])
-	d.Set("tag", data["tag"])
-	d.Set("td", data["td"])
+	setToInt("tag", d, data["tag"])
+	setToInt("td", d, data["td"])
 	d.Set("telnet", data["telnet"])
 
 	// Type is a special case
 	// Need to add sanity check to make sure we don't parse the wrong value
 	iptype := data["iptype"].([]interface{})
 	if len(iptype) > 1 {
-		return errors.New("Found iptype to contain more than one ip type")
+		return diag.Errorf("Found iptype to contain more than one ip type")
 	}
 	d.Set("type", iptype[0].(string))
 
-	d.Set("vlan", data["vlan"])
-	d.Set("vrid6", data["vrid6"])
+	setToInt("vlan", d, data["vlan"])
+	setToInt("vrid6", d, data["vrid6"])
 	d.Set("vserver", data["vserver"])
 	d.Set("vserverrhilevel", data["vserverrhilevel"])
 	d.Set("mptcpadvertise", data["mptcpadvertise"])
@@ -315,7 +343,7 @@ func readNsip6Func(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsip6Func(d *schema.ResourceData, meta interface{}) error {
+func updateNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsip6Func")
 	client := meta.(*NetScalerNitroClient).client
 	ipv6address := d.Get("ipv6address").(string)
@@ -324,6 +352,16 @@ func updateNsip6Func(d *schema.ResourceData, meta interface{}) error {
 		Ipv6address: d.Get("ipv6address").(string),
 	}
 	hasChange := false
+	if d.HasChange("ndowner") {
+		log.Printf("[DEBUG]  citrixadc-provider: Ndowner has changed for nsip6, starting update")
+		nsip6.Ndowner = intPtr(d.Get("ndowner").(int))
+		hasChange = true
+	}
+	if d.HasChange("icmpresponse") {
+		log.Printf("[DEBUG]  citrixadc-provider: Icmpresponse has changed for nsip6, starting update")
+		nsip6.Icmpresponse = d.Get("icmpresponse").(string)
+		hasChange = true
+	}
 	if d.HasChange("advertiseondefaultpartition") {
 		log.Printf("[DEBUG]  citrixadc-provider: Advertiseondefaultpartition has changed for nsip6 %s, starting update", ipv6address)
 		nsip6.Advertiseondefaultpartition = d.Get("advertiseondefaultpartition").(string)
@@ -371,7 +409,7 @@ func updateNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("metric") {
 		log.Printf("[DEBUG]  citrixadc-provider: Metric has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Metric = d.Get("metric").(int)
+		nsip6.Metric = intPtr(d.Get("metric").(int))
 		hasChange = true
 	}
 	if d.HasChange("mgmtaccess") {
@@ -396,7 +434,7 @@ func updateNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ospfarea") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ospfarea has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Ospfarea = d.Get("ospfarea").(int)
+		nsip6.Ospfarea = intPtr(d.Get("ospfarea").(int))
 		hasChange = true
 	}
 	if d.HasChange("ownerdownresponse") {
@@ -406,7 +444,7 @@ func updateNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Ownernode = d.Get("ownernode").(int)
+		nsip6.Ownernode = intPtr(d.Get("ownernode").(int))
 		hasChange = true
 	}
 	if d.HasChange("restrictaccess") {
@@ -436,12 +474,12 @@ func updateNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("tag") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tag has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Tag = d.Get("tag").(int)
+		nsip6.Tag = intPtr(d.Get("tag").(int))
 		hasChange = true
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Td = d.Get("td").(int)
+		nsip6.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("telnet") {
@@ -456,12 +494,12 @@ func updateNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Vlan = d.Get("vlan").(int)
+		nsip6.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("vrid6") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vrid6 has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Vrid6 = d.Get("vrid6").(int)
+		nsip6.Vrid6 = intPtr(d.Get("vrid6").(int))
 		hasChange = true
 	}
 	if d.HasChange("vserver") {
@@ -483,13 +521,13 @@ func updateNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nsip6.Type(), "", &nsip6)
 		if err != nil {
-			return fmt.Errorf("Error updating nsip6 %s", ipv6address)
+			return diag.Errorf("Error updating nsip6 %s", ipv6address)
 		}
 	}
-	return readNsip6Func(d, meta)
+	return readNsip6Func(ctx, d, meta)
 }
 
-func deleteNsip6Func(d *schema.ResourceData, meta interface{}) error {
+func deleteNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsip6Func")
 	client := meta.(*NetScalerNitroClient).client
 	ipv6address := d.Id()
@@ -500,7 +538,7 @@ func deleteNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	err := client.DeleteResourceWithArgsMap(service.Nsip6.Type(), "", argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

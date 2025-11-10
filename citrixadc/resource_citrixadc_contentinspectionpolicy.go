@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcContentinspectionpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createContentinspectionpolicyFunc,
-		Read:          readContentinspectionpolicyFunc,
-		Update:        updateContentinspectionpolicyFunc,
-		Delete:        deleteContentinspectionpolicyFunc,
+		CreateContext: createContentinspectionpolicyFunc,
+		ReadContext:   readContentinspectionpolicyFunc,
+		UpdateContext: updateContentinspectionpolicyFunc,
+		DeleteContext: deleteContentinspectionpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -51,7 +54,7 @@ func resourceCitrixAdcContentinspectionpolicy() *schema.Resource {
 	}
 }
 
-func createContentinspectionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createContentinspectionpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createContentinspectionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionpolicyName := d.Get("name").(string)
@@ -66,20 +69,15 @@ func createContentinspectionpolicyFunc(d *schema.ResourceData, meta interface{})
 
 	_, err := client.AddResource("contentinspectionpolicy", contentinspectionpolicyName, &contentinspectionpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(contentinspectionpolicyName)
 
-	err = readContentinspectionpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this contentinspectionpolicy but we can't read it ?? %s", contentinspectionpolicyName)
-		return nil
-	}
-	return nil
+	return readContentinspectionpolicyFunc(ctx, d, meta)
 }
 
-func readContentinspectionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readContentinspectionpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readContentinspectionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionpolicyName := d.Id()
@@ -101,7 +99,7 @@ func readContentinspectionpolicyFunc(d *schema.ResourceData, meta interface{}) e
 
 }
 
-func updateContentinspectionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateContentinspectionpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateContentinspectionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionpolicyName := d.Get("name").(string)
@@ -139,19 +137,19 @@ func updateContentinspectionpolicyFunc(d *schema.ResourceData, meta interface{})
 	if hasChange {
 		err := client.UpdateUnnamedResource("contentinspectionpolicy", &contentinspectionpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating contentinspectionpolicy %s", contentinspectionpolicyName)
+			return diag.Errorf("Error updating contentinspectionpolicy %s", contentinspectionpolicyName)
 		}
 	}
-	return readContentinspectionpolicyFunc(d, meta)
+	return readContentinspectionpolicyFunc(ctx, d, meta)
 }
 
-func deleteContentinspectionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteContentinspectionpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteContentinspectionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionpolicyName := d.Id()
 	err := client.DeleteResource("contentinspectionpolicy", contentinspectionpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

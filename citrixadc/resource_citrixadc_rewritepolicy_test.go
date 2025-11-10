@@ -21,15 +21,15 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccRewritepolicy_globalbinding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRewritepolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckRewritepolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRewritepolicy_globalbinding_not_exists,
@@ -46,14 +46,14 @@ func TestAccRewritepolicy_globalbinding(t *testing.T) {
 				),
 			},
 			/*
-				   // TODO: Find race condition that makes this fail. In manual testing this succeeds
-					resource.TestStep{
-						Config: testAccRewritepolicy_globalbinding_modified,
-						Check: resource.ComposeTestCheckFunc(
-							testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
-							verifyRewriteGlobalBindingExists("REQ_OVERRIDE", "tf_rewrite_policy", false),
-						),
-					},
+							   // TODO: Find race condition that makes this fail. In manual testing this succeeds
+								resource.TestStep{
+									Config: testAccRewritepolicy_globalbinding_modified,
+									Check: resource.ComposeTestCheckFunc(
+										testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
+										verifyRewriteGlobalBindingExists("REQ_OVERRIDE", "tf_rewrite_policy", false),
+									),
+				},
 			*/
 		},
 	})
@@ -61,9 +61,9 @@ func TestAccRewritepolicy_globalbinding(t *testing.T) {
 
 func TestAccRewritepolicy_lbvserverbinding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRewritepolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckRewritepolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRewritepolicy_lbvserverbindings_none,
@@ -95,9 +95,9 @@ func TestAccRewritepolicy_lbvserverbinding(t *testing.T) {
 
 func TestAccRewritepolicy_csvserverbinding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRewritepolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckRewritepolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRewritepolicy_csvserverbindings_none,
@@ -146,8 +146,12 @@ func testAccCheckRewritepolicyExist(n string, id *string) resource.TestCheckFunc
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Rewritepolicy.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Rewritepolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -162,7 +166,11 @@ func testAccCheckRewritepolicyExist(n string, id *string) resource.TestCheckFunc
 }
 
 func testAccCheckRewritepolicyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_rewritepolicy" {
@@ -173,7 +181,7 @@ func testAccCheckRewritepolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Rewritepolicy.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Rewritepolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -186,7 +194,11 @@ func testAccCheckRewritepolicyDestroy(s *terraform.State) error {
 func verifyRewriteGlobalBindingExists(bindtype string, policyname string, inverse bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		bindFound := false
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		globalBindings, _ := client.FindResourceArray("rewritepolicy_rewriteglobal_binding", policyname)
 		for _, val := range globalBindings {
 			boundtoSlice := strings.Split(val["boundto"].(string), " ")
@@ -215,7 +227,11 @@ func verifyRewriteGlobalBindingExists(bindtype string, policyname string, invers
 func verifyRewriteLbvserverBindingExists(servername string, policyname string, inverse bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		bindFound := false
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		lbVserverBindings, _ := client.FindResourceArray("rewritepolicy_lbvserver_binding", policyname)
 		for _, val := range lbVserverBindings {
 			boundtoSlice := strings.Split(val["boundto"].(string), " ")

@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var testAccProviders map[string]terraform.ResourceProvider
+var testAccProviderFactories map[string]func() (*schema.Provider, error)
 var testAccProvider *schema.Provider
 
 var isCpxRun bool
@@ -19,9 +19,11 @@ var adcTestbed string
 
 func init() {
 	log.Printf("[DEBUG]  citrixadc-provider-test: In init")
-	testAccProvider = Provider().(*schema.Provider)
-	testAccProviders = map[string]terraform.ResourceProvider{
-		"citrixadc": testAccProvider,
+	testAccProvider = Provider()
+	testAccProviderFactories = map[string]func() (*schema.Provider, error){
+		"citrixadc": func() (*schema.Provider, error) {
+			return testAccProvider, nil
+		},
 	}
 
 	nsUrl := os.Getenv("NS_URL")
@@ -35,17 +37,23 @@ func init() {
 }
 
 func TestProvider(t *testing.T) {
-	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
+	if err := Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ terraform.ResourceProvider = Provider()
+	var _ *schema.Provider = Provider()
 }
 
 func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("NS_URL"); v == "" {
 		t.Fatal("NS_URL must be set for acceptance tests")
 	}
+}
+
+// testAccGetClient returns a configured NITRO client using environment variables
+// This utility function can be reused across all test cases to avoid duplicating client creation logic
+func testAccGetClient() (*service.NitroClient, error) {
+	return testAccProvider.Meta().(*NetScalerNitroClient).client, nil
 }

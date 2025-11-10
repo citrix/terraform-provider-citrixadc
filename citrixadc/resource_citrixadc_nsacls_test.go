@@ -24,26 +24,31 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccNsacls_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNsaclsDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNsaclsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsacls_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsaclsExist("citrixadc_nsacls.foo", nil),
-					resource.TestCheckResourceAttr("citrixadc_nsacls.foo", "acl.1629125634.aclname", "restricttcp2"),
-					resource.TestCheckResourceAttr("citrixadc_nsacls.foo", "acl.1629125634.protocol", "TCP"),
-					resource.TestCheckResourceAttr("citrixadc_nsacls.foo", "acl.1629125634.destipval", "192.168.199.52"),
-					resource.TestCheckResourceAttr("citrixadc_nsacls.foo", "acl.1056203765.aclname", "allowudp"),
-					resource.TestCheckResourceAttr("citrixadc_nsacls.foo", "acl.1056203765.protocol", "UDP"),
-					resource.TestCheckResourceAttr("citrixadc_nsacls.foo", "acl.1056203765.destipval", "192.168.45.55"),
+					// Use TestCheckTypeSetElemNestedAttrs for TypeSet testing in SDK v2
+					resource.TestCheckTypeSetElemNestedAttrs("citrixadc_nsacls.foo", "acl.*", map[string]string{
+						"aclname":   "restricttcp2",
+						"protocol":  "TCP",
+						"destipval": "192.168.199.52",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs("citrixadc_nsacls.foo", "acl.*", map[string]string{
+						"aclname":   "allowudp",
+						"protocol":  "UDP",
+						"destipval": "192.168.45.55",
+					}),
 				),
 			},
 		},
@@ -69,8 +74,12 @@ func testAccCheckNsaclsExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		deviceAcls, err := nsClient.FindAllResources(service.Nsacl.Type())
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		deviceAcls, err := client.FindAllResources(service.Nsacl.Type())
 
 		if err != nil {
 			return err
@@ -123,15 +132,18 @@ func testAccCheckNsaclsExist(n string, id *string) resource.TestCheckFunc {
 
 func TestAccNsacls_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNsaclsDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNsaclsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsacls_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsaclsExist("citrixadc_nsacls.foo", nil),
-					resource.TestCheckResourceAttr("citrixadc_nsacls.foo", "acl.1629125634.aclname", "restricttcp2"),
+					// Use TestCheckTypeSetElemNestedAttrs for TypeSet testing in SDK v2
+					resource.TestCheckTypeSetElemNestedAttrs("citrixadc_nsacls.foo", "acl.*", map[string]string{
+						"aclname": "restricttcp2",
+					}),
 				),
 			},
 			{
@@ -146,8 +158,12 @@ func TestAccNsacls_update(t *testing.T) {
 
 func testAccCheckNsaclsDestroy(s *terraform.State) error {
 
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-	deviceAcls, err := nsClient.FindAllResources(service.Nsacl.Type())
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
+	deviceAcls, err := client.FindAllResources(service.Nsacl.Type())
 	if err != nil {
 		return err
 	}
@@ -192,9 +208,13 @@ func testAccCheckNsaclsUpdateExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
-		deviceAcls, err := nsClient.FindAllResources(service.Nsacl.Type())
+		deviceAcls, err := client.FindAllResources(service.Nsacl.Type())
 		if err != nil {
 			return err
 		}
@@ -254,7 +274,7 @@ resource "citrixadc_nsacls" "foo" {
     destipval = "192.168.199.52"
     srcportval = "149-1524"
     priority = "25"
-  }
+	}
 
   acl  {
     aclname = "allowudp"
@@ -263,14 +283,14 @@ resource "citrixadc_nsacls" "foo" {
     destipval = "192.168.45.55"
     srcportval = "490-1024"
        priority = "100"
-  }
+	}
 
   acl  {
     aclname = "restrictvlan"
     aclaction = "DENY"
     vlan = "2000"
     priority = "250"
-  }
+	}
 
 
 }
@@ -286,14 +306,14 @@ resource "citrixadc_nsacls" "foo" {
     destipval = "192.168.22.22"
     srcportval = "222-2222"
     priority = "25"
-  }
+	}
 
   acl  {
     aclname = "restrictvlan"
     aclaction = "DENY"
     vlan = "2000"
     priority = "250"
-  }
+	}
 
 
 }

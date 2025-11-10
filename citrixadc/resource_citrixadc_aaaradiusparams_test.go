@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -31,6 +31,7 @@ const testAccAaaradiusparams_basic = `
 		radnasip           = "ENABLED"
 		serverip           = "10.222.74.158"
 		authtimeout        = 8
+		messageauthenticator = "OFF"
 	}
 `
 const testAccAaaradiusparams_update = `
@@ -41,14 +42,15 @@ const testAccAaaradiusparams_update = `
 		radnasip           = "DISABLED"
 		serverip           = "10.222.74.159"
 		authtimeout        = 10
+		messageauthenticator = "ON"
 	}
 `
 
 func TestAccAaaradiusparams_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAaaradiusparams_basic,
@@ -58,6 +60,7 @@ func TestAccAaaradiusparams_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.158"),
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "8"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "messageauthenticator", "OFF"),
 				),
 			},
 			{
@@ -68,6 +71,7 @@ func TestAccAaaradiusparams_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.159"),
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "messageauthenticator", "ON"),
 				),
 			},
 		},
@@ -93,8 +97,12 @@ func testAccCheckAaaradiusparamsExist(n string, id *string) resource.TestCheckFu
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Aaaradiusparams.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Aaaradiusparams.Type(), "")
 
 		if err != nil {
 			return err

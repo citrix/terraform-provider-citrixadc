@@ -1,21 +1,24 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/smpp"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/smpp"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSmppparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSmppparamFunc,
-		Read:          readSmppparamFunc,
-		Update:        updateSmppparamFunc,
-		Delete:        deleteSmppparamFunc,
+		CreateContext: createSmppparamFunc,
+		ReadContext:   readSmppparamFunc,
+		UpdateContext: updateSmppparamFunc,
+		DeleteContext: deleteSmppparamFunc,
 		Schema: map[string]*schema.Schema{
 			"addrnpi": {
 				Type:     schema.TypeInt,
@@ -51,36 +54,38 @@ func resourceCitrixAdcSmppparam() *schema.Resource {
 	}
 }
 
-func createSmppparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createSmppparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSmppparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	smppparamName := resource.PrefixedUniqueId("tf-smppparam-")
 
 	smppparam := smpp.Smppparam{
-		Addrnpi:      d.Get("addrnpi").(int),
-		Addrrange:    d.Get("addrrange").(string),
-		Addrton:      d.Get("addrton").(int),
-		Clientmode:   d.Get("clientmode").(string),
-		Msgqueue:     d.Get("msgqueue").(string),
-		Msgqueuesize: d.Get("msgqueuesize").(int),
+		Addrrange:  d.Get("addrrange").(string),
+		Clientmode: d.Get("clientmode").(string),
+		Msgqueue:   d.Get("msgqueue").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("addrnpi"); !raw.IsNull() {
+		smppparam.Addrnpi = intPtr(d.Get("addrnpi").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("addrton"); !raw.IsNull() {
+		smppparam.Addrton = intPtr(d.Get("addrton").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("msgqueuesize"); !raw.IsNull() {
+		smppparam.Msgqueuesize = intPtr(d.Get("msgqueuesize").(int))
 	}
 
 	err := client.UpdateUnnamedResource("smppparam", &smppparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(smppparamName)
 
-	err = readSmppparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this smppparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSmppparamFunc(ctx, d, meta)
 }
 
-func readSmppparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readSmppparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSmppparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading smppparam state")
@@ -90,18 +95,18 @@ func readSmppparamFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("addrnpi", data["addrnpi"])
+	setToInt("addrnpi", d, data["addrnpi"])
 	d.Set("addrrange", data["addrrange"])
-	d.Set("addrton", data["addrton"])
+	setToInt("addrton", d, data["addrton"])
 	d.Set("clientmode", data["clientmode"])
 	d.Set("msgqueue", data["msgqueue"])
-	d.Set("msgqueuesize", data["msgqueuesize"])
+	setToInt("msgqueuesize", d, data["msgqueuesize"])
 
 	return nil
 
 }
 
-func updateSmppparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSmppparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSmppparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -109,7 +114,7 @@ func updateSmppparamFunc(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	if d.HasChange("addrnpi") {
 		log.Printf("[DEBUG]  citrixadc-provider: Addrnpi has changed for smppparam, starting update")
-		smppparam.Addrnpi = d.Get("addrnpi").(int)
+		smppparam.Addrnpi = intPtr(d.Get("addrnpi").(int))
 		hasChange = true
 	}
 	if d.HasChange("addrrange") {
@@ -119,7 +124,7 @@ func updateSmppparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("addrton") {
 		log.Printf("[DEBUG]  citrixadc-provider: Addrton has changed for smppparam, starting update")
-		smppparam.Addrton = d.Get("addrton").(int)
+		smppparam.Addrton = intPtr(d.Get("addrton").(int))
 		hasChange = true
 	}
 	if d.HasChange("clientmode") {
@@ -134,20 +139,20 @@ func updateSmppparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("msgqueuesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Msgqueuesize has changed for smppparam, starting update")
-		smppparam.Msgqueuesize = d.Get("msgqueuesize").(int)
+		smppparam.Msgqueuesize = intPtr(d.Get("msgqueuesize").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource("smppparam", &smppparam)
 		if err != nil {
-			return fmt.Errorf("Error updating smppparam")
+			return diag.Errorf("Error updating smppparam")
 		}
 	}
-	return readSmppparamFunc(d, meta)
+	return readSmppparamFunc(ctx, d, meta)
 }
 
-func deleteSmppparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSmppparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSmppparamFunc")
 	//smppparam does not support DELETE operation
 	d.SetId("")

@@ -76,6 +76,10 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 * `servicegroupmembers` - (Optional) list of members bindings by server ip address. e.g.`["172.20.0.9:80:10", "172.20.0.10:80:10"]
 * `lbmonitor` - (Optional) lbmonitor to bind the servicegroup to.
 * `riseapbrstatsmsgcode` - (Optional)
+* `autodelayedtrofs` - (Optional) Indicates graceful movement of IP-Port binding/s to TROFS when IP addresses are removed from DNS response. System will wait for monitor response timeout period before moving to TROFS .
+* `bootstrap` - (Optional) Flag to check if kafka broker servicegroup is of type bootstrap or not.
+* `quicprofilename` - (Optional) Name of QUIC profile which will be attached to the service group.
+* `topicname` - (Optional) Name of the Kafka topic.
 
 
 ## Attribute Reference

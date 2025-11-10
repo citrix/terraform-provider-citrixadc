@@ -33,7 +33,7 @@ type Vpnvserverintranetipbinding struct {
 		for the virtual servers running on the Citrix ADC. Mapped IP addresses are used by the system to connect to the backend servers.
 	*/
 	Map string `json:"map,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

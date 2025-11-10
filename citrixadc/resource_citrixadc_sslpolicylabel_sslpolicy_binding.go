@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcSslpolicylabel_sslpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslpolicylabel_sslpolicy_bindingFunc,
-		Read:          readSslpolicylabel_sslpolicy_bindingFunc,
-		Delete:        deleteSslpolicylabel_sslpolicy_bindingFunc,
+		CreateContext: createSslpolicylabel_sslpolicy_bindingFunc,
+		ReadContext:   readSslpolicylabel_sslpolicy_bindingFunc,
+		DeleteContext: deleteSslpolicylabel_sslpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"gotopriorityexpression": {
@@ -63,7 +65,7 @@ func resourceCitrixAdcSslpolicylabel_sslpolicy_binding() *schema.Resource {
 	}
 }
 
-func createSslpolicylabel_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslpolicylabel_sslpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslpolicylabel_sslpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	labelname := d.Get("labelname")
@@ -76,25 +78,23 @@ func createSslpolicylabel_sslpolicy_bindingFunc(d *schema.ResourceData, meta int
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		sslpolicylabel_sslpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Sslpolicylabel_sslpolicy_binding.Type(), &sslpolicylabel_sslpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSslpolicylabel_sslpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslpolicylabel_sslpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSslpolicylabel_sslpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readSslpolicylabel_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslpolicylabel_sslpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslpolicylabel_sslpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -115,7 +115,7 @@ func readSslpolicylabel_sslpolicy_bindingFunc(d *schema.ResourceData, meta inter
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -159,7 +159,7 @@ func readSslpolicylabel_sslpolicy_bindingFunc(d *schema.ResourceData, meta inter
 
 }
 
-func deleteSslpolicylabel_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslpolicylabel_sslpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslpolicylabel_sslpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -174,7 +174,7 @@ func deleteSslpolicylabel_sslpolicy_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.DeleteResourceWithArgs(service.Sslpolicylabel_sslpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

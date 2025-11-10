@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcNstrafficdomain_bridgegroup_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNstrafficdomain_bridgegroup_bindingFunc,
-		Read:          readNstrafficdomain_bridgegroup_bindingFunc,
-		Delete:        deleteNstrafficdomain_bridgegroup_bindingFunc,
+		CreateContext: createNstrafficdomain_bridgegroup_bindingFunc,
+		ReadContext:   readNstrafficdomain_bridgegroup_bindingFunc,
+		DeleteContext: deleteNstrafficdomain_bridgegroup_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"td": {
@@ -37,33 +39,32 @@ func resourceCitrixAdcNstrafficdomain_bridgegroup_binding() *schema.Resource {
 	}
 }
 
-func createNstrafficdomain_bridgegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createNstrafficdomain_bridgegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNstrafficdomain_bridgegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	td := strconv.Itoa(d.Get("td").(int))
 	bridgegroup := strconv.Itoa(d.Get("bridgegroup").(int))
 	bindingId := fmt.Sprintf("%s,%s", td, bridgegroup)
-	nstrafficdomain_bridgegroup_binding := ns.Nstrafficdomainbridgegroupbinding{
-		Bridgegroup: d.Get("bridgegroup").(int),
-		Td:          d.Get("td").(int),
+	nstrafficdomain_bridgegroup_binding := ns.Nstrafficdomainbridgegroupbinding{}
+
+	if raw := d.GetRawConfig().GetAttr("bridgegroup"); !raw.IsNull() {
+		nstrafficdomain_bridgegroup_binding.Bridgegroup = intPtr(d.Get("bridgegroup").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nstrafficdomain_bridgegroup_binding.Td = intPtr(d.Get("td").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nstrafficdomain_bridgegroup_binding.Type(), &nstrafficdomain_bridgegroup_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readNstrafficdomain_bridgegroup_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nstrafficdomain_bridgegroup_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readNstrafficdomain_bridgegroup_bindingFunc(ctx, d, meta)
 }
 
-func readNstrafficdomain_bridgegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readNstrafficdomain_bridgegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNstrafficdomain_bridgegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -84,7 +85,7 @@ func readNstrafficdomain_bridgegroup_bindingFunc(d *schema.ResourceData, meta in
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -115,14 +116,14 @@ func readNstrafficdomain_bridgegroup_bindingFunc(d *schema.ResourceData, meta in
 
 	data := dataArr[foundIndex]
 
-	d.Set("bridgegroup", data["bridgegroup"])
-	d.Set("td", data["td"])
+	setToInt("bridgegroup", d, data["bridgegroup"])
+	setToInt("td", d, data["td"])
 
 	return nil
 
 }
 
-func deleteNstrafficdomain_bridgegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNstrafficdomain_bridgegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNstrafficdomain_bridgegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -137,7 +138,7 @@ func deleteNstrafficdomain_bridgegroup_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.DeleteResourceWithArgs(service.Nstrafficdomain_bridgegroup_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

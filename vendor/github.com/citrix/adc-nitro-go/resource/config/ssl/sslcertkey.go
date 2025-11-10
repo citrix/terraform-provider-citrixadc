@@ -64,7 +64,7 @@ type Sslcertkey struct {
 	/**
 	* Time, in number of days, before certificate expiration, at which to generate an alert that the certificate is about to expire.
 	*/
-	Notificationperiod int `json:"notificationperiod,omitempty"`
+	Notificationperiod *int `json:"notificationperiod,omitempty"`
 	/**
 	* Parse the certificate chain as a single file after linking the server certificate to its issuer's certificate within the file.
 	*/

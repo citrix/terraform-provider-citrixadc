@@ -168,6 +168,15 @@ SSL policy binding supports the following:
 * `labeltype` - (Optional) Type of policy label invocation. Possible values: [ vserver, service, policylabel ]
 * `labelname` - (Optional) Name of the label to invoke if the current policy rule evaluates to TRUE.
 * `quicbridgeprofilename` - (Optional) Name of the QUIC Bridge profile whose settings are to be applied to the virtual server. Refer [quicbridgeprofile](./quicbridgeprofile.md) for usage.
+* `adfsproxyprofile` - (Optional) Name of the adfsProxy profile to be used to support ADFSPIP protocol for ADFS servers.
+* `apiprofile` - (Optional) The API profile where one or more API specs are bounded to.
+* `dnsoverhttps` - (Optional) This option is used to enable/disable DNS over HTTPS (DoH) processing.
+* `orderthreshold` - (Optional) This option is used to to specify the threshold of minimum number of services to be UP in an order, for it to be considered in Lb decision.
+* `persistavpno` - (Optional) Persist AVP number for Diameter Persistency. In case this AVP is not defined in Base RFC 3588 and it is nested inside a Grouped AVP, define a sequence of AVP numbers (max 3) in order of parent to child. So say persist AVP number X is nested inside AVP Y which is nested in Z, then define the list as  Z Y X.
+* `probesuccessresponsecode` - (Optional) HTTP code to return in SUCCESS case.
+* `quicprofilename` - (Optional) Name of QUIC profile which will be attached to the VServer.
+* `toggleorder` - (Optional) Configure this option to toggle order preference
+
 
 ## Attribute Reference
 

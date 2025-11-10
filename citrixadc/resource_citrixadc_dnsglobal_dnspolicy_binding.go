@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcDnsglobal_dnspolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsglobal_dnspolicy_bindingFunc,
-		Read:          readDnsglobal_dnspolicy_bindingFunc,
-		Delete:        deleteDnsglobal_dnspolicy_bindingFunc,
+		CreateContext: createDnsglobal_dnspolicy_bindingFunc,
+		ReadContext:   readDnsglobal_dnspolicy_bindingFunc,
+		DeleteContext: deleteDnsglobal_dnspolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -72,7 +74,7 @@ func resourceCitrixAdcDnsglobal_dnspolicy_binding() *schema.Resource {
 	}
 }
 
-func createDnsglobal_dnspolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsglobal_dnspolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsglobal_dnspolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -83,26 +85,24 @@ func createDnsglobal_dnspolicy_bindingFunc(d *schema.ResourceData, meta interfac
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             policyname,
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		dnsglobal_dnspolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Dnsglobal_dnspolicy_binding.Type(), &dnsglobal_dnspolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readDnsglobal_dnspolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsglobal_dnspolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readDnsglobal_dnspolicy_bindingFunc(ctx, d, meta)
 }
 
-func readDnsglobal_dnspolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsglobal_dnspolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsglobal_dnspolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -119,7 +119,7 @@ func readDnsglobal_dnspolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -163,7 +163,7 @@ func readDnsglobal_dnspolicy_bindingFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func deleteDnsglobal_dnspolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsglobal_dnspolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsglobal_dnspolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -176,7 +176,7 @@ func deleteDnsglobal_dnspolicy_bindingFunc(d *schema.ResourceData, meta interfac
 	}
 	err := client.DeleteResourceWithArgs(service.Dnsglobal_dnspolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

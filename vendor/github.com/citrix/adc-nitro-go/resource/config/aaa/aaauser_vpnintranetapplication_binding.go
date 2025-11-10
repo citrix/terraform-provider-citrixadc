@@ -24,7 +24,7 @@ type Aaauservpnintranetapplicationbinding struct {
 	* Name of the intranet VPN application to which the policy applies.
 	*/
 	Intranetapplication string `json:"intranetapplication,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* User account to which to bind the policy.
 	*/

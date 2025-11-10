@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lsn"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLsnsipalgprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnsipalgprofileFunc,
-		Read:          readLsnsipalgprofileFunc,
-		Update:        updateLsnsipalgprofileFunc,
-		Delete:        deleteLsnsipalgprofileFunc,
+		CreateContext: createLsnsipalgprofileFunc,
+		ReadContext:   readLsnsipalgprofileFunc,
+		UpdateContext: updateLsnsipalgprofileFunc,
+		DeleteContext: deleteLsnsipalgprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"sipalgprofilename": {
@@ -88,42 +91,44 @@ func resourceCitrixAdcLsnsipalgprofile() *schema.Resource {
 	}
 }
 
-func createLsnsipalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnsipalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnsipalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnsipalgprofileName := d.Get("sipalgprofilename").(string)
 	lsnsipalgprofile := lsn.Lsnsipalgprofile{
-		Datasessionidletimeout: d.Get("datasessionidletimeout").(int),
 		Opencontactpinhole:     d.Get("opencontactpinhole").(string),
 		Openrecordroutepinhole: d.Get("openrecordroutepinhole").(string),
 		Openregisterpinhole:    d.Get("openregisterpinhole").(string),
 		Openroutepinhole:       d.Get("openroutepinhole").(string),
 		Openviapinhole:         d.Get("openviapinhole").(string),
-		Registrationtimeout:    d.Get("registrationtimeout").(int),
 		Rport:                  d.Get("rport").(string),
 		Sipalgprofilename:      d.Get("sipalgprofilename").(string),
 		Sipdstportrange:        d.Get("sipdstportrange").(string),
-		Sipsessiontimeout:      d.Get("sipsessiontimeout").(int),
 		Sipsrcportrange:        d.Get("sipsrcportrange").(string),
 		Siptransportprotocol:   d.Get("siptransportprotocol").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("datasessionidletimeout"); !raw.IsNull() {
+		lsnsipalgprofile.Datasessionidletimeout = intPtr(d.Get("datasessionidletimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("registrationtimeout"); !raw.IsNull() {
+		lsnsipalgprofile.Registrationtimeout = intPtr(d.Get("registrationtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sipsessiontimeout"); !raw.IsNull() {
+		lsnsipalgprofile.Sipsessiontimeout = intPtr(d.Get("sipsessiontimeout").(int))
+	}
+
 	_, err := client.AddResource("lsnsipalgprofile", lsnsipalgprofileName, &lsnsipalgprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsnsipalgprofileName)
 
-	err = readLsnsipalgprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnsipalgprofile but we can't read it ?? %s", lsnsipalgprofileName)
-		return nil
-	}
-	return nil
+	return readLsnsipalgprofileFunc(ctx, d, meta)
 }
 
-func readLsnsipalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnsipalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnsipalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnsipalgprofileName := d.Id()
@@ -134,17 +139,17 @@ func readLsnsipalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("datasessionidletimeout", data["datasessionidletimeout"])
+	setToInt("datasessionidletimeout", d, data["datasessionidletimeout"])
 	d.Set("opencontactpinhole", data["opencontactpinhole"])
 	d.Set("openrecordroutepinhole", data["openrecordroutepinhole"])
 	d.Set("openregisterpinhole", data["openregisterpinhole"])
 	d.Set("openroutepinhole", data["openroutepinhole"])
 	d.Set("openviapinhole", data["openviapinhole"])
-	d.Set("registrationtimeout", data["registrationtimeout"])
+	setToInt("registrationtimeout", d, data["registrationtimeout"])
 	d.Set("rport", data["rport"])
 	d.Set("sipalgprofilename", data["sipalgprofilename"])
 	d.Set("sipdstportrange", data["sipdstportrange"])
-	d.Set("sipsessiontimeout", data["sipsessiontimeout"])
+	setToInt("sipsessiontimeout", d, data["sipsessiontimeout"])
 	d.Set("sipsrcportrange", data["sipsrcportrange"])
 	d.Set("siptransportprotocol", data["siptransportprotocol"])
 
@@ -152,7 +157,7 @@ func readLsnsipalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateLsnsipalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLsnsipalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLsnsipalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnsipalgprofileName := d.Get("sipalgprofilename").(string)
@@ -163,7 +168,7 @@ func updateLsnsipalgprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	hasChange := false
 	if d.HasChange("datasessionidletimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Datasessionidletimeout has changed for lsnsipalgprofile %s, starting update", lsnsipalgprofileName)
-		lsnsipalgprofile.Datasessionidletimeout = d.Get("datasessionidletimeout").(int)
+		lsnsipalgprofile.Datasessionidletimeout = intPtr(d.Get("datasessionidletimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("opencontactpinhole") {
@@ -193,7 +198,7 @@ func updateLsnsipalgprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("registrationtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Registrationtimeout has changed for lsnsipalgprofile %s, starting update", lsnsipalgprofileName)
-		lsnsipalgprofile.Registrationtimeout = d.Get("registrationtimeout").(int)
+		lsnsipalgprofile.Registrationtimeout = intPtr(d.Get("registrationtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("rport") {
@@ -208,7 +213,7 @@ func updateLsnsipalgprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("sipsessiontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sipsessiontimeout has changed for lsnsipalgprofile %s, starting update", lsnsipalgprofileName)
-		lsnsipalgprofile.Sipsessiontimeout = d.Get("sipsessiontimeout").(int)
+		lsnsipalgprofile.Sipsessiontimeout = intPtr(d.Get("sipsessiontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sipsrcportrange") {
@@ -225,19 +230,19 @@ func updateLsnsipalgprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource("lsnsipalgprofile", &lsnsipalgprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating lsnsipalgprofile %s", lsnsipalgprofileName)
+			return diag.Errorf("Error updating lsnsipalgprofile %s", lsnsipalgprofileName)
 		}
 	}
-	return readLsnsipalgprofileFunc(d, meta)
+	return readLsnsipalgprofileFunc(ctx, d, meta)
 }
 
-func deleteLsnsipalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnsipalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnsipalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnsipalgprofileName := d.Id()
 	err := client.DeleteResource("lsnsipalgprofile", lsnsipalgprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

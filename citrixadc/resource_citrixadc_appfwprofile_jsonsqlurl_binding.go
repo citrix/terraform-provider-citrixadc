@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAppfwprofile_jsonsqlurl_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_jsonsqlurl_bindingFunc,
-		Read:          readAppfwprofile_jsonsqlurl_bindingFunc,
-		Delete:        deleteAppfwprofile_jsonsqlurl_bindingFunc,
+		CreateContext: createAppfwprofile_jsonsqlurl_bindingFunc,
+		ReadContext:   readAppfwprofile_jsonsqlurl_bindingFunc,
+		DeleteContext: deleteAppfwprofile_jsonsqlurl_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -103,7 +105,7 @@ func resourceCitrixAdcAppfwprofile_jsonsqlurl_binding() *schema.Resource {
 	}
 }
 
-func createAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_jsonsqlurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_jsonsqlurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name").(string)
@@ -137,20 +139,15 @@ func createAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.UpdateUnnamedResource("appfwprofile_jsonsqlurl_binding", &appfwprofile_jsonsqlurl_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_jsonsqlurl_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_jsonsqlurl_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_jsonsqlurl_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_jsonsqlurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_jsonsqlurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -192,7 +189,7 @@ func readAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta interf
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -267,7 +264,7 @@ func readAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta interf
 
 }
 
-func deleteAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_jsonsqlurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_jsonsqlurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -294,7 +291,7 @@ func deleteAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.DeleteResourceWithArgs("appfwprofile_jsonsqlurl_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

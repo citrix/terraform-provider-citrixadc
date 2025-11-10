@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSystemcmdpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemcmdpolicyFunc,
-		Read:          readSystemcmdpolicyFunc,
-		Update:        updateSystemcmdpolicyFunc,
-		Delete:        deleteSystemcmdpolicyFunc,
+		CreateContext: createSystemcmdpolicyFunc,
+		ReadContext:   readSystemcmdpolicyFunc,
+		UpdateContext: updateSystemcmdpolicyFunc,
+		DeleteContext: deleteSystemcmdpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -37,7 +39,7 @@ func resourceCitrixAdcSystemcmdpolicy() *schema.Resource {
 	}
 }
 
-func createSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemcmdpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemcmdpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemcmdpolicyName := d.Get("policyname").(string)
@@ -50,20 +52,15 @@ func createSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Systemcmdpolicy.Type(), systemcmdpolicyName, &systemcmdpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(systemcmdpolicyName)
 
-	err = readSystemcmdpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemcmdpolicy but we can't read it ?? %s", systemcmdpolicyName)
-		return nil
-	}
-	return nil
+	return readSystemcmdpolicyFunc(ctx, d, meta)
 }
 
-func readSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemcmdpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemcmdpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemcmdpolicyName := d.Id()
@@ -74,7 +71,7 @@ func readSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
+
 	d.Set("action", data["action"])
 	d.Set("cmdspec", data["cmdspec"])
 	d.Set("policyname", data["policyname"])
@@ -83,7 +80,7 @@ func readSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSystemcmdpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSystemcmdpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemcmdpolicyName := d.Get("policyname").(string)
@@ -108,19 +105,19 @@ func updateSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Systemcmdpolicy.Type(), systemcmdpolicyName, &systemcmdpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating systemcmdpolicy %s:%s", systemcmdpolicyName, err.Error())
+			return diag.Errorf("Error updating systemcmdpolicy %s:%s", systemcmdpolicyName, err.Error())
 		}
 	}
-	return readSystemcmdpolicyFunc(d, meta)
+	return readSystemcmdpolicyFunc(ctx, d, meta)
 }
 
-func deleteSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemcmdpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemcmdpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemcmdpolicyName := d.Id()
 	err := client.DeleteResource(service.Systemcmdpolicy.Type(), systemcmdpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

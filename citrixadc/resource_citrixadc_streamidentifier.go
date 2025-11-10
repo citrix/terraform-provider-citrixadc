@@ -1,26 +1,44 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/stream"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcStreamidentifier() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createStreamidentifierFunc,
-		Read:          readStreamidentifierFunc,
-		Update:        updateStreamidentifierFunc,
-		Delete:        deleteStreamidentifierFunc,
+		CreateContext: createStreamidentifierFunc,
+		ReadContext:   readStreamidentifierFunc,
+		UpdateContext: updateStreamidentifierFunc,
+		DeleteContext: deleteStreamidentifierFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"loglimit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"loginterval": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"log": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -90,42 +108,54 @@ func resourceCitrixAdcStreamidentifier() *schema.Resource {
 	}
 }
 
-func createStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func createStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createStreamidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamidentifierName := d.Get("name").(string)
 	streamidentifier := stream.Streamidentifier{
-		Acceptancethreshold:     d.Get("acceptancethreshold").(string),
-		Appflowlog:              d.Get("appflowlog").(string),
-		Breachthreshold:         d.Get("breachthreshold").(int),
-		Interval:                d.Get("interval").(int),
-		Maxtransactionthreshold: d.Get("maxtransactionthreshold").(int),
-		Mintransactionthreshold: d.Get("mintransactionthreshold").(int),
-		Name:                    d.Get("name").(string),
-		Samplecount:             d.Get("samplecount").(int),
-		Selectorname:            d.Get("selectorname").(string),
-		Snmptrap:                d.Get("snmptrap").(string),
-		Sort:                    d.Get("sort").(string),
-		Trackackonlypackets:     d.Get("trackackonlypackets").(string),
-		Tracktransactions:       d.Get("tracktransactions").(string),
+		Acceptancethreshold: d.Get("acceptancethreshold").(string),
+		Appflowlog:          d.Get("appflowlog").(string),
+		Name:                d.Get("name").(string),
+		Selectorname:        d.Get("selectorname").(string),
+		Snmptrap:            d.Get("snmptrap").(string),
+		Sort:                d.Get("sort").(string),
+		Trackackonlypackets: d.Get("trackackonlypackets").(string),
+		Tracktransactions:   d.Get("tracktransactions").(string),
+		Log:                 d.Get("log").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("loglimit"); !raw.IsNull() {
+		streamidentifier.Loglimit = intPtr(d.Get("loglimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("loginterval"); !raw.IsNull() {
+		streamidentifier.Loginterval = intPtr(d.Get("loginterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("breachthreshold"); !raw.IsNull() {
+		streamidentifier.Breachthreshold = intPtr(d.Get("breachthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("interval"); !raw.IsNull() {
+		streamidentifier.Interval = intPtr(d.Get("interval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxtransactionthreshold"); !raw.IsNull() {
+		streamidentifier.Maxtransactionthreshold = intPtr(d.Get("maxtransactionthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mintransactionthreshold"); !raw.IsNull() {
+		streamidentifier.Mintransactionthreshold = intPtr(d.Get("mintransactionthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("samplecount"); !raw.IsNull() {
+		streamidentifier.Samplecount = intPtr(d.Get("samplecount").(int))
 	}
 
 	_, err := client.AddResource(service.Streamidentifier.Type(), streamidentifierName, &streamidentifier)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(streamidentifierName)
 
-	err = readStreamidentifierFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this streamidentifier but we can't read it ?? %s", streamidentifierName)
-		return nil
-	}
-	return nil
+	return readStreamidentifierFunc(ctx, d, meta)
 }
 
-func readStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func readStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readStreamidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamidentifierName := d.Id()
@@ -137,13 +167,16 @@ func readStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("acceptancethreshold", data["acceptancethreshold"])
+	setToInt("loglimit", d, data["loglimit"])
+	setToInt("loginterval", d, data["loginterval"])
+	d.Set("log", data["log"])
 	d.Set("appflowlog", data["appflowlog"])
-	d.Set("breachthreshold", data["breachthreshold"])
-	d.Set("interval", data["interval"])
-	d.Set("maxtransactionthreshold", data["maxtransactionthreshold"])
-	d.Set("mintransactionthreshold", data["mintransactionthreshold"])
+	setToInt("breachthreshold", d, data["breachthreshold"])
+	setToInt("interval", d, data["interval"])
+	setToInt("maxtransactionthreshold", d, data["maxtransactionthreshold"])
+	setToInt("mintransactionthreshold", d, data["mintransactionthreshold"])
 	d.Set("name", data["name"])
-	d.Set("samplecount", data["samplecount"])
+	setToInt("samplecount", d, data["samplecount"])
 	d.Set("selectorname", data["selectorname"])
 	d.Set("snmptrap", data["snmptrap"])
 	d.Set("sort", data["sort"])
@@ -154,7 +187,7 @@ func readStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func updateStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateStreamidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamidentifierName := d.Get("name").(string)
@@ -163,6 +196,21 @@ func updateStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error 
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("loglimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: Loglimit has changed for streamidentifier, starting update")
+		streamidentifier.Loglimit = intPtr(d.Get("loglimit").(int))
+		hasChange = true
+	}
+	if d.HasChange("loginterval") {
+		log.Printf("[DEBUG]  citrixadc-provider: Loginterval has changed for streamidentifier, starting update")
+		streamidentifier.Loginterval = intPtr(d.Get("loginterval").(int))
+		hasChange = true
+	}
+	if d.HasChange("log") {
+		log.Printf("[DEBUG]  citrixadc-provider: Log has changed for streamidentifier, starting update")
+		streamidentifier.Log = d.Get("log").(string)
+		hasChange = true
+	}
 	if d.HasChange("acceptancethreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Acceptancethreshold has changed for streamidentifier %s, starting update", streamidentifierName)
 		streamidentifier.Acceptancethreshold = d.Get("acceptancethreshold").(string)
@@ -175,27 +223,27 @@ func updateStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("breachthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Breachthreshold has changed for streamidentifier %s, starting update", streamidentifierName)
-		streamidentifier.Breachthreshold = d.Get("breachthreshold").(int)
+		streamidentifier.Breachthreshold = intPtr(d.Get("breachthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("interval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Interval has changed for streamidentifier %s, starting update", streamidentifierName)
-		streamidentifier.Interval = d.Get("interval").(int)
+		streamidentifier.Interval = intPtr(d.Get("interval").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxtransactionthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxtransactionthreshold has changed for streamidentifier %s, starting update", streamidentifierName)
-		streamidentifier.Maxtransactionthreshold = d.Get("maxtransactionthreshold").(int)
+		streamidentifier.Maxtransactionthreshold = intPtr(d.Get("maxtransactionthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("mintransactionthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mintransactionthreshold has changed for streamidentifier %s, starting update", streamidentifierName)
-		streamidentifier.Mintransactionthreshold = d.Get("mintransactionthreshold").(int)
+		streamidentifier.Mintransactionthreshold = intPtr(d.Get("mintransactionthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("samplecount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Samplecount has changed for streamidentifier %s, starting update", streamidentifierName)
-		streamidentifier.Samplecount = d.Get("samplecount").(int)
+		streamidentifier.Samplecount = intPtr(d.Get("samplecount").(int))
 		hasChange = true
 	}
 	if d.HasChange("selectorname") {
@@ -227,19 +275,19 @@ func updateStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Streamidentifier.Type(), &streamidentifier)
 		if err != nil {
-			return fmt.Errorf("Error updating streamidentifier %s", streamidentifierName)
+			return diag.Errorf("Error updating streamidentifier %s", streamidentifierName)
 		}
 	}
-	return readStreamidentifierFunc(d, meta)
+	return readStreamidentifierFunc(ctx, d, meta)
 }
 
-func deleteStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteStreamidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamidentifierName := d.Id()
 	err := client.DeleteResource(service.Streamidentifier.Type(), streamidentifierName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

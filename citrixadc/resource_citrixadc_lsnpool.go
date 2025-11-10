@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lsn"
+
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLsnpool() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnpoolFunc,
-		Read:          readLsnpoolFunc,
-		Update:        updateLsnpoolFunc,
-		Delete:        deleteLsnpoolFunc,
+		CreateContext: createLsnpoolFunc,
+		ReadContext:   readLsnpoolFunc,
+		UpdateContext: updateLsnpoolFunc,
+		DeleteContext: deleteLsnpoolFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"poolname": {
@@ -49,7 +52,7 @@ func resourceCitrixAdcLsnpool() *schema.Resource {
 	}
 }
 
-func createLsnpoolFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnpoolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnpoolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnpoolName := d.Get("poolname").(string)
@@ -74,20 +77,15 @@ func createLsnpoolFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("lsnpool", lsnpoolName, &lsnpool)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsnpoolName)
 
-	err = readLsnpoolFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnpool but we can't read it ?? %s", lsnpoolName)
-		return nil
-	}
-	return nil
+	return readLsnpoolFunc(ctx, d, meta)
 }
 
-func readLsnpoolFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnpoolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnpoolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnpoolName := d.Id()
@@ -102,13 +100,13 @@ func readLsnpoolFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("nattype", data["nattype"])
 	d.Set("poolname", data["poolname"])
 	d.Set("portblockallocation", data["portblockallocation"])
-	d.Set("portrealloctimeout", data["portrealloctimeout"])
+	setToInt("portrealloctimeout", d, data["portrealloctimeout"])
 
 	return nil
 
 }
 
-func updateLsnpoolFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLsnpoolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLsnpoolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnpoolName := d.Get("poolname").(string)
@@ -120,31 +118,31 @@ func updateLsnpoolFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("maxportrealloctmq") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxportrealloctmq has changed for lsnpool %s, starting update", lsnpoolName)
 		val, _ := strconv.Atoi(d.Get("maxportrealloctmq").(string))
-		lsnpool.Maxportrealloctmq = val
+		lsnpool.Maxportrealloctmq = intPtr(val)
 		hasChange = true
 	}
 	if d.HasChange("portrealloctimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Portrealloctimeout has changed for lsnpool %s, starting update", lsnpoolName)
-		lsnpool.Portrealloctimeout = d.Get("portrealloctimeout").(int)
+		lsnpool.Portrealloctimeout = intPtr(d.Get("portrealloctimeout").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource("lsnpool", &lsnpool)
 		if err != nil {
-			return fmt.Errorf("Error updating lsnpool %s", lsnpoolName)
+			return diag.Errorf("Error updating lsnpool %s", lsnpoolName)
 		}
 	}
-	return readLsnpoolFunc(d, meta)
+	return readLsnpoolFunc(ctx, d, meta)
 }
 
-func deleteLsnpoolFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnpoolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnpoolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnpoolName := d.Id()
 	err := client.DeleteResource("lsnpool", lsnpoolName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

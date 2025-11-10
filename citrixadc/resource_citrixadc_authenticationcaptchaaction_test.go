@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -29,6 +29,7 @@ const testAccAuthenticationcaptchaaction_add = `
 		sitekey                    = "key"
 		serverurl                  = "http://www.example.com/"
 		defaultauthenticationgroup = "old_group"
+		scorethreshold			 = 3
 	}
 `
 const testAccAuthenticationcaptchaaction_update = `
@@ -38,14 +39,15 @@ const testAccAuthenticationcaptchaaction_update = `
 		sitekey                    = "key"
 		serverurl                  = "http://www.example.com/"
 		defaultauthenticationgroup = "new_group"
+		scorethreshold			 = 6
 	}
 `
 
 func TestAccAuthenticationcaptchaaction_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthenticationcaptchaactionDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthenticationcaptchaactionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationcaptchaaction_add,
@@ -54,6 +56,7 @@ func TestAccAuthenticationcaptchaaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "name", "tf_captchaaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "secretkey", "secret"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "defaultauthenticationgroup", "old_group"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "scorethreshold", "3"),
 				),
 			},
 			{
@@ -63,6 +66,7 @@ func TestAccAuthenticationcaptchaaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "name", "tf_captchaaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "secretkey", "new_secret"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "defaultauthenticationgroup", "new_group"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "scorethreshold", "6"),
 				),
 			},
 		},
@@ -88,8 +92,12 @@ func testAccCheckAuthenticationcaptchaactionExist(n string, id *string) resource
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("authenticationcaptchaaction", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("authenticationcaptchaaction", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -104,7 +112,11 @@ func testAccCheckAuthenticationcaptchaactionExist(n string, id *string) resource
 }
 
 func testAccCheckAuthenticationcaptchaactionDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authenticationcaptchaaction" {
@@ -115,7 +127,7 @@ func testAccCheckAuthenticationcaptchaactionDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("authenticationcaptchaaction", rs.Primary.ID)
+		_, err := client.FindResource("authenticationcaptchaaction", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authenticationcaptchaaction %s still exists", rs.Primary.ID)
 		}

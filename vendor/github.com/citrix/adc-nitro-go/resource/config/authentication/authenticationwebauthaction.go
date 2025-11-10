@@ -34,7 +34,7 @@ type Authenticationwebauthaction struct {
 	/**
 	* Port on which the web server accepts connections.
 	*/
-	Serverport int `json:"serverport,omitempty"`
+	Serverport *int `json:"serverport,omitempty"`
 	/**
 	* Exact HTTP request, in the form of an expression, which the Citrix ADC sends to the authentication server.
 		The Citrix ADC does not check the validity of this request. One must manually validate the request.

@@ -24,7 +24,7 @@ type Vpnvservervpnepaprofilebinding struct {
 	* Advanced EPA profile to bind
 	*/
 	Epaprofile string `json:"epaprofile,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

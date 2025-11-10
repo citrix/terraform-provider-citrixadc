@@ -29,7 +29,7 @@ type Tmtrafficaction struct {
 	/**
 	* Time interval, in minutes, of user inactivity after which the connection is closed.
 	*/
-	Apptimeout int `json:"apptimeout,omitempty"`
+	Apptimeout *int `json:"apptimeout,omitempty"`
 	/**
 	* Use single sign-on for the resource that the user is accessing now.
 	*/
@@ -61,7 +61,7 @@ type Tmtrafficaction struct {
 	/**
 	* Time interval, in minutes, for which force timer should be set.
 	*/
-	Forcedtimeoutval int `json:"forcedtimeoutval,omitempty"`
+	Forcedtimeoutval *int `json:"forcedtimeoutval,omitempty"`
 	/**
 	* expression that will be evaluated to obtain username for SingleSignOn
 	*/

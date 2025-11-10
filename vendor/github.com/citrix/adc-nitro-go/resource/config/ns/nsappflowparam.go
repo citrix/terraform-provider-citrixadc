@@ -23,11 +23,11 @@ type Nsappflowparam struct {
 	/**
 	* IPFIX template refresh interval (in seconds).
 	*/
-	Templaterefresh int `json:"templaterefresh,omitempty"`
+	Templaterefresh *int `json:"templaterefresh,omitempty"`
 	/**
 	* MTU to be used for IPFIX UDP packets.
 	*/
-	Udppmtu int `json:"udppmtu,omitempty"`
+	Udppmtu *int `json:"udppmtu,omitempty"`
 	/**
 	* Enable AppFlow HTTP URL logging.
 	*/

@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ resource "citrixadc_lsnhttphdrlogprofile" "tf_lsnhttphdrlogprofile" {
 	logurl                = "DISABLED"
 	logversion            = "DISABLED"
 	loghost               = "DISABLED"
-  }
+	}
   
 `
 const testAccLsnhttphdrlogprofile_update = `
@@ -41,16 +41,16 @@ resource "citrixadc_lsnhttphdrlogprofile" "tf_lsnhttphdrlogprofile" {
 	logurl                = "ENABLED"
 	logversion            = "ENABLED"
 	loghost               = "ENABLED"
-  }
+	}
   
 `
 
 func TestAccLsnhttphdrlogprofile_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLsnhttphdrlogprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLsnhttphdrlogprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLsnhttphdrlogprofile_basic,
@@ -95,8 +95,12 @@ func testAccCheckLsnhttphdrlogprofileExist(n string, id *string) resource.TestCh
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("lsnhttphdrlogprofile", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("lsnhttphdrlogprofile", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -111,7 +115,11 @@ func testAccCheckLsnhttphdrlogprofileExist(n string, id *string) resource.TestCh
 }
 
 func testAccCheckLsnhttphdrlogprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lsnhttphdrlogprofile" {
@@ -122,7 +130,7 @@ func testAccCheckLsnhttphdrlogprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("lsnhttphdrlogprofile", rs.Primary.ID)
+		_, err := client.FindResource("lsnhttphdrlogprofile", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lsnhttphdrlogprofile %s still exists", rs.Primary.ID)
 		}

@@ -53,7 +53,7 @@ type Nsconfig struct {
 	/**
 	* VLAN (NSVLAN) for the subnet on which the IP address resides.
 	*/
-	Nsvlan int `json:"nsvlan,omitempty"`
+	Nsvlan *int `json:"nsvlan,omitempty"`
 	/**
 	* Interfaces of the appliances that must be bound to the NSVLAN.
 	*/
@@ -70,11 +70,11 @@ type Nsconfig struct {
 	/**
 	* The maximum number of connections that will be made from the system to the web server(s) attached to it. The value entered here is applied globally to all attached servers.
 	*/
-	Maxconn int `json:"maxconn,omitempty"`
+	Maxconn *int `json:"maxconn,omitempty"`
 	/**
 	* The maximum number of requests that the system can pass on a particular connection between the system and a server attached to it. Setting this value to 0 allows an unlimited number of requests to be passed.
 	*/
-	Maxreq int `json:"maxreq,omitempty"`
+	Maxreq *int `json:"maxreq,omitempty"`
 	/**
 	* The option to control (enable or disable) the insertion of the actual client IP address into the HTTP header request passed from the client to one, some, or all servers attached to the system.
 		The passed address can then be accessed through a minor modification to the server.
@@ -97,11 +97,11 @@ type Nsconfig struct {
 	/**
 	* The minimum Path MTU.
 	*/
-	Pmtumin int `json:"pmtumin,omitempty"`
+	Pmtumin *int `json:"pmtumin,omitempty"`
 	/**
 	* The timeout value in minutes.
 	*/
-	Pmtutimeout int `json:"pmtutimeout,omitempty"`
+	Pmtutimeout *int `json:"pmtutimeout,omitempty"`
 	/**
 	* Port range configured for FTP services.
 	*/
@@ -117,19 +117,19 @@ type Nsconfig struct {
 	/**
 	* The percentage of shared quota to be granted at a time for maxClient
 	*/
-	Grantquotamaxclient int `json:"grantquotamaxclient,omitempty"`
+	Grantquotamaxclient *int `json:"grantquotamaxclient,omitempty"`
 	/**
 	* The percentage of maxClient to be given to PEs
 	*/
-	Exclusivequotamaxclient int `json:"exclusivequotamaxclient,omitempty"`
+	Exclusivequotamaxclient *int `json:"exclusivequotamaxclient,omitempty"`
 	/**
 	* The percentage of shared quota to be granted at a time for spillover
 	*/
-	Grantquotaspillover int `json:"grantquotaspillover,omitempty"`
+	Grantquotaspillover *int `json:"grantquotaspillover,omitempty"`
 	/**
 	* The percentage of spillover threshold to be given to PEs
 	*/
-	Exclusivequotaspillover int `json:"exclusivequotaspillover,omitempty"`
+	Exclusivequotaspillover *int `json:"exclusivequotaspillover,omitempty"`
 	/**
 	* This enabled secure management traffic handling.
 	*/
@@ -137,7 +137,7 @@ type Nsconfig struct {
 	/**
 	* This positive integer identifies Management traffic domain. If not specified, defaults to 4094
 	*/
-	Securemanagementtd int `json:"securemanagementtd,omitempty"`
+	Securemanagementtd *int `json:"securemanagementtd,omitempty"`
 	/**
 	* Use this option to do saveconfig for all partitions
 	*/

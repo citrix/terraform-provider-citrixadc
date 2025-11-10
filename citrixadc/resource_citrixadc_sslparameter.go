@@ -1,27 +1,41 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslparameterFunc,
-		Read:          readSslparameterFunc,
-		Update:        updateSslparameterFunc,
-		Delete:        deleteSslparameterFunc, // Thought sslparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createSslparameterFunc,
+		ReadContext:   readSslparameterFunc,
+		UpdateContext: updateSslparameterFunc,
+		DeleteContext: deleteSslparameterFunc, // Thought sslparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"sigdigesttype": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"operationqueuelimit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"crlmemorysizemb": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -146,7 +160,7 @@ func resourceCitrixAdcSslparameter() *schema.Resource {
 	}
 }
 
-func createSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslparameterName string
@@ -155,48 +169,66 @@ func createSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	sslparameterName = resource.PrefixedUniqueId("tf-sslparameter-")
 
 	sslparameter := ssl.Sslparameter{
-		Crlmemorysizemb:          d.Get("crlmemorysizemb").(int),
-		Cryptodevdisablelimit:    d.Get("cryptodevdisablelimit").(int),
 		Defaultprofile:           d.Get("defaultprofile").(string),
 		Denysslreneg:             d.Get("denysslreneg").(string),
 		Dropreqwithnohostheader:  d.Get("dropreqwithnohostheader").(string),
-		Encrypttriggerpktcount:   d.Get("encrypttriggerpktcount").(int),
 		Heterogeneoussslhw:       d.Get("heterogeneoussslhw").(string),
 		Hybridfipsmode:           d.Get("hybridfipsmode").(string),
 		Insertcertspace:          d.Get("insertcertspace").(string),
 		Insertionencoding:        d.Get("insertionencoding").(string),
 		Ndcppcompliancecertcheck: d.Get("ndcppcompliancecertcheck").(string),
-		Ocspcachesize:            d.Get("ocspcachesize").(int),
-		Pushenctriggertimeout:    d.Get("pushenctriggertimeout").(int),
-		Pushflag:                 d.Get("pushflag").(int),
 		Quantumsize:              d.Get("quantumsize").(string),
 		Sendclosenotify:          d.Get("sendclosenotify").(string),
 		Snihttphostmatch:         d.Get("snihttphostmatch").(string),
-		Softwarecryptothreshold:  d.Get("softwarecryptothreshold").(int),
 		Sslierrorcache:           d.Get("sslierrorcache").(string),
-		Sslimaxerrorcachemem:     d.Get("sslimaxerrorcachemem").(int),
-		Ssltriggertimeout:        d.Get("ssltriggertimeout").(int),
 		Strictcachecks:           d.Get("strictcachecks").(string),
 		Undefactioncontrol:       d.Get("undefactioncontrol").(string),
 		Undefactiondata:          d.Get("undefactiondata").(string),
+		Sigdigesttype:            toStringList(d.Get("sigdigesttype").([]interface{})),
+	}
+	if raw := d.GetRawConfig().GetAttr("operationqueuelimit"); !raw.IsNull() {
+		sslparameter.Operationqueuelimit = intPtr(d.Get("operationqueuelimit").(int))
+	}
+
+	if raw := d.GetRawConfig().GetAttr("crlmemorysizemb"); !raw.IsNull() {
+		sslparameter.Crlmemorysizemb = intPtr(d.Get("crlmemorysizemb").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cryptodevdisablelimit"); !raw.IsNull() {
+		sslparameter.Cryptodevdisablelimit = intPtr(d.Get("cryptodevdisablelimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("encrypttriggerpktcount"); !raw.IsNull() {
+		sslparameter.Encrypttriggerpktcount = intPtr(d.Get("encrypttriggerpktcount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ocspcachesize"); !raw.IsNull() {
+		sslparameter.Ocspcachesize = intPtr(d.Get("ocspcachesize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pushenctriggertimeout"); !raw.IsNull() {
+		sslparameter.Pushenctriggertimeout = intPtr(d.Get("pushenctriggertimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pushflag"); !raw.IsNull() {
+		sslparameter.Pushflag = intPtr(d.Get("pushflag").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("softwarecryptothreshold"); !raw.IsNull() {
+		sslparameter.Softwarecryptothreshold = intPtr(d.Get("softwarecryptothreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sslimaxerrorcachemem"); !raw.IsNull() {
+		sslparameter.Sslimaxerrorcachemem = intPtr(d.Get("sslimaxerrorcachemem").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ssltriggertimeout"); !raw.IsNull() {
+		sslparameter.Ssltriggertimeout = intPtr(d.Get("ssltriggertimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Sslparameter.Type(), &sslparameter)
 	if err != nil {
-		return fmt.Errorf("Error updating sslparameter")
+		return diag.Errorf("Error updating sslparameter")
 	}
 
 	d.SetId(sslparameterName)
 
-	err = readSslparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just updated the sslparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSslparameterFunc(ctx, d, meta)
 }
 
-func readSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslparameter state")
@@ -206,27 +238,29 @@ func readSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("crlmemorysizemb", data["crlmemorysizemb"])
-	d.Set("cryptodevdisablelimit", data["cryptodevdisablelimit"])
+	setToInt("crlmemorysizemb", d, data["crlmemorysizemb"])
+	setToInt("cryptodevdisablelimit", d, data["cryptodevdisablelimit"])
 	d.Set("defaultprofile", data["defaultprofile"])
+	d.Set("sigdigesttype", data["sigdigesttype"])
+	setToInt("operationqueuelimit", d, data["operationqueuelimit"])
 	d.Set("denysslreneg", data["denysslreneg"])
 	d.Set("dropreqwithnohostheader", data["dropreqwithnohostheader"])
-	d.Set("encrypttriggerpktcount", data["encrypttriggerpktcount"])
+	setToInt("encrypttriggerpktcount", d, data["encrypttriggerpktcount"])
 	d.Set("heterogeneoussslhw", data["heterogeneoussslhw"])
 	d.Set("hybridfipsmode", data["hybridfipsmode"])
 	d.Set("insertcertspace", data["insertcertspace"])
 	d.Set("insertionencoding", data["insertionencoding"])
 	d.Set("ndcppcompliancecertcheck", data["ndcppcompliancecertcheck"])
-	d.Set("ocspcachesize", data["ocspcachesize"])
-	d.Set("pushenctriggertimeout", data["pushenctriggertimeout"])
-	d.Set("pushflag", data["pushflag"])
+	setToInt("ocspcachesize", d, data["ocspcachesize"])
+	setToInt("pushenctriggertimeout", d, data["pushenctriggertimeout"])
+	setToInt("pushflag", d, data["pushflag"])
 	d.Set("quantumsize", data["quantumsize"])
 	d.Set("sendclosenotify", data["sendclosenotify"])
 	d.Set("snihttphostmatch", data["snihttphostmatch"])
-	d.Set("softwarecryptothreshold", data["softwarecryptothreshold"])
+	setToInt("softwarecryptothreshold", d, data["softwarecryptothreshold"])
 	d.Set("sslierrorcache", data["sslierrorcache"])
-	d.Set("sslimaxerrorcachemem", data["sslimaxerrorcachemem"])
-	d.Set("ssltriggertimeout", data["ssltriggertimeout"])
+	setToInt("sslimaxerrorcachemem", d, data["sslimaxerrorcachemem"])
+	setToInt("ssltriggertimeout", d, data["ssltriggertimeout"])
 	d.Set("strictcachecks", data["strictcachecks"])
 	d.Set("undefactioncontrol", data["undefactioncontrol"])
 	d.Set("undefactiondata", data["undefactiondata"])
@@ -234,21 +268,31 @@ func readSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	sslparameter := ssl.Sslparameter{}
 
 	hasChange := false
+	if d.HasChange("sigdigesttype") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sigdigesttype has changed for sslparameter, starting update")
+		sslparameter.Sigdigesttype = toStringList(d.Get("sigdigesttype").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("operationqueuelimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: Operationqueuelimit has changed for sslparameter, starting update")
+		sslparameter.Operationqueuelimit = intPtr(d.Get("operationqueuelimit").(int))
+		hasChange = true
+	}
 	if d.HasChange("crlmemorysizemb") {
 		log.Printf("[DEBUG]  citrixadc-provider: Crlmemorysizemb has changed for sslparameter, starting update")
-		sslparameter.Crlmemorysizemb = d.Get("crlmemorysizemb").(int)
+		sslparameter.Crlmemorysizemb = intPtr(d.Get("crlmemorysizemb").(int))
 		hasChange = true
 	}
 	if d.HasChange("cryptodevdisablelimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cryptodevdisablelimit has changed for sslparameter, starting update")
-		sslparameter.Cryptodevdisablelimit = d.Get("cryptodevdisablelimit").(int)
+		sslparameter.Cryptodevdisablelimit = intPtr(d.Get("cryptodevdisablelimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultprofile") {
@@ -268,7 +312,7 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("encrypttriggerpktcount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Encrypttriggerpktcount has changed for sslparameter, starting update")
-		sslparameter.Encrypttriggerpktcount = d.Get("encrypttriggerpktcount").(int)
+		sslparameter.Encrypttriggerpktcount = intPtr(d.Get("encrypttriggerpktcount").(int))
 		hasChange = true
 	}
 	if d.HasChange("heterogeneoussslhw") {
@@ -298,17 +342,17 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ocspcachesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ocspcachesize has changed for sslparameter, starting update")
-		sslparameter.Ocspcachesize = d.Get("ocspcachesize").(int)
+		sslparameter.Ocspcachesize = intPtr(d.Get("ocspcachesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("pushenctriggertimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pushenctriggertimeout has changed for sslparameter, starting update")
-		sslparameter.Pushenctriggertimeout = d.Get("pushenctriggertimeout").(int)
+		sslparameter.Pushenctriggertimeout = intPtr(d.Get("pushenctriggertimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("pushflag") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pushflag has changed for sslparameter, starting update")
-		sslparameter.Pushflag = d.Get("pushflag").(int)
+		sslparameter.Pushflag = intPtr(d.Get("pushflag").(int))
 		hasChange = true
 	}
 	if d.HasChange("quantumsize") {
@@ -328,7 +372,7 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("softwarecryptothreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Softwarecryptothreshold has changed for sslparameter, starting update")
-		sslparameter.Softwarecryptothreshold = d.Get("softwarecryptothreshold").(int)
+		sslparameter.Softwarecryptothreshold = intPtr(d.Get("softwarecryptothreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("sslierrorcache") {
@@ -338,12 +382,12 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("sslimaxerrorcachemem") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sslimaxerrorcachemem has changed for sslparameter, starting update")
-		sslparameter.Sslimaxerrorcachemem = d.Get("sslimaxerrorcachemem").(int)
+		sslparameter.Sslimaxerrorcachemem = intPtr(d.Get("sslimaxerrorcachemem").(int))
 		hasChange = true
 	}
 	if d.HasChange("ssltriggertimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ssltriggertimeout has changed for sslparameter, starting update")
-		sslparameter.Ssltriggertimeout = d.Get("ssltriggertimeout").(int)
+		sslparameter.Ssltriggertimeout = intPtr(d.Get("ssltriggertimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("strictcachecks") {
@@ -365,13 +409,13 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Sslparameter.Type(), &sslparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating sslparameter: %s", err.Error())
+			return diag.Errorf("Error updating sslparameter: %s", err.Error())
 		}
 	}
-	return readSslparameterFunc(d, meta)
+	return readSslparameterFunc(ctx, d, meta)
 }
 
-func deleteSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslparameterFunc")
 	// sslparameter do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

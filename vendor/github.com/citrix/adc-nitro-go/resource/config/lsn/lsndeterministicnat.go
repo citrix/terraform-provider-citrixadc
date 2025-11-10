@@ -35,7 +35,7 @@ type Lsndeterministicnat struct {
 	/**
 	* The LSN client TD.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* The NAT IP address.
 	*/

@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -28,14 +28,14 @@ const testAccSubscriberradiusinterface_basic = `
 resource "citrixadc_subscriberradiusinterface" "tf_subscriberradiusinterface" {
 	listeningservice     = citrixadc_service.tf_service.name
 	radiusinterimasstart = "ENABLED"
-  }
+	}
   
   resource "citrixadc_service" "tf_service" {
 	name        = "srad1"
 	port        = 1813
 	ip          = "192.0.0.206"
 	servicetype = "RADIUSListener"
-  }
+	}
   
 `
 const testAccSubscriberradiusinterface_update = `
@@ -44,22 +44,22 @@ const testAccSubscriberradiusinterface_update = `
 resource "citrixadc_subscriberradiusinterface" "tf_subscriberradiusinterface" {
 	listeningservice     = citrixadc_service.tf_service.name
 	radiusinterimasstart = "DISABLED"
-  }
+	}
   
   resource "citrixadc_service" "tf_service" {
 	name        = "srad1"
 	port        = 1813
 	ip          = "192.0.0.206"
 	servicetype = "RADIUSListener"
-  }
+	}
   
   `
 
 func TestAccSubscriberradiusinterface_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberradiusinterface_basic,
@@ -100,8 +100,12 @@ func testAccCheckSubscriberradiusinterfaceExist(n string, id *string) resource.T
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("subscriberradiusinterface", "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("subscriberradiusinterface", "")
 
 		if err != nil {
 			return err

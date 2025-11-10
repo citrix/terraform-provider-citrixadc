@@ -1,6 +1,7 @@
 package citrixadc
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
@@ -10,15 +11,16 @@ import (
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppfwprofile_crosssitescripting_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_crosssitescripting_bindingFunc,
-		Read:          readAppfwprofile_crosssitescripting_bindingFunc,
-		Delete:        deleteAppfwprofile_crosssitescripting_bindingFunc,
+		CreateContext: createAppfwprofile_crosssitescripting_bindingFunc,
+		ReadContext:   readAppfwprofile_crosssitescripting_bindingFunc,
+		DeleteContext: deleteAppfwprofile_crosssitescripting_bindingFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -104,7 +106,7 @@ func resourceCitrixAdcAppfwprofile_crosssitescripting_binding() *schema.Resource
 	}
 }
 
-func createAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_crosssitescripting_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_crosssitescripting_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appFwName := d.Get("name").(string)
@@ -137,20 +139,15 @@ func createAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, m
 
 	_, err := client.AddResource(service.Appfwprofile_crosssitescripting_binding.Type(), appFwName, &appfwprofile_crosssitescripting_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_crosssitescripting_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_crosssitescripting_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_crosssitescripting_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_crosssitescripting_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_crosssitescripting_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -193,7 +190,7 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -250,7 +247,7 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 
 }
 
-func deleteAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_crosssitescripting_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_crosssitescripting_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -275,7 +272,7 @@ func deleteAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, m
 
 	err := client.DeleteResourceWithArgsMap(service.Appfwprofile_crosssitescripting_binding.Type(), appFwName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

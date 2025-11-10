@@ -44,6 +44,8 @@ resource "citrixadc_sslparameter" "default" {
 * `insertcertspace` - (Optional) To insert space between lines in the certificate header of request. Possible values: [ YES, NO ]
 * `ndcppcompliancecertcheck` - (Optional) Applies when the Citrix ADC appliance acts as a client (back-end connection). Settings apply as follows: YES - During certificate verification, ignore the common name if SAN is present in the certificate. NO - Do not ignore common name. Possible values: [ YES, NO ]
 * `heterogeneoussslhw` - (Optional) To support both cavium and coleto based platforms in cluster environment, this mode has to be enabled. Possible values: [ ENABLED, DISABLED ]
+* `operationqueuelimit` - (Optional) Limit in percentage of capacity of the crypto operations queue beyond which new SSL connections are not accepted until the queue is reduced.
+* `sigdigesttype` - (Optional) Signature Digest Algorithms that are supported by appliance. Default value is "ALL" and it will enable the following algorithms depending on the platform. On VPX: ECDSA-SHA1 ECDSA-SHA224 ECDSA-SHA256 ECDSA-SHA384 ECDSA-SHA512 RSA-SHA1 RSA-SHA224 RSA-SHA256 RSA-SHA384 RSA-SHA512 DSA-SHA1 DSA-SHA224 DSA-SHA256 DSA-SHA384 DSA-SHA512 On MPX with Nitrox-III and coleto cards: RSA-SHA1 RSA-SHA224 RSA-SHA256 RSA-SHA384 RSA-SHA512 ECDSA-SHA1 ECDSA-SHA224 ECDSA-SHA256 ECDSA-SHA384 ECDSA-SHA512 Others: RSA-SHA1 RSA-SHA224 RSA-SHA256 RSA-SHA384 RSA-SHA512. Note:ALL doesnot include RSA-MD5 for any platform.
 
 
 ## Attribute Reference

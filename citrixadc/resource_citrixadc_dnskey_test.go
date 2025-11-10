@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -34,7 +34,9 @@ resource "citrixadc_dnskey" "dnskey" {
 	notificationperiod = 7
 	units2             = "DAYS"
 	ttl                = 3600
-  }
+	rollovermethod	 = "PrePublication"
+	autorollover	 = "ENABLED"
+	}
 `
 const testAccDnskey_update = `
 
@@ -47,15 +49,17 @@ resource "citrixadc_dnskey" "dnskey" {
 	notificationperiod = 12
 	units2             = "HOURS"
 	ttl                = 3601
-  }
+	rollovermethod	 = "DoubleSignature"
+	autorollover	 = "DISABLED"
+	}
 `
 
 func TestAccDnskey_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDnskeyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckDnskeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDnskey_add,
@@ -67,6 +71,8 @@ func TestAccDnskey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "notificationperiod", "7"),
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "units2", "DAYS"),
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "ttl", "3600"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "rollovermethod", "PrePublication"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "autorollover", "ENABLED"),
 				),
 			},
 			{
@@ -79,6 +85,8 @@ func TestAccDnskey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "notificationperiod", "12"),
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "units2", "HOURS"),
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "ttl", "3601"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "rollovermethod", "DoubleSignature"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "autorollover", "DISABLED"),
 				),
 			},
 		},
@@ -104,8 +112,12 @@ func testAccCheckDnskeyExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Dnskey.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dnskey.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -120,7 +132,11 @@ func testAccCheckDnskeyExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckDnskeyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_dnskey" {
@@ -131,7 +147,7 @@ func testAccCheckDnskeyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Dnskey.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Dnskey.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("dnskey %s still exists", rs.Primary.ID)
 		}

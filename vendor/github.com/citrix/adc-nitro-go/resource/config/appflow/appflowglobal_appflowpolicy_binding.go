@@ -31,7 +31,7 @@ type Appflowglobalappflowpolicybinding struct {
 	/**
 	* Specifies the priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
@@ -51,11 +51,11 @@ type Appflowglobalappflowpolicybinding struct {
 	/**
 	* The number of policies bound to the bindpoint.
 	*/
-	Numpol int `json:"numpol,omitempty"`
+	Numpol *int `json:"numpol,omitempty"`
 	/**
 	* Flow type of the bound AppFlow policy.
 	*/
-	Flowtype int `json:"flowtype,omitempty"`
+	Flowtype *int `json:"flowtype,omitempty"`
 	Globalbindtype string `json:"globalbindtype,omitempty"`
 
 

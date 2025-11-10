@@ -1,21 +1,22 @@
 package citrixadc
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsconfigUpdate() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsconfigUpdateFunc,
-		Read:          readNsconfigUpdateFunc,
-		Update:        updateNsconfigUpdateFunc,
+		CreateContext: createNsconfigUpdateFunc,
+		ReadContext:   readNsconfigUpdateFunc,
+		UpdateContext: updateNsconfigUpdateFunc,
 		Delete:        schema.Noop, // Should we call `unset ns config` here?
 		Schema: map[string]*schema.Schema{
 			"ipaddress": {
@@ -47,7 +48,7 @@ func resourceCitrixAdcNsconfigUpdate() *schema.Resource {
 	}
 }
 
-func createNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsconfigUpdateFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsconfigUpdateFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsconfigName := resource.PrefixedUniqueId("tf-nsconfig-update")
@@ -55,26 +56,21 @@ func createNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
 	nsconfig := ns.Nsconfig{}
 	nsconfig.Ipaddress = d.Get("ipaddress").(string)
 	nsconfig.Netmask = d.Get("netmask").(string)
-	nsconfig.Nsvlan = d.Get("nsvlan").(int)
+	nsconfig.Nsvlan = intPtr(d.Get("nsvlan").(int))
 	nsconfig.Ifnum = toStringList(getIfnumValue(d))
 	nsconfig.Tagged = d.Get("tagged").(string)
 
 	err := client.UpdateUnnamedResource(service.Nsconfig.Type(), &nsconfig)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsconfigName)
 
-	err = readNsconfigUpdateFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just updated this nsconfig but we can't read it ?? %s", nsconfigName)
-		return nil
-	}
-	return nil
+	return readNsconfigUpdateFunc(ctx, d, meta)
 }
 
-func readNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsconfigUpdateFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsconfigFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsconfigName := d.Id()
@@ -87,7 +83,7 @@ func readNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("netmask", data["netmask"])
-	d.Set("nsvlan", data["nsvlan"])
+	setToInt("nsvlan", d, data["nsvlan"])
 	d.Set("ifnum", data["ifnum"])
 
 	d.Set("tagged", data["tagged"])
@@ -96,7 +92,7 @@ func readNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsconfigUpdateFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsconfigUpdateFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -134,7 +130,7 @@ func updateNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
 		nsconfig.Netmask = d.Get("netmask").(string)
 	}
 	if hasNsvlanChanged || hasIfnumChanged || hasTaggedChanged {
-		nsconfig.Nsvlan = d.Get("nsvlan").(int)
+		nsconfig.Nsvlan = intPtr(d.Get("nsvlan").(int))
 		nsconfig.Ifnum = toStringList(getIfnumValue(d))
 		nsconfig.Tagged = d.Get("tagged").(string)
 	}
@@ -142,10 +138,10 @@ func updateNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasIPChanged || hasNetmaskChanged || hasNsvlanChanged || hasIfnumChanged || hasTaggedChanged {
 		err := client.UpdateUnnamedResource(service.Nsconfig.Type(), &nsconfig)
 		if err != nil {
-			return fmt.Errorf("Error updating nsconfig %s", nsconfigName)
+			return diag.Errorf("Error updating nsconfig %s", nsconfigName)
 		}
 	}
-	return readNsconfigUpdateFunc(d, meta)
+	return readNsconfigUpdateFunc(ctx, d, meta)
 }
 
 func getIfnumValue(d *schema.ResourceData) []interface{} {

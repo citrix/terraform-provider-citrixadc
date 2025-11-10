@@ -21,7 +21,6 @@ resource "citrixadc_systembackup" "tf_systembackup" {
 
 * `filename` - (Required) Name of the backup file to be restored. Maximum length =  63
 
-
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:

@@ -31,7 +31,7 @@ type Rewriteparam struct {
 	/**
 	* Maximum time in milliseconds to allow for processing all the policies and their selected actions without interruption. If the timeout is reached then the evaluation causes an UNDEF to be raised and no further processing is performed. Note that some rewrites may have already been performed.
 	*/
-	Timeout int `json:"timeout,omitempty"`
+	Timeout *int `json:"timeout,omitempty"`
 
 	//------- Read only Parameter ---------;
 

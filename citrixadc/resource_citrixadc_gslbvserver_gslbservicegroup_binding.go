@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcGslbvserver_gslbservicegroup_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbvserver_gslbservicegroup_bindingFunc,
-		Read:          readGslbvserver_gslbservicegroup_bindingFunc,
-		Delete:        deleteGslbvserver_gslbservicegroup_bindingFunc,
+		CreateContext: createGslbvserver_gslbservicegroup_bindingFunc,
+		ReadContext:   readGslbvserver_gslbservicegroup_bindingFunc,
+		DeleteContext: deleteGslbvserver_gslbservicegroup_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,7 +42,7 @@ func resourceCitrixAdcGslbvserver_gslbservicegroup_binding() *schema.Resource {
 	}
 }
 
-func createGslbvserver_gslbservicegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbvserver_gslbservicegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbvserver_gslbservicegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -50,25 +52,23 @@ func createGslbvserver_gslbservicegroup_bindingFunc(d *schema.ResourceData, meta
 	gslbvserver_gslbservicegroup_binding := gslb.Gslbvservergslbservicegroupbinding{
 		Name:             d.Get("name").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
-		Order:            d.Get("order").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		gslbvserver_gslbservicegroup_binding.Order = intPtr(d.Get("order").(int))
 	}
 
 	err := client.UpdateUnnamedResource("gslbvserver_gslbservicegroup_binding", &gslbvserver_gslbservicegroup_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readGslbvserver_gslbservicegroup_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this gslbvserver_gslbservicegroup_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readGslbvserver_gslbservicegroup_bindingFunc(ctx, d, meta)
 }
 
-func readGslbvserver_gslbservicegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbvserver_gslbservicegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbvserver_gslbservicegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -89,7 +89,7 @@ func readGslbvserver_gslbservicegroup_bindingFunc(d *schema.ResourceData, meta i
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -128,7 +128,7 @@ func readGslbvserver_gslbservicegroup_bindingFunc(d *schema.ResourceData, meta i
 
 }
 
-func deleteGslbvserver_gslbservicegroup_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbvserver_gslbservicegroup_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteGslbvserver_gslbservicegroup_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -143,7 +143,7 @@ func deleteGslbvserver_gslbservicegroup_bindingFunc(d *schema.ResourceData, meta
 
 	err := client.DeleteResourceWithArgs("gslbvserver_gslbservicegroup_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

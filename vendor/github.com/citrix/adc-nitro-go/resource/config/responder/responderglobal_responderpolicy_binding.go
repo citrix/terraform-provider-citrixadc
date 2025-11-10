@@ -45,7 +45,7 @@ type Responderglobalresponderpolicybinding struct {
 	/**
 	* Specifies the priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
@@ -67,11 +67,11 @@ type Responderglobalresponderpolicybinding struct {
 	/**
 	* number of polices bound to label.
 	*/
-	Numpol int `json:"numpol,omitempty"`
+	Numpol *int `json:"numpol,omitempty"`
 	/**
 	* flowtype of the bound responder policy.
 	*/
-	Flowtype int `json:"flowtype,omitempty"`
+	Flowtype *int `json:"flowtype,omitempty"`
 	Globalbindtype string `json:"globalbindtype,omitempty"`
 
 

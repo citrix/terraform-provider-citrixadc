@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/transform"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcTransformpolicylabel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTransformpolicylabelFunc,
-		Read:          readTransformpolicylabelFunc,
-		Delete:        deleteTransformpolicylabelFunc,
+		CreateContext: createTransformpolicylabelFunc,
+		ReadContext:   readTransformpolicylabelFunc,
+		DeleteContext: deleteTransformpolicylabelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"labelname": {
@@ -33,7 +35,7 @@ func resourceCitrixAdcTransformpolicylabel() *schema.Resource {
 	}
 }
 
-func createTransformpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func createTransformpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTransformpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformpolicylabelName := d.Get("labelname").(string)
@@ -44,20 +46,15 @@ func createTransformpolicylabelFunc(d *schema.ResourceData, meta interface{}) er
 
 	_, err := client.AddResource(service.Transformpolicylabel.Type(), transformpolicylabelName, &transformpolicylabel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(transformpolicylabelName)
 
-	err = readTransformpolicylabelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this transformpolicylabel but we can't read it ?? %s", transformpolicylabelName)
-		return nil
-	}
-	return nil
+	return readTransformpolicylabelFunc(ctx, d, meta)
 }
 
-func readTransformpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func readTransformpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTransformpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformpolicylabelName := d.Id()
@@ -75,13 +72,13 @@ func readTransformpolicylabelFunc(d *schema.ResourceData, meta interface{}) erro
 
 }
 
-func deleteTransformpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTransformpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTransformpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformpolicylabelName := d.Id()
 	err := client.DeleteResource(service.Transformpolicylabel.Type(), transformpolicylabelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

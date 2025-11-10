@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testCiphersConfig(resourceTemplate string, ciphers []string) string {
@@ -42,9 +42,13 @@ func testCiphersuitesConfig(resourceTemplate string, ciphers []string) string {
 
 func testCheckCiphersEqualToActual(ciphers []string, vserverName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		// Check existence of ciphers in correct order
-		cipherBindings, err := nsClient.FindResourceArray(service.Sslvserver_sslcipher_binding.Type(), vserverName)
+		cipherBindings, err := client.FindResourceArray(service.Sslvserver_sslcipher_binding.Type(), vserverName)
 		if err != nil && len(cipherBindings) != 0 {
 			log.Printf("Error retrieving cipher resource array")
 			return err
@@ -69,9 +73,13 @@ func testCheckCiphersEqualToActual(ciphers []string, vserverName string) resourc
 
 func testCheckCiphersuitesEqualToActual(ciphersuites []string, vserverName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		// Check existence of ciphers in correct order
-		ciphersuiteBindings, err := nsClient.FindResourceArray(service.Sslvserver_sslciphersuite_binding.Type(), vserverName)
+		ciphersuiteBindings, err := client.FindResourceArray(service.Sslvserver_sslciphersuite_binding.Type(), vserverName)
 		if err != nil && len(ciphersuiteBindings) != 0 {
 			log.Printf("Error retrieving ciphersuite resource array")
 			return err

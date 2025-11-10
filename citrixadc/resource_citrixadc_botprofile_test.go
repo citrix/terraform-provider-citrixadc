@@ -19,15 +19,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccBotprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBotprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckBotprofileDestroy,
 		Steps: []resource.TestStep{
 			// create botprofile
 			{
@@ -35,6 +35,13 @@ func TestAccBotprofile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil),
 					testAccCheckUserAgent(),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "addcookieflags", "secure"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "dfprequestlimit", "25"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "headlessbrowserdetection", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "sessioncookiename", "testCookie"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "sessiontimeout", "1200"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "spoofedreqaction.0", "LOG"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "verboseloglevel", "HTTP_FULL_HEADER"),
 				),
 			},
 			// update botprofile actions
@@ -47,6 +54,13 @@ func TestAccBotprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "trapaction.0", "LOG"),
 					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "trapaction.1", "DROP"),
 					testAccCheckUserAgent(),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "addcookieflags", "secure"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "dfprequestlimit", "50"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "headlessbrowserdetection", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "sessioncookiename", "testCookie1"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "sessiontimeout", "1800"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "spoofedreqaction.0", "DROP"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "verboseloglevel", "NONE"),
 				),
 			},
 			// update botprofile properties
@@ -90,8 +104,12 @@ func testAccCheckBotprofileExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("botprofile", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("botprofile", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -106,7 +124,11 @@ func testAccCheckBotprofileExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckBotprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_Botprofile" {
@@ -117,7 +139,7 @@ func testAccCheckBotprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("botprofile", rs.Primary.ID)
+		_, err := client.FindResource("botprofile", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("Botprofile %s still exists", rs.Primary.ID)
 		}
@@ -142,6 +164,13 @@ resource "citrixadc_botprofile" "tf_botprofile" {
 	trap = "ON"
 	trapaction = ["LOG", "RESET"]
 	bot_enable_tps = "ON"
+	addcookieflags	= "secure"
+	dfprequestlimit = "25"
+	headlessbrowserdetection = "ON"
+	sessioncookiename = "testCookie"
+	sessiontimeout = "1200"
+	spoofedreqaction = ["LOG"]
+	verboseloglevel = "HTTP_FULL_HEADER"
 }
 `
 
@@ -150,6 +179,13 @@ resource "citrixadc_botprofile" "tf_botprofile" {
 	name = "tf_botprofile"
 	devicefingerprintaction = ["LOG", "DROP"]
 	trapaction = ["LOG", "DROP"]
+	addcookieflags	= "secure"
+	dfprequestlimit = "50"
+	headlessbrowserdetection = "OFF"
+	sessioncookiename = "testCookie1"
+	sessiontimeout = "1800"
+	spoofedreqaction = ["DROP"]
+	verboseloglevel = "NONE"
 }
 `
 

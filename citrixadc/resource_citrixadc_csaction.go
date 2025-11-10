@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCsaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCsactionFunc,
-		Read:          readCsactionFunc,
-		Update:        updateCsactionFunc,
-		Delete:        deleteCsactionFunc,
+		CreateContext: createCsactionFunc,
+		ReadContext:   readCsactionFunc,
+		UpdateContext: updateCsactionFunc,
+		DeleteContext: deleteCsactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -51,7 +53,7 @@ func resourceCitrixAdcCsaction() *schema.Resource {
 	}
 }
 
-func createCsactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createCsactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCsactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	csactionName := d.Get("name").(string)
@@ -66,20 +68,15 @@ func createCsactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Csaction.Type(), csactionName, &csaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(csactionName)
 
-	err = readCsactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this csaction but we can't read it ?? %s", csactionName)
-		return nil
-	}
-	return nil
+	return readCsactionFunc(ctx, d, meta)
 }
 
-func readCsactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readCsactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCsactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	csactionName := d.Id()
@@ -100,7 +97,7 @@ func readCsactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateCsactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCsactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCsactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	csactionName := d.Get("name").(string)
@@ -138,19 +135,19 @@ func updateCsactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Csaction.Type(), csactionName, &csaction)
 		if err != nil {
-			return fmt.Errorf("Error updating csaction %s", csactionName)
+			return diag.Errorf("Error updating csaction %s", csactionName)
 		}
 	}
-	return readCsactionFunc(d, meta)
+	return readCsactionFunc(ctx, d, meta)
 }
 
-func deleteCsactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCsactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCsactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	csactionName := d.Id()
 	err := client.DeleteResource(service.Csaction.Type(), csactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

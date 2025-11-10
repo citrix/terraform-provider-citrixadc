@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/autoscale"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAutoscaleprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAutoscaleprofileFunc,
-		Read:          readAutoscaleprofileFunc,
-		Update:        updateAutoscaleprofileFunc,
-		Delete:        deleteAutoscaleprofileFunc,
+		CreateContext: createAutoscaleprofileFunc,
+		ReadContext:   readAutoscaleprofileFunc,
+		UpdateContext: updateAutoscaleprofileFunc,
+		DeleteContext: deleteAutoscaleprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -50,7 +53,7 @@ func resourceCitrixAdcAutoscaleprofile() *schema.Resource {
 	}
 }
 
-func createAutoscaleprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createAutoscaleprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAutoscaleprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscaleprofileName := d.Get("name").(string)
@@ -64,20 +67,15 @@ func createAutoscaleprofileFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Autoscaleprofile.Type(), autoscaleprofileName, &autoscaleprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(autoscaleprofileName)
 
-	err = readAutoscaleprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this autoscaleprofile but we can't read it ?? %s", autoscaleprofileName)
-		return nil
-	}
-	return nil
+	return readAutoscaleprofileFunc(ctx, d, meta)
 }
 
-func readAutoscaleprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readAutoscaleprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAutoscaleprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscaleprofileName := d.Id()
@@ -96,7 +94,7 @@ func readAutoscaleprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAutoscaleprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAutoscaleprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAutoscaleprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscaleprofileName := d.Get("name").(string)
@@ -124,19 +122,19 @@ func updateAutoscaleprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Autoscaleprofile.Type(), &autoscaleprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating autoscaleprofile %s", autoscaleprofileName)
+			return diag.Errorf("Error updating autoscaleprofile %s", autoscaleprofileName)
 		}
 	}
-	return readAutoscaleprofileFunc(d, meta)
+	return readAutoscaleprofileFunc(ctx, d, meta)
 }
 
-func deleteAutoscaleprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAutoscaleprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAutoscaleprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscaleprofileName := d.Id()
 	err := client.DeleteResource(service.Autoscaleprofile.Type(), autoscaleprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

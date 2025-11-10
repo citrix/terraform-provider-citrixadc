@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcL4param() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createL4paramFunc,
-		Read:          readL4paramFunc,
-		Update:        updateL4paramFunc,
-		Delete:        deleteL4paramFunc,
+		CreateContext: createL4paramFunc,
+		ReadContext:   readL4paramFunc,
+		UpdateContext: updateL4paramFunc,
+		DeleteContext: deleteL4paramFunc,
 		Schema: map[string]*schema.Schema{
 			"l2connmethod": {
 				Type:     schema.TypeString,
@@ -33,7 +36,7 @@ func resourceCitrixAdcL4param() *schema.Resource {
 	}
 }
 
-func createL4paramFunc(d *schema.ResourceData, meta interface{}) error {
+func createL4paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createL4paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var l4paramName string
@@ -46,20 +49,15 @@ func createL4paramFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.L4param.Type(), &l4param)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(l4paramName)
 
-	err = readL4paramFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this l4param but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readL4paramFunc(ctx, d, meta)
 }
 
-func readL4paramFunc(d *schema.ResourceData, meta interface{}) error {
+func readL4paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readL4paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading l4param state")
@@ -76,7 +74,7 @@ func readL4paramFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateL4paramFunc(d *schema.ResourceData, meta interface{}) error {
+func updateL4paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateL4paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -96,13 +94,13 @@ func updateL4paramFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.L4param.Type(), &l4param)
 		if err != nil {
-			return fmt.Errorf("Error updating l4param")
+			return diag.Errorf("Error updating l4param")
 		}
 	}
-	return readL4paramFunc(d, meta)
+	return readL4paramFunc(ctx, d, meta)
 }
 
-func deleteL4paramFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteL4paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteL4paramFunc")
 
 	d.SetId("")

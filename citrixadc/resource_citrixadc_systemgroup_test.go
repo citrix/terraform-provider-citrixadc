@@ -20,26 +20,30 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccSystemgroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSystemgroupDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSystemgroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSystemgroup_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemgroupExist("citrixadc_systemgroup.tf_systemgroup", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemgroup.tf_systemgroup", "warnpriorndays", "10"),
+					resource.TestCheckResourceAttr("citrixadc_systemgroup.tf_systemgroup", "daystoexpire", "45"),
 				),
 			},
 			{
 				Config: testAccSystemgroup_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemgroupExist("citrixadc_systemgroup.tf_systemgroup", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemgroup.tf_systemgroup", "warnpriorndays", "15"),
+					resource.TestCheckResourceAttr("citrixadc_systemgroup.tf_systemgroup", "daystoexpire", "60"),
 				),
 			},
 			{
@@ -71,8 +75,12 @@ func testAccCheckSystemgroupExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Systemgroup.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Systemgroup.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -87,7 +95,11 @@ func testAccCheckSystemgroupExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckSystemgroupDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_systemgroup" {
@@ -98,7 +110,7 @@ func testAccCheckSystemgroupDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Systemgroup.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Systemgroup.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -109,6 +121,9 @@ func testAccCheckSystemgroupDestroy(s *terraform.State) error {
 }
 
 const testAccSystemgroup_basic_step1 = `
+resource "citrixadc_systemparameter" "tf_systemparameter" {
+    passwordhistorycontrol = "ENABLED"
+}
 
 resource "citrixadc_systemuser" "tf_user1" {
     username = "tf_user1"
@@ -128,16 +143,18 @@ resource "citrixadc_systemgroup" "tf_systemgroup" {
     groupname = "testgroupname"
     timeout = 999
     promptstring = "bye>"
+	warnpriorndays = 10
+	daystoexpire = 45
 
     cmdpolicybinding { 
         policyname = "superuser"
         priority = 100
-    }
+	}
 
     cmdpolicybinding { 
         policyname = "network"
         priority = 200
-    }
+	}
 
     systemusers = [
         citrixadc_systemuser.tf_user1.username,
@@ -168,16 +185,18 @@ resource "citrixadc_systemgroup" "tf_systemgroup" {
     groupname = "testgroupname"
     timeout = 999
     promptstring = "bye>"
+	warnpriorndays = 15
+	daystoexpire = 60
 
     cmdpolicybinding { 
         policyname = "superuser"
         priority = 200
-    }
+	}
 
     cmdpolicybinding { 
         policyname = "network"
         priority = 100
-    }
+	}
 
     systemusers = [
 		citrixadc_systemuser.tf_user2.username
@@ -187,6 +206,10 @@ resource "citrixadc_systemgroup" "tf_systemgroup" {
 
 `
 const testAccSystemgroup_basic_step3 = `
+resource "citrixadc_systemparameter" "tf_systemparameter" {
+    passwordhistorycontrol = "DISABLED"
+}
+
 
 resource "citrixadc_systemuser" "tf_user1" {
     username = "tf_user1"

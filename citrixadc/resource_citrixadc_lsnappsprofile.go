@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lsn"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLsnappsprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnappsprofileFunc,
-		Read:          readLsnappsprofileFunc,
-		Update:        updateLsnappsprofileFunc,
-		Delete:        deleteLsnappsprofileFunc,
+		CreateContext: createLsnappsprofileFunc,
+		ReadContext:   readLsnappsprofileFunc,
+		UpdateContext: updateLsnappsprofileFunc,
+		DeleteContext: deleteLsnappsprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"appsprofilename": {
@@ -63,7 +66,7 @@ func resourceCitrixAdcLsnappsprofile() *schema.Resource {
 	}
 }
 
-func createLsnappsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnappsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnappsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnappsprofileName := d.Get("appsprofilename").(string)
@@ -74,26 +77,24 @@ func createLsnappsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		L2info:            d.Get("l2info").(string),
 		Mapping:           d.Get("mapping").(string),
 		Tcpproxy:          d.Get("tcpproxy").(string),
-		Td:                d.Get("td").(int),
 		Transportprotocol: d.Get("transportprotocol").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		lsnappsprofile.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource("lsnappsprofile", lsnappsprofileName, &lsnappsprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsnappsprofileName)
 
-	err = readLsnappsprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnappsprofile but we can't read it ?? %s", lsnappsprofileName)
-		return nil
-	}
-	return nil
+	return readLsnappsprofileFunc(ctx, d, meta)
 }
 
-func readLsnappsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnappsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnappsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnappsprofileName := d.Id()
@@ -110,14 +111,14 @@ func readLsnappsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("l2info", data["l2info"])
 	d.Set("mapping", data["mapping"])
 	d.Set("tcpproxy", data["tcpproxy"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("transportprotocol", data["transportprotocol"])
 
 	return nil
 
 }
 
-func updateLsnappsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLsnappsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLsnappsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnappsprofileName := d.Get("appsprofilename").(string)
@@ -153,26 +154,26 @@ func updateLsnappsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for lsnappsprofile %s, starting update", lsnappsprofileName)
-		lsnappsprofile.Td = d.Get("td").(int)
+		lsnappsprofile.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource("lsnappsprofile", &lsnappsprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating lsnappsprofile %s", lsnappsprofileName)
+			return diag.Errorf("Error updating lsnappsprofile %s", lsnappsprofileName)
 		}
 	}
-	return readLsnappsprofileFunc(d, meta)
+	return readLsnappsprofileFunc(ctx, d, meta)
 }
 
-func deleteLsnappsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnappsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnappsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnappsprofileName := d.Id()
 	err := client.DeleteResource("lsnappsprofile", lsnappsprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

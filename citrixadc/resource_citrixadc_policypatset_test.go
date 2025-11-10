@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccPolicypatset_basic_step1 = `
@@ -44,9 +44,9 @@ resource "citrixadc_policypatset" "tf_patset" {
 
 func TestAccPolicypatset_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPolicypatsetDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPolicypatsetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicypatset_basic_step1,
@@ -83,8 +83,12 @@ func testAccCheckPolicypatsetExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Policypatset.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Policypatset.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -99,7 +103,11 @@ func testAccCheckPolicypatsetExist(n string, id *string) resource.TestCheckFunc 
 }
 
 func testAccCheckPolicypatsetDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_policypatset" {
@@ -110,7 +118,7 @@ func testAccCheckPolicypatsetDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Policypatset.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Policypatset.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("policypatset %s still exists", rs.Primary.ID)
 		}

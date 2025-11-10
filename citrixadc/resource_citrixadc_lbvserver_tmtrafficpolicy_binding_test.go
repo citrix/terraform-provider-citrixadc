@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -31,7 +31,7 @@ const testAccLbvserver_tmtrafficpolicy_binding_basic = `
 		apptimeout       = 5
 		sso              = "OFF"
 		persistentcookie = "ON"
-	}	
+	}
 	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
 		name   = "tf_tmttrafficpolicy"
 		rule   = "true"
@@ -63,9 +63,9 @@ const testAccLbvserver_tmtrafficpolicy_binding_basic_step2 = `
 
 func TestAccLbvserver_tmtrafficpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserver_tmtrafficpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserver_tmtrafficpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbvserver_tmtrafficpolicy_binding_basic,
@@ -102,7 +102,11 @@ func testAccCheckLbvserver_tmtrafficpolicy_bindingExist(n string, id *string) re
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -142,7 +146,11 @@ func testAccCheckLbvserver_tmtrafficpolicy_bindingExist(n string, id *string) re
 
 func testAccCheckLbvserver_tmtrafficpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -182,7 +190,11 @@ func testAccCheckLbvserver_tmtrafficpolicy_bindingNotExist(n string, id string) 
 }
 
 func testAccCheckLbvserver_tmtrafficpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbvserver_tmtrafficpolicy_binding" {
@@ -193,7 +205,7 @@ func testAccCheckLbvserver_tmtrafficpolicy_bindingDestroy(s *terraform.State) er
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Lbvserver_tmtrafficpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Lbvserver_tmtrafficpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lbvserver_tmtrafficpolicy_binding %s still exists", rs.Primary.ID)
 		}

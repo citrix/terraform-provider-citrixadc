@@ -1,29 +1,38 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/responder"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcResponderaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createResponderactionFunc,
-		Read:          readResponderactionFunc,
-		Update:        updateResponderactionFunc,
-		Delete:        deleteResponderactionFunc,
+		CreateContext: createResponderactionFunc,
+		ReadContext:   readResponderactionFunc,
+		UpdateContext: updateResponderactionFunc,
+		DeleteContext: deleteResponderactionFunc,
 		CustomizeDiff: customizeResponderactionDiff,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"headers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"bypasssafetycheck": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -70,7 +79,7 @@ func resourceCitrixAdcResponderaction() *schema.Resource {
 	}
 }
 
-func createResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createResponderactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createResponderactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var responderactionName string
@@ -81,32 +90,31 @@ func createResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", responderactionName)
 	}
 	responderaction := responder.Responderaction{
-		Bypasssafetycheck:  d.Get("bypasssafetycheck").(string),
-		Comment:            d.Get("comment").(string),
-		Htmlpage:           d.Get("htmlpage").(string),
-		Name:               d.Get("name").(string),
-		Reasonphrase:       d.Get("reasonphrase").(string),
-		Responsestatuscode: d.Get("responsestatuscode").(int),
-		Target:             d.Get("target").(string),
-		Type:               d.Get("type").(string),
+		Bypasssafetycheck: d.Get("bypasssafetycheck").(string),
+		Comment:           d.Get("comment").(string),
+		Htmlpage:          d.Get("htmlpage").(string),
+		Name:              d.Get("name").(string),
+		Reasonphrase:      d.Get("reasonphrase").(string),
+		Target:            d.Get("target").(string),
+		Type:              d.Get("type").(string),
+		Headers:           toStringList(d.Get("headers").([]interface{})),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("responsestatuscode"); !raw.IsNull() {
+		responderaction.Responsestatuscode = intPtr(d.Get("responsestatuscode").(int))
 	}
 
 	_, err := client.AddResource(service.Responderaction.Type(), responderactionName, &responderaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(responderactionName)
 
-	err = readResponderactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this responderaction but we can't read it ?? %s", responderactionName)
-		return nil
-	}
-	return nil
+	return readResponderactionFunc(ctx, d, meta)
 }
 
-func readResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readResponderactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readResponderactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderactionName := d.Id()
@@ -119,6 +127,7 @@ func readResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", data["name"])
+	d.Set("headers", data["headers"])
 	d.Set("bypasssafetycheck", data["bypasssafetycheck"])
 	d.Set("comment", data["comment"])
 	d.Set("htmlpage", data["htmlpage"])
@@ -137,14 +146,14 @@ func readResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	} else {
 		// If the value is not a string, assume it's already an integer and set it directly.
-		d.Set("responsestatuscode", data["responsestatuscode"])
+		setToInt("responsestatuscode", d, data["responsestatuscode"])
 	}
 
 	return nil
 
 }
 
-func updateResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateResponderactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateResponderactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderactionName := d.Get("name").(string)
@@ -153,6 +162,11 @@ func updateResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("headers") {
+		log.Printf("[DEBUG]  citrixadc-provider: Headers has changed for responderaction, starting update")
+		responderaction.Headers = toStringList(d.Get("headers").([]interface{}))
+		hasChange = true
+	}
 	if d.HasChange("bypasssafetycheck") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bypasssafetycheck has changed for responderaction %s, starting update", responderactionName)
 		responderaction.Bypasssafetycheck = d.Get("bypasssafetycheck").(string)
@@ -180,7 +194,7 @@ func updateResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("responsestatuscode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Responsestatuscode has changed for responderaction %s, starting update", responderactionName)
-		responderaction.Responsestatuscode = d.Get("responsestatuscode").(int)
+		responderaction.Responsestatuscode = intPtr(d.Get("responsestatuscode").(int))
 		hasChange = true
 	}
 	if d.HasChange("target") {
@@ -197,19 +211,19 @@ func updateResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Responderaction.Type(), responderactionName, &responderaction)
 		if err != nil {
-			return fmt.Errorf("Error updating responderaction %s", responderactionName)
+			return diag.Errorf("Error updating responderaction %s", responderactionName)
 		}
 	}
-	return readResponderactionFunc(d, meta)
+	return readResponderactionFunc(ctx, d, meta)
 }
 
-func deleteResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteResponderactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteResponderactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderactionName := d.Id()
 	err := client.DeleteResource(service.Responderaction.Type(), responderactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -217,7 +231,7 @@ func deleteResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func customizeResponderactionDiff(diff *schema.ResourceDiff, meta interface{}) error {
+func customizeResponderactionDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In customizeDiff")
 	o := diff.GetChangedKeysPrefix("")
 

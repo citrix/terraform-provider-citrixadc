@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcSslservicegroup_sslciphersuite_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslservicegroup_sslciphersuite_bindingFunc,
-		Read:          readSslservicegroup_sslciphersuite_bindingFunc,
-		Delete:        deleteSslservicegroup_sslciphersuite_bindingFunc,
+		CreateContext: createSslservicegroup_sslciphersuite_bindingFunc,
+		ReadContext:   readSslservicegroup_sslciphersuite_bindingFunc,
+		DeleteContext: deleteSslservicegroup_sslciphersuite_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ciphername": {
@@ -40,7 +42,7 @@ func resourceCitrixAdcSslservicegroup_sslciphersuite_binding() *schema.Resource 
 	}
 }
 
-func createSslservicegroup_sslciphersuite_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslservicegroup_sslciphersuite_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslservicegroup_sslciphersuite_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	servicegroupname := d.Get("servicegroupname")
@@ -54,20 +56,15 @@ func createSslservicegroup_sslciphersuite_bindingFunc(d *schema.ResourceData, me
 
 	err := client.UpdateUnnamedResource(service.Sslservicegroup_sslciphersuite_binding.Type(), &sslservicegroup_sslciphersuite_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSslservicegroup_sslciphersuite_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslservicegroup_sslciphersuite_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSslservicegroup_sslciphersuite_bindingFunc(ctx, d, meta)
 }
 
-func readSslservicegroup_sslciphersuite_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslservicegroup_sslciphersuite_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslservicegroup_sslciphersuite_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -88,7 +85,7 @@ func readSslservicegroup_sslciphersuite_bindingFunc(d *schema.ResourceData, meta
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -127,7 +124,7 @@ func readSslservicegroup_sslciphersuite_bindingFunc(d *schema.ResourceData, meta
 
 }
 
-func deleteSslservicegroup_sslciphersuite_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslservicegroup_sslciphersuite_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslservicegroup_sslciphersuite_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -142,7 +139,7 @@ func deleteSslservicegroup_sslciphersuite_bindingFunc(d *schema.ResourceData, me
 
 	err := client.DeleteResourceWithArgs(service.Sslservicegroup_sslciphersuite_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

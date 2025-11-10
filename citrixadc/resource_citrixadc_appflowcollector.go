@@ -1,24 +1,25 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppflowcollector() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppflowcollectorFunc,
-		Read:          readAppflowcollectorFunc,
-		Update:        updateAppflowcollectorFunc,
-		Delete:        deleteAppflowcollectorFunc,
+		CreateContext: createAppflowcollectorFunc,
+		ReadContext:   readAppflowcollectorFunc,
+		UpdateContext: updateAppflowcollectorFunc,
+		DeleteContext: deleteAppflowcollectorFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -51,7 +52,7 @@ func resourceCitrixAdcAppflowcollector() *schema.Resource {
 	}
 }
 
-func createAppflowcollectorFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppflowcollectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowcollectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowcollectorName := d.Get("name").(string)
@@ -60,26 +61,24 @@ func createAppflowcollectorFunc(d *schema.ResourceData, meta interface{}) error 
 		Ipaddress:  d.Get("ipaddress").(string),
 		Name:       d.Get("name").(string),
 		Netprofile: d.Get("netprofile").(string),
-		Port:       d.Get("port").(int),
 		Transport:  d.Get("transport").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		appflowcollector.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource(service.Appflowcollector.Type(), appflowcollectorName, &appflowcollector)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appflowcollectorName)
 
-	err = readAppflowcollectorFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appflowcollector but we can't read it ?? %s", appflowcollectorName)
-		return nil
-	}
-	return nil
+	return readAppflowcollectorFunc(ctx, d, meta)
 }
 
-func readAppflowcollectorFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppflowcollectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppflowcollectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowcollectorName := d.Id()
@@ -93,14 +92,14 @@ func readAppflowcollectorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("name", data["name"])
 	d.Set("netprofile", data["netprofile"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 	d.Set("transport", data["transport"])
 
 	return nil
 
 }
 
-func updateAppflowcollectorFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppflowcollectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppflowcollectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowcollectorName := d.Get("name").(string)
@@ -121,26 +120,26 @@ func updateAppflowcollectorFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for appflowcollector %s, starting update", appflowcollectorName)
-		appflowcollector.Port = d.Get("port").(int)
+		appflowcollector.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Appflowcollector.Type(), appflowcollectorName, &appflowcollector)
 		if err != nil {
-			return fmt.Errorf("Error updating appflowcollector %s", appflowcollectorName)
+			return diag.Errorf("Error updating appflowcollector %s", appflowcollectorName)
 		}
 	}
-	return readAppflowcollectorFunc(d, meta)
+	return readAppflowcollectorFunc(ctx, d, meta)
 }
 
-func deleteAppflowcollectorFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppflowcollectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppflowcollectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowcollectorName := d.Id()
 	err := client.DeleteResource(service.Appflowcollector.Type(), appflowcollectorName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,29 +1,41 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"bytes"
 	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSystemgroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemgroupFunc,
-		Read:          readSystemgroupFunc,
-		Update:        updateSystemgroupFunc,
-		Delete:        deleteSystemgroupFunc,
+		CreateContext: createSystemgroupFunc,
+		ReadContext:   readSystemgroupFunc,
+		UpdateContext: updateSystemgroupFunc,
+		DeleteContext: deleteSystemgroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"warnpriorndays": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"daystoexpire": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -74,7 +86,7 @@ func resourceCitrixAdcSystemgroup() *schema.Resource {
 	}
 }
 
-func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemgroupName := d.Get("groupname").(string)
@@ -82,13 +94,21 @@ func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	systemgroup := system.Systemgroup{
 		Groupname:                  d.Get("groupname").(string),
 		Promptstring:               d.Get("promptstring").(string),
-		Timeout:                    d.Get("timeout").(int),
 		Allowedmanagementinterface: toStringList(d.Get("allowedmanagementinterface").([]interface{})),
+	}
+	if raw := d.GetRawConfig().GetAttr("warnpriorndays"); !raw.IsNull() {
+		systemgroup.Warnpriorndays = intPtr(d.Get("warnpriorndays").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("daystoexpire"); !raw.IsNull() {
+		systemgroup.Daystoexpire = intPtr(d.Get("daystoexpire").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		systemgroup.Timeout = intPtr(d.Get("timeout").(int))
 	}
 
 	_, err := client.AddResource(service.Systemgroup.Type(), systemgroupName, &systemgroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(systemgroupName)
@@ -97,7 +117,7 @@ func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("cmdpolicybinding"); ok {
 		err = updateSystemgroupCmdpolicyBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -105,19 +125,14 @@ func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("systemusers"); ok {
 		err = updateSystemgroupSystemuserBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	err = readSystemgroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemgroup but we can't read it ?? %s", systemgroupName)
-		return nil
-	}
-	return nil
+	return readSystemgroupFunc(ctx, d, meta)
 }
 
-func readSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemgroupName := d.Id()
@@ -131,28 +146,29 @@ func readSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("cmdpolicybinding"); ok {
 		err = readSystemgroupCmdpolicybindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if _, ok := d.GetOk("systemusers"); ok {
 		err = readSystemgroupSystemuserbindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	d.Set("name", data["name"])
 	d.Set("groupname", data["groupname"])
+	setToInt("warnpriorndays", d, data["warnpriorndays"])
+	setToInt("daystoexpire", d, data["daystoexpire"])
 	d.Set("promptstring", data["promptstring"])
-	d.Set("timeout", data["timeout"])
+	setToInt("timeout", d, data["timeout"])
 	d.Set("allowedmanagementinterface", data["allowedmanagementinterface"])
 
 	return nil
 
 }
 
-func updateSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSystemgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemgroupName := d.Get("groupname").(string)
@@ -161,6 +177,16 @@ func updateSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 		Groupname: d.Get("groupname").(string),
 	}
 	hasChange := false
+	if d.HasChange("warnpriorndays") {
+		log.Printf("[DEBUG]  citrixadc-provider: Warnpriorndays has changed for systemgroup, starting update")
+		systemgroup.Warnpriorndays = intPtr(d.Get("warnpriorndays").(int))
+		hasChange = true
+	}
+	if d.HasChange("daystoexpire") {
+		log.Printf("[DEBUG]  citrixadc-provider: Daystoexpire has changed for systemgroup, starting update")
+		systemgroup.Daystoexpire = intPtr(d.Get("daystoexpire").(int))
+		hasChange = true
+	}
 	if d.HasChange("promptstring") {
 		log.Printf("[DEBUG]  citrixadc-provider: Promptstring has changed for systemgroup %s, starting update", systemgroupName)
 		systemgroup.Promptstring = d.Get("promptstring").(string)
@@ -168,7 +194,7 @@ func updateSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for systemgroup %s, starting update", systemgroupName)
-		systemgroup.Timeout = d.Get("timeout").(int)
+		systemgroup.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("allowedmanagementinterface") {
@@ -180,32 +206,32 @@ func updateSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Systemgroup.Type(), systemgroupName, &systemgroup)
 		if err != nil {
-			return fmt.Errorf("Error updating systemgroup %s", systemgroupName)
+			return diag.Errorf("Error updating systemgroup %s", systemgroupName)
 		}
 	}
 	if d.HasChange("cmdpolicybinding") {
 		err := updateSystemgroupCmdpolicyBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChange("systemusers") {
 		err := updateSystemgroupSystemuserBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return readSystemgroupFunc(d, meta)
+	return readSystemgroupFunc(ctx, d, meta)
 }
 
-func deleteSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemgroupName := d.Id()
 	err := client.DeleteResource(service.Systemgroup.Type(), systemgroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -291,7 +317,7 @@ func systemgroupCmdpolicybindingMappingHash(v interface{}) int {
 	if d, ok := m["priority"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
 	}
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func readSystemgroupCmdpolicybindings(d *schema.ResourceData, meta interface{}) error {

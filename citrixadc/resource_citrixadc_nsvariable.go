@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsvariable() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsvariableFunc,
-		Read:          readNsvariableFunc,
-		Update:        updateNsvariableFunc,
-		Delete:        deleteNsvariableFunc,
+		CreateContext: createNsvariableFunc,
+		ReadContext:   readNsvariableFunc,
+		UpdateContext: updateNsvariableFunc,
+		DeleteContext: deleteNsvariableFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,13 +76,12 @@ func resourceCitrixAdcNsvariable() *schema.Resource {
 	}
 }
 
-func createNsvariableFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsvariableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsvariableFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsvariableName := d.Get("name").(string)
 	nsvariable := ns.Nsvariable{
 		Comment:       d.Get("comment").(string),
-		Expires:       d.Get("expires").(int),
 		Iffull:        d.Get("iffull").(string),
 		Ifnovalue:     d.Get("ifnovalue").(string),
 		Ifvaluetoobig: d.Get("ifvaluetoobig").(string),
@@ -89,22 +91,21 @@ func createNsvariableFunc(d *schema.ResourceData, meta interface{}) error {
 		Type:          d.Get("type").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("expires"); !raw.IsNull() {
+		nsvariable.Expires = intPtr(d.Get("expires").(int))
+	}
+
 	_, err := client.AddResource(service.Nsvariable.Type(), nsvariableName, &nsvariable)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsvariableName)
 
-	err = readNsvariableFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsvariable but we can't read it ?? %s", nsvariableName)
-		return nil
-	}
-	return nil
+	return readNsvariableFunc(ctx, d, meta)
 }
 
-func readNsvariableFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsvariableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsvariableFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsvariableName := d.Id()
@@ -116,7 +117,7 @@ func readNsvariableFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("comment", data["comment"])
-	d.Set("expires", data["expires"])
+	setToInt("expires", d, data["expires"])
 	d.Set("iffull", data["iffull"])
 	d.Set("ifnovalue", data["ifnovalue"])
 	d.Set("ifvaluetoobig", data["ifvaluetoobig"])
@@ -129,7 +130,7 @@ func readNsvariableFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsvariableFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsvariableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsvariableFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsvariableName := d.Get("name").(string)
@@ -145,7 +146,7 @@ func updateNsvariableFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("expires") {
 		log.Printf("[DEBUG]  citrixadc-provider: Expires has changed for nsvariable %s, starting update", nsvariableName)
-		nsvariable.Expires = d.Get("expires").(int)
+		nsvariable.Expires = intPtr(d.Get("expires").(int))
 		hasChange = true
 	}
 	if d.HasChange("iffull") {
@@ -172,19 +173,19 @@ func updateNsvariableFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nsvariable.Type(), nsvariableName, &nsvariable)
 		if err != nil {
-			return fmt.Errorf("Error updating nsvariable %s", nsvariableName)
+			return diag.Errorf("Error updating nsvariable %s", nsvariableName)
 		}
 	}
-	return readNsvariableFunc(d, meta)
+	return readNsvariableFunc(ctx, d, meta)
 }
 
-func deleteNsvariableFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsvariableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsvariableFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsvariableName := d.Id()
 	err := client.DeleteResource(service.Nsvariable.Type(), nsvariableName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

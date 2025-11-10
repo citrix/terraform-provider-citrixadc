@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcLbvserver_dnspolicy64_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbvserver_dnspolicy64_bindingFunc,
-		Read:          readLbvserver_dnspolicy64_bindingFunc,
-		Delete:        deleteLbvserver_dnspolicy64_bindingFunc,
+		CreateContext: createLbvserver_dnspolicy64_bindingFunc,
+		ReadContext:   readLbvserver_dnspolicy64_bindingFunc,
+		DeleteContext: deleteLbvserver_dnspolicy64_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": {
@@ -71,7 +73,7 @@ func resourceCitrixAdcLbvserver_dnspolicy64_binding() *schema.Resource {
 	}
 }
 
-func createLbvserver_dnspolicy64_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbvserver_dnspolicy64_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbvserver_dnspolicy64_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Get("name").(string)
@@ -85,25 +87,23 @@ func createLbvserver_dnspolicy64_bindingFunc(d *schema.ResourceData, meta interf
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   lbvserverName,
 		Policyname:             policyName,
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		lbvserver_dnspolicy64_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Lbvserver_dnspolicy64_binding.Type(), lbvserverName, &lbvserver_dnspolicy64_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLbvserver_dnspolicy64_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbvserver_dnspolicy64_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLbvserver_dnspolicy64_bindingFunc(ctx, d, meta)
 }
 
-func readLbvserver_dnspolicy64_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbvserver_dnspolicy64_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbvserver_dnspolicy64_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -124,7 +124,7 @@ func readLbvserver_dnspolicy64_bindingFunc(d *schema.ResourceData, meta interfac
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -168,7 +168,7 @@ func readLbvserver_dnspolicy64_bindingFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func deleteLbvserver_dnspolicy64_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbvserver_dnspolicy64_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbvserver_dnspolicy64_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -190,7 +190,7 @@ func deleteLbvserver_dnspolicy64_bindingFunc(d *schema.ResourceData, meta interf
 	}
 	err := client.DeleteResourceWithArgsMap(service.Lbvserver_dnspolicy64_binding.Type(), lbvserverName, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

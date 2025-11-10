@@ -27,7 +27,7 @@ type Cacheforwardproxy struct {
 	/**
 	* Port on the Citrix ADC or a server for which the cache acts as a proxy
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 
 	//------- Read only Parameter ---------;
 

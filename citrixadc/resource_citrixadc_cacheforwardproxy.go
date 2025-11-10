@@ -1,24 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cache"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCacheforwardproxy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCacheforwardproxyFunc,
-		Read:          readCacheforwardproxyFunc,
-		Delete:        deleteCacheforwardproxyFunc,
+		CreateContext: createCacheforwardproxyFunc,
+		ReadContext:   readCacheforwardproxyFunc,
+		DeleteContext: deleteCacheforwardproxyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ipaddress": {
@@ -35,32 +39,30 @@ func resourceCitrixAdcCacheforwardproxy() *schema.Resource {
 	}
 }
 
-func createCacheforwardproxyFunc(d *schema.ResourceData, meta interface{}) error {
+func createCacheforwardproxyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCacheforwardproxyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cacheforwardproxyName := d.Get("ipaddress").(string)
 	cacheforwardproxyid := fmt.Sprintf("%s,%s", cacheforwardproxyName, strconv.Itoa(d.Get("port").(int)))
 	cacheforwardproxy := cache.Cacheforwardproxy{
 		Ipaddress: d.Get("ipaddress").(string),
-		Port:      d.Get("port").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		cacheforwardproxy.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource(service.Cacheforwardproxy.Type(), cacheforwardproxyName, &cacheforwardproxy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(cacheforwardproxyid)
 
-	err = readCacheforwardproxyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cacheforwardproxy but we can't read it ?? %s", cacheforwardproxyid)
-		return nil
-	}
-	return nil
+	return readCacheforwardproxyFunc(ctx, d, meta)
 }
 
-func readCacheforwardproxyFunc(d *schema.ResourceData, meta interface{}) error {
+func readCacheforwardproxyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCacheforwardproxyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cacheforwardproxyName := d.Id()
@@ -97,13 +99,13 @@ func readCacheforwardproxyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	data := dataArr[foundIndex]
 	d.Set("ipaddress", data["ipaddress"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 
 	return nil
 
 }
 
-func deleteCacheforwardproxyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCacheforwardproxyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCacheforwardproxyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cacheforwardproxyName := d.Get("ipaddress").(string)
@@ -111,7 +113,7 @@ func deleteCacheforwardproxyFunc(d *schema.ResourceData, meta interface{}) error
 	args = append(args, fmt.Sprintf("port:%v", d.Get("port").(int)))
 	err := client.DeleteResourceWithArgs(service.Cacheforwardproxy.Type(), cacheforwardproxyName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

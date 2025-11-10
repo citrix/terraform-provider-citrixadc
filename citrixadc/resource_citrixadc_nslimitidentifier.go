@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNslimitidentifier() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNslimitidentifierFunc,
-		Read:          readNslimitidentifierFunc,
-		Update:        updateNslimitidentifierFunc,
-		Delete:        deleteNslimitidentifierFunc,
+		CreateContext: createNslimitidentifierFunc,
+		ReadContext:   readNslimitidentifierFunc,
+		UpdateContext: updateNslimitidentifierFunc,
+		DeleteContext: deleteNslimitidentifierFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"limitidentifier": {
@@ -66,38 +69,42 @@ func resourceCitrixAdcNslimitidentifier() *schema.Resource {
 	}
 }
 
-func createNslimitidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func createNslimitidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNslimitidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nslimitidentifierName := d.Get("limitidentifier").(string)
 
 	nslimitidentifier := ns.Nslimitidentifier{
-		Limitidentifier:  d.Get("limitidentifier").(string),
-		Limittype:        d.Get("limittype").(string),
-		Maxbandwidth:     d.Get("maxbandwidth").(int),
-		Mode:             d.Get("mode").(string),
-		Selectorname:     d.Get("selectorname").(string),
-		Threshold:        d.Get("threshold").(int),
-		Timeslice:        d.Get("timeslice").(int),
-		Trapsintimeslice: d.Get("trapsintimeslice").(int),
+		Limitidentifier: d.Get("limitidentifier").(string),
+		Limittype:       d.Get("limittype").(string),
+		Mode:            d.Get("mode").(string),
+		Selectorname:    d.Get("selectorname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("maxbandwidth"); !raw.IsNull() {
+		nslimitidentifier.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("threshold"); !raw.IsNull() {
+		nslimitidentifier.Threshold = intPtr(d.Get("threshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeslice"); !raw.IsNull() {
+		nslimitidentifier.Timeslice = intPtr(d.Get("timeslice").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("trapsintimeslice"); !raw.IsNull() {
+		nslimitidentifier.Trapsintimeslice = intPtr(d.Get("trapsintimeslice").(int))
 	}
 
 	_, err := client.AddResource(service.Nslimitidentifier.Type(), nslimitidentifierName, &nslimitidentifier)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nslimitidentifierName)
 
-	err = readNslimitidentifierFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nslimitidentifier but we can't read it ?? %s", nslimitidentifierName)
-		return nil
-	}
-	return nil
+	return readNslimitidentifierFunc(ctx, d, meta)
 }
 
-func readNslimitidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func readNslimitidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNslimitidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nslimitidentifierName := d.Id()
@@ -110,18 +117,18 @@ func readNslimitidentifierFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("limitidentifier", data["limitidentifier"])
 	d.Set("limittype", data["limittype"])
-	d.Set("maxbandwidth", data["maxbandwidth"])
+	setToInt("maxbandwidth", d, data["maxbandwidth"])
 	d.Set("mode", data["mode"])
 	d.Set("selectorname", data["selectorname"])
-	d.Set("threshold", data["threshold"])
-	d.Set("timeslice", data["timeslice"])
-	d.Set("trapsintimeslice", data["trapsintimeslice"])
+	setToInt("threshold", d, data["threshold"])
+	setToInt("timeslice", d, data["timeslice"])
+	setToInt("trapsintimeslice", d, data["trapsintimeslice"])
 
 	return nil
 
 }
 
-func updateNslimitidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNslimitidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNslimitidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nslimitidentifierName := d.Get("limitidentifier").(string)
@@ -137,7 +144,7 @@ func updateNslimitidentifierFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxbandwidth has changed for nslimitidentifier %s, starting update", nslimitidentifierName)
-		nslimitidentifier.Maxbandwidth = d.Get("maxbandwidth").(int)
+		nslimitidentifier.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("mode") {
@@ -152,36 +159,36 @@ func updateNslimitidentifierFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("threshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Threshold has changed for nslimitidentifier %s, starting update", nslimitidentifierName)
-		nslimitidentifier.Threshold = d.Get("threshold").(int)
+		nslimitidentifier.Threshold = intPtr(d.Get("threshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("timeslice") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeslice has changed for nslimitidentifier %s, starting update", nslimitidentifierName)
-		nslimitidentifier.Timeslice = d.Get("timeslice").(int)
+		nslimitidentifier.Timeslice = intPtr(d.Get("timeslice").(int))
 		hasChange = true
 	}
 	if d.HasChange("trapsintimeslice") {
 		log.Printf("[DEBUG]  citrixadc-provider: Trapsintimeslice has changed for nslimitidentifier %s, starting update", nslimitidentifierName)
-		nslimitidentifier.Trapsintimeslice = d.Get("trapsintimeslice").(int)
+		nslimitidentifier.Trapsintimeslice = intPtr(d.Get("trapsintimeslice").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Nslimitidentifier.Type(), nslimitidentifierName, &nslimitidentifier)
 		if err != nil {
-			return fmt.Errorf("Error updating nslimitidentifier %s", nslimitidentifierName)
+			return diag.Errorf("Error updating nslimitidentifier %s", nslimitidentifierName)
 		}
 	}
-	return readNslimitidentifierFunc(d, meta)
+	return readNslimitidentifierFunc(ctx, d, meta)
 }
 
-func deleteNslimitidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNslimitidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNslimitidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nslimitidentifierName := d.Id()
 	err := client.DeleteResource(service.Nslimitidentifier.Type(), nslimitidentifierName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

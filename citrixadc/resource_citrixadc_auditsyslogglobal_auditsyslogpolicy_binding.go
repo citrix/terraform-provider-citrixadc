@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcAuditsyslogglobal_auditsyslogpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuditsyslogglobal_auditsyslogpolicy_bindingFunc,
-		Read:          readAuditsyslogglobal_auditsyslogpolicy_bindingFunc,
-		Delete:        deleteAuditsyslogglobal_auditsyslogpolicy_bindingFunc,
+		CreateContext: createAuditsyslogglobal_auditsyslogpolicy_bindingFunc,
+		ReadContext:   readAuditsyslogglobal_auditsyslogpolicy_bindingFunc,
+		DeleteContext: deleteAuditsyslogglobal_auditsyslogpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -53,32 +55,30 @@ func resourceCitrixAdcAuditsyslogglobal_auditsyslogpolicy_binding() *schema.Reso
 	}
 }
 
-func createAuditsyslogglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuditsyslogglobal_auditsyslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuditsyslogglobal_auditsyslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
 	auditsyslogglobal_auditsyslogpolicy_binding := audit.Auditsyslogglobalauditsyslogpolicybinding{
 		Globalbindtype: d.Get("globalbindtype").(string),
 		Policyname:     d.Get("policyname").(string),
-		Priority:       d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		auditsyslogglobal_auditsyslogpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource("auditsyslogglobal_auditsyslogpolicy_binding", &auditsyslogglobal_auditsyslogpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readAuditsyslogglobal_auditsyslogpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this auditsyslogglobal_auditsyslogpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readAuditsyslogglobal_auditsyslogpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAuditsyslogglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuditsyslogglobal_auditsyslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuditsyslogglobal_auditsyslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -94,7 +94,7 @@ func readAuditsyslogglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData,
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -135,7 +135,7 @@ func readAuditsyslogglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData,
 
 }
 
-func deleteAuditsyslogglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuditsyslogglobal_auditsyslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditsyslogglobal_auditsyslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -151,7 +151,7 @@ func deleteAuditsyslogglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceDat
 	}
 	err := client.DeleteResourceWithArgs("auditsyslogglobal_auditsyslogpolicy_binding", "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

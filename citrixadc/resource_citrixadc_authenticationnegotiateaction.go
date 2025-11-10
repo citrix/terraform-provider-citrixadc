@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationnegotiateaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationnegotiateactionFunc,
-		Read:          readAuthenticationnegotiateactionFunc,
-		Update:        updateAuthenticationnegotiateactionFunc,
-		Delete:        deleteAuthenticationnegotiateactionFunc,
+		CreateContext: createAuthenticationnegotiateactionFunc,
+		ReadContext:   readAuthenticationnegotiateactionFunc,
+		UpdateContext: updateAuthenticationnegotiateactionFunc,
+		DeleteContext: deleteAuthenticationnegotiateactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -65,7 +68,7 @@ func resourceCitrixAdcAuthenticationnegotiateaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationnegotiateactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationnegotiateactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationnegotiateactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationnegotiateactionName := d.Get("name").(string)
@@ -82,20 +85,15 @@ func createAuthenticationnegotiateactionFunc(d *schema.ResourceData, meta interf
 
 	_, err := client.AddResource(service.Authenticationnegotiateaction.Type(), authenticationnegotiateactionName, &authenticationnegotiateaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationnegotiateactionName)
 
-	err = readAuthenticationnegotiateactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationnegotiateaction but we can't read it ?? %s", authenticationnegotiateactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationnegotiateactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationnegotiateactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationnegotiateactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationnegotiateactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationnegotiateactionName := d.Id()
@@ -119,7 +117,7 @@ func readAuthenticationnegotiateactionFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func updateAuthenticationnegotiateactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationnegotiateactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationnegotiateactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationnegotiateactionName := d.Get("name").(string)
@@ -167,19 +165,19 @@ func updateAuthenticationnegotiateactionFunc(d *schema.ResourceData, meta interf
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationnegotiateaction.Type(), authenticationnegotiateactionName, &authenticationnegotiateaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationnegotiateaction %s", authenticationnegotiateactionName)
+			return diag.Errorf("Error updating authenticationnegotiateaction %s", authenticationnegotiateactionName)
 		}
 	}
-	return readAuthenticationnegotiateactionFunc(d, meta)
+	return readAuthenticationnegotiateactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationnegotiateactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationnegotiateactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationnegotiateactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationnegotiateactionName := d.Id()
 	err := client.DeleteResource(service.Authenticationnegotiateaction.Type(), authenticationnegotiateactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

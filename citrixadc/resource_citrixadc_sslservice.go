@@ -1,26 +1,34 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslservice() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslserviceFunc,
-		Read:          readSslserviceFunc,
-		Update:        updateSslserviceFunc,
-		Delete:        deleteSslserviceFunc,
+		CreateContext: createSslserviceFunc,
+		ReadContext:   readSslserviceFunc,
+		UpdateContext: updateSslserviceFunc,
+		DeleteContext: deleteSslserviceFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"sslclientlogs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"cipherredirect": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -195,7 +203,7 @@ func resourceCitrixAdcSslservice() *schema.Resource {
 	}
 }
 
-func createSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslserviceName = d.Get("servicename").(string)
@@ -207,14 +215,12 @@ func createSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		Clientcert:           d.Get("clientcert").(string),
 		Commonname:           d.Get("commonname").(string),
 		Dh:                   d.Get("dh").(string),
-		Dhcount:              d.Get("dhcount").(int),
 		Dhfile:               d.Get("dhfile").(string),
 		Dhkeyexpsizelimit:    d.Get("dhkeyexpsizelimit").(string),
 		Dtls1:                d.Get("dtls1").(string),
 		Dtls12:               d.Get("dtls12").(string),
 		Dtlsprofilename:      d.Get("dtlsprofilename").(string),
 		Ersa:                 d.Get("ersa").(string),
-		Ersacount:            d.Get("ersacount").(int),
 		Ocspstapling:         d.Get("ocspstapling").(string),
 		Pushenctrigger:       d.Get("pushenctrigger").(string),
 		Redirectportrewrite:  d.Get("redirectportrewrite").(string),
@@ -222,7 +228,6 @@ func createSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		Serverauth:           d.Get("serverauth").(string),
 		Servicename:          sslserviceName,
 		Sessreuse:            d.Get("sessreuse").(string),
-		Sesstimeout:          d.Get("sesstimeout").(int),
 		Snienable:            d.Get("snienable").(string),
 		Ssl2:                 d.Get("ssl2").(string),
 		Ssl3:                 d.Get("ssl3").(string),
@@ -235,24 +240,30 @@ func createSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		Tls11:                d.Get("tls11").(string),
 		Tls12:                d.Get("tls12").(string),
 		Tls13:                d.Get("tls13").(string),
+		Sslclientlogs:        d.Get("sslclientlogs").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("dhcount"); !raw.IsNull() {
+		sslservice.Dhcount = intPtr(d.Get("dhcount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ersacount"); !raw.IsNull() {
+		sslservice.Ersacount = intPtr(d.Get("ersacount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		sslservice.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Sslservice.Type(), &sslservice)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslserviceName)
 
-	err = readSslserviceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslservice but we can't read it ?? %s", sslserviceName)
-		return nil
-	}
-	return nil
+	return readSslserviceFunc(ctx, d, meta)
 }
 
-func readSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslserviceName := d.Id()
@@ -264,7 +275,7 @@ func readSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	sslserviceAttributes := [34]string{
+	sslserviceAttributes := [35]string{
 		"cipherredirect",
 		"cipherurl",
 		"clientauth",
@@ -299,12 +310,17 @@ func readSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		"tls11",
 		"tls12",
 		"tls13",
+		"sslclientlogs",
 	}
 
 	for _, val := range sslserviceAttributes {
 		if _, exists := data[val]; exists {
 			if data[val] != "" || data[val] != nil {
-				d.Set(val, data[val])
+				if val == "dhcount" || val == "ersacount" || val == "sesstimeout" {
+					setToInt(val, d, data[val])
+				} else {
+					d.Set(val, data[val])
+				}
 			}
 		}
 	}
@@ -313,7 +329,7 @@ func readSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslserviceName := d.Get("servicename").(string)
@@ -322,6 +338,11 @@ func updateSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		Servicename: d.Get("servicename").(string),
 	}
 	hasChange := false
+	if d.HasChange("sslclientlogs") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sslclientlogs has changed for sslservice, starting update")
+		sslservice.Sslclientlogs = d.Get("sslclientlogs").(string)
+		hasChange = true
+	}
 	if d.HasChange("cipherredirect") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cipherredirect has changed for sslservice %s, starting update", sslserviceName)
 		sslservice.Cipherredirect = d.Get("cipherredirect").(string)
@@ -354,7 +375,7 @@ func updateSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("dhcount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dhcount has changed for sslservice %s, starting update", sslserviceName)
-		sslservice.Dhcount = d.Get("dhcount").(int)
+		sslservice.Dhcount = intPtr(d.Get("dhcount").(int))
 		hasChange = true
 	}
 	if d.HasChange("dhfile") {
@@ -389,7 +410,7 @@ func updateSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ersacount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ersacount has changed for sslservice %s, starting update", sslserviceName)
-		sslservice.Ersacount = d.Get("ersacount").(int)
+		sslservice.Ersacount = intPtr(d.Get("ersacount").(int))
 		hasChange = true
 	}
 	if d.HasChange("ocspstapling") {
@@ -430,7 +451,7 @@ func updateSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	//sessreuse pre-requisite for sesstimeout
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for sslservice %s, starting update", sslserviceName)
-		sslservice.Sesstimeout = d.Get("sesstimeout").(int)
+		sslservice.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		sslservice.Sessreuse = d.Get("sessreuse").(string)
 		hasChange = true
 	}
@@ -498,13 +519,13 @@ func updateSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Sslservice.Type(), sslserviceName, &sslservice)
 		if err != nil {
-			return fmt.Errorf("Error updating sslservice %s", sslserviceName)
+			return diag.Errorf("Error updating sslservice %s", sslserviceName)
 		}
 	}
-	return readSslserviceFunc(d, meta)
+	return readSslserviceFunc(ctx, d, meta)
 }
 
-func deleteSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslserviceFunc")
 
 	d.SetId("")

@@ -27,8 +27,8 @@ type Authenticationvserverauthenticationlocalpolicybinding struct {
 	/**
 	* The priority, if any, of the vpn vserver policy.
 	*/
-	Priority int `json:"priority,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Priority *int `json:"priority,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Bind the authentication policy to the secondary chain.
 		Provides for multifactor authentication in which a user must authenticate via both a primary authentication method and, afterward, via a secondary authentication method.

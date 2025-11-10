@@ -31,11 +31,11 @@ type Botprofiletpsbinding struct {
 	/**
 	* Maximum number of requests that are allowed from (or to) a IP, Geolocation, URL or Host in 1 second time interval.
 	*/
-	Threshold int `json:"threshold,omitempty"`
+	Threshold *int `json:"threshold,omitempty"`
 	/**
 	* Maximum percentage increase in the requests from (or to) a IP, Geolocation, URL or Host in 30 minutes interval.
 	*/
-	Percentage int `json:"percentage,omitempty"`
+	Percentage *int `json:"percentage,omitempty"`
 	/**
 	* One to more actions to be taken if bot is detected based on this TPS binding. Only LOG action can be combined with DROP, RESET, REDIRECT, or MITIGIATION action.
 	*/

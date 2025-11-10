@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/tm"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcTmtrafficaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTmtrafficactionFunc,
-		Read:          readTmtrafficactionFunc,
-		Update:        updateTmtrafficactionFunc,
-		Delete:        deleteTmtrafficactionFunc,
+		CreateContext: createTmtrafficactionFunc,
+		ReadContext:   readTmtrafficactionFunc,
+		UpdateContext: updateTmtrafficactionFunc,
+		DeleteContext: deleteTmtrafficactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -85,15 +88,13 @@ func resourceCitrixAdcTmtrafficaction() *schema.Resource {
 	}
 }
 
-func createTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createTmtrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTmtrafficactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmtrafficactionName := d.Get("name").(string)
 
 	tmtrafficaction := tm.Tmtrafficaction{
-		Apptimeout:       d.Get("apptimeout").(int),
 		Forcedtimeout:    d.Get("forcedtimeout").(string),
-		Forcedtimeoutval: d.Get("forcedtimeoutval").(int),
 		Formssoaction:    d.Get("formssoaction").(string),
 		Initiatelogout:   d.Get("initiatelogout").(string),
 		Kcdaccount:       d.Get("kcdaccount").(string),
@@ -105,22 +106,24 @@ func createTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Userexpression:   d.Get("userexpression").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("apptimeout"); !raw.IsNull() {
+		tmtrafficaction.Apptimeout = intPtr(d.Get("apptimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("forcedtimeoutval"); !raw.IsNull() {
+		tmtrafficaction.Forcedtimeoutval = intPtr(d.Get("forcedtimeoutval").(int))
+	}
+
 	_, err := client.AddResource(service.Tmtrafficaction.Type(), tmtrafficactionName, &tmtrafficaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(tmtrafficactionName)
 
-	err = readTmtrafficactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this tmtrafficaction but we can't read it ?? %s", tmtrafficactionName)
-		return nil
-	}
-	return nil
+	return readTmtrafficactionFunc(ctx, d, meta)
 }
 
-func readTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readTmtrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTmtrafficactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmtrafficactionName := d.Id()
@@ -132,9 +135,9 @@ func readTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
-	d.Set("apptimeout", data["apptimeout"])
+	setToInt("apptimeout", d, data["apptimeout"])
 	d.Set("forcedtimeout", data["forcedtimeout"])
-	d.Set("forcedtimeoutval", data["forcedtimeoutval"])
+	setToInt("forcedtimeoutval", d, data["forcedtimeoutval"])
 	d.Set("formssoaction", data["formssoaction"])
 	d.Set("initiatelogout", data["initiatelogout"])
 	d.Set("kcdaccount", data["kcdaccount"])
@@ -148,7 +151,7 @@ func readTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateTmtrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateTmtrafficactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmtrafficactionName := d.Get("name").(string)
@@ -159,7 +162,7 @@ func updateTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	if d.HasChange("apptimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Apptimeout has changed for tmtrafficaction %s, starting update", tmtrafficactionName)
-		tmtrafficaction.Apptimeout = d.Get("apptimeout").(int)
+		tmtrafficaction.Apptimeout = intPtr(d.Get("apptimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("forcedtimeout") {
@@ -169,7 +172,7 @@ func updateTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("forcedtimeoutval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Forcedtimeoutval has changed for tmtrafficaction %s, starting update", tmtrafficactionName)
-		tmtrafficaction.Forcedtimeoutval = d.Get("forcedtimeoutval").(int)
+		tmtrafficaction.Forcedtimeoutval = intPtr(d.Get("forcedtimeoutval").(int))
 		hasChange = true
 	}
 	if d.HasChange("formssoaction") {
@@ -216,19 +219,19 @@ func updateTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Tmtrafficaction.Type(), &tmtrafficaction)
 		if err != nil {
-			return fmt.Errorf("Error updating tmtrafficaction %s", tmtrafficactionName)
+			return diag.Errorf("Error updating tmtrafficaction %s", tmtrafficactionName)
 		}
 	}
-	return readTmtrafficactionFunc(d, meta)
+	return readTmtrafficactionFunc(ctx, d, meta)
 }
 
-func deleteTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTmtrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTmtrafficactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmtrafficactionName := d.Id()
 	err := client.DeleteResource(service.Tmtrafficaction.Type(), tmtrafficactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

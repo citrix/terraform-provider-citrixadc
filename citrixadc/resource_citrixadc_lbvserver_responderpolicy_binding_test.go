@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLbvserver_responderpolicy_binding_basic_step1 = `
@@ -99,9 +99,9 @@ resource "citrixadc_lbvserver_responderpolicy_binding" "tf_bind2" {
 
 func TestAccLbvserver_responderpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserver_responderpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserver_responderpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbvserver_responderpolicy_binding_basic_step1,
@@ -140,7 +140,11 @@ func testAccCheckLbvserver_responderpolicy_bindingExist(n string, id *string) re
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		bindingId := rs.Primary.ID
 		idSlice := strings.SplitN(bindingId, ",", 2)
 		name := idSlice[0]
@@ -177,7 +181,11 @@ func testAccCheckLbvserver_responderpolicy_bindingExist(n string, id *string) re
 }
 
 func testAccCheckLbvserver_responderpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbvserver_responderpolicy_binding" {
@@ -188,7 +196,7 @@ func testAccCheckLbvserver_responderpolicy_bindingDestroy(s *terraform.State) er
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Lbvserver_responderpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Lbvserver_responderpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lbvserver_responderpolicy_binding %s still exists", rs.Primary.ID)
 		}

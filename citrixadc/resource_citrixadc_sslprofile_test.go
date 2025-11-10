@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccSslprofile_add = `
@@ -34,21 +34,28 @@ const testAccSslprofile_update = `
 	resource "citrixadc_sslprofile" "foo" {
 		name = "tfAcc_sslprofile"
 		hsts = "ENABLED"
+		snienable = "ENABLED"
 		ecccurvebindings = []
+		sslclientlogs = "ENABLED"
+		encryptedclienthello = "ENABLED"
+		defaultsni = 60
+		allowunknownsni = "ENABLED"
+		allowextendedmastersecret = "YES"
 	}
 `
 
 func TestAccSslprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslprofile_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "name", "tfAcc_sslprofile"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "sslclientlogs", "DISABLED"),
 				),
 			},
 			{
@@ -57,6 +64,11 @@ func TestAccSslprofile_basic(t *testing.T) {
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "name", "tfAcc_sslprofile"),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "hsts", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "sslclientlogs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "encryptedclienthello", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "defaultsni", "60"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "allowunknownsni", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "allowextendedmastersecret", "YES"),
 				),
 			},
 		},
@@ -78,9 +90,9 @@ const testAccSslprofile_ecccurvebinding_unbind = `
 
 func TestAccSslprofile_ecccurve_binding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslprofile_ecccurvebinding_bind,
@@ -107,7 +119,7 @@ const testAccSslprofile_cipherbinding_bind = `
 		cipherbindings {
 			ciphername     = "HIGH"
 			cipherpriority = 10
-		  }
+	}
 	}
 `
 const testAccSslprofile_cipherbinding_unbind = `
@@ -120,9 +132,9 @@ const testAccSslprofile_cipherbinding_unbind = `
 func TestAccSslprofile_cipher_binding(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslprofile_cipherbinding_bind,
@@ -161,8 +173,12 @@ func testAccCheckSslprofileExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Sslprofile.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Sslprofile.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -177,7 +193,11 @@ func testAccCheckSslprofileExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckSslprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_sslprofile" {
@@ -188,7 +208,7 @@ func testAccCheckSslprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Sslprofile.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Sslprofile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("SSL Profile %s still exists", rs.Primary.ID)
 		}

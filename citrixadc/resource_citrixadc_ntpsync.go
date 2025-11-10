@@ -1,23 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ntp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNtpsync() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNtpsyncFunc,
-		Update:        updateNtpsyncFunc,
-		Read:          readNtpsyncFunc,
-		Delete:        deleteNtpsyncFunc,
+		CreateContext: createNtpsyncFunc,
+		UpdateContext: updateNtpsyncFunc,
+		ReadContext:   readNtpsyncFunc,
+		DeleteContext: deleteNtpsyncFunc,
 		Schema: map[string]*schema.Schema{
 			"state": {
 				Type:     schema.TypeString,
@@ -27,27 +31,22 @@ func resourceCitrixAdcNtpsync() *schema.Resource {
 	}
 }
 
-func createNtpsyncFunc(d *schema.ResourceData, meta interface{}) error {
+func createNtpsyncFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNtpsyncFunc")
 	ntpsyncName := resource.PrefixedUniqueId("tf-ntpsync-")
 	client := meta.(*NetScalerNitroClient).client
 
 	err := doNtpsyncChange(d, client)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ntpsyncName)
 
-	err = readNtpsyncFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ntpsync but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNtpsyncFunc(ctx, d, meta)
 }
 
-func readNtpsyncFunc(d *schema.ResourceData, meta interface{}) error {
+func readNtpsyncFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNtpsyncFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading ntpsync state")
@@ -63,7 +62,7 @@ func readNtpsyncFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNtpsyncFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNtpsyncFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNtpSyncFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -76,10 +75,10 @@ func updateNtpsyncFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := doNtpsyncChange(d, client)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return readNtpsyncFunc(d, meta)
+	return readNtpsyncFunc(ctx, d, meta)
 }
 func doNtpsyncChange(d *schema.ResourceData, client *service.NitroClient) error {
 	ntpsync := ntp.Ntpsync{}
@@ -107,7 +106,7 @@ func doNtpsyncChange(d *schema.ResourceData, client *service.NitroClient) error 
 	return nil
 }
 
-func deleteNtpsyncFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNtpsyncFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNtpsyncFunc")
 	// ntpsync does not support DELETE operation
 	d.SetId("")

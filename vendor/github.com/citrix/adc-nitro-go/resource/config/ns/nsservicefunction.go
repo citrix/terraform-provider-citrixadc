@@ -27,7 +27,7 @@ type Nsservicefunction struct {
 	/**
 	* VLAN ID on which the traffic from service function reaches Citrix ADC.
 	*/
-	Ingressvlan int `json:"ingressvlan,omitempty"`
+	Ingressvlan *int `json:"ingressvlan,omitempty"`
 
 	//------- Read only Parameter ---------;
 

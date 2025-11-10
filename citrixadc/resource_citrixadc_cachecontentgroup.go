@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCachecontentgroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCachecontentgroupFunc,
-		Read:          readCachecontentgroupFunc,
-		Update:        updateCachecontentgroupFunc,
-		Delete:        deleteCachecontentgroupFunc,
+		CreateContext: createCachecontentgroupFunc,
+		ReadContext:   readCachecontentgroupFunc,
+		UpdateContext: updateCachecontentgroupFunc,
+		DeleteContext: deleteCachecontentgroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -242,7 +245,7 @@ func resourceCitrixAdcCachecontentgroup() *schema.Resource {
 	}
 }
 
-func createCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCachecontentgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachecontentgroupName := d.Get("name").(string)
@@ -379,7 +382,7 @@ func createCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	// 	Cachecontrol:           d.Get("cachecontrol").(string),
 	// 	Expireatlastbyte:       d.Get("expireatlastbyte").(string),
 	// 	Flashcache:             d.Get("flashcache").(string),
-	// 	Heurexpiryparam:        d.Get("heurexpiryparam").(int),
+	// 	Heurexpiryparam:        intPtr(d.Get("heurexpiryparam").(int)),
 	// 	Hitparams:              toStringList(d.Get("hitparams").([]interface{})),
 	// 	Hitselector:            d.Get("hitselector").(string),
 	// 	Host:                   d.Get("host").(string),
@@ -394,46 +397,41 @@ func createCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	// 	Invalselector:          d.Get("invalselector").(string),
 	// 	Lazydnsresolve:         d.Get("lazydnsresolve").(string),
 	// 	Matchcookies:           d.Get("matchcookies").(string),
-	// 	Maxressize:             d.Get("maxressize").(int),
-	// 	Memlimit:               d.Get("memlimit").(int),
-	// 	Minhits:                d.Get("minhits").(int),
-	// 	Minressize:             d.Get("minressize").(int),
+	// 	Maxressize:             intPtr(d.Get("maxressize").(int)),
+	// 	Memlimit:               intPtr(d.Get("memlimit").(int)),
+	// 	Minhits:                intPtr(d.Get("minhits").(int)),
+	// 	Minressize:             intPtr(d.Get("minressize").(int)),
 	// 	Name:                   d.Get("name").(string),
 	// 	Persistha:              d.Get("persistha").(string),
 	// 	Pinned:                 d.Get("pinned").(string),
 	// 	Polleverytime:          d.Get("polleverytime").(string),
 	// 	Prefetch:               d.Get("prefetch").(string),
-	// 	Prefetchmaxpending:     d.Get("prefetchmaxpending").(int),
-	// 	Prefetchperiod:         d.Get("prefetchperiod").(int),
-	// 	Prefetchperiodmillisec: d.Get("prefetchperiodmillisec").(int),
+	// 	Prefetchmaxpending:     intPtr(d.Get("prefetchmaxpending").(int)),
+	// 	Prefetchperiod:         intPtr(d.Get("prefetchperiod").(int)),
+	// 	Prefetchperiodmillisec: intPtr(d.Get("prefetchperiodmillisec").(int)),
 	// 	Query:                  d.Get("query").(string),
-	// 	Quickabortsize:         d.Get("quickabortsize").(int),
-	// 	Relexpiry:              d.Get("relexpiry").(int),
-	// 	Relexpirymillisec:      d.Get("relexpirymillisec").(int),
+	// 	Quickabortsize:         intPtr(d.Get("quickabortsize").(int)),
+	// 	Relexpiry:              intPtr(d.Get("relexpiry").(int)),
+	// 	Relexpirymillisec:      intPtr(d.Get("relexpirymillisec").(int)),
 	// 	Removecookies:          d.Get("removecookies").(string),
 	// 	Selectorvalue:          d.Get("selectorvalue").(string),
 	// 	Tosecondary:            d.Get("tosecondary").(string),
 	// 	Type:                   d.Get("type").(string),
-	// 	Weaknegrelexpiry:       d.Get("weaknegrelexpiry").(int),
-	// 	Weakposrelexpiry:       d.Get("weakposrelexpiry").(int),
+	// 	Weaknegrelexpiry:       intPtr(d.Get("weaknegrelexpiry").(int)),
+	// 	Weakposrelexpiry:       intPtr(d.Get("weakposrelexpiry").(int)),
 	// }
 
 	_, err := client.AddResource(service.Cachecontentgroup.Type(), cachecontentgroupName, &cachecontentgroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(cachecontentgroupName)
 
-	err = readCachecontentgroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cachecontentgroup but we can't read it ?? %s", cachecontentgroupName)
-		return nil
-	}
-	return nil
+	return readCachecontentgroupFunc(ctx, d, meta)
 }
 
-func readCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCachecontentgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachecontentgroupName := d.Id()
@@ -451,7 +449,7 @@ func readCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cachecontrol", data["cachecontrol"])
 	d.Set("expireatlastbyte", data["expireatlastbyte"])
 	d.Set("flashcache", data["flashcache"])
-	d.Set("heurexpiryparam", data["heurexpiryparam"])
+	setToInt("heurexpiryparam", d, data["heurexpiryparam"])
 	d.Set("hitparams", data["hitparams"])
 	d.Set("hitselector", data["hitselector"])
 	d.Set("host", data["host"])
@@ -466,33 +464,33 @@ func readCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("invalselector", data["invalselector"])
 	d.Set("lazydnsresolve", data["lazydnsresolve"])
 	d.Set("matchcookies", data["matchcookies"])
-	d.Set("maxressize", data["maxressize"])
-	d.Set("memlimit", data["memlimit"])
-	d.Set("minhits", data["minhits"])
-	d.Set("minressize", data["minressize"])
+	setToInt("maxressize", d, data["maxressize"])
+	setToInt("memlimit", d, data["memlimit"])
+	setToInt("minhits", d, data["minhits"])
+	setToInt("minressize", d, data["minressize"])
 	d.Set("persistha", data["persistha"])
 	d.Set("pinned", data["pinned"])
 	d.Set("polleverytime", data["polleverytime"])
 	d.Set("prefetch", data["prefetch"])
-	d.Set("prefetchmaxpending", data["prefetchmaxpending"])
-	d.Set("prefetchperiod", data["prefetchperiod"])
-	d.Set("prefetchperiodmillisec", data["prefetchperiodmillisec"])
+	setToInt("prefetchmaxpending", d, data["prefetchmaxpending"])
+	setToInt("prefetchperiod", d, data["prefetchperiod"])
+	setToInt("prefetchperiodmillisec", d, data["prefetchperiodmillisec"])
 	d.Set("query", data["query"])
-	d.Set("quickabortsize", data["quickabortsize"])
-	d.Set("relexpiry", data["relexpiry"])
-	d.Set("relexpirymillisec", data["relexpirymillisec"])
+	setToInt("quickabortsize", d, data["quickabortsize"])
+	setToInt("relexpiry", d, data["relexpiry"])
+	setToInt("relexpirymillisec", d, data["relexpirymillisec"])
 	d.Set("removecookies", data["removecookies"])
 	d.Set("selectorvalue", data["selectorvalue"])
 	d.Set("tosecondary", data["tosecondary"])
 	d.Set("type", data["type"])
-	d.Set("weaknegrelexpiry", data["weaknegrelexpiry"])
-	d.Set("weakposrelexpiry", data["weakposrelexpiry"])
+	setToInt("weaknegrelexpiry", d, data["weaknegrelexpiry"])
+	setToInt("weakposrelexpiry", d, data["weakposrelexpiry"])
 
 	return nil
 
 }
 
-func updateCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCachecontentgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachecontentgroupName := d.Get("name").(string)
@@ -533,7 +531,7 @@ func updateCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("heurexpiryparam") {
 		log.Printf("[DEBUG]  citrixadc-provider: Heurexpiryparam has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["heurexpiryparam"] = d.Get("heurexpiryparam").(int)
+		cachecontentgroup["heurexpiryparam"] = intPtr(d.Get("heurexpiryparam").(int))
 		hasChange = true
 	}
 	if d.HasChange("hitparams") {
@@ -608,22 +606,22 @@ func updateCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("maxressize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxressize has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["maxressize"] = d.Get("maxressize").(int)
+		cachecontentgroup["maxressize"] = intPtr(d.Get("maxressize").(int))
 		hasChange = true
 	}
 	if d.HasChange("memlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Memlimit has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["memlimit"] = d.Get("memlimit").(int)
+		cachecontentgroup["memlimit"] = intPtr(d.Get("memlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("minhits") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minhits has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["minhits"] = d.Get("minhits").(int)
+		cachecontentgroup["minhits"] = intPtr(d.Get("minhits").(int))
 		hasChange = true
 	}
 	if d.HasChange("minressize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minressize has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["minressize"] = d.Get("minressize").(int)
+		cachecontentgroup["minressize"] = intPtr(d.Get("minressize").(int))
 		hasChange = true
 	}
 	if d.HasChange("persistha") {
@@ -648,17 +646,17 @@ func updateCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("prefetchmaxpending") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefetchmaxpending has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["prefetchmaxpending"] = d.Get("prefetchmaxpending").(int)
+		cachecontentgroup["prefetchmaxpending"] = intPtr(d.Get("prefetchmaxpending").(int))
 		hasChange = true
 	}
 	if d.HasChange("prefetchperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefetchperiod has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["prefetchperiod"] = d.Get("prefetchperiod").(int)
+		cachecontentgroup["prefetchperiod"] = intPtr(d.Get("prefetchperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("prefetchperiodmillisec") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefetchperiodmillisec has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["prefetchperiodmillisec"] = d.Get("prefetchperiodmillisec").(int)
+		cachecontentgroup["prefetchperiodmillisec"] = intPtr(d.Get("prefetchperiodmillisec").(int))
 		hasChange = true
 	}
 	if d.HasChange("query") {
@@ -668,17 +666,17 @@ func updateCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("quickabortsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Quickabortsize has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["quickabortsize"] = d.Get("quickabortsize").(int)
+		cachecontentgroup["quickabortsize"] = intPtr(d.Get("quickabortsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("relexpiry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Relexpiry has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["relexpiry"] = d.Get("relexpiry").(int)
+		cachecontentgroup["relexpiry"] = intPtr(d.Get("relexpiry").(int))
 		hasChange = true
 	}
 	if d.HasChange("relexpirymillisec") {
 		log.Printf("[DEBUG]  citrixadc-provider: Relexpirymillisec has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["relexpirymillisec"] = d.Get("relexpirymillisec").(int)
+		cachecontentgroup["relexpirymillisec"] = intPtr(d.Get("relexpirymillisec").(int))
 		hasChange = true
 	}
 	if d.HasChange("removecookies") {
@@ -703,31 +701,31 @@ func updateCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("weaknegrelexpiry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Weaknegrelexpiry has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["weaknegrelexpiry"] = d.Get("weaknegrelexpiry").(int)
+		cachecontentgroup["weaknegrelexpiry"] = intPtr(d.Get("weaknegrelexpiry").(int))
 		hasChange = true
 	}
 	if d.HasChange("weakposrelexpiry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Weakposrelexpiry has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["weakposrelexpiry"] = d.Get("weakposrelexpiry").(int)
+		cachecontentgroup["weakposrelexpiry"] = intPtr(d.Get("weakposrelexpiry").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Cachecontentgroup.Type(), &cachecontentgroup)
 		if err != nil {
-			return fmt.Errorf("Error updating cachecontentgroup %s", cachecontentgroupName)
+			return diag.Errorf("Error updating cachecontentgroup %s", cachecontentgroupName)
 		}
 	}
-	return readCachecontentgroupFunc(d, meta)
+	return readCachecontentgroupFunc(ctx, d, meta)
 }
 
-func deleteCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCachecontentgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachecontentgroupName := d.Id()
 	err := client.DeleteResource(service.Cachecontentgroup.Type(), cachecontentgroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

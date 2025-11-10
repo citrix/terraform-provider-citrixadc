@@ -1,27 +1,66 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsacl() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsaclFunc,
-		Read:          readNsaclFunc,
-		Update:        updateNsaclFunc,
-		Delete:        deleteNsaclFunc,
+		CreateContext: createNsaclFunc,
+		ReadContext:   readNsaclFunc,
+		UpdateContext: updateNsaclFunc,
+		DeleteContext: deleteNsaclFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"srcportdataset": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"srcipdataset": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"nodeid": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"destportdataset": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"destipdataset": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"aclaction": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -162,11 +201,31 @@ func resourceCitrixAdcNsacl() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"srcip": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"destip": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"srcport": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"destport": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createNsaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nsaclName string
@@ -180,83 +239,103 @@ func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	destport := false
 	srcip := false
 	srcport := false
-	if d.Get("destipval") != nil && d.Get("destipval") != "" {
+	if (d.Get("destipval") != nil && d.Get("destipval") != "") || (d.Get("destipdataset") != nil && d.Get("destipdataset") != "") {
 		destip = true
 	}
-	if d.Get("destportval") != nil && d.Get("destportval") != "" {
+	if d.Get("destportval") != nil && d.Get("destportval") != "" || (d.Get("destportdataset") != nil && d.Get("destportdataset") != "") {
 		destport = true
 	}
-	if d.Get("srcipval") != nil && d.Get("srcipval") != "" {
+	if d.Get("srcipval") != nil && d.Get("srcipval") != "" || (d.Get("srcipdataset") != nil && d.Get("srcipdataset") != "") {
 		srcip = true
 	}
-	if d.Get("srcportval") != nil && d.Get("srcportval") != "" {
+	if d.Get("srcportval") != nil && d.Get("srcportval") != "" || (d.Get("srcportdataset") != nil && d.Get("srcportdataset") != "") {
 		srcport = true
 	}
-
 	if d.Get("destipop") != nil && d.Get("destipval") == nil {
-		return fmt.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
+		return diag.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
 	}
 	if d.Get("destportop") != nil && d.Get("destipval") == nil {
-		return fmt.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
+		return diag.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
 	}
 	if d.Get("srcipop") != nil && d.Get("srcipval") == nil {
-		return fmt.Errorf("Error in nsacl spec %s cannot have srcipop without srcipval", nsaclName)
+		return diag.Errorf("Error in nsacl spec %s cannot have srcipop without srcipval", nsaclName)
 	}
 	if d.Get("srcportop") != nil && d.Get("srcportval") == nil {
-		return fmt.Errorf("Error in nsacl spec %s cannot have srcportop without srcportval", nsaclName)
+		return diag.Errorf("Error in nsacl spec %s cannot have srcportop without srcportval", nsaclName)
 	}
 
 	nsacl := ns.Nsacl{
-		Aclaction:      d.Get("aclaction").(string),
-		Aclname:        d.Get("aclname").(string),
-		Destip:         destip,
-		Destipop:       d.Get("destipop").(string),
-		Destipval:      d.Get("destipval").(string),
-		Destport:       destport,
-		Destportop:     d.Get("destportop").(string),
-		Destportval:    d.Get("destportval").(string),
-		Dfdhash:        d.Get("dfdhash").(string),
-		Established:    d.Get("established").(bool),
-		Icmpcode:       d.Get("icmpcode").(int),
-		Icmptype:       d.Get("icmptype").(int),
-		Interface:      d.Get("interface").(string),
-		Logstate:       d.Get("logstate").(string),
-		Priority:       d.Get("priority").(int),
-		Protocol:       d.Get("protocol").(string),
-		Protocolnumber: d.Get("protocolnumber").(int),
-		Ratelimit:      d.Get("ratelimit").(int),
-		Srcip:          srcip,
-		Srcipop:        d.Get("srcipop").(string),
-		Srcipval:       d.Get("srcipval").(string),
-		Srcmac:         d.Get("srcmac").(string),
-		Srcmacmask:     d.Get("srcmacmask").(string),
-		Srcport:        srcport,
-		Srcportop:      d.Get("srcportop").(string),
-		Srcportval:     d.Get("srcportval").(string),
-		State:          d.Get("state").(string),
-		Stateful:       d.Get("stateful").(string),
-		Td:             d.Get("td").(int),
-		Ttl:            d.Get("ttl").(int),
-		Vlan:           d.Get("vlan").(int),
-		Vxlan:          d.Get("vxlan").(int),
+		Aclaction:       d.Get("aclaction").(string),
+		Aclname:         d.Get("aclname").(string),
+		Destip:          destip,
+		Destipop:        d.Get("destipop").(string),
+		Destipval:       d.Get("destipval").(string),
+		Destport:        destport,
+		Destportop:      d.Get("destportop").(string),
+		Destportval:     d.Get("destportval").(string),
+		Dfdhash:         d.Get("dfdhash").(string),
+		Established:     d.Get("established").(bool),
+		Interface:       d.Get("interface").(string),
+		Logstate:        d.Get("logstate").(string),
+		Protocol:        d.Get("protocol").(string),
+		Srcip:           srcip,
+		Srcipop:         d.Get("srcipop").(string),
+		Srcipval:        d.Get("srcipval").(string),
+		Srcmac:          d.Get("srcmac").(string),
+		Srcmacmask:      d.Get("srcmacmask").(string),
+		Srcport:         srcport,
+		Srcportop:       d.Get("srcportop").(string),
+		Srcportval:      d.Get("srcportval").(string),
+		State:           d.Get("state").(string),
+		Stateful:        d.Get("stateful").(string),
+		Destipdataset:   d.Get("destipdataset").(string),
+		Destportdataset: d.Get("destportdataset").(string),
+		Srcipdataset:    d.Get("srcipdataset").(string),
+		Srcportdataset:  d.Get("srcportdataset").(string),
+		Type:            d.Get("type").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		nsacl.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("icmpcode"); !raw.IsNull() {
+		nsacl.Icmpcode = intPtr(d.Get("icmpcode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("icmptype"); !raw.IsNull() {
+		nsacl.Icmptype = intPtr(d.Get("icmptype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		nsacl.Priority = intPtr(d.Get("priority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("protocolnumber"); !raw.IsNull() {
+		nsacl.Protocolnumber = intPtr(d.Get("protocolnumber").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ratelimit"); !raw.IsNull() {
+		nsacl.Ratelimit = intPtr(d.Get("ratelimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nsacl.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		nsacl.Ttl = intPtr(d.Get("ttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nsacl.Vlan = intPtr(d.Get("vlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vxlan"); !raw.IsNull() {
+		nsacl.Vxlan = intPtr(d.Get("vxlan").(int))
 	}
 
 	_, err := client.AddResource(service.Nsacl.Type(), nsaclName, &nsacl)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsaclName)
 
-	err = readNsaclFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsacl but we can't read it ?? %s", nsaclName)
-		return nil
-	}
-	return nil
+	return readNsaclFunc(ctx, d, meta)
 }
 
-func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readNsaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := d.Id()
@@ -268,6 +347,12 @@ func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("aclname", data["aclname"])
+	d.Set("type", data["type"])
+	d.Set("srcportdataset", data["srcportdataset"])
+	d.Set("srcipdataset", data["srcipdataset"])
+	setToInt("nodeid", d, data["nodeid"])
+	d.Set("destportdataset", data["destportdataset"])
+	d.Set("destipdataset", data["destipdataset"])
 	d.Set("aclaction", data["aclaction"])
 	d.Set("aclname", data["aclname"])
 	d.Set("destip", data["destip"])
@@ -278,14 +363,14 @@ func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("destportval", data["destportval"])
 	d.Set("dfdhash", data["dfdhash"])
 	d.Set("established", data["established"])
-	d.Set("icmpcode", data["icmpcode"])
-	d.Set("icmptype", data["icmptype"])
+	setToInt("icmpcode", d, data["icmpcode"])
+	setToInt("icmptype", d, data["icmptype"])
 	d.Set("interface", data["interface"])
 	d.Set("logstate", data["logstate"])
 	setToInt("priority", d, data["priority"])
 	d.Set("protocol", data["protocol"])
-	d.Set("protocolnumber", data["protocolnumber"])
-	d.Set("ratelimit", data["ratelimit"])
+	setToInt("protocolnumber", d, data["protocolnumber"])
+	setToInt("ratelimit", d, data["ratelimit"])
 	d.Set("srcip", data["srcip"])
 	d.Set("srcipop", data["srcipop"])
 	d.Set("srcipval", data["srcipval"])
@@ -296,16 +381,16 @@ func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("srcportval", data["srcportval"])
 	d.Set("state", data["state"])
 	d.Set("stateful", data["stateful"])
-	d.Set("td", data["td"])
-	d.Set("ttl", data["ttl"])
-	d.Set("vlan", data["vlan"])
-	d.Set("vxlan", data["vxlan"])
+	setToInt("td", d, data["td"])
+	setToInt("ttl", d, data["ttl"])
+	setToInt("vlan", d, data["vlan"])
+	setToInt("vxlan", d, data["vxlan"])
 
 	return nil
 
 }
 
-func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In updateNsaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := d.Get("aclname").(string)
@@ -315,6 +400,11 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	stateChange := false
 	hasChange := false
+	if d.HasChange("nodeid") {
+		log.Printf("[DEBUG]  citrixadc-provider: Nodeid has changed for nsacl, starting update")
+		nsacl.Nodeid = intPtr(d.Get("nodeid").(int))
+		hasChange = true
+	}
 	if d.HasChange("aclaction") {
 		log.Printf("[DEBUG]  netscaler-provider: Aclaction has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Aclaction = d.Get("aclaction").(string)
@@ -361,12 +451,12 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("icmpcode") {
 		log.Printf("[DEBUG]  netscaler-provider: Icmpcode has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Icmpcode = d.Get("icmpcode").(int)
+		nsacl.Icmpcode = intPtr(d.Get("icmpcode").(int))
 		hasChange = true
 	}
 	if d.HasChange("icmptype") {
 		log.Printf("[DEBUG]  netscaler-provider: Icmptype has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Icmptype = d.Get("icmptype").(int)
+		nsacl.Icmptype = intPtr(d.Get("icmptype").(int))
 		hasChange = true
 	}
 	if d.HasChange("interface") {
@@ -381,7 +471,7 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  netscaler-provider: Priority has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Priority = d.Get("priority").(int)
+		nsacl.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("protocol") {
@@ -391,12 +481,12 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("protocolnumber") {
 		log.Printf("[DEBUG]  netscaler-provider: Protocolnumber has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Protocolnumber = d.Get("protocolnumber").(int)
+		nsacl.Protocolnumber = intPtr(d.Get("protocolnumber").(int))
 		hasChange = true
 	}
 	if d.HasChange("ratelimit") {
 		log.Printf("[DEBUG]  netscaler-provider: Ratelimit has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Ratelimit = d.Get("ratelimit").(int)
+		nsacl.Ratelimit = intPtr(d.Get("ratelimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("srcipop") {
@@ -444,48 +534,48 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Td = d.Get("td").(int)
+		nsacl.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Ttl has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Ttl = d.Get("ttl").(int)
+		nsacl.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  netscaler-provider: Vlan has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Vlan = d.Get("vlan").(int)
+		nsacl.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("vxlan") {
 		log.Printf("[DEBUG]  netscaler-provider: Vxlan has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Vxlan = d.Get("vxlan").(int)
+		nsacl.Vxlan = intPtr(d.Get("vxlan").(int))
 		hasChange = true
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Nsacl.Type(), nsaclName, &nsacl)
 		if err != nil {
-			return fmt.Errorf("Error updating nsacl %s", nsaclName)
+			return diag.Errorf("Error updating nsacl %s", nsaclName)
 		}
 	}
 
 	if stateChange {
 		err := doNsaclStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling nsacl %s", nsaclName)
+			return diag.Errorf("Error enabling/disabling nsacl %s", nsaclName)
 		}
 	}
-	return readNsaclFunc(d, meta)
+	return readNsaclFunc(ctx, d, meta)
 }
 
-func deleteNsaclFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteNsaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := d.Id()
 	err := client.DeleteResource(service.Nsacl.Type(), nsaclName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

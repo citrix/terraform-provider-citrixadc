@@ -32,7 +32,7 @@ type Snmpmanager struct {
 	/**
 	* Amount of time, in seconds, for which the Citrix ADC waits before sending another DNS query to resolve the host name of the SNMP manager if the last query failed. This parameter is valid for host-name based SNMP managers only. After a query succeeds, the TTL determines the wait time. The minimum and default value is 5.
 	*/
-	Domainresolveretry int `json:"domainresolveretry,omitempty"`
+	Domainresolveretry *int `json:"domainresolveretry,omitempty"`
 
 	//------- Read only Parameter ---------;
 

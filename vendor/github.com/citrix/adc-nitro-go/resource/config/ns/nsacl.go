@@ -35,7 +35,7 @@ type Nsacl struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* IP address or range of IP addresses to match against the source IP address of an incoming IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.
 	*/
@@ -105,7 +105,7 @@ type Nsacl struct {
 	/**
 	* Number of seconds, in multiples of four, after which the extended ACL rule expires. If you do not want the extended ACL rule to expire, do not specify a TTL value.
 	*/
-	Ttl int `json:"ttl,omitempty"`
+	Ttl *int `json:"ttl,omitempty"`
 	/**
 	* MAC address to match against the source MAC address of an incoming IPv4 packet.
 	*/
@@ -121,15 +121,15 @@ type Nsacl struct {
 	/**
 	* Protocol to match against the protocol of an incoming IPv4 packet.
 	*/
-	Protocolnumber int `json:"protocolnumber,omitempty"`
+	Protocolnumber *int `json:"protocolnumber,omitempty"`
 	/**
 	* ID of the VLAN. The Citrix ADC applies the ACL rule only to the incoming packets of the specified VLAN. If you do not specify a VLAN ID, the appliance applies the ACL rule to the incoming packets on all VLANs.
 	*/
-	Vlan int `json:"vlan,omitempty"`
+	Vlan *int `json:"vlan,omitempty"`
 	/**
 	* ID of the VXLAN. The Citrix ADC applies the ACL rule only to the incoming packets of the specified VXLAN. If you do not specify a VXLAN ID, the appliance applies the ACL rule to the incoming packets on all VXLANs.
 	*/
-	Vxlan int `json:"vxlan,omitempty"`
+	Vxlan *int `json:"vxlan,omitempty"`
 	/**
 	* ID of an interface. The Citrix ADC applies the ACL rule only to the incoming packets from the specified interface. If you do not specify any value, the appliance applies the ACL rule to the incoming packets of all interfaces.
 	*/
@@ -142,16 +142,16 @@ type Nsacl struct {
 	* ICMP Message type to match against the message type of an incoming ICMP packet. For example, to block DESTINATION UNREACHABLE messages, you must specify 3 as the ICMP type.
 		Note: This parameter can be specified only for the ICMP protocol.
 	*/
-	Icmptype int `json:"icmptype,omitempty"`
+	Icmptype *int `json:"icmptype,omitempty"`
 	/**
 	* Code of a particular ICMP message type to match against the ICMP code of an incoming ICMP packet.  For example, to block DESTINATION HOST UNREACHABLE messages, specify 3 as the ICMP type and 1 as the ICMP code.
 		If you set this parameter, you must set the ICMP Type parameter.
 	*/
-	Icmpcode int `json:"icmpcode,omitempty"`
+	Icmpcode *int `json:"icmpcode,omitempty"`
 	/**
 	* Priority for the extended ACL rule that determines the order in which it is evaluated relative to the other extended ACL rules. If you do not specify priorities while creating extended ACL rules, the ACL rules are evaluated in the order in which they are created.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Enable or disable the extended ACL rule. After you apply the extended ACL rules, the Citrix ADC compares incoming packets against the enabled extended ACL rules.
 	*/
@@ -163,7 +163,7 @@ type Nsacl struct {
 	/**
 	* Maximum number of log messages to be generated per second. If you set this parameter, you must enable the Log State parameter.
 	*/
-	Ratelimit int `json:"ratelimit,omitempty"`
+	Ratelimit *int `json:"ratelimit,omitempty"`
 	/**
 	*  Type of the acl ,default will be CLASSIC.
 		Available options as follows:
@@ -178,7 +178,7 @@ type Nsacl struct {
 	/**
 	* Specifies the NodeId to steer the packet to the provided FP.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 	/**
 	* If stateful option is enabled, transparent sessions are created for the traffic hitting this ACL and not hitting any other features like LB, INAT etc. 
 	*/

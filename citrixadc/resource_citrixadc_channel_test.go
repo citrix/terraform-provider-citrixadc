@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ const testAccChannel_basic = `
 		channel_id = "LA/3"
 		tagall     = "ON"
 		speed      = "1000"
-	}  
+	}
 `
 const testAccChannel_update = `
 
@@ -39,14 +39,14 @@ const testAccChannel_update = `
 		channel_id = "LA/3"
 		tagall     = "OFF"
 		speed      = "100"
-	}  
+	}
 `
 
 func TestAccChannel_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckChannelDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannel_basic,
@@ -89,8 +89,12 @@ func testAccCheckChannelExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Channel.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Channel.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -105,7 +109,11 @@ func testAccCheckChannelExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckChannelDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_channel" {
@@ -116,7 +124,7 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Channel.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Channel.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("channel %s still exists", rs.Primary.ID)
 		}

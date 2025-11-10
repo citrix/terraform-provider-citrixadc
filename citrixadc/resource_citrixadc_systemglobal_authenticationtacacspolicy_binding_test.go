@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -27,7 +27,7 @@ const testAccSystemglobal_authenticationtacacspolicy_binding_basic = `
 resource "citrixadc_systemglobal_authenticationtatacspolicy_binding" "tf_systemglobal_authenticationtatacspolicy_binding" {
 	policyname = citrixadc_authenticationtacacspolicy.tf_tacacspolicy.name
 	priority   = 50
-  }
+	}
   
   resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
 	name            = "tf_tacacsaction"
@@ -38,13 +38,13 @@ resource "citrixadc_systemglobal_authenticationtatacspolicy_binding" "tf_systemg
 	accounting      = "ON"
 	auditfailedcmds = "ON"
 	groupattrname   = "group"
-  }
+	}
   resource "citrixadc_authenticationtacacspolicy" "tf_tacacspolicy" {
 	name      = "tf_tacacspolicy"
 	rule      = "NS_FALSE"
 	reqaction = citrixadc_authenticationtacacsaction.tf_tacacsaction.name
   
-  }
+	}
 `
 
 const testAccSystemglobal_authenticationtacacspolicy_binding_basic_step2 = `
@@ -57,20 +57,20 @@ resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
 	accounting      = "ON"
 	auditfailedcmds = "ON"
 	groupattrname   = "group"
-  }
+	}
   resource "citrixadc_authenticationtacacspolicy" "tf_tacacspolicy" {
 	name      = "tf_tacacspolicy"
 	rule      = "NS_FALSE"
 	reqaction = citrixadc_authenticationtacacsaction.tf_tacacsaction.name
   
-  }
+	}
 `
 
 func TestAccSystemglobal_authenticationtacacspolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSystemglobal_authenticationtacacspolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSystemglobal_authenticationtacacspolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSystemglobal_authenticationtacacspolicy_binding_basic,
@@ -107,7 +107,11 @@ func testAccCheckSystemglobal_authenticationtacacspolicy_bindingExist(n string, 
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := rs.Primary.ID
 
@@ -141,7 +145,11 @@ func testAccCheckSystemglobal_authenticationtacacspolicy_bindingExist(n string, 
 
 func testAccCheckSystemglobal_authenticationtacacspolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := id
 
@@ -174,7 +182,11 @@ func testAccCheckSystemglobal_authenticationtacacspolicy_bindingNotExist(n strin
 }
 
 func testAccCheckSystemglobal_authenticationtacacspolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_systemglobal_authenticationtacacspolicy_binding" {
@@ -185,7 +197,7 @@ func testAccCheckSystemglobal_authenticationtacacspolicy_bindingDestroy(s *terra
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Systemglobal_authenticationtacacspolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Systemglobal_authenticationtacacspolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("systemglobal_authenticationtacacspolicy_binding %s still exists", rs.Primary.ID)
 		}

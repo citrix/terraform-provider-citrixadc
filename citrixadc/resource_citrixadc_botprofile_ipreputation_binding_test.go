@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -72,9 +72,9 @@ const testAccBotprofile_ipreputation_binding_basic_step2 = `
 
 func TestAccBotprofile_ipreputation_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBotprofile_ipreputation_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckBotprofile_ipreputation_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotprofile_ipreputation_binding_basic,
@@ -111,7 +111,11 @@ func testAccCheckBotprofile_ipreputation_bindingExist(n string, id *string) reso
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -151,7 +155,11 @@ func testAccCheckBotprofile_ipreputation_bindingExist(n string, id *string) reso
 
 func testAccCheckBotprofile_ipreputation_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -191,7 +199,11 @@ func testAccCheckBotprofile_ipreputation_bindingNotExist(n string, id string) re
 }
 
 func testAccCheckBotprofile_ipreputation_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_botprofile_ipreputation_binding" {
@@ -202,7 +214,7 @@ func testAccCheckBotprofile_ipreputation_bindingDestroy(s *terraform.State) erro
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("botprofile_ipreputation_binding", rs.Primary.ID)
+		_, err := client.FindResource("botprofile_ipreputation_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("botprofile_ipreputation_binding %s still exists", rs.Primary.ID)
 		}

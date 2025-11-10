@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSnmpcommunity() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSnmpcommunityFunc,
-		Read:          readSnmpcommunityFunc,
-		Delete:        deleteSnmpcommunityFunc,
+		CreateContext: createSnmpcommunityFunc,
+		ReadContext:   readSnmpcommunityFunc,
+		DeleteContext: deleteSnmpcommunityFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"communityname": {
@@ -33,7 +35,7 @@ func resourceCitrixAdcSnmpcommunity() *schema.Resource {
 	}
 }
 
-func createSnmpcommunityFunc(d *schema.ResourceData, meta interface{}) error {
+func createSnmpcommunityFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpcommunityFunc")
 	client := meta.(*NetScalerNitroClient).client
 	communityname := d.Get("communityname").(string)
@@ -44,20 +46,15 @@ func createSnmpcommunityFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Snmpcommunity.Type(), communityname, &snmpcommunity)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(communityname)
 
-	err = readSnmpcommunityFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmpcommunity but we can't read it ?? %s", communityname)
-		return nil
-	}
-	return nil
+	return readSnmpcommunityFunc(ctx, d, meta)
 }
 
-func readSnmpcommunityFunc(d *schema.ResourceData, meta interface{}) error {
+func readSnmpcommunityFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmpcommunityFunc")
 	client := meta.(*NetScalerNitroClient).client
 	communityname := d.Id()
@@ -75,13 +72,13 @@ func readSnmpcommunityFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteSnmpcommunityFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSnmpcommunityFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpcommunityFunc")
 	client := meta.(*NetScalerNitroClient).client
 	communityname := d.Id()
 	err := client.DeleteResource(service.Snmpcommunity.Type(), communityname)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

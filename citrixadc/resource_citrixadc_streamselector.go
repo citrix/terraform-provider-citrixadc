@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/stream"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcStreamselector() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createStreamselectorFunc,
-		Read:          readStreamselectorFunc,
-		Update:        updateStreamselectorFunc,
-		Delete:        deleteStreamselectorFunc,
+		CreateContext: createStreamselectorFunc,
+		ReadContext:   readStreamselectorFunc,
+		UpdateContext: updateStreamselectorFunc,
+		DeleteContext: deleteStreamselectorFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -35,7 +38,7 @@ func resourceCitrixAdcStreamselector() *schema.Resource {
 	}
 }
 
-func createStreamselectorFunc(d *schema.ResourceData, meta interface{}) error {
+func createStreamselectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createStreamselectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamselectorName := d.Get("name").(string)
@@ -46,20 +49,15 @@ func createStreamselectorFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Streamselector.Type(), streamselectorName, &streamselector)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(streamselectorName)
 
-	err = readStreamselectorFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this streamselector but we can't read it ?? %s", streamselectorName)
-		return nil
-	}
-	return nil
+	return readStreamselectorFunc(ctx, d, meta)
 }
 
-func readStreamselectorFunc(d *schema.ResourceData, meta interface{}) error {
+func readStreamselectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readStreamselectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamselectorName := d.Id()
@@ -77,7 +75,7 @@ func readStreamselectorFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateStreamselectorFunc(d *schema.ResourceData, meta interface{}) error {
+func updateStreamselectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateStreamselectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamselectorName := d.Get("name").(string)
@@ -95,19 +93,19 @@ func updateStreamselectorFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Streamselector.Type(), &streamselector)
 		if err != nil {
-			return fmt.Errorf("Error updating streamselector %s", streamselectorName)
+			return diag.Errorf("Error updating streamselector %s", streamselectorName)
 		}
 	}
-	return readStreamselectorFunc(d, meta)
+	return readStreamselectorFunc(ctx, d, meta)
 }
 
-func deleteStreamselectorFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteStreamselectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteStreamselectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamselectorName := d.Id()
 	err := client.DeleteResource(service.Streamselector.Type(), streamselectorName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

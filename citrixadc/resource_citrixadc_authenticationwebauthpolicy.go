@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationwebauthpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationwebauthpolicyFunc,
-		Read:          readAuthenticationwebauthpolicyFunc,
-		Update:        updateAuthenticationwebauthpolicyFunc,
-		Delete:        deleteAuthenticationwebauthpolicyFunc,
+		CreateContext: createAuthenticationwebauthpolicyFunc,
+		ReadContext:   readAuthenticationwebauthpolicyFunc,
+		UpdateContext: updateAuthenticationwebauthpolicyFunc,
+		DeleteContext: deleteAuthenticationwebauthpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -41,7 +44,7 @@ func resourceCitrixAdcAuthenticationwebauthpolicy() *schema.Resource {
 	}
 }
 
-func createAuthenticationwebauthpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationwebauthpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationwebauthpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationwebauthpolicyName := d.Get("name").(string)
@@ -53,20 +56,15 @@ func createAuthenticationwebauthpolicyFunc(d *schema.ResourceData, meta interfac
 
 	_, err := client.AddResource(service.Authenticationwebauthpolicy.Type(), authenticationwebauthpolicyName, &authenticationwebauthpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationwebauthpolicyName)
 
-	err = readAuthenticationwebauthpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationwebauthpolicy but we can't read it ?? %s", authenticationwebauthpolicyName)
-		return nil
-	}
-	return nil
+	return readAuthenticationwebauthpolicyFunc(ctx, d, meta)
 }
 
-func readAuthenticationwebauthpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationwebauthpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationwebauthpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationwebauthpolicyName := d.Id()
@@ -85,7 +83,7 @@ func readAuthenticationwebauthpolicyFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func updateAuthenticationwebauthpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationwebauthpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationwebauthpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationwebauthpolicyName := d.Get("name").(string)
@@ -108,19 +106,19 @@ func updateAuthenticationwebauthpolicyFunc(d *schema.ResourceData, meta interfac
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationwebauthpolicy.Type(), authenticationwebauthpolicyName, &authenticationwebauthpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationwebauthpolicy %s", authenticationwebauthpolicyName)
+			return diag.Errorf("Error updating authenticationwebauthpolicy %s", authenticationwebauthpolicyName)
 		}
 	}
-	return readAuthenticationwebauthpolicyFunc(d, meta)
+	return readAuthenticationwebauthpolicyFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationwebauthpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationwebauthpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationwebauthpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationwebauthpolicyName := d.Id()
 	err := client.DeleteResource(service.Authenticationwebauthpolicy.Type(), authenticationwebauthpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

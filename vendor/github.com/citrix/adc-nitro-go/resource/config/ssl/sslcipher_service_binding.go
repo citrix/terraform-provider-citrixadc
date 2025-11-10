@@ -55,7 +55,7 @@ type Sslcipherservicebinding struct {
 	/**
 	* Priority of the cipher to be added
 	*/
-	Cipherpriority int `json:"cipherpriority,omitempty"`
+	Cipherpriority *int `json:"cipherpriority,omitempty"`
 
 
 }

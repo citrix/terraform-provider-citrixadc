@@ -27,7 +27,7 @@ type Filterglobalfilterpolicybinding struct {
 	/**
 	* The priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* State of the binding.
 	*/

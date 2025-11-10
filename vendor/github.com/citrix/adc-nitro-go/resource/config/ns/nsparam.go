@@ -27,11 +27,11 @@ type Nsparam struct {
 	/**
 	* Maximum number of connections that will be made from the appliance to the web server(s) attached to it. The value entered here is applied globally to all attached servers.
 	*/
-	Maxconn int `json:"maxconn"` // Zero is a valid value
+	Maxconn *int `json:"maxconn"` // Zero is a valid value
 	/**
 	* Maximum number of requests that the system can pass on a particular connection between the appliance and a server attached to it. Setting this value to 0 allows an unlimited number of requests to be passed. This value is overridden by the maximum number of requests configured on the individual service.
 	*/
-	Maxreq int `json:"maxreq"` // Zero is a valid value
+	Maxreq *int `json:"maxreq"` // Zero is a valid value
 	/**
 	* Enable or disable the insertion of the actual client IP address into the HTTP header request passed from the client to one, some, or all servers attached to the system. The passed address can then be accessed through a minor modification to the server.
 		* If the CIP header is specified, it will be used as the client IP header.
@@ -53,11 +53,11 @@ type Nsparam struct {
 	/**
 	* Minimum path MTU value that Citrix ADC will process in the ICMP fragmentation needed message. If the ICMP message contains a value less than this value, then this value is used instead.
 	*/
-	Pmtumin int `json:"pmtumin,omitempty"`
+	Pmtumin *int `json:"pmtumin,omitempty"`
 	/**
 	* Interval, in minutes, for flushing the PMTU entries.
 	*/
-	Pmtutimeout int `json:"pmtutimeout,omitempty"`
+	Pmtutimeout *int `json:"pmtutimeout,omitempty"`
 	/**
 	* Minimum and maximum port (port range) that FTP services are allowed to use.
 	*/
@@ -74,20 +74,20 @@ type Nsparam struct {
 	* Percentage of shared pool value granted to PE once PE exhausts the local exclusive quota. Where shared pool is the remaining maxclient quota after distribution of exclusive quota to PEs.
 		Example: In a 2 PE NetScaler system if configured maxclient is 100 and exclusive quota is 80 percent then each PE will get 40 as local exclusive quota and 20 will be in shared pool. If configured grantQuota is 20 percent, then after exhausting its local exclusive quota PE borrows from shared pool in chunks of 4 i.e. 20 percent of 20.
 	*/
-	Grantquotamaxclient int `json:"grantquotamaxclient"` // Zero is a valid value
+	Grantquotamaxclient *int `json:"grantquotamaxclient"` // Zero is a valid value
 	/**
 	* Percentage of maxClient threshold to be divided equally among PEs.
 	*/
-	Exclusivequotamaxclient int `json:"exclusivequotamaxclient"` // Zero is a valid value
+	Exclusivequotamaxclient *int `json:"exclusivequotamaxclient"` // Zero is a valid value
 	/**
 	* Percentage of shared pool value granted to PE once PE exhausts the local exclusive quota. Where shared pool is the remaining spillover quota after distribution of exclusive quota to PEs.
 		Example: In a 2 PE NetScaler system if configured spillover is 100 and exclusive quota is 80 percent then each PE will get 40 as local exclusive quota and 20 will be in shared pool. If configured grantQuota is 20 percent, then after exhausting its local exclusive quota PE borrows from shared pool in chunks of 4 i.e. 20 percent of 20.
 	*/
-	Grantquotaspillover int `json:"grantquotaspillover,omitempty"`
+	Grantquotaspillover *int `json:"grantquotaspillover,omitempty"`
 	/**
 	* Percentage of spillover threshold to be divided equally among PEs.
 	*/
-	Exclusivequotaspillover int `json:"exclusivequotaspillover"` // Zero is a valid value
+	Exclusivequotaspillover *int `json:"exclusivequotaspillover"` // Zero is a valid value
 	/**
 	* Enable/Disable use_proxy_port setting
 	*/
@@ -111,7 +111,7 @@ type Nsparam struct {
 	/**
 	* VLAN on which the subscriber traffic arrives on the appliance.
 	*/
-	Servicepathingressvlan int `json:"servicepathingressvlan,omitempty"`
+	Servicepathingressvlan *int `json:"servicepathingressvlan,omitempty"`
 	/**
 	* The Secure ICA ports on the Web server. This allows the system to perform connection off-load for any
 		client request that has a destination port matching one of these configured ports.
@@ -120,11 +120,11 @@ type Nsparam struct {
 	/**
 	* This allow the configuration of management HTTP port.
 	*/
-	Mgmthttpport int `json:"mgmthttpport,omitempty"`
+	Mgmthttpport *int `json:"mgmthttpport,omitempty"`
 	/**
 	* This allows the configuration of management HTTPS port.
 	*/
-	Mgmthttpsport int `json:"mgmthttpsport,omitempty"`
+	Mgmthttpsport *int `json:"mgmthttpsport,omitempty"`
 	/**
 	* Disable/Enable v1 or v2 proxy protocol header for client info insertion
 	*/
@@ -136,7 +136,7 @@ type Nsparam struct {
 	/**
 	* Set the IP Time to Live (TTL) and Hop Limit value for all outgoing packets from Citrix ADC.
 	*/
-	Ipttl int `json:"ipttl,omitempty"`
+	Ipttl *int `json:"ipttl,omitempty"`
 
 	//------- Read only Parameter ---------;
 

@@ -29,7 +29,7 @@ type Crvserver struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* Protocol (type of service) handled by the virtual server.
 	*/
@@ -42,7 +42,7 @@ type Crvserver struct {
 	/**
 	* Port number of the virtual server.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* The list of IPv4/IPv6 addresses bound to ipset would form a part of listening service on the current cr vserver
 	*/
@@ -50,7 +50,7 @@ type Crvserver struct {
 	/**
 	* Number of consecutive IP addresses, starting with the address specified by the IPAddress parameter, to include in a range of addresses assigned to this virtual server.
 	*/
-	Range int `json:"range,omitempty"`
+	Range *int `json:"range,omitempty"`
 	/**
 	* Mode of operation for the cache redirection virtual server. Available settings function as follows:
 		* TRANSPARENT - Intercept all traffic flowing to the appliance and apply cache redirection policies to determine whether content should be served from the cache or from the origin server.
@@ -78,7 +78,7 @@ type Crvserver struct {
 	/**
 	* Time-out value, in seconds, after which to terminate an idle client connection.
 	*/
-	Clttimeout int `json:"clttimeout,omitempty"`
+	Clttimeout *int `json:"clttimeout,omitempty"`
 	/**
 	* Type of policy (URL or RULE) that takes precedence on the cache redirection virtual server. Applies only to cache redirection virtual servers that have both URL and RULE based policies. If you specify URL, URL based policies are applied first, in the following order:
 		1.   Domain and exact URL
@@ -128,11 +128,11 @@ type Crvserver struct {
 	/**
 	* Time-out, in minutes, for spillover persistence.
 	*/
-	Sopersistencetimeout int `json:"sopersistencetimeout,omitempty"`
+	Sopersistencetimeout *int `json:"sopersistencetimeout,omitempty"`
 	/**
 	* For CONNECTION (or) DYNAMICCONNECTION spillover, the number of connections above which the virtual server enters spillover mode. For BANDWIDTH spillover, the amount of incoming and outgoing traffic (in Kbps) before spillover. For HEALTH spillover, the percentage of active services (by weight) below which spillover occurs.
 	*/
-	Sothreshold int `json:"sothreshold,omitempty"`
+	Sothreshold *int `json:"sothreshold,omitempty"`
 	/**
 	* Reuse TCP connections to the origin server across client connections. Do not set this parameter unless the Service Type parameter is set to HTTP. If you set this parameter to OFF, the possible settings of the Redirect parameter function as follows:
 		* CACHE - TCP connections to the cache servers are not reused.
@@ -172,7 +172,7 @@ type Crvserver struct {
 	/**
 	* Priority of the listen policy specified by the Listen Policy parameter. The lower the number, higher the priority.
 	*/
-	Listenpriority int `json:"listenpriority,omitempty"`
+	Listenpriority *int `json:"listenpriority,omitempty"`
 	/**
 	* Name of the profile containing TCP configuration information for the cache redirection virtual server.
 	*/
@@ -224,7 +224,7 @@ type Crvserver struct {
 	/**
 	* Port number for external TCP probe. NetScaler provides support for external TCP health check of the vserver status over the selected port. This option is only supported for vservers assigned with an IPAddress or ipset.
 	*/
-	Tcpprobeport int `json:"tcpprobeport,omitempty"`
+	Tcpprobeport *int `json:"tcpprobeport,omitempty"`
 	/**
 	* Citrix ADC provides support for external health check of the vserver status. Select HTTP or TCP probes for healthcheck
 	*/
@@ -236,7 +236,7 @@ type Crvserver struct {
 	/**
 	* Citrix ADC provides support for external health check of the vserver status. Select port for HTTP/TCP monitring
 	*/
-	Probeport int `json:"probeport,omitempty"`
+	Probeport *int `json:"probeport,omitempty"`
 	/**
 	* This is effective when a FORWARD type cr vserver is added. By default, this parameter is DISABLED. When it is ENABLED, backend services cannot be accessed through a FORWARD type cr vserver.
 	*/

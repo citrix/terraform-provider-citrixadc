@@ -1,24 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNspbr6() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNspbr6Func,
-		Read:          readNspbr6Func,
-		Update:        updateNspbr6Func,
-		Delete:        deleteNspbr6Func,
+		CreateContext: createNspbr6Func,
+		ReadContext:   readNspbr6Func,
+		UpdateContext: updateNspbr6Func,
+		DeleteContext: deleteNspbr6Func,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -191,62 +195,70 @@ func resourceCitrixAdcNspbr6() *schema.Resource {
 	}
 }
 
-func createNspbr6Func(d *schema.ResourceData, meta interface{}) error {
+func createNspbr6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNspbr6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nspbr6Name := d.Get("name").(string)
 	nspbr6 := ns.Nspbr6{
-		Action:         d.Get("action").(string),
-		Destipop:       d.Get("destipop").(string),
-		Destipv6:       d.Get("destipv6").(bool),
-		Destipv6val:    d.Get("destipv6val").(string),
-		Destport:       d.Get("destport").(bool),
-		Destportop:     d.Get("destportop").(string),
-		Destportval:    d.Get("destportval").(string),
-		Detail:         d.Get("detail").(bool),
-		Interface:      d.Get("interface").(string),
-		Iptunnel:       d.Get("iptunnel").(string),
-		Monitor:        d.Get("monitor").(string),
-		Msr:            d.Get("msr").(string),
-		Name:           d.Get("name").(string),
-		Nexthop:        d.Get("nexthop").(bool),
-		Nexthopval:     d.Get("nexthopval").(string),
-		Nexthopvlan:    d.Get("nexthopvlan").(int),
-		Ownergroup:     d.Get("ownergroup").(string),
-		Priority:       d.Get("priority").(int),
-		Protocol:       d.Get("protocol").(string),
-		Protocolnumber: d.Get("protocolnumber").(int),
-		Srcipop:        d.Get("srcipop").(string),
-		Srcipv6:        d.Get("srcipv6").(bool),
-		Srcipv6val:     d.Get("srcipv6val").(string),
-		Srcmac:         d.Get("srcmac").(string),
-		Srcmacmask:     d.Get("srcmacmask").(string),
-		Srcport:        d.Get("srcport").(bool),
-		Srcportop:      d.Get("srcportop").(string),
-		Srcportval:     d.Get("srcportval").(string),
-		State:          d.Get("state").(string),
-		Td:             d.Get("td").(int),
-		Vlan:           d.Get("vlan").(int),
-		Vxlan:          d.Get("vxlan").(int),
-		Vxlanvlanmap:   d.Get("vxlanvlanmap").(string),
+		Action:       d.Get("action").(string),
+		Destipop:     d.Get("destipop").(string),
+		Destipv6:     d.Get("destipv6").(bool),
+		Destipv6val:  d.Get("destipv6val").(string),
+		Destport:     d.Get("destport").(bool),
+		Destportop:   d.Get("destportop").(string),
+		Destportval:  d.Get("destportval").(string),
+		Detail:       d.Get("detail").(bool),
+		Interface:    d.Get("interface").(string),
+		Iptunnel:     d.Get("iptunnel").(string),
+		Monitor:      d.Get("monitor").(string),
+		Msr:          d.Get("msr").(string),
+		Name:         d.Get("name").(string),
+		Nexthop:      d.Get("nexthop").(bool),
+		Nexthopval:   d.Get("nexthopval").(string),
+		Ownergroup:   d.Get("ownergroup").(string),
+		Protocol:     d.Get("protocol").(string),
+		Srcipop:      d.Get("srcipop").(string),
+		Srcipv6:      d.Get("srcipv6").(bool),
+		Srcipv6val:   d.Get("srcipv6val").(string),
+		Srcmac:       d.Get("srcmac").(string),
+		Srcmacmask:   d.Get("srcmacmask").(string),
+		Srcport:      d.Get("srcport").(bool),
+		Srcportop:    d.Get("srcportop").(string),
+		Srcportval:   d.Get("srcportval").(string),
+		State:        d.Get("state").(string),
+		Vxlanvlanmap: d.Get("vxlanvlanmap").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nexthopvlan"); !raw.IsNull() {
+		nspbr6.Nexthopvlan = intPtr(d.Get("nexthopvlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		nspbr6.Priority = intPtr(d.Get("priority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("protocolnumber"); !raw.IsNull() {
+		nspbr6.Protocolnumber = intPtr(d.Get("protocolnumber").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nspbr6.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nspbr6.Vlan = intPtr(d.Get("vlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vxlan"); !raw.IsNull() {
+		nspbr6.Vxlan = intPtr(d.Get("vxlan").(int))
 	}
 
 	_, err := client.AddResource(service.Nspbr6.Type(), nspbr6Name, &nspbr6)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nspbr6Name)
 
-	err = readNspbr6Func(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nspbr6 but we can't read it ?? %s", nspbr6Name)
-		return nil
-	}
-	return nil
+	return readNspbr6Func(ctx, d, meta)
 }
 
-func readNspbr6Func(d *schema.ResourceData, meta interface{}) error {
+func readNspbr6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNspbr6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nspbr6Name := d.Id()
@@ -272,11 +284,11 @@ func readNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("nexthop", data["nexthop"])
 	d.Set("nexthopval", data["nexthopval"])
-	d.Set("nexthopvlan", data["nexthopvlan"])
+	setToInt("nexthopvlan", d, data["nexthopvlan"])
 	d.Set("ownergroup", data["ownergroup"])
 	setToInt("priority", d, data["priority"])
 	d.Set("protocol", data["protocol"])
-	d.Set("protocolnumber", data["protocolnumber"])
+	setToInt("protocolnumber", d, data["protocolnumber"])
 	d.Set("srcipop", data["srcipop"])
 	d.Set("srcipv6", data["srcipv6"])
 	d.Set("srcipv6val", data["srcipv6val"])
@@ -286,16 +298,16 @@ func readNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	d.Set("srcportop", data["srcportop"])
 	d.Set("srcportval", data["srcportval"])
 	d.Set("state", data["state"])
-	d.Set("td", data["td"])
-	d.Set("vlan", data["vlan"])
-	d.Set("vxlan", data["vxlan"])
+	setToInt("td", d, data["td"])
+	setToInt("vlan", d, data["vlan"])
+	setToInt("vxlan", d, data["vxlan"])
 	d.Set("vxlanvlanmap", data["vxlanvlanmap"])
 
 	return nil
 
 }
 
-func updateNspbr6Func(d *schema.ResourceData, meta interface{}) error {
+func updateNspbr6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNspbr6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nspbr6Name := d.Get("name").(string)
@@ -378,7 +390,7 @@ func updateNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("nexthopvlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nexthopvlan has changed for nspbr6 %s, starting update", nspbr6Name)
-		nspbr6.Nexthopvlan = d.Get("nexthopvlan").(int)
+		nspbr6.Nexthopvlan = intPtr(d.Get("nexthopvlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("ownergroup") {
@@ -388,7 +400,7 @@ func updateNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for nspbr6 %s, starting update", nspbr6Name)
-		nspbr6.Priority = d.Get("priority").(int)
+		nspbr6.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("protocol") {
@@ -398,7 +410,7 @@ func updateNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("protocolnumber") {
 		log.Printf("[DEBUG]  citrixadc-provider: Protocolnumber has changed for nspbr6 %s, starting update", nspbr6Name)
-		nspbr6.Protocolnumber = d.Get("protocolnumber").(int)
+		nspbr6.Protocolnumber = intPtr(d.Get("protocolnumber").(int))
 		hasChange = true
 	}
 	if d.HasChange("srcipop") {
@@ -447,17 +459,17 @@ func updateNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for nspbr6 %s, starting update", nspbr6Name)
-		nspbr6.Td = d.Get("td").(int)
+		nspbr6.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for nspbr6 %s, starting update", nspbr6Name)
-		nspbr6.Vlan = d.Get("vlan").(int)
+		nspbr6.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("vxlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vxlan has changed for nspbr6 %s, starting update", nspbr6Name)
-		nspbr6.Vxlan = d.Get("vxlan").(int)
+		nspbr6.Vxlan = intPtr(d.Get("vxlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("vxlanvlanmap") {
@@ -469,25 +481,25 @@ func updateNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	if stateChange {
 		err := doNspbr6StateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling nspbr6 %s", nspbr6Name)
+			return diag.Errorf("Error enabling/disabling nspbr6 %s", nspbr6Name)
 		}
 	}
 	if hasChange {
 		_, err := client.UpdateResource(service.Nspbr6.Type(), nspbr6Name, &nspbr6)
 		if err != nil {
-			return fmt.Errorf("Error updating nspbr6 %s", nspbr6Name)
+			return diag.Errorf("Error updating nspbr6 %s", nspbr6Name)
 		}
 	}
-	return readNspbr6Func(d, meta)
+	return readNspbr6Func(ctx, d, meta)
 }
 
-func deleteNspbr6Func(d *schema.ResourceData, meta interface{}) error {
+func deleteNspbr6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNspbr6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nspbr6Name := d.Id()
 	err := client.DeleteResource(service.Nspbr6.Type(), nspbr6Name)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

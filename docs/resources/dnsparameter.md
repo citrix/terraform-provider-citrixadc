@@ -59,6 +59,11 @@ resource "citrixadc_dnsparameter" "tf_dnsparameter" {
 * `resolutionorder` - (Optional) Type of DNS queries (A, AAAA, or both) to generate during the routine functioning of certain Citrix ADC features, such as SSL VPN, cache redirection, and the integrated cache. The queries are sent to the external name servers that are configured for the forwarder function. If you specify both query types, you can also specify the order. Available settings function as follows: * OnlyAQuery. Send queries for IPv4 address records (A records) only.  * OnlyAAAAQuery. Send queries for IPv6 address records (AAAA records) instead of queries for IPv4 address records (A records). * AThenAAAAQuery. Send a query for an A record, and then send a query for an AAAA record if the query for the A record results in a NODATA response from the name server. * AAAAThenAQuery. Send a query for an AAAA record, and then send a query for an A record if the query for the AAAA record results in a NODATA response from the name server.
 * `retries` - (Optional) Maximum number of retry attempts when no response is received for a query sent to a name server. Applies to end resolver and forwarder configurations.
 * `splitpktqueryprocessing` - (Optional) Processing requests split across multiple packets
+* `autosavekeyops` - (Optional) Flag to enable/disable saving of rollover operations executed automatically to avoid config loss. Applicable only when autorollover option is enabled on a key. Note: when you enable this, full configuration will be saved
+* `resolvermaxactiveresolutions` - (Optional) Maximum number of active concurrent DNS resolutions per Packet Engine
+* `resolvermaxtcpconnections` - (Optional) Maximum DNS-TCP connections opened for recursive resolution per Packet Engine
+* `resolvermaxtcptimeout` - (Optional) Maximum wait time in seconds for the response on DNS-TCP connection for recursive resolution per Packet Engine
+* `zonetransfer` - (Optional) Flag to enable/disable DNS zones configuration transfer to remote GSLB site nodes
 
 
 ## Attribute Reference

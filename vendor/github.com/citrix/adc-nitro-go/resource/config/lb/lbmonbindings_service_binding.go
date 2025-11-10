@@ -31,7 +31,7 @@ type Lbmonbindingsservicebinding struct {
 	/**
 	* The port of the service.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* The type of service
 	*/

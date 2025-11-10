@@ -31,7 +31,7 @@ type Appfwprofilesafeobjectbinding struct {
 	/**
 	* Maximum match length for a Safe Object expression.
 	*/
-	Maxmatchlength int `json:"maxmatchlength,omitempty"`
+	Maxmatchlength *int `json:"maxmatchlength,omitempty"`
 	/**
 	* Safe Object action types. (BLOCK | LOG | STATS | NONE)
 	*/

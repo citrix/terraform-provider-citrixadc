@@ -27,7 +27,7 @@ type Gslbservicegroupgslbservicegroupmemberbinding struct {
 	/**
 	* Server port number.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* The state of the GSLB service
 	*/
@@ -39,11 +39,11 @@ type Gslbservicegroupgslbservicegroupmemberbinding struct {
 	/**
 	* Time in 10 millisecond ticks since the last state change.
 	*/
-	Tickssincelaststatechange int `json:"tickssincelaststatechange,omitempty"`
+	Tickssincelaststatechange *int `json:"tickssincelaststatechange,omitempty"`
 	/**
 	* Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Name of the server to which to bind the service group.
 	*/
@@ -55,7 +55,7 @@ type Gslbservicegroupgslbservicegroupmemberbinding struct {
 	/**
 	* The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.
 	*/
-	Hashid int `json:"hashid,omitempty"`
+	Hashid *int `json:"hashid,omitempty"`
 	/**
 	* Wait for all existing connections to the service to terminate before shutting down the service.
 	*/
@@ -63,7 +63,7 @@ type Gslbservicegroupgslbservicegroupmemberbinding struct {
 	/**
 	* The time allowed (in seconds) for a graceful shutdown. During this period, new connections or requests will continue to be sent to this service for clients who already have a persistent session on the system. Connections or requests from fresh or new clients who do not yet have a persistence sessions on the system will not be sent to the service. Instead, they will be load balanced among other available services. After the delay time expires, no new requests or connections will be sent to the service.
 	*/
-	Delay int `json:"delay,omitempty"`
+	Delay *int `json:"delay,omitempty"`
 	/**
 	* The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.
 	*/
@@ -71,11 +71,11 @@ type Gslbservicegroupgslbservicegroupmemberbinding struct {
 	/**
 	* The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.
 	*/
-	Publicport int `json:"publicport,omitempty"`
+	Publicport *int `json:"publicport,omitempty"`
 	/**
 	* Indicates if gslb svc has reached threshold
 	*/
-	Gslbthreshold int `json:"gslbthreshold,omitempty"`
+	Gslbthreshold *int `json:"gslbthreshold,omitempty"`
 	Threshold string `json:"threshold,omitempty"`
 	/**
 	* Prefered location.
@@ -88,7 +88,7 @@ type Gslbservicegroupgslbservicegroupmemberbinding struct {
 	/**
 	* Order number to be assigned to the gslb servicegroup member
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 	/**
 	* Order number in string form assigned to the gslb servicegroup member
 	*/
@@ -96,7 +96,7 @@ type Gslbservicegroupgslbservicegroupmemberbinding struct {
 	/**
 	* Delay before moving to TROFS
 	*/
-	Trofsdelay int `json:"trofsdelay,omitempty"`
+	Trofsdelay *int `json:"trofsdelay,omitempty"`
 	/**
 	* Name of the GSLB service group.
 	*/

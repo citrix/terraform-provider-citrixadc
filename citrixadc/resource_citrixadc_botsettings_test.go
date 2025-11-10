@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccBotsettings_basic = `
@@ -33,6 +33,7 @@ const testAccBotsettings_basic = `
 		trapurlautogenerate = "OFF"
 		trapurlinterval = "3600"
 		trapurllength = "32"
+		proxyusername = "testuser"
 	}
 `
 const testAccBotsettings_basic_update = `
@@ -45,14 +46,14 @@ const testAccBotsettings_basic_update = `
 		trapurlautogenerate = "ON"
 		trapurlinterval = "3800"
 		trapurllength = "33"
-
+		proxyusername = "testuser1"
 	}
 `
 
 func TestAccBotsettings_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		// botsettings resource do not have DELETE operation
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -68,6 +69,7 @@ func TestAccBotsettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlautogenerate", "OFF"),
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlinterval", "3600"),
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurllength", "32"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyusername", "testuser"),
 				),
 			},
 			{
@@ -82,6 +84,7 @@ func TestAccBotsettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlautogenerate", "ON"),
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlinterval", "3800"),
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurllength", "33"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyusername", "testuser1"),
 				),
 			},
 		},
@@ -107,8 +110,12 @@ func testAccCheckBotsettingsExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("botsettings", "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("botsettings", "")
 
 		if err != nil {
 			return err

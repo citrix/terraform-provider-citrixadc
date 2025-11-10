@@ -103,6 +103,13 @@ resource "citrixadc_nstcpparam" "tf_tcpparam" {
 * `tcpfastopencookietimeout` - (Optional) Timeout in seconds after which a new TFO Key is computed for generating TFO Cookie. If zero, the same key is used always. If timeout is less than 120seconds, NS defaults to 120seconds timeout.
 * `autosyncookietimeout` - (Optional) Timeout for the server to function in syncookie mode after the synattack. This is valid if TCP syncookie is disabled on the profile and server acts in non syncookie mode by default.
 * `tcpfintimeout` - (Optional) The amount of time in seconds, after which a TCP connnection in the TCP TIME-WAIT state is flushed.
+* `compacttcpoptionnoop` - (Optional) If enabled, non-negotiated TCP options are removed from the received packet while proxying it. By default, non-negotiated TCP options would be replaced by NOPs in the proxied packets. This option is not applicable for Citrix ADC generated packets.
+* `delinkclientserveronrst` - (Optional) If enabled, Delink client and server connection, when there is outstanding data to be sent to the other side.
+* `enhancedisngeneration` - (Optional) If enabled, increase the ISN variation in SYN-ACKs sent by the NetScaler
+* `mptcpfastcloseoption` - (Optional) Allow to select option ACK or RESET to force the closure of an MPTCP connection abruptly.
+* `mptcpreliableaddaddr` - (Optional) If enabled, Citrix ADC retransmits MPTCP ADD-ADDR option if echo response is not received within the timeout interval. The retransmission is attempted only once.
+* `mptcpsendsfresetoption` - (Optional) Allow MPTCP subflows to send TCP RST Reason (MP_TCPRST) Option while sending TCP RST.
+* `rfc5961chlgacklimit` - (Optional) Limits number of Challenge ACK sent per second, as recommended in RFC 5961(Improving TCP's Robustness to Blind In-Window Attacks)
 
 
 ## Attribute Reference

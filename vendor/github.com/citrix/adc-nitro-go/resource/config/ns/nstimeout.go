@@ -23,67 +23,67 @@ type Nstimeout struct {
 	/**
 	* Interval, in seconds, at which the Citrix ADC zombie cleanup process must run. This process cleans up inactive TCP connections.
 	*/
-	Zombie int `json:"zombie,omitempty"`
+	Zombie *int `json:"zombie,omitempty"`
 	/**
 	* Client idle timeout (in seconds). If zero, the service-type default value is taken when service is created.
 	*/
-	Client int `json:"client"` // Zero is a valid value
+	Client *int `json:"client"` // Zero is a valid value
 	/**
 	* Server idle timeout (in seconds).  If zero, the service-type default value is taken when service is created.
 	*/
-	Server int `json:"server"` // Zero is a valid value
+	Server *int `json:"server"` // Zero is a valid value
 	/**
 	* Global idle timeout, in seconds, for client connections of HTTP service type. This value is over ridden by the client timeout that is configured on individual entities.
 	*/
-	Httpclient int `json:"httpclient"` // Zero is a valid value
+	Httpclient *int `json:"httpclient"` // Zero is a valid value
 	/**
 	* Global idle timeout, in seconds, for server connections of HTTP service type. This value is over ridden by the server timeout that is configured on individual entities.
 	*/
-	Httpserver int `json:"httpserver"` // Zero is a valid value
+	Httpserver *int `json:"httpserver"` // Zero is a valid value
 	/**
 	* Global idle timeout, in seconds, for non-HTTP client connections of TCP service type. This value is over ridden by the client timeout that is configured on individual entities.
 	*/
-	Tcpclient int `json:"tcpclient"` // Zero is a valid value
+	Tcpclient *int `json:"tcpclient"` // Zero is a valid value
 	/**
 	* Global idle timeout, in seconds, for non-HTTP server connections of TCP service type. This value is over ridden by the server timeout that is configured on entities.
 	*/
-	Tcpserver int `json:"tcpserver"` // Zero is a valid value
+	Tcpserver *int `json:"tcpserver"` // Zero is a valid value
 	/**
 	* Global idle timeout, in seconds, for non-TCP client connections. This value is over ridden by the client timeout that is configured on individual entities.
 	*/
-	Anyclient int `json:"anyclient"` // Zero is a valid value
+	Anyclient *int `json:"anyclient"` // Zero is a valid value
 	/**
 	* Global idle timeout, in seconds, for non TCP server connections. This value is over ridden by the server timeout that is configured on individual entities.
 	*/
-	Anyserver int `json:"anyserver"` // Zero is a valid value
+	Anyserver *int `json:"anyserver"` // Zero is a valid value
 	/**
 	* Global idle timeout, in seconds, for TCP client connections. This value takes precedence over  entity level timeout settings (vserver/service). This is applicable only to transport protocol TCP.
 	*/
-	Anytcpclient int `json:"anytcpclient"` // Zero is a valid value
+	Anytcpclient *int `json:"anytcpclient"` // Zero is a valid value
 	/**
 	* Global idle timeout, in seconds, for TCP server connections. This value takes precedence over entity level timeout settings ( vserver/service). This is applicable only to transport protocol TCP.
 	*/
-	Anytcpserver int `json:"anytcpserver"` // Zero is a valid value
+	Anytcpserver *int `json:"anytcpserver"` // Zero is a valid value
 	/**
 	* Idle timeout, in seconds, for connections that are in TCP half-closed state.
 	*/
-	Halfclose int `json:"halfclose,omitempty"`
+	Halfclose *int `json:"halfclose,omitempty"`
 	/**
 	* Interval at which the zombie clean-up process for non-TCP connections should run. Inactive IP NAT connections will be cleaned up.
 	*/
-	Nontcpzombie int `json:"nontcpzombie,omitempty"`
+	Nontcpzombie *int `json:"nontcpzombie,omitempty"`
 	/**
 	* Alternative idle timeout, in seconds, for closed TCP NATPCB connections.
 	*/
-	Reducedfintimeout int `json:"reducedfintimeout,omitempty"`
+	Reducedfintimeout *int `json:"reducedfintimeout,omitempty"`
 	/**
 	* Timer interval, in seconds, for abruptly terminated TCP NATPCB connections.
 	*/
-	Reducedrsttimeout int `json:"reducedrsttimeout"` // Zero is a valid value
+	Reducedrsttimeout *int `json:"reducedrsttimeout"` // Zero is a valid value
 	/**
 	* Timer interval, in seconds, for new TCP NATPCB connections on which no data was received.
 	*/
-	Newconnidletimeout int `json:"newconnidletimeout,omitempty"`
+	Newconnidletimeout *int `json:"newconnidletimeout,omitempty"`
 
 	//------- Read only Parameter ---------;
 

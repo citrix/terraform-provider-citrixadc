@@ -23,7 +23,7 @@ type Nscqaparam struct {
 	/**
 	* HARQ retransmission delay (in ms).
 	*/
-	Harqretxdelay int `json:"harqretxdelay,omitempty"`
+	Harqretxdelay *int `json:"harqretxdelay,omitempty"`
 	/**
 	* Name of the network label.
 	*/
@@ -31,7 +31,7 @@ type Nscqaparam struct {
 	/**
 	* MIN RTT (in ms) for the first network.
 	*/
-	Minrttnet1 int `json:"minrttnet1,omitempty"`
+	Minrttnet1 *int `json:"minrttnet1,omitempty"`
 	/**
 	* coefficients values for Label1.
 	*/
@@ -59,7 +59,7 @@ type Nscqaparam struct {
 	/**
 	* MIN RTT (in ms) for the second network.
 	*/
-	Minrttnet2 int `json:"minrttnet2,omitempty"`
+	Minrttnet2 *int `json:"minrttnet2,omitempty"`
 	/**
 	* coefficients values for Label 2.
 	*/
@@ -87,7 +87,7 @@ type Nscqaparam struct {
 	/**
 	* MIN RTT (in ms) for the third network.
 	*/
-	Minrttnet3 int `json:"minrttnet3,omitempty"`
+	Minrttnet3 *int `json:"minrttnet3,omitempty"`
 	/**
 	* Three congestion level scores limits corresponding to None, Low, Medium.
 	*/

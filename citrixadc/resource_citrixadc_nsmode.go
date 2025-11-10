@@ -1,21 +1,23 @@
 package citrixadc
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsmode() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsmodeFunc,
-		Read:          readNsmodeFunc,
-		Delete:        deleteNsmodeFunc,
+		CreateContext: createNsmodeFunc,
+		ReadContext:   readNsmodeFunc,
+		DeleteContext: deleteNsmodeFunc,
 		Schema: map[string]*schema.Schema{
 			"fr": {
 				Type:     schema.TypeBool,
@@ -150,26 +152,21 @@ var modesList = [...]string{
 	"ulfd",
 }
 
-func createNsmodeFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsmodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsmodeFunc")
 	nsmodeName := resource.PrefixedUniqueId("tf-nsmode-")
 
 	err := syncNsmode(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsmodeName)
 
-	err = readNsmodeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsmode but we can't read it ?? %s", nsmodeName)
-		return nil
-	}
-	return nil
+	return readNsmodeFunc(ctx, d, meta)
 }
 
-func readNsmodeFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsmodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsmodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsmodeName := d.Id()
@@ -185,7 +182,7 @@ func readNsmodeFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if len(dataArr) != 1 {
-		return fmt.Errorf("Unexpected fetched nsmode result %v", dataArr)
+		return diag.Errorf("Unexpected fetched nsmode result %v", dataArr)
 	}
 	data := dataArr[0]
 
@@ -203,7 +200,7 @@ func readNsmodeFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteNsmodeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsmodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsmodeFunc")
 
 	d.SetId("")

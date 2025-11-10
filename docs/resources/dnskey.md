@@ -41,6 +41,9 @@ resource "citrixadc_dnskey" "dnskey" {
 * `units1` - (Optional) Units for the expiry period.
 * `units2` - (Optional) Units for the notification period.
 * `zonename` - (Optional) Name of the zone for which to create a key.
+* `autorollover` - (Optional) Flag to enable/disable key rollover automatically. Note: * Key name will be appended with _AR1 for successor key. For e.g. current key=k1, successor key=k1_AR1. * Key name can be truncated if current name length is more than 58 bytes to accomodate the suffix.
+* `revoke` - (Optional) Revoke the key. Note: This operation is non-reversible.
+* `rollovermethod` - (Optional) Method used for automatic rollover. * Key type: ZSK, Method: PrePublication or DoubleSignature. * Key type: KSK, Method: DoubleRRSet.
 
 
 ## Attribute Reference

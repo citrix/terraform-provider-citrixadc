@@ -43,6 +43,13 @@ resource "citrixadc_botprofile" "tf_botprofile_name" {
 * `kmjavascriptname` - (Optional) Name of the JavaScript file that the Bot Management feature will insert in the response for keyboard-mouse based detection. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my javascript file name" or 'my javascript file name').
 * `kmdetection` - (Optional) Enable keyboard-mouse based bot detection. Possible values: [ on, off ]
 * `kmeventspostbodylimit` - (Optional) Size of the KM data send by the browser, needs to be processed on ADC. Minimum value =  1 Maximum value =  204800
+* `addcookieflags` - (Optional) Add the specified flags to bot session cookies. Available settings function as follows: * None - Do not add flags to cookies. * HTTP Only - Add the HTTP Only flag to cookies, which prevents scripts from accessing cookies. * Secure - Add Secure flag to cookies. * All - Add both HTTPOnly and Secure flags to cookies.
+* `dfprequestlimit` - (Optional) Number of requests to allow without bot session cookie if device fingerprint is enabled
+* `headlessbrowserdetection` - (Optional) Enable Headless Browser detection.
+* `sessioncookiename` - (Optional) Name of the SessionCookie that the Bot Management feature uses for tracking. Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.  The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my cookie name" or 'my cookie name').
+* `sessiontimeout` - (Optional) Timeout, in seconds, after which a user session is terminated.
+* `spoofedreqaction` - (Optional) Actions to be taken on a spoofed request (A request spoofing good bot user agent string).
+* `verboseloglevel` - (Optional) Bot verbose Logging. Based on the log level, ADC will log additional information whenever client is detected as a bot.
 
 
 ## Attribute Reference

@@ -1,24 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAuditmessageaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuditmessageactionFunc,
-		Read:          readAuditmessageactionFunc,
-		Update:        updateAuditmessageactionFunc,
-		Delete:        deleteAuditmessageactionFunc,
+		CreateContext: createAuditmessageactionFunc,
+		ReadContext:   readAuditmessageactionFunc,
+		UpdateContext: updateAuditmessageactionFunc,
+		DeleteContext: deleteAuditmessageactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bypasssafetycheck": {
@@ -50,7 +50,7 @@ func resourceCitrixAdcAuditmessageaction() *schema.Resource {
 	}
 }
 
-func createAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuditmessageactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuditmessageactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -67,20 +67,15 @@ func createAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := client.AddResource(service.Auditmessageaction.Type(), auditmessageactionName, &auditmessageaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(auditmessageactionName)
 
-	err = readAuditmessageactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this auditmessageaction but we can't read it ?? %s", auditmessageactionName)
-		return nil
-	}
-	return nil
+	return readAuditmessageactionFunc(ctx, d, meta)
 }
 
-func readAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuditmessageactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuditmessageactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditmessageactionName := d.Id()
@@ -102,7 +97,7 @@ func readAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) error 
 
 }
 
-func updateAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuditmessageactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuditmessageactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditmessageactionName := d.Get("name").(string)
@@ -140,19 +135,19 @@ func updateAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) erro
 	if hasChange {
 		_, err := client.UpdateResource(service.Auditmessageaction.Type(), auditmessageactionName, &auditmessageaction)
 		if err != nil {
-			return fmt.Errorf("Error updating auditmessageaction %s", auditmessageactionName)
+			return diag.Errorf("Error updating auditmessageaction %s", auditmessageactionName)
 		}
 	}
-	return readAuditmessageactionFunc(d, meta)
+	return readAuditmessageactionFunc(ctx, d, meta)
 }
 
-func deleteAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuditmessageactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditmessageactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditmessageactionName := d.Id()
 	err := client.DeleteResource(service.Auditmessageaction.Type(), auditmessageactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

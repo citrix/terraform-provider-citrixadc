@@ -27,11 +27,11 @@ type Vridparam struct {
 	/**
 	* Interval, in milliseconds, between vrrp advertisement messages sent to the peer node in active-active mode.
 	*/
-	Hellointerval int `json:"hellointerval,omitempty"`
+	Hellointerval *int `json:"hellointerval,omitempty"`
 	/**
 	* Number of seconds after which a peer node in active-active mode is marked down if vrrp advertisements are not received from the peer node.
 	*/
-	Deadinterval int `json:"deadinterval,omitempty"`
+	Deadinterval *int `json:"deadinterval,omitempty"`
 
 	//------- Read only Parameter ---------;
 

@@ -23,7 +23,7 @@ type Nstrafficdomain struct {
 	/**
 	* Integer value that uniquely identifies a traffic domain.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* Name of traffic domain  being added.
 	*/

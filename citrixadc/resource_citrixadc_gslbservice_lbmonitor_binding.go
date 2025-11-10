@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcGslbservice_lbmonitor_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbservice_lbmonitor_bindingFunc,
-		Read:          readGslbservice_lbmonitor_bindingFunc,
-		Delete:        deleteGslbservice_lbmonitor_bindingFunc,
+		CreateContext: createGslbservice_lbmonitor_bindingFunc,
+		ReadContext:   readGslbservice_lbmonitor_bindingFunc,
+		DeleteContext: deleteGslbservice_lbmonitor_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"monitor_name": {
@@ -46,7 +48,7 @@ func resourceCitrixAdcGslbservice_lbmonitor_binding() *schema.Resource {
 	}
 }
 
-func createGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbservice_lbmonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbservice_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	servicename := d.Get("servicename").(string)
@@ -57,36 +59,34 @@ func createGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interf
 		Monitorname: d.Get("monitor_name").(string),
 		Monstate:    d.Get("monstate").(string),
 		Servicename: d.Get("servicename").(string),
-		Weight:      d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		gslbservice_lbmonitor_binding.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Gslbservice_lbmonitor_binding.Type(), &gslbservice_lbmonitor_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readGslbservice_lbmonitor_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this gslbservice_lbmonitor_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readGslbservice_lbmonitor_bindingFunc(ctx, d, meta)
 }
 
-func readGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbservice_lbmonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbservice_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
 	idSlice := strings.SplitN(bindingId, ",", 2)
 
 	if len(idSlice) < 2 {
-		return fmt.Errorf("Cannot deduce monitor_name from id string")
+		return diag.Errorf("Cannot deduce monitor_name from id string")
 	}
 
 	if len(idSlice) > 2 {
-		return fmt.Errorf("Too many separators \",\" in id string")
+		return diag.Errorf("Too many separators \",\" in id string")
 	}
 
 	servicename := idSlice[0]
@@ -104,7 +104,7 @@ func readGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfac
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -144,7 +144,7 @@ func readGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func deleteGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbservice_lbmonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteGslbservice_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -159,7 +159,7 @@ func deleteGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interf
 
 	err := client.DeleteResourceWithArgs(service.Gslbservice_lbmonitor_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

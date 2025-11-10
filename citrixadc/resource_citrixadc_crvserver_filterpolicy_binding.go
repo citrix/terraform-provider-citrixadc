@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/cr"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcCrvserver_filterpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCrvserver_filterpolicy_bindingFunc,
-		Read:          readCrvserver_filterpolicy_bindingFunc,
-		Delete:        deleteCrvserver_filterpolicy_bindingFunc,
+		CreateContext: createCrvserver_filterpolicy_bindingFunc,
+		ReadContext:   readCrvserver_filterpolicy_bindingFunc,
+		DeleteContext: deleteCrvserver_filterpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": {
@@ -79,7 +81,7 @@ func resourceCitrixAdcCrvserver_filterpolicy_binding() *schema.Resource {
 	}
 }
 
-func createCrvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createCrvserver_filterpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCrvserver_filterpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -93,26 +95,24 @@ func createCrvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta inter
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   name.(string),
 		Policyname:             policyname.(string),
-		Priority:               d.Get("priority").(int),
 		Targetvserver:          d.Get("targetvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		crvserver_filterpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Crvserver_filterpolicy_binding.Type(), &crvserver_filterpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readCrvserver_filterpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this crvserver_filterpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readCrvserver_filterpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readCrvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readCrvserver_filterpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCrvserver_filterpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -133,7 +133,7 @@ func readCrvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -178,7 +178,7 @@ func readCrvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 
 }
 
-func deleteCrvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCrvserver_filterpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCrvserver_filterpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -199,7 +199,7 @@ func deleteCrvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta inter
 
 	err := client.DeleteResourceWithArgs(service.Crvserver_filterpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

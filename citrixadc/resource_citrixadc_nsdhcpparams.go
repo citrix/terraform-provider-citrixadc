@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsdhcpparams() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsdhcpparamsFunc,
-		Read:          readNsdhcpparamsFunc,
-		Update:        updateNsdhcpparamsFunc,
-		Delete:        deleteNsdhcpparamsFunc,
+		CreateContext: createNsdhcpparamsFunc,
+		ReadContext:   readNsdhcpparamsFunc,
+		UpdateContext: updateNsdhcpparamsFunc,
+		DeleteContext: deleteNsdhcpparamsFunc,
 		Schema: map[string]*schema.Schema{
 			"dhcpclient": {
 				Type:     schema.TypeString,
@@ -33,7 +36,7 @@ func resourceCitrixAdcNsdhcpparams() *schema.Resource {
 	}
 }
 
-func createNsdhcpparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsdhcpparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsdhcpparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nsdhcpparamsName string
@@ -46,20 +49,15 @@ func createNsdhcpparamsFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nsdhcpparams.Type(), &nsdhcpparams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsdhcpparamsName)
 
-	err = readNsdhcpparamsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsdhcpparams but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNsdhcpparamsFunc(ctx, d, meta)
 }
 
-func readNsdhcpparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsdhcpparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsdhcpparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsdhcpparams state")
@@ -76,7 +74,7 @@ func readNsdhcpparamsFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsdhcpparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsdhcpparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsdhcpparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -96,13 +94,13 @@ func updateNsdhcpparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nsdhcpparams.Type(), &nsdhcpparams)
 		if err != nil {
-			return fmt.Errorf("Error updating nsdhcpparams")
+			return diag.Errorf("Error updating nsdhcpparams")
 		}
 	}
-	return readNsdhcpparamsFunc(d, meta)
+	return readNsdhcpparamsFunc(ctx, d, meta)
 }
 
-func deleteNsdhcpparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsdhcpparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsdhcpparamsFunc")
 
 	d.SetId("")

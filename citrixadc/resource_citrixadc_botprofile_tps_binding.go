@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,13 +15,19 @@ import (
 func resourceCitrixAdcBotprofile_tps_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotprofile_tps_bindingFunc,
-		Read:          readBotprofile_tps_bindingFunc,
-		Delete:        deleteBotprofile_tps_bindingFunc,
+		CreateContext: createBotprofile_tps_bindingFunc,
+		ReadContext:   readBotprofile_tps_bindingFunc,
+		DeleteContext: deleteBotprofile_tps_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"bot_tps_enabled": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -73,7 +81,7 @@ func resourceCitrixAdcBotprofile_tps_binding() *schema.Resource {
 	}
 }
 
-func createBotprofile_tps_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotprofile_tps_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotprofile_tps_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -83,29 +91,30 @@ func createBotprofile_tps_bindingFunc(d *schema.ResourceData, meta interface{}) 
 		Botbindcomment: d.Get("bot_bind_comment").(string),
 		Bottps:         d.Get("bot_tps").(bool),
 		Bottpsaction:   toStringList(d.Get("bot_tps_action").([]interface{})),
+		Bottpsenabled:  d.Get("bot_tps_enabled").(string),
 		Bottpstype:     d.Get("bot_tps_type").(string),
 		Logmessage:     d.Get("logmessage").(string),
 		Name:           d.Get("name").(string),
-		Percentage:     d.Get("percentage").(int),
-		Threshold:      d.Get("threshold").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("percentage"); !raw.IsNull() {
+		botprofile_tps_binding.Percentage = intPtr(d.Get("percentage").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("threshold"); !raw.IsNull() {
+		botprofile_tps_binding.Threshold = intPtr(d.Get("threshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource("botprofile_tps_binding", &botprofile_tps_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readBotprofile_tps_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botprofile_tps_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readBotprofile_tps_bindingFunc(ctx, d, meta)
 }
 
-func readBotprofile_tps_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotprofile_tps_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotprofile_tps_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -126,7 +135,7 @@ func readBotprofile_tps_bindingFunc(d *schema.ResourceData, meta interface{}) er
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -158,19 +167,20 @@ func readBotprofile_tps_bindingFunc(d *schema.ResourceData, meta interface{}) er
 	data := dataArr[foundIndex]
 
 	d.Set("bot_bind_comment", data["bot_bind_comment"])
+	d.Set("bot_tps_enabled", data["bot_tps_enabled"])
 	d.Set("bot_tps", data["bot_tps"])
 	d.Set("bot_tps_action", data["bot_tps_action"])
 	d.Set("bot_tps_type", data["bot_tps_type"])
 	d.Set("logmessage", data["logmessage"])
 	d.Set("name", data["name"])
-	d.Set("percentage", data["percentage"])
-	d.Set("threshold", data["threshold"])
+	setToInt("percentage", d, data["percentage"])
+	setToInt("threshold", d, data["threshold"])
 
 	return nil
 
 }
 
-func deleteBotprofile_tps_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotprofile_tps_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotprofile_tps_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -188,7 +198,7 @@ func deleteBotprofile_tps_bindingFunc(d *schema.ResourceData, meta interface{}) 
 
 	err := client.DeleteResourceWithArgs("botprofile_tps_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

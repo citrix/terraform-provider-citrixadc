@@ -1,24 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcGslbsite() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbsiteFunc,
-		Read:          readGslbsiteFunc,
-		Update:        updateGslbsiteFunc,
-		Delete:        deleteGslbsiteFunc,
+		CreateContext: createGslbsiteFunc,
+		ReadContext:   readGslbsiteFunc,
+		UpdateContext: updateGslbsiteFunc,
+		DeleteContext: deleteGslbsiteFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"clip": {
@@ -95,15 +99,35 @@ func resourceCitrixAdcGslbsite() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"newname": {
+			"status": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
+			},
+			"persistencemepstatus": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"curbackupparentip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"sitestate": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"oldname": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
 }
 
-func createGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbsiteFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createGslbsiteFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var gslbsiteName string
@@ -133,20 +157,15 @@ func createGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err := client.AddResource(service.Gslbsite.Type(), gslbsiteName, &gslbsite)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(gslbsiteName)
 
-	err = readGslbsiteFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this gslbsite but we can't read it ?? %s", gslbsiteName)
-		return nil
-	}
-	return nil
+	return readGslbsiteFunc(ctx, d, meta)
 }
 
-func readGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbsiteFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readGslbsiteFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbsiteName := d.Id()
@@ -176,7 +195,6 @@ func readGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("curbackupparentip", data["curbackupparentip"])
 	d.Set("sitestate", data["sitestate"])
 	d.Set("oldname", data["oldname"])
-	d.Set("nextgenapiresource", data["_nextgenapiresource"])
 	if val, ok := data["backupparentlist"]; ok {
 		if list, ok := val.([]interface{}); ok {
 			d.Set("backupparentlist", toStringList(list))
@@ -189,7 +207,7 @@ func readGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
+func updateGslbsiteFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In updateGslbsiteFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbsiteName := d.Get("sitename").(string)
@@ -197,7 +215,6 @@ func updateGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	gslbsite := gslb.Gslbsite{
 		Sitename: gslbsiteName,
 	}
-	hasRename := false
 	hasChange := false
 	if d.HasChange("metricexchange") {
 		log.Printf("[DEBUG]  netscaler-provider: Metricexchange has changed for gslbsite %s, starting update", gslbsiteName)
@@ -249,37 +266,24 @@ func updateGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 		gslbsite.Backupparentlist = toStringList(d.Get("backupparentlist").([]interface{}))
 		hasChange = true
 	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  netscaler-provider: Newname has changed for gslbsite %s, starting update", gslbsiteName)
-		gslbsite.Newname = d.Get("newname").(string)
-		hasRename = true
-	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Gslbsite.Type(), gslbsiteName, &gslbsite)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	if hasRename {
-		err := client.ActOnResource(service.Gslbsite.Type(), &gslbsite, "rename")
-		if err != nil {
-			return err
-		}
-		d.SetId(gslbsite.Newname)
-	}
-
-	return readGslbsiteFunc(d, meta)
+	return readGslbsiteFunc(ctx, d, meta)
 }
 
-func deleteGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbsiteFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteGslbsiteFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbsiteName := d.Id()
 	err := client.DeleteResource(service.Gslbsite.Type(), gslbsiteName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

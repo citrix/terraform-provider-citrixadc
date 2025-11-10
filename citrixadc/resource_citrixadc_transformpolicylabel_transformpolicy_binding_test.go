@@ -21,51 +21,51 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccTransformpolicylabel_transformpolicy_binding_basic = `
 resource "citrixadc_transformprofile" "tf_trans_profile1" {
 	name = "pro_1"
-  }
+	}
   resource "citrixadc_transformpolicy" "tf_trans_policy" {
 	  name = "tf_trans_policy"
 	  profilename = citrixadc_transformprofile.tf_trans_profile1.name
 	  rule = "http.REQ.URL.CONTAINS(\"test_url\")"
-  }
+	}
   resource "citrixadc_transformpolicylabel" "transformpolicylabel" {
 	labelname = "label_1"
 	policylabeltype = "httpquic_req"
-  }
+	}
   resource "citrixadc_transformpolicylabel_transformpolicy_binding" "transformpolicylabel_transformpolicy_binding"{
 	 policyname = citrixadc_transformpolicy.tf_trans_policy.name
 	  labelname = citrixadc_transformpolicylabel.transformpolicylabel.labelname
 	  priority = 2
-  }
+	}
 `
 
 const testAccTransformpolicylabel_transformpolicy_binding_basic_step2 = `
 resource "citrixadc_transformprofile" "tf_trans_profile1" {
 	name = "pro_1"
-  }
+	}
   
   resource "citrixadc_transformpolicy" "tf_trans_policy" {
 	  name = "tf_trans_policy"
 	  profilename = citrixadc_transformprofile.tf_trans_profile1.name
 	  rule = "http.REQ.URL.CONTAINS(\"test_url\")"
-  }
+	}
   resource "citrixadc_transformpolicylabel" "transformpolicylabel" {
 	labelname = "label_1"
 	policylabeltype = "httpquic_req"
-  }
+	}
 `
 
 func TestAccTransformpolicylabel_transformpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckTransformpolicylabel_transformpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckTransformpolicylabel_transformpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransformpolicylabel_transformpolicy_binding_basic,
@@ -102,7 +102,11 @@ func testAccCheckTransformpolicylabel_transformpolicy_bindingExist(n string, id 
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -142,7 +146,11 @@ func testAccCheckTransformpolicylabel_transformpolicy_bindingExist(n string, id 
 
 func testAccCheckTransformpolicylabel_transformpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -182,7 +190,11 @@ func testAccCheckTransformpolicylabel_transformpolicy_bindingNotExist(n string, 
 }
 
 func testAccCheckTransformpolicylabel_transformpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_transformpolicylabel_transformpolicy_binding" {
@@ -193,7 +205,7 @@ func testAccCheckTransformpolicylabel_transformpolicy_bindingDestroy(s *terrafor
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Transformpolicylabel_transformpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Transformpolicylabel_transformpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("transformpolicylabel_transformpolicy_binding %s still exists", rs.Primary.ID)
 		}

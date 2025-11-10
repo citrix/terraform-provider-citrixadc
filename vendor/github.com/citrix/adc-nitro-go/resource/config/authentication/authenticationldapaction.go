@@ -38,11 +38,11 @@ type Authenticationldapaction struct {
 	/**
 	* Port on which the LDAP server accepts connections.
 	*/
-	Serverport int `json:"serverport,omitempty"`
+	Serverport *int `json:"serverport,omitempty"`
 	/**
 	* Number of seconds the Citrix ADC waits for a response from the RADIUS server.
 	*/
-	Authtimeout int `json:"authtimeout,omitempty"`
+	Authtimeout *int `json:"authtimeout,omitempty"`
 	/**
 	* Base (node) from which to start LDAP searches.
 		If the LDAP server is running locally, the default value of base is dc=netscaler, dc=com.
@@ -111,7 +111,7 @@ type Authenticationldapaction struct {
 	/**
 	* If nested group extraction is ON, specifies the number of levels up to which group extraction is performed.
 	*/
-	Maxnestinglevel int `json:"maxnestinglevel,omitempty"`
+	Maxnestinglevel *int `json:"maxnestinglevel,omitempty"`
 	/**
 	* Setting this option to ON enables following LDAP referrals received from the LDAP server.
 	*/
@@ -119,7 +119,7 @@ type Authenticationldapaction struct {
 	/**
 	* Specifies the maximum number of nested referrals to follow.
 	*/
-	Maxldapreferrals int `json:"maxldapreferrals,omitempty"`
+	Maxldapreferrals *int `json:"maxldapreferrals,omitempty"`
 	/**
 	* Specifies the DNS Record lookup Type for the referrals
 	*/

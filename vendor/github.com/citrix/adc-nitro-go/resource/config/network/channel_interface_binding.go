@@ -40,35 +40,35 @@ type Channelinterfacebinding struct {
 	/**
 	* State of the member interfaces.
 	*/
-	Slavestate int `json:"slavestate,omitempty"`
+	Slavestate *int `json:"slavestate,omitempty"`
 	/**
 	* Media type of the member interfaces.
 	*/
-	Slavemedia int `json:"slavemedia,omitempty"`
+	Slavemedia *int `json:"slavemedia,omitempty"`
 	/**
 	* Speed of the member interfaces.
 	*/
-	Slavespeed int `json:"slavespeed,omitempty"`
+	Slavespeed *int `json:"slavespeed,omitempty"`
 	/**
 	* Duplex of the member interfaces.
 	*/
-	Slaveduplex int `json:"slaveduplex,omitempty"`
+	Slaveduplex *int `json:"slaveduplex,omitempty"`
 	/**
 	* Flowcontrol of the member interfaces.
 	*/
-	Slaveflowctl int `json:"slaveflowctl,omitempty"`
+	Slaveflowctl *int `json:"slaveflowctl,omitempty"`
 	/**
 	* UP time of the member interfaces.
 	*/
-	Slavetime int `json:"slavetime,omitempty"`
+	Slavetime *int `json:"slavetime,omitempty"`
 	/**
 	* LR set member interface state(active/inactive).
 	*/
-	Lractiveintf int `json:"lractiveintf,omitempty"`
+	Lractiveintf *int `json:"lractiveintf,omitempty"`
 	/**
 	* New attribute added to identify the source of cmd, when SVM fires the nitro cmd, it will set the value of SVMCMD to be 1. 
 	*/
-	Svmcmd int `json:"svmcmd,omitempty"`
+	Svmcmd *int `json:"svmcmd,omitempty"`
 	/**
 	* ID of the LA channel or the cluster LA channel to which you want to bind interfaces. Specify an LA channel in LA/x notation, where x can range from 1 to 8 or a cluster LA channel in CLA/x notation or  Link redundant channel in LR/x notation , where x can range from 1 to 4.
 	*/

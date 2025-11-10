@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccNstcpparam_basic = `
@@ -40,6 +40,7 @@ var testAccNstcpparam_zero_values_map = map[string]string{
 	"oooqsize":                  "0",
 	"tcpfastopencookietimeout":  "0",
 	"wsval":                     "0",
+	"rfc5961chlgacklimit":       "0",
 }
 
 var testAccNstcpparam_default_values_map = map[string]string{
@@ -85,6 +86,13 @@ var testAccNstcpparam_default_values_map = map[string]string{
 	"tcpfastopencookietimeout":            "0",
 	"autosyncookietimeout":                "30",
 	"tcpfintimeout":                       "40",
+	"rfc5961chlgacklimit":                 "0",
+	"mptcpsendsfresetoption":              "DISABLED",
+	"mptcpreliableaddaddr":                "DISABLED",
+	"mptcpfastcloseoption":                "ACK",
+	"enhancedisngeneration":               "DISABLED",
+	"delinkclientserveronrst":             "DISABLED",
+	"compacttcpoptionnoop":                "DISABLED",
 }
 
 var testAccNstcpparam_non_default_values_map = map[string]string{
@@ -130,6 +138,13 @@ var testAccNstcpparam_non_default_values_map = map[string]string{
 	"tcpfastopencookietimeout":            "10",
 	"autosyncookietimeout":                "40",
 	"tcpfintimeout":                       "20",
+	"rfc5961chlgacklimit":                 "2200",
+	"mptcpsendsfresetoption":              "ENABLED",
+	"mptcpreliableaddaddr":                "ENABLED",
+	"mptcpfastcloseoption":                "RESET",
+	"enhancedisngeneration":               "ENABLED",
+	"delinkclientserveronrst":             "ENABLED",
+	"compacttcpoptionnoop":                "ENABLED",
 }
 
 const testAccNstcpparam_zero_values = `
@@ -142,6 +157,7 @@ resource "citrixadc_nstcpparam" "tf_tcpparam" {
 	oooqsize = 0
 	tcpfastopencookietimeout = 0
 	wsval = 0
+	rfc5961chlgacklimit = 0
 }
 `
 
@@ -189,6 +205,13 @@ resource "citrixadc_nstcpparam" "tf_tcpparam" {
         tcpfastopencookietimeout = 0
         autosyncookietimeout = 30
         tcpfintimeout = 40
+		rfc5961chlgacklimit = 0
+		mptcpsendsfresetoption = "DISABLED"
+		mptcpreliableaddaddr = "DISABLED"
+		mptcpfastcloseoption = "ACK"
+		enhancedisngeneration = "DISABLED"
+		delinkclientserveronrst = "DISABLED"
+		compacttcpoptionnoop = "DISABLED"
 }
 `
 
@@ -236,14 +259,21 @@ resource "citrixadc_nstcpparam" "tf_tcpparam" {
         tcpfastopencookietimeout = 10
         autosyncookietimeout = 40
         tcpfintimeout = 20
+		rfc5961chlgacklimit = 2200
+		mptcpsendsfresetoption = "ENABLED"
+		mptcpreliableaddaddr = "ENABLED"
+		mptcpfastcloseoption = "RESET"
+		enhancedisngeneration = "ENABLED"
+		delinkclientserveronrst = "ENABLED"
+		compacttcpoptionnoop = "ENABLED"
 }
 `
 
 func TestAccNstcpparam_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNstcpparamDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNstcpparamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNstcpparam_zero_values,
@@ -289,8 +319,12 @@ func testAccCheckNstcpparamExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Nstcpparam.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nstcpparam.Type(), "")
 
 		if err != nil {
 			return err
@@ -307,7 +341,11 @@ func testAccCheckNstcpparamExist(n string, id *string) resource.TestCheckFunc {
 func testAccCheckTcpparamMapvalues(mapData map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		findParams := service.FindParams{
 			ResourceType: "nstcpparam",
@@ -335,7 +373,11 @@ func testAccCheckTcpparamMapvalues(mapData map[string]string) resource.TestCheck
 }
 
 func testAccCheckNstcpparamDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_nstcpparam" {
@@ -346,7 +388,7 @@ func testAccCheckNstcpparamDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Nstcpparam.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Nstcpparam.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("nstcpparam %s still exists", rs.Primary.ID)
 		}

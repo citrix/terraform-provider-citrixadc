@@ -49,7 +49,7 @@ type Tmformssoaction struct {
 	/**
 	* Number of bytes, in the response, to parse for extracting the forms.
 	*/
-	Responsesize int `json:"responsesize,omitempty"`
+	Responsesize *int `json:"responsesize,omitempty"`
 	/**
 	* Type of processing of the name-value pair. If you specify STATIC, the values configured by the administrator are used. For DYNAMIC, the response is parsed, and the form is extracted and then submitted.
 	*/

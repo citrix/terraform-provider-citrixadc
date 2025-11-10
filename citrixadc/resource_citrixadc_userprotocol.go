@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/user"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/user"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcUserprotocol() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createUserprotocolFunc,
-		Read:          readUserprotocolFunc,
-		Update:        updateUserprotocolFunc,
-		Delete:        deleteUserprotocolFunc,
+		CreateContext: createUserprotocolFunc,
+		ReadContext:   readUserprotocolFunc,
+		UpdateContext: updateUserprotocolFunc,
+		DeleteContext: deleteUserprotocolFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"extension": {
@@ -43,7 +46,7 @@ func resourceCitrixAdcUserprotocol() *schema.Resource {
 	}
 }
 
-func createUserprotocolFunc(d *schema.ResourceData, meta interface{}) error {
+func createUserprotocolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createUserprotocolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	userprotocolName := d.Get("name").(string)
@@ -56,20 +59,15 @@ func createUserprotocolFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("userprotocol", userprotocolName, &userprotocol)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(userprotocolName)
 
-	err = readUserprotocolFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this userprotocol but we can't read it ?? %s", userprotocolName)
-		return nil
-	}
-	return nil
+	return readUserprotocolFunc(ctx, d, meta)
 }
 
-func readUserprotocolFunc(d *schema.ResourceData, meta interface{}) error {
+func readUserprotocolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readUserprotocolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	userprotocolName := d.Id()
@@ -89,7 +87,7 @@ func readUserprotocolFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateUserprotocolFunc(d *schema.ResourceData, meta interface{}) error {
+func updateUserprotocolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateUserprotocolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	userprotocolName := d.Get("name").(string)
@@ -107,19 +105,19 @@ func updateUserprotocolFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("userprotocol", &userprotocol)
 		if err != nil {
-			return fmt.Errorf("Error updating userprotocol %s", userprotocolName)
+			return diag.Errorf("Error updating userprotocol %s", userprotocolName)
 		}
 	}
-	return readUserprotocolFunc(d, meta)
+	return readUserprotocolFunc(ctx, d, meta)
 }
 
-func deleteUserprotocolFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteUserprotocolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteUserprotocolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	userprotocolName := d.Id()
 	err := client.DeleteResource("userprotocol", userprotocolName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -23,7 +23,7 @@ type Netbridgevlanbinding struct {
 	/**
 	* The VLAN that is extended by this network bridge.
 	*/
-	Vlan int `json:"vlan,omitempty"`
+	Vlan *int `json:"vlan,omitempty"`
 	/**
 	* The name of the network bridge.
 	*/

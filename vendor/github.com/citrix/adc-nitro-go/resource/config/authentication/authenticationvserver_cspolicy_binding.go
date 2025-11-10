@@ -27,7 +27,7 @@ type Authenticationvservercspolicybinding struct {
 	/**
 	* The priority, if any, of the vpn vserver policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

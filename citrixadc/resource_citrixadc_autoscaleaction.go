@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/autoscale"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAutoscaleaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAutoscaleactionFunc,
-		Read:          readAutoscaleactionFunc,
-		Update:        updateAutoscaleactionFunc,
-		Delete:        deleteAutoscaleactionFunc,
+		CreateContext: createAutoscaleactionFunc,
+		ReadContext:   readAutoscaleactionFunc,
+		UpdateContext: updateAutoscaleactionFunc,
+		DeleteContext: deleteAutoscaleactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -60,36 +63,36 @@ func resourceCitrixAdcAutoscaleaction() *schema.Resource {
 	}
 }
 
-func createAutoscaleactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAutoscaleactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAutoscaleactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscaleactionName := d.Get("name").(string)
 	autoscaleaction := autoscale.Autoscaleaction{
-		Name:                 d.Get("name").(string),
-		Parameters:           d.Get("parameters").(string),
-		Profilename:          d.Get("profilename").(string),
-		Quiettime:            d.Get("quiettime").(int),
-		Type:                 d.Get("type").(string),
-		Vmdestroygraceperiod: d.Get("vmdestroygraceperiod").(int),
-		Vserver:              d.Get("vserver").(string),
+		Name:        d.Get("name").(string),
+		Parameters:  d.Get("parameters").(string),
+		Profilename: d.Get("profilename").(string),
+		Type:        d.Get("type").(string),
+		Vserver:     d.Get("vserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("quiettime"); !raw.IsNull() {
+		autoscaleaction.Quiettime = intPtr(d.Get("quiettime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vmdestroygraceperiod"); !raw.IsNull() {
+		autoscaleaction.Vmdestroygraceperiod = intPtr(d.Get("vmdestroygraceperiod").(int))
 	}
 
 	_, err := client.AddResource(service.Autoscaleaction.Type(), autoscaleactionName, &autoscaleaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(autoscaleactionName)
 
-	err = readAutoscaleactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this autoscaleaction but we can't read it ?? %s", autoscaleactionName)
-		return nil
-	}
-	return nil
+	return readAutoscaleactionFunc(ctx, d, meta)
 }
 
-func readAutoscaleactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAutoscaleactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAutoscaleactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscaleactionName := d.Id()
@@ -103,16 +106,16 @@ func readAutoscaleactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("parameters", data["parameters"])
 	d.Set("profilename", data["profilename"])
-	d.Set("quiettime", data["quiettime"])
+	setToInt("quiettime", d, data["quiettime"])
 	d.Set("type", data["type"])
-	d.Set("vmdestroygraceperiod", data["vmdestroygraceperiod"])
+	setToInt("vmdestroygraceperiod", d, data["vmdestroygraceperiod"])
 	d.Set("vserver", data["vserver"])
 
 	return nil
 
 }
 
-func updateAutoscaleactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAutoscaleactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAutoscaleactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscaleactionName := d.Get("name").(string)
@@ -133,12 +136,12 @@ func updateAutoscaleactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("quiettime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Quiettime has changed for autoscaleaction %s, starting update", autoscaleactionName)
-		autoscaleaction.Quiettime = d.Get("quiettime").(int)
+		autoscaleaction.Quiettime = intPtr(d.Get("quiettime").(int))
 		hasChange = true
 	}
 	if d.HasChange("vmdestroygraceperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vmdestroygraceperiod has changed for autoscaleaction %s, starting update", autoscaleactionName)
-		autoscaleaction.Vmdestroygraceperiod = d.Get("vmdestroygraceperiod").(int)
+		autoscaleaction.Vmdestroygraceperiod = intPtr(d.Get("vmdestroygraceperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("vserver") {
@@ -150,19 +153,19 @@ func updateAutoscaleactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Autoscaleaction.Type(), &autoscaleaction)
 		if err != nil {
-			return fmt.Errorf("Error updating autoscaleaction %s", autoscaleactionName)
+			return diag.Errorf("Error updating autoscaleaction %s", autoscaleactionName)
 		}
 	}
-	return readAutoscaleactionFunc(d, meta)
+	return readAutoscaleactionFunc(ctx, d, meta)
 }
 
-func deleteAutoscaleactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAutoscaleactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAutoscaleactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscaleactionName := d.Id()
 	err := client.DeleteResource(service.Autoscaleaction.Type(), autoscaleactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcAaauser_auditnslogpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaauser_auditnslogpolicy_bindingFunc,
-		Read:          readAaauser_auditnslogpolicy_bindingFunc,
-		Delete:        deleteAaauser_auditnslogpolicy_bindingFunc,
+		CreateContext: createAaauser_auditnslogpolicy_bindingFunc,
+		ReadContext:   readAaauser_auditnslogpolicy_bindingFunc,
+		DeleteContext: deleteAaauser_auditnslogpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"username": {
@@ -51,7 +53,7 @@ func resourceCitrixAdcAaauser_auditnslogpolicy_binding() *schema.Resource {
 	}
 }
 
-func createAaauser_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaauser_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaauser_auditnslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	username := d.Get("username").(string)
@@ -60,27 +62,25 @@ func createAaauser_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta int
 	aaauser_auditnslogpolicy_binding := aaa.Aaauserauditnslogpolicybinding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
 		Username:               d.Get("username").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		aaauser_auditnslogpolicy_binding.Priority = intPtr(d.Get("priority").(int))
+	}
+
 	err := client.UpdateUnnamedResource(service.Aaauser_auditnslogpolicy_binding.Type(), &aaauser_auditnslogpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAaauser_auditnslogpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaauser_auditnslogpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAaauser_auditnslogpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAaauser_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaauser_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaauser_auditnslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -101,7 +101,7 @@ func readAaauser_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta inter
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -142,7 +142,7 @@ func readAaauser_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta inter
 
 }
 
-func deleteAaauser_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaauser_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaauser_auditnslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -161,7 +161,7 @@ func deleteAaauser_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.DeleteResourceWithArgs(service.Aaauser_auditnslogpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

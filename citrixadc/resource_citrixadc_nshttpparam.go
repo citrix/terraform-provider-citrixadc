@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
-	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strconv"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNshttpparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNshttpparamFunc,
-		Read:          readNshttpparamFunc,
-		Update:        updateNshttpparamFunc,
-		Delete:        deleteNshttpparamFunc,
+		CreateContext: createNshttpparamFunc,
+		ReadContext:   readNshttpparamFunc,
+		UpdateContext: updateNshttpparamFunc,
+		DeleteContext: deleteNshttpparamFunc,
 		Schema: map[string]*schema.Schema{
 			"conmultiplex": {
 				Type:     schema.TypeString,
@@ -73,7 +76,7 @@ func resourceCitrixAdcNshttpparam() *schema.Resource {
 	}
 }
 
-func createNshttpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createNshttpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNshttpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nshttpparamName string
@@ -88,26 +91,24 @@ func createNshttpparamFunc(d *schema.ResourceData, meta interface{}) error {
 		Logerrresp:                d.Get("logerrresp").(string),
 		Markconnreqinval:          d.Get("markconnreqinval").(string),
 		Markhttp09inval:           d.Get("markhttp09inval").(string),
-		Maxreusepool:              d.Get("maxreusepool").(int),
 		Nssrvrhdr:                 d.Get("nssrvrhdr").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("maxreusepool"); !raw.IsNull() {
+		nshttpparam.Maxreusepool = intPtr(d.Get("maxreusepool").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nshttpparam.Type(), &nshttpparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nshttpparamName)
 
-	err = readNshttpparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nshttpparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNshttpparamFunc(ctx, d, meta)
 }
 
-func readNshttpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readNshttpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNshttpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nshttpparam state")
@@ -133,12 +134,14 @@ func readNshttpparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNshttpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNshttpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNshttpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	nshttpparam := ns.Nshttpparam{
-		Maxreusepool: d.Get("maxreusepool").(int),
+	nshttpparam := ns.Nshttpparam{}
+
+	if raw := d.GetRawConfig().GetAttr("maxreusepool"); !raw.IsNull() {
+		nshttpparam.Maxreusepool = intPtr(d.Get("maxreusepool").(int))
 	}
 	hasChange := false
 	if d.HasChange("conmultiplex") {
@@ -190,13 +193,13 @@ func updateNshttpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nshttpparam.Type(), &nshttpparam)
 		if err != nil {
-			return fmt.Errorf("Error updating nshttpparam")
+			return diag.Errorf("Error updating nshttpparam")
 		}
 	}
-	return readNshttpparamFunc(d, meta)
+	return readNshttpparamFunc(ctx, d, meta)
 }
 
-func deleteNshttpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNshttpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNshttpparamFunc")
 
 	d.SetId("")

@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcService_dospolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createService_dospolicy_bindingFunc,
-		Read:          readService_dospolicy_bindingFunc,
-		Delete:        deleteService_dospolicy_bindingFunc,
+		CreateContext: createService_dospolicy_bindingFunc,
+		ReadContext:   readService_dospolicy_bindingFunc,
+		DeleteContext: deleteService_dospolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,7 +38,7 @@ func resourceCitrixAdcService_dospolicy_binding() *schema.Resource {
 	}
 }
 
-func createService_dospolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createService_dospolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createService_dospolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -49,20 +51,15 @@ func createService_dospolicy_bindingFunc(d *schema.ResourceData, meta interface{
 
 	err := client.UpdateUnnamedResource(service.Service_dospolicy_binding.Type(), &service_dospolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readService_dospolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this service_dospolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readService_dospolicy_bindingFunc(ctx, d, meta)
 }
 
-func readService_dospolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readService_dospolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readService_dospolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -83,7 +80,7 @@ func readService_dospolicy_bindingFunc(d *schema.ResourceData, meta interface{})
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -121,7 +118,7 @@ func readService_dospolicy_bindingFunc(d *schema.ResourceData, meta interface{})
 
 }
 
-func deleteService_dospolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteService_dospolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteService_dospolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -136,7 +133,7 @@ func deleteService_dospolicy_bindingFunc(d *schema.ResourceData, meta interface{
 
 	err := client.DeleteResourceWithArgs(service.Service_dospolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

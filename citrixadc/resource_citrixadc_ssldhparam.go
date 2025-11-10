@@ -1,20 +1,21 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSsldhparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSsldhparamFunc,
+		CreateContext: createSsldhparamFunc,
 		Read:          schema.Noop,
-		Delete:        deleteSsldhparamFunc,
+		DeleteContext: deleteSsldhparamFunc,
 		Schema: map[string]*schema.Schema{
 			"bits": {
 				Type:     schema.TypeInt,
@@ -36,20 +37,23 @@ func resourceCitrixAdcSsldhparam() *schema.Resource {
 	}
 }
 
-func createSsldhparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createSsldhparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSsldhparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ssldhparamName := d.Get("dhfile").(string)
 
 	ssldhparam := ssl.Ssldhparam{
-		Bits:   d.Get("bits").(int),
 		Dhfile: ssldhparamName,
 		Gen:    d.Get("gen").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("bits"); !raw.IsNull() {
+		ssldhparam.Bits = intPtr(d.Get("bits").(int))
+	}
+
 	err := client.ActOnResource(service.Ssldhparam.Type(), &ssldhparam, "create")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ssldhparamName)
@@ -57,7 +61,7 @@ func createSsldhparamFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteSsldhparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSsldhparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSsldhparamFunc")
 
 	d.SetId("")

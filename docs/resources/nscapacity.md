@@ -38,6 +38,8 @@ resource "citrixadc_nscapacity" "tf_vcpu" {
 * `edition` - (Optional) Product edition. Possible values: [ Standard, Enterprise, Platinum ]
 * `unit` - (Optional) Bandwidth unit. Possible values: [ Gbps, Mbps ]
 * `nodeid` - (Optional) Unique number that identifies the cluster node.
+* `password` - (Optional) Password to use when authenticating with ADM Agent for LAS licensing.
+* `username` - (Optional) Username to authenticate with ADM Agent for LAS licensing. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 
 
 ## Attribute Reference

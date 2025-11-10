@@ -28,7 +28,8 @@ resource "citrixadc_clusternode" "tf_clusternode" {
 * `nodegroup` - (Optional) The default node group in a Cluster system.
 * `priority` - (Optional) Preference for selecting a node as the configuration coordinator. The node with the lowest priority value is selected as the configuration coordinator. When the current configuration coordinator goes down, the node with the next lowest priority is made the new configuration coordinator. When the original node comes back up, it will preempt the new configuration coordinator and take over as the configuration coordinator. Note: When priority is not configured for any of the nodes or if multiple nodes have the same priority, the cluster elects one of the nodes as the configuration coordinator.
 * `state` - (Optional) Admin state of the cluster node. The available settings function as follows: ACTIVE - The node serves traffic. SPARE - The node does not serve traffic unless an ACTIVE node goes down. PASSIVE - The node does not serve traffic, unless you change its state. PASSIVE state is useful during temporary maintenance activities in which you want the node to take part in the consensus protocol but not to serve traffic.
-* `tunnelmode` - (Optional) To set the tunnel mode
+* `tunnelmode` - (Optional) To set the tunnel mode.
+* `force` - (Optional) Node will be removed from cluster without prompting for user confirmation.
 
 
 ## Attribute Reference

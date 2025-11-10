@@ -23,11 +23,11 @@ type Nstrafficdomainvlanbinding struct {
 	/**
 	* ID of the VLAN to bind to this traffic domain. More than one VLAN can be bound to a traffic domain, but the same VLAN cannot be a part of multiple traffic domains.
 	*/
-	Vlan int `json:"vlan,omitempty"`
+	Vlan *int `json:"vlan,omitempty"`
 	/**
 	* Integer value that uniquely identifies a traffic domain.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 
 
 }

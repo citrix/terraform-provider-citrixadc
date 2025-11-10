@@ -39,7 +39,7 @@ type Systemgroup struct {
 	/**
 	* CLI session inactivity timeout, in seconds. If Restrictedtimeout argument of system parameter is enabled, Timeout can have values in the range [300-86400] seconds.If Restrictedtimeout argument of system parameter is disabled, Timeout can have values in the range [0, 10-100000000] seconds. Default value is 900 seconds.
 	*/
-	Timeout int `json:"timeout,omitempty"`
+	Timeout *int `json:"timeout,omitempty"`
 	/**
 	* Allowed Management interfaces of the system users in the group. By default allowed from both API and CLI interfaces. If management interface for a group is set to API, then all users under this group will not allowed to access NS through CLI. GUI interface will come under API interface
 	*/
@@ -47,11 +47,11 @@ type Systemgroup struct {
 	/**
 	* Password days to expire for system groups. The daystoexpire value ranges from 30 to 255.
 	*/
-	Daystoexpire int `json:"daystoexpire,omitempty"`
+	Daystoexpire *int `json:"daystoexpire,omitempty"`
 	/**
 	* Number of days before which password expiration warning would be thrown with respect to daystoexpire. The warnpriorndays value ranges from 5 to 40.
 	*/
-	Warnpriorndays int `json:"warnpriorndays,omitempty"`
+	Warnpriorndays *int `json:"warnpriorndays,omitempty"`
 
 	//------- Read only Parameter ---------;
 

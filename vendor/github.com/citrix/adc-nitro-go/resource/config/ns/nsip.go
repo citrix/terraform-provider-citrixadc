@@ -111,7 +111,7 @@ type Nsip struct {
 	/**
 	* Tag value for the network/host route associated with this IP.
 	*/
-	Tag int `json:"tag,omitempty"`
+	Tag *int `json:"tag,omitempty"`
 	/**
 	* IP address of the gateway of the route for this VIP address.
 	*/
@@ -119,7 +119,7 @@ type Nsip struct {
 	/**
 	* Integer value to add to or subtract from the cost of the route advertised for the VIP address.
 	*/
-	Metric int `json:"metric,omitempty"`
+	Metric *int `json:"metric,omitempty"`
 	/**
 	* Advertise the route for the Virtual IP (VIP) address on the basis of the state of the virtual servers associated with that VIP.
 		* NONE - Advertise the route for the VIP address, regardless of the state of the virtual servers associated with the address.
@@ -139,7 +139,7 @@ type Nsip struct {
 	/**
 	* ID of the area in which the type1 link-state advertisements (LSAs) are to be advertised for this virtual IP (VIP)  address by the OSPF protocol running on the Citrix ADC.  When this parameter is not set, the VIP is advertised on all areas.
 	*/
-	Ospfarea int `json:"ospfarea,omitempty"`
+	Ospfarea *int `json:"ospfarea,omitempty"`
 	/**
 	* Enable or disable the IP address.
 	*/
@@ -147,7 +147,7 @@ type Nsip struct {
 	/**
 	* A positive integer that uniquely identifies a VMAC address for binding to this VIP address. This binding is used to set up Citrix ADCs in an active-active configuration using VRRP.
 	*/
-	Vrid int `json:"vrid,omitempty"`
+	Vrid *int `json:"vrid,omitempty"`
 	/**
 	* Respond to ICMP requests for a Virtual IP (VIP) address on the basis of the states of the virtual servers associated with that VIP. Available settings function as follows:
 		* NONE - The Citrix ADC responds to any ICMP request for the VIP address, irrespective of the states of the virtual servers associated with the address.
@@ -163,7 +163,7 @@ type Nsip struct {
 	/**
 	* The owner node in a Cluster for this IP address. Owner node can vary from 0 to 31. If ownernode is not specified then the IP is treated as Striped IP.
 	*/
-	Ownernode int `json:"ownernode,omitempty"`
+	Ownernode *int `json:"ownernode,omitempty"`
 	/**
 	* Respond to ARP requests for a Virtual IP (VIP) address on the basis of the states of the virtual servers associated with that VIP. Available settings function as follows:
 		* NONE - The Citrix ADC responds to any ARP request for the VIP address, irrespective of the states of the virtual servers associated with the address.
@@ -178,11 +178,11 @@ type Nsip struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0. TD id 4095 is used reserved for  LSN use  
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* The arp owner in a Cluster for this IP address. It can vary from 0 to 31.
 	*/
-	Arpowner int `json:"arpowner,omitempty"`
+	Arpowner *int `json:"arpowner,omitempty"`
 	/**
 	* If enabled, this IP will be advertised by Citrix ADC to MPTCP enabled clients as part of ADD_ADDR option.
 	*/

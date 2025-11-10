@@ -25,7 +25,7 @@ type Lsnparameter struct {
 		Note: If you later reduce the value of this parameter, the amount of active memory is not reduced. Changing the configured memory limit can only increase the amount of active memory.
 		This command is deprecated, use 'set extendedmemoryparam -memlimit' instead.
 	*/
-	Memlimit int `json:"memlimit,omitempty"`
+	Memlimit *int `json:"memlimit,omitempty"`
 	/**
 	* Synchronize all LSN sessions with the secondary node in a high availability (HA) deployment (global synchronization). After a failover, established TCP connections and UDP packet flows are kept active and resumed on the secondary node (new primary).
 		The global session synchronization parameter and session synchronization parameters (group level) of all LSN groups are enabled by default.

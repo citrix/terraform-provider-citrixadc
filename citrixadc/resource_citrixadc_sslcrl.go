@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslcrl() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslcrlFunc,
-		Read:          readSslcrlFunc,
-		Update:        updateSslcrlFunc,
-		Delete:        deleteSslcrlFunc,
+		CreateContext: createSslcrlFunc,
+		ReadContext:   readSslcrlFunc,
+		UpdateContext: updateSslcrlFunc,
+		DeleteContext: deleteSslcrlFunc,
 		Schema: map[string]*schema.Schema{
 			"basedn": {
 				Type:     schema.TypeString,
@@ -135,7 +138,7 @@ func resourceCitrixAdcSslcrl() *schema.Resource {
 	}
 }
 
-func createSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslcrlFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslcrlFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslcrlName string
@@ -154,14 +157,12 @@ func createSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
 		Cakeyfile:  d.Get("cakeyfile").(string),
 		Crlname:    d.Get("crlname").(string),
 		Crlpath:    d.Get("crlpath").(string),
-		Day:        d.Get("day").(int),
 		Gencrl:     d.Get("gencrl").(string),
 		Indexfile:  d.Get("indexfile").(string),
 		Inform:     d.Get("inform").(string),
 		Interval:   d.Get("interval").(string),
 		Method:     d.Get("method").(string),
 		Password:   d.Get("password").(string),
-		Port:       d.Get("port").(int),
 		Refresh:    d.Get("refresh").(string),
 		Revoke:     d.Get("revoke").(string),
 		Scope:      d.Get("scope").(string),
@@ -170,22 +171,24 @@ func createSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
 		Url:        d.Get("url").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("day"); !raw.IsNull() {
+		sslcrl.Day = intPtr(d.Get("day").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		sslcrl.Port = intPtr(d.Get("port").(int))
+	}
+
 	_, err := client.AddResource(service.Sslcrl.Type(), sslcrlName, &sslcrl)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslcrlName)
 
-	err = readSslcrlFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslcrl but we can't read it ?? %s", sslcrlName)
-		return nil
-	}
-	return nil
+	return readSslcrlFunc(ctx, d, meta)
 }
 
-func readSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslcrlFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslcrlFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcrlName := d.Id()
@@ -205,14 +208,14 @@ func readSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cakeyfile", data["cakeyfile"])
 	d.Set("crlname", data["crlname"])
 	d.Set("crlpath", data["crlpath"])
-	d.Set("day", data["day"])
+	setToInt("day", d, data["day"])
 	d.Set("gencrl", data["gencrl"])
 	d.Set("indexfile", data["indexfile"])
 	d.Set("inform", data["inform"])
 	d.Set("interval", data["interval"])
 	d.Set("method", data["method"])
 	d.Set("password", data["password"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 	d.Set("refresh", data["refresh"])
 	d.Set("revoke", data["revoke"])
 	d.Set("scope", data["scope"])
@@ -224,7 +227,7 @@ func readSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslcrlFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslcrlFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcrlName := d.Get("crlname").(string)
@@ -275,7 +278,7 @@ func updateSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("day") {
 		log.Printf("[DEBUG]  citrixadc-provider: Day has changed for sslcrl %s, starting update", sslcrlName)
-		sslcrl.Day = d.Get("day").(int)
+		sslcrl.Day = intPtr(d.Get("day").(int))
 		hasChange = true
 	}
 	if d.HasChange("gencrl") {
@@ -310,7 +313,7 @@ func updateSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for sslcrl %s, starting update", sslcrlName)
-		sslcrl.Port = d.Get("port").(int)
+		sslcrl.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("refresh") {
@@ -347,19 +350,19 @@ func updateSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Sslcrl.Type(), sslcrlName, &sslcrl)
 		if err != nil {
-			return fmt.Errorf("Error updating sslcrl %s", sslcrlName)
+			return diag.Errorf("Error updating sslcrl %s", sslcrlName)
 		}
 	}
-	return readSslcrlFunc(d, meta)
+	return readSslcrlFunc(ctx, d, meta)
 }
 
-func deleteSslcrlFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslcrlFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslcrlFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcrlName := d.Id()
 	err := client.DeleteResource(service.Sslcrl.Type(), sslcrlName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

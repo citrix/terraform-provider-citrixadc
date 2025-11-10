@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/responder"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcResponderglobal_responderpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createResponderglobal_responderpolicy_bindingFunc,
-		Read:          readResponderglobal_responderpolicy_bindingFunc,
-		Delete:        deleteResponderglobal_responderpolicy_bindingFunc,
+		CreateContext: createResponderglobal_responderpolicy_bindingFunc,
+		ReadContext:   readResponderglobal_responderpolicy_bindingFunc,
+		DeleteContext: deleteResponderglobal_responderpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -70,7 +72,7 @@ func resourceCitrixAdcResponderglobal_responderpolicy_binding() *schema.Resource
 	}
 }
 
-func createResponderglobal_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createResponderglobal_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createResponderglobal_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -81,26 +83,24 @@ func createResponderglobal_responderpolicy_bindingFunc(d *schema.ResourceData, m
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		responderglobal_responderpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Responderglobal_responderpolicy_binding.Type(), &responderglobal_responderpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readResponderglobal_responderpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this responderglobal_responderpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readResponderglobal_responderpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readResponderglobal_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readResponderglobal_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readResponderglobal_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -125,7 +125,7 @@ func readResponderglobal_responderpolicy_bindingFunc(d *schema.ResourceData, met
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -169,7 +169,7 @@ func readResponderglobal_responderpolicy_bindingFunc(d *schema.ResourceData, met
 
 }
 
-func deleteResponderglobal_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteResponderglobal_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteResponderglobal_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -186,7 +186,7 @@ func deleteResponderglobal_responderpolicy_bindingFunc(d *schema.ResourceData, m
 
 	err := client.DeleteResourceWithArgs(service.Responderglobal_responderpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

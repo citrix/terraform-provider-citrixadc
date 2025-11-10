@@ -56,7 +56,7 @@ type Lbmonitor struct {
 	/**
 	* Maximum number of hops that the SIP request used for monitoring can traverse to reach the server. Applicable only to monitors of type SIP-UDP.
 	*/
-	Maxforwards int `json:"maxforwards,omitempty"`
+	Maxforwards *int `json:"maxforwards,omitempty"`
 	/**
 	* SIP method to use for the query. Applicable only to monitors of type SIP-UDP.
 	*/
@@ -104,7 +104,7 @@ type Lbmonitor struct {
 	/**
 	* Port number on which the dispatcher listens for the monitoring probe.
 	*/
-	Dispatcherport int `json:"dispatcherport,omitempty"`
+	Dispatcherport *int `json:"dispatcherport,omitempty"`
 	/**
 	* User name with which to probe the RADIUS, NNTP, FTP, FTP-EXTENDED, MYSQL, MSSQL, POP3, CITRIX-AG, CITRIX-XD-DDC, CITRIX-WI-EXTENDED, CITRIX-XNC or CITRIX-XDM server.
 	*/
@@ -140,7 +140,7 @@ type Lbmonitor struct {
 	/**
 	* Account Type to be used in Account Request Packet. Applicable to monitors of type RADIUS_ACCOUNTING.
 	*/
-	Radaccounttype int `json:"radaccounttype,omitempty"`
+	Radaccounttype *int `json:"radaccounttype,omitempty"`
 	/**
 	* Source ip with which the packet will go out . Applicable to monitors of type RADIUS_ACCOUNTING.
 	*/
@@ -164,7 +164,7 @@ type Lbmonitor struct {
 	/**
 	* Time value added to the learned average response time in dynamic response time monitoring (DRTM). When a deviation is specified, the appliance learns the average response time of bound services and adds the deviation to the average. The final value is then continually adjusted to accommodate response time variations over time. Specified in milliseconds, seconds, or minutes.
 	*/
-	Deviation int `json:"deviation"` // Zero is a valid value
+	Deviation *int `json:"deviation"` // Zero is a valid value
 	/**
 	* Unit of measurement for the Deviation parameter. Cannot be changed after the monitor is created.
 	*/
@@ -172,7 +172,7 @@ type Lbmonitor struct {
 	/**
 	* Time interval between two successive probes. Must be greater than the value of Response Time-out.
 	*/
-	Interval int `json:"interval,omitempty"`
+	Interval *int `json:"interval,omitempty"`
 	/**
 	* monitor interval units
 	*/
@@ -181,7 +181,7 @@ type Lbmonitor struct {
 	* Amount of time for which the appliance must wait before it marks a probe as FAILED.  Must be less than the value specified for the Interval parameter.
 		Note: For UDP-ECV monitors for which a receive string is not configured, response timeout does not apply. For UDP-ECV monitors with no receive string, probe failure is indicated by an ICMP port unreachable error received from the service.
 	*/
-	Resptimeout int `json:"resptimeout,omitempty"`
+	Resptimeout *int `json:"resptimeout,omitempty"`
 	/**
 	* monitor response timeout units
 	*/
@@ -189,27 +189,27 @@ type Lbmonitor struct {
 	/**
 	* Response time threshold, specified as a percentage of the Response Time-out parameter. If the response to a monitor probe has not arrived when the threshold is reached, the appliance generates an SNMP trap called monRespTimeoutAboveThresh. After the response time returns to a value below the threshold, the appliance generates a monRespTimeoutBelowThresh SNMP trap. For the traps to be generated, the "MONITOR-RTO-THRESHOLD" alarm must also be enabled.
 	*/
-	Resptimeoutthresh int `json:"resptimeoutthresh,omitempty"`
+	Resptimeoutthresh *int `json:"resptimeoutthresh,omitempty"`
 	/**
 	* Maximum number of probes to send to establish the state of a service for which a monitoring probe failed.
 	*/
-	Retries int `json:"retries,omitempty"`
+	Retries *int `json:"retries,omitempty"`
 	/**
 	* Number of retries that must fail, out of the number specified for the Retries parameter, for a service to be marked as DOWN. For example, if the Retries parameter is set to 10 and the Failure Retries parameter is set to 6, out of the ten probes sent, at least six probes must fail if the service is to be marked as DOWN. The default value of 0 means that all the retries must fail if the service is to be marked as DOWN.
 	*/
-	Failureretries int `json:"failureretries,omitempty"`
+	Failureretries *int `json:"failureretries,omitempty"`
 	/**
 	* Number of consecutive probe failures after which the appliance generates an SNMP trap called monProbeFailed.
 	*/
-	Alertretries int `json:"alertretries,omitempty"`
+	Alertretries *int `json:"alertretries,omitempty"`
 	/**
 	* Number of consecutive successful probes required to transition a service's state from DOWN to UP.
 	*/
-	Successretries int `json:"successretries,omitempty"`
+	Successretries *int `json:"successretries,omitempty"`
 	/**
 	* Time duration for which to wait before probing a service that has been marked as DOWN. Expressed in milliseconds, seconds, or minutes.
 	*/
-	Downtime int `json:"downtime,omitempty"`
+	Downtime *int `json:"downtime,omitempty"`
 	/**
 	* Unit of measurement for the Down Time parameter. Cannot be changed after the monitor is created.
 	*/
@@ -221,7 +221,7 @@ type Lbmonitor struct {
 	/**
 	* TCP or UDP port to which to send the probe. If the parameter is set to 0, the port number of the service to which the monitor is bound is considered the destination port. For a monitor of type USER, however, the destination port is the port number that is included in the HTTP request sent to the dispatcher. Does not apply to monitors of type PING.
 	*/
-	Destport int `json:"destport,omitempty"`
+	Destport *int `json:"destport,omitempty"`
 	/**
 	* State of the monitor. The DISABLED setting disables not only the monitor being configured, but all monitors of the same type, until the parameter is set to ENABLED. If the monitor is bound to a service, the state of the monitor is not taken into account when the state of the service is determined.
 	*/
@@ -245,7 +245,7 @@ type Lbmonitor struct {
 	/**
 	* The TOS ID of the specified destination IP. Applicable only when the TOS parameter is set.
 	*/
-	Tosid int `json:"tosid,omitempty"`
+	Tosid *int `json:"tosid,omitempty"`
 	/**
 	* Use a secure SSL connection when monitoring a service. Applicable only to TCP based monitors. The secure option cannot be used with a CITRIX-AG monitor, because a CITRIX-AG monitor uses a secure connection by default.
 	*/
@@ -366,7 +366,7 @@ type Lbmonitor struct {
 	/**
 	* Vendor-Id value for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers.
 	*/
-	Vendorid int `json:"vendorid,omitempty"`
+	Vendorid *int `json:"vendorid,omitempty"`
 	/**
 	* Product-Name value for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers.
 	*/
@@ -374,7 +374,7 @@ type Lbmonitor struct {
 	/**
 	* Firmware-Revision value for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers.
 	*/
-	Firmwarerevision int `json:"firmwarerevision,omitempty"`
+	Firmwarerevision *int `json:"firmwarerevision,omitempty"`
 	/**
 	* List of Auth-Application-Id attribute value pairs (AVPs) for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers. A maximum of eight of these AVPs are supported in a monitoring CER message.
 	*/
@@ -394,7 +394,7 @@ type Lbmonitor struct {
 	/**
 	* Vendor-Id to use in the Vendor-Specific-Application-Id grouped attribute-value pair (AVP) in the monitoring CER message. To specify Auth-Application-Id or Acct-Application-Id in Vendor-Specific-Application-Id, use vendorSpecificAuthApplicationIds or vendorSpecificAcctApplicationIds, respectively. Only one Vendor-Id is supported for all the Vendor-Specific-Application-Id AVPs in a CER monitoring message.
 	*/
-	Vendorspecificvendorid int `json:"vendorspecificvendorid,omitempty"`
+	Vendorspecificvendorid *int `json:"vendorspecificvendorid,omitempty"`
 	/**
 	* List of Vendor-Specific-Auth-Application-Id attribute value pairs (AVPs) for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers. A maximum of eight of these AVPs are supported in a monitoring message. The specified value is combined with the value of vendorSpecificVendorId to obtain the Vendor-Specific-Application-Id AVP in the CER monitoring message.
 	*/
@@ -418,7 +418,7 @@ type Lbmonitor struct {
 	/**
 	* Code expected when the server is under maintenance
 	*/
-	Trofscode int `json:"trofscode,omitempty"`
+	Trofscode *int `json:"trofscode,omitempty"`
 	/**
 	* String expected from the server for the service to be marked as trofs. Applicable to HTTP-ECV/TCP-ECV monitors.
 	*/
@@ -434,7 +434,7 @@ type Lbmonitor struct {
 	/**
 	* Version of MQTT protocol used in connect message, default is version 3.1.1 [4]
 	*/
-	Mqttversion int `json:"mqttversion,omitempty"`
+	Mqttversion *int `json:"mqttversion,omitempty"`
 	/**
 	* Option to enable or disable gRPC health check service.
 	*/
@@ -454,11 +454,11 @@ type Lbmonitor struct {
 	/**
 	* Threshold to be used for that metric.
 	*/
-	Metricthreshold int `json:"metricthreshold,omitempty"`
+	Metricthreshold *int `json:"metricthreshold,omitempty"`
 	/**
 	* The weight for the specified service metric with respect to others.
 	*/
-	Metricweight int `json:"metricweight,omitempty"`
+	Metricweight *int `json:"metricweight,omitempty"`
 	/**
 	* The name of the service to which the monitor is bound.
 	*/

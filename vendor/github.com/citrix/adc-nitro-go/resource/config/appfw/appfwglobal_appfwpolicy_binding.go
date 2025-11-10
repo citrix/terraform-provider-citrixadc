@@ -27,7 +27,7 @@ type Appfwglobalappfwpolicybinding struct {
 	/**
 	* The priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
@@ -51,11 +51,11 @@ type Appfwglobalappfwpolicybinding struct {
 	/**
 	* The number of policies bound to the bindpoint.
 	*/
-	Numpol int `json:"numpol,omitempty"`
+	Numpol *int `json:"numpol,omitempty"`
 	/**
 	* flowtype of the bound application firewall policy.
 	*/
-	Flowtype int `json:"flowtype,omitempty"`
+	Flowtype *int `json:"flowtype,omitempty"`
 	/**
 	* Bind point to which to policy is bound.
 	*/

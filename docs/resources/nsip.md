@@ -57,6 +57,7 @@ resource "citrixadc_nsip" "tf_nsip" {
 * `td` - (Optional) Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0. TD id 4095 is used reserved for  LSN use  .
 * `vserverrhimode` - (Optional)
 * `mptcpadvertise` - (Optional)
+* `arpowner` - (Optional) The arp owner in a Cluster for this IP address. It can vary from 0 to 31.
 
 
 ## Attribute Reference

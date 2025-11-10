@@ -1,18 +1,20 @@
 package citrixadc
 
 import (
+	"context"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"log"
 )
 
 func dataSourceCitrixAdcSslcipherSslvserverBindings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCitrixAdcSslcipherSslvserverBindingsRead,
+		ReadContext: dataSourceCitrixAdcSslcipherSslvserverBindingsRead,
 		Schema: map[string]*schema.Schema{
 			"ciphername": {
 				Type:     schema.TypeString,
@@ -33,7 +35,8 @@ func dataSourceCitrixAdcSslcipherSslvserverBindings() *schema.Resource {
 	}
 }
 
-func dataSourceCitrixAdcSslcipherSslvserverBindingsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCitrixAdcSslcipherSslvserverBindingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	log.Printf("[DEBUG] citrixadc-provider:  In dataSourceCitrixAdcNsversionRead")
 	client := meta.(*NetScalerNitroClient).client
 	sslvserverFindParams := service.FindParams{
@@ -43,7 +46,7 @@ func dataSourceCitrixAdcSslcipherSslvserverBindingsRead(d *schema.ResourceData, 
 	sslvserverArr, err := client.FindResourceArrayWithParams(sslvserverFindParams)
 	if err != nil {
 		log.Printf("[ERROR] citrixadc-provider: Error during read %s", err)
-		return err
+		return diag.FromErr(err)
 	}
 
 	boundSslvservers := make([]string, 0)
@@ -58,7 +61,7 @@ func dataSourceCitrixAdcSslcipherSslvserverBindingsRead(d *schema.ResourceData, 
 		// Unexpected error
 		if err != nil {
 			log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-			return err
+			return diag.FromErr(err)
 		}
 
 		// Iterate through results to find the one with the right id
@@ -72,6 +75,6 @@ func dataSourceCitrixAdcSslcipherSslvserverBindingsRead(d *schema.ResourceData, 
 	d.SetId(resource.PrefixedUniqueId("tf-sslcipher-sslvserver-bindings-"))
 	d.Set("bound_sslvservers", strings.Join(boundSslvservers, ","))
 
-	return nil
+	return diags
 
 }

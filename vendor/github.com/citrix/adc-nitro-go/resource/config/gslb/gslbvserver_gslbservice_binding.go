@@ -27,7 +27,7 @@ type Gslbvservergslbservicebinding struct {
 	/**
 	* Weight for the service.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* The cname of the gslb service.
 	*/
@@ -39,7 +39,7 @@ type Gslbvservergslbservicebinding struct {
 	/**
 	* Port number.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* Protocol used by services bound to the GSLBvirtual server.
 	*/
@@ -51,11 +51,11 @@ type Gslbvservergslbservicebinding struct {
 	/**
 	* Weight obtained by the virtue of bound service count or weight
 	*/
-	Dynamicconfwt int `json:"dynamicconfwt,omitempty"`
+	Dynamicconfwt *int `json:"dynamicconfwt,omitempty"`
 	/**
 	* Cumulative weight is the weight of GSLB service considering both its configured weight and dynamic weight. It is equal to product of dynamic weight and configured weight of the gslb service 
 	*/
-	Cumulativeweight int `json:"cumulativeweight,omitempty"`
+	Cumulativeweight *int `json:"cumulativeweight,omitempty"`
 	/**
 	* Effective state of the gslb svc
 	*/
@@ -63,7 +63,7 @@ type Gslbvservergslbservicebinding struct {
 	/**
 	* Indicates if gslb svc has reached threshold
 	*/
-	Gslbthreshold int `json:"gslbthreshold,omitempty"`
+	Gslbthreshold *int `json:"gslbthreshold,omitempty"`
 	/**
 	* The target site to be returned in the DNS response when a policy is successfully evaluated against the incoming DNS request. Target site is specified in dotted notation with up to 6 qualifiers. Wildcard `*' is accepted as a valid qualifier token.
 	*/
@@ -71,7 +71,7 @@ type Gslbvservergslbservicebinding struct {
 	/**
 	* Tells whether threshold exceeded for this service participating in CUSTOMLB
 	*/
-	Thresholdvalue int `json:"thresholdvalue,omitempty"`
+	Thresholdvalue *int `json:"thresholdvalue,omitempty"`
 	/**
 	* is cname feature set on vserver
 	*/
@@ -91,7 +91,7 @@ type Gslbvservergslbservicebinding struct {
 	/**
 	* Order number to be assigned to the service when it is bound to the lb vserver.
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 	/**
 	* Order number in string form assigned to the service when it is bound to the lb vserver.
 	*/

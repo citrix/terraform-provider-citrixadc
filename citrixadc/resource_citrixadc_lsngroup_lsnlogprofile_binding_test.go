@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -28,7 +28,7 @@ const testAccLsngroup_lsnlogprofile_binding_basic = `
 resource "citrixadc_lsngroup_lsnlogprofile_binding" "tf_lsngroup_lsnlogprofile_binding" {
 	groupname      = "my_lsn_group"
 	logprofilename = "my_lsn_logprofile"
-  }
+	}
   
 `
 
@@ -39,9 +39,9 @@ const testAccLsngroup_lsnlogprofile_binding_basic_step2 = `
 func TestAccLsngroup_lsnlogprofile_binding_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLsngroup_lsnlogprofile_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLsngroup_lsnlogprofile_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLsngroup_lsnlogprofile_binding_basic,
@@ -78,7 +78,11 @@ func testAccCheckLsngroup_lsnlogprofile_bindingExist(n string, id *string) resou
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -118,7 +122,11 @@ func testAccCheckLsngroup_lsnlogprofile_bindingExist(n string, id *string) resou
 
 func testAccCheckLsngroup_lsnlogprofile_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -158,7 +166,11 @@ func testAccCheckLsngroup_lsnlogprofile_bindingNotExist(n string, id string) res
 }
 
 func testAccCheckLsngroup_lsnlogprofile_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lsngroup_lsnlogprofile_binding" {
@@ -169,7 +181,7 @@ func testAccCheckLsngroup_lsnlogprofile_bindingDestroy(s *terraform.State) error
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("lsngroup_lsnlogprofile_binding", rs.Primary.ID)
+		_, err := client.FindResource("lsngroup_lsnlogprofile_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lsngroup_lsnlogprofile_binding %s still exists", rs.Primary.ID)
 		}

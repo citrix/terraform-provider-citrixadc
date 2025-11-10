@@ -23,15 +23,15 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccInat_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInatDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckInatDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInat_basic,
@@ -48,6 +48,8 @@ func TestAccInat_basic(t *testing.T) {
 						"citrixadc_inat.foo", "tcpproxy", "ENABLED"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_inat.foo", "usnip", "ON"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_inat.foo", "connfailover", "DISABLED"),
 				),
 			},
 		},
@@ -73,8 +75,12 @@ func testAccCheckInatExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Inat.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Inat.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -89,7 +95,11 @@ func testAccCheckInatExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckInatDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_inat" {
@@ -100,7 +110,7 @@ func testAccCheckInatDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Inat.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Inat.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("Inat rule %s still exists", rs.Primary.ID)
 		}
@@ -120,6 +130,7 @@ resource "citrixadc_inat" "foo" {
   publicip = "172.16.1.2"
   tcpproxy = "ENABLED"
   usnip = "ON"
+  connfailover = "DISABLED"
 
 }
 `
@@ -158,11 +169,6 @@ func TestAccInat_AssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, inatType, inatName, inatInstance, "publicip")
 	inatInstance.Publicip = ""
 
-	// td
-	inatInstance.Td = 1
-	testHelperVerifyImmutabilityFunc(c, t, inatType, inatName, inatInstance, "td")
-	inatInstance.Td = 0
-
 	// name
 	newName := "inat-new-name"
 	inatInstance.Name = newName
@@ -175,4 +181,9 @@ func TestAccInat_AssertNonUpdateableAttributes(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+
+	// td
+	inatInstance.Td = intPtr(1)
+	testHelperVerifyImmutabilityFunc(c, t, inatType, inatName, inatInstance, "td")
+	inatInstance.Td = intPtr(0)
 }

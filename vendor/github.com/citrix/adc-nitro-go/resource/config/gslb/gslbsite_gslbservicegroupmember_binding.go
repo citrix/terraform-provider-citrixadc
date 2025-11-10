@@ -31,7 +31,7 @@ type Gslbsitegslbservicegroupmemberbinding struct {
 	/**
 	* Port number of the gslb service.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* Service type.
 	*/

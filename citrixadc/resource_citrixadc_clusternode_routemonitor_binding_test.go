@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -30,7 +30,7 @@ resource "citrixadc_clusternode_routemonitor_binding" "tf_clusternode_routemonit
 	nodeid       = 1
 	routemonitor = "10.222.74.128"
 	netmask      = "255.255.255.192"
-  }  
+	}
 `
 
 const testAccClusternode_routemonitor_binding_basic_step2 = `
@@ -42,9 +42,9 @@ func TestAccClusternode_routemonitor_binding_basic(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckClusternode_routemonitor_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckClusternode_routemonitor_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusternode_routemonitor_binding_basic,
@@ -81,7 +81,11 @@ func testAccCheckClusternode_routemonitor_bindingExist(n string, id *string) res
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -121,7 +125,11 @@ func testAccCheckClusternode_routemonitor_bindingExist(n string, id *string) res
 
 func testAccCheckClusternode_routemonitor_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -161,7 +169,11 @@ func testAccCheckClusternode_routemonitor_bindingNotExist(n string, id string) r
 }
 
 func testAccCheckClusternode_routemonitor_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_clusternode_routemonitor_binding" {
@@ -172,7 +184,7 @@ func testAccCheckClusternode_routemonitor_bindingDestroy(s *terraform.State) err
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("clusternode_routemonitor_binding", rs.Primary.ID)
+		_, err := client.FindResource("clusternode_routemonitor_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("clusternode_routemonitor_binding %s still exists", rs.Primary.ID)
 		}

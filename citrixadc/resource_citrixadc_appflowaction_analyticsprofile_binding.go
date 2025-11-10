@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcAppflowaction_analyticsprofile_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppflowaction_analyticsprofile_bindingFunc,
-		Read:          readAppflowaction_analyticsprofile_bindingFunc,
-		Delete:        deleteAppflowaction_analyticsprofile_bindingFunc,
+		CreateContext: createAppflowaction_analyticsprofile_bindingFunc,
+		ReadContext:   readAppflowaction_analyticsprofile_bindingFunc,
+		DeleteContext: deleteAppflowaction_analyticsprofile_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"analyticsprofile": {
@@ -34,7 +36,7 @@ func resourceCitrixAdcAppflowaction_analyticsprofile_binding() *schema.Resource 
 	}
 }
 
-func createAppflowaction_analyticsprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppflowaction_analyticsprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowaction_analyticsprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -49,20 +51,15 @@ func createAppflowaction_analyticsprofile_bindingFunc(d *schema.ResourceData, me
 
 	err := client.UpdateUnnamedResource("appflowaction_analyticsprofile_binding", &appflowaction_analyticsprofile_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppflowaction_analyticsprofile_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appflowaction_analyticsprofile_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppflowaction_analyticsprofile_bindingFunc(ctx, d, meta)
 }
 
-func readAppflowaction_analyticsprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppflowaction_analyticsprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppflowaction_analyticsprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -83,7 +80,7 @@ func readAppflowaction_analyticsprofile_bindingFunc(d *schema.ResourceData, meta
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -121,7 +118,7 @@ func readAppflowaction_analyticsprofile_bindingFunc(d *schema.ResourceData, meta
 
 }
 
-func deleteAppflowaction_analyticsprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppflowaction_analyticsprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppflowaction_analyticsprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -136,7 +133,7 @@ func deleteAppflowaction_analyticsprofile_bindingFunc(d *schema.ResourceData, me
 
 	err := client.DeleteResourceWithArgs("appflowaction_analyticsprofile_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

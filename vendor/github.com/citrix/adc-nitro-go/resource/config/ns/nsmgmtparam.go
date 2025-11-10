@@ -23,19 +23,19 @@ type Nsmgmtparam struct {
 	/**
 	* This allow the configuration of management HTTP port.
 	*/
-	Mgmthttpport int `json:"mgmthttpport,omitempty"`
+	Mgmthttpport *int `json:"mgmthttpport,omitempty"`
 	/**
 	* This allows the configuration of management HTTPS port.
 	*/
-	Mgmthttpsport int `json:"mgmthttpsport,omitempty"`
+	Mgmthttpsport *int `json:"mgmthttpsport,omitempty"`
 	/**
 	* This enables setting the HTTPD Max Clients value in the httpd.conf file. You can configure either Max Clients or Max Request Workers. The allowable range is from a minimum of 1 to a maximum of 255
 	*/
-	Httpdmaxclients int `json:"httpdmaxclients,omitempty"`
+	Httpdmaxclients *int `json:"httpdmaxclients,omitempty"`
 	/**
 	* This enables setting the HTTPD Max Request Workers value in the httpd.conf file. You can configure either Max Clients or Max Request Workers. The allowable range is from a minimum of 1 to a maximum of 255
 	*/
-	Httpdmaxreqworkers int `json:"httpdmaxreqworkers,omitempty"`
+	Httpdmaxreqworkers *int `json:"httpdmaxreqworkers,omitempty"`
 
 	//------- Read only Parameter ---------;
 

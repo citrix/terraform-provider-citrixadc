@@ -31,7 +31,7 @@ type Appfwprofilexmlattachmenturlbinding struct {
 	/**
 	* Specify maximum attachment size.
 	*/
-	Xmlmaxattachmentsize int `json:"xmlmaxattachmentsize,omitempty"`
+	Xmlmaxattachmentsize *int `json:"xmlmaxattachmentsize,omitempty"`
 	/**
 	* State if XML attachment content-type check is ON or OFF. Protects against XML requests with illegal attachments.
 	*/

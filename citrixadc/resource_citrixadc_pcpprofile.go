@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/pcp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcPcpprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPcpprofileFunc,
-		Read:          readPcpprofileFunc,
-		Update:        updatePcpprofileFunc,
-		Delete:        deletePcpprofileFunc,
+		CreateContext: createPcpprofileFunc,
+		ReadContext:   readPcpprofileFunc,
+		UpdateContext: updatePcpprofileFunc,
+		DeleteContext: deletePcpprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -60,7 +62,7 @@ func resourceCitrixAdcPcpprofile() *schema.Resource {
 	}
 }
 
-func createPcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createPcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPcpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pcpprofileName := d.Get("name").(string)
@@ -91,20 +93,15 @@ func createPcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("pcpprofile", pcpprofileName, &pcpprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(pcpprofileName)
 
-	err = readPcpprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this pcpprofile but we can't read it ?? %s", pcpprofileName)
-		return nil
-	}
-	return nil
+	return readPcpprofileFunc(ctx, d, meta)
 }
 
-func readPcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readPcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readPcpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pcpprofileName := d.Id()
@@ -118,8 +115,8 @@ func readPcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("announcemulticount", data["announcemulticount"])
 	d.Set("mapping", data["mapping"])
-	d.Set("maxmaplife", data["maxmaplife"])
-	d.Set("minmaplife", data["minmaplife"])
+	setToInt("maxmaplife", d, data["maxmaplife"])
+	setToInt("minmaplife", d, data["minmaplife"])
 	d.Set("peer", data["peer"])
 	d.Set("thirdparty", data["thirdparty"])
 
@@ -127,7 +124,7 @@ func readPcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updatePcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updatePcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updatePcpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pcpprofileName := d.Get("name").(string)
@@ -139,7 +136,7 @@ func updatePcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("announcemulticount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Announcemulticount has changed for pcpprofile %s, starting update", pcpprofileName)
 		val, _ := strconv.Atoi(d.Get("announcemulticount").(string))
-		pcpprofile.Announcemulticount = val
+		pcpprofile.Announcemulticount = intPtr(val)
 		hasChange = true
 	}
 	if d.HasChange("mapping") {
@@ -149,12 +146,12 @@ func updatePcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxmaplife") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxmaplife has changed for pcpprofile %s, starting update", pcpprofileName)
-		pcpprofile.Maxmaplife = d.Get("maxmaplife").(int)
+		pcpprofile.Maxmaplife = intPtr(d.Get("maxmaplife").(int))
 		hasChange = true
 	}
 	if d.HasChange("minmaplife") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minmaplife has changed for pcpprofile %s, starting update", pcpprofileName)
-		pcpprofile.Minmaplife = d.Get("minmaplife").(int)
+		pcpprofile.Minmaplife = intPtr(d.Get("minmaplife").(int))
 		hasChange = true
 	}
 	if d.HasChange("peer") {
@@ -171,19 +168,19 @@ func updatePcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("pcpprofile", pcpprofileName, &pcpprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating pcpprofile %s", pcpprofileName)
+			return diag.Errorf("Error updating pcpprofile %s", pcpprofileName)
 		}
 	}
-	return readPcpprofileFunc(d, meta)
+	return readPcpprofileFunc(ctx, d, meta)
 }
 
-func deletePcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deletePcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePcpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pcpprofileName := d.Id()
 	err := client.DeleteResource("pcpprofile", pcpprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
