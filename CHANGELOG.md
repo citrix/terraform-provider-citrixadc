@@ -1,3 +1,18 @@
+## 2.0.0 (Nov 10, 2025)
+
+BUG FIXES
+* **citrixadc_appfwsignatures**: Reverting implicit import of base signature while customizing signatures based on rule Ids.
+* **citrixadc_nsip**: Rectifying read and delete of nsip with non zero traffic domain.
+* **citrixadc_sslservicegroup_sslcertkey_binding**: Handling delete of sslservicegroup_sslcertkey_binding with ca flag set.
+* **citrixadc_dns*rec**: Removing type attribute from all dns record resources.
+
+ENHANCEMENTS
+*  Migrating the Citrix ADC Terraform provider to Plugin SDKv2.
+*  Updated Citrix ADC Terraform provider resources to include new attributes from NetScaler ADC version 14.1-51.72.
+
+FEATURES
+* **New Resource**: Support for creating and managing csvserver_appflowpolicy_binding resource.
+
 ## 1.45.0 (Oct 13, 2025)
 
 BUG FIXES
