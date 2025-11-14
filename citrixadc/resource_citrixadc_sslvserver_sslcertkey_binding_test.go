@@ -51,6 +51,8 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
     vservername = citrixadc_lbvserver.tf_lbvserver.name
 	certkeyname = citrixadc_sslcertkey.tf_cacertkey.certkey
     ca = true
+    ocspcheck = "Mandatory"
+	snicert = false
 }
 `
 const testAccSslvserver_sslcertkey_binding_lb_step2 = `
@@ -78,6 +80,8 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
 resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
     vservername = citrixadc_lbvserver.tf_lbvserver.name
 	certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
+	snicert = false
+	ca = false
 }
 `
 
@@ -107,6 +111,7 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
     vservername = citrixadc_lbvserver.tf_lbvserver.name
 	certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
 	snicert = true
+	ca = false
 }
 `
 
@@ -137,6 +142,7 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
     vservername = citrixadc_csvserver.tf_csvserver.name
 	certkeyname = citrixadc_sslcertkey.tf_cacertkey.certkey
     ca = true
+	ocspcheck = "Mandatory"
 }
 `
 
@@ -209,18 +215,25 @@ func TestAccSslvserver_sslcertkey_binding_lb(t *testing.T) {
 				Config: testAccSslvserver_sslcertkey_binding_lb_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_sslcertkey_bindingExist("citrixadc_sslvserver_sslcertkey_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "ocspcheck", "Mandatory"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "snicert", "false"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "ca", "true"),
 				),
 			},
 			{
 				Config: testAccSslvserver_sslcertkey_binding_lb_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_sslcertkey_bindingExist("citrixadc_sslvserver_sslcertkey_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "snicert", "false"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "ca", "false"),
 				),
 			},
 			{
 				Config: testAccSslvserver_sslcertkey_binding_lb_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_sslcertkey_bindingExist("citrixadc_sslvserver_sslcertkey_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "snicert", "true"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "ca", "false"),
 				),
 			},
 		},
@@ -237,18 +250,25 @@ func TestAccSslvserver_sslcertkey_binding_cs(t *testing.T) {
 				Config: testAccSslvserver_sslcertkey_binding_cs_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_sslcertkey_bindingExist("citrixadc_sslvserver_sslcertkey_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "ocspcheck", "Mandatory"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "snicert", "false"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "ca", "true"),
 				),
 			},
 			{
 				Config: testAccSslvserver_sslcertkey_binding_cs_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_sslcertkey_bindingExist("citrixadc_sslvserver_sslcertkey_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "snicert", "false"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "ca", "false"),
 				),
 			},
 			{
 				Config: testAccSslvserver_sslcertkey_binding_cs_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_sslcertkey_bindingExist("citrixadc_sslvserver_sslcertkey_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "snicert", "true"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslcertkey_binding.tf_binding", "ca", "false"),
 				),
 			},
 		},
@@ -285,7 +305,14 @@ func testAccCheckSslvserver_sslcertkey_bindingExist(n string, id *string) resour
 
 		vservername := idSlice[0]
 		certkeyname := idSlice[1]
-		snicert := idSlice[2] == "true"
+		snicert := false
+		ca := false
+		if val, ok := rs.Primary.Attributes["ca"]; ok {
+			ca = val == "true"
+		}
+		if val, ok := rs.Primary.Attributes["snicert"]; ok {
+			snicert = val == "true"
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslcertkey_binding",
@@ -301,7 +328,7 @@ func testAccCheckSslvserver_sslcertkey_bindingExist(n string, id *string) resour
 		// Iterate through results to find the one with the right certkeyname
 		foundIndex := -1
 		for i, v := range dataArr {
-			if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert {
+			if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
 				foundIndex = i
 				break
 			}
