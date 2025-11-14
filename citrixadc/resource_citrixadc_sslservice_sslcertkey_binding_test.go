@@ -95,7 +95,6 @@ resource "citrixadc_service" "tf_service" {
 	port = 443 
 	lbvserver = citrixadc_lbvserver.tf_lbvserver.name
 	ip = "10.77.33.22"
-
 	depends_on = [citrixadc_sslcertkey.tf_certkey]
 
 }
@@ -156,7 +155,6 @@ resource "citrixadc_service" "tf_service" {
 	port = 443 
 	lbvserver = citrixadc_lbvserver.tf_lbvserver.name
 	ip = "10.77.33.22"
-
 	depends_on = [citrixadc_sslcertkey.tf_certkey]
 
 }
@@ -210,7 +208,6 @@ resource "citrixadc_service" "tf_service" {
 	port = 443 
 	lbvserver = citrixadc_lbvserver.tf_lbvserver.name
 	ip = "10.77.33.22"
-
 	depends_on = [citrixadc_sslcertkey.tf_certkey]
 
 }
@@ -269,7 +266,6 @@ resource "citrixadc_service" "tf_service" {
 	port = 443 
 	lbvserver = citrixadc_lbvserver.tf_lbvserver.name
 	ip = "10.77.33.22"
-
 	depends_on = [citrixadc_sslcertkey.tf_certkey]
 
 }
@@ -285,12 +281,15 @@ func TestAccSslservice_sslcertkey_binding_basic(t *testing.T) {
 				Config: testAccSslservice_sslcertkey_binding_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslservice_sslcertkey_bindingExist("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "ca", "true"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "ocspcheck", "Optional"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "snicert", "false"),
 				),
 			},
 			{
 				Config: testAccSslservice_sslcertkey_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslservice_sslcertkey_bindingNotExist("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "tf_service,tf_certkey"),
+					testAccCheckSslservice_sslcertkey_bindingNotExist("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "tf_service,tf_certkey,false,true"),
 				),
 			},
 		},
@@ -307,12 +306,14 @@ func TestAccSslservice_sslcertkey_binding_basic_no_ca(t *testing.T) {
 				Config: testAccSslservice_sslcertkey_binding_basic_no_ca_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslservice_sslcertkey_bindingExist("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "ca", "false"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "snicert", "false"),
 				),
 			},
 			{
 				Config: testAccSslservice_sslcertkey_binding_basic_no_ca_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslservice_sslcertkey_bindingNotExist("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "tf_service,tf_certkey"),
+					testAccCheckSslservice_sslcertkey_bindingNotExist("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "tf_service,tf_certkey,false,false"),
 				),
 			},
 		},
@@ -346,10 +347,18 @@ func testAccCheckSslservice_sslcertkey_bindingExist(n string, id *string) resour
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.Split(bindingId, ",")
 
 		servicename := idSlice[0]
 		certkeyname := idSlice[1]
+		snicert := false
+		ca := false
+		if val, ok := rs.Primary.Attributes["snicert"]; ok {
+			snicert = val == "true"
+		}
+		if val, ok := rs.Primary.Attributes["ca"]; ok {
+			ca = val == "true"
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservice_sslcertkey_binding",
@@ -366,7 +375,7 @@ func testAccCheckSslservice_sslcertkey_bindingExist(n string, id *string) resour
 		// Iterate through results to find the one with the right monitor name
 		found := false
 		for _, v := range dataArr {
-			if v["certkeyname"].(string) == certkeyname {
+			if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
 				found = true
 				break
 			}
@@ -392,10 +401,11 @@ func testAccCheckSslservice_sslcertkey_bindingNotExist(n string, id string) reso
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
 
-		idSlice := strings.SplitN(id, ",", 2)
-
+		idSlice := strings.Split(id, ",")
 		servicename := idSlice[0]
 		certkeyname := idSlice[1]
+		snicert := idSlice[2] == "true"
+		ca := idSlice[3] == "true"
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservice_sslcertkey_binding",
@@ -412,7 +422,7 @@ func testAccCheckSslservice_sslcertkey_bindingNotExist(n string, id string) reso
 		// Iterate through results to find the one with the right monitor name
 		found := false
 		for _, v := range dataArr {
-			if v["certkeyname"].(string) == certkeyname {
+			if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
 				found = true
 				break
 			}

@@ -72,7 +72,8 @@ func createSslvserver_sslcertkey_bindingFunc(ctx context.Context, d *schema.Reso
 	vservername := d.Get("vservername").(string)
 	certkeyname := d.Get("certkeyname").(string)
 	snicert := d.Get("snicert").(bool)
-	bindingId := fmt.Sprintf("%s,%s,%t", vservername, certkeyname, snicert)
+	ca := d.Get("ca").(bool)
+	bindingId := fmt.Sprintf("%s,%s,%t,%t", vservername, certkeyname, snicert, ca)
 
 	sslvserver_sslcertkey_binding := ssl.Sslvservercertkeybinding{
 		Ca:          d.Get("ca").(bool),
@@ -104,11 +105,20 @@ func readSslvserver_sslcertkey_bindingFunc(ctx context.Context, d *schema.Resour
 	vservername := idSlice[0]
 	certkeyname := idSlice[1]
 	snicert := false
+	ca := false
 	if len(idSlice) > 2 {
 		snicert = idSlice[2] == "true"
+		if len(idSlice) > 3 {
+			ca = idSlice[3] == "true"
+		} else {
+			ca = d.Get("ca").(bool)
+			bindingId = fmt.Sprintf("%s,%t,%t", bindingId, snicert, ca)
+			d.SetId(bindingId)
+		}
 	} else {
 		snicert = d.Get("snicert").(bool)
-		bindingId = fmt.Sprintf("%s,%t", bindingId, snicert)
+		ca := d.Get("ca").(bool)
+		bindingId = fmt.Sprintf("%s,%t,%t", bindingId, snicert, ca)
 		d.SetId(bindingId)
 	}
 
@@ -137,7 +147,7 @@ func readSslvserver_sslcertkey_bindingFunc(ctx context.Context, d *schema.Resour
 	// Iterate through results to find the one with the right certkeyname
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert {
+		if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
 			foundIndex = i
 			break
 		}
@@ -179,20 +189,12 @@ func deleteSslvserver_sslcertkey_bindingFunc(ctx context.Context, d *schema.Reso
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("certkeyname:%v", certkeyname))
 
-	if v, ok := d.GetOk("ca"); ok {
+	if v, ok := d.GetOk("ca"); ok && v.(bool) {
 		args = append(args, fmt.Sprintf("ca:%v", v))
 	}
 
-	if v, ok := d.GetOk("crlcheck"); ok {
-		args = append(args, fmt.Sprintf("crlcheck:%v", v))
-	}
-
-	if v, ok := d.GetOk("snicert"); ok {
+	if v, ok := d.GetOk("snicert"); ok && v.(bool) {
 		args = append(args, fmt.Sprintf("snicert:%v", v))
-	}
-
-	if v, ok := d.GetOk("ocspcheck"); ok {
-		args = append(args, fmt.Sprintf("ocspcheck:%v", v))
 	}
 
 	err := client.DeleteResourceWithArgs(service.Sslvserver_sslcertkey_binding.Type(), vservername, args)
