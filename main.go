@@ -7,7 +7,7 @@ import (
 	"log"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -38,7 +38,7 @@ func main() {
 	}
 
 	// Create the Framework provider (already tf6)
-	frameworkProviderFunc := providerserver.NewProtocol6(citrixadc_framework.New(version)())
+	frameworkProviderFunc := providerserver.NewProtocol6(provider.New(version)())
 
 	// Create the mux server
 	providers := []func() tfprotov6.ProviderServer{

@@ -25,7 +25,7 @@ import (
 const testAccDataSourceHanode = `
 data "citrixadc_hanode" "hanode" {
 	hanode_id = 0
-	}
+}
 `
 
 func TestAccDataSourceHanode_basic(t *testing.T) {

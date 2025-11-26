@@ -19,11 +19,32 @@ resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 }
 ```
 
+## Example usage 2
+
+```hcl
+
+variable "sslcertkey_passplain_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+  certkey = "tf_sslcertkey"
+  cert = "/nsconfig/ssl/certificate1.crt"
+  key = "/nsconfig/ssl/key1.pem"
+  notificationperiod = 40
+  expirymonitor = "ENABLED"
+  passplain_wo = var.sslcertkey_passplain_wo
+  passplain_wo_version = 1
+}
+
+```
+
 
 ## Argument Reference
 
-* `certkey` - (Optional) Name for the certificate and private-key pair.
-* `cert` - (Optional) Name of and, optionally, path to the X509 certificate file that is used to form the certificate-key pair. The certificate file should be present on the appliance's hard-disk drive or solid-state drive. Storing a certificate in any location other than the default might cause inconsistency in a high availability setup. /nsconfig/ssl/ is the default path.
+* `certkey` - (Required) Name for the certificate and private-key pair.
+* `cert` - (Required) Name of and, optionally, path to the X509 certificate file that is used to form the certificate-key pair. The certificate file should be present on the appliance's hard-disk drive or solid-state drive. Storing a certificate in any location other than the default might cause inconsistency in a high availability setup. /nsconfig/ssl/ is the default path.
 * `key` - (Optional) Name of and, optionally, path to the private-key file that is used to form the certificate-key pair. The certificate file should be present on the appliance's hard-disk drive or solid-state drive. Storing a certificate in any location other than the default might cause inconsistency in a high availability setup. /nsconfig/ssl/ is the default path.
 * `password` - (Optional) Passphrase that was used to encrypt the private-key. Use this option to load encrypted private-keys in PEM format.
 * `fipskey` - (Optional) Name of the FIPS key that was created inside the Hardware Security Module (HSM) of a FIPS appliance, or a key that was imported into the HSM.
@@ -38,6 +59,8 @@ resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 * `ocspstaplingcache` - (Optional) Clear cached ocspStapling response in certkey.
 * `deletecertkeyfilesonremoval` - (Optional) This option is used to automatically delete certificate/key files from physical device when the added certkey is removed. When deleteCertKeyFilesOnRemoval option is used at rm certkey command, it overwrites the deleteCertKeyFilesOnRemoval setting used at add/set certkey command
 * `deletefromdevice` - (Optional) Delete cert/key file from file system.
+* `passplain_wo` - (Optional, Write-Only required unless passplain is provided) Pass phrase used to encrypt the private-key. Required when adding an encrypted private-key in PEM format. Note that this may show up in logs, and it will not be stored in the state file.
+* `passplain_wo_version` - (Optional) Used together with passplain_wo to trigger an update. Increment this value when an update to passplain_wo is required.
 
 
 ## Attribute Reference

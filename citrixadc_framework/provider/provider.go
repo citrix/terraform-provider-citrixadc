@@ -14,11 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package citrixadc_framework
+package provider
 
 import (
 	"context"
 	"os"
+
+	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -27,7 +29,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbparameter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertkey"
 )
 
 // Ensure CitrixAdcFrameworkProvider satisfies various provider interfaces.
@@ -212,27 +215,31 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 		}
 	}
 
-	providerData := &ProviderData{
-		Client:   client,
-		Username: username,
-		Password: password,
-		Endpoint: endpoint,
-	}
+	// providerData := &ProviderData{
+	// 	Client:   client,
+	// 	Username: username,
+	// 	Password: password,
+	// 	Endpoint: endpoint,
+	// }
 
-	resp.DataSourceData = providerData
-	resp.ResourceData = providerData
+	resp.DataSourceData = &client
+	resp.ResourceData = &client
 
 	tflog.Info(ctx, "Configured CitrixADC Framework Provider", map[string]any{"success": true})
 }
 
 func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewLbParameterResource,
+		lbparameter.NewLbParameterResource,
+		sslcertkey.NewSslCertKeyResource,
 	}
 }
 
 func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		lbparameter.LBParameterDataSource,
+		sslcertkey.SslCertKeyDataSource,
+	}
 }
 
 func New(version string) func() provider.Provider {
