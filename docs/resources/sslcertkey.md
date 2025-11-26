@@ -7,7 +7,9 @@ subcategory: "SSL"
 The sslcertkey resource is used to create TLS certificate keys.
 
 
-## Example usage
+## Example Usage
+
+### Basic SSL Certificate without Passphrase
 
 ```hcl
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
@@ -19,25 +21,67 @@ resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 }
 ```
 
-## Example usage 2
+### Using Legacy `passplain` (Backward Compatibility)
+
+The `passplain` attribute is maintained for backward compatibility but stores the passphrase in the state file:
 
 ```hcl
+resource "citrixadc_sslcertkey" "tf_sslcertkey_legacy" {
+  certkey = "tf_sslcertkey_legacy"
+  cert = "/nsconfig/ssl/certificate1.crt"
+  key = "/nsconfig/ssl/encrypted_key1.pem"
+  
+  # Legacy approach (passphrase stored in state file)
+  passplain = "my-secret-passphrase"
+}
+```
 
+### SSL Certificate with Ephemeral Passphrase Support
+
+This example demonstrates using `passplain_wo` (write-only) for enhanced security. The passphrase is not stored in the Terraform state file.
+
+```hcl
 variable "sslcertkey_passplain_wo" {
   type      = string
   sensitive = true
+  description = "Passphrase for encrypted private key (not stored in state)"
 }
 
-resource "citrixadc_sslcertkey" "tf_sslcertkey" {
-  certkey = "tf_sslcertkey"
+resource "citrixadc_sslcertkey" "tf_sslcertkey_encrypted" {
+  certkey = "tf_sslcertkey_encrypted"
   cert = "/nsconfig/ssl/certificate1.crt"
-  key = "/nsconfig/ssl/key1.pem"
+  key = "/nsconfig/ssl/encrypted_key1.pem"
   notificationperiod = 40
   expirymonitor = "ENABLED"
+  
+  # Ephemeral passphrase (write-only, not stored in state)
   passplain_wo = var.sslcertkey_passplain_wo
   passplain_wo_version = 1
 }
+```
 
+### Updating the Passphrase
+
+To update the passphrase for an encrypted private key, increment the `passplain_wo_version` value:
+
+```hcl
+variable "sslcertkey_passplain_wo" {
+  type      = string
+  sensitive = true
+  description = "New passphrase for encrypted private key"
+}
+
+resource "citrixadc_sslcertkey" "tf_sslcertkey_encrypted" {
+  certkey = "tf_sslcertkey_encrypted"
+  cert = "/nsconfig/ssl/certificate1.crt"
+  key = "/nsconfig/ssl/encrypted_key1.pem"
+  notificationperiod = 40
+  expirymonitor = "ENABLED"
+  
+  # Update passphrase by incrementing version
+  passplain_wo = var.sslcertkey_passplain_wo
+  passplain_wo_version = 2  # Incremented from 1 to trigger update
+}
 ```
 
 
@@ -50,7 +94,9 @@ resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 * `fipskey` - (Optional) Name of the FIPS key that was created inside the Hardware Security Module (HSM) of a FIPS appliance, or a key that was imported into the HSM.
 * `hsmkey` - (Optional) Name of the HSM key that was created in the External Hardware Security Module (HSM) of a FIPS appliance.
 * `inform` - (Optional) Input format of the certificate and the private-key files. The three formats supported by the appliance are: PEM - Privacy Enhanced Mail DER - Distinguished Encoding Rule PFX - Personal Information Exchange. Possible values: [ DER, PEM, PFX ]
-* `passplain` - (Optional) Pass phrase used to encrypt the private-key. Required when adding an encrypted private-key in PEM format.
+* `passplain` - (Optional) Pass phrase used to encrypt the private-key. Required when adding an encrypted private-key in PEM format. **Note:** This value is stored in the Terraform state file. For enhanced security, use `passplain_wo` instead.
+* `passplain_wo` - (Optional, Write-Only) Pass phrase used to encrypt the private-key. Required when adding an encrypted private-key in PEM format. **Recommended over `passplain`** for security reasons as this value is not stored in the Terraform state file. Must be used together with `passplain_wo_version`.
+* `passplain_wo_version` - (Optional) Version counter used to trigger updates when `passplain_wo` changes. Increment this value whenever you need to update the passphrase. Default: 1
 * `expirymonitor` - (Optional) Issue an alert when the certificate is about to expire. Possible values: [ ENABLED, DISABLED ]
 * `notificationperiod` - (Optional) Time, in number of days, before certificate expiration, at which to generate an alert that the certificate is about to expire.
 * `bundle` - (Optional) Parse the certificate chain as a single file after linking the server certificate to its issuer's certificate within the file. Possible values: [ YES, NO ]
@@ -59,8 +105,29 @@ resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 * `ocspstaplingcache` - (Optional) Clear cached ocspStapling response in certkey.
 * `deletecertkeyfilesonremoval` - (Optional) This option is used to automatically delete certificate/key files from physical device when the added certkey is removed. When deleteCertKeyFilesOnRemoval option is used at rm certkey command, it overwrites the deleteCertKeyFilesOnRemoval setting used at add/set certkey command
 * `deletefromdevice` - (Optional) Delete cert/key file from file system.
-* `passplain_wo` - (Optional, Write-Only required unless passplain is provided) Pass phrase used to encrypt the private-key. Required when adding an encrypted private-key in PEM format. Note that this may show up in logs, and it will not be stored in the state file.
-* `passplain_wo_version` - (Optional) Used together with passplain_wo to trigger an update. Increment this value when an update to passplain_wo is required.
+
+## Ephemeral Passphrase Support
+
+The `passplain_wo` (write-only) and `passplain_wo_version` attributes provide ephemeral passphrase support for enhanced security:
+
+### Why Use Ephemeral Passphrases?
+
+- **Security**: The passphrase is never stored in the Terraform state file
+- **Compliance**: Meets security requirements that prohibit storing secrets in state
+- **Best Practice**: Follows Terraform's recommended pattern for sensitive values that should not persist
+
+### How It Works
+
+1. **Initial Creation**: Provide the passphrase via `passplain_wo` and set `passplain_wo_version` to 1
+2. **Updating Passphrase**: Change the passphrase value and increment `passplain_wo_version` (e.g., to 2)
+3. **Version Tracking**: Terraform uses the version change to detect when the passphrase needs updating
+
+### Important Notes
+
+- `passplain_wo` and `passplain_wo_version` must be used together
+- The passphrase is sent to the Citrix ADC but never stored in Terraform state
+- For backward compatibility, `passplain` is still supported but stores the value in state
+- Do not use both `passplain` and `passplain_wo` simultaneously; choose one approach
 
 
 ## Attribute Reference
