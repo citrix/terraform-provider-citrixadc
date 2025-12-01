@@ -73,7 +73,9 @@ func createSslservice_sslcertkey_bindingFunc(ctx context.Context, d *schema.Reso
 	client := meta.(*NetScalerNitroClient).client
 	servicename := d.Get("servicename")
 	certkeyname := d.Get("certkeyname")
-	bindingId := fmt.Sprintf("%s,%s", servicename, certkeyname)
+	snicert := d.Get("snicert").(bool)
+	ca := d.Get("ca").(bool)
+	bindingId := fmt.Sprintf("%s,%s,%t,%t", servicename, certkeyname, snicert, ca)
 	sslservice_sslcertkey_binding := ssl.Sslservicesslcertkeybinding{
 		Ca:          d.Get("ca").(bool),
 		Certkeyname: d.Get("certkeyname").(string),
@@ -98,10 +100,21 @@ func readSslservice_sslcertkey_bindingFunc(ctx context.Context, d *schema.Resour
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslservice_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.Split(bindingId, ",")
 
 	servicename := idSlice[0]
 	certkeyname := idSlice[1]
+	snicert := false
+	ca := false
+	if len(idSlice) > 2 {
+		snicert = idSlice[2] == "true"
+		ca = idSlice[3] == "true"
+	} else {
+		snicert = d.Get("snicert").(bool)
+		ca = d.Get("ca").(bool)
+		bindingId = fmt.Sprintf("%s,%t,%t", bindingId, snicert, ca)
+		d.SetId(bindingId)
+	}
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslservice_sslcertkey_binding state %s", bindingId)
 
@@ -129,7 +142,7 @@ func readSslservice_sslcertkey_bindingFunc(ctx context.Context, d *schema.Resour
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["certkeyname"].(string) == certkeyname {
+		if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
 			foundIndex = i
 			break
 		}
@@ -162,7 +175,7 @@ func deleteSslservice_sslcertkey_bindingFunc(ctx context.Context, d *schema.Reso
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslservice_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.Split(bindingId, ",")
 
 	servicename := idSlice[0]
 	certkeyname := idSlice[1]
@@ -170,17 +183,12 @@ func deleteSslservice_sslcertkey_bindingFunc(ctx context.Context, d *schema.Reso
 	argsMap := make(map[string]string)
 	argsMap["certkeyname"] = url.QueryEscape(certkeyname)
 
-	if v, ok := d.GetOk("ca"); ok {
+	if v, ok := d.GetOk("ca"); ok && v.(bool) {
 		argsMap["ca"] = url.QueryEscape(fmt.Sprintf("%v", v))
-
 	}
 
-	if v, ok := d.GetOk("crlcheck"); ok {
-		argsMap["crlcheck"] = url.QueryEscape(v.(string))
-	}
-
-	if v, ok := d.GetOk("snicert"); ok {
-		argsMap["snicert"] = url.QueryEscape(v.(string))
+	if v, ok := d.GetOk("snicert"); ok && v.(bool) {
+		argsMap["snicert"] = url.QueryEscape(fmt.Sprintf("%v", v))
 	}
 
 	err := client.DeleteResourceWithArgsMap(service.Sslservice_sslcertkey_binding.Type(), servicename, argsMap)

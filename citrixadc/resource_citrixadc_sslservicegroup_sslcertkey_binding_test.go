@@ -17,16 +17,18 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccSslservicegroup_sslcertkey_binding_basic = `
 	resource "citrixadc_sslservicegroup_sslcertkey_binding" "tf_sslservicegroup_sslcertkey_binding" {
 		ca = false
+		snicert = false
         certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
         servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
 	}
@@ -66,12 +68,14 @@ func TestAccSslservicegroup_sslcertkey_binding_basic(t *testing.T) {
 				Config: testAccSslservicegroup_sslcertkey_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslservicegroup_sslcertkey_bindingExist("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "ca", "false"),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "snicert", "false"),
 				),
 			},
 			{
 				Config: testAccSslservicegroup_sslcertkey_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslservicegroup_sslcertkey_bindingNotExist("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "tf_servicegroup,tf_sslcertkey"),
+					testAccCheckSslservicegroup_sslcertkey_bindingNotExist("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "tf_servicegroup,tf_sslcertkey,false,false"),
 				),
 			},
 		},
@@ -105,10 +109,18 @@ func testAccCheckSslservicegroup_sslcertkey_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.Split(bindingId, ",")
 
 		servicegroupname := idSlice[0]
 		certkeyname := idSlice[1]
+		snicert := false
+		ca := false
+		if val, ok := rs.Primary.Attributes["ca"]; ok {
+			ca = val == "true"
+		}
+		if val, ok := rs.Primary.Attributes["snicert"]; ok {
+			snicert = val == "true"
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservicegroup_sslcertkey_binding",
@@ -125,7 +137,7 @@ func testAccCheckSslservicegroup_sslcertkey_bindingExist(n string, id *string) r
 		// Iterate through results to find the one with the right monitor name
 		found := false
 		for _, v := range dataArr {
-			if v["certkeyname"].(string) == certkeyname {
+			if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
 				found = true
 				break
 			}
@@ -150,10 +162,12 @@ func testAccCheckSslservicegroup_sslcertkey_bindingNotExist(n string, id string)
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
+		idSlice := strings.Split(id, ",")
 
 		name := idSlice[0]
 		certkeyname := idSlice[1]
+		snicert := idSlice[2] == "true"
+		ca := idSlice[3] == "true"
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservicegroup_sslcertkey_binding",
@@ -170,7 +184,7 @@ func testAccCheckSslservicegroup_sslcertkey_bindingNotExist(n string, id string)
 		// Iterate through results to find the one with the right certkey name
 		found := false
 		for _, v := range dataArr {
-			if v["certkeyname"].(string) == certkeyname {
+			if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
 				found = true
 				break
 			}
