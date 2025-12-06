@@ -1,4 +1,4 @@
-package citrixadc
+package acctests
 
 import (
 	"encoding/base64"
@@ -11,11 +11,21 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
 )
+
+// NetScalerNitroClient is a wrapper around the service.NitroClient
+type NetScalerNitroClient struct {
+	Username string
+	Password string
+	Endpoint string
+	client   *service.NitroClient
+	lock     sync.Mutex
+}
 
 func doSslcertkeyPreChecks(t *testing.T) {
 	testAccPreCheck(t)
@@ -29,6 +39,14 @@ func doSslcertkeyPreChecks(t *testing.T) {
 		"key1.pem",
 		"key2.pem",
 		"key3.pem",
+		"servercert1.cert",
+		"servercert1.key",
+		"intermediate1.cert",
+		"rootcert1.cert",
+		"servercert2.cert",
+		"servercert2.key",
+		"servercert3.cert",
+		"servercert3.key",
 	}
 
 	c, err := testHelperInstantiateClient("", "", "", false)
@@ -38,7 +56,7 @@ func doSslcertkeyPreChecks(t *testing.T) {
 
 	//c := testAccProvider.Meta().(*NetScalerNitroClient)
 	for _, filename := range uploads {
-		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		err := uploadTestdataFile(c, t, filename, "/nsconfig/ssl")
 		if err != nil {
 			t.Errorf("%v", err)
 		}
