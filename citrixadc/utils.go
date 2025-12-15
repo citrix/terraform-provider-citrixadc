@@ -62,6 +62,8 @@ func setToInt(attributeName string, d *schema.ResourceData, value interface{}) {
 	switch valueTyped := value.(type) {
 	case int:
 		v = valueTyped
+	case float64:
+		v = int(valueTyped)
 	case string:
 		v, err = strconv.Atoi(valueTyped)
 	case nil:
