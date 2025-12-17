@@ -1,3 +1,17 @@
+## 2.1.0 (Dec 17, 2025)
+
+BUG FIXES
+* **adc-nitro-go**: Handling Float64 values from API response. [#1334]
+* **citrixadc_lbparameter**: Added schema version for lbparameter resource.
+* **citrixadc_sslvserver_sslcertkey_binding**: Handling CRUD on sslvserver_sslcertkey_binding considering ca and SniCERT flags. [#1252], [#1301]
+
+ENHANCEMENTS
+* **citrixadc_sslcertkey**: Added ephemeral support for sslcertkey resource.
+
+[#1334]: https://github.com/citrix/terraform-provider-citrixadc/issues/1334
+[#1252]: https://github.com/citrix/terraform-provider-citrixadc/issues/1252
+[#1301]: https://github.com/citrix/terraform-provider-citrixadc/issues/1301
+
 ## 2.0.0 (Nov 10, 2025)
 
 BUG FIXES
