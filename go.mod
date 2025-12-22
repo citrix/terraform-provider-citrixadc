@@ -2,6 +2,8 @@ module github.com/citrix/terraform-provider-citrixadc
 
 go 1.24.0
 
+godebug tlsrsakex=1
+
 toolchain go1.24.6
 
 require (
