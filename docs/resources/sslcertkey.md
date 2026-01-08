@@ -84,6 +84,49 @@ resource "citrixadc_sslcertkey" "tf_sslcertkey_encrypted" {
 }
 ```
 
+### Automatic Certificate Renewal Detection
+
+This example demonstrates automatic certificate renewal detection using file content hashing. When certificate files are updated, the sslcertkey resource will automatically detect changes and update accordingly:
+
+```hcl
+# Create certificate file
+resource "citrixadc_systemfile" "cert_file" {
+  filename     = "servercert.cert"
+  filelocation = "/nsconfig/ssl"
+  filecontent  = file("path/to/your/certificate.cert")
+}
+
+# Create private key file
+resource "citrixadc_systemfile" "key_file" {
+  filename     = "servercert.key"
+  filelocation = "/nsconfig/ssl"
+  filecontent  = file("path/to/your/private.key")
+}
+
+variable "sslcertkey_passplain_wo" {
+  type      = string
+  sensitive = true
+  description = "Passphrase for encrypted private key (not stored in state)"
+}
+
+# SSL certificate with automatic renewal detection
+resource "citrixadc_sslcertkey" "tf_sslcertkey_auto_renewal" {
+  certkey   = "tf_sslcertkey_auto_renewal"
+  cert      = "/nsconfig/ssl/servercert.cert"
+  key       = "/nsconfig/ssl/servercert.key"
+  
+  # Hash-based change detection for automatic renewal
+  cert_hash = sha256(citrixadc_systemfile.cert_file.filecontent)
+  key_hash  = sha256(citrixadc_systemfile.key_file.filecontent)
+  
+  notificationperiod = 40
+  expirymonitor = "ENABLED"
+
+  passplain_wo = var.sslcertkey_passplain_wo
+  passplain_wo_version = 1
+}
+```
+
 
 ## Argument Reference
 
@@ -105,6 +148,8 @@ resource "citrixadc_sslcertkey" "tf_sslcertkey_encrypted" {
 * `ocspstaplingcache` - (Optional) Clear cached ocspStapling response in certkey.
 * `deletecertkeyfilesonremoval` - (Optional) This option is used to automatically delete certificate/key files from physical device when the added certkey is removed. When deleteCertKeyFilesOnRemoval option is used at rm certkey command, it overwrites the deleteCertKeyFilesOnRemoval setting used at add/set certkey command
 * `deletefromdevice` - (Optional) Delete cert/key file from file system.
+* `cert_hash` - (Optional, Computed) Hash of the certificate file content. Used internally to detect certificate file changes for automatic renewal. Typically set using `sha256(systemfile.filecontent)`.
+* `key_hash` - (Optional, Computed) Hash of the private key file content. Used internally to detect key file changes for automatic renewal. Typically set using `sha256(systemfile.filecontent)`.
 
 ## Ephemeral Passphrase Support
 
@@ -128,6 +173,27 @@ The `passplain_wo` (write-only) and `passplain_wo_version` attributes provide ep
 - The passphrase is sent to the Citrix ADC but never stored in Terraform state
 - For backward compatibility, `passplain` is still supported but stores the value in state
 - Do not use both `passplain` and `passplain_wo` simultaneously; choose one approach
+
+## Automatic Certificate Renewal Detection
+
+The `cert_hash` and `key_hash` attributes provide automatic certificate renewal detection capability:
+
+### How It Works
+
+1. **Hash Calculation**: Use Terraform's built-in `sha256()` function to calculate hashes of certificate and key file contents
+2. **Change Detection**: During `terraform plan/apply`, the system compares current file content hashes with stored state hashes
+3. **Automatic Updates**: If hashes differ (indicating file content changed), the sslcertkey resource automatically triggers an update using the Citrix ADC Change API
+4. **State Sync**: Updated hashes are stored in Terraform state for future comparisons
+
+### When Hash Attributes Are Needed
+
+**Important Note**: The `cert_hash` and `key_hash` attributes are only needed when the certificate file content changes but the file paths (`cert` and `key` attributes) remain the same. 
+
+- **Use hashes when**: Certificate content is updated but file names/paths stay the same
+- **Hashes not needed when**: Certificate renewal involves changing file names or paths (e.g., `certificate-2024.crt` to `certificate-2025.crt`)
+
+In cases where the `cert` and/or `key` file paths change during renewal, Terraform will automatically detect the attribute changes and update the certificate without requiring hash-based detection.
+
 
 
 ## Attribute Reference
