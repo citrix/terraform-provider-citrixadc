@@ -402,3 +402,85 @@ func testAccCheckSslcertkeyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+// TODO: Enable below test case when systemfile is offered as part of plugin framework provider.
+// const testAccSslcertkey_autoupdate_create = `
+
+// resource "citrixadc_systemfile" "cert_file" {
+//   filename = "servercert1.cert"
+//   filelocation = "/nsconfig/ssl"
+//   filecontent = file("./testdata/servercert_init/servercert1.cert")
+// }
+
+// resource "citrixadc_systemfile" "key_file" {
+//   filename = "servercert1.key"
+//   filelocation = "/nsconfig/ssl"
+//   filecontent = file("./testdata/servercert_init/servercert1.key")
+// }
+
+// resource "citrixadc_sslcertkey" "foo" {
+//   certkey = "sample_ssl_cert"
+//   cert = "/nsconfig/ssl/servercert1.cert"
+//   key = "/nsconfig/ssl/servercert1.key"
+//   notificationperiod = 40
+//   expirymonitor = "ENABLED"
+//   cert_hash = sha256(citrixadc_systemfile.cert_file.filecontent)
+//   key_hash  = sha256(citrixadc_systemfile.key_file.filecontent)
+// }
+// `
+// const testAccSslcertkey_autoupdate_update = `
+
+// resource "citrixadc_systemfile" "cert_file" {
+//   filename = "servercert1.cert"
+//   filelocation = "/nsconfig/ssl"
+//   filecontent = file("./testdata/servercert_latest/servercert1.cert")
+// }
+
+// resource "citrixadc_systemfile" "key_file" {
+//   filename = "servercert1.key"
+//   filelocation = "/nsconfig/ssl"
+//   filecontent = file("./testdata/servercert_latest/servercert1.key")
+// }
+
+// resource "citrixadc_sslcertkey" "foo" {
+//   certkey = "sample_ssl_cert"
+//   cert = "/nsconfig/ssl/servercert1.cert"
+//   key = "/nsconfig/ssl/servercert1.key"
+//   notificationperiod = 40
+//   expirymonitor = "ENABLED"
+//   cert_hash = sha256(citrixadc_systemfile.cert_file.filecontent)
+//   key_hash  = sha256(citrixadc_systemfile.key_file.filecontent)
+// }
+// `
+
+// func TestAccSslcertkey_autoUpdate(t *testing.T) {
+// 	resource.Test(t, resource.TestCase{
+// 		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+// 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+// 		CheckDestroy:             testAccCheckSslcertkeyDestroy,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccSslcertkey_autoupdate_create,
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.foo", nil),
+
+// 					resource.TestCheckResourceAttr(
+// 						"citrixadc_sslcertkey.foo", "cert_hash", "ba7dfca7e269b09fa00e62b1f61728389d739f5325fd83ea4452337d490ffa8e"),
+// 					resource.TestCheckResourceAttr(
+// 						"citrixadc_sslcertkey.foo", "key_hash", "2d6df3c98332916dddb0a35c4902ad3d55e60dd753eb1cd5b861c17e7781fd41"),
+// 				),
+// 			},
+// 			{
+// 				Config: testAccSslcertkey_autoupdate_update,
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.foo", nil),
+
+// 					resource.TestCheckResourceAttr(
+// 						"citrixadc_sslcertkey.foo", "cert_hash", "76e2a79e8c4526b98fef5077ee7a2f415c450f9ed6796a80f621048dd50041c7"),
+// 					resource.TestCheckResourceAttr(
+// 						"citrixadc_sslcertkey.foo", "key_hash", "16b697689dd78539d599d72de6602d17b8bd54bb657ebbb62971d366c845ef82"),
+// 				),
+// 			},
+// 		},
+// 	})
+// }

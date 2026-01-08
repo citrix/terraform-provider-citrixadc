@@ -37,6 +37,8 @@ type SslCertKeyResourceModel struct {
 	Passplain                   types.String `tfsdk:"passplain"`
 	PassplainWo                 types.String `tfsdk:"passplain_wo"`
 	PassplainWoVersion          types.Int64  `tfsdk:"passplain_wo_version"`
+	CertHash                    types.String `tfsdk:"cert_hash"`
+	KeyHash                     types.String `tfsdk:"key_hash"`
 }
 
 func (r *SslCertKeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -130,6 +132,16 @@ func (r *SslCertKeyResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:    true,
 				Computed:    true,
 				Default:     int64default.StaticInt64(1),
+			},
+			"cert_hash": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Hash of the certificate file content. Used internally to detect certificate file changes.",
+			},
+			"key_hash": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Hash of the private key file content. Used internally to detect key file changes.",
 			},
 		},
 	}

@@ -104,6 +104,18 @@ func (r *SslCertKeyResource) Create(ctx context.Context, req resource.CreateRequ
 		}
 	}
 
+	// Nodomaincheck is set to true post creation
+	if !data.NoDomainCheck.IsNull() {
+		sslcertkey.Nodomaincheck = data.NoDomainCheck.ValueBool()
+	}
+
+	// Update resource using "update" action after create.
+	err = r.client.ActOnResource(service.Sslcertkey.Type(), &sslcertkey, "update")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslcertkey, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
 	r.readSslCertKeyFromApi(ctx, &data, &resp.Diagnostics)
 
@@ -122,7 +134,6 @@ func (r *SslCertKeyResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	tflog.Debug(ctx, "Reading sslcertkey resource")
-
 	r.readSslCertKeyFromApi(ctx, &data, &resp.Diagnostics)
 
 	if resp.Diagnostics.HasError() {
@@ -191,6 +202,17 @@ func (r *SslCertKeyResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !plan.Key.Equal(state.Key) {
 		tflog.Debug(ctx, "Key has changed for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
+		sslcertkeyChange.Key = plan.Key.ValueString()
+		needsChange = true
+	}
+	// Check if certificate or key file content has changed by comparing hashes
+	if !plan.Cert.IsNull() && !plan.CertHash.Equal(state.CertHash) {
+		tflog.Debug(ctx, "Cert file content has changed for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
+		sslcertkeyChange.Cert = plan.Cert.ValueString()
+		needsChange = true
+	}
+	if !plan.Key.IsNull() && !plan.KeyHash.Equal(state.KeyHash) {
+		tflog.Debug(ctx, "Key file content has changed for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
 		sslcertkeyChange.Key = plan.Key.ValueString()
 		needsChange = true
 	}
