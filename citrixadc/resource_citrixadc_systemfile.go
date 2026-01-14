@@ -72,9 +72,15 @@ func createSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("file encoding %s is not supported", fileencoding)
 	}
 
-	// Encode file contents to base64
-	b64filecontent := base64.StdEncoding.EncodeToString([]byte(filecontent))
-
+	var b64filecontent string
+	_, err := base64.StdEncoding.DecodeString(filecontent)
+	if err != nil {
+		log.Printf("[DEBUG] citrixadc-provider: Content is not base64-encoded, encoding it")
+		b64filecontent = base64.StdEncoding.EncodeToString([]byte(filecontent))
+	} else {
+		log.Printf("[DEBUG] citrixadc-provider: Content is already base64-encoded")
+		b64filecontent = filecontent
+	}
 	systemfile := system.Systemfile{
 		Filecontent:  b64filecontent,
 		Fileencoding: fileencoding,
@@ -82,7 +88,7 @@ func createSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Filename:     filename,
 	}
 
-	_, err := client.AddResource(service.Systemfile.Type(), "", &systemfile)
+	_, err = client.AddResource(service.Systemfile.Type(), "", &systemfile)
 	if err != nil {
 		return diag.FromErr(err)
 	}
