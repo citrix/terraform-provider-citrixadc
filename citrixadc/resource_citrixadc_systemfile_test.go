@@ -47,6 +47,28 @@ func TestAccSystemfile_basic(t *testing.T) {
 	})
 }
 
+func TestAccSystemfile_base64(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSystemfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemfile_base64_plaintext,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemfileExist("citrixadc_systemfile.tf_file_plain", nil, []string{"/var/tmp", "plain.txt"}),
+				),
+			},
+			{
+				Config: testAccSystemfile_base64_encoded,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemfileExist("citrixadc_systemfile.tf_file_encoded", nil, []string{"/var/tmp", "encoded.txt"}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSystemfileExist(n string, id *string, pathData []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -133,5 +155,25 @@ resource "citrixadc_systemfile" "tf_file" {
     filename = "helloandbye.txt"
     filelocation = "/tmp"
     filecontent = "hello and goodbye"
+}
+`
+
+const testAccSystemfile_base64_plaintext = `
+
+resource "citrixadc_systemfile" "tf_file_plain" {
+    filename = "plain.txt"
+    filelocation = "/var/tmp"
+    filecontent = "This is plain text content"
+    fileencoding = "BASE64"
+}
+`
+
+const testAccSystemfile_base64_encoded = `
+
+resource "citrixadc_systemfile" "tf_file_encoded" {
+    filename = "encoded.txt"
+    filelocation = "/var/tmp"
+    filecontent = "SGVsbG8gV29ybGQhIFRoaXMgaXMgYSBiYXNlNjQgZW5jb2RlZCBleGFtcGxlIGZpbGU="
+    fileencoding = "BASE64"
 }
 `

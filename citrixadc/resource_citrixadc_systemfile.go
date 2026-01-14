@@ -139,7 +139,18 @@ func readSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(err)
 	}
 
-	d.Set("filecontent", string(bytes))
+	// Check if the original filecontent in config was base64-encoded
+	originalContent := d.Get("filecontent").(string)
+	_, decodeErr := base64.StdEncoding.DecodeString(originalContent)
+
+	if decodeErr != nil {
+		// Original was plain text, store decoded value
+		d.Set("filecontent", string(bytes))
+	} else {
+		// Original was base64, keep it base64 in state
+		d.Set("filecontent", data["filecontent"].(string))
+	}
+
 	d.Set("fileencoding", data["fileencoding"])
 	d.Set("filelocation", data["filelocation"])
 	d.Set("filename", data["filename"])
