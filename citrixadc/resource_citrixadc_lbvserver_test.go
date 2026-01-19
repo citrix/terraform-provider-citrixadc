@@ -630,3 +630,97 @@ func TestAccLbvserver_nonAddressable(t *testing.T) {
 		},
 	})
 }
+
+const testAccLbvserver_backupvserver_step1 = `
+resource "citrixadc_lbvserver" "tf_test_backup_lb" {
+	name = "bkp1"
+	ipv46 = "10.202.11.20"
+	port = 80
+	servicetype = "HTTP"
+}
+
+resource "citrixadc_lbvserver" "tf_test_main_lb" {
+	name = "lbvs1"
+	ipv46 = "10.202.11.21"
+	port = 80
+	servicetype = "HTTP"
+	backupvserver = citrixadc_lbvserver.tf_test_backup_lb.name
+}
+`
+
+const testAccLbvserver_backupvserver_step2 = `
+resource "citrixadc_lbvserver" "tf_test_backup_lb" {
+	name = "bkp1"
+	ipv46 = "10.202.11.20"
+	port = 80
+	servicetype = "HTTP"
+}
+
+resource "citrixadc_lbvserver" "tf_test_main_lb" {
+	name = "lbvs1"
+	ipv46 = "10.202.11.21"
+	port = 80
+	servicetype = "HTTP"
+	backupvserver = ""
+}
+`
+
+const testAccLbvserver_backupvserver_step3 = `
+
+resource "citrixadc_lbvserver" "tf_test_backup_lb" {
+	name = "bkp1"
+	ipv46 = "10.202.11.20"
+	port = 80
+	servicetype = "HTTP"
+}
+	
+
+resource "citrixadc_lbvserver" "tf_test_backup_lb2" {
+	name = "bkpnew"
+	ipv46 = "10.202.11.22"
+	port = 80
+	servicetype = "HTTP"
+}
+
+resource "citrixadc_lbvserver" "tf_test_main_lb" {
+	name = "lbvs1"
+	ipv46 = "10.202.11.21"
+	port = 80
+	servicetype = "HTTP"
+	backupvserver = citrixadc_lbvserver.tf_test_backup_lb2.name
+}
+`
+
+func TestAccLbvserver_backupvserver(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			// Create with backupvserver
+			{
+				Config: testAccLbvserver_backupvserver_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_main_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_main_lb", "backupvserver", "bkp1"),
+				),
+			},
+			// Unset backupvserver (change from value to empty)
+			{
+				Config: testAccLbvserver_backupvserver_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_main_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_main_lb", "backupvserver", ""),
+				),
+			},
+			// Change to different backupvserver
+			{
+				Config: testAccLbvserver_backupvserver_step3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_main_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_main_lb", "backupvserver", "bkpnew"),
+				),
+			},
+		},
+	})
+}
