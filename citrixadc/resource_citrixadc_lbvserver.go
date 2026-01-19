@@ -910,7 +910,6 @@ func readLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("authnvsname", data["authnvsname"])
 	d.Set("backuplbmethod", data["backuplbmethod"])
 	setToInt("backuppersistencetimeout", d, data["backuppersistencetimeout"])
-	log.Printf("[DEBUG] netscaler-provider: Setting backupvserver in state to: '%v' (type: %T)", data["backupvserver"], data["backupvserver"])
 	d.Set("backupvserver", data["backupvserver"])
 	d.Set("bypassaaaa", data["bypassaaaa"])
 	d.Set("cacheable", data["cacheable"])
