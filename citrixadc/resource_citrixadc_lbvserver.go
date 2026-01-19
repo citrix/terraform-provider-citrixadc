@@ -109,7 +109,6 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"backupvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"bypassaaaa": {
 				Type:     schema.TypeString,
@@ -911,6 +910,7 @@ func readLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("authnvsname", data["authnvsname"])
 	d.Set("backuplbmethod", data["backuplbmethod"])
 	setToInt("backuppersistencetimeout", d, data["backuppersistencetimeout"])
+	log.Printf("[DEBUG] netscaler-provider: Setting backupvserver in state to: '%v' (type: %T)", data["backupvserver"], data["backupvserver"])
 	d.Set("backupvserver", data["backupvserver"])
 	d.Set("bypassaaaa", data["bypassaaaa"])
 	d.Set("cacheable", data["cacheable"])
@@ -1085,6 +1085,7 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	snisslcertkeysChanged := false
 	ciphersChanged := false
 	ciphersuitesChanged := false
+
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Appflowlog = d.Get("appflowlog").(string)
@@ -1127,9 +1128,29 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("backupvserver") {
 		log.Printf("[DEBUG] netscaler-provider:  Backupvserver has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Backupvserver = d.Get("backupvserver").(string)
-		hasChange = true
+		oldBackupvserver, newBackupvserver := d.GetChange("backupvserver")
+		oldBackupvserverStr := oldBackupvserver.(string)
+		newBackupvserverStr := newBackupvserver.(string)
+
+		if oldBackupvserverStr != "" && newBackupvserverStr == "" {
+			// Changed from a value to empty - need to unset
+			log.Printf("[DEBUG] netscaler-provider:  Unsetting backupvserver for lbvserver %s", lbvserverName)
+			lbvserverUnset := lb.Lbvserver{
+				Name:          lbvserverName,
+				Backupvserver: "true",
+			}
+			err := client.ActOnResource(service.Lbvserver.Type(), &lbvserverUnset, "unset")
+			if err != nil {
+				return diag.Errorf("[ERROR] netscaler-provider: Error unsetting backupvserver from lbvserver %s", lbvserverName)
+			}
+			log.Printf("[DEBUG] netscaler-provider: backupvserver has been unset from lbvserver %s", lbvserverName)
+		} else {
+			// Normal update with a new value
+			lbvserver.Backupvserver = newBackupvserverStr
+			hasChange = true
+		}
 	}
+
 	if d.HasChange("bypassaaaa") {
 		log.Printf("[DEBUG] netscaler-provider:  Bypassaaaa has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Bypassaaaa = d.Get("bypassaaaa").(string)
