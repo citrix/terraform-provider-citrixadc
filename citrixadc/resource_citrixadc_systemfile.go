@@ -72,9 +72,15 @@ func createSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("file encoding %s is not supported", fileencoding)
 	}
 
-	// Encode file contents to base64
-	b64filecontent := base64.StdEncoding.EncodeToString([]byte(filecontent))
-
+	var b64filecontent string
+	_, err := base64.StdEncoding.DecodeString(filecontent)
+	if err != nil {
+		log.Printf("[DEBUG] citrixadc-provider: Content is not base64-encoded, encoding it")
+		b64filecontent = base64.StdEncoding.EncodeToString([]byte(filecontent))
+	} else {
+		log.Printf("[DEBUG] citrixadc-provider: Content is already base64-encoded")
+		b64filecontent = filecontent
+	}
 	systemfile := system.Systemfile{
 		Filecontent:  b64filecontent,
 		Fileencoding: fileencoding,
@@ -82,7 +88,7 @@ func createSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Filename:     filename,
 	}
 
-	_, err := client.AddResource(service.Systemfile.Type(), "", &systemfile)
+	_, err = client.AddResource(service.Systemfile.Type(), "", &systemfile)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -133,7 +139,18 @@ func readSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(err)
 	}
 
-	d.Set("filecontent", string(bytes))
+	// Check if the original filecontent in config was base64-encoded
+	originalContent := d.Get("filecontent").(string)
+	_, decodeErr := base64.StdEncoding.DecodeString(originalContent)
+
+	if decodeErr != nil {
+		// Original was plain text, store decoded value
+		d.Set("filecontent", string(bytes))
+	} else {
+		// Original was base64, keep it base64 in state
+		d.Set("filecontent", data["filecontent"].(string))
+	}
+
 	d.Set("fileencoding", data["fileencoding"])
 	d.Set("filelocation", data["filelocation"])
 	d.Set("filename", data["filename"])
