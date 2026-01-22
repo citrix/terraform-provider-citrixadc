@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_authenticationsamlidppolicy_binding_basic = `
@@ -95,9 +96,9 @@ const testAccVpnvserver_authenticationsamlidppolicy_binding_basic_step2 = `
 
 func TestAccVpnvserver_authenticationsamlidppolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckVpnvserver_authenticationsamlidppolicy_bindingDestroy,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationsamlidppolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnvserver_authenticationsamlidppolicy_binding_basic,

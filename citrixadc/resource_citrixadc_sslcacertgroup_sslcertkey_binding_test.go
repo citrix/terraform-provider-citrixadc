@@ -93,9 +93,9 @@ resource "citrixadc_sslcacertgroup" "ns_callout_certs1" {
 
 func TestAccSslcacertgroup_sslcertkey_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { doSslcacertgroup_sslcertkey_bindingPreChecks(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckSslcacertgroup_sslcertkey_bindingDestroy,
+		PreCheck:                 func() { doSslcacertgroup_sslcertkey_bindingPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcacertgroup_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslcacertgroup_sslcertkey_binding_basic_step1,

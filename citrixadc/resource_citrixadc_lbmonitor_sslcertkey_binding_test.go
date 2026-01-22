@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLbmonitor_sslcertkey_binding_basic = `
@@ -59,9 +60,9 @@ const testAccLbmonitor_sslcertkey_binding_basic_step2 = `
 
 func TestAccLbmonitor_sslcertkey_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { doSslcertkeyPreChecks(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckLbmonitor_sslcertkey_bindingDestroy,
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitor_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbmonitor_sslcertkey_binding_basic,

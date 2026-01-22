@@ -37,6 +37,8 @@ type SslCertKeyResourceModel struct {
 	Passplain                   types.String `tfsdk:"passplain"`
 	PassplainWo                 types.String `tfsdk:"passplain_wo"`
 	PassplainWoVersion          types.Int64  `tfsdk:"passplain_wo_version"`
+	CertHash                    types.String `tfsdk:"cert_hash"`
+	KeyHash                     types.String `tfsdk:"key_hash"`
 }
 
 func (r *SslCertKeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -68,10 +70,12 @@ func (r *SslCertKeyResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"fipskey": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Name of the FIPS key that was created inside the Hardware Security Module (HSM) of a FIPS appliance, or a key that was imported into the HSM.",
 			},
 			"hsmkey": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Name of the HSM key that was created in the External Hardware Security Module (HSM) of a FIPS appliance. The following fields cannot be changed after creation: certkey, bundle, hsmkey.",
 			},
 			"inform": schema.StringAttribute{
@@ -91,10 +95,12 @@ func (r *SslCertKeyResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"bundle": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Parse the certificate chain as a single file after linking the server certificate to its issuer's certificate within the file. Possible values: YES, NO. The following fields cannot be changed after creation: certkey, bundle, hsmkey.",
 			},
 			"linkcertkeyname": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Name of the Certificate Authority certificate-key pair to which to link a certificate-key pair.",
 			},
 			"nodomaincheck": schema.BoolAttribute{
@@ -130,6 +136,14 @@ func (r *SslCertKeyResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:    true,
 				Computed:    true,
 				Default:     int64default.StaticInt64(1),
+			},
+			"cert_hash": schema.StringAttribute{
+				Optional:    true,
+				Description: "Hash of the certificate file content. Used internally to detect certificate file changes.",
+			},
+			"key_hash": schema.StringAttribute{
+				Optional:    true,
+				Description: "Hash of the private key file content. Used internally to detect key file changes.",
 			},
 		},
 	}
@@ -173,12 +187,6 @@ func sslcertkeyGetThePayloadFromtheConfig(ctx context.Context, data *SslCertKeyR
 	}
 	if !data.Bundle.IsNull() {
 		sslcertkey.Bundle = data.Bundle.ValueString()
-	}
-	if !data.NoDomainCheck.IsNull() {
-		sslcertkey.Nodomaincheck = data.NoDomainCheck.ValueBool()
-	}
-	if !data.OcspStaplingCache.IsNull() {
-		sslcertkey.Ocspstaplingcache = data.OcspStaplingCache.ValueBool()
 	}
 	if !data.DeleteCertKeyFilesOnRemoval.IsNull() {
 		sslcertkey.Deletecertkeyfilesonremoval = data.DeleteCertKeyFilesOnRemoval.ValueString()

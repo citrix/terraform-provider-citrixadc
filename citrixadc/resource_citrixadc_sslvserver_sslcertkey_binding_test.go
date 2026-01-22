@@ -207,9 +207,9 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 
 func TestAccSslvserver_sslcertkey_binding_lb(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckSslvserver_sslcertkey_bindingDestroy,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslvserver_sslcertkey_binding_lb_step1,
@@ -242,9 +242,9 @@ func TestAccSslvserver_sslcertkey_binding_lb(t *testing.T) {
 
 func TestAccSslvserver_sslcertkey_binding_cs(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckSslvserver_sslcertkey_bindingDestroy,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslvserver_sslcertkey_binding_cs_step1,
