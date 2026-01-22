@@ -148,8 +148,8 @@ resource "citrixadc_sslcertkey" "tf_sslcertkey_auto_renewal" {
 * `ocspstaplingcache` - (Optional) Clear cached ocspStapling response in certkey.
 * `deletecertkeyfilesonremoval` - (Optional) This option is used to automatically delete certificate/key files from physical device when the added certkey is removed. When deleteCertKeyFilesOnRemoval option is used at rm certkey command, it overwrites the deleteCertKeyFilesOnRemoval setting used at add/set certkey command
 * `deletefromdevice` - (Optional) Delete cert/key file from file system.
-* `cert_hash` - (Optional, Computed) Hash of the certificate file content. Used internally to detect certificate file changes for automatic renewal. Typically set using `sha256(systemfile.filecontent)`.
-* `key_hash` - (Optional, Computed) Hash of the private key file content. Used internally to detect key file changes for automatic renewal. Typically set using `sha256(systemfile.filecontent)`.
+* `cert_hash` - (Optional) Hash of the certificate file content. Used internally to detect certificate file changes for automatic renewal. Typically set using `sha256(systemfile.filecontent)`.
+* `key_hash` - (Optional) Hash of the private key file content. Used internally to detect key file changes for automatic renewal. Typically set using `sha256(systemfile.filecontent)`.
 
 ## Ephemeral Passphrase Support
 

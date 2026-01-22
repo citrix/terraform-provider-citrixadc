@@ -60,9 +60,9 @@ const testAccSslservicegroup_sslcertkey_binding_basic_step2 = `
 
 func TestAccSslservicegroup_sslcertkey_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { doSslcertkeyPreChecks(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckSslservicegroup_sslcertkey_bindingDestroy,
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservicegroup_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslservicegroup_sslcertkey_binding_basic,

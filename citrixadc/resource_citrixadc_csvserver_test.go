@@ -454,9 +454,9 @@ func TestAccCsvserver_lbvserverbinding(t *testing.T) {
 
 func TestAccCsvserver_snicerts(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { doPreChecks(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckLbvserverDestroy,
+		PreCheck:                 func() { doPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "", "cert2-cert3"),

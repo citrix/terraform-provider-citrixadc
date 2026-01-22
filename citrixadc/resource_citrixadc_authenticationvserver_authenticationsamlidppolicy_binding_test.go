@@ -98,9 +98,9 @@ const testAccAuthenticationvserver_authenticationsamlidppolicy_binding_basic_ste
 
 func TestAccAuthenticationvserver_authenticationsamlidppolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAuthenticationvserver_authenticationsamlidppolicy_bindingDestroy,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationsamlidppolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationvserver_authenticationsamlidppolicy_binding_basic,

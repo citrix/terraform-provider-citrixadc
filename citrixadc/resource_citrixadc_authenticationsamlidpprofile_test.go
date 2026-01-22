@@ -62,9 +62,9 @@ const testAccAuthenticationsamlidpprofile_update = `
 
 func TestAccAuthenticationsamlidpprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { doSslPrecheckforsamlidpprofile(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAuthenticationsamlidpprofileDestroy,
+		PreCheck:                 func() { doSslPrecheckforsamlidpprofile(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlidpprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationsamlidpprofile_add,

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"net/url"
-	"testing"
 )
 
 const testAccVpnglobal_sslcertkey_binding_basic = `
@@ -48,9 +49,9 @@ const testAccVpnglobal_sslcertkey_binding_basic_step2 = `
 
 func TestAccVpnglobal_sslcertkey_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { PreCheckSslceriKey(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckVpnglobal_sslcertkey_bindingDestroy,
+		PreCheck:                 func() { PreCheckSslceriKey(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnglobal_sslcertkey_binding_basic,
