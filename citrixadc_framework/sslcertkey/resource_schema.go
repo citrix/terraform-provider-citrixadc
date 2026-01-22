@@ -70,10 +70,12 @@ func (r *SslCertKeyResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"fipskey": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Name of the FIPS key that was created inside the Hardware Security Module (HSM) of a FIPS appliance, or a key that was imported into the HSM.",
 			},
 			"hsmkey": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Name of the HSM key that was created in the External Hardware Security Module (HSM) of a FIPS appliance. The following fields cannot be changed after creation: certkey, bundle, hsmkey.",
 			},
 			"inform": schema.StringAttribute{
@@ -93,10 +95,12 @@ func (r *SslCertKeyResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"bundle": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Parse the certificate chain as a single file after linking the server certificate to its issuer's certificate within the file. Possible values: YES, NO. The following fields cannot be changed after creation: certkey, bundle, hsmkey.",
 			},
 			"linkcertkeyname": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Name of the Certificate Authority certificate-key pair to which to link a certificate-key pair.",
 			},
 			"nodomaincheck": schema.BoolAttribute{
