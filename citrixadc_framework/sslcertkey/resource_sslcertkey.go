@@ -73,9 +73,6 @@ func (r *SslCertKeyResource) Create(ctx context.Context, req resource.CreateRequ
 	// Use config (not plan) to get write-only attributes like passplain
 	sslcertkey := sslcertkeyGetThePayloadFromtheConfig(ctx, &config)
 
-	// Nodomaincheck is always set to false on creation
-	sslcertkey.Nodomaincheck = false
-
 	// Make API call
 	_, err := r.client.AddResource(service.Sslcertkey.Type(), sslcertkeyName, &sslcertkey)
 	if err != nil {
@@ -104,13 +101,18 @@ func (r *SslCertKeyResource) Create(ctx context.Context, req resource.CreateRequ
 		}
 	}
 
+	sslcertkeyUpdate := ssl.Sslcertkey{
+		Certkey: sslcertkeyName,
+		Cert:    data.Cert.ValueString(),
+	}
+
 	// Nodomaincheck is set to true post creation
 	if !data.NoDomainCheck.IsNull() {
-		sslcertkey.Nodomaincheck = data.NoDomainCheck.ValueBool()
+		sslcertkeyUpdate.Nodomaincheck = data.NoDomainCheck.ValueBool()
 	}
 
 	// Update resource using "update" action after create.
-	err = r.client.ActOnResource(service.Sslcertkey.Type(), &sslcertkey, "update")
+	err = r.client.ActOnResource(service.Sslcertkey.Type(), &sslcertkeyUpdate, "update")
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslcertkey, got error: %s", err))
 		return
@@ -195,6 +197,11 @@ func (r *SslCertKeyResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Check for changes that require Change API
+	if !plan.NoDomainCheck.Equal(state.NoDomainCheck) {
+		tflog.Debug(ctx, "NoDomainCheck has changed for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
+		sslcertkeyChange.Nodomaincheck = plan.NoDomainCheck.ValueBool()
+		needsChange = true
+	}
 	if !plan.Cert.Equal(state.Cert) {
 		tflog.Debug(ctx, "Cert has changed for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
 		sslcertkeyChange.Cert = plan.Cert.ValueString()

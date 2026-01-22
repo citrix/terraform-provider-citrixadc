@@ -135,12 +135,10 @@ func (r *SslCertKeyResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"cert_hash": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
 				Description: "Hash of the certificate file content. Used internally to detect certificate file changes.",
 			},
 			"key_hash": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
 				Description: "Hash of the private key file content. Used internally to detect key file changes.",
 			},
 		},
@@ -185,12 +183,6 @@ func sslcertkeyGetThePayloadFromtheConfig(ctx context.Context, data *SslCertKeyR
 	}
 	if !data.Bundle.IsNull() {
 		sslcertkey.Bundle = data.Bundle.ValueString()
-	}
-	if !data.NoDomainCheck.IsNull() {
-		sslcertkey.Nodomaincheck = data.NoDomainCheck.ValueBool()
-	}
-	if !data.OcspStaplingCache.IsNull() {
-		sslcertkey.Ocspstaplingcache = data.OcspStaplingCache.ValueBool()
 	}
 	if !data.DeleteCertKeyFilesOnRemoval.IsNull() {
 		sslcertkey.Deletecertkeyfilesonremoval = data.DeleteCertKeyFilesOnRemoval.ValueString()
