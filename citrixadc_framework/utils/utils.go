@@ -24,6 +24,8 @@ func ConvertToInt64(value interface{}) (int64, error) {
 		return int64(v), nil
 	case int64:
 		return v, nil
+	case float64:
+		return int64(v), nil
 	case string:
 		return strconv.ParseInt(v, 10, 64)
 	default:
