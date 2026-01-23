@@ -1,4 +1,4 @@
-package acctests
+package citrixadc
 
 import (
 	"encoding/base64"

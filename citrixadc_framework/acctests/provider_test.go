@@ -1,10 +1,11 @@
-package acctests
+package citrixadc
 
 import (
 	"context"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -56,6 +57,23 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 	},
 }
 
+var isCpxRun bool
+
+var adcTestbed string
+
+func init() {
+	log.Printf("[DEBUG]  citrixadc-provider-test: In init")
+
+	nsUrl := os.Getenv("NS_URL")
+	isCpxRun = strings.Contains(nsUrl, "localhost")
+
+	var exists bool
+	adcTestbed, exists = os.LookupEnv("ADC_TESTBED")
+	if !exists {
+		adcTestbed = "UNSPECIFIED"
+	}
+}
+
 func testAccPreCheck(t *testing.T) {
 	// You can add any setup code here
 	if v := os.Getenv("NS_URL"); v == "" {
@@ -92,34 +110,3 @@ func testAccGetFrameworkClient() (*service.NitroClient, error) {
 
 	return client, nil
 }
-
-// func TestProviderNew(t *testing.T) {
-// 	provider := provider.New("test")()
-
-// 	if provider == nil {
-// 		t.Fatal("Provider should not be nil")
-// 	}
-
-// 	// Test that the provider implements the required interface
-// 	_, ok := provider.(*(provider.CitrixAdcFrameworkProvider))
-// 	if !ok {
-// 		t.Fatal("Provider should be of type *CitrixAdcFrameworkProvider")
-// 	}
-// }
-
-// func TestProviderModel(t *testing.T) {
-// 	model := provider.CitrixAdcFrameworkProviderModel{}
-
-// 	// Test that all fields are properly defined
-// 	if !model.Username.IsNull() {
-// 		t.Error("New model Username should be null")
-// 	}
-
-// 	if !model.Password.IsNull() {
-// 		t.Error("New model Password should be null")
-// 	}
-
-// 	if !model.Endpoint.IsNull() {
-// 		t.Error("New model Endpoint should be null")
-// 	}
-// }
