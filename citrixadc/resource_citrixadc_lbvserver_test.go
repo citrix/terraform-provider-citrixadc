@@ -691,6 +691,29 @@ resource "citrixadc_lbvserver" "tf_test_main_lb" {
 }
 `
 
+const testAccLbvserver_backupvserver_step4 = `
+resource "citrixadc_lbvserver" "tf_test_backup_lb" {
+	name = "bkp1"
+	ipv46 = "10.202.11.20"
+	port = 80
+	servicetype = "HTTP"
+}
+
+resource "citrixadc_lbvserver" "tf_test_backup_lb2" {
+	name = "bkpnew"
+	ipv46 = "10.202.11.22"
+	port = 80
+	servicetype = "HTTP"
+}
+
+resource "citrixadc_lbvserver" "tf_test_main_lb" {
+	name = "lbvs1"
+	ipv46 = "10.202.11.21"
+	port = 80
+	servicetype = "HTTP"
+}
+`
+
 func TestAccLbvserver_backupvserver(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -719,6 +742,14 @@ func TestAccLbvserver_backupvserver(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_main_lb", nil),
 					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_main_lb", "backupvserver", "bkpnew"),
+				),
+			},
+			// Remove backupvserver attribute entirely
+			{
+				Config: testAccLbvserver_backupvserver_step4,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_main_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_main_lb", "backupvserver", ""),
 				),
 			},
 		},
