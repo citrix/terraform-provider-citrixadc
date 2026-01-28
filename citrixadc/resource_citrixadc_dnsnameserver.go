@@ -247,7 +247,6 @@ func deleteDnsnameserverFunc(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		d.SetId("")
-
 		return nil
 	}
 
