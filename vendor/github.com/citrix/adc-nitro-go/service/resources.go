@@ -1036,6 +1036,7 @@ const (
 	Vpnvserver_aaapreauthenticationpolicy_binding
 	Vpnvserver_appcontroller_binding
 	Vpnvserver_appflowpolicy_binding
+	Vpnvserver_appfwpolicy_binding
 	Vpnvserver_auditnslogpolicy_binding
 	Vpnvserver_auditsyslogpolicy_binding
 	Vpnvserver_authenticationcertpolicy_binding
