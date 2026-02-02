@@ -135,37 +135,22 @@ func readDnsnameserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 	name := idSlice[0]
 	dns_type := idSlice[1]
 
-	// When type is UDP_TCP, the ADC creates two separate entries (UDP and TCP)
-	// We need to check for both entries
-	var typesToCheck []string
-	if dns_type == "UDP_TCP" {
-		typesToCheck = []string{"UDP", "TCP"}
-	} else {
-		typesToCheck = []string{dns_type}
-	}
-
 	foundIndex := -1
-	for _, checkType := range typesToCheck {
-		for i, dnsnameserver := range dataArray {
-			match := false
-			if dnsnameserver["ip"] == name || dnsnameserver["dnsvservername"] == name {
-				match = true
-			}
-			if match == true {
-				if dnsnameserver["type"] != checkType {
-					match = false
-				}
-			}
-			if match {
-				foundIndex = i
-				break
+	for i, dnsnameserver := range dataArray {
+		match := false
+		if dnsnameserver["ip"] == name || dnsnameserver["dnsvservername"] == name {
+			match = true
+		}
+		if match == true {
+			if dnsnameserver["type"] != dns_type {
+				match = false
 			}
 		}
-		if foundIndex != -1 {
+		if match {
+			foundIndex = i
 			break
 		}
 	}
-
 	if foundIndex == -1 {
 		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams dnsnameserver not found in array")
 		log.Printf("[WARN] citrixadc-provider: Clearing dnsnameserver state %s", PrimaryId)
@@ -179,8 +164,7 @@ func readDnsnameserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 	// attribute local is not part of GET response.
 	d.Set("local", d.Get("local").(bool))
 	d.Set("state", data["state"])
-	// Keep the original type from config (UDP_TCP) rather than the individual entry type
-	d.Set("type", dns_type)
+	d.Set("type", data["type"])
 
 	return nil
 
@@ -240,6 +224,7 @@ func deleteDnsnameserverFunc(ctx context.Context, d *schema.ResourceData, meta i
 	Name := idSlice[0]
 	dns_type := idSlice[1]
 
+	argsMap := make(map[string]string)
 	if val, ok := d.GetOk("dnsvservername"); ok && Name == val { // if the user gives `dnsvservername`, then we need to directly call delete operation.
 		err := client.DeleteResource(service.Dnsnameserver.Type(), Name)
 		if err != nil {
@@ -247,24 +232,17 @@ func deleteDnsnameserverFunc(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		d.SetId("")
+
 		return nil
 	}
-
-	// When type is UDP_TCP, we need to delete both UDP and TCP entries
-	var typesToDelete []string
-	if dns_type == "UDP_TCP" {
-		typesToDelete = []string{"UDP", "TCP"}
+	if val, ok := d.GetOk("type"); ok {
+		argsMap["type"] = url.QueryEscape(val.(string))
 	} else {
-		typesToDelete = []string{dns_type}
+		argsMap["type"] = dns_type
 	}
-
-	for _, deleteType := range typesToDelete {
-		argsMap := make(map[string]string)
-		argsMap["type"] = url.QueryEscape(deleteType)
-		err := client.DeleteResourceWithArgsMap(service.Dnsnameserver.Type(), Name, argsMap)
-		if err != nil {
-			return diag.FromErr(err)
-		}
+	err := client.DeleteResourceWithArgsMap(service.Dnsnameserver.Type(), Name, argsMap)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
