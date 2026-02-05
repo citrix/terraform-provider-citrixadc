@@ -112,12 +112,12 @@ func readSslvserver_sslcertkey_bindingFunc(ctx context.Context, d *schema.Resour
 			ca = idSlice[3] == "true"
 		} else {
 			ca = d.Get("ca").(bool)
-			bindingId = fmt.Sprintf("%s,%t,%t", bindingId, snicert, ca)
+			bindingId = fmt.Sprintf("%s,%s,%t,%t", vservername, certkeyname, snicert, ca)
 			d.SetId(bindingId)
 		}
 	} else {
 		snicert = d.Get("snicert").(bool)
-		ca := d.Get("ca").(bool)
+		ca = d.Get("ca").(bool)
 		bindingId = fmt.Sprintf("%s,%t,%t", bindingId, snicert, ca)
 		d.SetId(bindingId)
 	}
