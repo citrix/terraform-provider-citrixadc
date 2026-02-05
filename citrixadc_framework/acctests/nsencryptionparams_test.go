@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsencryptionparams_basic = `
@@ -95,4 +96,30 @@ func testAccCheckNsencryptionparamsExist(n string, id *string) resource.TestChec
 
 		return nil
 	}
+}
+
+const testAccNsencryptionparamsDataSource_basic = `
+
+resource "citrixadc_nsencryptionparams" "tf_nsencryptionparams" {
+	method = "AES256"
+}
+
+data "citrixadc_nsencryptionparams" "tf_nsencryptionparams_ds" {
+	depends_on = [citrixadc_nsencryptionparams.tf_nsencryptionparams]
+}
+`
+
+func TestAccNsencryptionparamsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsencryptionparamsDataSource_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsencryptionparams.tf_nsencryptionparams_ds", "method", "AES256"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsencryptionparams.tf_nsencryptionparams_ds", "id"),
+				),
+			},
+		},
+	})
 }

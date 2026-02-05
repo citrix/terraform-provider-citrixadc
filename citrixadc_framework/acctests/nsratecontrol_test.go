@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsratecontrol_add = `
@@ -102,4 +103,35 @@ func testAccCheckNsratecontrolExist(n string, id *string) resource.TestCheckFunc
 
 		return nil
 	}
+}
+
+const testAccNsratecontrolDataSource_basic = `
+	resource "citrixadc_nsratecontrol" "tf_nsratecontrol" {
+		tcpthreshold    = 15
+		udpthreshold    = 20
+		icmpthreshold   = 105
+		tcprstthreshold = 110
+	}
+
+	data "citrixadc_nsratecontrol" "tf_nsratecontrol" {
+		depends_on = [citrixadc_nsratecontrol.tf_nsratecontrol]
+	}
+`
+
+func TestAccNsratecontrolDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsratecontrolDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsratecontrol.tf_nsratecontrol", "tcpthreshold", "15"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsratecontrol.tf_nsratecontrol", "udpthreshold", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsratecontrol.tf_nsratecontrol", "icmpthreshold", "105"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsratecontrol.tf_nsratecontrol", "tcprstthreshold", "110"),
+				),
+			},
+		},
+	})
 }

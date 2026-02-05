@@ -238,3 +238,42 @@ resource "citrixadc_systemgroup" "tf_systemgroup" {
 
 
 `
+
+const testAccSystemgroupDataSource_basic = `
+resource "citrixadc_systemparameter" "tf_systemparameter_ds" {
+    passwordhistorycontrol = "ENABLED"
+}
+
+resource "citrixadc_systemgroup" "tf_systemgroup_ds" {
+    groupname = "tf_datasource_group"
+    timeout = 999
+    promptstring = "test>"
+    warnpriorndays = 10
+    daystoexpire = 45
+    depends_on = [citrixadc_systemparameter.tf_systemparameter_ds]
+}
+
+data "citrixadc_systemgroup" "tf_systemgroup_datasource" {
+    groupname = citrixadc_systemgroup.tf_systemgroup_ds.groupname
+}
+`
+
+func TestAccSystemgroupDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemgroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup.tf_systemgroup_datasource", "groupname", "tf_datasource_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup.tf_systemgroup_datasource", "timeout", "999"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup.tf_systemgroup_datasource", "promptstring", "test>"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup.tf_systemgroup_datasource", "warnpriorndays", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup.tf_systemgroup_datasource", "daystoexpire", "45"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemgroup.tf_systemgroup_datasource", "id"),
+				),
+			},
+		},
+	})
+}

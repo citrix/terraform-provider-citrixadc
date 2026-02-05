@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNslicenseparameters_add = `
@@ -111,4 +112,39 @@ func testAccCheckNslicenseparametersExist(n string, id *string) resource.TestChe
 
 		return nil
 	}
+}
+
+const testAccNslicenseparametersDataSource_basic = `
+
+	resource "citrixadc_nslicenseparameters" "tf_nslicenseparameters" {
+		alert1gracetimeout       = 10
+		alert2gracetimeout       = 250
+		heartbeatinterval        = 270
+		inventoryrefreshinterval = 400
+		licenseexpiryalerttime   = 40
+	}
+	
+	data "citrixadc_nslicenseparameters" "tf_nslicenseparameters" {
+		depends_on = [citrixadc_nslicenseparameters.tf_nslicenseparameters]
+	}
+`
+
+func TestAccNslicenseparametersDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNslicenseparametersDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nslicenseparameters.tf_nslicenseparameters", "alert1gracetimeout", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslicenseparameters.tf_nslicenseparameters", "alert2gracetimeout", "250"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslicenseparameters.tf_nslicenseparameters", "heartbeatinterval", "270"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslicenseparameters.tf_nslicenseparameters", "inventoryrefreshinterval", "400"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslicenseparameters.tf_nslicenseparameters", "licenseexpiryalerttime", "40"),
+				),
+			},
+		},
+	})
 }

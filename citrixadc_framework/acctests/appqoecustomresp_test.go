@@ -17,22 +17,48 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppqoecustomresp_basic = `
 
+	resource "citrixadc_systemfile" "tf_customresp_file" {
+		filename = "tf_customresp.html"
+		filelocation = "/var/tmp"
+		filecontent = "<h1>Custom Response Page</h1>"
+	}
+
 	resource "citrixadc_appqoecustomresp" "tf_appqoecustomresp" {
 		name   = "my_appqoecustomresp"
-		src   = "local://index.html"
+		src   = "local://tf_customresp.html"
+		depends_on = [citrixadc_systemfile.tf_customresp_file]
+	}
+`
+
+const testAccAppqoecustomrespDataSource_basic = `
+
+	resource "citrixadc_systemfile" "tf_customresp_file" {
+		filename = "tf_customresp_ds.html"
+		filelocation = "/var/tmp"
+		filecontent = "<h1>Custom Response Page DataSource</h1>"
+	}
+
+	resource "citrixadc_appqoecustomresp" "tf_appqoecustomresp" {
+		name   = "my_appqoecustomresp_ds"
+		src   = "local://tf_customresp_ds.html"
+		depends_on = [citrixadc_systemfile.tf_customresp_file]
+	}
+	
+	data "citrixadc_appqoecustomresp" "tf_appqoecustomresp" {
+		name = citrixadc_appqoecustomresp.tf_appqoecustomresp.name
 	}
 `
 
 func TestAccAppqoecustomresp_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -112,12 +138,43 @@ func testAccCheckAppqoecustomrespDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Appqoecustomresp.Type(), rs.Primary.ID)
-		if err == nil {
+		dataArr, err := client.FindAllResources(service.Appqoecustomresp.Type())
+		if err != nil {
+			return err
+		}
+		if len(dataArr) == 0 {
+			return nil
+		}
+
+		found := false
+		for _, v := range dataArr {
+			if v["name"].(string) == rs.Primary.ID {
+				found = true
+				break
+			}
+		}
+		if found {
 			return fmt.Errorf("appqoecustomresp %s still exists", rs.Primary.ID)
 		}
 
 	}
 
 	return nil
+}
+
+func TestAccAppqoecustomrespDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoecustomrespDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppqoecustomrespDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appqoecustomresp.tf_appqoecustomresp", "name", "my_appqoecustomresp_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_appqoecustomresp.tf_appqoecustomresp", "src", "tf_customresp_ds.html"),
+				),
+			},
+		},
+	})
 }

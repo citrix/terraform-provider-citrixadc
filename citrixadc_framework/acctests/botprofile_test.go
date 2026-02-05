@@ -204,3 +204,55 @@ resource "citrixadc_botprofile" "tf_botprofile" {
 	bot_enable_tps = "OFF"
 }
 `
+
+func TestAccBotprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "name", "tf_botprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "addcookieflags", "secure"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "dfprequestlimit", "25"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "headlessbrowserdetection", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "sessioncookiename", "dsCookie"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "sessiontimeout", "1200"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "verboseloglevel", "HTTP_FULL_HEADER"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "comment", "DATASOURCE TEST COMMENT"),
+				),
+			},
+		},
+	})
+}
+
+const testAccBotprofileDataSource_basic = `
+
+resource "citrixadc_botprofile" "tf_botprofile_ds" {
+	name = "tf_botprofile_ds"
+	errorurl = "http://www.citrix.com"
+	trapurl = "/http://www.citrix.com"
+	comment = "DATASOURCE TEST COMMENT"
+	bot_enable_white_list = "ON"
+	bot_enable_black_list = "ON"
+	bot_enable_rate_limit = "ON"
+	devicefingerprint = "ON"
+	bot_enable_ip_reputation = "ON"
+	trap = "ON"
+	bot_enable_tps = "ON"
+	addcookieflags = "secure"
+	dfprequestlimit = "25"
+	headlessbrowserdetection = "ON"
+	sessioncookiename = "dsCookie"
+	sessiontimeout = "1200"
+	verboseloglevel = "HTTP_FULL_HEADER"
+}
+
+data "citrixadc_botprofile" "tf_botprofile_ds" {
+	name = citrixadc_botprofile.tf_botprofile_ds.name
+	depends_on = [citrixadc_botprofile.tf_botprofile_ds]
+}
+
+`

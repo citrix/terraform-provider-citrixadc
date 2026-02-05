@@ -17,16 +17,28 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpneula_basic = `
 
 	resource "citrixadc_vpneula" "tf_vpneula" {
 		name = "tf_vpneula"	
+	}
+`
+
+const testAccVpneulaDataSource_basic = `
+
+	resource "citrixadc_vpneula" "tf_vpneula" {
+		name = "tf_vpneula"	
+	}
+
+	data "citrixadc_vpneula" "tf_vpneula" {
+		name = citrixadc_vpneula.tf_vpneula.name
 	}
 `
 
@@ -108,4 +120,20 @@ func testAccCheckVpneulaDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpneulaDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpneulaDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpneula.tf_vpneula", "name", "tf_vpneula"),
+				),
+			},
+		},
+	})
 }

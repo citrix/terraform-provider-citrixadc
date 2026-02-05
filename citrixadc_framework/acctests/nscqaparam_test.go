@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNscqaparam_basic = `
@@ -123,4 +124,45 @@ func testAccCheckNscqaparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccNscqaparamDataSource_basic = `
+
+
+	resource "citrixadc_nscqaparam" "tf_nscqaparam" {
+		harqretxdelay = 5
+		net1label = "2g"
+		minrttnet1 = 25
+		lr1coeflist = "intercept=4.95,thruputavg=5.92,iaiavg=-189.48,rttmin=-15.75,loaddelayavg=0.01,noisedelayavg=-2.59"
+		lr1probthresh = 0.2
+		net1cclscale = "25,50,75"
+		net1csqscale = "25,50,75"
+		net1logcoef = " 1.49,3.62,-0.14,1.84,4.83"
+		net2label = "3g"
+		net3label = "4g"
+	}
+
+	data "citrixadc_nscqaparam" "tf_nscqaparam" {
+		depends_on = [citrixadc_nscqaparam.tf_nscqaparam]
+	}
+`
+
+func TestAccNscqaparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNscqaparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nscqaparam.tf_nscqaparam", "harqretxdelay", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_nscqaparam.tf_nscqaparam", "net1label", "2g"),
+					resource.TestCheckResourceAttr("data.citrixadc_nscqaparam.tf_nscqaparam", "net2label", "3g"),
+					resource.TestCheckResourceAttr("data.citrixadc_nscqaparam.tf_nscqaparam", "net3label", "4g"),
+					resource.TestCheckResourceAttr("data.citrixadc_nscqaparam.tf_nscqaparam", "minrttnet1", "25"),
+				),
+			},
+		},
+	})
 }

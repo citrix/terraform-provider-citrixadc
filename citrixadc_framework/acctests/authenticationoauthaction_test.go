@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationoauthaction_add = `
@@ -139,4 +140,39 @@ func testAccCheckAuthenticationoauthactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationoauthactionDataSource_basic = `
+
+	resource "citrixadc_authenticationoauthaction" "tf_authenticationoauthaction_ds" {
+		name                  = "tf_authenticationoauthaction_ds"
+		authorizationendpoint = "https://example.com/auth"
+		tokenendpoint         = "https://example.com/token"
+		clientid              = "datasource_test_id"
+		clientsecret          = "datasource_test_secret"
+		resourceuri           = "http://www.datasourcetest.com"
+	}
+
+	data "citrixadc_authenticationoauthaction" "tf_authenticationoauthaction_ds" {
+		name = citrixadc_authenticationoauthaction.tf_authenticationoauthaction_ds.name
+	}
+`
+
+func TestAccAuthenticationoauthactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationoauthactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthaction.tf_authenticationoauthaction_ds", "name", "tf_authenticationoauthaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthaction.tf_authenticationoauthaction_ds", "authorizationendpoint", "https://example.com/auth"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthaction.tf_authenticationoauthaction_ds", "tokenendpoint", "https://example.com/token"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthaction.tf_authenticationoauthaction_ds", "clientid", "datasource_test_id"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthaction.tf_authenticationoauthaction_ds", "resourceuri", "http://www.datasourcetest.com"),
+				),
+			},
+		},
+	})
 }

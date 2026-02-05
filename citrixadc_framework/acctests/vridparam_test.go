@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVridparam_add = `
@@ -104,4 +105,35 @@ func testAccCheckVridparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccVridparamDataSource_basic = `
+
+	resource "citrixadc_vridparam" "tf_vridparam" {
+		sendtomaster  = "ENABLED"
+		hellointerval = 400
+		deadinterval  = 4
+	}
+
+data "citrixadc_vridparam" "tf_vridparam" {
+	depends_on = [citrixadc_vridparam.tf_vridparam]
+}
+`
+
+func TestAccVridparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVridparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vridparam.tf_vridparam", "sendtomaster", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vridparam.tf_vridparam", "hellointerval", "400"),
+					resource.TestCheckResourceAttr("data.citrixadc_vridparam.tf_vridparam", "deadinterval", "4"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnsnaptrrec_basic = `
@@ -32,6 +33,21 @@ resource "citrixadc_dnsnaptrrec" "dnsnaptrrec" {
 	ttl        = 3600
 	replacement = "example1.com"
 	}
+`
+
+const testAccDnsnaptrrecDataSource_basic = `
+
+resource "citrixadc_dnsnaptrrec" "dnsnaptrrec" {
+	domain     = "example.com"
+	order      = 10
+	preference = 2
+	ttl        = 3600
+	replacement = "example1.com"
+}
+
+data "citrixadc_dnsnaptrrec" "dnsnaptrrec" {
+	domain = citrixadc_dnsnaptrrec.dnsnaptrrec.domain
+}
 `
 
 func TestAccDnsnaptrrec_basic(t *testing.T) {
@@ -118,4 +134,24 @@ func testAccCheckDnsnaptrrecDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnsnaptrrecDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsnaptrrecDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnaptrrec.dnsnaptrrec", "domain", "example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnaptrrec.dnsnaptrrec", "order", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnaptrrec.dnsnaptrrec", "preference", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnaptrrec.dnsnaptrrec", "ttl", "3600"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnaptrrec.dnsnaptrrec", "replacement", "example1.com"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsnaptrrec.dnsnaptrrec", "id"),
+				),
+			},
+		},
+	})
 }

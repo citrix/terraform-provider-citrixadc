@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCachepolicy_basic = `
@@ -138,3 +139,38 @@ func testAccCheckCachepolicyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccCachepolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCachepolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cachepolicy.tf_cachepolicy_ds", "policyname", "tf_cachepolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_cachepolicy.tf_cachepolicy_ds", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_cachepolicy.tf_cachepolicy_ds", "action", "CACHE"),
+					resource.TestCheckResourceAttr("data.citrixadc_cachepolicy.tf_cachepolicy_ds", "undefaction", "NOCACHE"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCachepolicyDataSource_basic = `
+
+resource "citrixadc_cachepolicy" "tf_cachepolicy_ds" {
+    policyname  = "tf_cachepolicy_ds"
+    rule        = "true"
+    action      = "CACHE"
+    undefaction = "NOCACHE"
+}
+
+data "citrixadc_cachepolicy" "tf_cachepolicy_ds" {
+    policyname = citrixadc_cachepolicy.tf_cachepolicy_ds.policyname
+    depends_on = [citrixadc_cachepolicy.tf_cachepolicy_ds]
+}
+
+`

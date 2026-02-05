@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnsptrrec_basic = `
@@ -113,4 +114,34 @@ func testAccCheckDnsptrrecDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccDnsptrrecDataSource_basic = `
+
+resource "citrixadc_dnsptrrec" "tf_dnsptrrec" {
+	reversedomain = "0.2.0.192.in-addr.arpa"
+	domain        = "example.com"
+	ttl           = 3600
+}
+
+data "citrixadc_dnsptrrec" "tf_dnsptrrec" {
+	reversedomain = citrixadc_dnsptrrec.tf_dnsptrrec.reversedomain
+}
+`
+
+func TestAccDnsptrrecDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsptrrecDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsptrrec.tf_dnsptrrec", "reversedomain", "0.2.0.192.in-addr.arpa"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsptrrec.tf_dnsptrrec", "domain", "example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsptrrec.tf_dnsptrrec", "ttl", "3600"),
+				),
+			},
+		},
+	})
 }

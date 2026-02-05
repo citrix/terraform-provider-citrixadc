@@ -199,3 +199,49 @@ func testAccCheckDnsnameserverDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccDnsnameserverDataSource_basic = `
+	resource "citrixadc_dnsprofile" "dnsprofile" {
+		dnsprofilename         = "tf_profile_ds1"
+		dnsquerylogging        = "DISABLED"
+		dnsanswerseclogging    = "DISABLED"
+		dnsextendedlogging     = "DISABLED"
+		dnserrorlogging        = "DISABLED"
+		cacherecords           = "ENABLED"
+		cachenegativeresponses = "ENABLED"
+		dropmultiqueryrequest  = "DISABLED"
+		cacheecsresponses      = "DISABLED"
+	}
+
+	resource "citrixadc_dnsnameserver" "dnsnameserver" {
+		ip 				= "192.0.2.1"
+		local 			= true
+		state 			= "DISABLED"
+		type 			= "UDP"
+		dnsprofilename 	= citrixadc_dnsprofile.dnsprofile.dnsprofilename
+	}
+
+	data "citrixadc_dnsnameserver" "dnsnameserver_ds" {
+		ip = citrixadc_dnsnameserver.dnsnameserver.ip
+		type = citrixadc_dnsnameserver.dnsnameserver.type
+	}
+`
+
+func TestAccDnsnameserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsnameserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnameserver.dnsnameserver_ds", "ip", "192.0.2.1"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnameserver.dnsnameserver_ds", "type", "UDP"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnameserver.dnsnameserver_ds", "local", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnameserver.dnsnameserver_ds", "state", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnameserver.dnsnameserver_ds", "dnsprofilename", "tf_profile_ds1"),
+				),
+			},
+		},
+	})
+}

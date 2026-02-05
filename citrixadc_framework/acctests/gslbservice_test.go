@@ -496,3 +496,46 @@ resource "citrixadc_gslbservice" "tf_test_gslbservice" {
 
 }
 `
+
+func TestAccGslbserviceDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbserviceDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "servicename", "tf_gslbservice_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "ipaddress", "172.16.1.102"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "port", "80"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "sitename", "Site-DS-East-Coast"),
+				),
+			},
+		},
+	})
+}
+
+const testAccGslbserviceDataSource_basic = `
+
+resource "citrixadc_gslbsite" "tf_gslbsite_ds" {
+  siteipaddress = "172.31.11.21"
+  sitename      = "Site-DS-East-Coast"
+  sitepassword  = "password123"
+}
+
+resource "citrixadc_gslbservice" "tf_gslbservice_ds" {
+  ip          = "172.16.1.102"
+  port        = "80"
+  servicename = "tf_gslbservice_ds"
+  servicetype = "HTTP"
+  sitename    = citrixadc_gslbsite.tf_gslbsite_ds.sitename
+}
+
+data "citrixadc_gslbservice" "tf_gslbservice_ds" {
+  servicename = citrixadc_gslbservice.tf_gslbservice_ds.servicename
+  depends_on  = [citrixadc_gslbservice.tf_gslbservice_ds]
+}
+
+`

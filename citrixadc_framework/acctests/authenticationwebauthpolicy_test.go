@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationwebauthpolicy_add = `
@@ -144,4 +145,42 @@ func testAccCheckAuthenticationwebauthpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationwebauthpolicyDataSource_basic = `
+	resource "citrixadc_authenticationwebauthaction" "tf_webauthaction" {
+		name                       = "tf_webauthaction"
+		serverip                   = "1.2.3.4"
+		serverport                 = 8080
+		fullreqexpr                = "TRUE"
+		scheme                     = "http"
+		successrule                = "http.RES.STATUS.EQ(200)"
+		defaultauthenticationgroup = "new_group"
+	}
+	resource "citrixadc_authenticationwebauthpolicy" "tf_webauthpolicy" {
+		name   = "tf_webauthpolicy_ds"
+		rule   = "NS_TRUE"
+		action = citrixadc_authenticationwebauthaction.tf_webauthaction.name
+	}
+
+	data "citrixadc_authenticationwebauthpolicy" "tf_webauthpolicy_ds" {
+		name = citrixadc_authenticationwebauthpolicy.tf_webauthpolicy.name
+	}
+`
+
+func TestAccAuthenticationwebauthpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationwebauthpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationwebauthpolicy.tf_webauthpolicy_ds", "name", "tf_webauthpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationwebauthpolicy.tf_webauthpolicy_ds", "rule", "NS_TRUE"),
+					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationwebauthpolicy.tf_webauthpolicy_ds", "action", "citrixadc_authenticationwebauthaction.tf_webauthaction", "name"),
+				),
+			},
+		},
+	})
 }

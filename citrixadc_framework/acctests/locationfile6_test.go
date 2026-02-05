@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLocationfile6_basic = `
@@ -33,7 +34,6 @@ resource "citrixadc_locationfile6" "tf_locationfile6" {
 `
 
 func TestAccLocationfile6_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource! No such resource")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -112,4 +112,32 @@ func testAccCheckLocationfile6Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLocationfile6DataSource_basic = `
+
+	resource "citrixadc_locationfile6" "tf_locationfile6" {
+		locationfile = "/var/netscaler/inbuilt_db/Citrix_Netscaler_InBuilt_GeoIP_DB_IPv6"
+		format       = "netscaler6"
+	}
+
+	data "citrixadc_locationfile6" "tf_locationfile6" {
+		depends_on = [citrixadc_locationfile6.tf_locationfile6]
+	}
+`
+
+func TestAccLocationfile6DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationfile6DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_locationfile6.tf_locationfile6", "locationfile", "/var/netscaler/inbuilt_db/Citrix_Netscaler_InBuilt_GeoIP_DB_IPv6"),
+					resource.TestCheckResourceAttr("data.citrixadc_locationfile6.tf_locationfile6", "format", "netscaler6"),
+				),
+			},
+		},
+	})
 }

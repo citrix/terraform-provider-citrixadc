@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"log"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"log"
-	"testing"
 )
 
 const testAccSnmpgroup_basic = `
@@ -157,3 +158,36 @@ func testAccCheckSnmpgroupDestroy(s *terraform.State) error {
 	}
 	return nil
 }
+
+func TestAccSnmpgroupDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpgroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "name", "tf_group_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "securitylevel", "noAuthNoPriv"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "readviewname", "tf_view_ds"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSnmpgroupDataSource_basic = `
+
+resource "citrixadc_snmpgroup" "tf_snmpgroup_ds" {
+	name          = "tf_group_ds"
+	securitylevel = "noAuthNoPriv"
+	readviewname  = "tf_view_ds"
+}
+
+data "citrixadc_snmpgroup" "tf_snmpgroup_ds" {
+	name = citrixadc_snmpgroup.tf_snmpgroup_ds.name
+	securitylevel = citrixadc_snmpgroup.tf_snmpgroup_ds.securitylevel
+	depends_on = [citrixadc_snmpgroup.tf_snmpgroup_ds]
+}
+`

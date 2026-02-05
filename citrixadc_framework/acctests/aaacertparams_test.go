@@ -105,3 +105,35 @@ func testAccCheckAaacertparamsExist(n string, id *string) resource.TestCheckFunc
 		return nil
 	}
 }
+
+const testAccAaacertparamsDataSource_basic = `
+
+
+	resource "citrixadc_aaacertparams" "tf_aaacertparams" {
+		usernamefield              = "Subject:CN"
+		groupnamefield             = "Subject:OU"
+		defaultauthenticationgroup = 50
+	}
+	
+	data "citrixadc_aaacertparams" "tf_aaacertparams" {
+		depends_on = [citrixadc_aaacertparams.tf_aaacertparams]
+	}
+`
+
+func TestAccAaacertparamsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaacertparamsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaacertparams.tf_aaacertparams", "usernamefield", "Subject:CN"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaacertparams.tf_aaacertparams", "groupnamefield", "Subject:OU"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaacertparams.tf_aaacertparams", "defaultauthenticationgroup", "50"),
+				),
+			},
+		},
+	})
+}

@@ -107,3 +107,30 @@ resource "citrixadc_systemextramgmtcpu" "tf_extramgmtcpu" {
 }
 
 `
+
+const testAccSystemextramgmtcpuDataSource_basic = `
+
+data "citrixadc_systemextramgmtcpu" "tf_extramgmtcpu" {
+}
+
+`
+
+func TestAccSystemextramgmtcpuDataSource_basic(t *testing.T) {
+	if isCpxRun {
+		t.Skip("CPX does not support the feature")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemextramgmtcpuDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemextramgmtcpu.tf_extramgmtcpu", "id", "systemextramgmtcpu-config"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemextramgmtcpu.tf_extramgmtcpu", "enabled", "false"),
+				),
+			},
+		},
+	})
+}

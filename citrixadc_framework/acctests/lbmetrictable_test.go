@@ -109,3 +109,32 @@ func testAccCheckLbmetrictableDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccLbmetrictableDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmetrictableDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable.tf_lbmetrictable_ds", "metrictable", "tf_lbmetrictable_ds"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbmetrictableDataSource_basic = `
+
+resource "citrixadc_lbmetrictable" "tf_lbmetrictable_ds" {
+  metrictable = "tf_lbmetrictable_ds"
+}
+
+data "citrixadc_lbmetrictable" "tf_lbmetrictable_ds" {
+  metrictable = citrixadc_lbmetrictable.tf_lbmetrictable_ds.metrictable
+  depends_on  = [citrixadc_lbmetrictable.tf_lbmetrictable_ds]
+}
+
+`

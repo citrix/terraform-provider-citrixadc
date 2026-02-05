@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaatacacsparams_basic = `
@@ -112,4 +113,39 @@ func testAccCheckAaatacacsparamsExist(n string, id *string) resource.TestCheckFu
 
 		return nil
 	}
+}
+
+const testAccAaatacacsparamsDataSource_basic = `
+
+
+resource "citrixadc_aaatacacsparams" "tf_aaatacacsparams" {
+	serverip      = "10.222.74.158"
+	serverport    = 49
+	authtimeout   = 5
+	authorization = "OFF"
+	}
+
+	data "citrixadc_aaatacacsparams" "tf_aaatacacsparams" {
+		depends_on = [citrixadc_aaatacacsparams.tf_aaatacacsparams]
+	}
+  
+`
+
+func TestAccAaatacacsparamsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaatacacsparamsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaatacacsparams.tf_aaatacacsparams", "serverip", "10.222.74.158"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaatacacsparams.tf_aaatacacsparams", "serverport", "49"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaatacacsparams.tf_aaatacacsparams", "authtimeout", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaatacacsparams.tf_aaatacacsparams", "authorization", "OFF"),
+				),
+			},
+		},
+	})
 }

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAnalyticsprofile_basic = `
@@ -133,4 +134,37 @@ func testAccCheckAnalyticsprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAnalyticsprofileDataSource_basic = `
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name             = "my_analyticsprofile"
+		type             = "webinsight"
+		httppagetracking = "DISABLED"
+		httpurl          = "DISABLED"
+	}
+	
+	data "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+`
+
+func TestAccAnalyticsprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyticsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyticsprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_analyticsprofile.tf_analyticsprofile", "name", "my_analyticsprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_analyticsprofile.tf_analyticsprofile", "type", "webinsight"),
+					resource.TestCheckResourceAttr("data.citrixadc_analyticsprofile.tf_analyticsprofile", "httppagetracking", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_analyticsprofile.tf_analyticsprofile", "httpurl", "DISABLED"),
+				),
+			},
+		},
+	})
 }

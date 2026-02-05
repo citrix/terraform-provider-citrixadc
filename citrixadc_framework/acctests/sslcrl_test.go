@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSslcrl_basic = `
@@ -28,6 +29,18 @@ const testAccSslcrl_basic = `
 		crlname = "tf_sslcrl"
 		crlpath = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
 		cacert  = "rootrsa_cert1"
+	}
+`
+
+const testAccSslcrlDataSource_basic = `
+	resource "citrixadc_sslcrl" "tf_sslcrl" {
+		crlname = "tf_sslcrl"
+		crlpath = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+		cacert  = "rootrsa_cert1"
+	}
+
+	data "citrixadc_sslcrl" "tf_sslcrl" {
+		crlname = citrixadc_sslcrl.tf_sslcrl.crlname
 	}
 `
 
@@ -109,4 +122,22 @@ func testAccCheckSslcrlDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSslcrlDataSource_basic(t *testing.T) {
+	t.Skipf("Find  a way to upload a CRL file to the ADC instance before running this test")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcrlDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslcrl.tf_sslcrl", "crlname", "tf_sslcrl"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcrl.tf_sslcrl", "crlpath", "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcrl.tf_sslcrl", "cacert", "rootrsa_cert1"),
+				),
+			},
+		},
+	})
 }

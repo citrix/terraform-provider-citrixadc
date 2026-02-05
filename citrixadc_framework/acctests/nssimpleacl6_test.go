@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNssimpleacl6_basic = `
@@ -117,3 +118,37 @@ func testAccCheckNssimpleacl6Destroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccNssimpleacl6DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNssimpleacl6DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nssimpleacl6.tf_simpleacl6_ds", "aclname", "tf_simpleacl6_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nssimpleacl6.tf_simpleacl6_ds", "aclaction", "DENY"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNssimpleacl6DataSource_basic = `
+
+	resource "citrixadc_nssimpleacl6" "tf_simpleacl6_ds" {
+		aclname   = "tf_simpleacl6_ds"
+		aclaction = "DENY"
+		srcipv6   = "2001:db8:1::1"
+		protocol  = "TCP"
+		destport  = 443
+		ttl       = 7200
+	}
+
+	data "citrixadc_nssimpleacl6" "tf_simpleacl6_ds" {
+		aclname    = citrixadc_nssimpleacl6.tf_simpleacl6_ds.aclname
+		depends_on = [citrixadc_nssimpleacl6.tf_simpleacl6_ds]
+	}
+`

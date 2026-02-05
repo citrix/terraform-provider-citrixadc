@@ -129,3 +129,30 @@ func testAccCheckResponderparamDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccResponderparamDataSource_basic = `
+resource "citrixadc_responderparam" "tf_responderparam_ds" {
+    timeout = 7
+    undefaction = "DROP"
+}
+
+data "citrixadc_responderparam" "tf_responderparam_ds" {
+  depends_on = [citrixadc_responderparam.tf_responderparam_ds]
+}
+`
+
+func TestAccResponderparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_responderparam.tf_responderparam_ds", "timeout", "7"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderparam.tf_responderparam_ds", "undefaction", "DROP"),
+				),
+			},
+		},
+	})
+}

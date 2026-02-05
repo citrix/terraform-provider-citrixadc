@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccFeoaction_basic = `
@@ -134,3 +135,44 @@ func testAccCheckFeoactionDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccFeoactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeoactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "name", "tf_feoaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "cachemaxage", "60"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "imgshrinktoattrib", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "imggiftopng", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "cssminify", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "jsminify", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "htmlminify", "true"),
+				),
+			},
+		},
+	})
+}
+
+const testAccFeoactionDataSource_basic = `
+
+resource "citrixadc_feoaction" "tf_feoaction_ds" {
+    name              = "tf_feoaction_ds"
+    cachemaxage       = 60
+    imgshrinktoattrib = "true"
+    imggiftopng       = "true"
+    cssminify         = "true"
+    jsminify          = "true"
+    htmlminify        = "true"
+}
+
+data "citrixadc_feoaction" "tf_feoaction_ds" {
+    name = citrixadc_feoaction.tf_feoaction_ds.name
+    depends_on = [citrixadc_feoaction.tf_feoaction_ds]
+}
+
+`

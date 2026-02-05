@@ -128,3 +128,35 @@ func testAccCheckAppfwfieldtypeDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccAppfwfieldtypeDataSource_basic = `
+resource "citrixadc_appfwfieldtype" "tfAcc_appfwfieldtype" {
+	name = "tfAcc_appfwfieldtype_ds"
+	regex = "test_.*regex_ds"
+	priority = "100"
+	comment = "Test datasource comment"
+}
+
+data "citrixadc_appfwfieldtype" "tfAcc_appfwfieldtype" {
+	name = citrixadc_appfwfieldtype.tfAcc_appfwfieldtype.name
+}
+`
+
+func TestAccAppfwfieldtypeDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwfieldtypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwfieldtypeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "name", "tfAcc_appfwfieldtype_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "regex", "test_.*regex_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "comment", "Test datasource comment"),
+				),
+			},
+		},
+	})
+}

@@ -169,3 +169,38 @@ func testAccCheckAppfwconfidfieldDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccAppfwconfidfieldDataSource_basic = `
+	resource "citrixadc_appfwconfidfield" "tf_confidfield1" {
+		fieldname = "tf_confidfield"
+		url       = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		isregex   = "REGEX"
+		comment   = "Testing"
+		state     = "DISABLED"
+	}
+
+	data "citrixadc_appfwconfidfield" "tf_confidfield1" {
+		fieldname = citrixadc_appfwconfidfield.tf_confidfield1.fieldname
+		url       = citrixadc_appfwconfidfield.tf_confidfield1.url
+	}
+`
+
+func TestAccAppfwconfidfieldDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwconfidfieldDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwconfidfield.tf_confidfield1", "fieldname", "tf_confidfield"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwconfidfield.tf_confidfield1", "url", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwconfidfield.tf_confidfield1", "isregex", "REGEX"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwconfidfield.tf_confidfield1", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwconfidfield.tf_confidfield1", "state", "DISABLED"),
+				),
+			},
+		},
+	})
+}

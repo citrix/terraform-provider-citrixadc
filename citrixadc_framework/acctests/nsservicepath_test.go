@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsservicepath_basic = `
@@ -109,3 +110,31 @@ func testAccCheckNsservicepathDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccNsservicepathDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsservicepathDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsservicepath.tf_servicepath_ds", "servicepathname", "tf_servicepath_ds"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsservicepathDataSource_basic = `
+
+	resource "citrixadc_nsservicepath" "tf_servicepath_ds" {
+		servicepathname = "tf_servicepath_ds"
+	}
+
+	data "citrixadc_nsservicepath" "tf_servicepath_ds" {
+		servicepathname = citrixadc_nsservicepath.tf_servicepath_ds.servicepathname
+		depends_on      = [citrixadc_nsservicepath.tf_servicepath_ds]
+	}
+`

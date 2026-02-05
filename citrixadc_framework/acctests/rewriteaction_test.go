@@ -127,3 +127,34 @@ resource "citrixadc_rewriteaction" "tf_rewrite_action" {
     type = "delete"
 }
 `
+
+const testAccRewriteactionDataSource_basic = `
+resource "citrixadc_rewriteaction" "tf_rewrite_action_ds" {
+    name = "tf_rewrite_action_ds"
+    target = "HTTP.REQ.HOSTNAME"
+    type = "delete"
+    comment = "datasource test comment"
+}
+
+data "citrixadc_rewriteaction" "tf_rewrite_action_ds" {
+  name = citrixadc_rewriteaction.tf_rewrite_action_ds.name
+}
+`
+
+func TestAccRewriteactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewriteactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteaction.tf_rewrite_action_ds", "name", "tf_rewrite_action_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteaction.tf_rewrite_action_ds", "type", "delete"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteaction.tf_rewrite_action_ds", "target", "HTTP.REQ.HOSTNAME"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteaction.tf_rewrite_action_ds", "comment", "datasource test comment"),
+				),
+			},
+		},
+	})
+}

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccGslbparameter_basic = `
@@ -110,4 +111,37 @@ func testAccCheckGslbparameterExist(n string, id *string) resource.TestCheckFunc
 
 		return nil
 	}
+}
+
+const testAccGslbparameterDataSource_basic = `
+
+	resource "citrixadc_gslbparameter" "tf_gslbparameter" {
+		ldnsentrytimeout = 50
+		rtttolerance     = 6
+		ldnsmask         = "255.255.255.255"
+		gslbsyncsaveconfigcommand = "DISABLED"
+	}
+
+	data "citrixadc_gslbparameter" "tf_gslbparameter" {
+		depends_on = [citrixadc_gslbparameter.tf_gslbparameter]
+	}
+`
+
+func TestAccGslbparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout", "50"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance", "6"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask", "255.255.255.255"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbparameter.tf_gslbparameter", "gslbsyncsaveconfigcommand", "DISABLED"),
+				),
+			},
+		},
+	})
 }

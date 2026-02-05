@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLldpparam_basic = `
@@ -101,4 +102,34 @@ func testAccCheckLldpparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccLldpparamDataSource_basic = `
+	resource "citrixadc_lldpparam" "tf_lldpparam" {
+		holdtimetxmult = 3
+		mode           = "TRANSMITTER"
+		timer          = 40
+	}
+
+	data "citrixadc_lldpparam" "tf_lldpparam" {
+		depends_on = [citrixadc_lldpparam.tf_lldpparam]
+	}
+`
+
+func TestAccLldpparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLldpparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lldpparam.tf_lldpparam", "holdtimetxmult", "3"),
+					resource.TestCheckResourceAttr("data.citrixadc_lldpparam.tf_lldpparam", "mode", "TRANSMITTER"),
+					resource.TestCheckResourceAttr("data.citrixadc_lldpparam.tf_lldpparam", "timer", "40"),
+				),
+			},
+		},
+	})
 }

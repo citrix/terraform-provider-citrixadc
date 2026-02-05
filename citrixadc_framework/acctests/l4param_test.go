@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccL4param_add = `
@@ -98,4 +99,33 @@ func testAccCheckL4paramExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccL4paramDataSource_basic = `
+
+	resource "citrixadc_l4param" "tf_l4param" {
+		l2connmethod = "Channel"
+		l4switch     = "ENABLED"
+	}
+
+	data "citrixadc_l4param" "tf_l4param" {
+		depends_on = [citrixadc_l4param.tf_l4param]
+	}
+`
+
+func TestAccL4paramDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccL4paramDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_l4param.tf_l4param", "l2connmethod", "Channel"),
+					resource.TestCheckResourceAttr("data.citrixadc_l4param.tf_l4param", "l4switch", "ENABLED"),
+				),
+			},
+		},
+	})
 }

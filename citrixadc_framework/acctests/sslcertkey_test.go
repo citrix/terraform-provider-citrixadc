@@ -482,3 +482,38 @@ func TestAccSslcertkey_autoUpdate(t *testing.T) {
 		},
 	})
 }
+
+const testAccSslcertkeyDataSource_basic = `
+
+resource "citrixadc_sslcertkey" "foo" {
+  certkey = "sample_ssl_cert"
+  cert = "/nsconfig/ssl/servercert1.cert"
+  key = "/nsconfig/ssl/servercert1.key"
+  notificationperiod = 40
+  expirymonitor = "ENABLED"
+}
+
+data "citrixadc_sslcertkey" "foo" {
+  certkey = citrixadc_sslcertkey.foo.certkey
+}
+`
+
+func TestAccSslcertkeyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertkeyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "certkey", "sample_ssl_cert"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "cert", "/nsconfig/ssl/servercert1.cert"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "key", "/nsconfig/ssl/servercert1.key"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "notificationperiod", "40"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "expirymonitor", "ENABLED"),
+				),
+			},
+		},
+	})
+}

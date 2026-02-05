@@ -191,3 +191,48 @@ resource "citrixadc_auditsyslogpolicy" "tf_syslogpolicy" {
 }
 
 `
+
+func TestAccAuditsyslogpolicyDataSource_basic(t *testing.T) {
+	if isCpxRun {
+		t.Skip("global binding causes issues with ADC version 12.0")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogpolicy.tf_syslogpolicy_ds", "name", "tf_auditsyslogpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogpolicy.tf_syslogpolicy_ds", "rule", "ns_true"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogpolicy.tf_syslogpolicy_ds", "action", "tf_syslogaction_ds"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditsyslogpolicy.tf_syslogpolicy_ds", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuditsyslogpolicyDataSource_basic = `
+
+resource "citrixadc_auditsyslogaction" "tf_syslogaction_ds" {
+    name = "tf_syslogaction_ds"
+    serverip = "10.78.60.33"
+    serverport = 514
+    loglevel = [
+        "ERROR",
+        "NOTICE",
+    ]
+}
+
+resource "citrixadc_auditsyslogpolicy" "tf_syslogpolicy_ds" {
+    name = "tf_auditsyslogpolicy_ds"
+    rule = "ns_true"
+    action = citrixadc_auditsyslogaction.tf_syslogaction_ds.name
+}
+
+data "citrixadc_auditsyslogpolicy" "tf_syslogpolicy_ds" {
+    name = citrixadc_auditsyslogpolicy.tf_syslogpolicy_ds.name
+}
+
+`

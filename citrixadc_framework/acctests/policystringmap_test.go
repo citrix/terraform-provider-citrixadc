@@ -125,3 +125,30 @@ func testAccCheckPolicystringmapDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccPolicystringmapDataSource_basic = `
+	resource "citrixadc_policystringmap" "tf_policystringmap_ds" {
+		name = "tf_policystringmap_ds"
+		comment = "datasource test stringmap"
+	}
+
+	data "citrixadc_policystringmap" "tf_policystringmap_ds" {
+		name = citrixadc_policystringmap.tf_policystringmap_ds.name
+	}
+`
+
+func TestAccPolicystringmapDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicystringmapDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_policystringmap.tf_policystringmap_ds", "name", "tf_policystringmap_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_policystringmap.tf_policystringmap_ds", "comment", "datasource test stringmap"),
+				),
+			},
+		},
+	})
+}

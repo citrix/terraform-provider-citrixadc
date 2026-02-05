@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccauditsyslogparams_basic = `
@@ -41,6 +42,21 @@ const testAccauditsyslogparams_update = `
 		tcp        = "NONE"
 		protocolviolations = "ALL"
 		streamanalytics = "ENABLED"
+	}
+`
+
+const testAccAuditsyslogparamsDataSource_basic = `
+
+	resource "citrixadc_auditsyslogparams" "tf_auditsyslogparams" {
+		dateformat = "DDMMYYYY"
+		loglevel   = ["EMERGENCY"]
+		tcp        = "ALL"
+		protocolviolations = "NONE"
+		streamanalytics = "DISABLED"
+	}
+
+	data "citrixadc_auditsyslogparams" "tf_auditsyslogparams_ds" {
+		depends_on = [citrixadc_auditsyslogparams.tf_auditsyslogparams]
 	}
 `
 
@@ -110,4 +126,23 @@ func testAccCheckauditsyslogparamsExist(n string, id *string) resource.TestCheck
 
 		return nil
 	}
+}
+
+func TestAccAuditsyslogparamsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogparamsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogparams.tf_auditsyslogparams_ds", "dateformat", "DDMMYYYY"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogparams.tf_auditsyslogparams_ds", "tcp", "ALL"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogparams.tf_auditsyslogparams_ds", "protocolviolations", "NONE"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogparams.tf_auditsyslogparams_ds", "streamanalytics", "DISABLED"),
+				),
+			},
+		},
+	})
 }

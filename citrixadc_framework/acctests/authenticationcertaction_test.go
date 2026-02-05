@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationcertaction_add = `
@@ -39,6 +40,21 @@ const testAccAuthenticationcertaction_update = `
 		defaultauthenticationgroup = "new_group"
 		usernamefield              = "Subject:CN"
 		groupnamefield             = "subject:grp"
+	}
+`
+
+const testAccAuthenticationcertactionDataSource_basic = `
+	resource "citrixadc_authenticationcertaction" "tf_certaction_ds" {
+		name                       = "tf_certaction_ds"
+		twofactor                  = "ON"
+		defaultauthenticationgroup = "test_group"
+		usernamefield              = "Subject:CN"
+		groupnamefield             = "subject:grp"
+	}
+
+	data "citrixadc_authenticationcertaction" "tf_certaction_ds" {
+		name = citrixadc_authenticationcertaction.tf_certaction_ds.name
+		depends_on = [citrixadc_authenticationcertaction.tf_certaction_ds]
 	}
 `
 
@@ -132,4 +148,24 @@ func testAccCheckAuthenticationcertactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationcertactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcertactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcertaction.tf_certaction_ds", "name", "tf_certaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcertaction.tf_certaction_ds", "twofactor", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcertaction.tf_certaction_ds", "defaultauthenticationgroup", "test_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcertaction.tf_certaction_ds", "usernamefield", "Subject:CN"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcertaction.tf_certaction_ds", "groupnamefield", "subject:grp"),
+				),
+			},
+		},
+	})
 }

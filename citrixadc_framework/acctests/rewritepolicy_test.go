@@ -532,3 +532,32 @@ resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
 
 }
 `
+
+func TestAccRewritepolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewritepolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicy.test", "name", "tf_rewritepolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicy.test", "action", "DROP"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rewritepolicy.test", "rule"),
+				),
+			},
+		},
+	})
+}
+
+const testAccRewritepolicyDataSource_basic = `
+resource "citrixadc_rewritepolicy" "test" {
+	name   = "tf_rewritepolicy_ds"
+	action = "DROP"
+	rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"test\")"
+}
+
+data "citrixadc_rewritepolicy" "test" {
+	name = citrixadc_rewritepolicy.test.name
+}
+`

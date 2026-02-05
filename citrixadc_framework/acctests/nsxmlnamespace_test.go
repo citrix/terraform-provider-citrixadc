@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsxmlnamespace_add = `
@@ -127,3 +128,31 @@ func testAccCheckNsxmlnamespaceDestroy(s *terraform.State) error {
 
 	return nil
 }
+func TestAccNsxmlnamespaceDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsxmlnamespaceDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsxmlnamespace.test", "prefix", "tf_nsxmlnamespace_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsxmlnamespace.test", "namespace", "http://www.w3.org/2001/04/xmlenc#"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsxmlnamespace.test", "description", "Datasource test"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsxmlnamespaceDataSource_basic = `
+resource "citrixadc_nsxmlnamespace" "tf_nsxmlnamespace_ds" {
+	prefix      = "tf_nsxmlnamespace_ds"
+	namespace   = "http://www.w3.org/2001/04/xmlenc#"
+	description = "Datasource test"
+}
+
+data "citrixadc_nsxmlnamespace" "test" {
+	prefix = citrixadc_nsxmlnamespace.tf_nsxmlnamespace_ds.prefix
+}
+`

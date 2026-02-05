@@ -224,3 +224,38 @@ func TestAccGslbvserver_enable_disable(t *testing.T) {
 		},
 	})
 }
+
+const testAccGslbvserverDataSource_basic = `
+
+resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+  dnsrecordtype = "A"
+  name = "tf_test_gslbvserver_ds"
+  servicetype = "HTTP"
+  toggleorder = "ASCENDING"
+  orderthreshold = "50"
+}
+
+data "citrixadc_gslbvserver" "tf_gslbvserver" {
+  name = citrixadc_gslbvserver.tf_gslbvserver.name
+}
+`
+
+func TestAccGslbvserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "name", "tf_test_gslbvserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "dnsrecordtype", "A"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "toggleorder", "ASCENDING"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "orderthreshold", "50"),
+				),
+			},
+		},
+	})
+}

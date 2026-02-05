@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnintranetapplication_add = `
@@ -130,4 +131,37 @@ func testAccCheckVpnintranetapplicationDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVpnintranetapplicationDataSource_basic = `
+
+	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+		intranetapplication = "tf_vpnintranetapplication"
+		protocol            = "TCP"
+		destip              = "2.3.6.5"
+		interception        = "TRANSPARENT"
+	}
+
+data "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+	intranetapplication = citrixadc_vpnintranetapplication.tf_vpnintranetapplication.intranetapplication
+}
+`
+
+func TestAccVpnintranetapplicationDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnintranetapplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnintranetapplicationDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnintranetapplication.tf_vpnintranetapplication", "intranetapplication", "tf_vpnintranetapplication"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnintranetapplication.tf_vpnintranetapplication", "protocol", "TCP"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnintranetapplication.tf_vpnintranetapplication", "destip", "2.3.6.5"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnintranetapplication.tf_vpnintranetapplication", "interception", "TRANSPARENT"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationdfapolicy_add = `
@@ -138,4 +139,41 @@ func testAccCheckAuthenticationdfapolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationdfapolicyDataSource_basic = `
+	resource "citrixadc_authenticationdfaaction" "tf_dfaaction" {
+		name       = "tf_dfaaction"
+		serverurl  = "https://example.com/"
+		clientid   = "cliId"
+		passphrase = "secret"
+	}
+	resource "citrixadc_authenticationdfapolicy" "td_dfapolicy" {
+		name   = "td_dfapolicy"
+		rule   = "NS_TRUE"
+		action = citrixadc_authenticationdfaaction.tf_dfaaction.name
+	}
+
+	data "citrixadc_authenticationdfapolicy" "td_dfapolicy" {
+		name = citrixadc_authenticationdfapolicy.td_dfapolicy.name
+		depends_on = [citrixadc_authenticationdfapolicy.td_dfapolicy]
+	}
+`
+
+func TestAccAuthenticationdfapolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationdfapolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationdfapolicy.td_dfapolicy", "name", "td_dfapolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationdfapolicy.td_dfapolicy", "rule", "NS_TRUE"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationdfapolicy.td_dfapolicy", "action", "tf_dfaaction"),
+				),
+			},
+		},
+	})
 }

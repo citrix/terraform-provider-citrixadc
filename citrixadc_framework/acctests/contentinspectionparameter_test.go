@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccContentinspectionparameter_basic = `
@@ -95,4 +96,30 @@ func testAccCheckContentinspectionparameterExist(n string, id *string) resource.
 
 		return nil
 	}
+}
+
+const testAccContentinspectionparameterDataSource_basic = `
+
+resource "citrixadc_contentinspectionparameter" "tf_contentinspectionparameter" {
+	undefaction = "RESET"
+}
+
+data "citrixadc_contentinspectionparameter" "tf_contentinspectionparameter_datasource" {
+	depends_on = [citrixadc_contentinspectionparameter.tf_contentinspectionparameter]
+}
+`
+
+func TestAccContentinspectionparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectionparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionparameter.tf_contentinspectionparameter_datasource", "undefaction", "RESET"),
+				),
+			},
+		},
+	})
 }

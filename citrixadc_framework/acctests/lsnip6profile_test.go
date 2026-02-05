@@ -17,32 +17,44 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsnip6profile_basic = `
 
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2003::1/64"
+		type       = "SNIP"
+	}
+
 	resource "citrixadc_lsnip6profile" "tf_lsnaip6profile" {
 		name     = "my_lsn_ip6profile"
 		type     = "DS-Lite"
-		network6 = "2003::/64"
+		network6 = "2003::1/64"
+		depends_on = [citrixadc_nsip6.tf_nsip6]
 	}
   
 `
 const testAccLsnip6profile_update = `
 
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "1001::/64"
+		type       = "SNIP"
+	}
+
 	resource "citrixadc_lsnip6profile" "tf_lsnaip6profile" {
 		name     = "my_lsn_ip6profile"
 		type     = "DS-Lite"
 		network6 = "1001::/64"
+		depends_on = [citrixadc_nsip6.tf_nsip6]
 	}
   
 `
 
 func TestAccLsnip6profile_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -54,7 +66,7 @@ func TestAccLsnip6profile_basic(t *testing.T) {
 					testAccCheckLsnip6profileExist("citrixadc_lsnip6profile.tf_lsnaip6profile", nil),
 					resource.TestCheckResourceAttr("citrixadc_lsnip6profile.tf_lsnaip6profile", "name", "my_lsn_ip6profile"),
 					resource.TestCheckResourceAttr("citrixadc_lsnip6profile.tf_lsnaip6profile", "type", "DS-Lite"),
-					resource.TestCheckResourceAttr("citrixadc_lsnip6profile.tf_lsnaip6profile", "network6", "2003::/64"),
+					resource.TestCheckResourceAttr("citrixadc_lsnip6profile.tf_lsnaip6profile", "network6", "2003::1/64"),
 				),
 			},
 			{
@@ -132,4 +144,40 @@ func testAccCheckLsnip6profileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnip6profileDataSource_basic = `
+
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2003::1/64"
+		type       = "SNIP"
+	}
+
+	resource "citrixadc_lsnip6profile" "tf_lsnaip6profile_ds" {
+		name     = "my_lsn_ip6profile_ds"
+		type     = "DS-Lite"
+		network6 = "2003::1/64"
+		depends_on = [citrixadc_nsip6.tf_nsip6]
+	}
+
+	data "citrixadc_lsnip6profile" "tf_lsnaip6profile_ds" {
+		name = citrixadc_lsnip6profile.tf_lsnaip6profile_ds.name
+	}
+`
+
+func TestAccLsnip6profileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnip6profileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnip6profile.tf_lsnaip6profile_ds", "name", "my_lsn_ip6profile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnip6profile.tf_lsnaip6profile_ds", "type", "DS-Lite"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnip6profile.tf_lsnaip6profile_ds", "network6", "2003::1/64"),
+				),
+			},
+		},
+	})
 }

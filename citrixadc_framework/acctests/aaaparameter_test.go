@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaaparameter_basic = `
@@ -118,4 +119,39 @@ func testAccCheckAaaparameterExist(n string, id *string) resource.TestCheckFunc 
 
 		return nil
 	}
+}
+
+const testAccAaaparameterDataSource_basic = `
+
+	resource "citrixadc_aaaparameter" "tf_aaaparameter" {
+		enablestaticpagecaching    = "NO"
+		enableenhancedauthfeedback = "YES"
+		defaultauthtype            = "LOCAL"
+		maxloginattempts           = 5
+		failedlogintimeout         = 15
+	}
+	
+	data "citrixadc_aaaparameter" "tf_aaaparameter" {
+		depends_on = [citrixadc_aaaparameter.tf_aaaparameter]
+	}
+`
+
+func TestAccAaaparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaaparameter.tf_aaaparameter", "enablestaticpagecaching", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaparameter.tf_aaaparameter", "enableenhancedauthfeedback", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaparameter.tf_aaaparameter", "defaultauthtype", "LOCAL"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaparameter.tf_aaaparameter", "maxloginattempts", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaparameter.tf_aaaparameter", "failedlogintimeout", "15"),
+				),
+			},
+		},
+	})
 }

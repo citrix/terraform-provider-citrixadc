@@ -92,19 +92,55 @@ func testAccCheckNsrpcnodeExist(n string, id *string) resource.TestCheckFunc {
 const testAccNsrpcnode_basic_step1 = `
 
 resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = "10.222.74.146"
-    password = "notnsroot"
+    ipaddress = "10.101.132.123"
+    password = "CADS123$%^"
     secure = "ON"
-    srcip = "10.222.74.146"
+    srcip = "10.101.132.123"
 }
 `
 
 const testAccNsrpcnode_basic_step2 = `
 
 resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = "10.222.74.146"
-    password = "notnsroot"
+    ipaddress = "10.101.132.123"
+    password = "CADS123$%^"
     secure = "OFF"
-    srcip = "10.222.74.146"
+    srcip = "10.101.132.123"
 }
 `
+
+const testAccNsrpcnodeDataSource_basic = `
+
+resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
+    ipaddress = "10.101.132.123"
+    password = "CADS123$%^"
+    secure = "ON"
+    srcip = "10.101.132.123"
+}
+
+data "citrixadc_nsrpcnode" "tf_nsrpcnode" {
+    ipaddress = citrixadc_nsrpcnode.tf_nsrpcnode.ipaddress
+}
+`
+
+func TestAccNsrpcnodeDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	if isCpxRun {
+		t.Skip("Operation not permitted under CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsrpcnodeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsrpcnode.tf_nsrpcnode", "ipaddress", "10.101.132.123"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsrpcnode.tf_nsrpcnode", "secure", "ON"),
+				),
+			},
+		},
+	})
+}

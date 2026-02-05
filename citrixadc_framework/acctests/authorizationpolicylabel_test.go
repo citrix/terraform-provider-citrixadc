@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthorizationpolicylabel_basic = `
@@ -110,4 +111,31 @@ func testAccCheckAuthorizationpolicylabelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthorizationpolicylabelDataSource_basic = `
+
+resource "citrixadc_authorizationpolicylabel" "tf_authorizationpolicylabel" {
+	labelname = "tf_authorizationpolicylabel_ds"
+}
+
+data "citrixadc_authorizationpolicylabel" "tf_authorizationpolicylabel_ds" {
+	labelname = citrixadc_authorizationpolicylabel.tf_authorizationpolicylabel.labelname
+}
+`
+
+func TestAccAuthorizationpolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizationpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthorizationpolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicylabel.tf_authorizationpolicylabel_ds", "labelname", "tf_authorizationpolicylabel_ds"),
+				),
+			},
+		},
+	})
 }

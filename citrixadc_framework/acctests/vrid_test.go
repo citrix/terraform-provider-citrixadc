@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVrid_add = `
@@ -136,4 +137,38 @@ func testAccCheckVridDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVridDataSource_basic = `
+	resource "citrixadc_vrid" "tf_vrid" {
+		vrid_id              = 3
+		priority             = 30
+		preemption           = "DISABLED"
+		sharing              = "ENABLED"
+		tracking             = "NONE"
+	}
+
+data "citrixadc_vrid" "tf_vrid" {
+	vrid_id = citrixadc_vrid.tf_vrid.vrid_id
+}
+`
+
+func TestAccVridDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVridDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "vrid_id", "3"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "priority", "30"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "preemption", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "sharing", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "tracking", "NONE"),
+				),
+			},
+		},
+	})
 }

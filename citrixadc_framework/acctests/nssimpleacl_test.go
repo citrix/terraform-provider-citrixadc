@@ -139,3 +139,37 @@ func testAccCheckNssimpleaclDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccNssimpleaclDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNssimpleaclDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nssimpleacl.tf_simpleacl_ds", "aclname", "tf_simpleacl_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nssimpleacl.tf_simpleacl_ds", "aclaction", "DENY"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNssimpleaclDataSource_basic = `
+
+	resource "citrixadc_nssimpleacl" "tf_simpleacl_ds" {
+		aclname   = "tf_simpleacl_ds"
+		aclaction = "DENY"
+		srcip     = "192.168.2.0"
+		protocol  = "TCP"
+		destport  = 443
+		ttl       = 7200
+	}
+
+	data "citrixadc_nssimpleacl" "tf_simpleacl_ds" {
+		aclname    = citrixadc_nssimpleacl.tf_simpleacl_ds.aclname
+		depends_on = [citrixadc_nssimpleacl.tf_simpleacl_ds]
+	}
+`

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationsamlidpprofile_add = `
@@ -169,4 +170,47 @@ func testAccCheckAuthenticationsamlidpprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationsamlidpprofileDataSource_basic = `
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey"
+		cert    = "/var/tmp/certificate1.crt"
+		key     = "/var/tmp/key1.pem"
+	}
+	resource "citrixadc_authenticationsamlidpprofile" "tf_samlidpprofile" {
+		name                        = "tf_samlidpprofile"
+		samlspcertname              = citrixadc_sslcertkey.tf_sslcertkey.certkey
+		assertionconsumerserviceurl = "http://www.example.com"
+		sendpassword                = "OFF"
+		samlissuername              = "new_user"
+		rejectunsignedrequests      = "ON"
+		signaturealg                = "RSA-SHA1"
+		digestmethod                = "SHA1"
+		nameidformat                = "Unspecified"
+	}
+
+	data "citrixadc_authenticationsamlidpprofile" "tf_samlidpprofile" {
+		name = citrixadc_authenticationsamlidpprofile.tf_samlidpprofile.name
+		depends_on = [citrixadc_authenticationsamlidpprofile.tf_samlidpprofile]
+	}
+`
+
+func TestAccAuthenticationsamlidpprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslPrecheckforsamlidpprofile(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsamlidpprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", "name", "tf_samlidpprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", "digestmethod", "SHA1"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", "rejectunsignedrequests", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", "signaturealg", "RSA-SHA1"),
+				),
+			},
+		},
+	})
 }

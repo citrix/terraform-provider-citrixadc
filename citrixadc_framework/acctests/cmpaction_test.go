@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCmpaction_basic = `
@@ -130,3 +131,34 @@ func testAccCheckCmpactionDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccCmpactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmpactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cmpaction.tf_cmpaction_ds", "name", "tf_cmpaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmpaction.tf_cmpaction_ds", "cmptype", "nocompress"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCmpactionDataSource_basic = `
+
+resource "citrixadc_cmpaction" "tf_cmpaction_ds" {
+    name    = "tf_cmpaction_ds"
+    cmptype = "nocompress"
+}
+
+data "citrixadc_cmpaction" "tf_cmpaction_ds" {
+    name = citrixadc_cmpaction.tf_cmpaction_ds.name
+    depends_on = [citrixadc_cmpaction.tf_cmpaction_ds]
+}
+
+`

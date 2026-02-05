@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strconv"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strconv"
-	"testing"
 )
 
 const testAccCacheforwardproxy_basic = `
@@ -147,3 +148,34 @@ func testAccCheckCacheforwardproxyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccCacheforwardproxyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCacheforwardproxyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cacheforwardproxy.tf_cacheforwardproxy_ds", "ipaddress", "10.222.74.187"),
+					resource.TestCheckResourceAttr("data.citrixadc_cacheforwardproxy.tf_cacheforwardproxy_ds", "port", "6000"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCacheforwardproxyDataSource_basic = `
+
+resource "citrixadc_cacheforwardproxy" "tf_cacheforwardproxy_ds" {
+    ipaddress  = "10.222.74.187"
+    port       = 6000
+}
+
+data "citrixadc_cacheforwardproxy" "tf_cacheforwardproxy_ds" {
+    ipaddress = citrixadc_cacheforwardproxy.tf_cacheforwardproxy_ds.ipaddress
+    depends_on = [citrixadc_cacheforwardproxy.tf_cacheforwardproxy_ds]
+}
+
+`

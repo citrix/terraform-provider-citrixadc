@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccContentinspectionpolicylabel_basic = `
@@ -38,6 +39,19 @@ const testAccContentinspectionpolicylabel_update = `
 		type      = "RES"
 	}
   
+`
+
+const testAccContentinspectionpolicylabelDataSource_basic = `
+
+resource "citrixadc_contentinspectionpolicylabel" "tf_contentinspectionpolicylabel" {
+	labelname = "my_ci_policylabel_ds"
+	type      = "REQ"
+	comment   = "Test datasource comment"
+}
+
+data "citrixadc_contentinspectionpolicylabel" "tf_contentinspectionpolicylabel_ds" {
+	labelname = citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel.labelname
+}
 `
 
 func TestAccContentinspectionpolicylabel_basic(t *testing.T) {
@@ -128,4 +142,21 @@ func testAccCheckContentinspectionpolicylabelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccContentinspectionpolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectionpolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "labelname", "citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel", "labelname"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "type", "REQ"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "comment", "Test datasource comment"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccFis_basic = `
@@ -108,4 +109,29 @@ func testAccCheckFisDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccFisDataSource_basic = `
+	resource "citrixadc_fis" "tf_fis" {
+		name = "tf_fis_ds"  
+	}
+
+	data "citrixadc_fis" "tf_fis_ds" {
+		name = citrixadc_fis.tf_fis.name
+	}
+`
+
+func TestAccFisDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFisDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_fis.tf_fis_ds", "name", "tf_fis_ds"),
+				),
+			},
+		},
+	})
 }

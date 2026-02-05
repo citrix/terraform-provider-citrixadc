@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationtacacsaction_add = `
@@ -138,4 +139,43 @@ func testAccCheckAuthenticationtacacsactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationtacacsactionDataSource_basic = `
+	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+		name            = "tf_tacacsaction_ds"
+		serverip        = "1.2.3.5"
+		serverport      = 49
+		authtimeout     = 10
+		authorization   = "ON"
+		accounting      = "ON"
+		auditfailedcmds = "ON"
+		groupattrname   = "group"
+	}
+
+	data "citrixadc_authenticationtacacsaction" "tf_tacacsaction_ds" {
+		name = citrixadc_authenticationtacacsaction.tf_tacacsaction.name
+	}
+`
+
+func TestAccAuthenticationtacacsactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationtacacsactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "name", "tf_tacacsaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "serverip", "1.2.3.5"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "serverport", "49"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "authtimeout", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "authorization", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "accounting", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "auditfailedcmds", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "groupattrname", "group"),
+				),
+			},
+		},
+	})
 }

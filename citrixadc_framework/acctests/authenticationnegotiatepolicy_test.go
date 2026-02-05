@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationnegotiatepolicy_add = `
@@ -144,4 +145,42 @@ func testAccCheckAuthenticationnegotiatepolicyDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+const testAccAuthenticationnegotiatepolicyDataSource_basic = `
+
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction" {
+		name                       = "tf_negotiateaction"
+		domain                     = "DomainName"
+		domainuser                 = "usersame"
+		domainuserpasswd           = "password"
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "new_grpname"
+	}
+	resource "citrixadc_authenticationnegotiatepolicy" "tf_negotiatepolicy" {
+		name = "tf_negotiatepolicy_ds"
+		rule = "ns_true"
+		reqaction = citrixadc_authenticationnegotiateaction.tf_negotiateaction.name
+	}
+	
+	data "citrixadc_authenticationnegotiatepolicy" "tf_negotiatepolicy_ds" {
+		name = citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy.name
+	}
+`
+
+func TestAccAuthenticationnegotiatepolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationnegotiatepolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy_ds", "name", "citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy", "name"),
+					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy_ds", "rule", "citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy", "rule"),
+					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy_ds", "reqaction", "citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy", "reqaction"),
+				),
+			},
+		},
+	})
 }

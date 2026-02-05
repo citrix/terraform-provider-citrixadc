@@ -102,3 +102,29 @@ func testAccCheckLacpExist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+const testAccLacpDataSource_basic = `
+	resource "citrixadc_lacp" "tf_lacp_ds" {
+		syspriority = 40
+	}
+
+	data "citrixadc_lacp" "tf_lacp_ds" {
+		ownernode = citrixadc_lacp.tf_lacp_ds.ownernode
+	}
+`
+
+func TestAccLacpDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLacpDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lacp.tf_lacp_ds", "ownernode", "255"),
+					resource.TestCheckResourceAttr("data.citrixadc_lacp.tf_lacp_ds", "syspriority", "40"),
+				),
+			},
+		},
+	})
+}

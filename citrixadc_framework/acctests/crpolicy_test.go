@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCrpolicy_add = `
@@ -130,4 +131,34 @@ func testAccCheckCrpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCrpolicyDataSource_basic = `
+
+resource "citrixadc_crpolicy" "crpolicy" {
+    policyname = "crpolicy_datasource_test"
+    rule = "true"
+    action = "CACHE"
+}
+
+data "citrixadc_crpolicy" "crpolicy_data" {
+    policyname = citrixadc_crpolicy.crpolicy.policyname
+}
+`
+
+func TestAccCrpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crpolicy.crpolicy_data", "policyname", "crpolicy_datasource_test"),
+					resource.TestCheckResourceAttr("data.citrixadc_crpolicy.crpolicy_data", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_crpolicy.crpolicy_data", "action", "CACHE"),
+				),
+			},
+		},
+	})
 }

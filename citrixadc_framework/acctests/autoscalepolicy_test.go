@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAutoscalepolicy_basic = `
@@ -69,6 +70,33 @@ resource "citrixadc_autoscalepolicy" "tf_autoscalepolicy" {
 	}
 `
 
+const testAccAutoscalepolicyDataSource_basic = `
+
+resource "citrixadc_autoscaleprofile" "tf_autoscaleprofile" {
+	name         = "my_profile"
+	type         = "CLOUDSTACK"
+	apikey       = "7c177611-4a18-42b0-a7c5-bfd811fd590f"
+	url          = "www.service.example.com"
+	sharedsecret = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
+}
+resource "citrixadc_autoscaleaction" "tf_autoscaleaction" {
+	name        = "my_autoscaleaction"
+	type        = "SCALE_UP"
+	profilename = citrixadc_autoscaleprofile.tf_autoscaleprofile.name
+	vserver     = "my_vserver"
+	parameters  = "my_parameters"
+}
+resource "citrixadc_autoscalepolicy" "tf_autoscalepolicy" {
+	name         = "my_autoscalepolicy"
+	rule         = "true"
+	action       = citrixadc_autoscaleaction.tf_autoscaleaction.name
+}
+
+data "citrixadc_autoscalepolicy" "tf_autoscalepolicy" {
+	name = citrixadc_autoscalepolicy.tf_autoscalepolicy.name
+}
+`
+
 func TestAccAutoscalepolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -91,6 +119,23 @@ func TestAccAutoscalepolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_autoscalepolicy.tf_autoscalepolicy", "name", "my_autoscaleprofile"),
 					resource.TestCheckResourceAttr("citrixadc_autoscalepolicy.tf_autoscalepolicy", "rule", "false"),
 					resource.TestCheckResourceAttr("citrixadc_autoscalepolicy.tf_autoscalepolicy", "action", "my_autoscaleaction"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoscalepolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscalepolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.citrixadc_autoscalepolicy.tf_autoscalepolicy", "name", "citrixadc_autoscalepolicy.tf_autoscalepolicy", "name"),
+					resource.TestCheckResourceAttr("data.citrixadc_autoscalepolicy.tf_autoscalepolicy", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_autoscalepolicy.tf_autoscalepolicy", "action", "my_autoscaleaction"),
 				),
 			},
 		},

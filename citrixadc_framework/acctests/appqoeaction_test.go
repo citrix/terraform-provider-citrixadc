@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppqoeaction_basic = `
@@ -134,4 +135,37 @@ func testAccCheckAppqoeactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAppqoeactionDataSource_basic = `
+
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "my_appqoeaction_ds"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = "30"
+	}
+
+	data "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+`
+
+func TestAccAppqoeactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppqoeactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appqoeaction.tf_appqoeaction", "name", "my_appqoeaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_appqoeaction.tf_appqoeaction", "priority", "LOW"),
+					resource.TestCheckResourceAttr("data.citrixadc_appqoeaction.tf_appqoeaction", "respondwith", "NS"),
+					resource.TestCheckResourceAttr("data.citrixadc_appqoeaction.tf_appqoeaction", "delay", "30"),
+				),
+			},
+		},
+	})
 }

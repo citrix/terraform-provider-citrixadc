@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppfwlearningsettings_add = `
@@ -148,4 +149,72 @@ func testAccCheckAppfwlearningsettingsExist(n string, id *string) resource.TestC
 
 		return nil
 	}
+}
+
+const testAccAppfwlearningsettingsDataSource_basic = `
+
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwlearningsettings" "tf_learningsetting" {
+		profilename                        = citrixadc_appfwprofile.tf_appfwprofile.name
+		starturlminthreshold               = 9
+		starturlpercentthreshold           = 10
+		cookieconsistencyminthreshold      = 2
+		cookieconsistencypercentthreshold  = 1
+		csrftagminthreshold                = 2
+		csrftagpercentthreshold            = 10
+		fieldconsistencyminthreshold       = 20
+		fieldconsistencypercentthreshold   = 8
+		crosssitescriptingminthreshold     = 10
+		crosssitescriptingpercentthreshold = 1
+		sqlinjectionminthreshold           = 10
+		sqlinjectionpercentthreshold       = 1
+		fieldformatminthreshold            = 10
+		fieldformatpercentthreshold        = 1
+		creditcardnumberminthreshold       = 1
+		creditcardnumberpercentthreshold   = 0
+		contenttypeminthreshold            = 1
+		contenttypepercentthreshold        = 0
+	}
+
+	data "citrixadc_appfwlearningsettings" "tf_learningsetting" {
+		profilename = citrixadc_appfwlearningsettings.tf_learningsetting.profilename
+		depends_on = [citrixadc_appfwlearningsettings.tf_learningsetting]
+	}
+`
+
+func TestAccAppfwlearningsettingsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwlearningsettingsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "profilename", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "starturlminthreshold", "9"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "starturlpercentthreshold", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "cookieconsistencyminthreshold", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "cookieconsistencypercentthreshold", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "csrftagminthreshold", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "csrftagpercentthreshold", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "fieldconsistencyminthreshold", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "fieldconsistencypercentthreshold", "8"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "crosssitescriptingminthreshold", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "crosssitescriptingpercentthreshold", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "sqlinjectionminthreshold", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "sqlinjectionpercentthreshold", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "fieldformatminthreshold", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "fieldformatpercentthreshold", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "creditcardnumberminthreshold", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "creditcardnumberpercentthreshold", "0"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "contenttypeminthreshold", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwlearningsettings.tf_learningsetting", "contenttypepercentthreshold", "0"),
+				),
+			},
+		},
+	})
 }

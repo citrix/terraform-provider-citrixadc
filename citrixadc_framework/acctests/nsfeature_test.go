@@ -145,3 +145,28 @@ resource "citrixadc_nsfeature" "tf_nsfeature" {
 }
 
 `
+
+const testAccNsfeatureDataSource_basic = `
+data "citrixadc_nsfeature" "tf_nsfeature_ds" {
+}
+`
+
+func TestAccNsfeatureDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsfeatureDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsfeature.tf_nsfeature_ds", "id", "nsfeature-config"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsfeature.tf_nsfeature_ds", "lb"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsfeature.tf_nsfeature_ds", "cs"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsfeature.tf_nsfeature_ds", "ssl"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsfeature.tf_nsfeature_ds", "rewrite"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsfeature.tf_nsfeature_ds", "responder"),
+				),
+			},
+		},
+	})
+}

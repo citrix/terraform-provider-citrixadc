@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationsamlidppolicy_add = `
@@ -73,9 +74,8 @@ const testAccAuthenticationsamlidppolicy_update = `
 `
 
 func TestAccAuthenticationsamlidppolicy_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource! it requires certificates")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckAuthenticationsamlidppolicyDestroy,
 		Steps: []resource.TestStep{
@@ -163,4 +163,50 @@ func testAccCheckAuthenticationsamlidppolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationsamlidppolicyDataSource_basic = `
+	resource "citrixadc_sslcertkey" "tf_sslcertkey_ds" {
+		certkey = "tf_sslcertkey_ds"
+		cert    = "/var/tmp/certificate1.crt"
+		key     = "/var/tmp/key1.pem"
+	}
+	resource "citrixadc_authenticationsamlidpprofile" "tf_samlidpprofile_ds" {
+		name                        = "tf_samlidpprofile_ds"
+		samlspcertname              = citrixadc_sslcertkey.tf_sslcertkey_ds.certkey
+		assertionconsumerserviceurl = "http://www.example.com"
+		sendpassword                = "OFF"
+		samlissuername              = "new_user"
+		rejectunsignedrequests      = "ON"
+		signaturealg                = "RSA-SHA1"
+		digestmethod                = "SHA1"
+		nameidformat                = "Unspecified"
+	}
+	resource "citrixadc_authenticationsamlidppolicy" "tf_samlidppolicy_ds" {
+		name    = "tf_samlidppolicy_ds"
+		rule    = "false"
+		action  = citrixadc_authenticationsamlidpprofile.tf_samlidpprofile_ds.name
+		comment = "DataSource Test"
+	}
+	data "citrixadc_authenticationsamlidppolicy" "tf_samlidppolicy_ds" {
+		name = citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds.name
+	}
+`
+
+func TestAccAuthenticationsamlidppolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsamlidppolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "name", "tf_samlidppolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "rule", "false"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "comment", "DataSource Test"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "id"),
+				),
+			},
+		},
+	})
 }

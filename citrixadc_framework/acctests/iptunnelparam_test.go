@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIptunnelparam_add = `
@@ -106,4 +107,41 @@ func testAccCheckIptunnelparamExist(n string, id *string) resource.TestCheckFunc
 
 		return nil
 	}
+}
+
+const testAccIptunnelparamDataSource_basic = `
+
+	resource "citrixadc_iptunnelparam" "tf_iptunnelparam" {
+		dropfrag             = "YES"
+		dropfragcputhreshold = 1
+		srciproundrobin      = "NO"
+		enablestrictrx       = "YES"
+		enablestricttx       = "YES"
+		useclientsourceip    = "YES"
+	}
+
+	data "citrixadc_iptunnelparam" "tf_iptunnelparam" {
+		depends_on = [citrixadc_iptunnelparam.tf_iptunnelparam]
+	}
+`
+
+func TestAccIptunnelparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIptunnelparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_iptunnelparam.tf_iptunnelparam", "dropfrag", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_iptunnelparam.tf_iptunnelparam", "dropfragcputhreshold", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_iptunnelparam.tf_iptunnelparam", "srciproundrobin", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_iptunnelparam.tf_iptunnelparam", "enablestrictrx", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_iptunnelparam.tf_iptunnelparam", "enablestricttx", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_iptunnelparam.tf_iptunnelparam", "useclientsourceip", "YES"),
+				),
+			},
+		},
+	})
 }

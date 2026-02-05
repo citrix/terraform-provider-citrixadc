@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSnmpcommunity_basic = `
@@ -127,3 +128,33 @@ func testAccCheckSnmpcommunityDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccSnmpcommunityDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpcommunityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpcommunityDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_snmpcommunity.tf_snmpcommunity_ds", "communityname", "tf_community_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpcommunity.tf_snmpcommunity_ds", "permissions", "GET"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSnmpcommunityDataSource_basic = `
+
+resource "citrixadc_snmpcommunity" "tf_snmpcommunity_ds" {
+	communityname = "tf_community_ds"
+	permissions   = "GET"
+}
+
+data "citrixadc_snmpcommunity" "tf_snmpcommunity_ds" {
+	communityname = citrixadc_snmpcommunity.tf_snmpcommunity_ds.communityname
+	depends_on = [citrixadc_snmpcommunity.tf_snmpcommunity_ds]
+}
+`

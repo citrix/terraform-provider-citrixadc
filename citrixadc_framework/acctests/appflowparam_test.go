@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppflowparam_basic = `
@@ -108,4 +109,36 @@ func testAccCheckAppflowparamExist(n string, id *string) resource.TestCheckFunc 
 
 		return nil
 	}
+}
+
+const testAccAppflowparamDataSource_basic = `
+	resource "citrixadc_appflowparam" "tf_appflowparam" {
+		templaterefresh     = 200
+		flowrecordinterval  = 200
+		httpcookie          = "ENABLED"
+		httplocation        = "ENABLED"
+	}
+	
+	data "citrixadc_appflowparam" "tf_appflowparam" {
+		depends_on = [citrixadc_appflowparam.tf_appflowparam]
+	}
+`
+
+func TestAccAppflowparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appflowparam.tf_appflowparam", "templaterefresh", "200"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowparam.tf_appflowparam", "flowrecordinterval", "200"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowparam.tf_appflowparam", "httpcookie", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowparam.tf_appflowparam", "httplocation", "ENABLED"),
+				),
+			},
+		},
+	})
 }

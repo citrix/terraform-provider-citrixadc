@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationnegotiateaction_add = `
@@ -134,4 +135,38 @@ func testAccCheckAuthenticationnegotiateactionDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+const testAccAuthenticationnegotiateactionDataSource_basic = `
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction_ds" {
+		name                       = "tf_negotiateaction_ds"
+		domain                     = "DomainName"
+		domainuser                 = "username"
+		domainuserpasswd           = "password"
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "grpname"
+	}
+
+	data "citrixadc_authenticationnegotiateaction" "tf_negotiateaction_ds" {
+		name = citrixadc_authenticationnegotiateaction.tf_negotiateaction_ds.name
+	}
+`
+
+func TestAccAuthenticationnegotiateactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationnegotiateactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationnegotiateaction.tf_negotiateaction_ds", "name", "tf_negotiateaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationnegotiateaction.tf_negotiateaction_ds", "domain", "DomainName"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationnegotiateaction.tf_negotiateaction_ds", "domainuser", "username"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationnegotiateaction.tf_negotiateaction_ds", "ntlmpath", "http://www.example.com/"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationnegotiateaction.tf_negotiateaction_ds", "defaultauthenticationgroup", "grpname"),
+				),
+			},
+		},
+	})
 }

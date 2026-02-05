@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppfwxmlschema_basic = `
@@ -116,4 +117,38 @@ func testAccCheckAppfwxmlschemaDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAppfwxmlschemaDataSource_basic = `
+	resource "citrixadc_systemfile" "tf_xmlschema_ds" {
+		filename     = "appfwxmlschema_ds.xml"
+		filelocation = "/var/tmp"
+		filecontent  = file("testdata/appfwxmlschema.xml")
+	}
+	resource "citrixadc_appfwxmlschema" "tf_appfwxmlschema_ds" {
+		name       = "tf_appfwxmlschema_ds"
+		src        = "local://appfwxmlschema_ds.xml"
+		depends_on = [citrixadc_systemfile.tf_xmlschema_ds]
+		comment    = "TestingDataSource"
+	}
+	
+	data "citrixadc_appfwxmlschema" "tf_appfwxmlschema_ds" {
+		name = citrixadc_appfwxmlschema.tf_appfwxmlschema_ds.name
+	}
+`
+
+func TestAccAppfwxmlschemaDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwxmlschemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwxmlschemaDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlschema.tf_appfwxmlschema_ds", "name", "tf_appfwxmlschema_ds"),
+				),
+			},
+		},
+	})
 }

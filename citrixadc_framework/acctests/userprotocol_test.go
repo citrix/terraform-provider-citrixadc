@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccUserprotocol_basic = `
@@ -38,6 +39,20 @@ const testAccUserprotocol_update = `
 		transport = "SSL"
 		extension = "my_extension_mqtt"
 		comment   = "my_new_comment"
+	}
+`
+
+const testAccUserprotocolDataSource_basic = `
+
+	resource "citrixadc_userprotocol" "tf_userprotocol" {
+		name      = "MQTT"
+		transport = "TCP"
+		extension = "mqtt_code"
+		comment   = "my_comment"
+	}
+
+	data "citrixadc_userprotocol" "tf_userprotocol" {
+		name = citrixadc_userprotocol.tf_userprotocol.name
 	}
 `
 
@@ -134,4 +149,22 @@ func testAccCheckUserprotocolDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccUserprotocolDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserprotocolDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_userprotocol.tf_userprotocol", "name", "MQTT"),
+					resource.TestCheckResourceAttr("data.citrixadc_userprotocol.tf_userprotocol", "transport", "TCP"),
+					resource.TestCheckResourceAttr("data.citrixadc_userprotocol.tf_userprotocol", "extension", "mqtt_code"),
+					resource.TestCheckResourceAttr("data.citrixadc_userprotocol.tf_userprotocol", "comment", "my_comment"),
+				),
+			},
+		},
+	})
 }

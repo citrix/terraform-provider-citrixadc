@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccRdpserverprofile_basic = `
@@ -138,3 +139,34 @@ func testAccCheckRdpserverprofileDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccRdpserverprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRdpserverprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rdpserverprofile.test", "name", "tf_rdpserverprofile"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rdpserverprofile.test", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rdpserverprofile.test", "rdpip"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rdpserverprofile.test", "rdpport"),
+				),
+			},
+		},
+	})
+}
+
+const testAccRdpserverprofileDataSource_basic = `
+resource "citrixadc_rdpserverprofile" "tf_rdpserverprofile" {
+	name    = "tf_rdpserverprofile"
+	rdpip   = "192.168.2.10"
+	rdpport = 3389
+	psk     = "secret789"
+}
+
+data "citrixadc_rdpserverprofile" "test" {
+	name = citrixadc_rdpserverprofile.tf_rdpserverprofile.name
+}
+`

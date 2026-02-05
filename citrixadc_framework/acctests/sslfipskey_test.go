@@ -32,6 +32,18 @@ resource "citrixadc_sslfipskey" "demo_sslfipskey" {
 }
 `
 
+const testAccSslfipskeyDataSource_basic = `
+resource "citrixadc_sslfipskey" "demo_sslfipskey" {
+    fipskeyname = "f1"
+    keytype = "ECDSA"
+    curve = "P_256"
+}
+
+data "citrixadc_sslfipskey" "demo_sslfipskey" {
+    fipskeyname = citrixadc_sslfipskey.demo_sslfipskey.fipskeyname
+}
+`
+
 func TestAccSslfipskey_basic(t *testing.T) {
 	if adcTestbed != "STANDALONE_HSM" {
 		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
@@ -113,4 +125,24 @@ func testAccCheckSslfipskeyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSslfipskeyDataSource_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslfipskeyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslfipskey.demo_sslfipskey", "fipskeyname", "f1"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslfipskey.demo_sslfipskey", "keytype", "ECDSA"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslfipskey.demo_sslfipskey", "curve", "P_256"),
+				),
+			},
+		},
+	})
 }

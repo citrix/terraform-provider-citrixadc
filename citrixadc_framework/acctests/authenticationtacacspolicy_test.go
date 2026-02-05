@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationtacacspolicy_add = `
@@ -148,4 +149,42 @@ func testAccCheckAuthenticationtacacspolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationtacacspolicyDataSource_basic = `
+	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction_ds" {
+		name            = "tf_tacacsaction_ds"
+		serverip        = "1.2.3.5"
+		serverport      = 8081
+		authtimeout     = 6
+		authorization   = "ON"
+		accounting      = "ON"
+		auditfailedcmds = "ON"
+		groupattrname   = "group"
+	}
+	resource "citrixadc_authenticationtacacspolicy" "tf_tacacspolicy_ds" {
+		name      = "tf_tacacspolicy_ds"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationtacacsaction.tf_tacacsaction_ds.name
+	}
+	data "citrixadc_authenticationtacacspolicy" "tf_tacacspolicy_data" {
+		name = citrixadc_authenticationtacacspolicy.tf_tacacspolicy_ds.name
+	}
+`
+
+func TestAccAuthenticationtacacspolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationtacacspolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacspolicy.tf_tacacspolicy_data", "name", "tf_tacacspolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacspolicy.tf_tacacspolicy_data", "rule", "NS_TRUE"),
+					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationtacacspolicy.tf_tacacspolicy_data", "reqaction", "citrixadc_authenticationtacacspolicy.tf_tacacspolicy_ds", "reqaction"),
+				),
+			},
+		},
+	})
 }

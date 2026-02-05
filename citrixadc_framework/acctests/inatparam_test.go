@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccInatparam_basic = `
@@ -105,3 +106,37 @@ func testAccCheckInatparamExist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+func TestAccInatparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInatparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_inatparam.tf_inatparam_ds", "nat46ignoretos", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_inatparam.tf_inatparam_ds", "nat46zerochecksum", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_inatparam.tf_inatparam_ds", "nat46v6mtu", "1400"),
+					resource.TestCheckResourceAttr("data.citrixadc_inatparam.tf_inatparam_ds", "td", "0"),
+				),
+			},
+		},
+	})
+}
+
+const testAccInatparamDataSource_basic = `
+
+resource "citrixadc_inatparam" "tf_inatparam_ds" {
+	nat46ignoretos    = "NO"
+	nat46zerochecksum = "ENABLED"
+	nat46v6mtu        = 1400
+}
+
+data "citrixadc_inatparam" "tf_inatparam_ds" {
+	td = 0
+	depends_on = [citrixadc_inatparam.tf_inatparam_ds]
+}
+
+`

@@ -34,6 +34,20 @@ resource "citrixadc_dnsaddrec" "dnsaddrec" {
 	}
 `
 
+const testAccDnsaddrecDataSource_basic = `
+
+resource "citrixadc_dnsaddrec" "dnsaddrec" {
+	hostname  = "tfacc-ds-addr-test.local"
+	ipaddress = "10.200.100.50"
+	ttl       = 3600
+}
+
+data "citrixadc_dnsaddrec" "dnsaddrec" {
+	hostname  = citrixadc_dnsaddrec.dnsaddrec.hostname
+	ipaddress = citrixadc_dnsaddrec.dnsaddrec.ipaddress
+}
+`
+
 func TestAccDnsaddrec_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -135,4 +149,21 @@ func testAccCheckDnsaddrecDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnsaddrecDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsaddrecDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaddrec.dnsaddrec", "hostname", "tfacc-ds-addr-test.local"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaddrec.dnsaddrec", "ipaddress", "10.200.100.50"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaddrec.dnsaddrec", "ttl", "3600"),
+				),
+			},
+		},
+	})
 }

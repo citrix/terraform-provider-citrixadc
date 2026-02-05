@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAutoscaleprofile_basic = `
@@ -33,6 +34,21 @@ resource "citrixadc_autoscaleprofile" "tf_autoscaleprofile" {
 	url          = "www.service.example.com"
 	sharedsecret = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
 	}
+`
+
+const testAccAutoscaleprofileDataSource_basic = `
+
+resource "citrixadc_autoscaleprofile" "tf_autoscaleprofile" {
+	name         = "my_autoscaleprofile"
+	type         = "CLOUDSTACK"
+	apikey       = "7c177611-4a18-42b0-a7c5-bfd811fd590f"
+	url          = "www.service.example.com"
+	sharedsecret = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
+}
+
+data "citrixadc_autoscaleprofile" "tf_autoscaleprofile" {
+	name = citrixadc_autoscaleprofile.tf_autoscaleprofile.name
+}
 `
 const testAccAutoscaleprofile_update = `
 
@@ -140,4 +156,23 @@ func testAccCheckAutoscaleprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAutoscaleprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscaleprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_autoscaleprofile.tf_autoscaleprofile", "name", "my_autoscaleprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_autoscaleprofile.tf_autoscaleprofile", "type", "CLOUDSTACK"),
+					resource.TestCheckResourceAttr("data.citrixadc_autoscaleprofile.tf_autoscaleprofile", "url", "www.service.example.com"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_autoscaleprofile.tf_autoscaleprofile", "apikey"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_autoscaleprofile.tf_autoscaleprofile", "sharedsecret"),
+				),
+			},
+		},
+	})
 }

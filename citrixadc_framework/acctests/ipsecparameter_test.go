@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIpsecparameter_basic = `
@@ -42,6 +43,20 @@ resource "citrixadc_ipsecparameter" "tf_ipsecparameter" {
 	livenesscheckinterval = 60
 	}
   
+`
+
+const testAccIpsecparameterDataSource_basic = `
+
+resource "citrixadc_ipsecparameter" "tf_ipsecparameter" {
+	ikeversion            = "V2"
+	encalgo               = ["AES", "AES256"]
+	hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
+	livenesscheckinterval = 50
+}
+
+data "citrixadc_ipsecparameter" "tf_ipsecparameter_datasource" {
+	depends_on = [citrixadc_ipsecparameter.tf_ipsecparameter]
+}
 `
 
 func TestAccIpsecparameter_basic(t *testing.T) {
@@ -106,4 +121,20 @@ func testAccCheckIpsecparameterExist(n string, id *string) resource.TestCheckFun
 
 		return nil
 	}
+}
+
+func TestAccIpsecparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpsecparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_ipsecparameter.tf_ipsecparameter_datasource", "ikeversion", "V2"),
+					resource.TestCheckResourceAttr("data.citrixadc_ipsecparameter.tf_ipsecparameter_datasource", "livenesscheckinterval", "50"),
+				),
+			},
+		},
+	})
 }

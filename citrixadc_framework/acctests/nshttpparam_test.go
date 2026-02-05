@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNshttpparam_add = `
@@ -118,4 +119,43 @@ func testAccCheckNshttpparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccNshttpparamDataSource_basic = `
+	resource "citrixadc_nshttpparam" "tf_nshttpparam_ds" {
+		dropinvalreqs             = "ON"
+		markconnreqinval          = "ON"
+		maxreusepool              = 2
+		markhttp09inval           = "ON"
+		insnssrvrhdr              = "OFF"
+		logerrresp                = "OFF"
+		conmultiplex              = "DISABLED"
+		http2serverside           = "OFF"
+		ignoreconnectcodingscheme = "ENABLED"
+	}
+
+	data "citrixadc_nshttpparam" "tf_nshttpparam_ds" {
+		depends_on = [citrixadc_nshttpparam.tf_nshttpparam_ds]
+	}
+`
+
+func TestAccNshttpparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNshttpparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "dropinvalreqs", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "markconnreqinval", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "maxreusepool", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "markhttp09inval", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "conmultiplex", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "http2serverside", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "ignoreconnectcodingscheme", "ENABLED"),
+				),
+			},
+		},
+	})
 }

@@ -134,3 +134,41 @@ func testAccCheckNspbrDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccNspbrDataSource_basic = `
+	resource "citrixadc_nspbr" "tf_nspbr_ds" {
+		name     = "tf_test_nspbr_ds"
+		action   = "DENY"
+		srcip    = true
+		srcipop  = "="
+		srcipval = "192.0.2.0-192.0.2.255"
+		destip   = true
+		destipop = "="
+		destipval = "203.0.113.0-203.0.113.255"
+		priority = 100
+	}
+
+	data "citrixadc_nspbr" "tf_nspbr_ds" {
+		name = citrixadc_nspbr.tf_nspbr_ds.name
+	}
+`
+
+func TestAccNspbrDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspbrDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nspbr.tf_nspbr_ds", "name", "tf_test_nspbr_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nspbr.tf_nspbr_ds", "action", "DENY"),
+					resource.TestCheckResourceAttr("data.citrixadc_nspbr.tf_nspbr_ds", "srcipval", "192.0.2.0-192.0.2.255"),
+					resource.TestCheckResourceAttr("data.citrixadc_nspbr.tf_nspbr_ds", "destipval", "203.0.113.0-203.0.113.255"),
+					resource.TestCheckResourceAttr("data.citrixadc_nspbr.tf_nspbr_ds", "priority", "100"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nspbr.tf_nspbr_ds", "id"),
+				),
+			},
+		},
+	})
+}

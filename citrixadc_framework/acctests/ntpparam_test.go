@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNtpparam_basic = `
@@ -107,3 +108,23 @@ func testAccCheckNtpparamExist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+func TestAccNtpparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNtpparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_ntpparam.test", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_ntpparam.test", "authentication"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNtpparamDataSource_basic = `
+data "citrixadc_ntpparam" "test" {
+}
+`

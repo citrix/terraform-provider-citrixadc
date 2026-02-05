@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationldappolicy_add = `
@@ -140,4 +141,39 @@ func testAccCheckAuthenticationldappolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationldappolicyDataSource_basic = `
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "ldapaction_ds"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_authenticationldappolicy_ds"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+	data "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy_ds" {
+		name = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
+	}
+`
+
+func TestAccAuthenticationldappolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationldappolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationldappolicy.tf_authenticationldappolicy_ds", "name", "tf_authenticationldappolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationldappolicy.tf_authenticationldappolicy_ds", "rule", "NS_TRUE"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationldappolicy.tf_authenticationldappolicy_ds", "reqaction", "ldapaction_ds"),
+				),
+			},
+		},
+	})
 }

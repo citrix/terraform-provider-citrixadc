@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationldapaction_add = `
@@ -131,4 +132,37 @@ func testAccCheckAuthenticationldapactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationldapactionDataSource_basic = `
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name   		  = "tf_authenticationldapaction"
+		serverip 	  = "1.2.3.4"
+		serverport 	  = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+
+	data "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+`
+
+func TestAccAuthenticationldapactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationldapactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationldapaction.tf_authenticationldapaction", "name", "tf_authenticationldapaction"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationldapaction.tf_authenticationldapaction", "serverip", "1.2.3.4"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationldapaction.tf_authenticationldapaction", "serverport", "8080"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationldapaction.tf_authenticationldapaction", "authtimeout", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationldapaction.tf_authenticationldapaction", "ldaploginname", "username"),
+				),
+			},
+		},
+	})
 }

@@ -168,3 +168,45 @@ func testAccCheckRouteDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccRouteDataSource_basic = `
+	resource "citrixadc_nsip" "nsip" {
+		ipaddress = "100.0.1.100"
+		netmask   = "255.255.255.0"
+	}
+
+	resource "citrixadc_route" "tf_route" {
+		depends_on = [citrixadc_nsip.nsip]
+		network    = "100.0.100.0"
+		netmask    = "255.255.255.0"
+		gateway    = "100.0.1.1"
+		advertise  = "ENABLED"
+		td         = 0
+	}
+
+	data "citrixadc_route" "tf_route" {
+		network = citrixadc_route.tf_route.network
+		netmask = citrixadc_route.tf_route.netmask
+		td      = citrixadc_route.tf_route.td
+		depends_on = [citrixadc_route.tf_route]
+	}
+`
+
+func TestAccRouteDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRouteDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_route.tf_route", "network", "100.0.100.0"),
+					resource.TestCheckResourceAttr("data.citrixadc_route.tf_route", "netmask", "255.255.255.0"),
+					resource.TestCheckResourceAttr("data.citrixadc_route.tf_route", "gateway", "100.0.1.1"),
+					resource.TestCheckResourceAttr("data.citrixadc_route.tf_route", "advertise", "ENABLED"),
+				),
+			},
+		},
+	})
+}

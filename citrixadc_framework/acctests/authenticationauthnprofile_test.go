@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationauthnprofile_add = `
@@ -146,4 +147,43 @@ func testAccCheckAuthenticationauthnprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationauthnprofileDataSource_basic = `
+
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new_vserver"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationauthnprofile" "tf_authenticationauthnprofile" {
+		name                = "tf_name"
+		authnvsname         = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		authenticationhost  = "hostname"
+		authenticationlevel = "20"
+	}
+
+	data "citrixadc_authenticationauthnprofile" "tf_authenticationauthnprofile_datasource" {
+		name = citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile.name
+	}
+`
+
+func TestAccAuthenticationauthnprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationauthnprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile_datasource", "name", "tf_name"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile_datasource", "authnvsname", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile_datasource", "authenticationhost", "hostname"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile_datasource", "authenticationlevel", "20"),
+				),
+			},
+		},
+	})
 }

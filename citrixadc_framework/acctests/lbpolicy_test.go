@@ -18,9 +18,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLbpolicy_basic = `
@@ -117,4 +118,42 @@ func testAccCheckLbpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLbpolicyDataSource_basic = `
+
+	resource "citrixadc_lbaction" "tf_act_ds" {
+		name  = "tf_act_ds"
+		type  = "SELECTIONORDER"
+		value = [1]
+	}
+	
+	resource "citrixadc_lbpolicy" "tf_pol_ds" {
+		name   = "tf_pol_ds"
+		rule   = "true"
+		action = citrixadc_lbaction.tf_act_ds.name
+	}
+  
+	data "citrixadc_lbpolicy" "tf_pol_ds" {
+		name       = citrixadc_lbpolicy.tf_pol_ds.name
+		depends_on = [citrixadc_lbpolicy.tf_pol_ds]
+	}
+`
+
+func TestAccLbpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbpolicy.tf_pol_ds", "name", "tf_pol_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbpolicy.tf_pol_ds", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbpolicy.tf_pol_ds", "action", "tf_act_ds"),
+				),
+			},
+		},
+	})
 }

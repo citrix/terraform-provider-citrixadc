@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIcaaccessprofile_basic = `
@@ -51,6 +52,24 @@ const testAccIcaaccessprofile_update = `
 		clienttwaindeviceredirection = "DEFAULT"
 	}
 	
+`
+
+const testAccIcaaccessprofileDataSource_basic = `
+
+	resource "citrixadc_icaaccessprofile" "tf_icaaccessprofile" {
+		name                   = "my_ica_accessprofile"
+		connectclientlptports  = "DEFAULT"
+		localremotedatasharing = "DEFAULT"
+		wiaredirection		 = "DISABLED"
+		smartcardredirection	= "DISABLED"
+		fido2redirection		 = "DISABLED"
+		draganddrop			 = "DISABLED"
+		clienttwaindeviceredirection = "DISABLED"
+	}
+
+	data "citrixadc_icaaccessprofile" "icaaccessprofile_data" {
+		name = citrixadc_icaaccessprofile.tf_icaaccessprofile.name
+	}
 `
 
 func TestAccIcaaccessprofile_basic(t *testing.T) {
@@ -153,4 +172,26 @@ func testAccCheckIcaaccessprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccIcaaccessprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcaaccessprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "name", "my_ica_accessprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "connectclientlptports", "DEFAULT"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "localremotedatasharing", "DEFAULT"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "wiaredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "smartcardredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "fido2redirection", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "draganddrop", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "clienttwaindeviceredirection", "DISABLED"),
+				),
+			},
+		},
+	})
 }

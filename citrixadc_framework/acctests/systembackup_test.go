@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSystembackup_basic = `
@@ -110,4 +111,34 @@ func testAccCheckSystembackupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccSystembackupDataSource_basic = `
+
+resource "citrixadc_systembackup_create" "tf_systembackup_create" {
+	filename         = "my_backup_file"
+	level            = "basic"
+	uselocaltimezone = "true"
+}
+
+data "citrixadc_systembackup" "tf_systembackup" {
+	filename = "my_backup_file.tgz"
+	depends_on = [citrixadc_systembackup_create.tf_systembackup_create]
+}
+`
+
+func TestAccSystembackupDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystembackupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systembackup.tf_systembackup", "filename", "my_backup_file.tgz"),
+					resource.TestCheckResourceAttr("data.citrixadc_systembackup.tf_systembackup", "level", "basic"),
+				),
+			},
+		},
+	})
 }

@@ -72,3 +72,27 @@ resource "citrixadc_nslicense" "tf_license" {
     ssh_host_pubkey = "AAAAB3NzaC1kc3MAAACBAJ2yRBTkiCIR94oYfCmabSKPi7EjyYS7FxLPV0j8zAsWtarS16UTiPyW+tTpd5I9HNJPqIkGKTLWw9DakXd+lyRnXAusOGXIfiV+wdyLn8hg/T/dZMA7r6QssIfIUza0Bqcjn7eCGStwOHzSgUH5qS9YmIlZuZ/hKOU3Zs0N7wF5AAAAFQC6iGTFqcADv83/ItKiHh+6pEWe2wAAAIB3pcTDxth1IASlwNgzm1HQYaOm5ttcGve468w3c97BpzEXCbiwObd6T8Ynt2GFMH2NHOFFqid4nRXvT2Ba5JlLYgyrDTU53J6eDxkXtBSuxTcMss0P6EEtcqOJzi1e+OZWFPKtxaIsKBtScBw+S/dNFkY4H+Eo5vl5/ChahdOchAAAAIBd4sHyDMVWzI6vG9Z/HYNM6los0fXqCL8ait+LpFN5+hOScdDKNgzIfM5md35ToV6cM28nPQL3bum3sLLO4R4o5Rqp3QFW82+mipswjzycNIgKy3gcSSuFA7ALivIsZUxqpyQYU7GyBKnkJsf5om0tcr7PawHL08CqJf0/mLXZcw=="
 }
 `
+
+func TestAccNslicenseDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNslicenseDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nslicense.test", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nslicense.test", "licensingmode"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nslicense.test", "modelid"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslicense.test", "lb", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslicense.test", "ssl", "true"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNslicenseDataSource_basic = `
+data "citrixadc_nslicense" "test" {
+}
+`

@@ -97,3 +97,29 @@ func testAccCheckPolicyparamExist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+const testAccPolicyparamDataSource_basic = `
+	resource "citrixadc_policyparam" "tf_policyparam_ds" {
+		timeout = 5000
+	}
+
+	data "citrixadc_policyparam" "tf_policyparam_ds" {
+		depends_on = [citrixadc_policyparam.tf_policyparam_ds]
+	}
+`
+
+func TestAccPolicyparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyparam.tf_policyparam_ds", "id"),
+					resource.TestCheckResourceAttr("data.citrixadc_policyparam.tf_policyparam_ds", "timeout", "5000"),
+				),
+			},
+		},
+	})
+}

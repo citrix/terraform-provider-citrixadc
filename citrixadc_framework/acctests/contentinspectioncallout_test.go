@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccContentinspectioncallout_basic = `
@@ -161,3 +162,52 @@ func testAccCheckContentinspectioncalloutDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccContentinspectioncalloutDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectioncalloutDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "name", "my_ci_callout_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "type", "ICAP"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "profilename", "new-profile-ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "serverip", "2.2.2.2"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "returntype", "TEXT"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "resultexpr", "true"),
+				),
+			},
+		},
+	})
+}
+
+const testAccContentinspectioncalloutDataSource_basic = `
+
+resource "citrixadc_nsicapprofile" "tf_nsicapprofile_ds" {
+	name             = "new-profile-ds"
+	uri              = "/example"
+	mode             = "REQMOD"
+	reqtimeout       = 4
+	reqtimeoutaction = "RESET"
+	preview          = "ENABLED"
+	previewlength    = 4096
+}
+
+resource "citrixadc_contentinspectioncallout" "tf_contentinspectioncallout_ds" {
+	name        = "my_ci_callout_ds"
+	type        = "ICAP"
+	profilename = citrixadc_nsicapprofile.tf_nsicapprofile_ds.name
+	serverip    = "2.2.2.2"
+	returntype  = "TEXT"
+	resultexpr  = "true"
+}
+
+data "citrixadc_contentinspectioncallout" "tf_contentinspectioncallout_ds" {
+	name = citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds.name
+	depends_on = [citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds]
+}
+
+`

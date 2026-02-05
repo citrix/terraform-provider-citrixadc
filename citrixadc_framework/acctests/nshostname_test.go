@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNshostname_basic = `
@@ -96,4 +97,29 @@ func testAccCheckNshostnameExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccNshostnameDataSource_basic = `
+	resource "citrixadc_nshostname" "tf_nshostname_ds" {
+		hostname  = "testhost.citrix.com"
+	}
+
+	data "citrixadc_nshostname" "tf_nshostname_ds" {
+		depends_on = [citrixadc_nshostname.tf_nshostname_ds]
+	}
+`
+
+func TestAccNshostnameDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNshostnameDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nshostname.tf_nshostname_ds", "hostname", "testhost.citrix.com"),
+				),
+			},
+		},
+	})
 }

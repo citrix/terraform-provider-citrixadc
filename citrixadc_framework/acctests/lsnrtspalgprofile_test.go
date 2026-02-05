@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsnrtspalgprofile_basic = `
@@ -40,7 +41,6 @@ const testAccLsnrtspalgprofile_update = `
 `
 
 func TestAccLsnrtspalgprofile_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -130,4 +130,34 @@ func testAccCheckLsnrtspalgprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnrtspalgprofileDataSource_basic = `
+
+resource "citrixadc_lsnrtspalgprofile" "tf_lsnrtspalgprofile_ds" {
+	rtspalgprofilename = "my_lsn_rtspalgprofile_ds"
+	rtspportrange      = "4200"
+	rtspidletimeout    = 150
+}
+
+data "citrixadc_lsnrtspalgprofile" "tf_lsnrtspalgprofile_ds" {
+	rtspalgprofilename = citrixadc_lsnrtspalgprofile.tf_lsnrtspalgprofile_ds.rtspalgprofilename
+}
+`
+
+func TestAccLsnrtspalgprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnrtspalgprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnrtspalgprofile.tf_lsnrtspalgprofile_ds", "rtspalgprofilename", "my_lsn_rtspalgprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnrtspalgprofile.tf_lsnrtspalgprofile_ds", "rtspportrange", "4200"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnrtspalgprofile.tf_lsnrtspalgprofile_ds", "rtspidletimeout", "150"),
+				),
+			},
+		},
+	})
 }

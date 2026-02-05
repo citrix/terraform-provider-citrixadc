@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccPtp_add = `
@@ -94,4 +95,30 @@ func testAccCheckPtpExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccPtpDataSource_basic = `
+	resource "citrixadc_ptp" "tf_ptp_ds" {
+		state = "ENABLE"
+	}
+
+	data "citrixadc_ptp" "tf_ptp_ds" {
+		depends_on = [citrixadc_ptp.tf_ptp_ds]
+	}
+`
+
+func TestAccPtpDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPtpDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_ptp.tf_ptp_ds", "id"),
+					resource.TestCheckResourceAttr("data.citrixadc_ptp.tf_ptp_ds", "state", "ENABLE"),
+				),
+			},
+		},
+	})
 }

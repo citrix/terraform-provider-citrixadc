@@ -133,3 +133,38 @@ func testAccCheckBotpolicyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccBotpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botpolicy.tf_botpolicy_ds", "name", "tf_botpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_botpolicy.tf_botpolicy_ds", "profilename", "BOT_BYPASS"),
+					resource.TestCheckResourceAttr("data.citrixadc_botpolicy.tf_botpolicy_ds", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_botpolicy.tf_botpolicy_ds", "comment", "DATASOURCE TEST COMMENT"),
+				),
+			},
+		},
+	})
+}
+
+const testAccBotpolicyDataSource_basic = `
+
+resource "citrixadc_botpolicy" "tf_botpolicy_ds" {
+    name        = "tf_botpolicy_ds"
+    profilename = "BOT_BYPASS"
+    rule        = "true"
+    comment     = "DATASOURCE TEST COMMENT"
+}
+
+data "citrixadc_botpolicy" "tf_botpolicy_ds" {
+    name = citrixadc_botpolicy.tf_botpolicy_ds.name
+    depends_on = [citrixadc_botpolicy.tf_botpolicy_ds]
+}
+
+`

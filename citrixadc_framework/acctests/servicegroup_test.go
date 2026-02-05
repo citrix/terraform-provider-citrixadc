@@ -264,3 +264,33 @@ func TestAccServicegroup_enable_disable(t *testing.T) {
 		},
 	})
 }
+
+const testAccServicegroupDataSource_basic = `
+
+	resource "citrixadc_servicegroup" "tf_servicegroup" {
+		servicegroupname = "test_servicegroup_ds"
+		servicetype      = "HTTP"
+	}
+
+	data "citrixadc_servicegroup" "tf_servicegroup" {
+		servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+		depends_on       = [citrixadc_servicegroup.tf_servicegroup]
+	}
+`
+
+func TestAccServicegroupDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServicegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServicegroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_servicegroup.tf_servicegroup", "servicegroupname", "test_servicegroup_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_servicegroup.tf_servicegroup", "servicetype", "HTTP"),
+				),
+			},
+		},
+	})
+}

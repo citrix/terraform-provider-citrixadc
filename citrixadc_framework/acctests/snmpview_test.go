@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSnmpview_basic = `
@@ -44,6 +45,19 @@ resource "citrixadc_snmpview" "tf_snmpview" {
   
 `
 
+const testAccSnmpviewDataSource_basic = `
+resource "citrixadc_snmpview" "tf_snmpview" {
+	name    = "test_name_ds"
+	subtree = "1.2.4.7"
+	type    = "excluded"
+}
+
+data "citrixadc_snmpview" "tf_snmpview" {
+	name = citrixadc_snmpview.tf_snmpview.name
+	subtree = citrixadc_snmpview.tf_snmpview.subtree
+}
+`
+
 func TestAccSnmpview_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -64,6 +78,23 @@ func TestAccSnmpview_basic(t *testing.T) {
 					testAccCheckSnmpviewExist("citrixadc_snmpview.tf_snmpview", nil),
 					resource.TestCheckResourceAttr("citrixadc_snmpview.tf_snmpview", "subtree", "1.2.4.8"),
 					resource.TestCheckResourceAttr("citrixadc_snmpview.tf_snmpview", "type", "included"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSnmpviewDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpviewDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_snmpview.tf_snmpview", "name", "test_name_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpview.tf_snmpview", "subtree", "1.2.4.7"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpview.tf_snmpview", "type", "excluded"),
 				),
 			},
 		},

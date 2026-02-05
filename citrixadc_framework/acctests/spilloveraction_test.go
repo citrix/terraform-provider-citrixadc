@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSpilloveraction_basic = `
@@ -30,6 +31,17 @@ resource "citrixadc_spilloveraction" "tf_spilloveraction" {
 	name         = "my_spilloveraction"
 	action       = "SPILLOVER"
 	}
+`
+
+const testAccSpilloveractionDataSource_basic = `
+resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+	name   = "my_spilloveraction_ds"
+	action = "SPILLOVER"
+}
+
+data "citrixadc_spilloveraction" "tf_spilloveraction" {
+	name = citrixadc_spilloveraction.tf_spilloveraction.name
+}
 `
 
 func TestAccSpilloveraction_basic(t *testing.T) {
@@ -44,6 +56,22 @@ func TestAccSpilloveraction_basic(t *testing.T) {
 					testAccCheckSpilloveractionExist("citrixadc_spilloveraction.tf_spilloveraction", nil),
 					resource.TestCheckResourceAttr("citrixadc_spilloveraction.tf_spilloveraction", "name", "my_spilloveraction"),
 					resource.TestCheckResourceAttr("citrixadc_spilloveraction.tf_spilloveraction", "action", "SPILLOVER"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSpilloveractionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpilloveractionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_spilloveraction.tf_spilloveraction", "name", "my_spilloveraction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_spilloveraction.tf_spilloveraction", "action", "SPILLOVER"),
 				),
 			},
 		},

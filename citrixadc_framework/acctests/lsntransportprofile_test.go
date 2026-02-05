@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsntransportprofile_basic = `
@@ -47,7 +48,6 @@ const testAccLsntransportprofile_update = `
 `
 
 func TestAccLsntransportprofile_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -141,4 +141,38 @@ func testAccCheckLsntransportprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsntransportprofileDataSource_basic = `
+
+	resource "citrixadc_lsntransportprofile" "tf_lsntransportprofile_ds" {
+		transportprofilename = "my_lsn_transportprofile_ds"
+		transportprotocol    = "TCP"
+		portquota            = 10
+		sessionquota         = 10
+		groupsessionlimit    = 100
+	}
+
+	data "citrixadc_lsntransportprofile" "tf_lsntransportprofile_ds" {
+		transportprofilename = citrixadc_lsntransportprofile.tf_lsntransportprofile_ds.transportprofilename
+	}
+`
+
+func TestAccLsntransportprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsntransportprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsntransportprofile.tf_lsntransportprofile_ds", "transportprofilename", "my_lsn_transportprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsntransportprofile.tf_lsntransportprofile_ds", "transportprotocol", "TCP"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsntransportprofile.tf_lsntransportprofile_ds", "portquota", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsntransportprofile.tf_lsntransportprofile_ds", "sessionquota", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsntransportprofile.tf_lsntransportprofile_ds", "groupsessionlimit", "100"),
+				),
+			},
+		},
+	})
 }

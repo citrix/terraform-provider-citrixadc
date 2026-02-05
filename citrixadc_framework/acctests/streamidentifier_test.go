@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccStreamidentifier_basic = `
@@ -163,4 +164,48 @@ func testAccCheckStreamidentifierDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccStreamidentifierDataSource_basic = `
+	resource "citrixadc_streamselector" "tf_streamselector" {
+		name = "my_streamselector"
+		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
+	}
+	resource "citrixadc_streamidentifier" "tf_streamidentifier" {
+		name         = "my_streamidentifier"
+		selectorname = citrixadc_streamselector.tf_streamselector.name
+		samplecount  = 10
+		sort         = "CONNECTIONS"
+		snmptrap     = "ENABLED"
+		loglimit	 = 500
+		loginterval = 60
+		log = "NONE"
+	}
+
+	data "citrixadc_streamidentifier" "tf_streamidentifier_datasource" {
+		name = citrixadc_streamidentifier.tf_streamidentifier.name
+	}
+`
+
+func TestAccStreamidentifierDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamidentifierDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_streamidentifier.tf_streamidentifier_datasource", "name", "my_streamidentifier"),
+					resource.TestCheckResourceAttr("data.citrixadc_streamidentifier.tf_streamidentifier_datasource", "selectorname", "my_streamselector"),
+					resource.TestCheckResourceAttr("data.citrixadc_streamidentifier.tf_streamidentifier_datasource", "samplecount", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_streamidentifier.tf_streamidentifier_datasource", "sort", "CONNECTIONS"),
+					resource.TestCheckResourceAttr("data.citrixadc_streamidentifier.tf_streamidentifier_datasource", "snmptrap", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_streamidentifier.tf_streamidentifier_datasource", "loglimit", "500"),
+					resource.TestCheckResourceAttr("data.citrixadc_streamidentifier.tf_streamidentifier_datasource", "loginterval", "60"),
+					resource.TestCheckResourceAttr("data.citrixadc_streamidentifier.tf_streamidentifier_datasource", "log", "NONE"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_streamidentifier.tf_streamidentifier_datasource", "id"),
+				),
+			},
+		},
+	})
 }

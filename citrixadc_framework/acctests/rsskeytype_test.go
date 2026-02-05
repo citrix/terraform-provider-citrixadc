@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccRsskeytype_add = `
@@ -94,4 +95,31 @@ func testAccCheckRsskeytypeExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccRsskeytypeDataSource_basic = `
+
+	resource "citrixadc_rsskeytype" "tf_rsskeytype" {
+		rsstype = "SYMMETRIC"
+	}
+
+	data "citrixadc_rsskeytype" "tf_rsskeytype" {
+		depends_on = [citrixadc_rsskeytype.tf_rsskeytype]
+	}
+`
+
+func TestAccRsskeytypeDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRsskeytypeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rsskeytype.tf_rsskeytype", "rsstype", "SYMMETRIC"),
+				),
+			},
+		},
+	})
 }

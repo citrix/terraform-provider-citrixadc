@@ -254,3 +254,33 @@ func testAccCheckUserAgent() resource.TestCheckFunc {
 		}
 	}
 }
+
+const testAccServerDataSource_basic = `
+
+	resource "citrixadc_server" "tf_server" {
+		name      = "test_server_ds"
+		ipaddress = "192.168.11.14"
+	}
+
+	data "citrixadc_server" "tf_server" {
+		name       = citrixadc_server.tf_server.name
+		depends_on = [citrixadc_server.tf_server]
+	}
+`
+
+func TestAccServerDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_server.tf_server", "name", "test_server_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_server.tf_server", "ipaddress", "192.168.11.14"),
+				),
+			},
+		},
+	})
+}

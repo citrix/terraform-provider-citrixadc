@@ -25,7 +25,6 @@ import (
 )
 
 func TestAccNslicenseserver_basic(t *testing.T) {
-	t.Skip("ssh does not work correctly with CPX")
 	if isCpxRun {
 		t.Skip("Feature not supported in CPX")
 	}
@@ -116,7 +115,35 @@ func testAccCheckNslicenseserverDestroy(s *terraform.State) error {
 
 const testAccNslicenseserver_basic = `
 resource "citrixadc_nslicenseserver" "tf_licenseserver" {
-    servername = "10.222.74.142"
+    servername = "10.101.132.128"
     port = 27000
+}
+`
+
+func TestAccNslicenseserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNslicenseserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nslicenseserver.tf_licenseserver_datasource", "servername", "10.101.132.128"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslicenseserver.tf_licenseserver_datasource", "port", "27000"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNslicenseserverDataSource_basic = `
+
+resource "citrixadc_nslicenseserver" "tf_licenseserver_ds" {
+    servername = "10.101.132.128"
+    port = 27000
+}
+
+data "citrixadc_nslicenseserver" "tf_licenseserver_datasource" {
+    servername = citrixadc_nslicenseserver.tf_licenseserver_ds.servername
 }
 `

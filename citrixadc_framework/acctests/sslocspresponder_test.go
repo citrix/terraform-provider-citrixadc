@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSslocspresponder_basic = `
@@ -75,6 +76,28 @@ const testAccSslocspresponder_basic_update2 = `
 		signingcert = "ns-server-certificate"
 		trustresponder = false
 		usenonce = "YES"
+	}
+`
+
+const testAccSslocspresponderDataSource_basic = `
+	resource "citrixadc_sslocspresponder" "tf_sslocspresponder" {
+		name = "tf_sslocspresponder"
+		url = "http://www.citrix.com"
+		batchingdelay = 5
+		batchingdepth = 2
+		cache = "ENABLED"
+		cachetimeout = 1
+		httpmethod = "GET"
+		insertclientcert = "YES"
+		ocspurlresolvetimeout = 100
+		producedattimeskew = 300
+		resptimeout = 100
+		trustresponder = false
+		usenonce = "NO"
+	}
+
+	data "citrixadc_sslocspresponder" "tf_sslocspresponder" {
+		name = citrixadc_sslocspresponder.tf_sslocspresponder.name
 	}
 `
 
@@ -195,4 +218,27 @@ func testAccCheckSslocspresponderDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSslocspresponderDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslocspresponderDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "name", "tf_sslocspresponder"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "url", "http://www.citrix.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "batchingdelay", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "batchingdepth", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "cache", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "cachetimeout", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "httpmethod", "GET"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "insertclientcert", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "usenonce", "NO"),
+				),
+			},
+		},
+	})
 }

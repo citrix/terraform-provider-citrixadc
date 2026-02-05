@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationradiuspolicy_add = `
@@ -144,4 +145,42 @@ func testAccCheckAuthenticationradiuspolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationradiuspolicyDataSource_basic = `
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction_ds" {
+		name         = "tf_radiusaction_ds"
+		radkey       = "secret"
+		serverip     = "1.2.3.5"
+		serverport   = 8080
+		authtimeout  = 2
+		radnasip     = "DISABLED"
+		passencoding = "chap"
+	}
+	resource "citrixadc_authenticationradiuspolicy" "tf_radiuspolicy_ds" {
+		name      = "tf_radiuspolicy_ds"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationradiusaction.tf_radiusaction_ds.name
+	}
+
+	data "citrixadc_authenticationradiuspolicy" "tf_radiuspolicy_ds_data" {
+		name = citrixadc_authenticationradiuspolicy.tf_radiuspolicy_ds.name
+	}
+`
+
+func TestAccAuthenticationradiuspolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationradiuspolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiuspolicy.tf_radiuspolicy_ds_data", "name", "tf_radiuspolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiuspolicy.tf_radiuspolicy_ds_data", "rule", "NS_TRUE"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiuspolicy.tf_radiuspolicy_ds_data", "reqaction", "tf_radiusaction_ds"),
+				),
+			},
+		},
+	})
 }

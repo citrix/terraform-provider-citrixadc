@@ -151,3 +151,44 @@ func testAccCheckVpnurlpolicyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccVpnurlpolicyDataSource_basic = `
+
+	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
+		name             = "tf_vpnurlaction"
+		linkname         = "new_link"
+		actualurl        = "http://www.citrix.com"
+		applicationtype  = "CVPN"
+		clientlessaccess = "OFF"
+		comment          = "Testing"
+		ssotype          = "unifiedgateway"
+		vservername      = "vserver1"
+	}
+	resource "citrixadc_vpnurlpolicy" "tf_vpnurlpolicy" {
+		name = "new_policy"
+		rule = "true"
+		action = citrixadc_vpnurlaction.tf_vpnurlaction.name
+	}
+
+data "citrixadc_vpnurlpolicy" "tf_vpnurlpolicy" {
+	name = citrixadc_vpnurlpolicy.tf_vpnurlpolicy.name
+}
+`
+
+func TestAccVpnurlpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnurlpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "name", "new_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "action", "tf_vpnurlaction"),
+				),
+			},
+		},
+	})
+}

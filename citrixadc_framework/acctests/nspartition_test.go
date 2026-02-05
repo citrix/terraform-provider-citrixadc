@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNspartition_add = `
@@ -132,4 +133,37 @@ func testAccCheckNspartitionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNspartitionDataSource_basic = `
+	resource "citrixadc_nspartition" "tf_nspartition_ds" {
+		partitionname = "tf_test_partition"
+		maxbandwidth  = 10240
+		minbandwidth  = 10240
+		maxconn       = 1024
+		maxmemlimit   = 10
+	}
+
+	data "citrixadc_nspartition" "tf_nspartition_ds" {
+		partitionname = citrixadc_nspartition.tf_nspartition_ds.partitionname
+	}
+`
+
+func TestAccNspartitionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspartitionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nspartition.tf_nspartition_ds", "partitionname", "tf_test_partition"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nspartition.tf_nspartition_ds", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nspartition.tf_nspartition_ds", "maxbandwidth"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nspartition.tf_nspartition_ds", "maxconn"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nspartition.tf_nspartition_ds", "maxmemlimit"),
+				),
+			},
+		},
+	})
 }

@@ -145,3 +145,41 @@ func testAccCheckAuditnslogactionDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccAuditnslogactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditnslogactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogaction.tf_auditnslogaction_ds", "name", "tf_auditnslogaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogaction.tf_auditnslogaction_ds", "serverip", "10.222.74.180"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogaction.tf_auditnslogaction_ds", "tcp", "ALL"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogaction.tf_auditnslogaction_ds", "acl", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogaction.tf_auditnslogaction_ds", "protocolviolations", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuditnslogactionDataSource_basic = `
+
+resource "citrixadc_auditnslogaction" "tf_auditnslogaction_ds" {
+    name     = "tf_auditnslogaction_ds"
+    serverip = "10.222.74.180"
+    loglevel = ["ALERT", "CRITICAL"]
+    tcp      = "ALL"
+    acl      = "ENABLED"
+    protocolviolations = "NONE"
+}
+
+data "citrixadc_auditnslogaction" "tf_auditnslogaction_ds" {
+    name = citrixadc_auditnslogaction.tf_auditnslogaction_ds.name
+    depends_on = [citrixadc_auditnslogaction.tf_auditnslogaction_ds]
+}
+
+`

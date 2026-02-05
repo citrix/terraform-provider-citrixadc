@@ -129,3 +129,35 @@ func testAccCheckCmppolicyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccCmppolicyDataSource_basic = `
+
+resource "citrixadc_cmppolicy" "tf_cmppolicy" {
+    name = "tf_cmppolicy_datasource"
+    rule = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"
+    resaction = "COMPRESS"
+}
+
+data "citrixadc_cmppolicy" "tf_cmppolicy_datasource" {
+    name = citrixadc_cmppolicy.tf_cmppolicy.name
+    depends_on = [citrixadc_cmppolicy.tf_cmppolicy]
+}
+
+`
+
+func TestAccCmppolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmppolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "name", "tf_cmppolicy_datasource"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "rule", "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "resaction", "COMPRESS"),
+				),
+			},
+		},
+	})
+}

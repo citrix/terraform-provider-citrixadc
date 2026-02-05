@@ -17,29 +17,55 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccArp_basic = `
 
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid = 2
+	}
+
 	resource "citrixadc_arp" "tf_arp" {
 		ipaddress = "10.222.74.175"
 		mac       = "3B:FD:37:27:A1:F8"
-		vxlan     =  2
+		vxlan     =  resource.citrixadc_vxlan.tf_vxlan.vxlanid
 	}
 	
 `
 const testAccArp_update = `
 
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid = 4
+	}
+
 	resource "citrixadc_arp" "tf_arp" {
 		ipaddress = "10.222.74.175"
 		mac       = "3B:FD:37:27:A1:F8"
-		vxlan     =  4
+		vxlan     =  resource.citrixadc_vxlan.tf_vxlan.vxlanid
 	}
 	
+`
+
+const testAccArpDataSource_basic = `
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid = 2
+	}
+	resource "citrixadc_arp" "tf_arp" {
+		ipaddress = "10.222.74.175"
+		mac       = "3B:FD:37:27:A1:F8"
+		vxlan     =  resource.citrixadc_vxlan.tf_vxlan.vxlanid
+	}
+
+	data "citrixadc_arp" "tf_arp_ds" {
+		ipaddress = citrixadc_arp.tf_arp.ipaddress
+		ownernode = 0
+		td        = 0
+	}
 `
 
 func TestAccArp_basic(t *testing.T) {
@@ -130,4 +156,22 @@ func testAccCheckArpDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccArpDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckArpDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccArpDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_arp.tf_arp_ds", "ipaddress", "10.222.74.175"),
+					resource.TestCheckResourceAttr("data.citrixadc_arp.tf_arp_ds", "mac", "3b:fd:37:27:a1:f8"),
+					resource.TestCheckResourceAttr("data.citrixadc_arp.tf_arp_ds", "vxlan", "2"),
+				),
+			},
+		},
+	})
 }

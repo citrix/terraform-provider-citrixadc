@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationradiusaction_add = `
@@ -144,4 +145,45 @@ func testAccCheckAuthenticationradiusactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationradiusactionDataSource_basic = `
+
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction_ds" {
+		name         = "tf_radiusaction_ds"
+		radkey       = "secret"
+		serverip     = "1.2.3.4"
+		serverport   = 8080
+		authtimeout  = 2
+		radnasip     = "DISABLED"
+		passencoding = "chap"
+		transport    = "UDP"
+		messageauthenticator = "OFF"
+	}
+
+	data "citrixadc_authenticationradiusaction" "tf_radiusaction_ds" {
+		name = citrixadc_authenticationradiusaction.tf_radiusaction_ds.name
+	}
+`
+
+func TestAccAuthenticationradiusactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationradiusactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "name", "tf_radiusaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "serverip", "1.2.3.4"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "serverport", "8080"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "authtimeout", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "radnasip", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "passencoding", "chap"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "transport", "UDP"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "messageauthenticator", "OFF"),
+				),
+			},
+		},
+	})
 }

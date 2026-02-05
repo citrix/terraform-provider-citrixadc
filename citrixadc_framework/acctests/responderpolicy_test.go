@@ -547,3 +547,40 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
   rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
 }
 `
+
+const testAccResponderpolicyDataSource_basic = `
+resource "citrixadc_responderaction" "tf_responder_action_ds" {
+  name    = "tf_responder_action_ds"
+  type    = "respondwith"
+  target  = "\"test_response\""
+}
+
+resource "citrixadc_responderpolicy" "tf_responder_policy_ds" {
+  name   = "tf_responder_policy_ds"
+  action = citrixadc_responderaction.tf_responder_action_ds.name
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"testds\")"
+  comment = "datasource test comment"
+}
+
+data "citrixadc_responderpolicy" "tf_responder_policy_ds" {
+  name = citrixadc_responderpolicy.tf_responder_policy_ds.name
+}
+`
+
+func TestAccResponderpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicy.tf_responder_policy_ds", "name", "tf_responder_policy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicy.tf_responder_policy_ds", "action", "tf_responder_action_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicy.tf_responder_policy_ds", "rule", "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"testds\")"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicy.tf_responder_policy_ds", "comment", "datasource test comment"),
+				),
+			},
+		},
+	})
+}

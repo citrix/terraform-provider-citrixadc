@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccGslbservicegroup_add = `
@@ -60,6 +61,27 @@ resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
   
 `
 
+const testAccGslbservicegroupDataSource_basic = `
+
+resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+	servicegroupname = "test_gslbvservicegroup"
+	servicetype      = "HTTP"
+	cip              = "DISABLED"
+	healthmonitor    = "NO"
+	sitename         = citrixadc_gslbsite.site_local.sitename
+}
+resource "citrixadc_gslbsite" "site_local" {
+	sitename        = "Site-Local"
+	siteipaddress   = "172.31.96.234"
+	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
+}
+
+data "citrixadc_gslbservicegroup" "gslbservicegroup_data" {
+	servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
+}
+`
+
 func TestAccGslbservicegroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -82,6 +104,25 @@ func TestAccGslbservicegroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup.tf_gslbservicegroup", "servicegroupname", "test_gslbvservicegroup"),
 					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup.tf_gslbservicegroup", "cip", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup.tf_gslbservicegroup", "sitename", "Site-Local"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGslbservicegroupDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicegroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "servicegroupname", "test_gslbvservicegroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "cip", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "healthmonitor", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "sitename", "Site-Local"),
 				),
 			},
 		},

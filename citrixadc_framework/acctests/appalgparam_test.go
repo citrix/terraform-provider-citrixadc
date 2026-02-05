@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppalgparam_add = `
@@ -96,4 +97,30 @@ func testAccCheckAppalgparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccAppalgparamDataSource_basic = `
+	resource "citrixadc_appalgparam" "tf_appalgparam" {
+		pptpgreidletimeout = 8000
+	}
+	
+	data "citrixadc_appalgparam" "tf_appalgparam" {
+		depends_on = [citrixadc_appalgparam.tf_appalgparam]
+	}
+`
+
+func TestAccAppalgparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppalgparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appalgparam.tf_appalgparam", "pptpgreidletimeout", "8000"),
+				),
+			},
+		},
+	})
 }

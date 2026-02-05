@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccTmtrafficpolicy_basic = `
@@ -143,4 +144,41 @@ func testAccCheckTmtrafficpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccTmtrafficpolicyDataSource_basic = `
+
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_tmtraffic_action"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}
+
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "my_tmtraffic_policy"
+		rule   = "true"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
+
+data "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+    name = citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy.name
+}
+`
+
+func TestAccTmtrafficpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmtrafficpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "name", "my_tmtraffic_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "action", "my_tmtraffic_action"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "rule", "true"),
+				),
+			},
+		},
+	})
 }

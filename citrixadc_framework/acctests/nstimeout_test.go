@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNstimeout_basic = `
@@ -116,4 +117,39 @@ func testAccCheckNstimeoutExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccNstimeoutDataSource_basic = `
+
+	resource "citrixadc_nstimeout" "tf_nstimeout" {
+		zombie     = 60
+		client     = 2000
+		server     = 2000
+		httpclient = 2000
+		reducedrsttimeout = 10
+	}
+
+	data "citrixadc_nstimeout" "tf_nstimeout_data" {
+		depends_on = [citrixadc_nstimeout.tf_nstimeout]
+	}
+`
+
+func TestAccNstimeoutDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstimeoutDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nstimeout.tf_nstimeout_data", "zombie", "60"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstimeout.tf_nstimeout_data", "client", "2000"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstimeout.tf_nstimeout_data", "server", "2000"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstimeout.tf_nstimeout_data", "httpclient", "2000"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstimeout.tf_nstimeout_data", "reducedrsttimeout", "10"),
+				),
+			},
+		},
+	})
 }

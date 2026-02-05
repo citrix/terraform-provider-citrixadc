@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccExtendedmemoryparam_add = `
@@ -94,4 +95,30 @@ func testAccCheckExtendedmemoryparamExist(n string, id *string) resource.TestChe
 
 		return nil
 	}
+}
+
+const testAccExtendedmemoryparamDataSource_basic = `
+	resource "citrixadc_extendedmemoryparam" "tf_extendedmemoryparam" {
+		memlimit = 512
+	}
+
+	data "citrixadc_extendedmemoryparam" "tf_extendedmemoryparam_ds" {
+		depends_on = [citrixadc_extendedmemoryparam.tf_extendedmemoryparam]
+	}
+`
+
+func TestAccExtendedmemoryparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExtendedmemoryparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_extendedmemoryparam.tf_extendedmemoryparam_ds", "memlimit", "512"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_extendedmemoryparam.tf_extendedmemoryparam_ds", "id"),
+				),
+			},
+		},
+	})
 }

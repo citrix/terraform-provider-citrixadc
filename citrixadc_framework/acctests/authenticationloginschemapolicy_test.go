@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationloginschemapolicy_add = `
@@ -144,4 +145,44 @@ func testAccCheckAuthenticationloginschemapolicyDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccAuthenticationloginschemapolicyDataSource_basic = `
+
+resource "citrixadc_authenticationloginschema" "tf_loginschema_ds" {
+	name                    = "tf_loginschema_ds"
+	authenticationschema    = "LoginSchema/SingleAuth.xml"
+	ssocredentials          = "YES"
+	authenticationstrength  = "30"
+	passwordcredentialindex = "10"
+}
+
+resource "citrixadc_authenticationloginschemapolicy" "tf_loginschemapolicy_ds" {
+	name      = "tf_loginschemapolicy_ds"
+	rule      = "true"
+	action    = citrixadc_authenticationloginschema.tf_loginschema_ds.name
+	comment   = "datasource_test"
+}
+
+data "citrixadc_authenticationloginschemapolicy" "tf_loginschemapolicy_ds" {
+	name = citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy_ds.name
+}
+`
+
+func TestAccAuthenticationloginschemapolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationloginschemapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationloginschemapolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy_ds", "name", "tf_loginschemapolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy_ds", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy_ds", "comment", "datasource_test"),
+				),
+			},
+		},
+	})
 }

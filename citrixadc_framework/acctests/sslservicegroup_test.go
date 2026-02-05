@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSslservicegroup_basic = `
@@ -132,4 +133,54 @@ func testAccCheckSslservicegroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccSslservicegroupDataSource_basic = `
+	resource "citrixadc_sslservicegroup" "tf_sslservicegroup" {
+		servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+		sesstimeout = 50
+		sessreuse = "ENABLED"
+		ssl3 = "ENABLED"
+		snienable = "ENABLED"
+		serverauth = "ENABLED"
+		sendclosenotify = "YES"
+		strictsigdigestcheck = "ENABLED"
+		sslclientlogs = "ENABLED"
+	}
+
+	resource "citrixadc_servicegroup" "tf_servicegroup" {
+		servicegroupname = "tf_servicegroup"
+		servicetype = "SSL"
+	}
+
+	data "citrixadc_sslservicegroup" "tf_sslservicegroup_datasource" {
+		servicegroupname = citrixadc_sslservicegroup.tf_sslservicegroup.servicegroupname
+	}
+`
+
+func TestAccSslservicegroupDataSource_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservicegroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "servicegroupname", "tf_servicegroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "sesstimeout", "50"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "sessreuse", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "ssl3", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "snienable", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "serverauth", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "sendclosenotify", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "strictsigdigestcheck", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "sslclientlogs", "ENABLED"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "id"),
+				),
+			},
+		},
+	})
 }

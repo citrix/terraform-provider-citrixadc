@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSubscribergxinterface_basic = `
@@ -36,6 +37,27 @@ const testAccSubscribergxinterface_basic = `
 		healthcheck    = "YES"
 		servicepathavp = [26009]
 		healthcheckttl = 30
+	}
+`
+
+const testAccSubscribergxinterfaceDataSource_basic = `
+
+	resource "citrixadc_service" "tf_service" {
+		name 		= "pcrf-svc1"
+		port 		= 3868
+		ip 			= "10.202.22.12"
+		servicetype = "DIAMETER"
+	}
+	resource "citrixadc_subscribergxinterface" "tf_subscribergxinterface" {
+		service        = citrixadc_service.tf_service.name
+		pcrfrealm      = "myrealm.com"
+		healthcheck    = "YES"
+		servicepathavp = [26009]
+		healthcheckttl = 30
+	}
+
+	data "citrixadc_subscribergxinterface" "tf_subscribergxinterface" {
+		depends_on = [citrixadc_subscribergxinterface.tf_subscribergxinterface]
 	}
 `
 const testAccSubscribergxinterface_update = `
@@ -123,4 +145,23 @@ func testAccCheckSubscribergxinterfaceExist(n string, id *string) resource.TestC
 
 		return nil
 	}
+}
+
+func TestAccSubscribergxinterfaceDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscribergxinterfaceDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_subscribergxinterface.tf_subscribergxinterface", "service", "pcrf-svc1"),
+					resource.TestCheckResourceAttr("data.citrixadc_subscribergxinterface.tf_subscribergxinterface", "pcrfrealm", "myrealm.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_subscribergxinterface.tf_subscribergxinterface", "healthcheck", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_subscribergxinterface.tf_subscribergxinterface", "healthcheckttl", "30"),
+				),
+			},
+		},
+	})
 }

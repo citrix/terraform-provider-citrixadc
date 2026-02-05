@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNshmackey_add = `
@@ -132,3 +133,36 @@ func testAccCheckNshmackeyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccNshmackeyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNshmackeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNshmackeyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nshmackey.tf_hmackey_ds", "name", "tf_hmackey_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshmackey.tf_hmackey_ds", "digest", "SHA256"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshmackey.tf_hmackey_ds", "comment", "Test HMAC key for datasource"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNshmackeyDataSource_basic = `
+
+resource "citrixadc_nshmackey" "tf_hmackey_ds" {
+	name     = "tf_hmackey_ds"
+	digest   = "SHA256"
+	keyvalue = "616263"
+	comment  = "Test HMAC key for datasource"
+}
+
+data "citrixadc_nshmackey" "tf_hmackey_ds" {
+	name = citrixadc_nshmackey.tf_hmackey_ds.name
+	depends_on = [citrixadc_nshmackey.tf_hmackey_ds]
+}
+`

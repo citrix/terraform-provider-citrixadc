@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccBotsignature_basic = `
@@ -114,4 +115,38 @@ func testAccCheckBotsignatureDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccBotsignatureDataSource_basic = `
+	resource "citrixadc_systemfile" "tf_signature_ds" {
+		filename     = "bot_signature_ds.json"
+		filelocation = "/var/tmp"
+		filecontent  = file("testdata/bot_signatures.json")
+	}
+	resource "citrixadc_botsignature" "tf_botsignature_ds" {
+		name       = "tf_botsignature_ds"
+		src        = "local://bot_signature_ds.json"
+		depends_on = [citrixadc_systemfile.tf_signature_ds]
+		comment    = "TestingDataSource"
+	}
+	data "citrixadc_botsignature" "tf_botsignature_ds_data" {
+		name       = citrixadc_botsignature.tf_botsignature_ds.name
+		depends_on = [citrixadc_botsignature.tf_botsignature_ds]
+	}
+`
+
+func TestAccBotsignatureDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotsignatureDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botsignature.tf_botsignature_ds_data", "name", "tf_botsignature_ds"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_botsignature.tf_botsignature_ds_data", "id"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaaradiusparams_basic = `
@@ -114,4 +115,40 @@ func testAccCheckAaaradiusparamsExist(n string, id *string) resource.TestCheckFu
 
 		return nil
 	}
+}
+
+const testAccAaaradiusparamsDataSource_basic = `
+
+
+	resource "citrixadc_aaaradiusparams" "tf_aaaradiusparams" {
+		radkey             = "sslvpn"
+		radnasip           = "ENABLED"
+		serverip           = "10.222.74.158"
+		authtimeout        = 8
+		messageauthenticator = "OFF"
+	}
+
+	data "citrixadc_aaaradiusparams" "tf_aaaradiusparams" {
+		depends_on = [citrixadc_aaaradiusparams.tf_aaaradiusparams]
+	}
+`
+
+func TestAccAaaradiusparamsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaradiusparamsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					// radkey is not checked as it's returned encrypted/hashed by the API
+					resource.TestCheckResourceAttr("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.158"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "8"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "messageauthenticator", "OFF"),
+				),
+			},
+		},
+	})
 }

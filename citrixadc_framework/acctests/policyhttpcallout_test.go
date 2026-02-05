@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccPolicyhttpcallout_basic = `
@@ -218,4 +219,45 @@ func testAccCheckPolicyhttpcalloutDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccPolicyhttpcalloutDataSource_basic = `
+	resource "citrixadc_lbvserver" "tf_lbvserver_ds" {
+		name        = "tf_lbvserver_ds"
+		ipv46       = "10.202.11.13"
+		port        = 80
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_policyhttpcallout" "tf_policyhttpcallout_ds" {
+		name         = "tf_policyhttpcallout_ds"
+		httpmethod   = "GET"
+		scheme       = "http"
+		vserver      = citrixadc_lbvserver.tf_lbvserver_ds.name
+		returntype   = "TEXT"
+		comment      = "Test datasource callout"
+	}
+
+	data "citrixadc_policyhttpcallout" "tf_policyhttpcallout_ds" {
+		name = citrixadc_policyhttpcallout.tf_policyhttpcallout_ds.name
+	}
+`
+
+func TestAccPolicyhttpcalloutDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyhttpcalloutDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_policyhttpcallout.tf_policyhttpcallout_ds", "name", "tf_policyhttpcallout_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_policyhttpcallout.tf_policyhttpcallout_ds", "httpmethod", "GET"),
+					resource.TestCheckResourceAttr("data.citrixadc_policyhttpcallout.tf_policyhttpcallout_ds", "scheme", "http"),
+					resource.TestCheckResourceAttr("data.citrixadc_policyhttpcallout.tf_policyhttpcallout_ds", "returntype", "TEXT"),
+					resource.TestCheckResourceAttr("data.citrixadc_policyhttpcallout.tf_policyhttpcallout_ds", "comment", "Test datasource callout"),
+				),
+			},
+		},
+	})
 }

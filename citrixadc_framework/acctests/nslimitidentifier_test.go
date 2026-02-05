@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNslimitidentifier_add = `
@@ -136,4 +137,42 @@ func testAccCheckNslimitidentifierDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNslimitidentifierDataSource_basic = `
+
+	resource "citrixadc_nslimitidentifier" "tf_nslimitidentifier_ds" {
+		limitidentifier  = "tf_nslimitidentifier_ds"
+		threshold        = 5
+		timeslice        = 3000
+		limittype        = "BURSTY"
+		mode             = "REQUEST_RATE"
+		maxbandwidth     = 100
+		trapsintimeslice = 2
+	}
+
+	data "citrixadc_nslimitidentifier" "tf_nslimitidentifier_ds_data" {
+		limitidentifier = citrixadc_nslimitidentifier.tf_nslimitidentifier_ds.limitidentifier
+	}
+`
+
+func TestAccNslimitidentifierDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNslimitidentifierDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "limitidentifier", "tf_nslimitidentifier_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "threshold", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "timeslice", "3000"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "limittype", "BURSTY"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "mode", "REQUEST_RATE"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "maxbandwidth", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "trapsintimeslice", "2"),
+				),
+			},
+		},
+	})
 }

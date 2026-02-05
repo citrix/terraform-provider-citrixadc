@@ -176,3 +176,39 @@ resource "citrixadc_netprofile" "tf_netprofile" {
 }
 
 `
+
+const testAccNetprofileDataSource_basic = `
+
+	resource "citrixadc_netprofile" "tf_netprofile" {
+		name                   = "tf_netprofile_ds"
+		proxyprotocol          = "ENABLED"
+		proxyprotocoltxversion = "V1"
+		srcippersistency       = "ENABLED"
+	}
+
+	data "citrixadc_netprofile" "tf_netprofile_ds" {
+		name = citrixadc_netprofile.tf_netprofile.name
+	}
+`
+
+func TestAccNetprofileDataSource_basic(t *testing.T) {
+	if isCpxRun {
+		t.Skip("CPX 12.0 is outdated for this resource")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_netprofile.tf_netprofile_ds", "name", "tf_netprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_netprofile.tf_netprofile_ds", "proxyprotocol", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_netprofile.tf_netprofile_ds", "proxyprotocoltxversion", "V1"),
+					resource.TestCheckResourceAttr("data.citrixadc_netprofile.tf_netprofile_ds", "srcippersistency", "ENABLED"),
+				),
+			},
+		},
+	})
+}

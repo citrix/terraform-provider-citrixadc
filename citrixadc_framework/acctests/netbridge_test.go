@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNetbridge_add = `
@@ -45,6 +46,20 @@ const testAccNetbridge_update = `
 	resource "citrixadc_netbridge" "tf_netbridge" {
 		name         = "tf_netbridge"
 		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp1.name
+	}
+`
+
+const testAccNetbridgeDataSource_basic = `
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "tf_netbridge_ds"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+
+	data "citrixadc_netbridge" "tf_netbridge_ds" {
+		name = citrixadc_netbridge.tf_netbridge.name
 	}
 `
 
@@ -136,4 +151,21 @@ func testAccCheckNetbridgeDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccNetbridgeDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridgeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetbridgeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge.tf_netbridge_ds", "name", "tf_netbridge_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge.tf_netbridge_ds", "vxlanvlanmap", "tf_vxlanvlanmp"),
+				),
+			},
+		},
+	})
 }

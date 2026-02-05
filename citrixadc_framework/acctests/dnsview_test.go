@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnsview_basic = `
@@ -111,4 +112,30 @@ func testAccCheckDnsviewDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccDnsviewDataSource_basic = `
+	resource "citrixadc_dnsview" "tf_dnsview_ds" {
+		viewname = "view_ds_test"
+	}
+
+	data "citrixadc_dnsview" "tf_dnsview_ds" {
+		viewname = citrixadc_dnsview.tf_dnsview_ds.viewname
+	}
+`
+
+func TestAccDnsviewDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsviewDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsview.tf_dnsview_ds", "viewname", "view_ds_test"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsview.tf_dnsview_ds", "id", "view_ds_test"),
+				),
+			},
+		},
+	})
 }

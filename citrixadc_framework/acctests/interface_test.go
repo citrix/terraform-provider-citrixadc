@@ -106,3 +106,36 @@ resource "citrixadc_interface" "tf_interface" {
     mtu = 1500
 }
 `
+
+func TestAccInterfaceDataSource_basic(t *testing.T) {
+	if isCpxRun {
+		t.Skip("skipping test CPX has different interface numbering")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInterfaceDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_interface.tf_interface", "interface_id", "1/1"),
+					resource.TestCheckResourceAttr("data.citrixadc_interface.tf_interface", "hamonitor", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_interface.tf_interface", "mtu", "2000"),
+				),
+			},
+		},
+	})
+}
+
+const testAccInterfaceDataSource_basic = `
+resource "citrixadc_interface" "tf_interface" {
+    interface_id = "1/1"
+    hamonitor = "OFF"
+    mtu = 2000
+}
+
+data "citrixadc_interface" "tf_interface" {
+    interface_id = citrixadc_interface.tf_interface.interface_id
+}
+`

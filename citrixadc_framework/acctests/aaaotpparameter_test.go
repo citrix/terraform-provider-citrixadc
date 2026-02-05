@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaaotpparameter_basic = `
@@ -97,4 +98,32 @@ func testAccCheckAaaotpparameterExist(n string, id *string) resource.TestCheckFu
 
 		return nil
 	}
+}
+
+const testAccAaaotpparameterDataSource_basic = `
+	resource "citrixadc_aaaotpparameter" "tf_aaaotpparameter" {
+		encryption = "OFF"
+		maxotpdevices = 3
+	}
+	
+	data "citrixadc_aaaotpparameter" "tf_aaaotpparameter" {
+		depends_on = [citrixadc_aaaotpparameter.tf_aaaotpparameter]
+	}
+`
+
+func TestAccAaaotpparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaotpparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaaotpparameter.tf_aaaotpparameter", "encryption", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaotpparameter.tf_aaaotpparameter", "maxotpdevices", "3"),
+				),
+			},
+		},
+	})
 }

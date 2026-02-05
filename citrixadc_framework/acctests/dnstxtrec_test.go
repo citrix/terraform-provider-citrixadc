@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnstxtrec_basic = `
@@ -116,4 +117,35 @@ func testAccCheckDnstxtrecDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccDnstxtrecDataSource_basic = `
+
+resource "citrixadc_dnstxtrec" "dnstxtrec" {
+	domain = "tfacc-ds-txtrec-test.local"
+	string = [
+		"v=spf1 a mxrec include:websitewelcome.com ~all"
+	]
+	ttl = 3600
+}
+
+data "citrixadc_dnstxtrec" "dnstxtrec" {
+	domain = citrixadc_dnstxtrec.dnstxtrec.domain
+}
+`
+
+func TestAccDnstxtrecDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnstxtrecDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnstxtrec.dnstxtrec", "domain", "tfacc-ds-txtrec-test.local"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnstxtrec.dnstxtrec", "ttl", "3600"),
+				),
+			},
+		},
+	})
 }

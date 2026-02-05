@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnclientlessaccesspolicy_basic = `
@@ -38,6 +39,19 @@ const testAccVpnclientlessaccesspolicy_basic_update = `
 		name = "tf_vpnclientlessaccesspolicy"
 		profilename = "ns_cvpn_v2_default_profile"
 		rule = "false"
+	}
+`
+
+const testAccVpnclientlessaccesspolicyDataSource_basic = `
+
+	resource "citrixadc_vpnclientlessaccesspolicy" "tf_vpnclientlessaccesspolicy" {
+		name = "tf_vpnclientlessaccesspolicy"
+		profilename = "ns_cvpn_default_profile"
+		rule = "true"
+	}
+
+	data "citrixadc_vpnclientlessaccesspolicy" "tf_vpnclientlessaccesspolicy" {
+		name = citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy.name
 	}
 `
 
@@ -130,4 +144,22 @@ func testAccCheckVpnclientlessaccesspolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnclientlessaccesspolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnclientlessaccesspolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "name", "tf_vpnclientlessaccesspolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "profilename", "ns_cvpn_default_profile"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "rule", "true"),
+				),
+			},
+		},
+	})
 }

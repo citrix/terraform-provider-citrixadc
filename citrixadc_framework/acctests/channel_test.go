@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccChannel_basic = `
@@ -133,3 +134,34 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccChannelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_channel.tf_channel_ds", "channelid", "LA/3"),
+					resource.TestCheckResourceAttr("data.citrixadc_channel.tf_channel_ds", "tagall", "ON"),
+				),
+			},
+		},
+	})
+}
+
+const testAccChannelDataSource_basic = `
+
+resource "citrixadc_channel" "tf_channel_ds" {
+	channel_id = "LA/3"
+	tagall     = "ON"
+}
+
+data "citrixadc_channel" "tf_channel_ds" {
+	channelid = citrixadc_channel.tf_channel_ds.channel_id
+	depends_on = [citrixadc_channel.tf_channel_ds]
+}
+
+`

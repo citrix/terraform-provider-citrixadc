@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationoauthidppolicy_add = `
@@ -141,4 +142,40 @@ func testAccCheckAuthenticationoauthidppolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationoauthidppolicyDataSource_basic = `
+	resource "citrixadc_authenticationoauthidpprofile" "tf_idpprofile" {
+		name         = "tf_idpprofile_ds"
+		clientid     = "cliId"
+		clientsecret = "secret"
+		redirecturl  = "http://www.example.com/1/"
+	}
+	resource "citrixadc_authenticationoauthidppolicy" "tf_idppolicy" {
+		name    = "tf_idppolicy_ds"
+		rule    = "true"
+		action  = citrixadc_authenticationoauthidpprofile.tf_idpprofile.name
+		comment = "datasource_test"
+	}
+	data "citrixadc_authenticationoauthidppolicy" "tf_idppolicy_ds" {
+		name = citrixadc_authenticationoauthidppolicy.tf_idppolicy.name
+	}
+`
+
+func TestAccAuthenticationoauthidppolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationoauthidppolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidppolicy.tf_idppolicy_ds", "name", "tf_idppolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidppolicy.tf_idppolicy_ds", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidppolicy.tf_idppolicy_ds", "comment", "datasource_test"),
+					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationoauthidppolicy.tf_idppolicy_ds", "action", "citrixadc_authenticationoauthidppolicy.tf_idppolicy", "action"),
+				),
+			},
+		},
+	})
 }

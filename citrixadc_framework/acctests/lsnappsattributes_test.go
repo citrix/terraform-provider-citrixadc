@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsnappsattributes_basic = `
@@ -46,7 +47,6 @@ resource "citrixadc_lsnappsattributes" "tf_lsnappsattributes" {
 `
 
 func TestAccLsnappsattributes_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -138,4 +138,37 @@ func testAccCheckLsnappsattributesDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnappsattributesDataSource_basic = `
+
+resource "citrixadc_lsnappsattributes" "tf_lsnappsattributes" {
+	name              = "my_lsn_appattributes_ds"
+	transportprotocol = "TCP"
+	port              = 90
+	sessiontimeout    = 40
+}
+
+data "citrixadc_lsnappsattributes" "tf_lsnappsattributes_ds" {
+	name = citrixadc_lsnappsattributes.tf_lsnappsattributes.name
+	depends_on = [citrixadc_lsnappsattributes.tf_lsnappsattributes]
+}
+`
+
+func TestAccLsnappsattributesDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnappsattributesDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsattributes.tf_lsnappsattributes_ds", "name", "my_lsn_appattributes_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsattributes.tf_lsnappsattributes_ds", "transportprotocol", "TCP"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsattributes.tf_lsnappsattributes_ds", "port", "90"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsattributes.tf_lsnappsattributes_ds", "sessiontimeout", "40"),
+				),
+			},
+		},
+	})
 }

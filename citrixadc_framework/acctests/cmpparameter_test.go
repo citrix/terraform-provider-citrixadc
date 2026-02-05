@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCmpparameter_basic = `
@@ -118,4 +119,42 @@ func testAccCheckCmpparameterExist(n string, id *string) resource.TestCheckFunc 
 
 		return nil
 	}
+}
+
+const testAccCmpparameterDataSource_basic = `
+
+
+	resource "citrixadc_cmpparameter" "tf_cmpparameter" {
+		cmplevel    = "optimal"
+		quantumsize = 20
+		servercmp   = "OFF"
+		randomgzipfilenameminlength = "12"
+		randomgzipfilenamemaxlength = "20"
+		randomgzipfilename = "ENABLED"
+	}
+
+	data "citrixadc_cmpparameter" "tf_cmpparameter" {
+		depends_on = [citrixadc_cmpparameter.tf_cmpparameter]
+	}
+`
+
+func TestAccCmpparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmpparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cmpparameter.tf_cmpparameter", "cmplevel", "optimal"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmpparameter.tf_cmpparameter", "quantumsize", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmpparameter.tf_cmpparameter", "servercmp", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenameminlength", "12"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenamemaxlength", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilename", "ENABLED"),
+				),
+			},
+		},
+	})
 }

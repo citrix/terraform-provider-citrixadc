@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsnparameter_basic = `
@@ -99,4 +100,32 @@ func testAccCheckLsnparameterExist(n string, id *string) resource.TestCheckFunc 
 
 		return nil
 	}
+}
+
+const testAccLsnparameterDataSource_basic = `
+
+resource "citrixadc_lsnparameter" "tf_lsnparameter_ds" {
+	sessionsync          = "ENABLED"
+	subscrsessionremoval = "ENABLED"
+}
+
+data "citrixadc_lsnparameter" "tf_lsnparameter_ds" {
+	depends_on = [citrixadc_lsnparameter.tf_lsnparameter_ds]
+}
+`
+
+func TestAccLsnparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnparameter.tf_lsnparameter_ds", "sessionsync", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnparameter.tf_lsnparameter_ds", "subscrsessionremoval", "ENABLED"),
+				),
+			},
+		},
+	})
 }

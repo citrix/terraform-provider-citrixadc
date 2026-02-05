@@ -111,3 +111,34 @@ resource "citrixadc_botpolicylabel" "tf_Botpolicylabel" {
 	comment = "tf_Botpolicylabel comment"
 }
 `
+
+func TestAccBotpolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotpolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel.tf_botpolicylabel_ds", "labelname", "tf_botpolicylabel_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel.tf_botpolicylabel_ds", "comment", "DATASOURCE TEST COMMENT"),
+				),
+			},
+		},
+	})
+}
+
+const testAccBotpolicylabelDataSource_basic = `
+
+resource "citrixadc_botpolicylabel" "tf_botpolicylabel_ds" {
+	labelname = "tf_botpolicylabel_ds"
+	comment = "DATASOURCE TEST COMMENT"
+}
+
+data "citrixadc_botpolicylabel" "tf_botpolicylabel_ds" {
+	labelname = citrixadc_botpolicylabel.tf_botpolicylabel_ds.labelname
+	depends_on = [citrixadc_botpolicylabel.tf_botpolicylabel_ds]
+}
+
+`

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsappflowcollector_basic = `
@@ -28,6 +29,19 @@ const testAccNsappflowcollector_basic = `
 		name      = "tf_appflowcollector"
 		ipaddress = "1.2.4.1"
 		port      = 30
+	}
+`
+
+const testAccNsappflowcollectorDataSource_basic = `
+	resource "citrixadc_nsappflowcollector" "tf_appflowcollector" {
+		name      = "tf_appflowcollector_ds"
+		ipaddress = "1.2.4.2"
+		port      = 31
+	}
+
+	data "citrixadc_nsappflowcollector" "tf_appflowcollector" {
+		name = citrixadc_nsappflowcollector.tf_appflowcollector.name
+		depends_on = [citrixadc_nsappflowcollector.tf_appflowcollector]
 	}
 `
 
@@ -112,4 +126,22 @@ func testAccCheckNsappflowcollectorDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccNsappflowcollectorDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsappflowcollectorDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsappflowcollector.tf_appflowcollector", "name", "tf_appflowcollector_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsappflowcollector.tf_appflowcollector", "ipaddress", "1.2.4.2"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsappflowcollector.tf_appflowcollector", "port", "31"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCmppolicylabel_basic = `
@@ -131,3 +132,34 @@ func testAccCheckCmppolicylabelDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccCmppolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmppolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cmppolicylabel.tf_cmppolicylabel_ds", "labelname", "my_cmppolicy_label_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmppolicylabel.tf_cmppolicylabel_ds", "type", "REQ"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCmppolicylabelDataSource_basic = `
+
+resource "citrixadc_cmppolicylabel" "tf_cmppolicylabel_ds" {
+	labelname = "my_cmppolicy_label_ds"
+	type      = "REQ"
+}
+
+data "citrixadc_cmppolicylabel" "tf_cmppolicylabel_ds" {
+	labelname = citrixadc_cmppolicylabel.tf_cmppolicylabel_ds.labelname
+	depends_on = [citrixadc_cmppolicylabel.tf_cmppolicylabel_ds]
+}
+
+`

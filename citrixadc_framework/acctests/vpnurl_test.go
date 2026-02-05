@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnurl_add = `
@@ -144,4 +145,46 @@ func testAccCheckVpnurlDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVpnurlDataSource_basic = `
+
+resource "citrixadc_vpnurl" "foo" {
+	actualurl        = "http://www.citrix.com"
+	appjson          = "xyz"
+	applicationtype  = "CVPN"
+	clientlessaccess = "OFF"
+	comment          = "Testing"
+	linkname         = "Description"
+	ssotype          = "unifiedgateway"
+	urlname          = "Firsturl"
+	vservername      = "server1"
+	}
+
+data "citrixadc_vpnurl" "foo" {
+	urlname = citrixadc_vpnurl.foo.urlname
+}
+`
+
+func TestAccVpnurlDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnurlDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurl.foo", "urlname", "Firsturl"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurl.foo", "actualurl", "http://www.citrix.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurl.foo", "linkname", "Description"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurl.foo", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurl.foo", "applicationtype", "CVPN"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurl.foo", "clientlessaccess", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurl.foo", "ssotype", "unifiedgateway"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnurl.foo", "vservername", "server1"),
+				),
+			},
+		},
+	})
 }

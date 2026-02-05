@@ -147,3 +147,34 @@ func testAccCheckTransformprofileDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccTransformprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_transformprofile.tf_trans_profile", "name", "tf_trans_profile"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformprofile.tf_trans_profile", "comment", "Some comment"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformprofile.tf_trans_profile", "onlytransformabsurlinbody", "ON"),
+				),
+			},
+		},
+	})
+}
+
+const testAccTransformprofileDataSource_basic = `
+resource "citrixadc_transformprofile" "tf_trans_profile" {
+    name = "tf_trans_profile"
+    comment = "Some comment"
+    onlytransformabsurlinbody = "ON"
+}
+
+data "citrixadc_transformprofile" "tf_trans_profile" {
+    name = citrixadc_transformprofile.tf_trans_profile.name
+    depends_on = [citrixadc_transformprofile.tf_trans_profile]
+}
+`

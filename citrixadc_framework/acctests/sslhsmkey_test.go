@@ -33,6 +33,19 @@ resource "citrixadc_sslhsmkey" "tf_hsmkey1" {
 }
 `
 
+const testAccSslhsmkeyDataSource_basic = `
+resource "citrixadc_sslhsmkey" "tf_hsmkey1" {
+	hsmkeyname = "hsmkey1"
+	hsmtype = "Fillme"
+	password = "Fillme"
+	serialnum = "Fillme"
+}
+
+data "citrixadc_sslhsmkey" "tf_hsmkey1" {
+	hsmkeyname = citrixadc_sslhsmkey.tf_hsmkey1.hsmkeyname
+}
+`
+
 func TestAccSslhsmkey_basic(t *testing.T) {
 	if adcTestbed != "STANDALONE_HSM" {
 		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
@@ -114,4 +127,24 @@ func testAccCheckSslhsmkeyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSslhsmkeyDataSource_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslhsmkeyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslhsmkey.tf_hsmkey1", "hsmkeyname", "hsmkey1"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslhsmkey.tf_hsmkey1", "hsmtype", "Fillme"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslhsmkey.tf_hsmkey1", "serialnum", "Fillme"),
+				),
+			},
+		},
+	})
 }

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsnhttphdrlogprofile_basic = `
@@ -46,7 +47,6 @@ resource "citrixadc_lsnhttphdrlogprofile" "tf_lsnhttphdrlogprofile" {
 `
 
 func TestAccLsnhttphdrlogprofile_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -138,4 +138,36 @@ func testAccCheckLsnhttphdrlogprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnhttphdrlogprofileDataSource_basic = `
+
+resource "citrixadc_lsnhttphdrlogprofile" "tf_lsnhttphdrlogprofile_ds" {
+	httphdrlogprofilename = "my_lsn_httphdrlogprofile_ds"
+	logurl                = "DISABLED"
+	logversion            = "DISABLED"
+	loghost               = "DISABLED"
+}
+
+data "citrixadc_lsnhttphdrlogprofile" "tf_lsnhttphdrlogprofile_ds" {
+	httphdrlogprofilename = citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile_ds.httphdrlogprofilename
+}
+`
+
+func TestAccLsnhttphdrlogprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnhttphdrlogprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile_ds", "httphdrlogprofilename", "my_lsn_httphdrlogprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile_ds", "logurl", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile_ds", "logversion", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile_ds", "loghost", "DISABLED"),
+				),
+			},
+		},
+	})
 }

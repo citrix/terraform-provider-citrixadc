@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppflowpolicylabel_basic = `
@@ -124,4 +125,33 @@ func testAccCheckAppflowpolicylabelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAppflowpolicylabelDataSource_basic = `
+
+	resource "citrixadc_appflowpolicylabel" "tf_appflowpolicylabel" {
+		labelname       = "tf_policylabel"
+		policylabeltype = "HTTP"
+	}
+	
+	data "citrixadc_appflowpolicylabel" "tf_appflowpolicylabel" {
+		labelname = citrixadc_appflowpolicylabel.tf_appflowpolicylabel.labelname
+	}
+`
+
+func TestAccAppflowpolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowpolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicylabel.tf_appflowpolicylabel", "labelname", "tf_policylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicylabel.tf_appflowpolicylabel", "policylabeltype", "HTTP"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsvariable_add = `
@@ -140,3 +141,33 @@ func testAccCheckNsvariableDestroy(s *terraform.State) error {
 
 	return nil
 }
+func TestAccNsvariableDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsvariableDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsvariable.test", "name", "tf_nsvariable_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsvariable.test", "type", "text(20)"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsvariable.test", "scope", "global"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsvariable.test", "comment", "Testing datasource"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsvariableDataSource_basic = `
+resource "citrixadc_nsvariable" "tf_nsvariable_ds" {
+	name          = "tf_nsvariable_ds"
+	type          = "text(20)"
+	scope         = "global"
+	comment       = "Testing datasource"
+}
+
+data "citrixadc_nsvariable" "test" {
+	name = citrixadc_nsvariable.tf_nsvariable_ds.name
+}
+`

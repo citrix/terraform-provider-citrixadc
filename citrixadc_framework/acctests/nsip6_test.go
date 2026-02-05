@@ -176,3 +176,37 @@ resource "citrixadc_nsip6" "tf_nsip6" {
     icmp = "ENABLED"
 }
 `
+
+const testAccNsip6DataSource_basic = `
+
+resource "citrixadc_nsip6" "tf_nsip6_ds" {
+    ipv6address = "2002:db8:100::aa/64"
+    type = "VIP"
+    icmp = "ENABLED"
+    nd = "ENABLED"
+    state = "ENABLED"
+}
+
+data "citrixadc_nsip6" "tf_nsip6_datasource" {
+    ipv6address = citrixadc_nsip6.tf_nsip6_ds.ipv6address
+    td = 0
+}
+`
+
+func TestAccNsip6DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsip6DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsip6.tf_nsip6_datasource", "ipv6address", "2002:db8:100::aa/64"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsip6.tf_nsip6_datasource", "icmp", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsip6.tf_nsip6_datasource", "nd", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsip6.tf_nsip6_datasource", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}

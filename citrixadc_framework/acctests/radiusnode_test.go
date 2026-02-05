@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccRadiusnode_basic = `
@@ -109,3 +110,30 @@ func testAccCheckRadiusnodeDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccRadiusnodeDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRadiusnodeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_radiusnode.test", "nodeprefix", "192.168.1.0/24"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_radiusnode.test", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccRadiusnodeDataSource_basic = `
+resource "citrixadc_radiusnode" "tf_radiusnode" {
+	nodeprefix = "192.168.1.0/24"
+	radkey     = "secret123"
+}
+
+data "citrixadc_radiusnode" "test" {
+	nodeprefix = citrixadc_radiusnode.tf_radiusnode.nodeprefix
+}
+`

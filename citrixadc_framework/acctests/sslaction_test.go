@@ -39,6 +39,18 @@ const testAccSslaction_check_forcenew = `
 	}
 `
 
+const testAccSslactionDataSource_basic = `
+resource "citrixadc_sslaction" "foo" {
+	name       = "tf_sslaction_ds"
+	clientauth = "DOCLIENTAUTH"
+	clientcertverification = "Mandatory"
+}
+
+data "citrixadc_sslaction" "foo" {
+	name = citrixadc_sslaction.foo.name
+}
+`
+
 func TestAccSslaction_basic(t *testing.T) {
 	if isCpxRun {
 		t.Skip("sslaction clientcertverification attribute not supported in CPX12")
@@ -63,6 +75,26 @@ func TestAccSslaction_basic(t *testing.T) {
 					testAccCheckSslactionExist("citrixadc_sslaction.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslaction.foo", "name", "tf_sslaction"),
 					resource.TestCheckResourceAttr("citrixadc_sslaction.foo", "clientauth", "NOCLIENTAUTH"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslactionDataSource_basic(t *testing.T) {
+	if isCpxRun {
+		t.Skip("sslaction clientcertverification attribute not supported in CPX12")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslaction.foo", "name", "tf_sslaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslaction.foo", "clientauth", "DOCLIENTAUTH"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslaction.foo", "clientcertverification", "Mandatory"),
 				),
 			},
 		},

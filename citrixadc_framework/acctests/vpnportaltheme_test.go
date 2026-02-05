@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnportaltheme_add = `
@@ -35,6 +36,18 @@ const testAccVpnportaltheme_update = `
 	resource "citrixadc_vpnportaltheme" "tf_vpnportaltheme" {
 		name      = "tf_vpnportaltheme"
 		basetheme = "Greenbubble"
+	}
+`
+
+const testAccVpnportalthemeDataSource_basic = `
+
+	resource "citrixadc_vpnportaltheme" "tf_vpnportaltheme" {
+		name      = "tf_vpnportaltheme"
+		basetheme = "X1"
+	}
+
+	data "citrixadc_vpnportaltheme" "tf_vpnportaltheme" {
+		name = citrixadc_vpnportaltheme.tf_vpnportaltheme.name
 	}
 `
 
@@ -126,4 +139,20 @@ func testAccCheckVpnportalthemeDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnportalthemeDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnportalthemeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnportaltheme.tf_vpnportaltheme", "name", "tf_vpnportaltheme"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnportaltheme.tf_vpnportaltheme", "basetheme", "X1"),
+				),
+			},
+		},
+	})
 }

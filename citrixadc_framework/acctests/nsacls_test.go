@@ -318,3 +318,30 @@ resource "citrixadc_nsacls" "foo" {
 
 }
 `
+
+const testAccNsaclsDataSource_basic = `
+
+resource "citrixadc_nsacls" "foo" {
+  type = "CLASSIC"
+}
+
+data "citrixadc_nsacls" "foo" {
+  depends_on = [citrixadc_nsacls.foo]
+}
+`
+
+func TestAccNsaclsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsaclsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsacls.foo", "id", "nsacls-config"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacls.foo", "type", "CLASSIC"),
+				),
+			},
+		},
+	})
+}

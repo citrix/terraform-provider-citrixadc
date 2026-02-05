@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNstrafficdomain_basic = `
@@ -112,4 +113,35 @@ func testAccCheckNstrafficdomainDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNstrafficdomainDataSource_basic = `
+
+	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
+		td        = 3
+		aliasname = "tf_trafficdomain_ds"
+		vmac      = "ENABLED"
+	}
+
+	data "citrixadc_nstrafficdomain" "tf_trafficdomain_data" {
+		td = citrixadc_nstrafficdomain.tf_trafficdomain.td
+	}
+`
+
+func TestAccNstrafficdomainDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstrafficdomainDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "td", "3"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "aliasname", "tf_trafficdomain_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "vmac", "ENABLED"),
+				),
+			},
+		},
+	})
 }

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccReputationsettings_basic = `
@@ -105,4 +106,33 @@ func testAccCheckReputationsettingsExist(n string, id *string) resource.TestChec
 
 		return nil
 	}
+}
+
+const testAccReputationsettingsDataSource_basic = `
+resource "citrixadc_reputationsettings" "tf_reputationsettings" {
+	proxyserver = "my_proxyserver"
+	proxyport   = 3500
+	proxyusername = "my_proxyuser"
+}
+
+data "citrixadc_reputationsettings" "reputationsettings" {
+	depends_on = [citrixadc_reputationsettings.tf_reputationsettings]
+}
+`
+
+func TestAccDataSourceReputationsettings(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReputationsettingsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_reputationsettings.reputationsettings", "proxyserver", "my_proxyserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_reputationsettings.reputationsettings", "proxyport", "3500"),
+					resource.TestCheckResourceAttr("data.citrixadc_reputationsettings.reputationsettings", "proxyusername", "my_proxyuser"),
+				),
+			},
+		},
+	})
 }

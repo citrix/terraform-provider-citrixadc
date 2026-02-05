@@ -123,3 +123,30 @@ func testAccCheckVlanDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccVlanDataSource_basic = `
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid = 40
+    aliasname = "Test alias name"
+}
+
+data "citrixadc_vlan" "tf_vlan" {
+    vlanid = citrixadc_vlan.tf_vlan.vlanid
+}
+`
+
+func TestAccVlanDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlanDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vlan.tf_vlan", "vlanid", "40"),
+					resource.TestCheckResourceAttr("data.citrixadc_vlan.tf_vlan", "aliasname", "Test alias name"),
+				),
+			},
+		},
+	})
+}

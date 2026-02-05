@@ -110,3 +110,32 @@ func testAccCheckSslpolicylabelDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccSslpolicylabelDataSource_basic = `
+
+	resource "citrixadc_sslpolicylabel" "tf_sslpolicylabel" {
+		labelname = "tf_sslpolicylabel"
+		type = "CONTROL"
+	}
+	
+	data "citrixadc_sslpolicylabel" "tf_sslpolicylabel" {
+		labelname = citrixadc_sslpolicylabel.tf_sslpolicylabel.labelname
+	}
+`
+
+func TestAccSslpolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslpolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel.tf_sslpolicylabel", "labelname", "tf_sslpolicylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel.tf_sslpolicylabel", "type", "CONTROL"),
+				),
+			},
+		},
+	})
+}

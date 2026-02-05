@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCacheparameter_basic = `
@@ -39,6 +40,20 @@ const testAccCacheparameter_update = `
 		maxpostlen  = "6500"
 		verifyusing = "HOSTNAME_AND_IP"
 		cacheevictionpolicy = "MODERATE"
+	}
+`
+
+const testAccCacheparameterDataSource_basic = `
+
+	resource "citrixadc_cacheparameter" "tf_cacheparameter" {
+		memlimit    = "650"
+		maxpostlen  = "6000"
+		verifyusing = "HOSTNAME"
+		cacheevictionpolicy = "RELAXED"
+	}
+
+	data "citrixadc_cacheparameter" "tf_cacheparameter_ds" {
+		depends_on = [citrixadc_cacheparameter.tf_cacheparameter]
 	}
 `
 
@@ -108,4 +123,22 @@ func testAccCheckCacheparameterExist(n string, id *string) resource.TestCheckFun
 
 		return nil
 	}
+}
+
+func TestAccCacheparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCacheparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cacheparameter.tf_cacheparameter_ds", "memlimit", "650"),
+					resource.TestCheckResourceAttr("data.citrixadc_cacheparameter.tf_cacheparameter_ds", "maxpostlen", "6000"),
+					resource.TestCheckResourceAttr("data.citrixadc_cacheparameter.tf_cacheparameter_ds", "verifyusing", "HOSTNAME"),
+					resource.TestCheckResourceAttr("data.citrixadc_cacheparameter.tf_cacheparameter_ds", "cacheevictionpolicy", "RELAXED"),
+				),
+			},
+		},
+	})
 }

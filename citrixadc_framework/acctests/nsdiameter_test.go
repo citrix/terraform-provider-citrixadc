@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsdiameter_add = `
@@ -128,4 +129,34 @@ func testAccCheckNsdiameterDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNsdiameterDataSource_basic = `
+	resource "citrixadc_nsdiameter" "tf_nsdiameter_ds" {
+		identity               = "citrixadc.com"
+		realm                  = "com"
+		serverclosepropagation = "NO"
+	}
+
+	data "citrixadc_nsdiameter" "tf_nsdiameter_ds" {
+		ownernode = -1
+		depends_on = [citrixadc_nsdiameter.tf_nsdiameter_ds]
+	}
+`
+
+func TestAccNsdiameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsdiameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsdiameter.tf_nsdiameter_ds", "identity", "citrixadc.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsdiameter.tf_nsdiameter_ds", "realm", "com"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsdiameter.tf_nsdiameter_ds", "serverclosepropagation", "NO"),
+				),
+			},
+		},
+	})
 }

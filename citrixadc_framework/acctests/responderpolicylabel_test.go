@@ -112,3 +112,32 @@ resource "citrixadc_responderpolicylabel" "responder_policylabel" {
 	comment = "Some comment"
 }
 `
+
+const testAccResponderpolicylabelDataSource_basic = `
+resource "citrixadc_responderpolicylabel" "responder_policylabel_ds" {
+	labelname = "tf_responder_policylabel_ds"
+	policylabeltype = "HTTP"
+	comment = "datasource test comment"
+}
+
+data "citrixadc_responderpolicylabel" "responder_policylabel_ds" {
+  labelname = citrixadc_responderpolicylabel.responder_policylabel_ds.labelname
+}
+`
+
+func TestAccResponderpolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "labelname", "tf_responder_policylabel_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "policylabeltype", "HTTP"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "comment", "datasource test comment"),
+				),
+			},
+		},
+	})
+}

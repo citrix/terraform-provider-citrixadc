@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVxlan_add = `
@@ -140,4 +141,44 @@ func testAccCheckVxlanDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVxlanDataSource_basic = `
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 40
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		vlan               = citrixadc_vlan.tf_vlan.vlanid
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+
+data "citrixadc_vxlan" "tf_vxlan" {
+	vxlanid = citrixadc_vxlan.tf_vxlan.vxlanid
+}
+`
+
+func TestAccVxlanDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVxlanDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vxlan.tf_vxlan", "vxlanid", "123"),
+					resource.TestCheckResourceAttr("data.citrixadc_vxlan.tf_vxlan", "vlan", "40"),
+					resource.TestCheckResourceAttr("data.citrixadc_vxlan.tf_vxlan", "port", "33"),
+					resource.TestCheckResourceAttr("data.citrixadc_vxlan.tf_vxlan", "dynamicrouting", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vxlan.tf_vxlan", "ipv6dynamicrouting", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vxlan.tf_vxlan", "innervlantagging", "ENABLED"),
+				),
+			},
+		},
+	})
 }

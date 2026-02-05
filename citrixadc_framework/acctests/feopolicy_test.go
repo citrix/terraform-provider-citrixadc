@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccFeopolicy_basic = `
@@ -36,6 +37,19 @@ const testAccFeopolicy_update = `
 		name   = "my_feopolicy"
 		action = "IMG_OPTIMIZE"
 		rule   = "false"
+	}
+`
+
+const testAccFeopolicyDataSource_basic = `
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "my_feopolicy_datasource"
+		action = "BASIC"
+		rule   = "true"
+	}
+
+	data "citrixadc_feopolicy" "tf_feopolicy" {
+		name = citrixadc_feopolicy.tf_feopolicy.name
 	}
 `
 
@@ -129,4 +143,21 @@ func testAccCheckFeopolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccFeopolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeopolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_feopolicy.tf_feopolicy", "name", "my_feopolicy_datasource"),
+					resource.TestCheckResourceAttr("data.citrixadc_feopolicy.tf_feopolicy", "action", "BASIC"),
+					resource.TestCheckResourceAttr("data.citrixadc_feopolicy.tf_feopolicy", "rule", "true"),
+				),
+			},
+		},
+	})
 }

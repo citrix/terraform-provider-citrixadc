@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaaglobal_aaapreauthenticationpolicy_binding_basic = `
@@ -195,4 +196,44 @@ func testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingDestroy(s *terrafor
 	}
 
 	return nil
+}
+
+const testAccAaaglobal_aaapreauthenticationpolicy_binding_DataSource_basic = `
+
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "my_action"
+		preauthenticationaction = "ALLOW"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
+	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
+		name      = "my_policy"
+		rule 	  = "REQ.VLANID == 5"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
+	}
+	resource "citrixadc_aaaglobal_aaapreauthenticationpolicy_binding" "tf_aaaglobal_aaapreauthenticationpolicy_binding" {
+		policy    = citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy.name
+		priority  = 50
+	}
+	
+	data "citrixadc_aaaglobal_aaapreauthenticationpolicy_binding" "tf_aaaglobal_aaapreauthenticationpolicy_binding" {
+		policy = citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy.name
+		depends_on = [citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding]
+	}
+`
+
+func TestAccAaaglobal_aaapreauthenticationpolicy_binding_DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaglobal_aaapreauthenticationpolicy_binding_DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", "policy", "my_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", "priority", "50"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccRnat6_basic = `
@@ -107,3 +108,31 @@ func testAccCheckRnat6Exist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+func TestAccRnat6DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRnat6DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rnat6.test", "name", "tf_rnat6_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_rnat6.test", "network", "2004::/64"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rnat6.test", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccRnat6DataSource_basic = `
+resource "citrixadc_rnat6" "test" {
+	name    = "tf_rnat6_ds"
+	network = "2004::/64"
+}
+
+data "citrixadc_rnat6" "test" {
+	name = citrixadc_rnat6.test.name
+}
+`

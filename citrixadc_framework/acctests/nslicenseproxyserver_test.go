@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNslicenseproxyserver_basic = `
@@ -129,3 +130,32 @@ func testAccCheckNslicenseproxyserverDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccNslicenseproxyserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNslicenseproxyserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nslicenseproxyserver.test", "servername", "www.example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_nslicenseproxyserver.test", "port", "80"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNslicenseproxyserverDataSource_basic = `
+
+resource "citrixadc_nslicenseproxyserver" "test" {
+	servername = "www.example.com"
+	port       = 80
+}
+
+data "citrixadc_nslicenseproxyserver" "test" {
+	servername = citrixadc_nslicenseproxyserver.test.servername
+	depends_on = [citrixadc_nslicenseproxyserver.test]
+}
+`

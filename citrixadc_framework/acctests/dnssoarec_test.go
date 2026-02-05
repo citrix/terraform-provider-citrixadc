@@ -44,6 +44,23 @@ resource "citrixadc_dnssoarec" "tf_dnssoarec" {
 }
 `
 
+const testAccDnssoarecDataSource_basic = `
+
+resource "citrixadc_dnssoarec" "tf_dnssoarec" {
+	domain =  "test.com"
+	originserver  = "10.2.3.5"
+	contact =  "other"
+	expire = 1800
+	refresh = 4000
+}
+
+data "citrixadc_dnssoarec" "tf_dnssoarec_ds" {
+	domain = citrixadc_dnssoarec.tf_dnssoarec.domain
+	depends_on = [citrixadc_dnssoarec.tf_dnssoarec]
+}
+
+`
+
 func TestAccDnssoarec_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -60,6 +77,25 @@ func TestAccDnssoarec_basic(t *testing.T) {
 				Config: testAccDnssoarec_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnssoarecExist("citrixadc_dnssoarec.tf_dnssoarec", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDnssoarecDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnssoarecDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "domain", "test.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "originserver", "10.2.3.5"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "contact", "other"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "expire", "1800"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "refresh", "4000"),
 				),
 			},
 		},

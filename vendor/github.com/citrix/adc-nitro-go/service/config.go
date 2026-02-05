@@ -331,7 +331,12 @@ func (c *NitroClient) ChangeResource(resourceType string, name string, resourceS
 // DeleteResource deletes a resource of supplied type and name
 func (c *NitroClient) DeleteResource(resourceType string, resourceName string) error {
 
-	_, err := c.listResource(resourceType, resourceName)
+	var err error
+	if resourceType == "appqoecustomresp" {
+		_, err = c.listResource(resourceType, "")
+	} else {
+		_, err = c.listResource(resourceType, resourceName)
+	}
 	if err == nil { // resource exists
 		c.logger.Trace("DeleteResource Found resource ", "resourceType", resourceType, "resourceName", resourceName)
 		_, err = c.deleteResource(resourceType, resourceName)
@@ -626,6 +631,10 @@ func (c *NitroClient) FindResourceArrayWithParams(findParams FindParams) ([]map[
 	// Fallthrough
 
 	// Check if resource type key exists
+	if findParams.ResourceType == "interface" {
+		// Special handling for interface as NITRO returns different key name
+		findParams.ResourceType = "Interface"
+	}
 	resourceData, ok := nitroData[findParams.ResourceType]
 	if !ok {
 		// Since errorcode is 0 we persume this is the expected behavior for a missing resource
@@ -671,6 +680,10 @@ func (c *NitroClient) FindAllResources(resourceType string) ([]map[string]interf
 	if err = json.Unmarshal(result, &data); err != nil {
 		c.logger.Error("FindAllResources: Failed to unmarshal Netscaler Response!")
 		return nil, fmt.Errorf("[ERROR] nitro-go: FindAllResources: Failed to unmarshal Netscaler Response: of type %s", resourceType)
+	}
+	if resourceType == "interface" {
+		// Special handling for cachepolicylabel as NITRO returns different key name
+		resourceType = "Interface"
 	}
 	rsrcs, ok := data[resourceType]
 	if !ok || rsrcs == nil {

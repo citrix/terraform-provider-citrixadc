@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppfwurlencodedformcontenttype_basic = `
@@ -109,4 +110,32 @@ func testAccCheckAppfwurlencodedformcontenttypeDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+const testAccAppfwurlencodedformcontenttypeDataSource_basic = `
+	resource "citrixadc_appfwurlencodedformcontenttype" "tf_urlencodedformcontenttype" {
+		urlencodedformcontenttypevalue = "tf_urlencodedformcontenttype"
+		isregex                        = "NOTREGEX"
+	}
+
+	data "citrixadc_appfwurlencodedformcontenttype" "tf_urlencodedformcontenttype" {
+		urlencodedformcontenttypevalue = citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype.urlencodedformcontenttypevalue
+	}
+`
+
+func TestAccAppfwurlencodedformcontenttypeDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwurlencodedformcontenttypeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype", "urlencodedformcontenttypevalue", "tf_urlencodedformcontenttype"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype", "isregex", "NOTREGEX"),
+				),
+			},
+		},
+	})
 }

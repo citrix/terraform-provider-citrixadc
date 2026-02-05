@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIcapolicy_basic = `
@@ -140,3 +141,39 @@ func testAccCheckIcapolicyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccIcapolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcapolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_icapolicy.tf_icapolicy_ds", "name", "my_ica_policy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_icapolicy.tf_icapolicy_ds", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_icapolicy.tf_icapolicy_ds", "action", "my_ica_action_ds"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_icapolicy.tf_icapolicy_ds", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccIcapolicyDataSource_basic = `
+
+	resource "citrixadc_icaaction" "tf_icaaction_ds" {
+		name              = "my_ica_action_ds"
+		accessprofilename = "default_ica_accessprofile"
+	}
+
+	resource "citrixadc_icapolicy" "tf_icapolicy_ds" {
+		name   = "my_ica_policy_ds"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction_ds.name
+	}
+
+	data "citrixadc_icapolicy" "tf_icapolicy_ds" {
+		name = citrixadc_icapolicy.tf_icapolicy_ds.name
+	}
+`

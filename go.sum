@@ -13,8 +13,8 @@ github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d h1:xDfNPAt8lFiC1U
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d/go.mod h1:6QX/PXZ00z/TKoufEY6K/a0k6AhaJrQKdFe6OfVXsa4=
 github.com/bufbuild/protocompile v0.14.1 h1:iA73zAf/fyljNjQKwYzUHD6AD4R8KMasmwa/FBatYVw=
 github.com/bufbuild/protocompile v0.14.1/go.mod h1:ppVdAIhbr2H8asPk6k4pY7t9zB1OU5DoEw9xY/FUi1c=
-github.com/citrix/adc-nitro-go v0.0.0-20251104191711-0b07dd8d6d8a h1:qmw5Uf38zK36xXt3mSvl31L6Y1mJKU3uPkZE0haoz6U=
-github.com/citrix/adc-nitro-go v0.0.0-20251104191711-0b07dd8d6d8a/go.mod h1:1SPLFfIOtWnKiNWEuLhRqGrEi6VxGkXt4gpWa+mhaCg=
+github.com/citrix/adc-nitro-go v0.0.0-20260205012354-82928f146e7b h1:YLknisxEn7G3Ghzc+97TCEn9jvbT7Vy5vobMtLW+axA=
+github.com/citrix/adc-nitro-go v0.0.0-20260205012354-82928f146e7b/go.mod h1:1SPLFfIOtWnKiNWEuLhRqGrEi6VxGkXt4gpWa+mhaCg=
 github.com/cloudflare/circl v1.6.1 h1:zqIqSPIndyBh1bjLVVDHMPpVKqp8Su/V+6MeDzzQBQ0=
 github.com/cloudflare/circl v1.6.1/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLocationparameter_add = `
@@ -35,6 +36,18 @@ const testAccLocationparameter_update = `
 		context            = "geographic"
 		q1label            = "europe"
 		matchwildcardtoany = "NO"
+	}
+`
+
+const testAccLocationparameterDataSource_basic = `
+	resource "citrixadc_locationparameter" "tf_locationpara" {
+		context            = "geographic"
+		q1label            = "asia"
+		matchwildcardtoany = "YES"
+	}
+
+	data "citrixadc_locationparameter" "tf_locationpara" {
+		depends_on = [citrixadc_locationparameter.tf_locationpara]
 	}
 `
 
@@ -101,4 +114,22 @@ func testAccCheckLocationparameterExist(n string, id *string) resource.TestCheck
 
 		return nil
 	}
+}
+
+func TestAccLocationparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_locationparameter.tf_locationpara", "context", "geographic"),
+					resource.TestCheckResourceAttr("data.citrixadc_locationparameter.tf_locationpara", "q1label", "asia"),
+					resource.TestCheckResourceAttr("data.citrixadc_locationparameter.tf_locationpara", "matchwildcardtoany", "YES"),
+				),
+			},
+		},
+	})
 }

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIcalatencyprofile_basic = `
@@ -43,6 +44,21 @@ resource "citrixadc_icalatencyprofile" "tf_icalatencyprofile" {
 	l7latencywaittime        = 80
 	}
   
+`
+
+const testAccIcalatencyprofileDataSource_basic = `
+
+resource "citrixadc_icalatencyprofile" "tf_icalatencyprofile" {
+	name                     = "my_ica_latencyprofile"
+	l7latencymonitoring      = "ENABLED"
+	l7latencythresholdfactor = 120
+	l7latencywaittime        = 100
+}
+
+data "citrixadc_icalatencyprofile" "tf_icalatencyprofile_ds" {
+	name = citrixadc_icalatencyprofile.tf_icalatencyprofile.name
+}
+
 `
 
 func TestAccIcalatencyprofile_basic(t *testing.T) {
@@ -137,4 +153,22 @@ func testAccCheckIcalatencyprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccIcalatencyprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcalatencyprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_icalatencyprofile.tf_icalatencyprofile_ds", "name", "my_ica_latencyprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_icalatencyprofile.tf_icalatencyprofile_ds", "l7latencymonitoring", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_icalatencyprofile.tf_icalatencyprofile_ds", "l7latencythresholdfactor", "120"),
+					resource.TestCheckResourceAttr("data.citrixadc_icalatencyprofile.tf_icalatencyprofile_ds", "l7latencywaittime", "100"),
+				),
+			},
+		},
+	})
 }

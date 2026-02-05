@@ -160,3 +160,36 @@ func TestAccLbmonitor_AssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, monitorType, monitorName, monitorInstance, "servicegroupname")
 	monitorInstance.Servicegroupname = ""
 }
+
+const testAccLbmonitorDataSource_basic = `
+
+	resource "citrixadc_lbmonitor" "tf_lbmonitor" {
+		monitorname = "tf_test_lbmonitor_datasource"
+		type        = "HTTP"
+		interval    = 350
+		resptimeout = 2
+	}
+	
+	data "citrixadc_lbmonitor" "tf_lbmonitor" {
+		monitorname = citrixadc_lbmonitor.tf_lbmonitor.monitorname
+	}
+`
+
+func TestAccLbmonitorDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitorDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor.tf_lbmonitor", "monitorname", "tf_test_lbmonitor_datasource"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor.tf_lbmonitor", "type", "HTTP"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor.tf_lbmonitor", "interval", "350"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor.tf_lbmonitor", "resptimeout", "2"),
+				),
+			},
+		},
+	})
+}

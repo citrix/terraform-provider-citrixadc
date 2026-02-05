@@ -178,3 +178,56 @@ func testAccCheckNshttpprofileDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccNshttpprofileDataSource_basic = `
+
+	resource "citrixadc_nshttpprofile" "tf_nshttpprofile_ds" {
+		name                             = "tf_nshttpprofile_ds"
+		dropinvalreqs                    = "ENABLED"
+		markconnreqinval                 = "ENABLED"
+		markhttp09inval                  = "ENABLED"
+		cmponpush                        = "ENABLED"
+		conmultiplex                     = "ENABLED"
+		maxreusepool                     = 75
+		http2                            = "ENABLED"
+		altsvc                           = "ENABLED"
+		reqtimeout                       = 60000
+		persistentetag                   = "ENABLED"
+		markhttpheaderextrawserror       = "ENABLED"
+		markrfc7230noncompliantinval     = "ENABLED"
+		allowonlywordcharactersandhyphen = "DISABLED"
+	}
+
+	data "citrixadc_nshttpprofile" "tf_nshttpprofile_ds" {
+		name = citrixadc_nshttpprofile.tf_nshttpprofile_ds.name
+	}
+`
+
+func TestAccNshttpprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNshttpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNshttpprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "name", "tf_nshttpprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "dropinvalreqs", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "markconnreqinval", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "markhttp09inval", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "cmponpush", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "conmultiplex", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "maxreusepool", "75"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "http2", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "altsvc", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "reqtimeout", "60000"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "persistentetag", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "markhttpheaderextrawserror", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "markrfc7230noncompliantinval", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "allowonlywordcharactersandhyphen", "DISABLED"),
+				),
+			},
+		},
+	})
+}

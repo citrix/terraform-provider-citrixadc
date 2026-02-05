@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSnmpalarm_basic = `
@@ -111,3 +112,37 @@ func testAccCheckSnmpalarmExist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+func TestAccSnmpalarmDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpalarmDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_snmpalarm.tf_snmpalarm_ds", "trapname", "CPU-USAGE"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpalarm.tf_snmpalarm_ds", "thresholdvalue", "25"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpalarm.tf_snmpalarm_ds", "normalvalue", "20"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSnmpalarmDataSource_basic = `
+
+resource "citrixadc_snmpalarm" "tf_snmpalarm_ds" {
+	trapname       = "CPU-USAGE"
+	thresholdvalue = 25
+	normalvalue    = 20
+	state          = "ENABLED"
+	severity       = "Warning"
+}
+
+data "citrixadc_snmpalarm" "tf_snmpalarm_ds" {
+	trapname = citrixadc_snmpalarm.tf_snmpalarm_ds.trapname
+	depends_on = [citrixadc_snmpalarm.tf_snmpalarm_ds]
+}
+`

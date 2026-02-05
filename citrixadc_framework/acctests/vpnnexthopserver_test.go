@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnnexthopserver_add = `
@@ -128,4 +129,35 @@ func testAccCheckVpnnexthopserverDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVpnnexthopserverDataSource_basic = `
+
+	resource "citrixadc_vpnnexthopserver" "tf_vpnnexthopserver" {
+		name        = "tf_vpnnexthopserver"
+		nexthopip   = "2.6.1.5"
+		nexthopport = "200"
+	}
+
+data "citrixadc_vpnnexthopserver" "tf_vpnnexthopserver" {
+	name = citrixadc_vpnnexthopserver.tf_vpnnexthopserver.name
+}
+`
+
+func TestAccVpnnexthopserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnnexthopserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnnexthopserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnnexthopserver.tf_vpnnexthopserver", "name", "tf_vpnnexthopserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnnexthopserver.tf_vpnnexthopserver", "nexthopip", "2.6.1.5"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnnexthopserver.tf_vpnnexthopserver", "nexthopport", "200"),
+				),
+			},
+		},
+	})
 }

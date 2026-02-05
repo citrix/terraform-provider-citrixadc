@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccArpparam_add = `
@@ -98,4 +99,33 @@ func testAccCheckArpparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccArpparamDataSource_basic = `
+
+	resource "citrixadc_arpparam" "tf_arpparam" {
+		timeout         = 1000
+		spoofvalidation = "ENABLED"
+	}
+
+	data "citrixadc_arpparam" "tf_arpparam" {
+		depends_on = [citrixadc_arpparam.tf_arpparam]
+	}
+`
+
+func TestAccArpparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccArpparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_arpparam.tf_arpparam", "timeout", "1000"),
+					resource.TestCheckResourceAttr("data.citrixadc_arpparam.tf_arpparam", "spoofvalidation", "ENABLED"),
+				),
+			},
+		},
+	})
 }

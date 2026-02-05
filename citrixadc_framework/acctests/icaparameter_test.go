@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIcaparameter_basic = `
@@ -126,4 +127,44 @@ func testAccCheckIcaparameterExist(n string, id *string) resource.TestCheckFunc 
 
 		return nil
 	}
+}
+
+const testAccIcaparameterDataSource_basic = `
+
+resource "citrixadc_icaparameter" "tf_icaparameter" {
+	edtpmtuddf           = "ENABLED"
+	edtpmtuddftimeout    = 200
+	l7latencyfrequency   = 0
+	enablesronhafailover = "YES"
+	edtpmtudrediscovery = "DISABLED"
+	edtlosstolerant = "DISABLED"
+	dfpersistence = "DISABLED"
+	hdxinsightnonnsap = "NO"
+}
+
+data "citrixadc_icaparameter" "tf_icaparameter_ds" {
+	depends_on = [citrixadc_icaparameter.tf_icaparameter]
+}
+`
+
+func TestAccIcaparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcaparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "edtpmtuddf", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "edtpmtuddftimeout", "200"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "l7latencyfrequency", "0"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "enablesronhafailover", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "edtpmtudrediscovery", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "edtlosstolerant", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "dfpersistence", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "hdxinsightnonnsap", "NO"),
+				),
+			},
+		},
+	})
 }

@@ -70,7 +70,6 @@ func resourceCitrixAdcAaaldapparams() *schema.Resource {
 			"ldapbinddnpassword": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"ldaploginname": {
 				Type:     schema.TypeString,
@@ -196,7 +195,6 @@ func readAaaldapparamsFunc(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("groupsearchsubattribute", data["groupsearchsubattribute"])
 	d.Set("ldapbase", data["ldapbase"])
 	d.Set("ldapbinddn", data["ldapbinddn"])
-	d.Set("ldapbinddnpassword", data["ldapbinddnpassword"])
 	d.Set("ldaploginname", data["ldaploginname"])
 	setToInt("maxnestinglevel", d, data["maxnestinglevel"])
 	d.Set("nestedgroupextraction", data["nestedgroupextraction"])

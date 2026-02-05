@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnspolicylabel_add = `
@@ -30,6 +31,18 @@ resource "citrixadc_dnspolicylabel" "dnspolicylabel" {
 	labelname = "label1"
 	transform = "dns_req"
 	
+	}
+`
+
+const testAccDnspolicylabelDataSource_basic = `
+	resource "citrixadc_dnspolicylabel" "dnspolicylabel" {
+		labelname = "label1"
+		transform = "dns_req"
+	}
+
+	data "citrixadc_dnspolicylabel" "dnspolicylabel" {
+		labelname = citrixadc_dnspolicylabel.dnspolicylabel.labelname
+		depends_on = [citrixadc_dnspolicylabel.dnspolicylabel]
 	}
 `
 
@@ -113,4 +126,21 @@ func testAccCheckDnspolicylabelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnspolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnspolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnspolicylabel.dnspolicylabel", "labelname", "label1"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnspolicylabel.dnspolicylabel", "transform", "dns_req"),
+				),
+			},
+		},
+	})
 }

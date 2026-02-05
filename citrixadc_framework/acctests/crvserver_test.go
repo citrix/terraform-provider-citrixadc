@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCrvserver_add = `
@@ -132,3 +133,36 @@ func testAccCheckCrvserverDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccCrvserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver.tf_crvserver_ds", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver.tf_crvserver_ds", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver.tf_crvserver_ds", "arp", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCrvserverDataSource_basic = `
+
+resource "citrixadc_crvserver" "tf_crvserver_ds" {
+	name        = "my_vserver_ds"
+	servicetype = "HTTP"
+	arp         = "OFF"
+}
+
+data "citrixadc_crvserver" "tf_crvserver_ds" {
+	name       = citrixadc_crvserver.tf_crvserver_ds.name
+	depends_on = [citrixadc_crvserver.tf_crvserver_ds]
+}
+
+`

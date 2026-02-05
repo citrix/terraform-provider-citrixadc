@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsconsoleloginprompt_add = `
@@ -121,3 +122,30 @@ func testAccCheckNsconsoleloginpromptDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccNsconsoleloginpromptDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsconsoleloginpromptDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsconsoleloginprompt.tf_nsconsoleloginprompt", "promptstring", "tf_prompt_datasource"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsconsoleloginpromptDataSource_basic = `
+
+resource "citrixadc_nsconsoleloginprompt" "tf_nsconsoleloginprompt" {
+	promptstring = "tf_prompt_datasource"
+}
+
+data "citrixadc_nsconsoleloginprompt" "tf_nsconsoleloginprompt" {
+	depends_on = [citrixadc_nsconsoleloginprompt.tf_nsconsoleloginprompt]
+}
+`

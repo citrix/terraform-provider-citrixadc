@@ -167,3 +167,32 @@ resource "citrixadc_nsparam" "tf_nsparam" {
   ipttl = 150
 }
 `
+
+func TestAccNsparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsparam.test", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsparam.test", "timezone"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsparam.test", "advancedanalyticsstats"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsparam.test", "aftpallowrandomsourceport"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsparam.test", "internaluserlogin"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsparam.test", "ipttl"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsparam.test", "useproxyport"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsparam.test", "securecookie"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsparam.test", "proxyprotocol"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsparam.test", "tcpcip"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsparamDataSource_basic = `
+data "citrixadc_nsparam" "test" {
+}
+`

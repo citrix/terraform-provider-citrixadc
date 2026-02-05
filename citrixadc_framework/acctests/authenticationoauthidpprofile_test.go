@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationoauthidpprofile_add = `
@@ -129,4 +130,35 @@ func testAccCheckAuthenticationoauthidpprofileDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+const testAccAuthenticationoauthidpprofileDataSource_basic = `
+
+	resource "citrixadc_authenticationoauthidpprofile" "tf_idpprofile_ds" {
+		name         = "tf_idpprofile_ds"
+		clientid     = "cliId_datasource"
+		clientsecret = "secret"
+		redirecturl  = "http://www.example.com/datasource/"
+	}
+
+	data "citrixadc_authenticationoauthidpprofile" "tf_idpprofile_ds" {
+		name = citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds.name
+	}
+`
+
+func TestAccAuthenticationoauthidpprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationoauthidpprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "name", "tf_idpprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "clientid", "cliId_datasource"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "redirecturl", "http://www.example.com/datasource/"),
+				),
+			},
+		},
+	})
 }

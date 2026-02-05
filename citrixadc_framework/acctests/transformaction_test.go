@@ -175,3 +175,44 @@ func testAccCheckTransformactionDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccTransformactionDataSource_basic = `
+resource "citrixadc_transformprofile" "tf_trans_profile1" {
+  name = "tf_trans_profile1"
+}
+
+resource "citrixadc_transformaction" "tf_trans_action" {
+  name = "tf_trans_action"
+  profilename = citrixadc_transformprofile.tf_trans_profile1.name
+  priority = 100
+  requrlfrom = "http://m3.mydomain.com/(.*)"
+  requrlinto = "https://exp-proxy-v1.api.mydomain.com/$1"
+  resurlfrom = "https://exp-proxy-v1.api.mydomain.com/(.*)"
+  resurlinto = "https://m3.mydomain.com/$1"
+}
+
+data "citrixadc_transformaction" "tf_trans_action" {
+    name = citrixadc_transformaction.tf_trans_action.name
+}
+`
+
+func TestAccTransformactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_transformaction.tf_trans_action", "name", "tf_trans_action"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformaction.tf_trans_action", "profilename", "tf_trans_profile1"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformaction.tf_trans_action", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformaction.tf_trans_action", "requrlfrom", "http://m3.mydomain.com/(.*)"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformaction.tf_trans_action", "requrlinto", "https://exp-proxy-v1.api.mydomain.com/$1"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformaction.tf_trans_action", "resurlfrom", "https://exp-proxy-v1.api.mydomain.com/(.*)"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformaction.tf_trans_action", "resurlinto", "https://m3.mydomain.com/$1"),
+				),
+			},
+		},
+	})
+}

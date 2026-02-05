@@ -18,9 +18,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLbaction_basic = `
@@ -111,4 +112,33 @@ func testAccCheckLbactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLbactionDataSource_basic = `
+
+	resource "citrixadc_lbaction" "tf_act_ds" {
+		name  = "tf_act_ds"
+		type  = "SELECTIONORDER"
+		value = [1, 2]
+	}
+
+	data "citrixadc_lbaction" "tf_lbaction_ds" {
+		name = citrixadc_lbaction.tf_act_ds.name
+	}
+`
+
+func TestAccLbactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbaction.tf_lbaction_ds", "name", "tf_act_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbaction.tf_lbaction_ds", "type", "SELECTIONORDER"),
+				),
+			},
+		},
+	})
 }

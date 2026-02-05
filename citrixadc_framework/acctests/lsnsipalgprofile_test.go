@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsnsipalgprofile_basic = `
@@ -48,7 +49,6 @@ const testAccLsnsipalgprofile_update = `
 `
 
 func TestAccLsnsipalgprofile_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -144,4 +144,40 @@ func testAccCheckLsnsipalgprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnsipalgprofileDataSource_basic = `
+
+resource "citrixadc_lsnsipalgprofile" "tf_lsnsipalgprofile_ds" {
+	sipalgprofilename      = "my_lsn_sipalgprofile_ds"
+	datasessionidletimeout = 150
+	sipsessiontimeout      = 150
+	registrationtimeout    = 150
+	sipsrcportrange        = "4400"
+	siptransportprotocol   = "TCP"
+}
+
+data "citrixadc_lsnsipalgprofile" "tf_lsnsipalgprofile_ds" {
+	sipalgprofilename = citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile_ds.sipalgprofilename
+}
+`
+
+func TestAccLsnsipalgprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnsipalgprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile_ds", "sipalgprofilename", "my_lsn_sipalgprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile_ds", "datasessionidletimeout", "150"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile_ds", "sipsessiontimeout", "150"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile_ds", "registrationtimeout", "150"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile_ds", "sipsrcportrange", "4400"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile_ds", "siptransportprotocol", "TCP"),
+				),
+			},
+		},
+	})
 }

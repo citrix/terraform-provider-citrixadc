@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNat64_add = `
@@ -166,4 +167,47 @@ func testAccCheckNat64Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNat64DataSource_basic = `
+	resource "citrixadc_nsacl6" "tf_nsacl6_ds" {
+		acl6name   = "tf_nsacl6_ds"
+		acl6action = "ALLOW"
+		logstate   = "ENABLED"
+		stateful   = "NO"
+		ratelimit  = 120
+		state      = "ENABLED"
+		priority   = 20
+		protocol   = "TCP"
+	}
+	resource "citrixadc_netprofile" "tf_netprofile_ds" {
+		name                   = "tf_netprofile_ds"
+		proxyprotocol          = "ENABLED"
+		proxyprotocoltxversion = "V1"
+	}
+	resource "citrixadc_nat64" "tf_nat64_ds" {
+		name       = "tf_nat64_ds"
+		acl6name   = citrixadc_nsacl6.tf_nsacl6_ds.acl6name
+		netprofile = citrixadc_netprofile.tf_netprofile_ds.name
+	}
+	data "citrixadc_nat64" "tf_nat64_ds_data" {
+		name = citrixadc_nat64.tf_nat64_ds.name
+	}
+`
+
+func TestAccNat64DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNat64DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nat64.tf_nat64_ds_data", "name", "tf_nat64_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nat64.tf_nat64_ds_data", "acl6name", "tf_nsacl6_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nat64.tf_nat64_ds_data", "netprofile", "tf_netprofile_ds"),
+				),
+			},
+		},
+	})
 }

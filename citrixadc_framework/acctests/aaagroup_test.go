@@ -127,3 +127,32 @@ func testAccCheckAaagroupDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccAaagroup_DataSource_basic = `
+
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+	}
+
+	data "citrixadc_aaagroup" "tf_aaagroup_data" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+	}
+`
+
+func TestAccAaagroup_DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup.tf_aaagroup_data", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup.tf_aaagroup_data", "weight", "100"),
+				),
+			},
+		},
+	})
+}

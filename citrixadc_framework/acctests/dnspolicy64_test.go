@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnspolicy64_add = `
@@ -131,4 +132,36 @@ func testAccCheckDnspolicy64Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccDnspolicy64DataSource_basic = `
+
+resource "citrixadc_dnspolicy64" "dnspolicy64" {
+	name  = "policy_1"
+	rule = "dns.req.question.type.ne(aaaa)"
+	action = "default_DNS64_action"
+}
+
+data "citrixadc_dnspolicy64" "dnspolicy64_data" {
+	name = citrixadc_dnspolicy64.dnspolicy64.name
+}
+`
+
+func TestAccDnspolicy64DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnspolicy64Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnspolicy64DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnspolicy64.dnspolicy64_data", "name", "policy_1"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnspolicy64.dnspolicy64_data", "rule", "dns.req.question.type.ne(aaaa)"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnspolicy64.dnspolicy64_data", "action", "default_DNS64_action"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnspolicy64.dnspolicy64_data", "id"),
+				),
+			},
+		},
+	})
 }

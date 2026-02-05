@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIp6tunnel_add = `
@@ -36,6 +37,27 @@ const testAccIp6tunnel_add = `
 		depends_on = [
 			citrixadc_nsip6.test_nsip
 		]
+	}
+`
+
+const testAccIp6tunnelDataSource_basic = `
+	resource "citrixadc_nsip6" "test_nsip" {
+		ipv6address = "23::30:20:23:34/64"
+		type        = "VIP"
+		icmp        = "DISABLED"
+	}
+	resource "citrixadc_ip6tunnel" "tf_ip6tunnel" {
+		name   = "tf_ip6tunnel"
+		remote = "2001:db8:0:b::/64"
+		local  = "23::30:20:23:34"
+		depends_on = [
+			citrixadc_nsip6.test_nsip
+		]
+	}
+
+	data "citrixadc_ip6tunnel" "tf_ip6tunnel_ds" {
+		name   = citrixadc_ip6tunnel.tf_ip6tunnel.name
+		remote = citrixadc_ip6tunnel.tf_ip6tunnel.remote
 	}
 `
 
@@ -120,4 +142,22 @@ func testAccCheckIp6tunnelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccIp6tunnelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIp6tunnelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIp6tunnelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnel.tf_ip6tunnel_ds", "name", "tf_ip6tunnel"),
+					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnel.tf_ip6tunnel_ds", "remote", "2001:db8:0:b::/64"),
+					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnel.tf_ip6tunnel_ds", "local", "23::30:20:23:34"),
+				),
+			},
+		},
+	})
 }

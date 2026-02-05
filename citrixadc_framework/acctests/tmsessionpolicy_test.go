@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccTmsessionpolicy_basic = `
@@ -143,4 +144,40 @@ func testAccCheckTmsessionpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccTmsessionpolicyDataSource_basic = `
+
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "tf_tmsessaction"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
+	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+		name   = "my_tmsession_policy"
+		rule   = "true"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
+	}
+
+data "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+    name = citrixadc_tmsessionpolicy.tf_tmsessionpolicy.name
+}
+`
+
+func TestAccTmsessionpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmsessionpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "name", "my_tmsession_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "action", "tf_tmsessaction"),
+				),
+			},
+		},
+	})
 }

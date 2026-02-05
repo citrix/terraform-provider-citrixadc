@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaapreauthenticationpolicy_basic = `
@@ -140,4 +141,40 @@ func testAccCheckAaapreauthenticationpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAaapreauthenticationpolicyDataSource_basic = `
+
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "my_action"
+		preauthenticationaction = "ALLOW"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
+	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
+		name 	  = "my_policy"
+		rule 	  = "REQ.VLANID == 5"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
+	}
+
+	data "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
+		name = citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy.name
+	}
+`
+
+func TestAccAaapreauthenticationpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaapreauthenticationpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "name", "my_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "rule", "REQ.VLANID == 5"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "reqaction", "my_action"),
+				),
+			},
+		},
+	})
 }

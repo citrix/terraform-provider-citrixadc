@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"net/url"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccDnssrvrec_add = `
@@ -172,3 +173,43 @@ func testAccCheckDnssrvrecDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccDnssrvrecDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnssrvrecDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "domain", "example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "target", "_sip._udp.example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "priority", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "weight", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "port", "22"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "ttl", "3600"),
+				),
+			},
+		},
+	})
+}
+
+const testAccDnssrvrecDataSource_basic = `
+
+resource "citrixadc_dnssrvrec" "tf_dnssrvrec_ds" {
+	domain   = "example.com"
+	target   = "_sip._udp.example.com"
+	priority = 1
+	weight   = 1
+	port     = 22
+	ttl      = 3600
+}
+
+data "citrixadc_dnssrvrec" "tf_dnssrvrec_ds" {
+	domain = citrixadc_dnssrvrec.tf_dnssrvrec_ds.domain
+	target = citrixadc_dnssrvrec.tf_dnssrvrec_ds.target
+	depends_on = [citrixadc_dnssrvrec.tf_dnssrvrec_ds]
+}
+
+`

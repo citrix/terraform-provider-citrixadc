@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationvserver_add = `
@@ -135,3 +136,38 @@ func testAccCheckAuthenticationvserverDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccAuthenticationvserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver.tf_authenticationvserver_ds", "name", "tf_authenticationvserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver.tf_authenticationvserver_ds", "servicetype", "SSL"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver.tf_authenticationvserver_ds", "comment", "DataSource Test"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuthenticationvserverDataSource_basic = `
+
+resource "citrixadc_authenticationvserver" "tf_authenticationvserver_ds" {
+	name           = "tf_authenticationvserver_ds"
+	servicetype    = "SSL"
+	comment        = "DataSource Test"
+	authentication = "ON"
+	state          = "ENABLED"
+}
+
+data "citrixadc_authenticationvserver" "tf_authenticationvserver_ds" {
+	name = citrixadc_authenticationvserver.tf_authenticationvserver_ds.name
+	depends_on = [citrixadc_authenticationvserver.tf_authenticationvserver_ds]
+}
+
+`

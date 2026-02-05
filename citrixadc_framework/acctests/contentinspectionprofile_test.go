@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccContentinspectionprofile_basic = `
@@ -133,4 +134,36 @@ func testAccCheckContentinspectionprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccContentinspectionprofileDataSource_basic = `
+
+	resource "citrixadc_contentinspectionprofile" "tf_contentinspectionprofile" {
+		name             = "my_ci_profile_ds"
+		type             = "InlineInspection"
+		ingressinterface = "LA/2"
+		egressinterface  = "LA/3"
+	}
+
+	data "citrixadc_contentinspectionprofile" "tf_contentinspectionprofile_ds" {
+		name = citrixadc_contentinspectionprofile.tf_contentinspectionprofile.name
+	}
+`
+
+func TestAccContentinspectionprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectionprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionprofile.tf_contentinspectionprofile_ds", "name", "my_ci_profile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionprofile.tf_contentinspectionprofile_ds", "type", "InlineInspection"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionprofile.tf_contentinspectionprofile_ds", "ingressinterface", "LA/2"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionprofile.tf_contentinspectionprofile_ds", "egressinterface", "LA/3"),
+				),
+			},
+		},
+	})
 }

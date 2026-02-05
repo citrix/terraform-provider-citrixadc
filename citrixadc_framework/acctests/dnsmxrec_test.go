@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"net/url"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccDnsmxrec_add = `
@@ -45,6 +46,20 @@ resource "citrixadc_dnsmxrec" "dnsmxrec" {
 	pref   = 2
 	ttl    = 3601
 	}
+`
+
+const testAccDnsmxrecDataSource_basic = `
+
+resource "citrixadc_dnsmxrec" "dnsmxrec" {
+	domain = "tftest-ds-mx.example.local"
+	mx     = "mail-tftest-ds.example.local"
+	pref   = 10
+	ttl    = 3600
+}
+
+data "citrixadc_dnsmxrec" "dnsmxrec" {
+	domain = citrixadc_dnsmxrec.dnsmxrec.domain
+}
 `
 
 func TestAccDnsmxrec_basic(t *testing.T) {
@@ -160,4 +175,19 @@ func testAccCheckDnsmxrecDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnsmxrecDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsmxrecDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsmxrec.dnsmxrec", "domain", "tftest-ds-mx.example.local"),
+				),
+			},
+		},
+	})
 }

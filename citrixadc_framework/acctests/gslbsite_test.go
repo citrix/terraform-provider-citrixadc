@@ -180,3 +180,39 @@ func TestAccGslbsite_AssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, siteType, siteName, siteInstance, "publicclip")
 	siteInstance.Publicclip = ""
 }
+
+func TestAccGslbsiteDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbsiteDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "sitename", "Site-GSLB-East-Coast-DS"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "siteipaddress", "172.31.11.25"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "metricexchange", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "nwmetricexchange", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "sessionexchange", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "triggermonitor", "ALWAYS"),
+				),
+			},
+		},
+	})
+}
+
+const testAccGslbsiteDataSource_basic = `
+
+resource "citrixadc_gslbsite" "tf_gslbsite_ds" {
+  siteipaddress = "172.31.11.25"
+  sitename = "Site-GSLB-East-Coast-DS"
+  sitepassword = "password123"
+}
+
+data "citrixadc_gslbsite" "tf_gslbsite_ds" {
+  sitename   = citrixadc_gslbsite.tf_gslbsite_ds.sitename
+  depends_on = [citrixadc_gslbsite.tf_gslbsite_ds]
+}
+
+`

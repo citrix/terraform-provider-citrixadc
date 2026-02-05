@@ -148,3 +148,38 @@ resource "citrixadc_auditmessageaction" "tf_msgaction" {
 }
 
 `
+
+func TestAccAuditmessageactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditmessageactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_auditmessageaction.tf_msgaction", "name", "tf_msgaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditmessageaction.tf_msgaction", "loglevel", "NOTICE"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditmessageaction.tf_msgaction", "stringbuilderexpr", "\"hello from datasource\""),
+					resource.TestCheckResourceAttr("data.citrixadc_auditmessageaction.tf_msgaction", "logtonewnslog", "YES"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuditmessageactionDataSource_basic = `
+
+resource "citrixadc_auditmessageaction" "tf_msgaction" {
+    name = "tf_msgaction_ds"
+    loglevel = "NOTICE"
+    stringbuilderexpr = "\"hello from datasource\""
+    logtonewnslog = "YES"
+}
+
+data "citrixadc_auditmessageaction" "tf_msgaction" {
+    name = citrixadc_auditmessageaction.tf_msgaction.name
+    depends_on = [citrixadc_auditmessageaction.tf_msgaction]
+}
+
+`

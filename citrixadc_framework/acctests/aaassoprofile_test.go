@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaassoprofile_basic = `
@@ -129,4 +130,35 @@ func testAccCheckAaassoprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAaassoprofileDataSource_basic = `
+
+	resource "citrixadc_aaassoprofile" "tf_aaassoprofile" {
+		name = "myssoprofile"
+		username = "john"
+		password = "my_password"
+	}
+
+	data "citrixadc_aaassoprofile" "tf_aaassoprofile" {
+		name = citrixadc_aaassoprofile.tf_aaassoprofile.name
+	}
+`
+
+func TestAccAaassoprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaassoprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaassoprofile.tf_aaassoprofile", "name", "myssoprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaassoprofile.tf_aaassoprofile", "username", "john"),
+					// password is not checked as it may be returned encrypted by the API
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIp6tunnelparam_add = `
@@ -118,4 +119,43 @@ func testAccCheckIp6tunnelparamExist(n string, id *string) resource.TestCheckFun
 
 		return nil
 	}
+}
+
+const testAccIp6tunnelparamDataSource_basic = `
+	resource "citrixadc_nsip6" "name" {
+		ipv6address = "2001:db8:100::fa/64"
+		type        = "VIP"
+		icmp        = "DISABLED"
+	}
+	resource "citrixadc_ip6tunnelparam" "tf_ip6tunnelparam" {
+		srcip                = split("/",citrixadc_nsip6.name.ipv6address)[0]
+		dropfrag             = "YES"
+		dropfragcputhreshold = 3
+		srciproundrobin      = "YES"
+		useclientsourceipv6  = "NO"
+	}
+	
+	data "citrixadc_ip6tunnelparam" "tf_ip6tunnelparam" {
+		depends_on = [citrixadc_ip6tunnelparam.tf_ip6tunnelparam]
+	}
+`
+
+func TestAccIp6tunnelparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIp6tunnelparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnelparam.tf_ip6tunnelparam", "srcip", "2001:db8:100::fa"),
+					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnelparam.tf_ip6tunnelparam", "dropfrag", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnelparam.tf_ip6tunnelparam", "dropfragcputhreshold", "3"),
+					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnelparam.tf_ip6tunnelparam", "srciproundrobin", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnelparam.tf_ip6tunnelparam", "useclientsourceipv6", "NO"),
+				),
+			},
+		},
+	})
 }

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationcaptchaaction_add = `
@@ -135,4 +136,39 @@ func testAccCheckAuthenticationcaptchaactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationcaptchaactionDataSource_basic = `
+	resource "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
+		name                       = "tf_captchaaction_ds"
+		secretkey                  = "secret"
+		sitekey                    = "key"
+		serverurl                  = "http://www.example.com/"
+		defaultauthenticationgroup = "test_group"
+		scorethreshold             = 7
+	}
+
+	data "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
+		name       = citrixadc_authenticationcaptchaaction.tf_captchaaction.name
+		depends_on = [citrixadc_authenticationcaptchaaction.tf_captchaaction]
+	}
+`
+
+func TestAccAuthenticationcaptchaactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcaptchaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcaptchaactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcaptchaaction.tf_captchaaction", "name", "tf_captchaaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcaptchaaction.tf_captchaaction", "serverurl", "http://www.example.com/"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcaptchaaction.tf_captchaaction", "defaultauthenticationgroup", "test_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcaptchaaction.tf_captchaaction", "scorethreshold", "7"),
+				),
+			},
+		},
+	})
 }

@@ -149,3 +149,59 @@ func testAccCheckVpnparameterExist(n string, id *string) resource.TestCheckFunc 
 		return nil
 	}
 }
+
+const testAccVpnparameterDataSource_basic = `
+
+	resource "citrixadc_vpnparameter" "tf_vpnparameter" {
+		splitdns              = "LOCAL"
+		sesstimeout           = 30
+		clientsecuritylog     = "OFF"
+		smartgroup            = 10
+		splittunnel           = "ON"
+		locallanaccess        = "ON"
+		winsip                = "4.45.5.4"
+		samesite              = "None"
+		backendcertvalidation = "DISABLED"
+		backendserversni      = "DISABLED"
+		icasessiontimeout     = "OFF"
+		iconwithreceiver      = "OFF"
+		linuxpluginupgrade    = "Always"
+		uitheme               = "DEFAULT"
+		httpport              = [80]
+		secureprivateaccess	= "ENABLED"
+		maxiipperuser         = 5
+		httptrackconnproxy	= "OFF"
+		deviceposture = "DISABLED"
+		backenddtls12 = "DISABLED"
+		accessrestrictedpageredirect = "NS"
+	}
+
+data "citrixadc_vpnparameter" "tf_vpnparameter" {
+	depends_on = [citrixadc_vpnparameter.tf_vpnparameter]
+}
+`
+
+func TestAccVpnparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "splittunnel", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "locallanaccess", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "secureprivateaccess", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "httptrackconnproxy", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "deviceposture", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "backenddtls12", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "accessrestrictedpageredirect", "NS"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "splitdns", "LOCAL"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "sesstimeout", "30"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "clientsecuritylog", "OFF"),
+				),
+			},
+		},
+	})
+}

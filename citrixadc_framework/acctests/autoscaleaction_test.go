@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAutoscaleaction_basic = `
@@ -153,4 +154,44 @@ func testAccCheckAutoscaleactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAutoscaleactionDataSource_basic = `
+	resource "citrixadc_autoscaleprofile" "tf_autoscaleprofile_ds" {
+		name         = "my_profile_ds"
+		type         = "CLOUDSTACK"
+		apikey       = "7c177611-4a18-42b0-a7c5-bfd811fd590f"
+		url          = "www.service.example.com"
+		sharedsecret = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
+	}
+	resource "citrixadc_autoscaleaction" "tf_autoscaleaction_ds" {
+		name        = "my_autoscaleaction_ds"
+		type        = "SCALE_UP"
+		profilename = citrixadc_autoscaleprofile.tf_autoscaleprofile_ds.name
+		vserver     = "my_vserver"
+		parameters  = "my_parameters"
+	}
+
+	data "citrixadc_autoscaleaction" "tf_autoscaleaction_ds" {
+		name = citrixadc_autoscaleaction.tf_autoscaleaction_ds.name
+	}
+`
+
+func TestAccAutoscaleactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscaleactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_autoscaleaction.tf_autoscaleaction_ds", "name", "my_autoscaleaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_autoscaleaction.tf_autoscaleaction_ds", "type", "SCALE_UP"),
+					resource.TestCheckResourceAttr("data.citrixadc_autoscaleaction.tf_autoscaleaction_ds", "profilename", "my_profile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_autoscaleaction.tf_autoscaleaction_ds", "vserver", "my_vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_autoscaleaction.tf_autoscaleaction_ds", "parameters", "my_parameters"),
+				),
+			},
+		},
+	})
 }

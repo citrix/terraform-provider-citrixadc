@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccPolicymap_basic = `
@@ -111,4 +112,37 @@ func testAccCheckPolicymapDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccPolicymapDataSource_basic = `
+	resource "citrixadc_policymap" "tf_policymap_ds" {
+		mappolicyname = "tf_policymap_ds"
+		sd = "www.citrix.com"
+		td = "www.google.com"
+		su = "/www.citrix.com"
+		tu = "/www.google.com"
+	}
+
+	data "citrixadc_policymap" "tf_policymap_ds" {
+		mappolicyname = citrixadc_policymap.tf_policymap_ds.mappolicyname
+	}
+`
+
+func TestAccPolicymapDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicymapDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "mappolicyname", "tf_policymap_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "sd", "www.citrix.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "td", "www.google.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "su", "/www.citrix.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "tu", "/www.google.com"),
+				),
+			},
+		},
+	})
 }

@@ -16,10 +16,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCacheselector_basic = `
@@ -122,3 +123,33 @@ func testAccCheckCacheselectorDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccCacheselectorDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCacheselectorDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cacheselector.tf_cacheselector_ds", "selectorname", "tf_cacheselector_ds"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCacheselectorDataSource_basic = `
+
+resource "citrixadc_cacheselector" "tf_cacheselector_ds" {
+    selectorname = "tf_cacheselector_ds"
+    rule         = ["true"]
+}
+
+data "citrixadc_cacheselector" "tf_cacheselector_ds" {
+    selectorname = citrixadc_cacheselector.tf_cacheselector_ds.selectorname
+    depends_on   = [citrixadc_cacheselector.tf_cacheselector_ds]
+}
+
+`

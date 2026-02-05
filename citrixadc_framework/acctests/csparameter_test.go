@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCsparameter_basic = `
@@ -121,4 +122,31 @@ func testAccCheckCsparameterDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCsparameterDataSource_basic = `
+
+	resource "citrixadc_csparameter" "tf_csparameter" {
+		stateupdate = "ENABLED"
+	}
+
+	data "citrixadc_csparameter" "tf_csparameter" {
+		depends_on = [citrixadc_csparameter.tf_csparameter]
+	}
+`
+
+func TestAccCsparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csparameter.tf_csparameter", "stateupdate", "ENABLED"),
+				),
+			},
+		},
+	})
 }

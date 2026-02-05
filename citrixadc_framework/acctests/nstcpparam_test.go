@@ -397,3 +397,32 @@ func testAccCheckNstcpparamDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccNstcpparamDataSource_basic = `
+
+	resource "citrixadc_nstcpparam" "tf_nstcpparam" {
+		delayedack = 100
+		maxburst   = 6
+	}
+
+	data "citrixadc_nstcpparam" "tf_nstcpparam_data" {
+		depends_on = [citrixadc_nstcpparam.tf_nstcpparam]
+	}
+`
+
+func TestAccNstcpparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstcpparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nstcpparam.tf_nstcpparam_data", "delayedack", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstcpparam.tf_nstcpparam_data", "maxburst", "6"),
+				),
+			},
+		},
+	})
+}

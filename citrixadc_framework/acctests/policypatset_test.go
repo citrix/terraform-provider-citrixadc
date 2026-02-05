@@ -127,3 +127,30 @@ func testAccCheckPolicypatsetDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccPolicypatsetDataSource_basic = `
+	resource "citrixadc_policypatset" "tf_patset_ds" {
+		name = "tf_patset_ds"
+		comment = "datasource test patset"
+	}
+
+	data "citrixadc_policypatset" "tf_patset_ds" {
+		name = citrixadc_policypatset.tf_patset_ds.name
+	}
+`
+
+func TestAccPolicypatsetDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicypatsetDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_policypatset.tf_patset_ds", "name", "tf_patset_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_policypatset.tf_patset_ds", "comment", "datasource test patset"),
+				),
+			},
+		},
+	})
+}

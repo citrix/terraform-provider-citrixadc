@@ -52,6 +52,26 @@ resource "citrixadc_iptunnel" "tf_iptunnel" {
 }
 `
 
+const testAccIptunnelDataSource_basic = `
+resource "citrixadc_iptunnel" "tf_iptunnel" {
+    name = "tf_iptunnel_ds"
+	protocol = "GENEVE"
+    remote = "66.0.0.12"
+    remotesubnetmask = "255.255.255.255"
+    local = "*"
+	vnid = 100
+	tosinherit = "DISABLED"
+	destport = 1088
+	vlantagging = "DISABLED"
+}
+
+data "citrixadc_iptunnel" "tf_iptunnel_ds" {
+	name = citrixadc_iptunnel.tf_iptunnel.name
+	remote = citrixadc_iptunnel.tf_iptunnel.remote
+	remotesubnetmask = citrixadc_iptunnel.tf_iptunnel.remotesubnetmask
+}
+`
+
 func TestAccIptunnel_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -154,4 +174,20 @@ func testAccCheckIptunnelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccIptunnelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIptunnelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIptunnelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_iptunnel.tf_iptunnel_ds", "id"),
+				),
+			},
+		},
+	})
 }

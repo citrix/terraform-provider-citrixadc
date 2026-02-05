@@ -113,3 +113,33 @@ func testAccCheckAppfwjsoncontenttypeDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccAppfwjsoncontenttypeDataSource_basic = `
+
+	resource "citrixadc_appfwjsoncontenttype" "tf_Acc_appfwjsoncontenttype" {
+		jsoncontenttypevalue = "tf_Acc.*test"
+		isregex = "REGEX"
+	}
+
+	data "citrixadc_appfwjsoncontenttype" "tf_Acc_appfwjsoncontenttype" {
+		jsoncontenttypevalue = citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype.jsoncontenttypevalue
+		depends_on = [citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype]
+	}
+`
+
+func TestAccAppfwjsoncontenttypeDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwjsoncontenttypeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", "jsoncontenttypevalue", "tf_Acc.*test"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", "isregex", "REGEX"),
+				),
+			},
+		},
+	})
+}

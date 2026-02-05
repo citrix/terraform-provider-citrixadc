@@ -39,6 +39,18 @@ const testAccSslparameter_basic_update = `
 	}
 `
 
+const testAccSslparameterDataSource_basic = `
+	resource "citrixadc_sslparameter" "default" {
+		denysslreneg   = "NONSECURE"
+		defaultprofile = "ENABLED"
+		operationqueuelimit = 4096
+	}
+
+	data "citrixadc_sslparameter" "default" {
+		depends_on = [citrixadc_sslparameter.default]
+	}
+`
+
 func TestAccSslparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -104,4 +116,22 @@ func testAccCheckSslparameterExist(n string, id *string) resource.TestCheckFunc 
 
 		return nil
 	}
+}
+
+func TestAccSslparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslparameter.default", "denysslreneg", "NONSECURE"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslparameter.default", "defaultprofile", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslparameter.default", "operationqueuelimit", "4096"),
+				),
+			},
+		},
+	})
 }

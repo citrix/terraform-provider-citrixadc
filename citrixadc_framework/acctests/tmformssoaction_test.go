@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccTmformssoaction_basic = `
@@ -41,6 +42,21 @@ const testAccTmformssoaction_update = `
 		userfield      = "loginID2"
 		passwdfield    = "passwd2"
 		ssosuccessrule = "HTTP.RES.HEADER(\"Set-Cookie\").CONTAINS(\"LogonID\")"
+	}
+`
+
+const testAccTmformssoactionDataSource_basic = `
+
+	resource "citrixadc_tmformssoaction" "tf_tmformssoaction" {
+		name           = "my_formsso_action"
+		actionurl      = "/logon.php"
+		userfield      = "loginID"
+		passwdfield    = "passwd"
+		ssosuccessrule = "HTTP.RES.HEADER(\"Set-Cookie\").CONTAINS(\"LogonID\")"
+	}
+
+	data "citrixadc_tmformssoaction" "tf_tmformssoaction" {
+		name = citrixadc_tmformssoaction.tf_tmformssoaction.name
 	}
 `
 
@@ -138,4 +154,24 @@ func testAccCheckTmformssoactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccTmformssoactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmformssoactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmformssoactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_tmformssoaction.tf_tmformssoaction", "name", "my_formsso_action"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmformssoaction.tf_tmformssoaction", "actionurl", "/logon.php"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmformssoaction.tf_tmformssoaction", "userfield", "loginID"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmformssoaction.tf_tmformssoaction", "passwdfield", "passwd"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmformssoaction.tf_tmformssoaction", "ssosuccessrule", "HTTP.RES.HEADER(\"Set-Cookie\").CONTAINS(\"LogonID\")"),
+				),
+			},
+		},
+	})
 }

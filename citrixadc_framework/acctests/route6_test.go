@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 	//"strconv"
 )
 
@@ -162,4 +163,44 @@ func testAccCheckRoute6Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccRoute6DataSource_basic = `
+
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid = 2
+}
+
+resource "citrixadc_route6" "tf_route6" {
+	network  = "2001:db8:85a3::/64"
+	vlan     = citrixadc_vlan.tf_vlan.vlanid
+	weight   = 5
+	distance = 3
+	td       = 0
+}
+
+data "citrixadc_route6" "tf_route6" {
+	network = citrixadc_route6.tf_route6.network
+	td      = citrixadc_route6.tf_route6.td
+	depends_on = [citrixadc_route6.tf_route6]
+}
+`
+
+func TestAccRoute6DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRoute6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute6DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_route6.tf_route6", "network", "2001:db8:85a3::/64"),
+					resource.TestCheckResourceAttr("data.citrixadc_route6.tf_route6", "vlan", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_route6.tf_route6", "weight", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_route6.tf_route6", "distance", "3"),
+				),
+			},
+		},
+	})
 }

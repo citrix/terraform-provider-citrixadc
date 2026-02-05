@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIcaaction_basic = `
@@ -45,6 +46,34 @@ const testAccIcaaction_update = `
 	}
   
 `
+
+const testAccIcaactionDataSource_basic = `
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "my_ica_action"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	
+	data "citrixadc_icaaction" "tf_icaaction_ds" {
+		name = citrixadc_icaaction.tf_icaaction.name
+	}
+`
+
+func TestAccIcaactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcaactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_icaaction.tf_icaaction_ds", "name", "my_ica_action"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaaction.tf_icaaction_ds", "accessprofilename", "default_ica_accessprofile"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_icaaction.tf_icaaction_ds", "id"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccIcaaction_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

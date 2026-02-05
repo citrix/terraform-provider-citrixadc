@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnszone_add = `
@@ -33,6 +34,21 @@ resource "citrixadc_dnszone" "dnszone" {
 	nsec          = "DISABLED"
 	
 	}
+`
+
+const testAccDnszoneDataSource_basic = `
+
+resource "citrixadc_dnszone" "dnszone" {
+	zonename      = "tf_zone1"
+	proxymode     = "YES"
+	dnssecoffload = "DISABLED"
+	nsec          = "DISABLED"
+}
+
+data "citrixadc_dnszone" "dnszone_data" {
+	zonename = citrixadc_dnszone.dnszone.zonename
+	type     = "ALL"
+}
 `
 
 func TestAccDnszone_basic(t *testing.T) {
@@ -49,6 +65,24 @@ func TestAccDnszone_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnszone.dnszone", "proxymode", "YES"),
 					resource.TestCheckResourceAttr("citrixadc_dnszone.dnszone", "dnssecoffload", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_dnszone.dnszone", "nsec", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDnszoneDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnszoneDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnszone.dnszone_data", "zonename", "tf_zone1"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnszone.dnszone_data", "proxymode", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnszone.dnszone_data", "dnssecoffload", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnszone.dnszone_data", "nsec", "DISABLED"),
 				),
 			},
 		},

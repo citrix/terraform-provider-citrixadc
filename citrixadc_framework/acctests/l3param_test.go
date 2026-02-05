@@ -113,3 +113,38 @@ func testAccCheckL3paramExist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+const testAccL3paramDataSource_basic = `
+
+	resource "citrixadc_l3param" "tf_l3param" {
+		srcnat               = "DISABLED"
+		icmpgenratethreshold = 150
+		overridernat         = "DISABLED"
+		dropdfflag           = "DISABLED"
+		implicitpbr          = "DISABLED"
+	}
+
+	data "citrixadc_l3param" "tf_l3param" {
+		depends_on = [citrixadc_l3param.tf_l3param]
+	}
+`
+
+func TestAccL3paramDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccL3paramDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_l3param.tf_l3param", "srcnat", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_l3param.tf_l3param", "icmpgenratethreshold", "150"),
+					resource.TestCheckResourceAttr("data.citrixadc_l3param.tf_l3param", "overridernat", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_l3param.tf_l3param", "dropdfflag", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_l3param.tf_l3param", "implicitpbr", "DISABLED"),
+				),
+			},
+		},
+	})
+}

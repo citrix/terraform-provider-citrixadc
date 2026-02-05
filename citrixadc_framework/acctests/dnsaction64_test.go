@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnsaction64_add = `
@@ -42,6 +43,21 @@ resource "citrixadc_dnsaction64" "dnsaction64" {
     prefix = "64:ff9c::/96"
     mappedrule = "DNS.RR.TYPE.EQ(A)"
     excluderule = "DNS.RR.TYPE.EQ(AAAA)"
+}
+
+`
+
+const testAccDnsaction64DataSource_basic = `
+
+resource "citrixadc_dnsaction64" "dnsaction64" {
+	actionname = "default_DNS64_action1"
+    prefix = "64:ff9c::/96"
+    mappedrule = "DNS.RR.RDATA.IP.IN_SUBNET(10.0.0.0/8)"
+    excluderule = "DNS.RR.RDATA.IPV6.IN_SUBNET(::ffff:0:0/96)"
+}
+
+data "citrixadc_dnsaction64" "dnsaction64_datasource" {
+    actionname = citrixadc_dnsaction64.dnsaction64.actionname
 }
 
 `
@@ -138,4 +154,22 @@ func testAccCheckDnsaction64Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnsaction64DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsaction64DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaction64.dnsaction64_datasource", "actionname", "default_DNS64_action1"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaction64.dnsaction64_datasource", "prefix", "64:ff9c::/96"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaction64.dnsaction64_datasource", "mappedrule", "DNS.RR.RDATA.IP.IN_SUBNET(10.0.0.0/8)"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaction64.dnsaction64_datasource", "excluderule", "DNS.RR.RDATA.IPV6.IN_SUBNET(::ffff:0:0/96)"),
+				),
+			},
+		},
+	})
 }

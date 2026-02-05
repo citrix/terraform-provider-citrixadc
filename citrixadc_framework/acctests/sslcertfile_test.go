@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSslcertfile_basic = `
@@ -128,3 +129,33 @@ func testAccCheckSslcertfileDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccSslcertfileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertfileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslcertfile.tf_sslcertfile_ds", "name", "tf_sslcertfile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcertfile.tf_sslcertfile_ds", "src", "certificate1.crt"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSslcertfileDataSource_basic = `
+
+resource "citrixadc_sslcertfile" "tf_sslcertfile_ds" {
+	name = "tf_sslcertfile_ds"
+	src = "local://certificate1.crt"
+}
+
+data "citrixadc_sslcertfile" "tf_sslcertfile_ds" {
+	name = citrixadc_sslcertfile.tf_sslcertfile_ds.name
+	depends_on = [citrixadc_sslcertfile.tf_sslcertfile_ds]
+}
+`

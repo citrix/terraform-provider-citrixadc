@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccBridgetable_basic = `
@@ -187,3 +188,47 @@ func testAccCheckBridgetableDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccBridgetableDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBridgetableDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_bridgetable.tf_bridgetable_ds", "mac"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_bridgetable.tf_bridgetable_ds", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccBridgetableDataSource_basic = `
+
+resource "citrixadc_vlan" "tf_vlan_ds" {
+	vlanid    = 21
+	aliasname = "Management VLAN DS"
+}
+resource "citrixadc_vxlan" "tf_vxlan_ds" {
+	vxlanid            = 124
+	vlan               = citrixadc_vlan.tf_vlan_ds.vlanid
+	port               = 33
+	dynamicrouting     = "DISABLED"
+	ipv6dynamicrouting = "DISABLED"
+	innervlantagging   = "ENABLED"
+}
+resource "citrixadc_bridgetable" "tf_bridgetable_ds" {
+	mac       = "00:00:00:00:00:02"
+	vxlan     = citrixadc_vxlan.tf_vxlan_ds.vxlanid
+	vtep      = "2.34.5.7"
+	bridgeage = "250"
+}
+
+data "citrixadc_bridgetable" "tf_bridgetable_ds" {
+	depends_on = [citrixadc_bridgetable.tf_bridgetable_ds]
+}
+
+`

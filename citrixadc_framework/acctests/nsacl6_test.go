@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsacl6_add = `
@@ -156,4 +157,48 @@ func testAccCheckNsacl6Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNsacl6DataSource_basic = `
+	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
+		td        = 2
+		aliasname = "tf_trafficdomain_ds"
+		vmac      = "ENABLED"
+	}
+	resource "citrixadc_nsacl6" "tf_nsacl6_ds" {
+		acl6name   = "tf_nsacl6_ds"
+		acl6action = "ALLOW"
+		td         = citrixadc_nstrafficdomain.tf_trafficdomain.td
+		logstate   = "ENABLED"
+		stateful   = "YES"
+		ratelimit  = 120
+		state      = "ENABLED"
+		priority   = 20
+		protocol   = "ICMPV6"
+	}
+
+	data "citrixadc_nsacl6" "tf_nsacl6_ds" {
+		acl6name = citrixadc_nsacl6.tf_nsacl6_ds.acl6name
+		type     = "CLASSIC"
+	}
+`
+
+func TestAccNsacl6DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsacl6DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl6.tf_nsacl6_ds", "acl6name", "tf_nsacl6_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl6.tf_nsacl6_ds", "acl6action", "ALLOW"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl6.tf_nsacl6_ds", "stateful", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl6.tf_nsacl6_ds", "ratelimit", "120"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl6.tf_nsacl6_ds", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl6.tf_nsacl6_ds", "protocol", "ICMPV6"),
+				),
+			},
+		},
+	})
 }

@@ -43,6 +43,20 @@ resource "citrixadc_ssllogprofile" "demo_ssllogprofile" {
 }
 `
 
+const testAccSsllogprofileDataSource_basic = `
+resource "citrixadc_ssllogprofile" "demo_ssllogprofile" {
+    name = "demo_ssllogprofile"
+    ssllogclauth = "ENABLED"
+    ssllogclauthfailures = "ENABLED"
+    sslloghs = "ENABLED"
+    sslloghsfailures = "ENABLED"	
+}
+
+data "citrixadc_ssllogprofile" "demo_ssllogprofile" {
+    name = citrixadc_ssllogprofile.demo_ssllogprofile.name
+}
+`
+
 func TestAccSsllogprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -137,4 +151,23 @@ func testAccCheckSsllogprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSsllogprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSsllogprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_ssllogprofile.demo_ssllogprofile", "name", "demo_ssllogprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssllogprofile.demo_ssllogprofile", "ssllogclauth", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssllogprofile.demo_ssllogprofile", "ssllogclauthfailures", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssllogprofile.demo_ssllogprofile", "sslloghs", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssllogprofile.demo_ssllogprofile", "sslloghsfailures", "ENABLED"),
+				),
+			},
+		},
+	})
 }

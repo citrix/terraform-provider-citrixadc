@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsnclient_basic = `
@@ -38,7 +39,6 @@ const testAccLsnclient_update = `
 `
 
 func TestAccLsnclient_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -124,4 +124,30 @@ func testAccCheckLsnclientDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnclientDataSource_basic = `
+
+resource "citrixadc_lsnclient" "tf_lsnclient_ds" {
+	clientname = "my_lsnclient_ds"
+}
+
+data "citrixadc_lsnclient" "tf_lsnclient_ds" {
+	clientname = citrixadc_lsnclient.tf_lsnclient_ds.clientname
+}
+`
+
+func TestAccLsnclientDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnclientDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnclient.tf_lsnclient_ds", "clientname", "my_lsnclient_ds"),
+				),
+			},
+		},
+	})
 }

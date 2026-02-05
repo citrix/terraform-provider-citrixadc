@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccTransformpolicylabel_basic = `
@@ -113,3 +114,32 @@ func testAccCheckTransformpolicylabelDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccTransformpolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformpolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_transformpolicylabel.transformpolicylabel", "labelname", "label_1"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformpolicylabel.transformpolicylabel", "policylabeltype", "httpquic_req"),
+				),
+			},
+		},
+	})
+}
+
+const testAccTransformpolicylabelDataSource_basic = `
+resource "citrixadc_transformpolicylabel" "transformpolicylabel" {
+	labelname = "label_1"
+	policylabeltype = "httpquic_req"
+}
+
+data "citrixadc_transformpolicylabel" "transformpolicylabel" {
+    labelname = citrixadc_transformpolicylabel.transformpolicylabel.labelname
+    depends_on = [citrixadc_transformpolicylabel.transformpolicylabel]
+}
+`

@@ -168,3 +168,24 @@ func testAccCheckNsvpxparamDestroy(s *terraform.State) error {
 
 	return nil
 }
+func TestAccNsvpxparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsvpxparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsvpxparam.test", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsvpxparam.test", "cpuyield"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsvpxparamDataSource_basic = `
+data "citrixadc_nsvpxparam" "test" {
+	ownernode = 0
+}
+`

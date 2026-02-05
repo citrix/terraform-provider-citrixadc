@@ -103,7 +103,6 @@ func providerSchema() map[string]*schema.Schema {
 
 func providerDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"citrixadc_hanode":                        dataSourceCitrixAdcHanode(),
 		"citrixadc_nsversion":                     dataSourceCitrixAdcNsversion(),
 		"citrixadc_nitro_info":                    dataSourceCitrixAdcNitroInfo(),
 		"citrixadc_sslcipher_sslvserver_bindings": dataSourceCitrixAdcSslcipherSslvserverBindings(),

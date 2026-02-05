@@ -198,3 +198,77 @@ func testAccCheckDnsparameterExist(n string, id *string) resource.TestCheckFunc 
 		return nil
 	}
 }
+
+const testAccDnsparameterDataSource_basic = `
+resource "citrixadc_dnsparameter" "tf_dnsparameter" {
+  cacheecszeroprefix         = "DISABLED"
+  cachehitbypass             = "ENABLED"
+  cachenoexpire              = "ENABLED"
+  dns64timeout               = 1200
+  dnsrootreferral            = "ENABLED"
+  dnssec                     = "ENABLED"
+  ecsmaxsubnets              = 5
+  maxcachesize               = 10
+  maxnegativecachesize       = 10
+  maxnegcachettl             = 404800
+  maxpipeline                = 245
+  maxttl                     = 404800
+  maxudppacketsize           = 1180
+  minttl                     = 2
+  namelookuppriority         = "DNS"
+  nxdomainratelimitthreshold = 10
+  recursion                  = "ENABLED"
+  resolutionorder            = "OnlyAAAAQuery"
+  retries                    = 2
+  splitpktqueryprocessing    = "DROP"
+  zonetransfer               = "DISABLED"
+  resolvermaxtcptimeout      = 10
+  resolvermaxtcpconnections  = 100
+  resolvermaxactiveresolutions = 500
+  autosavekeyops             = "DISABLED"
+}
+
+data "citrixadc_dnsparameter" "tf_dnsparameter_ds" {
+  depends_on = [citrixadc_dnsparameter.tf_dnsparameter]
+}
+`
+
+func TestAccDnsparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "cacheecszeroprefix", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "cachehitbypass", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "cachenoexpire", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "dns64timeout", "1200"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "dnsrootreferral", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "dnssec", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "ecsmaxsubnets", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "maxcachesize", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "maxnegativecachesize", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "maxnegcachettl", "404800"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "maxpipeline", "245"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "maxttl", "404800"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "maxudppacketsize", "1180"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "minttl", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "namelookuppriority", "DNS"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "nxdomainratelimitthreshold", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "recursion", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "resolutionorder", "OnlyAAAAQuery"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "retries", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "splitpktqueryprocessing", "DROP"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "zonetransfer", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "resolvermaxtcptimeout", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "resolvermaxtcpconnections", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "resolvermaxactiveresolutions", "500"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "autosavekeyops", "DISABLED"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsparameter.tf_dnsparameter_ds", "id"),
+				),
+			},
+		},
+	})
+}

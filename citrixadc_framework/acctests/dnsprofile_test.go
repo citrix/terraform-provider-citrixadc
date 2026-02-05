@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnsprofile_add = `
@@ -66,6 +67,30 @@ const testAccDnsprofile_update = `
 		maxcacheableecsprefixlength6 = 18
 		
 	}
+`
+
+const testAccDnsprofileDataSource_basic = `
+
+resource "citrixadc_dnsprofile" "tf_dnsprofile_ds" {
+	dnsprofilename      = "tf_profile_ds"
+	dnsquerylogging     = "DISABLED"
+	dnsanswerseclogging = "DISABLED"
+	dnsextendedlogging  = "DISABLED"
+	dnserrorlogging     = "DISABLED"
+	cacherecords        = "ENABLED"
+	cachenegativeresponses="ENABLED"
+	dropmultiqueryrequest="DISABLED"
+	cacheecsresponses ="DISABLED"
+	recursiveresolution = "ENABLED"
+	insertecs = "ENABLED"
+	replaceecs = "ENABLED"
+	maxcacheableecsprefixlength = 16
+	maxcacheableecsprefixlength6 = 16
+}
+
+data "citrixadc_dnsprofile" "tf_dnsprofile_ds" {
+	dnsprofilename = citrixadc_dnsprofile.tf_dnsprofile_ds.dnsprofilename
+}
 `
 
 func TestAccDnsprofile_basic(t *testing.T) {
@@ -180,4 +205,32 @@ func testAccCheckDnsprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnsprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "dnsprofilename", "tf_profile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "dnsquerylogging", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "dnsanswerseclogging", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "dnsextendedlogging", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "dnserrorlogging", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "cacherecords", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "cachenegativeresponses", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "dropmultiqueryrequest", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "cacheecsresponses", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "recursiveresolution", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "insertecs", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "replaceecs", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "maxcacheableecsprefixlength", "16"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "maxcacheableecsprefixlength6", "16"),
+				),
+			},
+		},
+	})
 }

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnalwaysonprofile_basic = `
@@ -39,6 +40,20 @@ const testAccVpnalwaysonprofile_basic_update = `
 		clientcontrol = "ALLOW"
 		locationbasedvpn = "Everywhere"
 		networkaccessonvpnfailure = "fullAccess"
+	}
+`
+
+const testAccVpnalwaysonprofileDataSource_basic = `
+
+	resource "citrixadc_vpnalwaysonprofile" "tf_vpnalwaysonprofile" {
+		name = "tf_vpnalwaysonprofile"
+		clientcontrol = "DENY"
+		locationbasedvpn = "Remote"
+		networkaccessonvpnfailure = "onlyToGateway"
+	}
+
+	data "citrixadc_vpnalwaysonprofile" "tf_vpnalwaysonprofile" {
+		name = citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile.name
 	}
 `
 
@@ -133,4 +148,23 @@ func testAccCheckVpnalwaysonprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnalwaysonprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnalwaysonprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile", "name", "tf_vpnalwaysonprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile", "clientcontrol", "DENY"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile", "locationbasedvpn", "Remote"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile", "networkaccessonvpnfailure", "onlyToGateway"),
+				),
+			},
+		},
+	})
 }

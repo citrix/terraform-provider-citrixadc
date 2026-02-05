@@ -140,3 +140,51 @@ resource "citrixadc_cspolicy" "foo_cspolicy" {
 
 }
 `
+
+func TestAccCspolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCspolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cspolicy.tf_cspolicy_ds", "policyname", "tf_test_policy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_cspolicy.tf_cspolicy_ds", "rule", "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.85.0)"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCspolicyDataSource_basic = `
+
+resource "citrixadc_csvserver" "tf_cspolicy_ds" {
+  ipv46       = "10.202.11.12"
+  name        = "tst_policy_cs_ds"
+  port        = 8081
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_lbvserver" "tf_cspolicy_ds" {
+  name        = "tst_policy_lb_ds"
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_cspolicy" "tf_cspolicy_ds" {
+  csvserver       = citrixadc_csvserver.tf_cspolicy_ds.name
+  targetlbvserver = citrixadc_lbvserver.tf_cspolicy_ds.name
+  policyname      = "tf_test_policy_ds"
+  rule            = "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.85.0)"
+  priority        = 10
+
+  depends_on = [citrixadc_csvserver.tf_cspolicy_ds, citrixadc_lbvserver.tf_cspolicy_ds]
+}
+
+data "citrixadc_cspolicy" "tf_cspolicy_ds" {
+  policyname = citrixadc_cspolicy.tf_cspolicy_ds.policyname
+  depends_on = [citrixadc_cspolicy.tf_cspolicy_ds]
+}
+
+`

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNat64param_add = `
@@ -105,4 +106,36 @@ func testAccCheckNat64paramExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccNat64paramDataSource_basic = `
+	resource "citrixadc_nat64param" "tf_nat64param" {
+		nat64ignoretos    = "YES"
+		nat64zerochecksum = "DISABLED"
+		nat64v6mtu        = 1282
+		nat64fragheader   = "DISABLED"
+	}
+
+	data "citrixadc_nat64param" "tf_nat64param_ds" {
+		td = citrixadc_nat64param.tf_nat64param.td
+	}
+`
+
+func TestAccNat64paramDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNat64paramDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nat64param.tf_nat64param_ds", "nat64ignoretos", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_nat64param.tf_nat64param_ds", "nat64zerochecksum", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nat64param.tf_nat64param_ds", "nat64v6mtu", "1282"),
+					resource.TestCheckResourceAttr("data.citrixadc_nat64param.tf_nat64param_ds", "nat64fragheader", "DISABLED"),
+				),
+			},
+		},
+	})
 }

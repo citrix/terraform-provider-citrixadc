@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccForwardingsession_add = `
@@ -136,4 +137,40 @@ func testAccCheckForwardingsessionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccForwardingsessionDataSource_basic = `
+
+resource "citrixadc_forwardingsession" "tf_forwarding_ds" {
+	name             = "tf_forwarding_ds"
+	network          = "10.102.105.91"
+	netmask          = "255.255.255.255"
+	connfailover     = "ENABLED"
+	sourceroutecache = "ENABLED"
+	processlocal     = "DISABLED"
+}
+
+data "citrixadc_forwardingsession" "tf_forwarding_ds" {
+	name = citrixadc_forwardingsession.tf_forwarding_ds.name
+}
+`
+
+func TestAccForwardingsessionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccForwardingsessionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_forwardingsession.tf_forwarding_ds", "name", "tf_forwarding_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_forwardingsession.tf_forwarding_ds", "network", "10.102.105.91"),
+					resource.TestCheckResourceAttr("data.citrixadc_forwardingsession.tf_forwarding_ds", "netmask", "255.255.255.255"),
+					resource.TestCheckResourceAttr("data.citrixadc_forwardingsession.tf_forwarding_ds", "connfailover", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_forwardingsession.tf_forwarding_ds", "sourceroutecache", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_forwardingsession.tf_forwarding_ds", "processlocal", "DISABLED"),
+				),
+			},
+		},
+	})
 }

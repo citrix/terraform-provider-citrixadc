@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationcertpolicy_add = `
@@ -140,4 +141,41 @@ func testAccCheckAuthenticationcertpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationcertpolicyDataSource_basic = `
+	resource "citrixadc_authenticationcertaction" "tf_certaction" {
+		name                       = "tf_certaction_ds"
+		twofactor                  = "ON"
+		defaultauthenticationgroup = "new_group"
+		usernamefield              = "Subject:CN"
+		groupnamefield             = "subject:grp"
+	}
+	resource "citrixadc_authenticationcertpolicy" "tf_certpolicy" {
+		name      = "tf_certpolicy_ds"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationcertaction.tf_certaction.name
+	}
+
+	data "citrixadc_authenticationcertpolicy" "tf_certpolicy_data" {
+		name = citrixadc_authenticationcertpolicy.tf_certpolicy.name
+	}
+`
+
+func TestAccAuthenticationcertpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcertpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcertpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcertpolicy.tf_certpolicy_data", "name", "tf_certpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcertpolicy.tf_certpolicy_data", "rule", "ns_true"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcertpolicy.tf_certpolicy_data", "reqaction", "tf_certaction_ds"),
+				),
+			},
+		},
+	})
 }

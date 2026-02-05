@@ -17,15 +17,28 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppfwmultipartformcontenttype_basic = `
 	resource "citrixadc_appfwmultipartformcontenttype" "tf_multipartform" {
 		multipartformcontenttypevalue = "date/tf_multipartform"
 		isregex                       = "REGEX"
+	}
+`
+
+const testAccAppfwmultipartformcontenttypeDataSource_basic = `
+	resource "citrixadc_appfwmultipartformcontenttype" "tf_multipartform" {
+		multipartformcontenttypevalue = "date/tf_multipartform"
+		isregex                       = "REGEX"
+	}
+
+	data "citrixadc_appfwmultipartformcontenttype" "tf_multipartform" {
+		multipartformcontenttypevalue = citrixadc_appfwmultipartformcontenttype.tf_multipartform.multipartformcontenttypevalue
+		depends_on = [citrixadc_appfwmultipartformcontenttype.tf_multipartform]
 	}
 `
 
@@ -112,4 +125,21 @@ func testAccCheckAppfwmultipartformcontenttypeDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+func TestAccAppfwmultipartformcontenttypeDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwmultipartformcontenttypeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwmultipartformcontenttype.tf_multipartform", "multipartformcontenttypevalue", "date/tf_multipartform"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwmultipartformcontenttype.tf_multipartform", "isregex", "REGEX"),
+				),
+			},
+		},
+	})
 }

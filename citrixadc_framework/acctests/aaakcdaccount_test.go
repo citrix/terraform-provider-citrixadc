@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaakcdaccount_basic = `
@@ -132,4 +133,37 @@ func testAccCheckAaakcdaccountDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAaakcdaccountDataSource_basic = `
+
+	resource "citrixadc_aaakcdaccount" "tf_aaakcdaccount" {
+		kcdaccount    = "my_kcdaccount"
+		delegateduser = "john"
+		kcdpassword   = "my_password"
+		realmstr      = "my_realm"
+	}
+	
+	data "citrixadc_aaakcdaccount" "tf_aaakcdaccount" {
+		kcdaccount = citrixadc_aaakcdaccount.tf_aaakcdaccount.kcdaccount
+	}
+`
+
+func TestAccAaakcdaccountDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaakcdaccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaakcdaccountDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "kcdaccount", "my_kcdaccount"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "delegateduser", "john"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "kcdpassword"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "realmstr", "MY_REALM"),
+				),
+			},
+		},
+	})
 }

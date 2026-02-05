@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnsessionpolicy_add = `
@@ -61,6 +62,31 @@ const testAccVpnsessionpolicy_update = `
 		name   = "tf_vpnsessionpolicy"
   		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\")"
   		action = citrixadc_vpnsessionaction.tf_vpnsessionaction_update.name
+	}
+`
+
+const testAccVpnsessionpolicyDataSource_basic = `
+
+	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
+		name                       = "newsession"
+		sesstimeout                = "10"
+		defaultauthorizationaction = "ALLOW"
+	}
+	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction_update" {
+		name                       = "newsession_update"
+		sesstimeout                = "10"
+		defaultauthorizationaction = "ALLOW"
+	}
+	
+	resource "citrixadc_vpnsessionpolicy" "foo" {
+		
+		name   = "tf_vpnsessionpolicy"
+  		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+  		action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name	
+	}
+
+	data "citrixadc_vpnsessionpolicy" "foo" {
+		name = citrixadc_vpnsessionpolicy.foo.name
 	}
 `
 
@@ -154,4 +180,21 @@ func testAccCheckVpnsessionpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnsessionpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnsessionpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionpolicy.foo", "name", "tf_vpnsessionpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionpolicy.foo", "rule", "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionpolicy.foo", "action", "newsession"),
+				),
+			},
+		},
+	})
 }

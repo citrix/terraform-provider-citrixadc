@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSsldtlsprofile_basic = `
@@ -51,6 +52,25 @@ const testAccSsldtlsprofile_basic_update = `
 		terminatesession = "DISABLED"
 		initialretrytimeout = 3
 	}
+`
+
+const testAccSsldtlsprofileDataSource_basic = `
+resource "citrixadc_ssldtlsprofile" "tf_ssldtlsprofile" {
+	name = "tf_ssldtlsprofile"
+	helloverifyrequest = "ENABLED"
+	maxbadmacignorecount = 128
+	maxholdqlen = 64
+	maxpacketsize = 125
+	maxrecordsize = 250
+	maxretrytime = 5
+	pmtudiscovery = "DISABLED"
+	terminatesession = "ENABLED"
+	initialretrytimeout = 2
+}
+
+data "citrixadc_ssldtlsprofile" "tf_ssldtlsprofile" {
+	name = citrixadc_ssldtlsprofile.tf_ssldtlsprofile.name
+}
 `
 
 func TestAccSsldtlsprofile_basic(t *testing.T) {
@@ -157,4 +177,28 @@ func testAccCheckSsldtlsprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSsldtlsprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSsldtlsprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "name", "tf_ssldtlsprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "helloverifyrequest", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "maxbadmacignorecount", "128"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "maxholdqlen", "64"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "maxpacketsize", "125"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "maxrecordsize", "250"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "maxretrytime", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "pmtudiscovery", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "terminatesession", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "initialretrytimeout", "2"),
+				),
+			},
+		},
+	})
 }

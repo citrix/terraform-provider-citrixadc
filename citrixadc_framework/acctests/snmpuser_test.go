@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSnmpuser_basic = `
@@ -151,3 +152,38 @@ func testAccCheckSnmpuserDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccSnmpuserDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpuserDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_snmpuser.tf_snmpuser_ds", "name", "test_user_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpuser.tf_snmpuser_ds", "group", "test_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpuser.tf_snmpuser_ds", "authtype", "SHA"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSnmpuserDataSource_basic = `
+
+resource "citrixadc_snmpuser" "tf_snmpuser_ds" {
+	name       = "test_user_ds"
+	group      = "test_group"
+	authtype   = "SHA"
+	authpasswd = "this_is_my_password"
+	privtype   = "DES"
+	privpasswd = "this_is_my_password2"
+}
+
+data "citrixadc_snmpuser" "tf_snmpuser_ds" {
+	name       = citrixadc_snmpuser.tf_snmpuser_ds.name
+	depends_on = [citrixadc_snmpuser.tf_snmpuser_ds]
+}
+`

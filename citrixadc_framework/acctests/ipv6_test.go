@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIpv6_basic = `
@@ -39,6 +40,13 @@ resource "citrixadc_ipv6" "tf_ipv6" {
 	ndbasereachtime   = 4000
 	routerredirection = "ENABLED"
 	}
+`
+
+const testAccIpv6DataSource_basic = `
+
+data "citrixadc_ipv6" "tf_ipv6_ds" {
+	td = "0"
+}
 `
 
 func TestAccIpv6_basic(t *testing.T) {
@@ -132,4 +140,23 @@ func testAccCheckIpv6Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccIpv6DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpv6DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_ipv6.tf_ipv6_ds", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_ipv6.tf_ipv6_ds", "ralearning"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_ipv6.tf_ipv6_ds", "ndbasereachtime"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_ipv6.tf_ipv6_ds", "routerredirection"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_ipv6.tf_ipv6_ds", "td"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationloginschema_add = `
@@ -132,4 +133,36 @@ func testAccCheckAuthenticationloginschemaDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationloginschemaDataSource_basic = `
+	resource "citrixadc_authenticationloginschema" "tf_loginschema_ds" {
+		name                    = "tf_loginschema_ds"
+		authenticationschema    = "LoginSchema/SingleAuth.xml"
+		ssocredentials          = "NO"
+		authenticationstrength  = "30"
+		passwordcredentialindex = "10"
+	}
+	data "citrixadc_authenticationloginschema" "tf_loginschema_ds" {
+		name = citrixadc_authenticationloginschema.tf_loginschema_ds.name
+	}
+`
+
+func TestAccAuthenticationloginschemaDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationloginschemaDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "name", "tf_loginschema_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "authenticationschema", "LoginSchema/SingleAuth.xml"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "ssocredentials", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "authenticationstrength", "30"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "passwordcredentialindex", "10"),
+				),
+			},
+		},
+	})
 }

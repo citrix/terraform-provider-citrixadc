@@ -242,3 +242,34 @@ resource "citrixadc_responderaction" "tfaction2" {
   responsestatuscode = 201
 }
 `
+
+const testAccResponderactionDataSource_basic = `
+resource "citrixadc_responderaction" "tfaction_ds" {
+  name    = "tfaction_ds"
+  type    = "respondwith"
+  target  = "\"test_response\""
+  comment = "datasource test comment"
+}
+
+data "citrixadc_responderaction" "tfaction_ds" {
+  name = citrixadc_responderaction.tfaction_ds.name
+}
+`
+
+func TestAccResponderactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_responderaction.tfaction_ds", "name", "tfaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderaction.tfaction_ds", "type", "respondwith"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderaction.tfaction_ds", "target", "\"test_response\""),
+					resource.TestCheckResourceAttr("data.citrixadc_responderaction.tfaction_ds", "comment", "datasource test comment"),
+				),
+			},
+		},
+	})
+}

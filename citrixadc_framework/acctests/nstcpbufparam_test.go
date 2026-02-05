@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNstcpbufparam_add = `
@@ -99,3 +100,32 @@ func testAccCheckNstcpbufparamExist(n string, id *string) resource.TestCheckFunc
 		return nil
 	}
 }
+
+func TestAccNstcpbufparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstcpbufparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nstcpbufparam.tf_nstcpbufparam_ds", "size", "32"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstcpbufparam.tf_nstcpbufparam_ds", "memlimit", "8"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNstcpbufparamDataSource_basic = `
+
+	resource "citrixadc_nstcpbufparam" "tf_nstcpbufparam_ds" {
+		size     = 32
+		memlimit = 8
+	}
+
+	data "citrixadc_nstcpbufparam" "tf_nstcpbufparam_ds" {
+		depends_on = [citrixadc_nstcpbufparam.tf_nstcpbufparam_ds]
+	}
+`

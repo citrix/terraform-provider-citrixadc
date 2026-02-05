@@ -177,3 +177,36 @@ resource "citrixadc_systemfile" "tf_file_encoded" {
     fileencoding = "BASE64"
 }
 `
+
+const testAccSystemfileDataSource_basic = `
+resource "citrixadc_systemfile" "tf_file_ds" {
+    filename = "datasource_test.txt"
+    filelocation = "/var/tmp"
+    filecontent = "datasource test content"
+    fileencoding = "BASE64"
+}
+
+data "citrixadc_systemfile" "tf_file_datasource" {
+    filelocation = citrixadc_systemfile.tf_file_ds.filelocation
+    filename = citrixadc_systemfile.tf_file_ds.filename
+}
+`
+
+func TestAccSystemfileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemfileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemfile.tf_file_datasource", "filename", "datasource_test.txt"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemfile.tf_file_datasource", "filelocation", "/var/tmp"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemfile.tf_file_datasource", "fileencoding", "BASE64"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemfile.tf_file_datasource", "filecontent"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemfile.tf_file_datasource", "id"),
+				),
+			},
+		},
+	})
+}

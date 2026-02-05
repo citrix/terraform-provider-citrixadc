@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDbuser_basic = `
@@ -34,6 +35,35 @@ const testAccDbuser_update = `
 		password = "1234"
 	}
 `
+
+const testAccDbuserDataSource_basic = `
+	resource "citrixadc_dbuser" "tf_dbuser" {
+		username = "user1"
+		password = "1234"
+	}
+	
+	data "citrixadc_dbuser" "tf_dbuser_ds" {
+		username = citrixadc_dbuser.tf_dbuser.username
+		loggedin = false
+	}
+`
+
+func TestAccDbuserDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbuserDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dbuser.tf_dbuser_ds", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_dbuser.tf_dbuser_ds", "loggedin", "false"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_dbuser.tf_dbuser_ds", "id"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccDbuser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

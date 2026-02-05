@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnssuffix_basic = `
@@ -108,4 +109,31 @@ func testAccCheckDnssuffixDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccDnssuffixDataSource_basic = `
+
+	resource "citrixadc_dnssuffix" "tf_dnssuffix" {
+		dnssuffix = "example.com"
+	}
+	
+	data "citrixadc_dnssuffix" "tf_dnssuffix" {
+		dnssuffix = citrixadc_dnssuffix.tf_dnssuffix.dnssuffix
+	}
+`
+
+func TestAccDnssuffixDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnssuffixDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnssuffixDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnssuffix.tf_dnssuffix", "dnssuffix", "example.com"),
+				),
+			},
+		},
+	})
 }

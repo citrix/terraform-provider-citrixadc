@@ -112,3 +112,30 @@ resource "citrixadc_policydataset" "tf_dataset" {
 }
 
 `
+
+const testAccPolicydatasetDataSource_basic = `
+	resource "citrixadc_policydataset" "tf_dataset_ds" {
+		name = "tf_dataset_ds"
+		type = "ipv4"
+	}
+
+	data "citrixadc_policydataset" "tf_dataset_ds" {
+		name = citrixadc_policydataset.tf_dataset_ds.name
+	}
+`
+
+func TestAccPolicydatasetDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicydatasetDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_policydataset.tf_dataset_ds", "name", "tf_dataset_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_policydataset.tf_dataset_ds", "type", "ipv4"),
+				),
+			},
+		},
+	})
+}

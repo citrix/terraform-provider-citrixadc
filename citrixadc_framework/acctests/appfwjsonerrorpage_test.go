@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppfwjsonerrorpage_basic = `
@@ -115,4 +116,39 @@ func testAccCheckAppfwjsonerrorpageDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAppfwjsonerrorpageDataSource_basic = `
+	resource "citrixadc_systemfile" "tf_jsonerrorpage" {
+		filename     = "appfwjsonerrorpage.json"
+		filelocation = "/var/tmp"
+		filecontent  = file("testdata/appfwjsonerrorpage.json")
+	}
+	resource "citrixadc_appfwjsonerrorpage" "tf_appfwjsonerrorpage" {
+		name       = "tf_appfwjsonerrorpage"
+		src        = "local://appfwjsonerrorpage.json"
+		depends_on = [citrixadc_systemfile.tf_jsonerrorpage]
+		comment    = "TestingExample"
+	}
+
+	data "citrixadc_appfwjsonerrorpage" "tf_appfwjsonerrorpage" {
+		name       = citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage.name
+		depends_on = [citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage]
+	}
+`
+
+func TestAccAppfwjsonerrorpageDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwjsonerrorpageDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage", "name", "tf_appfwjsonerrorpage"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccBridgegroup_add = `
@@ -35,6 +36,19 @@ const testAccBridgegroup_update = `
 		bridgegroup_id     = 2
 		dynamicrouting     = "ENABLED"
 		ipv6dynamicrouting = "ENABLED"
+	}
+`
+
+const testAccBridgegroupDataSource_basic = `
+	resource "citrixadc_bridgegroup" "tf_bridgegroup" {
+		bridgegroup_id     = 2
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+	}
+
+	data "citrixadc_bridgegroup" "tf_bridgegroup_ds" {
+		depends_on        = [citrixadc_bridgegroup.tf_bridgegroup]
+		bridgegroup_id    = citrixadc_bridgegroup.tf_bridgegroup.bridgegroup_id
 	}
 `
 
@@ -128,4 +142,22 @@ func testAccCheckBridgegroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccBridgegroupDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBridgegroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.citrixadc_bridgegroup.tf_bridgegroup_ds", "bridgegroup_id", "citrixadc_bridgegroup.tf_bridgegroup", "bridgegroup_id"),
+					resource.TestCheckResourceAttrPair("data.citrixadc_bridgegroup.tf_bridgegroup_ds", "dynamicrouting", "citrixadc_bridgegroup.tf_bridgegroup", "dynamicrouting"),
+					resource.TestCheckResourceAttrPair("data.citrixadc_bridgegroup.tf_bridgegroup_ds", "ipv6dynamicrouting", "citrixadc_bridgegroup.tf_bridgegroup", "ipv6dynamicrouting"),
+				),
+			},
+		},
+	})
 }

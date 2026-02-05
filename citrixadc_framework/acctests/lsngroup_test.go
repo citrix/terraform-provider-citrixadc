@@ -17,16 +17,21 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsngroup_basic = `
 
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
+	}
+
 	resource "citrixadc_lsngroup" "tf_lsngroup" {
 		groupname     = "my_lsngroup"
-		clientname    = "my_lsnclient"
+		clientname    = resource.citrixadc_lsnclient.tf_lsnclient.clientname
 		logging       = "DISABLED"
 		nattype       = "DYNAMIC"
 		snmptraplimit = 50
@@ -34,16 +39,19 @@ const testAccLsngroup_basic = `
 `
 const testAccLsngroup_update = `
 
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
+	}
+
 	resource "citrixadc_lsngroup" "tf_lsngroup" {
 		groupname     = "my_lsngroup"
-		clientname    = "my_lsnclient"
+		clientname    = resource.citrixadc_lsnclient.tf_lsnclient.clientname
 		nattype       = "DYNAMIC"
 		snmptraplimit = 100
 	}
 `
 
 func TestAccLsngroup_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -136,4 +144,42 @@ func testAccCheckLsngroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsngroupDataSource_basic = `
+
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient_ds"
+	}
+
+resource "citrixadc_lsngroup" "tf_lsngroup_ds" {
+	groupname     = "my_lsngroup_ds"
+	clientname    = citrixadc_lsnclient.tf_lsnclient.clientname
+	logging       = "DISABLED"
+	nattype       = "DYNAMIC"
+	snmptraplimit = 50
+}
+
+data "citrixadc_lsngroup" "tf_lsngroup_ds" {
+	groupname = citrixadc_lsngroup.tf_lsngroup_ds.groupname
+}
+`
+
+func TestAccLsngroupDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup.tf_lsngroup_ds", "groupname", "my_lsngroup_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup.tf_lsngroup_ds", "clientname", "my_lsnclient_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup.tf_lsngroup_ds", "logging", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup.tf_lsngroup_ds", "nattype", "DYNAMIC"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup.tf_lsngroup_ds", "snmptraplimit", "50"),
+				),
+			},
+		},
+	})
 }

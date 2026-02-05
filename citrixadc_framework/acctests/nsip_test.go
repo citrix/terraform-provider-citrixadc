@@ -68,6 +68,22 @@ resource "citrixadc_nsip" "tf_test_nsip" {
 }
 `
 
+const testAccNsipDataSource_basic = `
+	resource "citrixadc_nsip" "tf_nsip_ds" {
+		ipaddress = "10.222.74.149"
+		netmask   = "255.255.255.0"
+		type      = "SNIP"
+		arp       = "ENABLED"
+		icmp      = "ENABLED"
+		snmp      = "ENABLED"
+	}
+
+	data "citrixadc_nsip" "tf_nsip_ds" {
+		ipaddress = citrixadc_nsip.tf_nsip_ds.ipaddress
+		td        = 0
+	}
+`
+
 func TestAccNsip_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -304,4 +320,24 @@ func testAccCheckNsipDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccNsipDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsipDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "ipaddress", "10.222.74.149"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "netmask", "255.255.255.0"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "type", "SNIP"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "arp", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "icmp", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "snmp", "ENABLED"),
+				),
+			},
+		},
+	})
 }

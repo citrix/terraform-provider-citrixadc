@@ -107,3 +107,35 @@ func testAccCheckAuditnslogparamsExist(n string, id *string) resource.TestCheckF
 		return nil
 	}
 }
+
+func TestAccAuditnslogparamsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditnslogparamsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogparams.tf_auditnslogparams", "dateformat", "DDMMYYYY"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogparams.tf_auditnslogparams", "tcp", "ALL"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogparams.tf_auditnslogparams", "protocolviolations", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuditnslogparamsDataSource_basic = `
+
+resource "citrixadc_auditnslogparams" "tf_auditnslogparams" {
+	dateformat = "DDMMYYYY"
+	loglevel   = ["EMERGENCY"]
+	tcp        = "ALL"
+	protocolviolations = "NONE"
+}
+
+data "citrixadc_auditnslogparams" "tf_auditnslogparams" {
+	depends_on = [citrixadc_auditnslogparams.tf_auditnslogparams]
+}
+`

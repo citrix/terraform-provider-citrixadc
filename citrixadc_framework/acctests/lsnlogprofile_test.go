@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsnlogprofile_basic = `
@@ -44,7 +45,6 @@ const testAccLsnlogprofile_update = `
 `
 
 func TestAccLsnlogprofile_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -136,4 +136,36 @@ func testAccCheckLsnlogprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnlogprofileDataSource_basic = `
+
+resource "citrixadc_lsnlogprofile" "tf_lsnlogprofile_ds" {
+	logprofilename = "my_lsn_logprofile_ds"
+	logsubscrinfo  = "ENABLED"
+	logcompact     = "ENABLED"
+	logipfix       = "ENABLED"
+}
+
+data "citrixadc_lsnlogprofile" "tf_lsnlogprofile_ds" {
+	logprofilename = citrixadc_lsnlogprofile.tf_lsnlogprofile_ds.logprofilename
+}
+`
+
+func TestAccLsnlogprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnlogprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnlogprofile.tf_lsnlogprofile_ds", "logprofilename", "my_lsn_logprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnlogprofile.tf_lsnlogprofile_ds", "logsubscrinfo", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnlogprofile.tf_lsnlogprofile_ds", "logcompact", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnlogprofile.tf_lsnlogprofile_ds", "logipfix", "ENABLED"),
+				),
+			},
+		},
+	})
 }

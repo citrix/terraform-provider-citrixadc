@@ -16,10 +16,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCachepolicylabel_basic = `
@@ -124,3 +125,34 @@ func testAccCheckCachepolicylabelDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccCachepolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCachepolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cachepolicylabel.tf_cachepolicylabel_ds", "labelname", "tf_cachepolicylabel_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_cachepolicylabel.tf_cachepolicylabel_ds", "evaluates", "REQ"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCachepolicylabelDataSource_basic = `
+
+resource "citrixadc_cachepolicylabel" "tf_cachepolicylabel_ds" {
+    labelname = "tf_cachepolicylabel_ds"
+    evaluates = "REQ"
+}
+
+data "citrixadc_cachepolicylabel" "tf_cachepolicylabel_ds" {
+    labelname = citrixadc_cachepolicylabel.tf_cachepolicylabel_ds.labelname
+    depends_on = [citrixadc_cachepolicylabel.tf_cachepolicylabel_ds]
+}
+
+`

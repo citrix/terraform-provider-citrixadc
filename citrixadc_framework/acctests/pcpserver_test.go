@@ -17,32 +17,46 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccPcpserver_basic = `
+
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.185"
+		netmask   = "255.255.255.0"
+		type =  "SNIP"
+	}
 
 	resource "citrixadc_pcpserver" "tf_pcpserver" {
 		name      = "my_pcpserver"
 		ipaddress = "10.222.74.185"
 		port      = 5351
+		depends_on = [citrixadc_nsip.tf_nsip]
 	}
   
 `
 const testAccPcpserver_update = `
 
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.185"
+		netmask   = "255.255.255.0"
+		type =  "SNIP"
+	}
+
 	resource "citrixadc_pcpserver" "tf_pcpserver" {
 		name      = "my_pcpserver"
 		ipaddress = "10.222.74.185"
 		port      = 5352
+		depends_on = [citrixadc_nsip.tf_nsip]
 	}
   
 `
 
 func TestAccPcpserver_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -132,4 +146,40 @@ func testAccCheckPcpserverDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccPcpserverDataSource_basic = `
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.185"
+		netmask   = "255.255.255.0"
+		type =  "SNIP"
+	}
+
+	resource "citrixadc_pcpserver" "tf_pcpserver_ds" {
+		name      = "my_pcpserver"
+		ipaddress = "10.222.74.185"
+		port      = 5351
+		depends_on = [citrixadc_nsip.tf_nsip]
+	}
+
+	data "citrixadc_pcpserver" "tf_pcpserver_ds" {
+		name = citrixadc_pcpserver.tf_pcpserver_ds.name
+	}
+`
+
+func TestAccPcpserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPcpserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_pcpserver.tf_pcpserver_ds", "name", "my_pcpserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_pcpserver.tf_pcpserver_ds", "ipaddress", "10.222.74.185"),
+					resource.TestCheckResourceAttr("data.citrixadc_pcpserver.tf_pcpserver_ds", "port", "5351"),
+				),
+			},
+		},
+	})
 }

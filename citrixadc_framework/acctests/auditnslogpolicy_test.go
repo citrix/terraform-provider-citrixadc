@@ -135,3 +135,36 @@ func testAccCheckAuditnslogpolicyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccAuditnslogpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditnslogpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogpolicy.tf_auditnslogpolicy_ds", "name", "tf_auditnslogpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogpolicy.tf_auditnslogpolicy_ds", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditnslogpolicy.tf_auditnslogpolicy_ds", "action", "SETASLEARNNSLOG_ACT"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuditnslogpolicyDataSource_basic = `
+
+resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy_ds" {
+    name   = "tf_auditnslogpolicy_ds"
+    rule   = "true"
+    action = "SETASLEARNNSLOG_ACT"
+}
+
+data "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy_ds" {
+    name = citrixadc_auditnslogpolicy.tf_auditnslogpolicy_ds.name
+    depends_on = [citrixadc_auditnslogpolicy.tf_auditnslogpolicy_ds]
+}
+
+`

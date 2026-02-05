@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppfwxmlerrorpage_basic = `
@@ -115,4 +116,39 @@ func testAccCheckAppfwxmlerrorpageDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAppfwxmlerrorpageDataSource_basic = `
+	resource "citrixadc_systemfile" "tf_xmlerrorpage_ds" {
+		filename     = "appfwxmlerrorpage_ds.xml"
+		filelocation = "/var/tmp"
+		filecontent  = file("testdata/appfwxmlerrorpage.xml")
+	}
+	resource "citrixadc_appfwxmlerrorpage" "tf_appfwxmlerrorpage_ds" {
+		name       = "tf_appfwxmlerrorpage_ds"
+		src        = "local://appfwxmlerrorpage_ds.xml"
+		depends_on = [citrixadc_systemfile.tf_xmlerrorpage_ds]
+		comment    = "TestingExampleDataSource"
+	}
+	
+	data "citrixadc_appfwxmlerrorpage" "tf_appfwxmlerrorpage_ds" {
+		name = citrixadc_appfwxmlerrorpage.tf_appfwxmlerrorpage_ds.name
+	}
+`
+
+func TestAccAppfwxmlerrorpageDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwxmlerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwxmlerrorpageDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlerrorpage.tf_appfwxmlerrorpage_ds", "name", "tf_appfwxmlerrorpage_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlerrorpage.tf_appfwxmlerrorpage_ds", "src", "appfwxmlerrorpage_ds.xml"),
+				),
+			},
+		},
+	})
 }

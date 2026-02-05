@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNspbr6_add = `
@@ -150,4 +151,45 @@ func testAccCheckNspbr6Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNspbr6DataSource_basic = `
+
+	resource "citrixadc_iptunnel" "tf_iptunnel" {
+		name             = "tf_iptunnel"
+		remote           = "66.0.0.11"
+		remotesubnetmask = "255.255.255.255"
+		local            = "*"
+	}
+	resource "citrixadc_nspbr6" "tf_nspbr6" {
+		name     = "tf_nspbr6_ds"
+		action   = "ALLOW"
+		protocol = "ICMPV6"
+		priority = 25
+		state    = "ENABLED"
+		iptunnel = citrixadc_iptunnel.tf_iptunnel.name
+	}
+
+	data "citrixadc_nspbr6" "tf_nspbr6" {
+		name   = citrixadc_nspbr6.tf_nspbr6.name
+		detail = false
+	}
+`
+
+func TestAccNspbr6DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspbr6DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nspbr6.tf_nspbr6", "name", "tf_nspbr6_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nspbr6.tf_nspbr6", "action", "ALLOW"),
+					resource.TestCheckResourceAttr("data.citrixadc_nspbr6.tf_nspbr6", "protocol", "ICMPV6"),
+					resource.TestCheckResourceAttr("data.citrixadc_nspbr6.tf_nspbr6", "priority", "25"),
+				),
+			},
+		},
+	})
 }

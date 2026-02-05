@@ -140,3 +140,38 @@ func testAccCheckVideooptimizationpacingpolicyDestroy(s *terraform.State) error 
 
 	return nil
 }
+
+const testAccVideooptimizationpacingpolicyDataSource_basic = `
+
+	resource "citrixadc_videooptimizationpacingaction" "tf_action" {
+		name = "tf_action"
+		rate = 10
+	}
+	
+	resource "citrixadc_videooptimizationpacingpolicy" "tf_policy" {
+		name   = "tf_policy"
+		rule   = "true"
+		action = citrixadc_videooptimizationpacingaction.tf_action.name
+	}
+
+	data "citrixadc_videooptimizationpacingpolicy" "tf_policy" {
+		name = citrixadc_videooptimizationpacingpolicy.tf_policy.name
+	}
+`
+
+func TestAccVideooptimizationpacingpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationpacingpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingpolicy.tf_policy", "name", "tf_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingpolicy.tf_policy", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingpolicy.tf_policy", "action", "tf_action"),
+				),
+			},
+		},
+	})
+}

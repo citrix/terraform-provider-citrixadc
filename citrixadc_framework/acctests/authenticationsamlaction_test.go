@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationsamlaction_add = `
@@ -142,4 +143,44 @@ func testAccCheckAuthenticationsamlactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationsamlactionDataSource_basic = `
+
+	resource "citrixadc_authenticationsamlaction" "tf_samlaction_ds" {
+		name                  = "tf_samlaction_ds"
+		metadataurl           = "http://www.example.com"
+		samltwofactor         = "ON"
+		requestedauthncontext = "minimum"
+		digestmethod          = "SHA1"
+		signaturealg          = "RSA-SHA256"
+		statechecks      = "false"
+		preferredbindtype	= ["SSOREDIRECT"]
+	}
+	
+	data "citrixadc_authenticationsamlaction" "tf_samlaction_ds" {
+		name = citrixadc_authenticationsamlaction.tf_samlaction_ds.name
+	}
+`
+
+func TestAccAuthenticationsamlactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsamlactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "name", "tf_samlaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "metadataurl", "http://www.example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "samltwofactor", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "requestedauthncontext", "minimum"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "digestmethod", "SHA1"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "signaturealg", "RSA-SHA256"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "statechecks", "false"),
+				),
+			},
+		},
+	})
 }

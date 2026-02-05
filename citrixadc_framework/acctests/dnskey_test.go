@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnskey_add = `
@@ -52,6 +53,24 @@ resource "citrixadc_dnskey" "dnskey" {
 	rollovermethod	 = "DoubleSignature"
 	autorollover	 = "DISABLED"
 	}
+`
+
+const testAccDnskeyDataSource_basic = `
+
+resource "citrixadc_dnskey" "dnskey" {
+	keyname            = "adckey_ds_test"
+	publickey          = "/nsconfig/dns/demo.key"
+	privatekey         = "/nsconfig/dns/demo.private"
+	expires            = 120
+	units1             = "DAYS"
+	notificationperiod = 7
+	units2             = "DAYS"
+	ttl                = 3600
+}
+
+data "citrixadc_dnskey" "dnskey" {
+	keyname = citrixadc_dnskey.dnskey.keyname
+}
 `
 
 func TestAccDnskey_basic(t *testing.T) {
@@ -155,4 +174,25 @@ func testAccCheckDnskeyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnskeyDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnskeyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "keyname", "adckey_ds_test"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "expires", "120"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "units1", "DAYS"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "notificationperiod", "7"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "units2", "DAYS"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "ttl", "3600"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpntrafficaction_add = `
@@ -43,6 +44,22 @@ const testAccVpntrafficaction_update = `
 		fta        = "OFF"
 		hdx        = "OFF"
 		sso        = "OFF"
+	}
+`
+
+const testAccVpntrafficactionDataSource_basic = `
+
+	resource "citrixadc_vpntrafficaction" "tf_action" {
+		name       = "Testing"
+		qual       = "tcp"
+		apptimeout = 20
+		fta        = "OFF"
+		hdx        = "OFF"
+		sso        = "ON"
+	}
+
+	data "citrixadc_vpntrafficaction" "tf_action" {
+		name = citrixadc_vpntrafficaction.tf_action.name
 	}
 `
 
@@ -136,4 +153,21 @@ func testAccCheckVpntrafficactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpntrafficactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpntrafficactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficaction.tf_action", "name", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficaction.tf_action", "apptimeout", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficaction.tf_action", "sso", "ON"),
+				),
+			},
+		},
+	})
 }

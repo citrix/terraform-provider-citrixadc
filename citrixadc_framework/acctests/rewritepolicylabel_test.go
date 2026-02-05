@@ -112,3 +112,31 @@ resource "citrixadc_rewritepolicylabel" "tf_rewritepolicylabel" {
 	comment = "Some comment"
 }
 `
+
+func TestAccRewritepolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewritepolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicylabel.test", "labelname", "tf_rewritepolicylabel_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicylabel.test", "transform", "http_req"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rewritepolicylabel.test", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccRewritepolicylabelDataSource_basic = `
+resource "citrixadc_rewritepolicylabel" "test" {
+	labelname = "tf_rewritepolicylabel_ds"
+	transform = "http_req"
+}
+
+data "citrixadc_rewritepolicylabel" "test" {
+	labelname = citrixadc_rewritepolicylabel.test.labelname
+}
+`

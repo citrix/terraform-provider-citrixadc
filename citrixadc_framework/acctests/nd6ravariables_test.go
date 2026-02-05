@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNd6ravariables_basic = `
@@ -108,4 +109,37 @@ func testAccCheckNd6ravariablesExist(n string, id *string) resource.TestCheckFun
 
 		return nil
 	}
+}
+
+const testAccNd6ravariablesDataSource_basic = `
+
+	resource "citrixadc_nd6ravariables" "tf_nd6ravariables" {
+		vlan                     = 1
+		ceaserouteradv           = "NO"
+		onlyunicastrtadvresponse = "NO"
+		srclinklayeraddroption   = "NO"
+	}
+
+	data "citrixadc_nd6ravariables" "tf_nd6ravariables_data" {
+		vlan = citrixadc_nd6ravariables.tf_nd6ravariables.vlan
+	}
+`
+
+func TestAccNd6ravariablesDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNd6ravariablesDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nd6ravariables.tf_nd6ravariables_data", "vlan", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_nd6ravariables.tf_nd6ravariables_data", "ceaserouteradv", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_nd6ravariables.tf_nd6ravariables_data", "onlyunicastrtadvresponse", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_nd6ravariables.tf_nd6ravariables_data", "srclinklayeraddroption", "NO"),
+				),
+			},
+		},
+	})
 }

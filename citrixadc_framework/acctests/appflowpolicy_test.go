@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppflowpolicy_basic = `
@@ -167,4 +168,52 @@ func testAccCheckAppflowpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAppflowpolicyDataSource_basic = `
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name   = "test_policy"
+		action = citrixadc_appflowaction.tf_appflowaction.name
+		rule   = "client.TCP.DSTPORT.EQ(22)"
+	}
+	
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name            = "test_action"
+		collectors      = [citrixadc_appflowcollector.tf_appflowcollector.name, citrixadc_appflowcollector.tf_appflowcollector2.name, ]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "tf_collector"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector2" {
+		name      = "tf2_collector"
+		ipaddress = "192.168.2.3"
+		port      = 80
+	}
+
+	data "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name = citrixadc_appflowpolicy.tf_appflowpolicy.name
+	}
+`
+
+func TestAccAppflowpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicy.tf_appflowpolicy", "name", "test_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicy.tf_appflowpolicy", "action", "test_action"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicy.tf_appflowpolicy", "rule", "client.TCP.DSTPORT.EQ(22)"),
+				),
+			},
+		},
+	})
 }

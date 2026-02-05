@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnvserver_add = `
@@ -159,4 +160,50 @@ func testAccCheckVpnvserverDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVpnvserverDataSource_basic = `
+	resource "citrixadc_ipset" "tf_ipset" {
+		name = "tf_test_ipset"
+	}
+	resource "citrixadc_vpnvserver" "foo" {
+		name                     = "tf.citrix.example.com"
+		servicetype              = "SSL"
+		ipv46                    = "3.3.3.3"
+		port                     = 443
+		ipset                    = citrixadc_ipset.tf_ipset.name
+		dtls                     = "OFF"
+		downstateflush           = "DISABLED"
+		listenpolicy             = "NONE"
+		tcpprofilename           = "nstcp_default_XA_XD_profile"
+		secureprivateaccess		= "ENABLED"
+		accessrestrictedpageredirect = "NS"
+		deviceposture 		  = "DISABLED"
+	}
+
+data "citrixadc_vpnvserver" "foo" {
+	name = citrixadc_vpnvserver.foo.name
+}
+`
+
+func TestAccVpnvserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver.foo", "name", "tf.citrix.example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver.foo", "servicetype", "SSL"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver.foo", "ipv46", "3.3.3.3"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver.foo", "downstateflush", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver.foo", "secureprivateaccess", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver.foo", "deviceposture", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver.foo", "accessrestrictedpageredirect", "NS"),
+				),
+			},
+		},
+	})
 }

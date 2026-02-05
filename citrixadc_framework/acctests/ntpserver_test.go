@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNtpserver_basic_ip = `
@@ -210,3 +211,36 @@ func testAccCheckNtpserverDestroy(s *terraform.State) error {
 	}
 	return nil
 }
+
+func TestAccNtpserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNtpserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNtpserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_ntpserver.tf_ntpserver_ds", "serverip", "10.222.74.150"),
+					resource.TestCheckResourceAttr("data.citrixadc_ntpserver.tf_ntpserver_ds", "minpoll", "6"),
+					resource.TestCheckResourceAttr("data.citrixadc_ntpserver.tf_ntpserver_ds", "maxpoll", "10"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNtpserverDataSource_basic = `
+
+resource "citrixadc_ntpserver" "tf_ntpserver_ds" {
+	serverip          = "10.222.74.150"
+	minpoll            = 6
+	maxpoll            = 10
+	preferredntpserver = "NO"
+}
+
+data "citrixadc_ntpserver" "tf_ntpserver_ds" {
+	serverip = citrixadc_ntpserver.tf_ntpserver_ds.serverip
+	depends_on = [citrixadc_ntpserver.tf_ntpserver_ds]
+}
+`

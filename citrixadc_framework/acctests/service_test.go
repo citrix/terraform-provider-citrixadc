@@ -424,3 +424,41 @@ resource "citrixadc_service" "test_service" {
     lbmonitor = "tcp-default"
 }
 `
+
+const testAccServiceDataSource_basic = `
+
+	resource "citrixadc_server" "tf_server" {
+		name      = "test_service_ds_server"
+		ipaddress = "192.168.11.15"
+	}
+
+	resource "citrixadc_service" "tf_service" {
+		name        = "test_service_ds"
+		servicetype = "HTTP"
+		servername  = citrixadc_server.tf_server.name
+		port        = 80
+	}
+
+	data "citrixadc_service" "tf_service" {
+		name       = citrixadc_service.tf_service.name
+		depends_on = [citrixadc_service.tf_service]
+	}
+`
+
+func TestAccServiceDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_service.tf_service", "name", "test_service_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_service.tf_service", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr("data.citrixadc_service.tf_service", "port", "80"),
+				),
+			},
+		},
+	})
+}

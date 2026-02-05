@@ -8,9 +8,10 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceCitrixAdcDnscnamerec() *schema.Resource {
@@ -104,12 +105,14 @@ func deleteDnscnamerecFunc(ctx context.Context, d *schema.ResourceData, meta int
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnscnamerecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnscnamerecName := d.Id()
+	var err error
 	argsMap := make(map[string]string)
 	if ecs, ok := d.GetOk("ecssubnet"); ok {
 		argsMap["ecssubnet"] = url.QueryEscape(ecs.(string))
+		err = client.DeleteResourceWithArgsMap(service.Dnscnamerec.Type(), dnscnamerecName, argsMap)
+	} else {
+		err = client.DeleteResource(service.Dnscnamerec.Type(), dnscnamerecName)
 	}
-
-	err := client.DeleteResourceWithArgsMap(service.Dnscnamerec.Type(), dnscnamerecName, argsMap)
 	if err != nil {
 		return diag.FromErr(err)
 	}

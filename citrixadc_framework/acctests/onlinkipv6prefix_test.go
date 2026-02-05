@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccOnlinkipv6prefix_basic = `
@@ -131,3 +132,35 @@ func testAccCheckOnlinkipv6prefixDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccOnlinkipv6prefixDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckOnlinkipv6prefixDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOnlinkipv6prefixDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix_ds", "ipv6prefix", "9000::/64"),
+					resource.TestCheckResourceAttr("data.citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix_ds", "onlinkprefix", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix_ds", "autonomusprefix", "NO"),
+				),
+			},
+		},
+	})
+}
+
+const testAccOnlinkipv6prefixDataSource_basic = `
+
+resource "citrixadc_onlinkipv6prefix" "tf_onlinkipv6prefix_ds" {
+	ipv6prefix      = "9000::/64"
+	onlinkprefix    = "YES"
+	autonomusprefix = "NO"
+}
+
+data "citrixadc_onlinkipv6prefix" "tf_onlinkipv6prefix_ds" {
+	ipv6prefix = citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix_ds.ipv6prefix
+	depends_on = [citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix_ds]
+}
+`

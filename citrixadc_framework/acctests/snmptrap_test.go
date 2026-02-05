@@ -175,3 +175,41 @@ func testAccCheckSnmptrapDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccSnmptrapDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmptrapDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmptrapDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_snmptrap.tf_snmptrap_ds", "trapclass", "specific"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmptrap.tf_snmptrap_ds", "trapdestination", "192.168.2.25"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmptrap.tf_snmptrap_ds", "version", "V2"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmptrap.tf_snmptrap_ds", "td", "0"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSnmptrapDataSource_basic = `
+
+resource "citrixadc_snmptrap" "tf_snmptrap_ds" {
+	severity        = "Major"
+	trapclass       = "specific"
+	trapdestination = "192.168.2.25"
+	version         = "V2"
+	td              = 0
+}
+
+data "citrixadc_snmptrap" "tf_snmptrap_ds" {
+	trapclass       = citrixadc_snmptrap.tf_snmptrap_ds.trapclass
+	trapdestination = citrixadc_snmptrap.tf_snmptrap_ds.trapdestination
+	version         = citrixadc_snmptrap.tf_snmptrap_ds.version
+	td              = citrixadc_snmptrap.tf_snmptrap_ds.td
+	depends_on      = [citrixadc_snmptrap.tf_snmptrap_ds]
+}
+`

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationwebauthaction_add = `
@@ -136,4 +137,41 @@ func testAccCheckAuthenticationwebauthactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationwebauthactionDataSource_basic = `
+	resource "citrixadc_authenticationwebauthaction" "tf_webauthaction" {
+		name                       = "tf_webauthaction_ds"
+		serverip                   = "1.2.3.4"
+		serverport                 = 8080
+		fullreqexpr                = "TRUE"
+		scheme                     = "https"
+		successrule                = "http.RES.STATUS.EQ(200)"
+		defaultauthenticationgroup = "test_group"
+	}
+
+	data "citrixadc_authenticationwebauthaction" "tf_webauthaction_ds" {
+		name = citrixadc_authenticationwebauthaction.tf_webauthaction.name
+	}
+`
+
+func TestAccAuthenticationwebauthactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationwebauthactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationwebauthaction.tf_webauthaction_ds", "name", "tf_webauthaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationwebauthaction.tf_webauthaction_ds", "serverip", "1.2.3.4"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationwebauthaction.tf_webauthaction_ds", "serverport", "8080"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationwebauthaction.tf_webauthaction_ds", "fullreqexpr", "TRUE"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationwebauthaction.tf_webauthaction_ds", "scheme", "https"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationwebauthaction.tf_webauthaction_ds", "successrule", "http.RES.STATUS.EQ(200)"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationwebauthaction.tf_webauthaction_ds", "defaultauthenticationgroup", "test_group"),
+				),
+			},
+		},
+	})
 }

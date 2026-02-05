@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationcitrixauthaction_add = `
@@ -129,4 +130,34 @@ func testAccCheckAuthenticationcitrixauthactionDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+const testAccAuthenticationcitrixauthactionDataSource_basic = `
+
+	resource "citrixadc_authenticationcitrixauthaction" "tf_citrixauthaction" {
+		name               = "tf_citrixauthaction_ds"
+		authenticationtype = "CITRIXCONNECTOR"
+		authentication     = "DISABLED"
+	}
+
+	data "citrixadc_authenticationcitrixauthaction" "tf_citrixauthaction_ds" {
+		name = citrixadc_authenticationcitrixauthaction.tf_citrixauthaction.name
+	}
+`
+
+func TestAccAuthenticationcitrixauthactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcitrixauthactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcitrixauthaction.tf_citrixauthaction_ds", "name", "tf_citrixauthaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcitrixauthaction.tf_citrixauthaction_ds", "authenticationtype", "CITRIXCONNECTOR"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationcitrixauthaction.tf_citrixauthaction_ds", "authentication", "DISABLED"),
+				),
+			},
+		},
+	})
 }

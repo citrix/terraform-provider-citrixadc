@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsspparams_add = `
@@ -127,3 +128,32 @@ func testAccCheckNsspparamsDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccNsspparamsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsspparamsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsspparams.tf_nsspparams_ds", "basethreshold", "350"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsspparams.tf_nsspparams_ds", "throttle", "Aggressive"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsspparamsDataSource_basic = `
+
+	resource "citrixadc_nsspparams" "tf_nsspparams_ds" {
+		basethreshold = 350
+		throttle      = "Aggressive"
+	}
+
+	data "citrixadc_nsspparams" "tf_nsspparams_ds" {
+		depends_on = [citrixadc_nsspparams.tf_nsspparams_ds]
+	}
+`

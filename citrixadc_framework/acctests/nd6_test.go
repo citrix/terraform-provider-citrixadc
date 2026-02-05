@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNd6_basic = `
@@ -130,4 +131,34 @@ func testAccCheckNd6Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNd6DataSource_basic = `
+
+	resource "citrixadc_nd6" "tf_nd6_ds" {
+		neighbor = "2001::5"
+		mac      = "e6:ec:41:50:b1:d3"
+		ifnum    = "LO/1"
+	}
+
+	data "citrixadc_nd6" "tf_nd6_ds_data" {
+		neighbor = citrixadc_nd6.tf_nd6_ds.neighbor
+	}
+`
+
+func TestAccNd6DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNd6DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nd6.tf_nd6_ds_data", "neighbor", "2001::5"),
+					resource.TestCheckResourceAttr("data.citrixadc_nd6.tf_nd6_ds_data", "mac", "e6:ec:41:50:b1:d3"),
+					resource.TestCheckResourceAttr("data.citrixadc_nd6.tf_nd6_ds_data", "ifnum", "LO/1"),
+				),
+			},
+		},
+	})
 }

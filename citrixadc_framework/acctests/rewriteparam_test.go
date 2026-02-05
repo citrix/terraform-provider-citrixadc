@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccRewriteparam_basic = `
@@ -126,3 +127,25 @@ func testAccCheckRewriteparamDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccRewriteparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewriteparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_rewriteparam.test", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rewriteparam.test", "timeout"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rewriteparam.test", "undefaction"),
+				),
+			},
+		},
+	})
+}
+
+const testAccRewriteparamDataSource_basic = `
+data "citrixadc_rewriteparam" "test" {
+}
+`

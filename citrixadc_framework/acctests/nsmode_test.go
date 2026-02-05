@@ -89,3 +89,33 @@ func testEnsureNsmodes(modes []string, expectedState bool) resource.TestCheckFun
 		return nil
 	}
 }
+
+func TestAccNsmodeDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsmodeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "fr"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "l2"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "usip"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "cka"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "tcpb"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "mbf"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "edge"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "usnip"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "l3"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsmode.test", "pmtud"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsmodeDataSource_basic = `
+data "citrixadc_nsmode" "test" {
+}
+`

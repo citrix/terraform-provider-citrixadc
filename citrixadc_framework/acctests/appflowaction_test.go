@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppflowaction_basic = `	
@@ -148,4 +149,43 @@ func testAccCheckAppflowactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAppflowactionDataSource_basic = `
+
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name            = "test_action"
+		collectors      = [citrixadc_appflowcollector.tf_appflowcollector.name ]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "tf_collector"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
+
+	data "citrixadc_appflowaction" "tf_appflowaction" {
+		name = citrixadc_appflowaction.tf_appflowaction.name
+	}
+`
+
+func TestAccAppflowactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appflowaction.tf_appflowaction", "name", "test_action"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowaction.tf_appflowaction", "securityinsight", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowaction.tf_appflowaction", "botinsight", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowaction.tf_appflowaction", "videoanalytics", "ENABLED"),
+				),
+			},
+		},
+	})
 }

@@ -31,6 +31,18 @@ const testAccAppfwpolicylabel_basic = `
 	}
 `
 
+const testAccAppfwpolicylabelDataSource_basic = `
+	resource "citrixadc_appfwpolicylabel" "tfAcc_appfwpolicylabel" {
+		labelname = "tfAcc_appfwpolicylabel"
+		policylabeltype = "http_req"
+	}
+
+	data "citrixadc_appfwpolicylabel" "tfAcc_appfwpolicylabel" {
+		labelname = citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel.labelname
+		depends_on = [citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel]
+	}
+`
+
 func TestAccAppfwpolicylabel_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -110,4 +122,21 @@ func testAccCheckAppfwpolicylabelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAppfwpolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwpolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", "labelname", "tfAcc_appfwpolicylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", "policylabeltype", "http_req"),
+				),
+			},
+		},
+	})
 }

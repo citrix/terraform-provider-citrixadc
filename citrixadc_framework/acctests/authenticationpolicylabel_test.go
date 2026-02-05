@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationpolicylabel_add = `
@@ -130,4 +131,34 @@ func testAccCheckAuthenticationpolicylabelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationpolicylabelDataSource_basic = `
+
+	resource "citrixadc_authenticationpolicylabel" "tf_authenticationpolicylabel_ds" {
+		labelname = "tf_authenticationpolicylabel_ds"
+		type 	  = "AAATM_REQ"
+		comment   = "Testing DataSource"
+	}
+
+	data "citrixadc_authenticationpolicylabel" "tf_authenticationpolicylabel_ds" {
+		labelname = citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel_ds.labelname
+	}
+`
+
+func TestAccAuthenticationpolicylabelDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpolicylabelDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel_ds", "labelname", "tf_authenticationpolicylabel_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel_ds", "type", "AAATM_REQ"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel_ds", "comment", "Testing DataSource"),
+				),
+			},
+		},
+	})
 }

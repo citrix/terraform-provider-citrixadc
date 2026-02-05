@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsassignment_add = `
@@ -59,7 +60,6 @@ const testAccNsassignment_update = `
 `
 
 func TestAccNsassignment_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -149,4 +149,44 @@ func testAccCheckNsassignmentDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNsassignmentDataSource_basic = `
+	resource "citrixadc_nsvariable" "tf_nsvariable" {
+		name          = "tf_nsvariable"
+		type          = "text(20)"
+		scope         = "global"
+		iffull        = "undef"
+		ifvaluetoobig = "undef"
+		ifnovalue     = "init"
+		comment       = "Testing"
+	}
+	resource "citrixadc_nsassignment" "tf_nsassignment" {
+		name     = "tf_nsassignment"
+		variable = join("", ["$", citrixadc_nsvariable.tf_nsvariable.name])
+		set      = "1"
+		comment  = "Testing"
+	}
+
+	data "citrixadc_nsassignment" "tf_nsassignment_data" {
+		name = citrixadc_nsassignment.tf_nsassignment.name
+	}
+`
+
+func TestAccNsassignmentDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsassignmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsassignmentDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsassignment.tf_nsassignment_data", "name", "tf_nsassignment"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsassignment.tf_nsassignment_data", "set", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsassignment.tf_nsassignment_data", "comment", "Testing"),
+				),
+			},
+		},
+	})
 }

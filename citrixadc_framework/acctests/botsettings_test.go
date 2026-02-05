@@ -128,3 +128,44 @@ func testAccCheckBotsettingsExist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+const testAccBotsettingsDataSource_basic = `
+	resource "citrixadc_botsettings" "default" {
+		sessiontimeout= "900"
+		proxyport = "8080"
+		sessioncookiename = "citrix_bot_id"
+		dfprequestlimit = "1"
+		signatureautoupdate = "ON"
+		trapurlautogenerate = "OFF"
+		trapurlinterval = "3600"
+		trapurllength = "32"
+		proxyusername = "testuser"
+	}
+
+	data "citrixadc_botsettings" "botsettings" {
+		depends_on = [citrixadc_botsettings.default]
+	}
+`
+
+func TestAccBotsettingsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotsettingsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "sessiontimeout", "900"),
+					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "proxyport", "8080"),
+					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "sessioncookiename", "citrix_bot_id"),
+					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "dfprequestlimit", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "signatureautoupdate", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "trapurlautogenerate", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "trapurlinterval", "3600"),
+					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "trapurllength", "32"),
+					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "proxyusername", "testuser"),
+				),
+			},
+		},
+	})
+}

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLocation_basic = `
@@ -110,4 +111,35 @@ func testAccCheckLocationDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLocationDataSource_basic = `
+
+	resource "citrixadc_location" "tf_location" {
+		ipfrom            = "8.8.8.8"
+		ipto              = "9.9.9.9"
+		preferredlocation = "datasource_city"
+	}
+
+	data "citrixadc_location" "tf_location" {
+		ipfrom     = citrixadc_location.tf_location.ipfrom
+		depends_on = [citrixadc_location.tf_location]
+	}
+`
+
+func TestAccLocationDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_location.tf_location", "ipfrom", "8.8.8.8"),
+					resource.TestCheckResourceAttr("data.citrixadc_location.tf_location", "ipto", "9.9.9.9"),
+					resource.TestCheckResourceAttr("data.citrixadc_location.tf_location", "preferredlocation", "datasource_city.*.*.*.*.*"),
+				),
+			},
+		},
+	})
 }

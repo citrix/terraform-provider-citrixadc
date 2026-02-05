@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSubscriberprofile_basic = `
@@ -27,8 +28,23 @@ const testAccSubscriberprofile_basic = `
 
 resource "citrixadc_subscriberprofile" "tf_subscriberprofile" {
 	ip                  = "10.222.74.185"
+	vlan                = 1
 	}
   
+`
+
+const testAccSubscriberprofileDataSource_basic = `
+
+resource "citrixadc_subscriberprofile" "tf_subscriberprofile" {
+	ip                  = "10.222.74.185"
+	vlan                = 1
+}
+
+data "citrixadc_subscriberprofile" "tf_subscriberprofile" {
+	ip   = citrixadc_subscriberprofile.tf_subscriberprofile.ip
+	vlan = citrixadc_subscriberprofile.tf_subscriberprofile.vlan
+	depends_on = [citrixadc_subscriberprofile.tf_subscriberprofile]
+}
 `
 
 const testAccSubscriberprofile_update = `
@@ -36,6 +52,7 @@ const testAccSubscriberprofile_update = `
 
 resource "citrixadc_subscriberprofile" "tf_subscriberprofile" {
 	ip                  = "10.222.74.185"
+	vlan                = 1
 	}
   
 `
@@ -131,4 +148,20 @@ func testAccCheckSubscriberprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSubscriberprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_subscriberprofile.tf_subscriberprofile", "ip", "10.222.74.185"),
+					resource.TestCheckResourceAttr("data.citrixadc_subscriberprofile.tf_subscriberprofile", "vlan", "1"),
+				),
+			},
+		},
+	})
 }

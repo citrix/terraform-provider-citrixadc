@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationpushservice_add = `
@@ -129,4 +130,36 @@ func testAccCheckAuthenticationpushserviceDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationpushserviceDataSource_basic = `
+	resource "citrixadc_authenticationpushservice" "tf_pushservice" {
+		name            = "tf_pushservice_ds"
+		clientid        = "cliId"
+		clientsecret    = "secret"
+		customerid      = "cusID"
+		refreshinterval = 50
+	}
+
+	data "citrixadc_authenticationpushservice" "tf_pushservice_data" {
+		name = citrixadc_authenticationpushservice.tf_pushservice.name
+	}
+`
+
+func TestAccAuthenticationpushserviceDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpushserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpushserviceDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpushservice.tf_pushservice_data", "name", "tf_pushservice_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpushservice.tf_pushservice_data", "customerid", "cusID"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpushservice.tf_pushservice_data", "refreshinterval", "50"),
+				),
+			},
+		},
+	})
 }

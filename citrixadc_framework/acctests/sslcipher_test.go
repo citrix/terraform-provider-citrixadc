@@ -81,6 +81,31 @@ const testAccSslcipher_update = `
 	}
 `
 
+const testAccSslcipherDataSource_basic = `
+	resource "citrixadc_sslcipher" "foo" {
+		ciphergroupname = "tfAccsslcipher"
+
+		# ciphersuitebinding is MANDATORY attribute
+		# Any change in the ciphersuitebinding will result in re-creation of the whole sslcipher resource.
+		ciphersuitebinding {
+			ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+			cipherpriority = 1
+	}
+		ciphersuitebinding {
+			ciphername     = "TLS1.2-ECDHE-RSA-AES256-GCM-SHA384"
+			cipherpriority = 2
+	}
+		ciphersuitebinding {
+			ciphername     = "TLS1.2-ECDHE-RSA-AES-128-SHA256"
+			cipherpriority = 3
+	}
+	}
+
+	data "citrixadc_sslcipher" "foo" {
+		ciphergroupname = citrixadc_sslcipher.foo.ciphergroupname
+	}
+`
+
 func TestAccSslcipher_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -236,4 +261,19 @@ func testAccCheckSslcipherDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSslcipherDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcipherDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslcipher.foo", "ciphergroupname", "tfAccsslcipher"),
+				),
+			},
+		},
+	})
 }

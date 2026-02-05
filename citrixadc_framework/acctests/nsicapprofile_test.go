@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsicapprofile_add = `
@@ -45,6 +46,24 @@ const testAccNsicapprofile_update = `
 	}
 `
 
+const testAccNsicapprofileDataSource_basic = `
+	resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
+		name             = "tf_nsicapprofile_ds"
+		uri              = "/avscan"
+		mode             = "REQMOD"
+		reqtimeout       = 30
+		reqtimeoutaction = "RESET"
+		preview          = "ENABLED"
+		previewlength    = 2048
+		allow204         = "ENABLED"
+		connectionkeepalive = "ENABLED"
+	}
+
+	data "citrixadc_nsicapprofile" "nsicapprofile_data" {
+		name = citrixadc_nsicapprofile.tf_nsicapprofile.name
+	}
+`
+
 func TestAccNsicapprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -67,6 +86,29 @@ func TestAccNsicapprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_nsicapprofile", "name", "tf_nsicapprofile"),
 					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_nsicapprofile", "uri", "/hello"),
 					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_nsicapprofile", "preview", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNsicapprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsicapprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "name", "tf_nsicapprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "uri", "/avscan"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "mode", "REQMOD"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "preview", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "previewlength", "2048"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "allow204", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "connectionkeepalive", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "reqtimeout", "30"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "reqtimeoutaction", "RESET"),
 				),
 			},
 		},

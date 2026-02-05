@@ -156,3 +156,44 @@ resource "citrixadc_lbprofile" "tf_lbprofile" {
 }
 
 `
+
+const testAccLbprofileDataSource_basic = `
+resource "citrixadc_lbprofile" "tf_lbprofile_ds" {
+    lbprofilename = "tf_lbprofile_ds"
+    dbslb = "ENABLED"
+	processlocal = "DISABLED"
+	httponlycookieflag = "ENABLED"
+	lbhashfingers = 258
+	lbhashalgorithm = "PRAC"
+	storemqttclientidandusername = "YES"
+	proximityfromself = "NO"
+}
+
+data "citrixadc_lbprofile" "tf_lbprofile_ds" {
+	lbprofilename = citrixadc_lbprofile.tf_lbprofile_ds.lbprofilename
+	depends_on = [citrixadc_lbprofile.tf_lbprofile_ds]
+}
+`
+
+func TestAccLbprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "lbprofilename", "tf_lbprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "dbslb", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "processlocal", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "httponlycookieflag", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "lbhashfingers", "258"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "lbhashalgorithm", "PRAC"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "storemqttclientidandusername", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "proximityfromself", "NO"),
+				),
+			},
+		},
+	})
+}

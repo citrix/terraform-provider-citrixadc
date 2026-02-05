@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccStreamselector_basic = `
@@ -118,4 +119,31 @@ func testAccCheckStreamselectorDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccStreamselectorDataSource_basic = `
+	resource "citrixadc_streamselector" "tf_streamselector" {
+		name = "my_streamselector"
+		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
+	}
+
+	data "citrixadc_streamselector" "tf_streamselector_datasource" {
+		name = citrixadc_streamselector.tf_streamselector.name
+	}
+`
+
+func TestAccStreamselectorDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamselectorDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_streamselector.tf_streamselector_datasource", "name", "my_streamselector"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_streamselector.tf_streamselector_datasource", "id"),
+				),
+			},
+		},
+	})
 }

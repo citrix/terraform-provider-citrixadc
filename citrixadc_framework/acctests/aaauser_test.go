@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaauser_basic = `
@@ -126,4 +127,33 @@ func testAccCheckAaauserDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAaauserDataSource_basic = `
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "john_datasource"
+		password = "my_pass123"
+	}
+
+	data "citrixadc_aaauser" "tf_aaauser" {
+		username = citrixadc_aaauser.tf_aaauser.username
+	}
+`
+
+func TestAccAaauserDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauserDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser.tf_aaauser", "username", "john_datasource"),
+					// password is not checked as it may be returned encrypted by the API
+				),
+			},
+		},
+	})
 }

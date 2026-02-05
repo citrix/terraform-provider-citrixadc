@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccClusterinstance_basic = `
@@ -131,3 +132,36 @@ func testAccCheckClusterinstanceDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccClusterinstanceDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterinstanceDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusterinstance.tf_clusterinstance_ds", "clid", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusterinstance.tf_clusterinstance_ds", "deadinterval", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusterinstance.tf_clusterinstance_ds", "hellointerval", "600"),
+				),
+			},
+		},
+	})
+}
+
+const testAccClusterinstanceDataSource_basic = `
+
+resource "citrixadc_clusterinstance" "tf_clusterinstance_ds" {
+	clid          = 1
+	deadinterval  = 5
+	hellointerval = 600
+}
+
+data "citrixadc_clusterinstance" "tf_clusterinstance_ds" {
+	clid = citrixadc_clusterinstance.tf_clusterinstance_ds.clid
+	depends_on = [citrixadc_clusterinstance.tf_clusterinstance_ds]
+}
+
+`

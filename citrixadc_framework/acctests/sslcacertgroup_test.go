@@ -29,6 +29,16 @@ const testAccSslcacertgroup_basic = `
 	}
 `
 
+const testAccSslcacertgroupDataSource_basic = `
+resource "citrixadc_sslcacertgroup" "foo" {	
+	cacertgroupname = "foo_ds"
+}
+
+data "citrixadc_sslcacertgroup" "foo" {
+	cacertgroupname = citrixadc_sslcacertgroup.foo.cacertgroupname
+}
+`
+
 func TestAccSslcacertgroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -39,6 +49,21 @@ func TestAccSslcacertgroup_basic(t *testing.T) {
 				Config: testAccSslcacertgroup_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcacertgroupExist("citrixadc_sslcacertgroup.foo", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslcacertgroupDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcacertgroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslcacertgroup.foo", "cacertgroupname", "foo_ds"),
 				),
 			},
 		},

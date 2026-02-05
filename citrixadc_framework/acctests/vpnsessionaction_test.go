@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnsessionaction_add = `
@@ -51,6 +52,25 @@ const testAccVpnsessionaction_update = `
 		wihome                     = "https://citrix.lab.com"
 		clientlessvpnmode          = "DISABLED"
 		httpport                   = [8080, 8000, 808]	
+	}
+`
+
+const testAccVpnsessionactionDataSource_basic = `
+
+	resource "citrixadc_vpnsessionaction" "foo" {
+		name 					   = "newsession"
+		sesstimeout                = "10"
+  		defaultauthorizationaction = "ALLOW"
+  		transparentinterception    = "ON"
+  		clientidletimeout          = "10"
+  		sso                        = "ON"
+  		icaproxy                   = "ON"
+  		wihome                     = "https://citrix.lab.com"
+  		clientlessvpnmode          = "DISABLED"
+	}
+
+	data "citrixadc_vpnsessionaction" "foo" {
+		name = citrixadc_vpnsessionaction.foo.name
 	}
 `
 
@@ -144,4 +164,21 @@ func testAccCheckVpnsessionactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnsessionactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnsessionactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionaction.foo", "name", "newsession"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionaction.foo", "sesstimeout", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionaction.foo", "defaultauthorizationaction", "ALLOW"),
+				),
+			},
+		},
+	})
 }

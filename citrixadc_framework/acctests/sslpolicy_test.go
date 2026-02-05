@@ -52,6 +52,24 @@ const testAccSslpolicy_update = `
 	}
 `
 
+const testAccSslpolicyDataSource_basic = `
+	resource "citrixadc_sslaction" "foo" {
+	name                   = "tf_sslaction"
+	clientauth             = "DOCLIENTAUTH"
+	clientcertverification = "Mandatory"
+	}
+
+	resource "citrixadc_sslpolicy" "foo" {
+	name   = "tf_sslpolicy"
+	rule   = "false"
+	action = citrixadc_sslaction.foo.name
+	}
+
+	data "citrixadc_sslpolicy" "foo" {
+		name = citrixadc_sslpolicy.foo.name
+	}
+`
+
 func TestAccSslpolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -142,4 +160,22 @@ func testAccCheckSslpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSslpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicy.foo", "name", "tf_sslpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicy.foo", "rule", "false"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicy.foo", "action", "tf_sslaction"),
+				),
+			},
+		},
+	})
 }

@@ -174,3 +174,63 @@ func testAccCheckAppfwsettingsExist(n string, id *string) resource.TestCheckFunc
 		return nil
 	}
 }
+
+const testAccAppfwsettingsDataSource_basic = `
+
+resource "citrixadc_appfwsettings" "tf_appfwsettings" {
+  defaultprofile           = "APPFW_DROP"
+  undefaction              = "APPFW_DROP"
+  sessiontimeout           = 800
+  learnratelimit           = 300
+  sessionlifetime          = 1000
+  sessioncookiename        = "test_ns_id"
+  importsizelimit          = 134217700
+  signatureautoupdate      = "ON"
+  signatureurl             = "https://example.com"
+  cookiepostencryptprefix  = "ENCRYPTED"
+  geolocationlogging       = "ON"
+  ceflogging               = "ON"
+  entitydecoding           = "ON"
+  useconfigurablesecretkey = "ON"
+  sessionlimit             = 0
+  malformedreqaction = [
+    "none",
+  ]
+  centralizedlearning = "ON"
+  proxyport           = 9090
+}
+
+data "citrixadc_appfwsettings" "tf_appfwsettings" {
+  depends_on = [citrixadc_appfwsettings.tf_appfwsettings]
+}
+`
+
+func TestAccAppfwsettingsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwsettingsDataSource_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "defaultprofile", "APPFW_DROP"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "undefaction", "APPFW_DROP"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "sessiontimeout", "800"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "learnratelimit", "300"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "sessionlifetime", "1000"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "sessioncookiename", "test_ns_id"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "importsizelimit", "134217700"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "signatureautoupdate", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "signatureurl", "https://example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "cookiepostencryptprefix", "ENCRYPTED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "geolocationlogging", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "ceflogging", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "entitydecoding", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "useconfigurablesecretkey", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "sessionlimit", "0"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "centralizedlearning", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "proxyport", "9090"),
+				),
+			},
+		},
+	})
+}

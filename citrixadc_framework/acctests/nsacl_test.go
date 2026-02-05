@@ -275,3 +275,42 @@ func TestAccNsacl_dataset(t *testing.T) {
 		},
 	})
 }
+
+const testAccNsaclDataSource_basic = `
+
+resource "citrixadc_nsacl" "foo" {
+  aclaction = "DENY"
+  aclname = "test_acl_datasource"
+  destipval = "192.168.1.33"
+  protocol = "TCP"
+  srcportval = "45-1024"
+  priority = "100"
+}
+
+data "citrixadc_nsacl" "foo" {
+  aclname = citrixadc_nsacl.foo.aclname
+  type = "CLASSIC"
+  depends_on = [citrixadc_nsacl.foo]
+}
+`
+
+func TestAccNsaclDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsaclDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl.foo", "aclname", "test_acl_datasource"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl.foo", "aclaction", "DENY"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl.foo", "destipval", "192.168.1.33"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl.foo", "protocol", "TCP"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl.foo", "srcportval", "45-1024"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl.foo", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsacl.foo", "type", "CLASSIC"),
+				),
+			},
+		},
+	})
+}

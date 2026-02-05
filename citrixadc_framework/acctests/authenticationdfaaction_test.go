@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationdfaaction_add = `
@@ -129,3 +130,37 @@ func testAccCheckAuthenticationdfaactionDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccAuthenticationdfaactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationdfaactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationdfaaction.tf_dfaaction_ds", "name", "tf_dfaaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationdfaaction.tf_dfaaction_ds", "serverurl", "https://example.com/"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationdfaaction.tf_dfaaction_ds", "clientid", "cliId"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuthenticationdfaactionDataSource_basic = `
+
+resource "citrixadc_authenticationdfaaction" "tf_dfaaction_ds" {
+    name       = "tf_dfaaction_ds"
+    serverurl  = "https://example.com/"
+    clientid   = "cliId"
+    passphrase = "secret"
+}
+
+data "citrixadc_authenticationdfaaction" "tf_dfaaction_ds" {
+    name = citrixadc_authenticationdfaaction.tf_dfaaction_ds.name
+    depends_on = [citrixadc_authenticationdfaaction.tf_dfaaction_ds]
+}
+
+`

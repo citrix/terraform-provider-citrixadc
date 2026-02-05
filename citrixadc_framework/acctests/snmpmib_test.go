@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSnmpmib_basic = `
@@ -111,3 +112,36 @@ func testAccCheckSnmpmibExist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+func TestAccSnmpmibDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpmibDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_snmpmib.tf_snmpmib_ds", "contact", "phone_number_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpmib.tf_snmpmib_ds", "name", "my_name_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpmib.tf_snmpmib_ds", "location", "LOCATION_DS"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSnmpmibDataSource_basic = `
+
+resource "citrixadc_snmpmib" "tf_snmpmib_ds" {
+	contact  = "phone_number_ds"
+	name     = "my_name_ds"
+	location = "LOCATION_DS"
+	customid = "CUSTOMER_ID_DS"
+}
+
+data "citrixadc_snmpmib" "tf_snmpmib_ds" {
+	ownernode = -1
+	depends_on = [citrixadc_snmpmib.tf_snmpmib_ds]
+}
+`

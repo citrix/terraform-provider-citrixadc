@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnpcoipvserverprofile_add = `
@@ -34,6 +35,18 @@ const testAccVpnpcoipvserverprofile_update = `
 		name        = "tf_vpnpcoipvserverprofile"
 		logindomain = "domainname"
 		udpport     = "200"
+	}
+`
+
+const testAccVpnpcoipvserverprofileDataSource_basic = `
+	resource "citrixadc_vpnpcoipvserverprofile" "tf_vpnpcoipvserverprofile" {
+		name        = "tf_vpnpcoipvserverprofile"
+		logindomain = "domainname"
+		udpport     = "802"
+	}
+
+	data "citrixadc_vpnpcoipvserverprofile" "tf_vpnpcoipvserverprofile" {
+		name = citrixadc_vpnpcoipvserverprofile.tf_vpnpcoipvserverprofile.name
 	}
 `
 
@@ -125,4 +138,21 @@ func testAccCheckVpnpcoipvserverprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnpcoipvserverprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnpcoipvserverprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnpcoipvserverprofile.tf_vpnpcoipvserverprofile", "name", "tf_vpnpcoipvserverprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnpcoipvserverprofile.tf_vpnpcoipvserverprofile", "logindomain", "domainname"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnpcoipvserverprofile.tf_vpnpcoipvserverprofile", "udpport", "802"),
+				),
+			},
+		},
+	})
 }

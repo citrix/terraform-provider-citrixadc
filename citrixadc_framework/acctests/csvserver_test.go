@@ -48,6 +48,22 @@ resource "citrixadc_csvserver" "foo" {
 }
 `
 
+const testAccCsvserverDataSource_basic = `
+
+resource "citrixadc_csvserver" "foo" {
+
+  ipv46 = "10.202.11.11"
+  name = "terraform-cs"
+  port = 8080
+  servicetype = "HTTP"
+
+}
+
+data "citrixadc_csvserver" "foo" {
+  name = citrixadc_csvserver.foo.name
+}
+`
+
 func TestAccCsvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -83,6 +99,28 @@ func TestAccCsvserver_basic(t *testing.T) {
 						"citrixadc_csvserver.foo", "dtls", "OFF"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_csvserver.foo", "backuppersistencetimeout", "30"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"data.citrixadc_csvserver.foo", "name", "terraform-cs"),
+					resource.TestCheckResourceAttr(
+						"data.citrixadc_csvserver.foo", "ipv46", "10.202.11.11"),
+					resource.TestCheckResourceAttr(
+						"data.citrixadc_csvserver.foo", "port", "8080"),
+					resource.TestCheckResourceAttr(
+						"data.citrixadc_csvserver.foo", "servicetype", "HTTP"),
 				),
 			},
 		},

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccMapbmr_basic = `
@@ -114,4 +115,38 @@ func testAccCheckMapbmrDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccMapbmrDataSource_basic = `
+
+	resource "citrixadc_mapbmr" "tf_mapbmr_ds" {
+		name           = "tf_mapbmr_ds"
+		ruleipv6prefix = "2001:db8:abcd:12::/64"
+		psidoffset     = 6
+		eabitlength    = 16
+		psidlength     = 8
+	}
+
+	data "citrixadc_mapbmr" "tf_mapbmr_ds_data" {
+		name = citrixadc_mapbmr.tf_mapbmr_ds.name
+	}
+`
+
+func TestAccMapbmrDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMapbmrDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_mapbmr.tf_mapbmr_ds_data", "name", "tf_mapbmr_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_mapbmr.tf_mapbmr_ds_data", "ruleipv6prefix", "2001:db8:abcd:12::/64"),
+					resource.TestCheckResourceAttr("data.citrixadc_mapbmr.tf_mapbmr_ds_data", "psidoffset", "6"),
+					resource.TestCheckResourceAttr("data.citrixadc_mapbmr.tf_mapbmr_ds_data", "eabitlength", "16"),
+					resource.TestCheckResourceAttr("data.citrixadc_mapbmr.tf_mapbmr_ds_data", "psidlength", "8"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSnmpmanager_basic = `
@@ -153,3 +154,34 @@ func testAccCheckSnmpmanagerDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccSnmpmanagerDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpmanagerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpmanagerDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_snmpmanager.tf_snmpmanager_ds", "ipaddress", "192.168.2.10"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmpmanager.tf_snmpmanager_ds", "netmask", "255.255.255.255"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSnmpmanagerDataSource_basic = `
+
+resource "citrixadc_snmpmanager" "tf_snmpmanager_ds" {
+	ipaddress = "192.168.2.10"
+	netmask   = "255.255.255.255"
+}
+
+data "citrixadc_snmpmanager" "tf_snmpmanager_ds" {
+	ipaddress = citrixadc_snmpmanager.tf_snmpmanager_ds.ipaddress
+	netmask   = citrixadc_snmpmanager.tf_snmpmanager_ds.netmask
+	depends_on = [citrixadc_snmpmanager.tf_snmpmanager_ds]
+}
+`

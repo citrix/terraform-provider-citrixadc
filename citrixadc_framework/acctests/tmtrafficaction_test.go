@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccTmtrafficaction_basic = `
@@ -137,4 +138,37 @@ func testAccCheckTmtrafficactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccTmtrafficactionDataSource_basic = `
+
+
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_traffic_action"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}
+
+data "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+    name = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+}
+`
+
+func TestAccTmtrafficactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmtrafficactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficaction.tf_tmtrafficaction", "name", "my_traffic_action"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficaction.tf_tmtrafficaction", "apptimeout", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficaction.tf_tmtrafficaction", "sso", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficaction.tf_tmtrafficaction", "persistentcookie", "ON"),
+				),
+			},
+		},
+	})
 }

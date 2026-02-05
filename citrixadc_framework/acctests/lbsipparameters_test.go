@@ -122,3 +122,40 @@ func testAccCheckLbsipparametersExist(n string, id *string) resource.TestCheckFu
 		return nil
 	}
 }
+
+const testAccLbsipparametersDataSource_basic = `
+	resource "citrixadc_lbsipparameters" "tf_lbsipparameters" {
+		addrportvip = "ENABLED"
+		retrydur = 100
+		rnatdstport = 80
+		rnatsecuredstport = 81
+		rnatsecuresrcport = 82
+		rnatsrcport = 83
+		sip503ratethreshold = 15
+	}
+
+	data "citrixadc_lbsipparameters" "tf_lbsipparameters" {
+		depends_on = [citrixadc_lbsipparameters.tf_lbsipparameters]
+	}
+`
+
+func TestAccLbsipparametersDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbsipparametersDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbsipparameters.tf_lbsipparameters", "addrportvip", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbsipparameters.tf_lbsipparameters", "retrydur", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbsipparameters.tf_lbsipparameters", "rnatdstport", "80"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbsipparameters.tf_lbsipparameters", "rnatsecuredstport", "81"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbsipparameters.tf_lbsipparameters", "rnatsecuresrcport", "82"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbsipparameters.tf_lbsipparameters", "rnatsrcport", "83"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbsipparameters.tf_lbsipparameters", "sip503ratethreshold", "15"),
+				),
+			},
+		},
+	})
+}

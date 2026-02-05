@@ -177,3 +177,61 @@ func testAccCheckLbparameterDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccLbparameterDataSource_basic = `
+
+	resource "citrixadc_lbparameter" "tf_lbparameter" {
+        httponlycookieflag = "DISABLED"
+        useencryptedpersistencecookie = "ENABLED"
+        consolidatedlconn = "NO"
+        useportforhashlb = "NO"
+        preferdirectroute = "NO"
+        startuprrfactor = 10
+        monitorskipmaxclient = "DISABLED"
+        monitorconnectionclose = "FIN"
+        vserverspecificmac = "DISABLED"
+        allowboundsvcremoval = "ENABLED"
+        retainservicestate = "OFF"
+        dbsttl = 0
+        maxpipelinenat = 240
+        storemqttclientidandusername = "NO"
+        dropmqttjumbomessage = "YES"
+        lbhashalgorithm = "JARH"
+        lbhashfingers = 512
+	}
+
+	data "citrixadc_lbparameter" "tf_lbparameter" {
+		depends_on = [citrixadc_lbparameter.tf_lbparameter]
+	}
+`
+
+func TestAccLbparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "httponlycookieflag", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "useencryptedpersistencecookie", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "consolidatedlconn", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "useportforhashlb", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "preferdirectroute", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "startuprrfactor", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "monitorskipmaxclient", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "monitorconnectionclose", "FIN"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "vserverspecificmac", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "allowboundsvcremoval", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "retainservicestate", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "dbsttl", "0"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "maxpipelinenat", "240"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "storemqttclientidandusername", "NO"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "dropmqttjumbomessage", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "lbhashalgorithm", "JARH"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "lbhashfingers", "512"),
+				),
+			},
+		},
+	})
+}

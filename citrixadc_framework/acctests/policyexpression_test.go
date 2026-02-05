@@ -197,3 +197,32 @@ resource "citrixadc_policyexpression" "tf_classic_policyexpression" {
     clientsecuritymessage = "new security message"
 }
 `
+
+const testAccPolicyexpressionDataSource_basic = `
+	resource "citrixadc_policyexpression" "tf_policyexpression_ds" {
+		name    = "tf_policyexpression_ds"
+		value   = "HTTP.REQ.HOSTNAME.EQ(\"example.com\")"
+		comment = "Test datasource expression"
+	}
+
+	data "citrixadc_policyexpression" "tf_policyexpression_ds" {
+		name = citrixadc_policyexpression.tf_policyexpression_ds.name
+	}
+`
+
+func TestAccPolicyexpressionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyexpressionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_policyexpression.tf_policyexpression_ds", "name", "tf_policyexpression_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_policyexpression.tf_policyexpression_ds", "value", "HTTP.REQ.HOSTNAME.EQ(\"example.com\")"),
+					resource.TestCheckResourceAttr("data.citrixadc_policyexpression.tf_policyexpression_ds", "comment", "Test datasource expression"),
+				),
+			},
+		},
+	})
+}

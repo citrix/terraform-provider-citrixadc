@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccClusternode_basic_nogroup_config = `
@@ -238,3 +239,34 @@ func testAccCheckClusternodeDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccClusternodeDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternode.tf_clusternode_ds", "nodeid", "0"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternode.tf_clusternode_ds", "ipaddress", "10.101.132.123"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternode.tf_clusternode_ds", "state", "ACTIVE"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternode.tf_clusternode_ds", "nodegroup", "DEFAULT_NG"),
+				),
+			},
+		},
+	})
+}
+
+const testAccClusternodeDataSource_basic = `
+
+
+data "citrixadc_clusternode" "tf_clusternode_ds" {
+	nodeid     = "0"
+}
+
+`

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIpsecalgprofile_basic = `
@@ -134,4 +135,35 @@ func testAccCheckIpsecalgprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccIpsecalgprofileDataSource_basic = `
+	resource "citrixadc_ipsecalgprofile" "tf_ipsecalgprofile_ds" {
+		name              = "my_ipsecalgprofile_ds"
+		ikesessiontimeout = 50
+		espsessiontimeout = 20
+		connfailover      = "DISABLED"
+	}
+
+	data "citrixadc_ipsecalgprofile" "tf_ipsecalgprofile_ds" {
+		name = citrixadc_ipsecalgprofile.tf_ipsecalgprofile_ds.name
+	}
+`
+
+func TestAccIpsecalgprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpsecalgprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_ipsecalgprofile.tf_ipsecalgprofile_ds", "name", "my_ipsecalgprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_ipsecalgprofile.tf_ipsecalgprofile_ds", "ikesessiontimeout", "50"),
+					resource.TestCheckResourceAttr("data.citrixadc_ipsecalgprofile.tf_ipsecalgprofile_ds", "espsessiontimeout", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_ipsecalgprofile.tf_ipsecalgprofile_ds", "connfailover", "DISABLED"),
+				),
+			},
+		},
+	})
 }

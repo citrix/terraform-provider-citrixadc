@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSystemparameter_basic = `
@@ -52,6 +53,26 @@ resource "citrixadc_systemparameter" "tf_systemparameter" {
 	passwordhistorycontrol = "DISABLED"
 	maxsessionperuser = 15
 	daystoexpire = 50
+}
+`
+
+const testAccSystemparameterDataSource_basic = `
+
+resource "citrixadc_systemparameter" "tf_systemparameter" {
+    rbaonresponse = "ENABLED"
+    natpcbforceflushlimit = 3000
+    natpcbrstontimeout = "DISABLED"
+    timeout = 500
+    doppler = "ENABLED"
+	pwdhistorycount = 5
+	warnpriorndays = 10
+	passwordhistorycontrol = "ENABLED"
+	maxsessionperuser = 10
+	daystoexpire = 45
+}
+
+data "citrixadc_systemparameter" "tf_systemparameter" {
+    depends_on = [citrixadc_systemparameter.tf_systemparameter]
 }
 `
 
@@ -133,4 +154,29 @@ func testAccCheckSystemparameterExist(n string, id *string) resource.TestCheckFu
 
 		return nil
 	}
+}
+
+func TestAccSystemparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "rbaonresponse", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "natpcbforceflushlimit", "3000"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "natpcbrstontimeout", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "timeout", "500"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "doppler", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "pwdhistorycount", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "warnpriorndays", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "passwordhistorycontrol", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "maxsessionperuser", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "daystoexpire", "45"),
+				),
+			},
+		},
+	})
 }

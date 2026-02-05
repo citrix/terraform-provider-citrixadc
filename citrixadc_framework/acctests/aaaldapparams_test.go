@@ -105,3 +105,65 @@ func testAccCheckAaaldapparamsExist(n string, id *string) resource.TestCheckFunc
 		return nil
 	}
 }
+
+// Add this to the end of aaaldapparams_test.go
+
+const testAccAaaldapparamsDataSource_basic = `
+
+resource "citrixadc_aaaldapparams" "tf_aaaldapparams" {
+	serverip = "1.2.3.4"
+	serverport = 389
+	authtimeout = 5
+	ldapbase = "dc=aaa,dc=local"
+	ldapbinddn = "cn=Manager,dc=aaa,dc=local"
+	ldapbinddnpassword = "secret"
+	ldaploginname = "samAccountName"
+	searchfilter = "cn"
+	groupattrname = "memberOf"
+	subattributename = "cn"
+	sectype = "PLAINTEXT"
+	passwdchange = "ENABLED"
+	nestedgroupextraction = "OFF"
+	maxnestinglevel = 3
+	groupnameidentifier = "samAccountName"
+	groupsearchattribute = "memberOf"
+	groupsearchsubattribute = "cn"
+	groupsearchfilter = "memberOf"
+	defaultauthenticationgroup = "default_group"
+}
+
+data "citrixadc_aaaldapparams" "tf_aaaldapparams" {
+	depends_on = [citrixadc_aaaldapparams.tf_aaaldapparams]
+}
+`
+
+func TestAccAaaldapparamsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaldapparamsDataSource_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "serverip", "1.2.3.4"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "serverport", "389"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "authtimeout", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "ldapbase", "dc=aaa,dc=local"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "ldapbinddn", "cn=Manager,dc=aaa,dc=local"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "ldaploginname", "samAccountName"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "searchfilter", "cn"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "groupattrname", "memberOf"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "subattributename", "cn"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "sectype", "PLAINTEXT"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "passwdchange", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "nestedgroupextraction", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "maxnestinglevel", "3"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "groupnameidentifier", "samAccountName"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "groupsearchattribute", "memberOf"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "groupsearchsubattribute", "cn"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "groupsearchfilter", "memberOf"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "defaultauthenticationgroup", "default_group"),
+				),
+			},
+		},
+	})
+}

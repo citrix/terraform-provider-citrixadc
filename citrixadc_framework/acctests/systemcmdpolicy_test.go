@@ -138,3 +138,32 @@ resource "citrixadc_systemcmdpolicy" "tf_policy" {
     cmdspec = "sh.*"
 }
 `
+
+const testAccSystemcmdpolicyDataSource_basic = `
+resource "citrixadc_systemcmdpolicy" "tf_policy" {
+    policyname = "tf_policy_ds"
+    action = "ALLOW"
+    cmdspec = "show.*"
+}
+
+data "citrixadc_systemcmdpolicy" "tf_policy" {
+    policyname = citrixadc_systemcmdpolicy.tf_policy.policyname
+}
+`
+
+func TestAccSystemcmdpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemcmdpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemcmdpolicy.tf_policy", "policyname", "tf_policy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemcmdpolicy.tf_policy", "action", "ALLOW"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemcmdpolicy.tf_policy", "cmdspec", "show.*"),
+				),
+			},
+		},
+	})
+}

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsdhcpparams_add = `
@@ -99,3 +100,32 @@ func testAccCheckNsdhcpparamsExist(n string, id *string) resource.TestCheckFunc 
 		return nil
 	}
 }
+
+func TestAccNsdhcpparamsDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsdhcpparamsDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsdhcpparams.tf_nsdhcpparams", "dhcpclient", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsdhcpparams.tf_nsdhcpparams", "saveroute", "ON"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsdhcpparamsDataSource_basic = `
+
+resource "citrixadc_nsdhcpparams" "tf_nsdhcpparams" {
+	dhcpclient = "ON"
+	saveroute  = "ON"
+}
+
+data "citrixadc_nsdhcpparams" "tf_nsdhcpparams" {
+	depends_on = [citrixadc_nsdhcpparams.tf_nsdhcpparams]
+}
+`

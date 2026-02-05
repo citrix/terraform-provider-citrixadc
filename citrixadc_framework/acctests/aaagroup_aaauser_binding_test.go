@@ -208,3 +208,44 @@ func testAccCheckAaagroup_aaauser_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccAaagroup_aaauser_binding_DataSource_basic = `
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+
+	resource "citrixadc_aaagroup_aaauser_binding" "tf_aaagroup_aaauser_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		username  = citrixadc_aaauser.tf_aaauser.username
+	}
+
+	data "citrixadc_aaagroup_aaauser_binding" "tf_aaagroup_aaauser_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		username  = citrixadc_aaauser.tf_aaauser.username
+		depends_on = [citrixadc_aaagroup_aaauser_binding.tf_aaagroup_aaauser_binding]
+	}
+  
+`
+
+func TestAccAaagroup_aaauser_binding_DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_aaauser_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_aaauser_binding_DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_aaauser_binding.tf_aaagroup_aaauser_binding", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_aaauser_binding.tf_aaagroup_aaauser_binding", "username", "user1"),
+				),
+			},
+		},
+	})
+}

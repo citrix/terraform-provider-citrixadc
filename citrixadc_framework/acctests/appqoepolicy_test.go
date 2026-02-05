@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppqoepolicy_basic = `
@@ -49,6 +50,26 @@ const testAccAppqoepolicy_update = `
 		name   = "my_appqoepolicy"
 		rule   = "false"
 		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+`
+
+const testAccAppqoepolicyDataSource_basic = `
+
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "my_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "my_appqoepolicy"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+
+	data "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name = citrixadc_appqoepolicy.tf_appqoepolicy.name
+		depends_on = [citrixadc_appqoepolicy.tf_appqoepolicy]
 	}
 `
 
@@ -142,4 +163,22 @@ func testAccCheckAppqoepolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAppqoepolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppqoepolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appqoepolicy.tf_appqoepolicy", "name", "my_appqoepolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_appqoepolicy.tf_appqoepolicy", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_appqoepolicy.tf_appqoepolicy", "action", "my_appqoeaction"),
+				),
+			},
+		},
+	})
 }

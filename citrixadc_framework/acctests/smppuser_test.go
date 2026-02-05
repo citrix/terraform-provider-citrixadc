@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSmppuser_basic = `
@@ -128,3 +129,32 @@ func testAccCheckSmppuserDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccSmppuserDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSmppuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmppuserDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_smppuser.tf_smppuser_ds", "username", "tf_smppuser_ds"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSmppuserDataSource_basic = `
+
+resource "citrixadc_smppuser" "tf_smppuser_ds" {
+	username = "tf_smppuser_ds"
+	password = "datasourcepass"
+}
+
+data "citrixadc_smppuser" "tf_smppuser_ds" {
+	username = citrixadc_smppuser.tf_smppuser_ds.username
+	depends_on = [citrixadc_smppuser.tf_smppuser_ds]
+}
+`

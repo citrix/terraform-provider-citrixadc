@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccInterfacepair_basic = `
@@ -37,6 +38,34 @@ const testAccInterfacepair_update = `
 	}
   
 `
+
+const testAccInterfacepairDataSource_basic = `
+	resource "citrixadc_interfacepair" "tf_interfacepair" {
+		interface_id = 1
+		ifnum        = ["LA/2", "LA/3"]
+	}
+	
+	data "citrixadc_interfacepair" "tf_interfacepair_ds" {
+		interface_id = citrixadc_interfacepair.tf_interfacepair.interface_id
+	}
+`
+
+func TestAccInterfacepairDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this datasource - requires specific hardware setup!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInterfacepairDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_interfacepair.tf_interfacepair_ds", "interface_id", "1"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_interfacepair.tf_interfacepair_ds", "id"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccInterfacepair_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")

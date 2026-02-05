@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccRnatparam_add = `
@@ -98,4 +99,33 @@ func testAccCheckRnatparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccRnatparamDataSource_basic = `
+
+	resource "citrixadc_rnatparam" "tf_rnatparam" {
+		srcippersistency = "ENABLED"
+		tcpproxy         = "ENABLED"
+	}
+
+	data "citrixadc_rnatparam" "tf_rnatparam" {
+		depends_on = [citrixadc_rnatparam.tf_rnatparam]
+	}
+`
+
+func TestAccRnatparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRnatparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rnatparam.tf_rnatparam", "srcippersistency", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_rnatparam.tf_rnatparam", "tcpproxy", "ENABLED"),
+				),
+			},
+		},
+	})
 }

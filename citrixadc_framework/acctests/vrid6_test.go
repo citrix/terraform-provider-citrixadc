@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVrid6_add = `
@@ -136,4 +137,38 @@ func testAccCheckVrid6Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVrid6DataSource_basic = `
+	resource "citrixadc_vrid6" "tf_vrid6" {
+		vrid6_id             = 3
+		priority             = 30
+		preemption           = "DISABLED"
+		sharing              = "DISABLED"
+		tracking             = "NONE"
+	}
+
+data "citrixadc_vrid6" "tf_vrid6" {
+	vrid6_id = citrixadc_vrid6.tf_vrid6.vrid6_id
+}
+`
+
+func TestAccVrid6DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVrid6DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vrid6.tf_vrid6", "vrid6_id", "3"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid6.tf_vrid6", "priority", "30"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid6.tf_vrid6", "preemption", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid6.tf_vrid6", "sharing", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid6.tf_vrid6", "tracking", "NONE"),
+				),
+			},
+		},
+	})
 }

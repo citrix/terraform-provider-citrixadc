@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccFeoparameter_basic = `
@@ -109,4 +110,35 @@ func testAccCheckFeoparameterExist(n string, id *string) resource.TestCheckFunc 
 
 		return nil
 	}
+}
+
+const testAccFeoparameterDataSource_basic = `
+	resource "citrixadc_feoparameter" "tf_feoparameter" {
+		jpegqualitypercent = 10
+		cssinlinethressize = 100
+		jsinlinethressize  = 50
+		imginlinethressize = 1
+	}
+
+	data "citrixadc_feoparameter" "feoparameter" {
+		depends_on = [citrixadc_feoparameter.tf_feoparameter]
+	}
+`
+
+func TestAccFeoparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeoparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_feoparameter.feoparameter", "jpegqualitypercent", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoparameter.feoparameter", "cssinlinethressize", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoparameter.feoparameter", "jsinlinethressize", "50"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoparameter.feoparameter", "imginlinethressize", "1"),
+				),
+			},
+		},
+	})
 }

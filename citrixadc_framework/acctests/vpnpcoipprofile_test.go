@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnpcoipprofile_add = `
@@ -36,6 +37,19 @@ const testAccVpnpcoipprofile_update = `
 		name               = "tf_vpnpcoipprofile"
 		conserverurl       = "http://www.example.com"
 		sessionidletimeout = 90
+	}
+`
+
+const testAccVpnpcoipprofileDataSource_basic = `
+
+	resource "citrixadc_vpnpcoipprofile" "tf_vpnpcoipprofile" {
+		name               = "tf_vpnpcoipprofile"
+		conserverurl       = "http://www.example.com"
+		sessionidletimeout = 80
+	}
+
+	data "citrixadc_vpnpcoipprofile" "tf_vpnpcoipprofile" {
+		name = citrixadc_vpnpcoipprofile.tf_vpnpcoipprofile.name
 	}
 `
 
@@ -127,4 +141,21 @@ func testAccCheckVpnpcoipprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnpcoipprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnpcoipprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnpcoipprofile.tf_vpnpcoipprofile", "name", "tf_vpnpcoipprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnpcoipprofile.tf_vpnpcoipprofile", "conserverurl", "http://www.example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnpcoipprofile.tf_vpnpcoipprofile", "sessionidletimeout", "80"),
+				),
+			},
+		},
+	})
 }

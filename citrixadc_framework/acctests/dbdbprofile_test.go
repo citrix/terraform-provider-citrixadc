@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDbdbprofile_basic = `
@@ -37,6 +38,19 @@ const testAccDbdbprofile_update = `
 		stickiness     = "NO"
 		conmultiplex   = "DISABLED"
 		interpretquery = "NO"
+	}
+`
+
+const testAccDbdbprofileDataSource_basic = `
+	resource "citrixadc_dbdbprofile" "tf_dbdbprofile" {
+		name           = "my_dbprofile"
+		stickiness     = "YES"
+		conmultiplex   = "ENABLED"
+		interpretquery = "YES"
+	}
+
+	data "citrixadc_dbdbprofile" "tf_dbdbprofile_datasource" {
+		name = citrixadc_dbdbprofile.tf_dbdbprofile.name
 	}
 `
 
@@ -132,4 +146,22 @@ func testAccCheckDbdbprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDbdbprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbdbprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dbdbprofile.tf_dbdbprofile_datasource", "name", "my_dbprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_dbdbprofile.tf_dbdbprofile_datasource", "stickiness", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_dbdbprofile.tf_dbdbprofile_datasource", "conmultiplex", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_dbdbprofile.tf_dbdbprofile_datasource", "interpretquery", "YES"),
+				),
+			},
+		},
+	})
 }

@@ -131,3 +131,35 @@ func testAccCheckLinksetDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccLinksetDataSource_basic = `
+	resource "citrixadc_linkset" "tf_linkset" {
+		linkset_id = "LS/2"
+	}
+
+	data "citrixadc_linkset" "tf_linkset" {
+		linkset_id = citrixadc_linkset.tf_linkset.linkset_id
+	}
+`
+
+func TestAccLinksetDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	if isCpxRun {
+		t.Skip("clustering not supported in CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLinksetDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_linkset.tf_linkset", "linkset_id", "LS/2"),
+				),
+			},
+		},
+	})
+}

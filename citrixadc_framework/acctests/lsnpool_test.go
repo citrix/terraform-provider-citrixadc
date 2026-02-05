@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsnpool_basic = `
@@ -48,7 +49,6 @@ const testAccLsnpool_update = `
 `
 
 func TestAccLsnpool_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -142,4 +142,38 @@ func testAccCheckLsnpoolDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnpoolDataSource_basic = `
+
+resource "citrixadc_lsnpool" "tf_lsnpool_ds" {
+	poolname            = "my_lsn_pool_ds"
+	nattype             = "DYNAMIC"
+	portblockallocation = "DISABLED"
+	maxportrealloctmq   = 50
+	portrealloctimeout  = 50
+}
+
+data "citrixadc_lsnpool" "tf_lsnpool_ds" {
+	poolname = citrixadc_lsnpool.tf_lsnpool_ds.poolname
+}
+`
+
+func TestAccLsnpoolDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnpoolDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnpool.tf_lsnpool_ds", "poolname", "my_lsn_pool_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnpool.tf_lsnpool_ds", "nattype", "DYNAMIC"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnpool.tf_lsnpool_ds", "portblockallocation", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnpool.tf_lsnpool_ds", "maxportrealloctmq", "50"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnpool.tf_lsnpool_ds", "portrealloctimeout", "50"),
+				),
+			},
+		},
+	})
 }

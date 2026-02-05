@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVideooptimizationdetectionaction_add = `
@@ -35,6 +36,19 @@ const testAccVideooptimizationdetectionaction_update = `
 	resource "citrixadc_videooptimizationdetectionaction" "tf_detectionaction" {
 		name = "tf_videooptimizationdetectionaction"
 		type = "clear_text_abr"
+	}
+  
+`
+
+const testAccVideooptimizationdetectionactionDataSource_basic = `
+
+	resource "citrixadc_videooptimizationdetectionaction" "tf_detectionaction" {
+		name = "tf_videooptimizationdetectionaction"
+		type = "clear_text_pd"
+	}
+
+	data "citrixadc_videooptimizationdetectionaction" "tf_detectionaction" {
+		name = citrixadc_videooptimizationdetectionaction.tf_detectionaction.name
 	}
   
 `
@@ -127,4 +141,20 @@ func testAccCheckVideooptimizationdetectionactionDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+func TestAccVideooptimizationdetectionactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationdetectionactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionaction.tf_detectionaction", "name", "tf_videooptimizationdetectionaction"),
+					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionaction.tf_detectionaction", "type", "clear_text_pd"),
+				),
+			},
+		},
+	})
 }

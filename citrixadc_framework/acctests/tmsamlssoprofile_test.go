@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccTmsamlssoprofile_basic = `
@@ -136,4 +137,35 @@ func testAccCheckTmsamlssoprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccTmsamlssoprofileDataSource_basic = `
+
+	resource "citrixadc_tmsamlssoprofile" "tf_tmsamlssoprofile" {
+		name                        = "my_tmsamlssoprofile"
+		assertionconsumerserviceurl = "https://service.example.com"
+		sendpassword                = "OFF"
+		relaystaterule              = "true"
+	}
+
+data "citrixadc_tmsamlssoprofile" "tf_tmsamlssoprofile" {
+    name = citrixadc_tmsamlssoprofile.tf_tmsamlssoprofile.name
+}
+`
+
+func TestAccTmsamlssoprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmsamlssoprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_tmsamlssoprofile.tf_tmsamlssoprofile", "name", "my_tmsamlssoprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmsamlssoprofile.tf_tmsamlssoprofile", "assertionconsumerserviceurl", "https://service.example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmsamlssoprofile.tf_tmsamlssoprofile", "relaystaterule", "true"),
+				),
+			},
+		},
+	})
 }

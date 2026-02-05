@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"net/url"
-	"testing"
 )
 
 const testAccDnscnamerec_basic = `
@@ -31,6 +32,19 @@ resource "citrixadc_dnscnamerec" "dnscnamerec" {
 	aliasname = "citrixadc.cloud.com"
     canonicalname = "ctxwsp-citrixadc-fdproxy-global.trafficmanager.net"
     ttl = 3600
+}
+`
+
+const testAccDnscnamerecDataSource_basic = `
+
+resource "citrixadc_dnscnamerec" "dnscnamerec" {
+	aliasname = "tfacc-ds-cname-test.local"
+    canonicalname = "tfacc-target.example.com"
+    ttl = 3600
+}
+
+data "citrixadc_dnscnamerec" "dnscnamerec" {
+	aliasname = citrixadc_dnscnamerec.dnscnamerec.aliasname
 }
 `
 
@@ -122,4 +136,21 @@ func testAccCheckDnscnamerecDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnscnamerecDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnscnamerecDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnscnamerec.dnscnamerec", "aliasname", "tfacc-ds-cname-test.local"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnscnamerec.dnscnamerec", "canonicalname", "tfacc-target.example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnscnamerec.dnscnamerec", "ttl", "3600"),
+				),
+			},
+		},
+	})
 }

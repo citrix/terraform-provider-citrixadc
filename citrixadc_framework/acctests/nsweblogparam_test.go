@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsweblogparam_add = `
@@ -99,3 +100,23 @@ func testAccCheckNsweblogparamExist(n string, id *string) resource.TestCheckFunc
 		return nil
 	}
 }
+func TestAccNsweblogparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsweblogparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsweblogparam.test", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsweblogparam.test", "buffersizemb"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsweblogparamDataSource_basic = `
+data "citrixadc_nsweblogparam" "test" {
+}
+`

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationstorefrontauthaction_add = `
@@ -127,4 +128,35 @@ func testAccCheckAuthenticationstorefrontauthactionDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+const testAccAuthenticationstorefrontauthactionDataSource_basic = `
+	resource "citrixadc_authenticationstorefrontauthaction" "tf_storefront_ds" {
+		name                       = "tf_storefront_ds"
+		serverurl                  = "http://www.example.com/"
+		domain                     = "domainname_ds"
+		defaultauthenticationgroup = "group_name_ds"
+	}
+
+	data "citrixadc_authenticationstorefrontauthaction" "tf_storefront_ds_data" {
+		name = citrixadc_authenticationstorefrontauthaction.tf_storefront_ds.name
+	}
+`
+
+func TestAccAuthenticationstorefrontauthactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationstorefrontauthactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationstorefrontauthaction.tf_storefront_ds_data", "name", "tf_storefront_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationstorefrontauthaction.tf_storefront_ds_data", "serverurl", "http://www.example.com/"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationstorefrontauthaction.tf_storefront_ds_data", "domain", "domainname_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationstorefrontauthaction.tf_storefront_ds_data", "defaultauthenticationgroup", "group_name_ds"),
+				),
+			},
+		},
+	})
 }

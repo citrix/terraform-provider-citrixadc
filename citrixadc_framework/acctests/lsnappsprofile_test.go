@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccLsnappsprofile_basic = `
@@ -40,7 +41,6 @@ const testAccLsnappsprofile_update = `
 `
 
 func TestAccLsnappsprofile_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -130,4 +130,38 @@ func testAccCheckLsnappsprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnappsprofileDataSource_basic = `
+
+resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile_ds" {
+	appsprofilename   = "my_lsn_appsprofile_ds"
+	transportprotocol = "TCP"
+	mapping           = "ENDPOINT-INDEPENDENT"
+	filtering         = "ENDPOINT-INDEPENDENT"
+	ippooling         = "RANDOM"
+}
+
+data "citrixadc_lsnappsprofile" "tf_lsnappsprofile_ds" {
+	appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile_ds.appsprofilename
+}
+`
+
+func TestAccLsnappsprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnappsprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile.tf_lsnappsprofile_ds", "appsprofilename", "my_lsn_appsprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile.tf_lsnappsprofile_ds", "transportprotocol", "TCP"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile.tf_lsnappsprofile_ds", "mapping", "ENDPOINT-INDEPENDENT"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile.tf_lsnappsprofile_ds", "filtering", "ENDPOINT-INDEPENDENT"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile.tf_lsnappsprofile_ds", "ippooling", "RANDOM"),
+				),
+			},
+		},
+	})
 }

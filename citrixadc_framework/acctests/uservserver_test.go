@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccUservserver_basic = `
@@ -42,6 +43,35 @@ const testAccUservserver_update = `
 		ipaddress    = "10.222.74.200"
 		port         = 3500
 		defaultlb    = "mysv"
+	}
+`
+
+const testAccUservserverDataSource_basic = `
+
+	resource "citrixadc_userprotocol" "tf_userprotocol" {
+		name      = "MQTT"
+		transport = "TCP"
+		extension = "mqtt_code"
+		comment   = "my_comment"
+	}
+
+	resource "citrixadc_lbvserver" "tf_defaultlb" {
+		name        = "tf_defaultlb"
+		servicetype = "USER_TCP"
+	}
+
+	resource "citrixadc_uservserver" "tf_uservserver" {
+		name         = "my_user_vserver"
+		userprotocol = "MQTT"
+		ipaddress    = "10.222.74.180"
+		port         = 80
+		defaultlb    = citrixadc_lbvserver.tf_defaultlb.name
+		depends_on   = [citrixadc_userprotocol.tf_userprotocol, citrixadc_lbvserver.tf_defaultlb]
+	}
+
+	data "citrixadc_uservserver" "tf_uservserver" {
+		name = citrixadc_uservserver.tf_uservserver.name
+		depends_on = [citrixadc_uservserver.tf_uservserver]
 	}
 `
 
@@ -140,4 +170,22 @@ func testAccCheckUservserverDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccUservserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUservserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "name", "my_user_vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "userprotocol", "MQTT"),
+					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "ipaddress", "10.222.74.180"),
+					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "port", "80"),
+				),
+			},
+		},
+	})
 }

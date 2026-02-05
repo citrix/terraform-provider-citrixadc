@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCachecontentgroup_basic = `
@@ -138,4 +139,38 @@ func testAccCheckCachecontentgroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCachecontentgroupDataSource_basic = `
+
+	resource "citrixadc_cachecontentgroup" "tf_cachecontentgroup" {
+		name                 = "my_cachecontentgroup_ds"
+		heurexpiryparam      = 30
+		prefetch             = "YES"
+		quickabortsize       = 40
+		ignorereqcachinghdrs = "YES"
+	}
+
+	data "citrixadc_cachecontentgroup" "tf_cachecontentgroup_ds" {
+		name = citrixadc_cachecontentgroup.tf_cachecontentgroup.name
+	}
+`
+
+func TestAccCachecontentgroupDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCachecontentgroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cachecontentgroup.tf_cachecontentgroup_ds", "name", "my_cachecontentgroup_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_cachecontentgroup.tf_cachecontentgroup_ds", "heurexpiryparam", "30"),
+					resource.TestCheckResourceAttr("data.citrixadc_cachecontentgroup.tf_cachecontentgroup_ds", "prefetch", "YES"),
+					resource.TestCheckResourceAttr("data.citrixadc_cachecontentgroup.tf_cachecontentgroup_ds", "quickabortsize", "40"),
+					resource.TestCheckResourceAttr("data.citrixadc_cachecontentgroup.tf_cachecontentgroup_ds", "ignorereqcachinghdrs", "YES"),
+				),
+			},
+		},
+	})
 }

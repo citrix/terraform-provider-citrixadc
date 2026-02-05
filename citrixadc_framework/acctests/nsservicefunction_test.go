@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsservicefunction_add = `
@@ -140,4 +141,35 @@ func testAccCheckNsservicefunctionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNsservicefunctionDataSource_basic = `
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 25
+		aliasname = "Test VLAN"
+	}
+	resource "citrixadc_nsservicefunction" "tf_servicefunc" {
+		servicefunctionname = "tf_servicefunc_ds"
+		ingressvlan         = citrixadc_vlan.tf_vlan.vlanid
+	}
+
+	data "citrixadc_nsservicefunction" "tf_servicefunc" {
+		servicefunctionname = citrixadc_nsservicefunction.tf_servicefunc.servicefunctionname
+	}
+`
+
+func TestAccNsservicefunctionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsservicefunctionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsservicefunction.tf_servicefunc", "servicefunctionname", "tf_servicefunc_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsservicefunction.tf_servicefunc", "ingressvlan", "25"),
+				),
+			},
+		},
+	})
 }

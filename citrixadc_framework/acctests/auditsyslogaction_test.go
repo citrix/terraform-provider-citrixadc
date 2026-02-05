@@ -188,3 +188,41 @@ resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 	streamanalytics = "ENABLED"
 }
 `
+
+func TestAccAuditsyslogactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "name", "tf_auditsyslogaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "serverip", "10.78.60.33"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "serverport", "514"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "transport", "TCP"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "protocolviolations", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuditsyslogactionDataSource_basic = `
+
+resource "citrixadc_auditsyslogaction" "tf_auditsyslogaction_ds" {
+    name      = "tf_auditsyslogaction_ds"
+    serverip  = "10.78.60.33"
+    serverport = 514
+    loglevel  = ["ERROR", "NOTICE"]
+    transport = "TCP"
+    protocolviolations = "NONE"
+}
+
+data "citrixadc_auditsyslogaction" "tf_auditsyslogaction_ds" {
+    name = citrixadc_auditsyslogaction.tf_auditsyslogaction_ds.name
+    depends_on = [citrixadc_auditsyslogaction.tf_auditsyslogaction_ds]
+}
+
+`

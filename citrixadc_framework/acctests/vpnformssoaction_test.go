@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnformssoaction_basic = `
@@ -171,4 +172,47 @@ func testAccCheckVpnformssoactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVpnformssoactionDataSource_basic = `
+
+resource "citrixadc_vpnformssoaction" "tf_vpnformssoaction" {
+	name = "tf_vpnformssoaction"
+	actionurl = "/home"
+	userfield = "username"
+	passwdfield = "password"
+	ssosuccessrule = "true"
+	namevaluepair = "name1=value1&name2=value2"
+	nvtype = "STATIC"
+	responsesize = "150"
+	submitmethod = "POST"
+}
+
+data "citrixadc_vpnformssoaction" "tf_vpnformssoaction" {
+	name = citrixadc_vpnformssoaction.tf_vpnformssoaction.name
+}
+`
+
+func TestAccVpnformssoactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnformssoactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnformssoactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnformssoaction.tf_vpnformssoaction", "name", "tf_vpnformssoaction"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnformssoaction.tf_vpnformssoaction", "actionurl", "/home"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnformssoaction.tf_vpnformssoaction", "userfield", "username"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnformssoaction.tf_vpnformssoaction", "passwdfield", "password"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnformssoaction.tf_vpnformssoaction", "ssosuccessrule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnformssoaction.tf_vpnformssoaction", "namevaluepair", "name1=value1&name2=value2"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnformssoaction.tf_vpnformssoaction", "nvtype", "STATIC"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnformssoaction.tf_vpnformssoaction", "responsesize", "150"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnformssoaction.tf_vpnformssoaction", "submitmethod", "POST"),
+				),
+			},
+		},
+	})
 }

@@ -632,3 +632,39 @@ func TestAccLbvserver_nonAddressable(t *testing.T) {
 		},
 	})
 }
+
+const testAccLbvserverDataSource_basic = `
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		ipv46 = "10.202.11.11"
+		lbmethod = "ROUNDROBIN"
+		name = "terraform-lb-ds"
+		persistencetype = "COOKIEINSERT"
+		port = 80
+		servicetype = "HTTP"
+	}
+
+	data "citrixadc_lbvserver" "tf_lbvserver" {
+		name = citrixadc_lbvserver.tf_lbvserver.name
+		depends_on = [citrixadc_lbvserver.tf_lbvserver]
+	}
+`
+
+func TestAccLbvserverDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserverDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "name", "terraform-lb-ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "ipv46", "10.202.11.11"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "lbmethod", "ROUNDROBIN"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "persistencetype", "COOKIEINSERT"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "port", "80"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "servicetype", "HTTP"),
+				),
+			},
+		},
+	})
+}

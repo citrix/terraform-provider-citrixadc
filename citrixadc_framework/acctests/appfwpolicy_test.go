@@ -50,6 +50,24 @@ const testAccAppfwpolicy_update = `
 	}
 `
 
+const testAccAppfwpolicyDataSource_basic = `
+	resource citrixadc_appfwprofile tfAcc_appfwprofile {
+		name = "tfAcc_appfwprofile"
+		type = ["HTML"]
+	}
+
+	resource citrixadc_appfwpolicy tfAcc_appfwpolicy1 {
+		name = "tfAcc_appfwpolicy1"
+		profilename = citrixadc_appfwprofile.tfAcc_appfwprofile.name
+		rule = "true"
+	}
+
+	data "citrixadc_appfwpolicy" "tfAcc_appfwpolicy1" {
+		name = citrixadc_appfwpolicy.tfAcc_appfwpolicy1.name
+		depends_on = [citrixadc_appfwpolicy.tfAcc_appfwpolicy1]
+	}
+`
+
 func TestAccAppfwpolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -141,4 +159,22 @@ func testAccCheckAppfwpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAppfwpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicy.tfAcc_appfwpolicy1", "name", "tfAcc_appfwpolicy1"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicy.tfAcc_appfwpolicy1", "profilename", "tfAcc_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicy.tfAcc_appfwpolicy1", "rule", "true"),
+				),
+			},
+		},
+	})
 }

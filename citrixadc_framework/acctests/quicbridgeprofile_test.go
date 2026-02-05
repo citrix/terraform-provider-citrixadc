@@ -131,3 +131,33 @@ func testAccCheckQuicbridgeprofileDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccQuicbridgeprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQuicbridgeprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_quicbridgeprofile.test", "name", "tf_quicbridgeprofile"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "routingalgorithm"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "serveridlength"),
+				),
+			},
+		},
+	})
+}
+
+const testAccQuicbridgeprofileDataSource_basic = `
+resource "citrixadc_quicbridgeprofile" "tf_quicbridgeprofile" {
+	name              = "tf_quicbridgeprofile"
+	routingalgorithm  = "PLAINTEXT"
+	serveridlength    = 4
+}
+
+data "citrixadc_quicbridgeprofile" "test" {
+	name = citrixadc_quicbridgeprofile.tf_quicbridgeprofile.name
+}
+`

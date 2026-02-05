@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpntrafficpolicy_add = `
@@ -50,6 +51,26 @@ const testAccVpntrafficpolicy_update = `
 		name   = "tf_vpntrafficpolicy"
 		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\")"
 		action = citrixadc_vpntrafficaction.tf_vpntrafficaction.name	
+	}
+`
+
+const testAccVpntrafficpolicyDataSource_basic = `
+	resource "citrixadc_vpntrafficaction" "tf_vpntrafficaction" {
+		name       = "Testingaction"
+		fta        = "ON"
+		hdx        = "ON"
+		qual       = "http"
+		sso        = "ON"
+	
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.tf_vpntrafficaction.name	
+	}
+
+	data "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
 	}
 `
 
@@ -143,4 +164,21 @@ func testAccCheckVpntrafficpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpntrafficpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpntrafficpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "name", "tf_vpntrafficpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "rule", "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "action", "Testingaction"),
+				),
+			},
+		},
+	})
 }

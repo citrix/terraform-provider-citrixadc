@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSmppparam_basic = `
@@ -109,4 +110,35 @@ func testAccCheckSmppparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+const testAccSmppparamDataSource_basic = `
+
+	resource "citrixadc_smppparam" "tf_smppparam" {
+		clientmode = "TRANSCEIVER"
+		msgqueue   = "OFF"
+		addrnpi    = 40
+		addrton    = 40
+	}
+
+	data "citrixadc_smppparam" "tf_smppparam" {
+		depends_on = [citrixadc_smppparam.tf_smppparam]
+	}
+`
+
+func TestAccSmppparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmppparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_smppparam.tf_smppparam", "clientmode", "TRANSCEIVER"),
+					resource.TestCheckResourceAttr("data.citrixadc_smppparam.tf_smppparam", "msgqueue", "OFF"),
+				),
+			},
+		},
+	})
 }

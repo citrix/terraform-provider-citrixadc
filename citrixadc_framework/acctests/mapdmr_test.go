@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccMapdmr_basic = `
@@ -110,4 +111,32 @@ func testAccCheckMapdmrDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccMapdmrDataSource_basic = `
+
+	resource "citrixadc_mapdmr" "tf_mapdmr_ds" {
+		name         = "tf_mapdmr_ds"
+		bripv6prefix = "2002:db8::/64"
+	}
+
+	data "citrixadc_mapdmr" "tf_mapdmr_ds_data" {
+		name = citrixadc_mapdmr.tf_mapdmr_ds.name
+	}
+`
+
+func TestAccMapdmrDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMapdmrDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_mapdmr.tf_mapdmr_ds_data", "name", "tf_mapdmr_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_mapdmr.tf_mapdmr_ds_data", "bripv6prefix", "2002:db8::/64"),
+				),
+			},
+		},
+	})
 }

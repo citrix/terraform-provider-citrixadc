@@ -141,3 +141,38 @@ func testAccCheckTransformpolicyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccTransformpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_transformpolicy.tf_trans_policy", "name", "tf_trans_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformpolicy.tf_trans_policy", "profilename", "tf_trans_profile1"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformpolicy.tf_trans_policy", "rule", "http.REQ.URL.CONTAINS(\"test_url\")"),
+				),
+			},
+		},
+	})
+}
+
+const testAccTransformpolicyDataSource_basic = `
+resource "citrixadc_transformprofile" "tf_trans_profile1" {
+  name = "tf_trans_profile1"
+}
+
+resource "citrixadc_transformpolicy" "tf_trans_policy" {
+    name = "tf_trans_policy"
+    profilename = citrixadc_transformprofile.tf_trans_profile1.name
+    rule = "http.REQ.URL.CONTAINS(\"test_url\")"
+}
+
+data "citrixadc_transformpolicy" "tf_trans_policy" {
+    name = citrixadc_transformpolicy.tf_trans_policy.name
+    depends_on = [citrixadc_transformpolicy.tf_trans_policy]
+}
+`

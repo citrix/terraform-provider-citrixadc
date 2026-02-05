@@ -217,3 +217,43 @@ func testAccCheckSslprofileDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccSslprofileDataSource_basic = `
+	resource "citrixadc_sslprofile" "tf_sslprofile" {
+		name = "tf_sslprofile_datasource"
+		hsts = "ENABLED"
+		snienable = "ENABLED"
+		ecccurvebindings = []
+		sslclientlogs = "ENABLED"
+		encryptedclienthello = "ENABLED"
+		defaultsni = "60"
+		allowunknownsni = "ENABLED"
+		allowextendedmastersecret = "YES"
+	}
+
+	data "citrixadc_sslprofile" "tf_sslprofile_datasource" {
+		name = citrixadc_sslprofile.tf_sslprofile.name
+	}
+`
+
+func TestAccSslprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "name", "tf_sslprofile_datasource"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "hsts", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "snienable", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "sslclientlogs", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "encryptedclienthello", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "defaultsni", "60"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "allowunknownsni", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "allowextendedmastersecret", "YES"),
+				),
+			},
+		},
+	})
+}

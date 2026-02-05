@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccRdpclientprofile_basic = `
@@ -142,3 +143,33 @@ func testAccCheckRdpclientprofileDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccRdpclientprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRdpclientprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rdpclientprofile.test", "name", "tf_rdpclientprofile"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rdpclientprofile.test", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rdpclientprofile.test", "addusernameinrdpfile"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rdpclientprofile.test", "keyboardhook"),
+				),
+			},
+		},
+	})
+}
+
+const testAccRdpclientprofileDataSource_basic = `
+resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile" {
+	name                  = "tf_rdpclientprofile"
+	addusernameinrdpfile  = "YES"
+	keyboardhook          = "InFullScreenMode"
+}
+
+data "citrixadc_rdpclientprofile" "test" {
+	name = citrixadc_rdpclientprofile.tf_rdpclientprofile.name
+}
+`

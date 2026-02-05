@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVideooptimizationdetectionpolicy_add = `
@@ -45,6 +46,23 @@ const testAccVideooptimizationdetectionpolicy_update = `
 		name   = "tf_videooptimizationdetectionpolicy"
 		rule   = "false"
 		action = citrixadc_videooptimizationdetectionaction.tf_detectionaction.name
+	}
+`
+
+const testAccVideooptimizationdetectionpolicyDataSource_basic = `
+	resource "citrixadc_videooptimizationdetectionaction" "tf_detectionaction" {
+		name = "tf_videooptimizationdetectionaction"
+		type = "clear_text_abr"
+	}
+	
+	resource "citrixadc_videooptimizationdetectionpolicy" "tf_detectionpolicy" {
+		name   = "tf_videooptimizationdetectionpolicy"
+		rule   = "true"
+		action = citrixadc_videooptimizationdetectionaction.tf_detectionaction.name
+	}
+
+	data "citrixadc_videooptimizationdetectionpolicy" "tf_detectionpolicy" {
+		name = citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy.name
 	}
 `
 
@@ -138,4 +156,21 @@ func testAccCheckVideooptimizationdetectionpolicyDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+func TestAccVideooptimizationdetectionpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationdetectionpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "name", "tf_videooptimizationdetectionpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "action", "tf_videooptimizationdetectionaction"),
+				),
+			},
+		},
+	})
 }

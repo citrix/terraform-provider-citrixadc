@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaapreauthenticationaction_basic = `
@@ -127,4 +128,35 @@ func testAccCheckAaapreauthenticationactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAaapreauthenticationactionDataSource_basic = `
+
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "tf_aaapreauthenticationaction"
+		preauthenticationaction = "ALLOW"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
+	
+	data "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
+	}
+`
+
+func TestAccAaapreauthenticationactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaapreauthenticationactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "name", "tf_aaapreauthenticationaction"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "preauthenticationaction", "ALLOW"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "deletefiles", "/var/tmp/new/hello.txt"),
+				),
+			},
+		},
+	})
 }

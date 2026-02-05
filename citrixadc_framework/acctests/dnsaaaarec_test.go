@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"net/url"
-	"testing"
 )
 
 const testAccDnsaaaarec_basic = `
@@ -31,6 +32,22 @@ resource "citrixadc_dnsaaaarec" "dnsaaaarec" {
 	hostname = "www.adfihrwpi.com"
     ipv6address = "2001:db8:85a3::8a2e:370:7334"
     ttl = 3600
+}
+
+`
+
+const testAccDnsaaaarecDataSource_basic = `
+
+resource "citrixadc_dnsaaaarec" "dnsaaaarec" {
+	hostname = "www.adfihrwpi.com"
+    ipv6address = "2001:db8:85a3::8a2e:370:7334"
+    ttl = 3600
+}
+
+data "citrixadc_dnsaaaarec" "dnsaaaarec" {
+	hostname = citrixadc_dnsaaaarec.dnsaaaarec.hostname
+	ipv6address = citrixadc_dnsaaaarec.dnsaaaarec.ipv6address
+	depends_on = [citrixadc_dnsaaaarec.dnsaaaarec]
 }
 
 `
@@ -48,6 +65,23 @@ func TestAccDnsaaaarec_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnsaaaarec.dnsaaaarec", "hostname", "www.adfihrwpi.com"),
 					resource.TestCheckResourceAttr("citrixadc_dnsaaaarec.dnsaaaarec", "ipv6address", "2001:db8:85a3::8a2e:370:7334"),
 					resource.TestCheckResourceAttr("citrixadc_dnsaaaarec.dnsaaaarec", "ttl", "3600"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDnsaaaarecDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsaaaarecDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaaaarec.dnsaaaarec", "hostname", "www.adfihrwpi.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaaaarec.dnsaaaarec", "ipv6address", "2001:db8:85a3::8a2e:370:7334"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaaaarec.dnsaaaarec", "ttl", "3600"),
 				),
 			},
 		},

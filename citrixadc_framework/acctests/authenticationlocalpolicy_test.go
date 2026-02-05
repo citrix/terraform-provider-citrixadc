@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationlocalpolicy_add = `
@@ -124,4 +125,33 @@ func testAccCheckAuthenticationlocalpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationlocalpolicyDataSource_basic = `
+
+resource "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy" {
+	name   = "tf_authenticationlocalpolicy_ds"
+	rule   = "ns_true"
+}
+
+data "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy_ds" {
+	name = citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy.name
+}
+`
+
+func TestAccAuthenticationlocalpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationlocalpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationlocalpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy_ds", "name", "tf_authenticationlocalpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy_ds", "rule", "ns_true"),
+				),
+			},
+		},
+	})
 }

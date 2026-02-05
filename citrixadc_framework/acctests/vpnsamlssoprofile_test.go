@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnsamlssoprofile_add = `
@@ -47,6 +48,24 @@ const testAccVpnsamlssoprofile_update = `
 		signaturealg                = "RSA-SHA1"
 		digestmethod                = "SHA1"
 		nameidformat                = "Unspecified"
+	}
+`
+
+const testAccVpnsamlssoprofileDataSource_basic = `
+
+	resource "citrixadc_vpnsamlssoprofile" "tf_vpnsamlssoprofile" {
+		name                        = "tf_vpnsamlssoprofile"
+		assertionconsumerserviceurl = "http://www.example.com"
+		relaystaterule              = "true"
+		sendpassword				= "OFF"
+		samlissuername              = "issuername"
+		signaturealg                = "RSA-SHA1"
+		digestmethod                = "SHA256"
+		nameidformat                = "Unspecified"
+	}
+
+	data "citrixadc_vpnsamlssoprofile" "tf_vpnsamlssoprofile" {
+		name = citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile.name
 	}
 `
 
@@ -140,4 +159,22 @@ func testAccCheckVpnsamlssoprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnsamlssoprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnsamlssoprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile", "name", "tf_vpnsamlssoprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile", "assertionconsumerserviceurl", "http://www.example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile", "digestmethod", "SHA256"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile", "samlissuername", "issuername"),
+				),
+			},
+		},
+	})
 }

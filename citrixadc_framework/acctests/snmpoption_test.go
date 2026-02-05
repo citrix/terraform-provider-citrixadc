@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSnmpoption_basic = `
@@ -113,3 +114,25 @@ func testAccCheckSnmpoptionExist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+func TestAccSnmpoptionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpoptionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpoption.tf_snmpoption_ds", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSnmpoptionDataSource_basic = `
+
+data "citrixadc_snmpoption" "tf_snmpoption_ds" {
+}
+`

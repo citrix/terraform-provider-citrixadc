@@ -119,3 +119,36 @@ func testAccCheckResponderhtmlpageDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccResponderhtmlpageDataSource_basic = `
+resource "citrixadc_systemfile" "tf_html_page_ds" {
+    filename = "tf_html_page_ds.html"
+    filelocation = "/var/tmp"
+    filecontent = "<h1>Hello Responder DataSource</h1>"
+}
+
+resource "citrixadc_responderhtmlpage" "tf_responder_page_ds" {
+    name = "tf_responder_page_ds"
+    src = "local://tf_html_page_ds.html"
+    depends_on = [citrixadc_systemfile.tf_html_page_ds]
+}
+
+data "citrixadc_responderhtmlpage" "tf_responder_page_ds" {
+  name = citrixadc_responderhtmlpage.tf_responder_page_ds.name
+}
+`
+
+func TestAccResponderhtmlpageDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderhtmlpageDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_responderhtmlpage.tf_responder_page_ds", "name", "tf_responder_page_ds"),
+				),
+			},
+		},
+	})
+}

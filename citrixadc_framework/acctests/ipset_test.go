@@ -352,3 +352,31 @@ func TestAccIpset_ipv6_swaps(t *testing.T) {
 		},
 	})
 }
+
+const testAccIpsetDataSource_basic = `
+	resource "citrixadc_ipset" "tf_ipset" {
+		name = "tf_test_ipset"
+	}
+
+	data "citrixadc_ipset" "tf_ipset" {
+		name = citrixadc_ipset.tf_ipset.name
+		depends_on = [citrixadc_ipset.tf_ipset]
+	}
+`
+
+func TestAccIpsetDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpsetDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_ipset.tf_ipset", "name", "tf_test_ipset"),
+					resource.TestCheckResourceAttr("data.citrixadc_ipset.tf_ipset", "id", "tf_test_ipset"),
+				),
+			},
+		},
+	})
+}

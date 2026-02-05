@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationpolicy_add = `
@@ -143,4 +144,41 @@ func testAccCheckAuthenticationpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationpolicyDataSource_basic = `
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "ldapaction_ds"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationpolicy" "tf_authenticationpolicy" {
+		name   = "tf_authenticationpolicy_ds"
+		rule   = "true"
+		action = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+		comment= "datasource_test"
+	}
+	data "citrixadc_authenticationpolicy" "tf_authenticationpolicy_ds" {
+		name = citrixadc_authenticationpolicy.tf_authenticationpolicy.name
+	}
+`
+
+func TestAccAuthenticationpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicy.tf_authenticationpolicy_ds", "name", "tf_authenticationpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicy.tf_authenticationpolicy_ds", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicy.tf_authenticationpolicy_ds", "comment", "datasource_test"),
+					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationpolicy.tf_authenticationpolicy_ds", "action", "citrixadc_authenticationldapaction.tf_authenticationldapaction", "name"),
+				),
+			},
+		},
+	})
 }

@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSubscriberparam_basic = `
@@ -43,6 +44,21 @@ resource "citrixadc_subscriberparam" "tf_subscriberparam" {
 	ipv6prefixlookuplist = [64]
 	}
   
+`
+
+const testAccSubscriberparamDataSource_basic = `
+
+resource "citrixadc_subscriberparam" "tf_subscriberparam" {
+	keytype       = "IP"
+	interfacetype = "None"
+	idlettl       = 40
+	idleaction    = "ccrTerminate"
+	ipv6prefixlookuplist = [64]
+}
+
+data "citrixadc_subscriberparam" "tf_subscriberparam" {
+	depends_on = [citrixadc_subscriberparam.tf_subscriberparam]
+}
 `
 
 func TestAccSubscriberparam_basic(t *testing.T) {
@@ -111,4 +127,23 @@ func testAccCheckSubscriberparamExist(n string, id *string) resource.TestCheckFu
 
 		return nil
 	}
+}
+
+func TestAccSubscriberparamDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberparamDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_subscriberparam.tf_subscriberparam", "keytype", "IP"),
+					resource.TestCheckResourceAttr("data.citrixadc_subscriberparam.tf_subscriberparam", "interfacetype", "None"),
+					resource.TestCheckResourceAttr("data.citrixadc_subscriberparam.tf_subscriberparam", "idlettl", "40"),
+					resource.TestCheckResourceAttr("data.citrixadc_subscriberparam.tf_subscriberparam", "idleaction", "ccrTerminate"),
+				),
+			},
+		},
+	})
 }

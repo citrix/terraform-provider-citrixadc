@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnspolicy_add = `
@@ -36,6 +37,18 @@ resource "citrixadc_dnspolicy" "dnspolicy" {
 	rule = "dns.req.question.type.ne(aaaa)"
 	drop = "NO"
 	}
+`
+
+const testAccDnspolicyDataSource_basic = `
+resource "citrixadc_dnspolicy" "dnspolicy" {
+	name = "policy_A"
+	rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
+	drop = "YES"
+}
+
+data "citrixadc_dnspolicy" "dnspolicy_data" {
+	name = citrixadc_dnspolicy.dnspolicy.name
+}
 `
 
 func TestAccDnspolicy_basic(t *testing.T) {
@@ -60,6 +73,22 @@ func TestAccDnspolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "name", "policy_A"),
 					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "rule", "dns.req.question.type.ne(aaaa)"),
 					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "drop", "NO"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDnspolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnspolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnspolicy.dnspolicy_data", "name", "policy_A"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnspolicy.dnspolicy_data", "rule", "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"),
 				),
 			},
 		},

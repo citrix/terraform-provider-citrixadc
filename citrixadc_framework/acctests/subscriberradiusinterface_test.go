@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSubscriberradiusinterface_basic = `
@@ -54,6 +55,26 @@ resource "citrixadc_subscriberradiusinterface" "tf_subscriberradiusinterface" {
 	}
   
   `
+
+const testAccSubscriberradiusinterfaceDataSource_basic = `
+
+
+resource "citrixadc_subscriberradiusinterface" "tf_subscriberradiusinterface" {
+	listeningservice     = citrixadc_service.tf_service.name
+	radiusinterimasstart = "ENABLED"
+	}
+  
+  resource "citrixadc_service" "tf_service" {
+	name        = "srad1"
+	port        = 1813
+	ip          = "192.0.0.206"
+	servicetype = "RADIUSListener"
+	}
+
+data "citrixadc_subscriberradiusinterface" "tf_subscriberradiusinterface" {
+	depends_on = [citrixadc_subscriberradiusinterface.tf_subscriberradiusinterface]
+}
+`
 
 func TestAccSubscriberradiusinterface_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -117,4 +138,21 @@ func testAccCheckSubscriberradiusinterfaceExist(n string, id *string) resource.T
 
 		return nil
 	}
+}
+
+func TestAccSubscriberradiusinterfaceDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberradiusinterfaceDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_subscriberradiusinterface.tf_subscriberradiusinterface", "listeningservice", "srad1"),
+					resource.TestCheckResourceAttr("data.citrixadc_subscriberradiusinterface.tf_subscriberradiusinterface", "radiusinterimasstart", "ENABLED"),
+				),
+			},
+		},
+	})
 }

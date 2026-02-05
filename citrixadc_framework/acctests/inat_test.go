@@ -189,3 +189,39 @@ func TestAccInat_AssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, inatType, inatName, inatInstance, "td")
 	inatInstance.Td = utils.IntPtr(0)
 }
+
+const testAccInatDataSource_basic = `
+
+resource "citrixadc_inat" "foo" {
+  name = "ip4ip"
+  privateip = "192.168.1.1"
+  publicip = "172.16.1.2"
+  tcpproxy = "ENABLED"
+  usnip = "ON"
+  connfailover = "DISABLED"
+}
+
+data "citrixadc_inat" "foo" {
+  name = citrixadc_inat.foo.name
+}
+`
+
+func TestAccInatDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInatDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "name", "ip4ip"),
+					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "privateip", "192.168.1.1"),
+					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "publicip", "172.16.1.2"),
+					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "tcpproxy", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "usnip", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "connfailover", "DISABLED"),
+				),
+			},
+		},
+	})
+}

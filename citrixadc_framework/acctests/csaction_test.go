@@ -204,3 +204,43 @@ func testAccCheckCsactionDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccCsactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csaction.tf_csaction_ds", "name", "tf_csaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_csaction.tf_csaction_ds", "targetlbvserver", "ds_image_lb"),
+					resource.TestCheckResourceAttr("data.citrixadc_csaction.tf_csaction_ds", "comment", "DataSource test for csaction"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCsactionDataSource_basic = `
+
+resource "citrixadc_csaction" "tf_csaction_ds" {
+  name            = "tf_csaction_ds"
+  targetlbvserver = citrixadc_lbvserver.ds_image_lb.name
+  comment         = "DataSource test for csaction"
+}
+
+resource "citrixadc_lbvserver" "ds_image_lb" {
+  name        = "ds_image_lb"
+  ipv46       = "10.0.2.7"
+  port        = "80"
+  servicetype = "HTTP"
+}
+
+data "citrixadc_csaction" "tf_csaction_ds" {
+  name       = citrixadc_csaction.tf_csaction_ds.name
+  depends_on = [citrixadc_csaction.tf_csaction_ds]
+}
+
+`

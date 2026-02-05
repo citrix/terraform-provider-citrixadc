@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccTunneltrafficpolicy_basic = `
@@ -135,3 +136,34 @@ func testAccCheckTunneltrafficpolicyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccTunneltrafficpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTunneltrafficpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy", "name", "my_tunneltrafficpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy", "action", "COMPRESS"),
+				),
+			},
+		},
+	})
+}
+
+const testAccTunneltrafficpolicyDataSource_basic = `
+resource "citrixadc_tunneltrafficpolicy" "tf_tunneltrafficpolicy" {
+	name   = "my_tunneltrafficpolicy"
+	rule   = "true"
+	action = "COMPRESS"
+}
+
+data "citrixadc_tunneltrafficpolicy" "tf_tunneltrafficpolicy" {
+    name = citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy.name
+    depends_on = [citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy]
+}
+`

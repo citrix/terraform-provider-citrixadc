@@ -51,6 +51,23 @@ resource "citrixadc_lbgroup" "tf_lbgroup" {
 }
 `
 
+const testAccLbgroupDataSource_basic = `
+resource "citrixadc_lbgroup" "tf_lbgroup" {
+	name = "tf_lbgroup_ds"
+	persistencetype = "COOKIEINSERT"
+	persistencebackup = "SOURCEIP"
+	backuppersistencetimeout = 10
+	persistmask = "255.255.255.0"
+	cookiename = "test_cookie"
+	v6persistmasklen = 64
+	timeout = 10
+}
+
+data "citrixadc_lbgroup" "tf_lbgroup" {
+	name = citrixadc_lbgroup.tf_lbgroup.name
+}
+`
+
 func TestAccLbgroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -84,6 +101,28 @@ func TestAccLbgroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lbgroup.tf_lbgroup", "v6persistmasklen", "96"),
 					resource.TestCheckResourceAttr("citrixadc_lbgroup.tf_lbgroup", "timeout", "15"),
 					testAccCheckUserAgent(),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbgroupDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbgroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "name", "tf_lbgroup_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "persistencetype", "COOKIEINSERT"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "persistencebackup", "SOURCEIP"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "backuppersistencetimeout", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "persistmask", "255.255.255.0"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "cookiename", "test_cookie"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "v6persistmasklen", "64"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "timeout", "10"),
 				),
 			},
 		},

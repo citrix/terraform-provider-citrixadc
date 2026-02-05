@@ -84,6 +84,14 @@ func SslCertKeyDataSourceSchema() schema.Schema {
 				Description: "Increment this version to signal a passplain_wo update.",
 				Computed:    true,
 			},
+			"cert_hash": schema.StringAttribute{
+				Optional:    true,
+				Description: "SHA256 hash of the certificate.",
+			},
+			"key_hash": schema.StringAttribute{
+				Optional:    true,
+				Description: "SHA256 hash of the private key.",
+			},
 		},
 	}
 }

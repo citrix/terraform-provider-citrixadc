@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIpsecprofile_basic = `
@@ -144,3 +145,39 @@ func testAccCheckIpsecprofileDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccIpsecprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpsecprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "name", "my_ipsecprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "ikeversion", "V2"),
+					resource.TestCheckResourceAttr("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "livenesscheckinterval", "50"),
+				),
+			},
+		},
+	})
+}
+
+const testAccIpsecprofileDataSource_basic = `
+
+resource "citrixadc_ipsecprofile" "tf_ipsecprofile_ds" {
+	name                  = "my_ipsecprofile_ds"
+	ikeversion            = "V2"
+	encalgo               = ["AES", "AES256"]
+	hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
+	livenesscheckinterval = 50
+	psk                   = "GCC5VcY0TQ+0TfjGwCrR+cQthm5UnBPB"
+}
+
+data "citrixadc_ipsecprofile" "tf_ipsecprofile_ds" {
+	name       = citrixadc_ipsecprofile.tf_ipsecprofile_ds.name
+	depends_on = [citrixadc_ipsecprofile.tf_ipsecprofile_ds]
+}
+
+`

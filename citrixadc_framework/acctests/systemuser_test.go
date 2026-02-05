@@ -136,3 +136,42 @@ resource "citrixadc_systemuser" "tf_user" {
 
 }
 `
+
+const testAccSystemuserDataSource_basic = `
+resource "citrixadc_systemuser" "tf_user" {
+    username = "tf_user"
+    password = "tf_password"
+    timeout = 900
+
+    cmdpolicybinding {
+        policyname = "superuser"
+        priority = 100
+	}
+
+    cmdpolicybinding {
+        policyname = "network"
+        priority = 200
+	}
+}
+
+data "citrixadc_systemuser" "tf_user" {
+    username = citrixadc_systemuser.tf_user.username
+}
+`
+
+func TestAccSystemuserDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemuserDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemuser.tf_user", "username", "tf_user"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemuser.tf_user", "timeout", "900"),
+				),
+			},
+		},
+	})
+}

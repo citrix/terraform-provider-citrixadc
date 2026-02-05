@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationemailaction_add = `
@@ -133,4 +134,39 @@ func testAccCheckAuthenticationemailactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationemailactionDataSource_basic = `
+	resource "citrixadc_authenticationemailaction" "tf_emailaction" {
+		name      = "tf_emailaction_ds"
+		username  = "username@abc.com"
+		password  = "secret"
+		serverurl = "www.example.com"
+		timeout   = 100
+		type      = "SMTP"
+	}
+
+	data "citrixadc_authenticationemailaction" "tf_emailaction" {
+		name       = citrixadc_authenticationemailaction.tf_emailaction.name
+		depends_on = [citrixadc_authenticationemailaction.tf_emailaction]
+	}
+`
+
+func TestAccAuthenticationemailactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationemailactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationemailactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationemailaction.tf_emailaction", "name", "tf_emailaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationemailaction.tf_emailaction", "username", "username@abc.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationemailaction.tf_emailaction", "serverurl", "www.example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationemailaction.tf_emailaction", "type", "SMTP"),
+				),
+			},
+		},
+	})
 }

@@ -108,3 +108,32 @@ func testAccCheckL2paramExist(n string, id *string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+const testAccL2paramDataSource_basic = `
+	resource "citrixadc_l2param" "tf_l2param" {
+		mbfpeermacupdate   = 20
+		maxbridgecollision = 30
+		bdggrpproxyarp     = "DISABLED"
+	}
+
+	data "citrixadc_l2param" "l2param" {
+		depends_on = [citrixadc_l2param.tf_l2param]
+	}
+`
+
+func TestAccL2paramDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccL2paramDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_l2param.l2param", "mbfpeermacupdate", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_l2param.l2param", "maxbridgecollision", "30"),
+					resource.TestCheckResourceAttr("data.citrixadc_l2param.l2param", "bdggrpproxyarp", "DISABLED"),
+				),
+			},
+		},
+	})
+}

@@ -369,6 +369,45 @@ const testAccAppfwprofile_add = `
 	}
 `
 
+const testAccAppfwprofileDataSource_basic = `
+	resource citrixadc_appfwprofile test_appfw {
+		name = "test_appfw"
+		bufferoverflowaction = ["none"]
+		contenttypeaction = ["none"]
+		cookieconsistencyaction = ["none"]
+		creditcard = ["none"]
+		creditcardaction = ["none"]
+		crosssitescriptingaction = ["none"]
+		csrftagaction = ["none"]
+		denyurlaction = ["none"]
+		dynamiclearning = ["none"]
+		fieldconsistencyaction = ["none"]
+		fieldformataction = ["none"]
+		fileuploadtypesaction = ["none"]
+		inspectcontenttypes = ["none"]
+		jsondosaction = ["none"]
+		jsonsqlinjectionaction = ["none"]
+		jsonxssaction = ["none"]
+		multipleheaderaction = ["none"]
+		sqlinjectionaction = ["none"]
+		starturlaction = ["none"]
+		type = ["HTML"]
+		xmlattachmentaction = ["none"]
+		xmldosaction = ["none"]
+		xmlformataction = ["none"]
+		xmlsoapfaultaction = ["none"]
+		xmlsqlinjectionaction = ["none"]
+		xmlvalidationaction = ["none"]
+		xmlwsiaction = ["none"]
+		xmlxssaction = ["none"]
+	}
+
+	data "citrixadc_appfwprofile" "test_appfw" {
+		name = citrixadc_appfwprofile.test_appfw.name
+		depends_on = [citrixadc_appfwprofile.test_appfw]
+	}
+`
+
 const testAccAppfwprofile_update = `
 	resource citrixadc_appfwprofile test_appfw {
 		name = "test_appfw"
@@ -492,4 +531,20 @@ func testAccCheckAppfwprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAppfwprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile.test_appfw", "name", "test_appfw"),
+				),
+			},
+		},
+	})
 }

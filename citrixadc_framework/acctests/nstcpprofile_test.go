@@ -161,3 +161,34 @@ func TestAccNstcpprofile_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccNstcpprofileDataSource_basic = `
+
+	resource "citrixadc_nstcpprofile" "tf_nstcpprofile" {
+		name = "test_profile_datasource"
+		ws = "ENABLED"
+		ackaggregation = "ENABLED"
+	}
+
+	data "citrixadc_nstcpprofile" "tf_nstcpprofile_data" {
+		name = citrixadc_nstcpprofile.tf_nstcpprofile.name
+	}
+`
+
+func TestAccNstcpprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstcpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstcpprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nstcpprofile.tf_nstcpprofile_data", "name", "test_profile_datasource"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstcpprofile.tf_nstcpprofile_data", "ws", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstcpprofile.tf_nstcpprofile_data", "ackaggregation", "ENABLED"),
+				),
+			},
+		},
+	})
+}

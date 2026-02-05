@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSpilloverpolicy_add = `
@@ -48,6 +49,23 @@ const testAccSpilloverpolicy_update = `
 	}
 `
 
+const testAccSpilloverpolicyDataSource_basic = `
+resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+	name   = "my_spilloveraction_ds"
+	action = "SPILLOVER"
+}
+resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+	name    = "tf_spilloverpolicy_ds"
+	rule    = "true"
+	action  = citrixadc_spilloveraction.tf_spilloveraction.name
+	comment = "This is example of spilloverpolicy"
+}
+
+data "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+	name = citrixadc_spilloverpolicy.tf_spilloverpolicy.name
+}
+`
+
 func TestAccSpilloverpolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -68,6 +86,23 @@ func TestAccSpilloverpolicy_basic(t *testing.T) {
 					testAccCheckSpilloverpolicyExist("citrixadc_spilloverpolicy.tf_spilloverpolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_spilloverpolicy.tf_spilloverpolicy", "name", "tf_spilloverpolicy"),
 					resource.TestCheckResourceAttr("citrixadc_spilloverpolicy.tf_spilloverpolicy", "rule", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSpilloverpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpilloverpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_spilloverpolicy.tf_spilloverpolicy", "name", "tf_spilloverpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_spilloverpolicy.tf_spilloverpolicy", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_spilloverpolicy.tf_spilloverpolicy", "comment", "This is example of spilloverpolicy"),
 				),
 			},
 		},

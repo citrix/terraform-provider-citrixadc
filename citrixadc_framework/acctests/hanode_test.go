@@ -154,6 +154,39 @@ func testAccCheckHanodeExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+const testAccHanodeLocalDataSource_basic = `
+  
+resource "citrixadc_hanode" "local_node" {
+	hanode_id     = 0
+	hellointerval = 200
+	deadinterval = 5
+}
+
+data "citrixadc_hanode" "local_node" {
+	hanode_id = citrixadc_hanode.local_node.hanode_id
+	depends_on = [citrixadc_hanode.local_node]
+}
+   
+`
+
+func TestAccHanodeLocalDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHanodeLocalDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_hanode.local_node", "hanode_id", "0"),
+					resource.TestCheckResourceAttr("data.citrixadc_hanode.local_node", "hellointerval", "200"),
+					resource.TestCheckResourceAttr("data.citrixadc_hanode.local_node", "deadinterval", "5"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckHanodeDestroy(s *terraform.State) error {
 	// Use the shared utility function to get a configured client
 	client, err := testAccGetFrameworkClient()

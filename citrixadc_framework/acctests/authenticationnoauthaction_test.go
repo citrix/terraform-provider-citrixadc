@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationnoauthaction_add = `
@@ -32,6 +33,17 @@ const testAccAuthenticationnoauthaction_update = `
 	resource "citrixadc_authenticationnoauthaction" "tf_noauthaction" {
 		name                       = "tf_noauthaction"
 		defaultauthenticationgroup = "new_group"
+	}
+`
+
+const testAccAuthenticationnoauthactionDataSource_basic = `
+	resource "citrixadc_authenticationnoauthaction" "tf_noauthaction" {
+		name                       = "tf_noauthaction_ds"
+		defaultauthenticationgroup = "test_group"
+	}
+
+	data "citrixadc_authenticationnoauthaction" "tf_noauthaction_ds" {
+		name = citrixadc_authenticationnoauthaction.tf_noauthaction.name
 	}
 `
 
@@ -123,4 +135,21 @@ func testAccCheckAuthenticationnoauthactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationnoauthactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationnoauthactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationnoauthaction.tf_noauthaction_ds", "name", "citrixadc_authenticationnoauthaction.tf_noauthaction", "name"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationnoauthaction.tf_noauthaction_ds", "name", "tf_noauthaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationnoauthaction.tf_noauthaction_ds", "defaultauthenticationgroup", "test_group"),
+				),
+			},
+		},
+	})
 }

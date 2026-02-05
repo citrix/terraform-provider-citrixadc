@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthorizationpolicy_add = `
@@ -35,6 +36,18 @@ const testAccAuthorizationpolicy_update = `
 		name = "tp-authorize-1"
 		rule = "false"
 		action = "ALLOW"
+	}
+`
+
+const testAccAuthorizationpolicyDataSource_basic = `
+	resource "citrixadc_authorizationpolicy" "foo" {
+		name = "tp-authorize-datasource-1"
+		rule = "true"
+		action = "ALLOW"
+	}
+
+	data "citrixadc_authorizationpolicy" "foo" {
+		name = citrixadc_authorizationpolicy.foo.name
 	}
 `
 
@@ -58,6 +71,23 @@ func TestAccAuthorizationpolicy_basic(t *testing.T) {
 					testAccCheckAuthorizationpolicyExist("citrixadc_authorizationpolicy.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_authorizationpolicy.foo", "name", "tp-authorize-1"),
 					resource.TestCheckResourceAttr("citrixadc_authorizationpolicy.foo", "rule", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthorizationpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthorizationpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicy.foo", "name", "tp-authorize-datasource-1"),
+					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicy.foo", "rule", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicy.foo", "action", "ALLOW"),
 				),
 			},
 		},

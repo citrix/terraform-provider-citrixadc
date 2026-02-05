@@ -56,6 +56,20 @@ resource "citrixadc_dnsnsrec" "tf_dnsnsrec2" {
 }
 `
 
+const testAccDnsnsrecDataSource_basic = `
+
+resource "citrixadc_dnsnsrec" "tf_dnsnsrec" {
+    domain = "tf-datasource-test-001.local"
+    nameserver = "192.168.99.200"
+	ttl = 4000
+}
+
+data "citrixadc_dnsnsrec" "tf_dnsnsrec_ds" {
+	depends_on = [citrixadc_dnsnsrec.tf_dnsnsrec]
+	domain = citrixadc_dnsnsrec.tf_dnsnsrec.domain
+}
+`
+
 func TestAccDnsnsrec_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -160,4 +174,22 @@ func testAccCheckDnsnsrecDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnsnsrecDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsnsrecDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnsrec.tf_dnsnsrec_ds", "domain", "tf-datasource-test-001.local"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnsrec.tf_dnsnsrec_ds", "nameserver", "192.168.99.200"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsnsrec.tf_dnsnsrec_ds", "ttl", "4000"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsnsrec.tf_dnsnsrec_ds", "id"),
+				),
+			},
+		},
+	})
 }

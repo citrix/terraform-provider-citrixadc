@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccClusternodegroup_basic = `
@@ -36,6 +37,18 @@ resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
 	name   = "my_clusternode"
 	strict = "NO"
 	}
+`
+
+const testAccClusternodegroupDataSource_basic = `
+
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_clusternode_ds"
+	strict = "YES"
+}
+
+data "citrixadc_clusternodegroup" "tf_clusternodegroup_ds" {
+	name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+}
 `
 
 func TestAccClusternodegroup_basic(t *testing.T) {
@@ -129,4 +142,23 @@ func testAccCheckClusternodegroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccClusternodegroupDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroupDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup.tf_clusternodegroup_ds", "name", "my_clusternode_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup.tf_clusternodegroup_ds", "strict", "YES"),
+				),
+			},
+		},
+	})
 }

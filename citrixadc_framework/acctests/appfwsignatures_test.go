@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppfwsignatures_basic = `
@@ -116,4 +117,41 @@ func testAccCheckAppfwsignaturesDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAppfwsignaturesDataSource_basic = `
+	resource "citrixadc_systemfile" "tf_signature_ds" {
+		filename     = "appfw_signatures_ds.xml"
+		filelocation = "/var/tmp"
+		filecontent  = file("testdata/appfw_signatures.xml")
+	}
+	resource "citrixadc_appfwsignatures" "tf_appfwsignatures_ds" {
+		name       = "tf_appfwsignatures_ds"
+		src        = "local://appfw_signatures_ds.xml"
+		depends_on = [citrixadc_systemfile.tf_signature_ds]
+		comment    = "DataSourceTestingExample"
+	}
+
+	data "citrixadc_appfwsignatures" "tf_appfwsignatures_ds" {
+		name = citrixadc_appfwsignatures.tf_appfwsignatures_ds.name
+		depends_on = [citrixadc_appfwsignatures.tf_appfwsignatures_ds]
+	}
+`
+
+func TestAccAppfwsignaturesDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwsignaturesDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwsignaturesDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsignatures.tf_appfwsignatures_ds", "name", "tf_appfwsignatures_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsignatures.tf_appfwsignatures_ds", "src", "appfw_signatures_ds.xml"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwsignatures.tf_appfwsignatures_ds", "id"),
+				),
+			},
+		},
+	})
 }

@@ -76,3 +76,38 @@ resource "citrixadc_routerdynamicrouting" "tf_dynamicrouting" {
 }
 
 `
+
+// const testAccRouterdynamicroutingDataSource_basic = `
+// 	resource "citrixadc_routerdynamicrouting" "tf_dynamicrouting_ds" {
+// 		commandlines = [
+// 			"router bgp 101",
+// 			"neighbor 192.168.5.1 remote-as 100",
+// 			"redistribute kernel",
+// 		]
+// 	}
+
+// 	data "citrixadc_routerdynamicrouting" "tf_dynamicrouting_ds" {
+// 		commandstring = "show ip bgp summary"
+// 		depends_on = [citrixadc_routerdynamicrouting.tf_dynamicrouting_ds]
+// 	}
+// `
+
+// func TestAccRouterdynamicroutingDataSource_basic(t *testing.T) {
+// 	t.Skip("TODO: Need to find a way to test this resource!")
+// 	if isCpxRun {
+// 		t.Skip("Feature not supported on CPX")
+// 	}
+// 	resource.Test(t, resource.TestCase{
+// 		PreCheck:                 func() { testAccPreCheck(t) },
+// 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccRouterdynamicroutingDataSource_basic,
+// 				Check: resource.ComposeTestCheckFunc(
+// 					resource.TestCheckResourceAttr("data.citrixadc_routerdynamicrouting.tf_dynamicrouting_ds", "commandstring", "show ip bgp summary"),
+// 					resource.TestCheckResourceAttrSet("data.citrixadc_routerdynamicrouting.tf_dynamicrouting_ds", "id"),
+// 				),
+// 			},
+// 		},
+// 	})
+// }

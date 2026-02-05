@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnsaction_add = `
@@ -45,6 +46,32 @@ const testAccDnsaction_add = `
 	}
 `
 
+const testAccDnsactionDataSource_basic = `
+
+	resource "citrixadc_dnsprofile" "dnsprofile" {
+		dnsprofilename         = "tf_profile1"
+		dnsquerylogging        = "DISABLED"
+		dnsanswerseclogging    = "DISABLED"
+		dnsextendedlogging     = "DISABLED"
+		dnserrorlogging        = "DISABLED"
+		cacherecords           = "ENABLED"
+		cachenegativeresponses = "ENABLED"
+		dropmultiqueryrequest  = "DISABLED"
+		cacheecsresponses      = "DISABLED"
+	}
+
+	resource "citrixadc_dnsaction" "dnsaction" {
+		actionname       = "tf_action1"
+		actiontype       = "Rewrite_Response"
+		ipaddress        = ["192.0.2.20","192.0.2.56","198.51.130.10"]
+		dnsprofilename   = citrixadc_dnsprofile.dnsprofile.dnsprofilename
+	}
+
+	data "citrixadc_dnsaction" "dnsaction_data" {
+		actionname = citrixadc_dnsaction.dnsaction.actionname
+	}
+`
+
 func TestAccDnsaction_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -58,6 +85,23 @@ func TestAccDnsaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction", "actionname", "tf_action1"),
 					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction", "actiontype", "Rewrite_Response"),
 					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction", "dnsprofilename", "tf_profile1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDnsactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaction.dnsaction_data", "actionname", "tf_action1"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaction.dnsaction_data", "actiontype", "Rewrite_Response"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsaction.dnsaction_data", "dnsprofilename", "tf_profile1"),
 				),
 			},
 		},

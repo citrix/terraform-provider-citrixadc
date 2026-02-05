@@ -100,3 +100,25 @@ resource "citrixadc_nscapacity" "tf_capacity" {
 // 	platform = "VP10000"
 // }
 // `
+
+const testAccNscapacityDataSource_basic = `
+
+	data "citrixadc_nscapacity" "tf_nscapacity" {
+	}
+`
+
+func TestAccNscapacityDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNscapacityDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nscapacity.tf_nscapacity", "id"),
+				),
+			},
+		},
+	})
+}

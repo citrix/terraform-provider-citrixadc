@@ -111,3 +111,33 @@ func testAccCheckAppfwxmlcontenttypeDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccAppfwxmlcontenttypeDataSource_basic = `
+
+	resource "citrixadc_appfwxmlcontenttype" "tf_Acc_appfwxmlcontenttype" {
+		xmlcontenttypevalue = "tf_Acc.*test"
+		isregex = "REGEX"
+	}
+
+	data "citrixadc_appfwxmlcontenttype" "tf_Acc_appfwxmlcontenttype" {
+		xmlcontenttypevalue = citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype.xmlcontenttypevalue
+		depends_on = [citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype]
+	}
+`
+
+func TestAccAppfwxmlcontenttypeDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwxmlcontenttypeDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype", "xmlcontenttypevalue", "tf_Acc.*test"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype", "isregex", "REGEX"),
+				),
+			},
+		},
+	})
+}

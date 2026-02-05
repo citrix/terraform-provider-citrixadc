@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppqoeparameter_basic = `
@@ -108,4 +109,37 @@ func testAccCheckAppqoeparameterExist(n string, id *string) resource.TestCheckFu
 
 		return nil
 	}
+}
+
+const testAccAppqoeparameterDataSource_basic = `
+
+	resource "citrixadc_appqoeparameter" "tf_appqoeparameter" {
+		sessionlife         = 300
+		avgwaitingclient    = 400
+		maxaltrespbandwidth = 50
+		dosattackthresh     = 100
+	}
+
+	data "citrixadc_appqoeparameter" "tf_appqoeparameter" {
+		depends_on = [citrixadc_appqoeparameter.tf_appqoeparameter]
+	}
+`
+
+func TestAccAppqoeparameterDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppqoeparameterDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appqoeparameter.tf_appqoeparameter", "sessionlife", "300"),
+					resource.TestCheckResourceAttr("data.citrixadc_appqoeparameter.tf_appqoeparameter", "avgwaitingclient", "400"),
+					resource.TestCheckResourceAttr("data.citrixadc_appqoeparameter.tf_appqoeparameter", "maxaltrespbandwidth", "50"),
+					resource.TestCheckResourceAttr("data.citrixadc_appqoeparameter.tf_appqoeparameter", "dosattackthresh", "100"),
+				),
+			},
+		},
+	})
 }

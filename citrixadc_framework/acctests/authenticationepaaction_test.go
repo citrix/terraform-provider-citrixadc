@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationepaaction_add = `
@@ -151,4 +152,39 @@ func testAccCheckAuthenticationepaactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationepaactionDataSource_basic = `
+
+	resource "citrixadc_authenticationepaaction" "tf_epaaction_ds" {
+		name            = "tf_epaaction_ds"
+		csecexpr        = "sys.client_expr (\"app_0_MAC-BROWSER_1001_VERSION_<=_10.0.3\")"
+		defaultepagroup = "new_group"
+		deletefiles     = "old_files"
+		killprocess     = "old_process"
+	}
+
+	data "citrixadc_authenticationepaaction" "tf_epaaction_ds" {
+		name = citrixadc_authenticationepaaction.tf_epaaction_ds.name
+	}
+`
+
+func TestAccAuthenticationepaactionDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationepaactionDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationepaaction.tf_epaaction_ds", "name", "tf_epaaction_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationepaaction.tf_epaaction_ds", "csecexpr", "sys.client_expr (\"app_0_MAC-BROWSER_1001_VERSION_<=_10.0.3\")"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationepaaction.tf_epaaction_ds", "defaultepagroup", "new_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationepaaction.tf_epaaction_ds", "deletefiles", "old_files"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationepaaction.tf_epaaction_ds", "killprocess", "old_process"),
+				),
+			},
+		},
+	})
 }

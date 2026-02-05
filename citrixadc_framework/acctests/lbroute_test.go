@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"net/url"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLbroute_basic = `
@@ -59,6 +60,49 @@ const testAccLbroute_basic = `
 		persistencetype = "NONE"
 		clttimeout = 120
 		port = 0
+	}
+`
+
+const testAccLbrouteDataSource_basic = `
+	resource "citrixadc_lbroute" "tf_lbroute" {
+		network = "55.0.0.0"
+		netmask = "255.0.0.0"
+		gatewayname = citrixadc_lbvserver.tf_lbvserver.name
+
+		depends_on = [citrixadc_lbvserver_service_binding.tf_lbvserver_service_binding, citrixadc_nsip.nsip]
+	}
+
+	resource "citrixadc_nsip" "nsip" {
+		ipaddress = "22.2.2.1"
+		netmask   = "255.255.255.0"
+	}
+
+	resource "citrixadc_lbvserver_service_binding" "tf_lbvserver_service_binding" {
+		name = citrixadc_lbvserver.tf_lbvserver.name
+		servicename = citrixadc_service.tf_service.name
+	}
+
+	resource "citrixadc_service" "tf_service" {
+		name = "tf_service"
+		port = 65535
+		ip = "22.2.2.2"
+		servicetype = "ANY"
+	}
+	
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name = "tf_lbvserver"
+		ipv46 = "0.0.0.0"
+		servicetype = "ANY"
+		lbmethod = "ROUNDROBIN"
+		persistencetype = "NONE"
+		clttimeout = 120
+		port = 0
+	}
+
+	data "citrixadc_lbroute" "tf_lbroute" {
+		network = citrixadc_lbroute.tf_lbroute.network
+		netmask = citrixadc_lbroute.tf_lbroute.netmask
+		td      = citrixadc_lbroute.tf_lbroute.td
 	}
 `
 
@@ -157,4 +201,22 @@ func testAccCheckLbrouteDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLbrouteDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbrouteDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbroute.tf_lbroute", "network", "55.0.0.0"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbroute.tf_lbroute", "netmask", "255.0.0.0"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbroute.tf_lbroute", "td", "0"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbroute.tf_lbroute", "gatewayname"),
+				),
+			},
+		},
+	})
 }

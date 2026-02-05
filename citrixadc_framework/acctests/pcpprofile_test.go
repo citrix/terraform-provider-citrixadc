@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccPcpprofile_basic = `
@@ -44,7 +45,6 @@ resource "citrixadc_pcpprofile" "tf_pcpprofile" {
 `
 
 func TestAccPcpprofile_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -135,3 +135,35 @@ func testAccCheckPcpprofileDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccPcpprofileDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPcpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPcpprofileDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_pcpprofile.tf_pcpprofile_ds", "name", "my_pcpprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_pcpprofile.tf_pcpprofile_ds", "mapping", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_pcpprofile.tf_pcpprofile_ds", "peer", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+const testAccPcpprofileDataSource_basic = `
+
+resource "citrixadc_pcpprofile" "tf_pcpprofile_ds" {
+	name    = "my_pcpprofile_ds"
+	mapping = "ENABLED"
+	peer    = "ENABLED"
+}
+
+data "citrixadc_pcpprofile" "tf_pcpprofile_ds" {
+	name = citrixadc_pcpprofile.tf_pcpprofile_ds.name
+	depends_on = [citrixadc_pcpprofile.tf_pcpprofile_ds]
+}
+`

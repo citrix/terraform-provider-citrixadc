@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuthenticationsamlpolicy_add = `
@@ -144,4 +145,45 @@ func testAccCheckAuthenticationsamlpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAuthenticationsamlpolicyDataSource_basic = `
+
+resource "citrixadc_authenticationsamlaction" "tf_samlaction_ds" {
+	name                    = "tf_samlaction_ds"
+	metadataurl             = "http://www.example.com"
+	samltwofactor           = "OFF"
+	requestedauthncontext   = "minimum"
+	digestmethod            = "SHA1"
+	signaturealg            = "RSA-SHA256"
+	metadatarefreshinterval = 1
+}
+
+resource "citrixadc_authenticationsamlpolicy" "tf_samlpolicy_ds" {
+	name      = "tf_samlpolicy_ds"
+	rule      = "NS_TRUE"
+	reqaction = citrixadc_authenticationsamlaction.tf_samlaction_ds.name
+}
+
+data "citrixadc_authenticationsamlpolicy" "tf_samlpolicy_ds_data" {
+	name = citrixadc_authenticationsamlpolicy.tf_samlpolicy_ds.name
+}
+`
+
+func TestAccAuthenticationsamlpolicyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsamlpolicyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlpolicy.tf_samlpolicy_ds_data", "name", "tf_samlpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlpolicy.tf_samlpolicy_ds_data", "rule", "NS_TRUE"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlpolicy.tf_samlpolicy_ds_data", "reqaction"),
+				),
+			},
+		},
+	})
 }

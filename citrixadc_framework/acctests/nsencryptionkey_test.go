@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccNsencryptionkey_add = `
@@ -137,3 +138,40 @@ func testAccCheckNsencryptionkeyDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccNsencryptionkeyDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsencryptionkeyDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsencryptionkey.tf_encryptionkey_ds", "name", "tf_encryptionkey_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsencryptionkey.tf_encryptionkey_ds", "method", "AES256"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsencryptionkey.tf_encryptionkey_ds", "padding", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsencryptionkey.tf_encryptionkey_ds", "iv", "c2bf0b2e15c15004d6b14bcdc7e5e365"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsencryptionkey.tf_encryptionkey_ds", "comment", "DataSource test for nsencryptionkey"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNsencryptionkeyDataSource_basic = `
+
+	resource "citrixadc_nsencryptionkey" "tf_encryptionkey_ds" {
+		name     = "tf_encryptionkey_ds"
+		method   = "AES256"
+		keyvalue = "26ea5537b7e0746089476e5658f9327c0b10c3b4778c673a5b38cee182874711"
+		padding  = "ON"
+		iv       = "c2bf0b2e15c15004d6b14bcdc7e5e365"
+		comment  = "DataSource test for nsencryptionkey"
+	}
+
+	data "citrixadc_nsencryptionkey" "tf_encryptionkey_ds" {
+		name       = citrixadc_nsencryptionkey.tf_encryptionkey_ds.name
+		depends_on = [citrixadc_nsencryptionkey.tf_encryptionkey_ds]
+	}
+`
