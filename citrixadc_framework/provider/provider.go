@@ -31,6 +31,7 @@ import (
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbparameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertkey"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnvserver_appfwpolicy_binding"
 )
 
 // Ensure CitrixAdcFrameworkProvider satisfies various provider interfaces.
@@ -232,6 +233,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 	return []func() resource.Resource{
 		lbparameter.NewLbParameterResource,
 		sslcertkey.NewSslCertKeyResource,
+		vpnvserver_appfwpolicy_binding.NewVpnvserverAppfwpolicyBindingResource,
 	}
 }
 
@@ -239,6 +241,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 	return []func() datasource.DataSource{
 		lbparameter.LBParameterDataSource,
 		sslcertkey.SslCertKeyDataSource,
+		vpnvserver_appfwpolicy_binding.VpnvserverAppfwpolicyBindingDataSource,
 	}
 }
 
