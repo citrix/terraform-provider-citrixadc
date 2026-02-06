@@ -10,10 +10,6 @@ The appflowaction_analyticsprofile_binding resource is used to create appflowact
 ## Example usage
 
 ```hcl
-# Since the analyticsprofile resource is not yet available on Terraform,
-# the analyticsprofile policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli command:
-# add analyticsprofile <name> -type <type>
 
 resource "citrixadc_appflowaction_analyticsprofile_binding" "tf_appflowaction_analyticsprofile_binding" {
   name      = citrixadc_appflowaction.tf_appflowaction.name
