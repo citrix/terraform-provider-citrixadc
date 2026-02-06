@@ -13,7 +13,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
-// VpnvserverAppfwpolicyBindingResourceModel describes the resource data model.
+//d VpnvserverAppfwpolicyBindingResourceModel describes the resource data model.
 type VpnvserverAppfwpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
