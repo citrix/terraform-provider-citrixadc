@@ -291,7 +291,6 @@ func readNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{})
 	client := meta.(*NetScalerNitroClient).client
 	nsipName := d.Id()
 	trafficDomain := 0
-	netmask := d.Get("netmask").(string)
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsip state %s", nsipName)
 	argsMap := make(map[string]string)
 	if val, ok := d.GetOk("td"); ok {
@@ -323,7 +322,7 @@ func readNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{})
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["ipaddress"].(string) == nsipName && v["netmask"].(string) == netmask {
+		if v["ipaddress"].(string) == nsipName {
 			foundIndex = i
 			break
 		}
