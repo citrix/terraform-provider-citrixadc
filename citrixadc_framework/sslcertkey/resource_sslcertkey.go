@@ -110,6 +110,17 @@ func (r *SslCertKeyResource) Create(ctx context.Context, req resource.CreateRequ
 	if !data.NoDomainCheck.IsNull() {
 		sslcertkeyUpdate.Nodomaincheck = data.NoDomainCheck.ValueBool()
 	}
+	if !data.Key.IsNull() {
+		sslcertkeyUpdate.Key = data.Key.ValueString()
+	}
+	if !data.Password.IsNull() {
+		sslcertkeyUpdate.Password = data.Password.ValueBool()
+	}
+	if !data.Passplain.IsNull() {
+		sslcertkeyUpdate.Passplain = data.Passplain.ValueString()
+	} else if !data.PassplainWo.IsNull() {
+		sslcertkeyUpdate.Passplain = data.PassplainWo.ValueString()
+	}
 
 	// Update resource using "update" action after create.
 	err = r.client.ActOnResource(service.Sslcertkey.Type(), &sslcertkeyUpdate, "update")
@@ -238,19 +249,6 @@ func (r *SslCertKeyResource) Update(ctx context.Context, req resource.UpdateRequ
 		sslcertkeyChange.Inform = plan.Inform.ValueString()
 		needsChange = true
 	}
-	if !plan.Passplain.Equal(state.Passplain) || !plan.PassplainWoVersion.Equal(state.PassplainWoVersion) {
-		tflog.Debug(ctx, "PassplainWoVersion has changed for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
-
-		sslcertkeyChange.Passplain = config.Passplain.ValueString()
-		// Use config value since passplain is WriteOnly
-		if !config.PassplainWo.IsNull() {
-			passplainWo := config.PassplainWo.ValueString()
-			if passplainWo != "" {
-				sslcertkeyChange.Passplain = config.PassplainWo.ValueString()
-			}
-		}
-		needsChange = true
-	}
 
 	// Check for changes that require Clear API
 	if !config.OcspStaplingCache.IsNull() && !plan.OcspStaplingCache.Equal(state.OcspStaplingCache) {
@@ -277,6 +275,15 @@ func (r *SslCertKeyResource) Update(ctx context.Context, req resource.UpdateRequ
 		// Nodomaincheck is a flag for the change operation
 		if !plan.NoDomainCheck.IsNull() {
 			sslcertkeyChange.Nodomaincheck = plan.NoDomainCheck.ValueBool()
+		}
+		// Include password if configured (required for PKCS12 cert/key changes)
+		// Use config value since passplain is WriteOnly
+		if !config.Passplain.IsNull() && config.Passplain.ValueString() != "" {
+			tflog.Debug(ctx, "Including passplain in change operation for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
+			sslcertkeyChange.Passplain = config.Passplain.ValueString()
+		} else if !config.PassplainWo.IsNull() && config.PassplainWo.ValueString() != "" {
+			tflog.Debug(ctx, "Including passplain_wo in change operation for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
+			sslcertkeyChange.Passplain = config.PassplainWo.ValueString()
 		}
 		_, err := r.client.ChangeResource(service.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyChange)
 		if err != nil {

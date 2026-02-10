@@ -47,6 +47,8 @@ func doSslcertkeyPreChecks(t *testing.T) {
 		"servercert2.key",
 		"servercert3.cert",
 		"servercert3.key",
+		"servercert3_renewed.cert",
+		"servercert3_renewed.key",
 	}
 
 	c, err := testHelperInstantiateClient("", "", "", false)
