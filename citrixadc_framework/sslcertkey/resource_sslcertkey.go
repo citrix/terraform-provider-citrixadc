@@ -276,6 +276,13 @@ func (r *SslCertKeyResource) Update(ctx context.Context, req resource.UpdateRequ
 		if !plan.NoDomainCheck.IsNull() {
 			sslcertkeyChange.Nodomaincheck = plan.NoDomainCheck.ValueBool()
 		}
+		sslcertkeyChange.Cert = plan.Cert.ValueString()
+		if !plan.Key.IsNull() {
+			sslcertkeyChange.Key = plan.Key.ValueString()
+		}
+		if !plan.Password.IsNull() {
+			sslcertkeyChange.Password = plan.Password.ValueBool()
+		}
 		// Include password if configured (required for PKCS12 cert/key changes)
 		// Use config value since passplain is WriteOnly
 		if !config.Passplain.IsNull() && config.Passplain.ValueString() != "" {
