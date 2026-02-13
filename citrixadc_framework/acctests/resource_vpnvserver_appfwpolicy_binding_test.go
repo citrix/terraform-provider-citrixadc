@@ -1,30 +1,17 @@
-/*
-Copyright 2016 Citrix Systems, Inc
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-	http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-package citrixadc
+package acctests
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
-const testAccVpnvserver_appfwpolicy_binding_basic = `
+const testAccVpnvserverAppfwpolicyBinding_basic = `
 
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name = "tf_appfwprofile"
@@ -37,19 +24,18 @@ const testAccVpnvserver_appfwpolicy_binding_basic = `
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserver"
 		servicetype = "SSL"
-		ipv46       = "3.3.3.3"
-		port        = 443
+		ipv46       = "0.0.0.0"
+		port        = 0
 	}
 	resource "citrixadc_vpnvserver_appfwpolicy_binding" "tf_bind" {
-		name                   = citrixadc_vpnvserver.tf_vpnvserver.name
-		policy                 = citrixadc_appfwpolicy.tf_appfwpolicy.name
-		bindpoint              = "REQUEST"
-		priority               = 100
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		priority  = 100
 		gotopriorityexpression = "END"
 	}
 `
 
-const testAccVpnvserver_appfwpolicy_binding_basic_step2 = `
+const testAccVpnvserverAppfwpolicyBinding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
@@ -63,34 +49,63 @@ const testAccVpnvserver_appfwpolicy_binding_basic_step2 = `
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserver"
 		servicetype = "SSL"
-		ipv46       = "3.3.3.3"
-		port        = 443
+		ipv46       = "0.0.0.0"
+		port        = 0
 	}
 `
 
-func TestAccVpnvserver_appfwpolicy_binding_basic(t *testing.T) {
+const testAccVpnvserver_appfwpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
+		name        = "tf_appfwpolicy"
+		rule        = "true"
+		profilename = "APPFW_BYPASS"
+	}
+
+	resource "citrixadc_vpnvserver_appfwpolicy_binding" "tf_bind" {
+		name     = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy   = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		priority = 100
+	}
+
+	data "citrixadc_vpnvserver_appfwpolicy_binding" "tf_bind" {
+		name = citrixadc_vpnvserver_appfwpolicy_binding.tf_bind.name
+	}
+`
+
+func TestAccVpnvserverAppfwpolicyBinding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckVpnvserver_appfwpolicy_bindingDestroy,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserverAppfwpolicyBindingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpnvserver_appfwpolicy_binding_basic,
+				Config: testAccVpnvserverAppfwpolicyBinding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnvserver_appfwpolicy_bindingExist("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", nil),
+					testAccCheckVpnvserverAppfwpolicyBindingExist("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "name", "tf_vpnvserver"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "policy", "tf_appfwpolicy"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "priority", "100"),
 				),
 			},
 			{
-				Config: testAccVpnvserver_appfwpolicy_binding_basic_step2,
+				Config: testAccVpnvserverAppfwpolicyBinding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnvserver_appfwpolicy_bindingNotExist("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "tf_vpnvserver,tf_appfwpolicy"),
+					testAccCheckVpnvserverAppfwpolicyBindingNotExist("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "tf_vpnvserver,tf_appfwpolicy"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckVpnvserver_appfwpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
+func testAccCheckVpnvserverAppfwpolicyBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -109,8 +124,8 @@ func testAccCheckVpnvserver_appfwpolicy_bindingExist(n string, id *string) resou
 			*id = rs.Primary.ID
 		}
 
-		// Use the shared utility function to get a configured client
-		client, err := testAccGetClient()
+		// Get a configured client from the test helper
+		client, err := testAccGetFrameworkClient()
 		if err != nil {
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
@@ -151,10 +166,10 @@ func testAccCheckVpnvserver_appfwpolicy_bindingExist(n string, id *string) resou
 	}
 }
 
-func testAccCheckVpnvserver_appfwpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
+func testAccCheckVpnvserverAppfwpolicyBindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		// Use the shared utility function to get a configured client
-		client, err := testAccGetClient()
+		// Get a configured client from the test helper
+		client, err := testAccGetFrameworkClient()
 		if err != nil {
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
@@ -196,9 +211,9 @@ func testAccCheckVpnvserver_appfwpolicy_bindingNotExist(n string, id string) res
 	}
 }
 
-func testAccCheckVpnvserver_appfwpolicy_bindingDestroy(s *terraform.State) error {
-	// Use the shared utility function to get a configured client
-	client, err := testAccGetClient()
+func testAccCheckVpnvserverAppfwpolicyBindingDestroy(s *terraform.State) error {
+	// Get a configured client from the test helper
+	client, err := testAccGetFrameworkClient()
 	if err != nil {
 		return fmt.Errorf("Failed to get test client: %v", err)
 	}
@@ -221,3 +236,23 @@ func testAccCheckVpnvserver_appfwpolicy_bindingDestroy(s *terraform.State) error
 
 	return nil
 }
+
+
+func TestAccVpnvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_appfwpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "name", "tf_vpnvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "policy", "tf_appfwpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "priority", "100"),
+				),
+			},
+		},
+	})
+}
+
