@@ -54,6 +54,32 @@ const testAccVpnvserverAppfwpolicyBinding_basic_step2 = `
 	}
 `
 
+const testAccVpnvserver_appfwpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
+		name        = "tf_appfwpolicy"
+		rule        = "true"
+		profilename = "APPFW_BYPASS"
+	}
+
+	resource "citrixadc_vpnvserver_appfwpolicy_binding" "tf_bind" {
+		name     = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy   = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		priority = 100
+	}
+
+	data "citrixadc_vpnvserver_appfwpolicy_binding" "tf_bind" {
+		name = citrixadc_vpnvserver_appfwpolicy_binding.tf_bind.name
+	}
+`
+
 func TestAccVpnvserverAppfwpolicyBinding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -210,3 +236,23 @@ func testAccCheckVpnvserverAppfwpolicyBindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+
+func TestAccVpnvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_appfwpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "name", "tf_vpnvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "policy", "tf_appfwpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "priority", "100"),
+				),
+			},
+		},
+	})
+}
+
