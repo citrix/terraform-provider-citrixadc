@@ -13,7 +13,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
-//d VpnvserverAppfwpolicyBindingResourceModel describes the resource data model.
+// d VpnvserverAppfwpolicyBindingResourceModel describes the resource data model.
 type VpnvserverAppfwpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
@@ -48,7 +48,6 @@ func (r *VpnvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req r
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional:    true,
-				Computed:    true,
 				Description: "Binds the authentication policy to a tertiary chain which will be used only for group extraction. The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.",
 			},
 			"priority": schema.Int64Attribute{
@@ -58,7 +57,6 @@ func (r *VpnvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req r
 			},
 			"secondary": schema.BoolAttribute{
 				Optional:    true,
-				Computed:    true,
 				Description: "Binds the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only via a primary authentication method but also via a secondary authentication method. User groups are aggregated across both. The user name must be exactly the same for both authentication methods, but they can require different passwords.",
 			},
 		},
@@ -112,26 +110,13 @@ func vpnvserverAppfwpolicyBindingSetAttrFromGet(ctx context.Context, data *Vpnvs
 	} else {
 		data.Gotopriorityexpression = types.StringNull()
 	}
-	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
-		if boolVal, ok := val.(bool); ok {
-			data.Groupextraction = types.BoolValue(boolVal)
-		}
-	} else {
-		data.Groupextraction = types.BoolNull()
-	}
+
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
 	} else {
 		data.Priority = types.Int64Null()
-	}
-	if val, ok := getResponseData["secondary"]; ok && val != nil {
-		if boolVal, ok := val.(bool); ok {
-			data.Secondary = types.BoolValue(boolVal)
-		}
-	} else {
-		data.Secondary = types.BoolNull()
 	}
 
 	return data
