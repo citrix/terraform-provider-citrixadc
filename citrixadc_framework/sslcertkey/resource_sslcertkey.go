@@ -116,6 +116,12 @@ func (r *SslCertKeyResource) Create(ctx context.Context, req resource.CreateRequ
 	if !data.Password.IsNull() {
 		sslcertkeyUpdate.Password = data.Password.ValueBool()
 	}
+	if !data.Inform.IsNull() {
+		sslcertkeyUpdate.Inform = data.Inform.ValueString()
+	}
+	if !data.Fipskey.IsNull() {
+		sslcertkeyUpdate.Fipskey = data.Fipskey.ValueString()
+	}
 	if !data.Passplain.IsNull() {
 		sslcertkeyUpdate.Passplain = data.Passplain.ValueString()
 	} else if !data.PassplainWo.IsNull() {
@@ -272,19 +278,22 @@ func (r *SslCertKeyResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Execute Change API if needed
 	if needsChange {
-		// Nodomaincheck is a flag for the change operation
+		sslcertkeyChange.Cert = plan.Cert.ValueString()
 		if !plan.NoDomainCheck.IsNull() {
 			sslcertkeyChange.Nodomaincheck = plan.NoDomainCheck.ValueBool()
 		}
-		sslcertkeyChange.Cert = plan.Cert.ValueString()
 		if !plan.Key.IsNull() {
 			sslcertkeyChange.Key = plan.Key.ValueString()
 		}
 		if !plan.Password.IsNull() {
 			sslcertkeyChange.Password = plan.Password.ValueBool()
 		}
-		// Include password if configured (required for PKCS12 cert/key changes)
-		// Use config value since passplain is WriteOnly
+		if !plan.Inform.IsNull() {
+			sslcertkeyChange.Inform = plan.Inform.ValueString()
+		}
+		if !plan.Fipskey.IsNull() {
+			sslcertkeyChange.Fipskey = plan.Fipskey.ValueString()
+		}
 		if !config.Passplain.IsNull() && config.Passplain.ValueString() != "" {
 			tflog.Debug(ctx, "Including passplain in change operation for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
 			sslcertkeyChange.Passplain = config.Passplain.ValueString()
