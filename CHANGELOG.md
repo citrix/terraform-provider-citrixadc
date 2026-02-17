@@ -1,3 +1,33 @@
+## 2.1.1 (Feb 17, 2026)
+
+BUG FIXES
+* **citrixadc_systemfile**: Fixed systemfile decoding to properly handle already-encoded content. [#1300]
+* **citrixadc_lbvserver**: Fixed handling of backupvserver attribute to allow proper removal/unbinding. [#1283]
+* **citrixadc_lbparameter**: Rectified int64 conversion for float64 type values from API response. [#1346]
+* **citrixadc_sslcertkey_update**: Always including passplain attribute for certificate updates. [#1353]
+* **citrixadc_nsip**: Rectified readNsip logic to fix Import issue.
+* **citrixadc_systemfile**: Marked filecontent attribute as sensitive to keep sensitive data out of Terraform logs and plan/apply output. [#1256]
+* **resource_citrixadc_dnsnameserver.go**: Creating both UDP and TCP dnsnameservers when type is UDP_TCP. [#1221]
+* **citrixadc_sslvserver_sslcertkey_binding**: Rectifying Id calculation logic for sslvserver_sslcertkey_binding in migration usecase. [#1351]
+* **provider**: Adding back support for old ciphers to address tls handshake failures. [#1340]
+* **documentation**: Removed obsolete documentation related to analyticsprofile.
+
+ENHANCEMENTS
+* **citrixadc_sslcertkey**: Support for graceful update of sslcertkey during certificate renewal.
+
+FEATURES
+* **New Resource**: Support for creating and managing citrixadc_vpnvserver_appflowpolicy_binding. [#1234]
+
+[#1221]: https://github.com/citrix/terraform-provider-citrixadc/issues/1221
+[#1234]: https://github.com/citrix/terraform-provider-citrixadc/issues/1234
+[#1256]: https://github.com/citrix/terraform-provider-citrixadc/issues/1256
+[#1283]: https://github.com/citrix/terraform-provider-citrixadc/issues/1283
+[#1300]: https://github.com/citrix/terraform-provider-citrixadc/issues/1300
+[#1340]: https://github.com/citrix/terraform-provider-citrixadc/issues/1340
+[#1346]: https://github.com/citrix/terraform-provider-citrixadc/issues/1346
+[#1351]: https://github.com/citrix/terraform-provider-citrixadc/issues/1351
+[#1353]: https://github.com/citrix/terraform-provider-citrixadc/issues/1353
+
 ## 2.1.0 (Dec 17, 2025)
 
 BUG FIXES
