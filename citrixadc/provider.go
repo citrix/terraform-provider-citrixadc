@@ -98,6 +98,12 @@ func providerSchema() map[string]*schema.Schema {
 			Description: "Perform login to NetScaler",
 			Default:     false,
 		},
+		"is_cloud": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Set to true when using MAS/ADM Cloud (uses ID/Secret authentication instead of username/password)",
+			Default:     false,
+		},
 	}
 }
 
@@ -930,6 +936,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		ProxiedNs: d.Get("proxied_ns").(string),
 		SslVerify: !d.Get("insecure_skip_verify").(bool),
 		Headers:   userHeaders,
+		IsCloud:   d.Get("is_cloud").(bool),
 	}
 	client, err := service.NewNitroClientFromParams(params)
 	if err != nil {

@@ -54,6 +54,7 @@ type CitrixAdcFrameworkProviderModel struct {
 	ProxiedNs          types.String `tfsdk:"proxied_ns"`
 	Partition          types.String `tfsdk:"partition"`
 	DoLogin            types.Bool   `tfsdk:"do_login"`
+	IsCloud            types.Bool   `tfsdk:"is_cloud"`
 }
 
 // ProviderData contains the configured client for data sources and resources.
@@ -98,6 +99,10 @@ func (p *CitrixAdcFrameworkProvider) Schema(ctx context.Context, req provider.Sc
 			},
 			"do_login": schema.BoolAttribute{
 				Description: "Perform login to NetScaler",
+				Optional:    true,
+			},
+			"is_cloud": schema.BoolAttribute{
+				Description: "Set to true when using MAS/ADM Cloud (uses ID/Secret authentication instead of username/password)",
 				Optional:    true,
 			},
 		},
@@ -177,6 +182,11 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 		doLogin = data.DoLogin.ValueBool()
 	}
 
+	isCloud := false
+	if !data.IsCloud.IsNull() {
+		isCloud = data.IsCloud.ValueBool()
+	}
+
 	userHeaders := map[string]string{
 		"User-Agent": "terraform-ctxadc-framework",
 	}
@@ -188,6 +198,7 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 		ProxiedNs: proxiedNs,
 		SslVerify: !insecureSkipVerify,
 		Headers:   userHeaders,
+		IsCloud:   isCloud,
 	}
 
 	client, err := service.NewNitroClientFromParams(params)
