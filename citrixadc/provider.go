@@ -83,7 +83,7 @@ func providerSchema() map[string]*schema.Schema {
 		"proxied_ns": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Target NS ip. When defined username, password and endpoint must refer to MAS.",
+			Description: "Target NS ip. When defined username, password and endpoint must refer to ADM.",
 			DefaultFunc: schema.EnvDefaultFunc("_MPS_API_PROXY_MANAGED_INSTANCE_IP", ""),
 		},
 		"partition": {
@@ -101,7 +101,7 @@ func providerSchema() map[string]*schema.Schema {
 		"is_cloud": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Description: "Set to true when using MAS/ADM Cloud (uses ID/Secret authentication instead of username/password)",
+			Description: "Set to true when using ADM Cloud",
 			Default:     false,
 		},
 	}

@@ -165,7 +165,7 @@ func (c *NitroClient) Login() error {
 	var err error
 	
 	if c.isCloud {
-		// MAS/ADM Cloud uses ID and Secret
+		// ADM Cloud uses ID and Secret
 		cloudLoginObj := cloudLogin{
 			ID:     c.username,
 			Secret: c.password,
@@ -189,28 +189,20 @@ func (c *NitroClient) Login() error {
 	err = json.Unmarshal(body, &data)
 	if err == nil {
 		c.logger.Trace("Login response data:", data)
-		c.logger.Trace("isCloud flag:", c.isCloud)
 		var sessionid string
 		
 		if c.isCloud {
 			c.logger.Trace("Parsing Cloud login response")
 			// Cloud response: {"login": [{"sessionid": "...", "customerId": "...", ...}]}
 			if loginArray, ok := data["login"].([]interface{}); ok && len(loginArray) > 0 {
-				c.logger.Trace("Found login array, length:", len(loginArray))
 				if loginObj, ok := loginArray[0].(map[string]interface{}); ok {
 					c.logger.Trace("Login object:", loginObj)
 					if sid, ok := loginObj["sessionid"].(string); ok {
 						sessionid = sid
 						c.logger.Trace("Extracted sessionid from Cloud response:", sessionid)
-					} else {
-						c.logger.Trace("sessionid field not found in login object")
 					}
-				} else {
-					c.logger.Trace("First element of login array is not a map")
-				}
-			} else {
-				c.logger.Trace("login field is not an array or is empty")
-			}
+				} 
+			} 
 		} else {
 			c.logger.Trace("Parsing on-prem login response")
 			// On-prem response: {"sessionid": "..."}
@@ -223,11 +215,7 @@ func (c *NitroClient) Login() error {
 		if sessionid != "" {
 			c.logger.Trace("Updating session ID to:", sessionid)
 			c.updateSessionid(sessionid)
-			c.logger.Trace("Session ID after update:", c.sessionid)
-		} else {
-			c.logger.Trace("ERROR: sessionid is empty string")
-			return fmt.Errorf("sessionid not found in login response")
-		}
+			} 
 	}
 	c.logger.Trace("Login successful")
 	return err

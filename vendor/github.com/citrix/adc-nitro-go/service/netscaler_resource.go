@@ -174,15 +174,15 @@ func (c *NitroClient) createHTTPRequest(method string, urlstr string, buff *byte
 			}
 		}
 	} else {
-		// Proxied NS configuration (MAS/ADM)
+		// Proxied NS configuration (ADM)
 		if c.isCloud {
-			// MAS/ADM Cloud uses session ID in Cookie header as SESSID
+			// ADM Cloud uses session ID in Cookie header as SESSID
 			c.logger.Trace("Cloud proxied request - IsLoggedIn:", c.IsLoggedIn(), "sessionid:", c.getSessionid())
 			if c.IsLoggedIn() {
 				req.Header.Set("Cookie", "SESSID="+c.getSessionid())
 				c.logger.Trace("Set Cookie with SESSID for Cloud proxied request")
 			} else {
-				// For login request, use Basic Auth
+				// For login request, use Basic Auth in authorizaton header
 				req.SetBasicAuth(c.username, c.password)
 				c.logger.Trace("Using Basic Auth for Cloud login request")
 			}

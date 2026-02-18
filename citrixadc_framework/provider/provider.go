@@ -90,7 +90,7 @@ func (p *CitrixAdcFrameworkProvider) Schema(ctx context.Context, req provider.Sc
 				Optional:    true,
 			},
 			"proxied_ns": schema.StringAttribute{
-				Description: "Target NS ip. When defined username, password and endpoint must refer to MAS.",
+				Description: "Target NS ip. When defined username, password and endpoint must refer to ADM.",
 				Optional:    true,
 			},
 			"partition": schema.StringAttribute{
@@ -102,7 +102,7 @@ func (p *CitrixAdcFrameworkProvider) Schema(ctx context.Context, req provider.Sc
 				Optional:    true,
 			},
 			"is_cloud": schema.BoolAttribute{
-				Description: "Set to true when using MAS/ADM Cloud (uses ID/Secret authentication instead of username/password)",
+				Description: "Set to true when using ADM Cloud",
 				Optional:    true,
 			},
 		},
