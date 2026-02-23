@@ -62,8 +62,10 @@ func (r *LbParameterResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed: true,
 			},
 			"cookiepassphrase": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:    true,
+				Computed:    true,
+				Sensitive:   true,
+				Description: "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.",
 			},
 			"dbsttl": schema.Int64Attribute{
 				Optional: true,
@@ -250,11 +252,13 @@ func lbparameterSetAttrFromGet(ctx context.Context, data *LbParameterResourceMod
 	} else {
 		data.ConsolidatedLconn = types.StringNull()
 	}
-	if val, ok := getResponseData["cookiepassphrase"]; ok && val != nil {
-		data.CookiePassphrase = types.StringValue(val.(string))
-	} else {
-		data.CookiePassphrase = types.StringNull()
-	}
+	// Skip reading cookiepassphrase from API as it returns hashed value
+	// Keep the value from config to avoid inconsistency errors
+	// if val, ok := getResponseData["cookiepassphrase"]; ok && val != nil {
+	// 	data.CookiePassphrase = types.StringValue(val.(string))
+	// } else {
+	// 	data.CookiePassphrase = types.StringNull()
+	// }
 	if val, ok := getResponseData["dbsttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.DbsTtl = types.Int64Value(intVal)
