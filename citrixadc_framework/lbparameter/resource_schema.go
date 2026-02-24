@@ -63,7 +63,6 @@ func (r *LbParameterResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"cookiepassphrase": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
 				Sensitive:   true,
 				Description: "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.",
 			},
