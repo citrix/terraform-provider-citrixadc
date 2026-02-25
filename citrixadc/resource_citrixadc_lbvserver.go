@@ -1038,6 +1038,7 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	stateChange := false
 	hasChange := false
+	attributesToUnset := []string{} // Collect attributes that need to be unset
 	if d.HasChange("toggleorder") {
 		log.Printf("[DEBUG]  citrixadc-provider: Toggleorder has changed for lbvserver, starting update")
 		lbvserver.Toggleorder = d.Get("toggleorder").(string)
@@ -1046,12 +1047,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("quicprofilename") {
 		log.Printf("[DEBUG]  citrixadc-provider: Quicprofilename has changed for lbvserver, starting update")
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "quicprofilename", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "quicprofilename") {
+			attributesToUnset = append(attributesToUnset, "quicprofilename")
+		} else {
 			lbvserver.Quicprofilename = d.Get("quicprofilename").(string)
 			hasChange = true
 		}
@@ -1079,14 +1077,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("apiprofile") {
 		log.Printf("[DEBUG]  citrixadc-provider: Apiprofile has changed for lbvserver, starting update")
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "apiprofile", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "apiprofile") {
+			attributesToUnset = append(attributesToUnset, "apiprofile")
+		} else {
 			lbvserver.Apiprofile = d.Get("apiprofile").(string)
 			hasChange = true
 		}
@@ -1094,14 +1087,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("adfsproxyprofile") {
 		log.Printf("[DEBUG]  citrixadc-provider: Adfsproxyprofile has changed for lbvserver, starting update")
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "adfsproxyprofile", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "adfsproxyprofile") {
+			attributesToUnset = append(attributesToUnset, "adfsproxyprofile")
+		} else {
 			lbvserver.Adfsproxyprofile = d.Get("adfsproxyprofile").(string)
 			hasChange = true
 		}
@@ -1115,12 +1103,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "appflowlog", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "appflowlog") {
+			attributesToUnset = append(attributesToUnset, "appflowlog")
+		} else {
 			lbvserver.Appflowlog = d.Get("appflowlog").(string)
 			hasChange = true
 		}
@@ -1128,12 +1113,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("authentication") {
 		log.Printf("[DEBUG] netscaler-provider:  Authentication has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "authentication", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "authentication") {
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
 			lbvserver.Authentication = d.Get("authentication").(string)
 			hasChange = true
 		}
@@ -1141,12 +1123,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("authenticationhost") {
 		log.Printf("[DEBUG] netscaler-provider:  Authenticationhost has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "authenticationhost", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "authenticationhost") {
+			attributesToUnset = append(attributesToUnset, "authenticationhost")
+		} else {
 			lbvserver.Authenticationhost = d.Get("authenticationhost").(string)
 			hasChange = true
 		}
@@ -1154,12 +1133,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("authn401") {
 		log.Printf("[DEBUG] netscaler-provider:  Authn401 has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "authn401", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "authn401") {
+			attributesToUnset = append(attributesToUnset, "authn401")
+		} else {
 			lbvserver.Authn401 = d.Get("authn401").(string)
 			hasChange = true
 		}
@@ -1167,14 +1143,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("authnprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  Authnprofile has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "authnprofile", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "authnprofile") {
+			attributesToUnset = append(attributesToUnset, "authnprofile")
+		} else {
 			lbvserver.Authnprofile = d.Get("authnprofile").(string)
 			hasChange = true
 		}
@@ -1182,14 +1153,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("authnvsname") {
 		log.Printf("[DEBUG] netscaler-provider:  Authnvsname has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "authnvsname", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "authnvsname") {
+			attributesToUnset = append(attributesToUnset, "authnvsname")
+		} else {
 			lbvserver.Authnvsname = d.Get("authnvsname").(string)
 			hasChange = true
 		}
@@ -1197,12 +1163,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("backuplbmethod") {
 		log.Printf("[DEBUG]  netscaler-provider: Backuplbmethod has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "backuplbmethod", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "backuplbmethod") {
+			attributesToUnset = append(attributesToUnset, "backuplbmethod")
+		} else {
 			lbvserver.Backuplbmethod = d.Get("backuplbmethod").(string)
 			hasChange = true
 		}
@@ -1215,14 +1178,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("backupvserver") {
 		log.Printf("[DEBUG] netscaler-provider:  Backupvserver has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "backupvserver", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "backupvserver") {
+			attributesToUnset = append(attributesToUnset, "backupvserver")
+		} else {
 			lbvserver.Backupvserver = d.Get("backupvserver").(string)
 			hasChange = true
 		}
@@ -1236,12 +1194,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("cacheable") {
 		log.Printf("[DEBUG] netscaler-provider:  Cacheable has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "cacheable", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "cacheable") {
+			attributesToUnset = append(attributesToUnset, "cacheable")
+		} else {
 			lbvserver.Cacheable = d.Get("cacheable").(string)
 			hasChange = true
 		}
@@ -1254,14 +1209,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG] netscaler-provider:  Comment has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "comment", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "comment") {
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
 			lbvserver.Comment = d.Get("comment").(string)
 			hasChange = true
 		}
@@ -1269,12 +1219,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("connfailover") {
 		log.Printf("[DEBUG] netscaler-provider:  Connfailover has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "connfailover", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "connfailover") {
+			attributesToUnset = append(attributesToUnset, "connfailover")
+		} else {
 			lbvserver.Connfailover = d.Get("connfailover").(string)
 			hasChange = true
 		}
@@ -1282,14 +1229,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("cookiename") {
 		log.Printf("[DEBUG] netscaler-provider:  Cookiename has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "cookiename", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "cookiename") {
+			attributesToUnset = append(attributesToUnset, "cookiename")
+		} else {
 			lbvserver.Cookiename = d.Get("cookiename").(string)
 			hasChange = true
 		}
@@ -1307,14 +1249,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("dbprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Dbprofilename has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "dbprofilename", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "dbprofilename") {
+			attributesToUnset = append(attributesToUnset, "dbprofilename")
+		} else {
 			lbvserver.Dbprofilename = d.Get("dbprofilename").(string)
 			hasChange = true
 		}
@@ -1322,12 +1259,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("dbslb") {
 		log.Printf("[DEBUG] netscaler-provider:  Dbslb has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "dbslb", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "dbslb") {
+			attributesToUnset = append(attributesToUnset, "dbslb")
+		} else {
 			lbvserver.Dbslb = d.Get("dbslb").(string)
 			hasChange = true
 		}
@@ -1335,12 +1269,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("disableprimaryondown") {
 		log.Printf("[DEBUG] netscaler-provider:  Disableprimaryondown has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "disableprimaryondown", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "disableprimaryondown") {
+			attributesToUnset = append(attributesToUnset, "disableprimaryondown")
+		} else {
 			lbvserver.Disableprimaryondown = d.Get("disableprimaryondown").(string)
 			hasChange = true
 		}
@@ -1353,14 +1284,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("dnsprofilename") {
 		log.Printf("[DEBUG]  netscaler-provider: Dnsprofilename has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "dnsprofilename", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "dnsprofilename") {
+			attributesToUnset = append(attributesToUnset, "dnsprofilename")
+		} else {
 			lbvserver.Dnsprofilename = d.Get("dnsprofilename").(string)
 			hasChange = true
 		}
@@ -1368,12 +1294,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("downstateflush") {
 		log.Printf("[DEBUG] netscaler-provider:  Downstateflush has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "downstateflush", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "downstateflush") {
+			attributesToUnset = append(attributesToUnset, "downstateflush")
+		} else {
 			lbvserver.Downstateflush = d.Get("downstateflush").(string)
 			hasChange = true
 		}
@@ -1391,14 +1314,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("httpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Httpprofilename has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "httpprofilename", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "httpprofilename") {
+			attributesToUnset = append(attributesToUnset, "httpprofilename")
+		} else {
 			lbvserver.Httpprofilename = d.Get("httpprofilename").(string)
 			hasChange = true
 		}
@@ -1406,12 +1324,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("httpsredirecturl") {
 		log.Printf("[DEBUG]  netscaler-provider: Httpsredirecturl has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "httpsredirecturl", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "httpsredirecturl") {
+			attributesToUnset = append(attributesToUnset, "httpsredirecturl")
+		} else {
 			lbvserver.Httpsredirecturl = d.Get("httpsredirecturl").(string)
 			hasChange = true
 		}
@@ -1419,12 +1334,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("icmpvsrresponse") {
 		log.Printf("[DEBUG] netscaler-provider:  Icmpvsrresponse has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "icmpvsrresponse", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "icmpvsrresponse") {
+			attributesToUnset = append(attributesToUnset, "icmpvsrresponse")
+		} else {
 			lbvserver.Icmpvsrresponse = d.Get("icmpvsrresponse").(string)
 			hasChange = true
 		}
@@ -1432,12 +1344,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("insertvserveripport") {
 		log.Printf("[DEBUG] netscaler-provider:  Insertvserveripport has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "insertvserveripport", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "insertvserveripport") {
+			attributesToUnset = append(attributesToUnset, "insertvserveripport")
+		} else {
 			lbvserver.Insertvserveripport = d.Get("insertvserveripport").(string)
 			hasChange = true
 		}
@@ -1455,12 +1364,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("ipset") {
 		log.Printf("[DEBUG]  netscaler-provider: Ipset has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "ipset", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "ipset") {
+			attributesToUnset = append(attributesToUnset, "ipset")
+		} else {
 			lbvserver.Ipset = d.Get("ipset").(string)
 			hasChange = true
 		}
@@ -1473,12 +1379,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("l2conn") {
 		log.Printf("[DEBUG] netscaler-provider:  L2conn has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "l2conn", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "l2conn") {
+			attributesToUnset = append(attributesToUnset, "l2conn")
+		} else {
 			lbvserver.L2conn = d.Get("l2conn").(string)
 			hasChange = true
 		}
@@ -1486,12 +1389,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("lbmethod") {
 		log.Printf("[DEBUG] netscaler-provider:  Lbmethod has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "lbmethod", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "lbmethod") {
+			attributesToUnset = append(attributesToUnset, "lbmethod")
+		} else {
 			lbvserver.Lbmethod = d.Get("lbmethod").(string)
 			hasChange = true
 		}
@@ -1499,14 +1399,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("lbprofilename") {
 		log.Printf("[DEBUG]  netscaler-provider: Lbprofilename has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "lbprofilename", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "lbprofilename") {
+			attributesToUnset = append(attributesToUnset, "lbprofilename")
+		} else {
 			lbvserver.Lbprofilename = d.Get("lbprofilename").(string)
 			hasChange = true
 		}
@@ -1514,12 +1409,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("listenpolicy") {
 		log.Printf("[DEBUG] netscaler-provider:  Listenpolicy has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "listenpolicy", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "listenpolicy") {
+			attributesToUnset = append(attributesToUnset, "listenpolicy")
+		} else {
 			lbvserver.Listenpolicy = d.Get("listenpolicy").(string)
 			hasChange = true
 		}
@@ -1532,12 +1424,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("m") {
 		log.Printf("[DEBUG] netscaler-provider:  M has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "m", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "m") {
+			attributesToUnset = append(attributesToUnset, "m")
+		} else {
 			lbvserver.M = d.Get("m").(string)
 			hasChange = true
 		}
@@ -1545,12 +1434,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("macmoderetainvlan") {
 		log.Printf("[DEBUG] netscaler-provider:  Macmoderetainvlan has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "macmoderetainvlan", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "macmoderetainvlan") {
+			attributesToUnset = append(attributesToUnset, "macmoderetainvlan")
+		} else {
 			lbvserver.Macmoderetainvlan = d.Get("macmoderetainvlan").(string)
 			hasChange = true
 		}
@@ -1568,12 +1454,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("mssqlserverversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mssqlserverversion has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "mssqlserverversion", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "mssqlserverversion") {
+			attributesToUnset = append(attributesToUnset, "mssqlserverversion")
+		} else {
 			lbvserver.Mssqlserverversion = d.Get("mssqlserverversion").(string)
 			hasChange = true
 		}
@@ -1596,12 +1479,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("mysqlserverversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlserverversion has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "mysqlserverversion", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "mysqlserverversion") {
+			attributesToUnset = append(attributesToUnset, "mysqlserverversion")
+		} else {
 			lbvserver.Mysqlserverversion = d.Get("mysqlserverversion").(string)
 			hasChange = true
 		}
@@ -1614,12 +1494,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("netmask") {
 		log.Printf("[DEBUG] netscaler-provider:  Netmask has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "netmask", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "netmask") {
+			attributesToUnset = append(attributesToUnset, "netmask")
+		} else {
 			lbvserver.Netmask = d.Get("netmask").(string)
 			hasChange = true
 		}
@@ -1627,14 +1504,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("netprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  Netprofile has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "netprofile", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "netprofile") {
+			attributesToUnset = append(attributesToUnset, "netprofile")
+		} else {
 			lbvserver.Netprofile = d.Get("netprofile").(string)
 			hasChange = true
 		}
@@ -1652,12 +1524,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("newservicerequestunit") {
 		log.Printf("[DEBUG] netscaler-provider:  Newservicerequestunit has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "newservicerequestunit", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "newservicerequestunit") {
+			attributesToUnset = append(attributesToUnset, "newservicerequestunit")
+		} else {
 			lbvserver.Newservicerequestunit = d.Get("newservicerequestunit").(string)
 			hasChange = true
 		}
@@ -1665,12 +1534,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("oracleserverversion") {
 		log.Printf("[DEBUG]  netscaler-provider: Oracleserverversion has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "oracleserverversion", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "oracleserverversion") {
+			attributesToUnset = append(attributesToUnset, "oracleserverversion")
+		} else {
 			lbvserver.Oracleserverversion = d.Get("oracleserverversion").(string)
 			hasChange = true
 		}
@@ -1678,12 +1544,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("persistencebackup") {
 		log.Printf("[DEBUG] netscaler-provider:  Persistencebackup has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "persistencebackup", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "persistencebackup") {
+			attributesToUnset = append(attributesToUnset, "persistencebackup")
+		} else {
 			lbvserver.Persistencebackup = d.Get("persistencebackup").(string)
 			hasChange = true
 		}
@@ -1691,12 +1554,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("persistencetype") {
 		log.Printf("[DEBUG] netscaler-provider:  Persistencetype has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "persistencetype", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "persistencetype") {
+			attributesToUnset = append(attributesToUnset, "persistencetype")
+		} else {
 			lbvserver.Persistencetype = d.Get("persistencetype").(string)
 			hasChange = true
 		}
@@ -1704,12 +1564,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("persistmask") {
 		log.Printf("[DEBUG] netscaler-provider:  Persistmask has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "persistmask", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "persistmask") {
+			attributesToUnset = append(attributesToUnset, "persistmask")
+		} else {
 			lbvserver.Persistmask = d.Get("persistmask").(string)
 			hasChange = true
 		}
@@ -1727,12 +1584,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("probeprotocol") {
 		log.Printf("[DEBUG] netscaler-provider:  probeprotocol has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "probeprotocol", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "probeprotocol") {
+			attributesToUnset = append(attributesToUnset, "probeprotocol")
+		} else {
 			lbvserver.Probeprotocol = d.Get("probeprotocol").(string)
 			hasChange = true
 		}
@@ -1750,12 +1604,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("pushlabel") {
 		log.Printf("[DEBUG] netscaler-provider:  Pushlabel has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "pushlabel", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "pushlabel") {
+			attributesToUnset = append(attributesToUnset, "pushlabel")
+		} else {
 			lbvserver.Pushlabel = d.Get("pushlabel").(string)
 			hasChange = true
 		}
@@ -1768,12 +1619,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("pushvserver") {
 		log.Printf("[DEBUG] netscaler-provider:  Pushvserver has changed for lbvserver %s, starting update", lbvserverName)
 
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "pushvserver", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "pushvserver") {
+			attributesToUnset = append(attributesToUnset, "pushvserver")
+		} else {
 			lbvserver.Pushvserver = d.Get("pushvserver").(string)
 			hasChange = true
 		}
@@ -1789,13 +1637,11 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		hasChange = true
 	}
 	if d.HasChange("redirectfromport") {
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "redirectfromport", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if !wasUnset {
-			log.Printf("[DEBUG]  netscaler-provider: Redirectfromport has changed for lbvserver %s, starting update", lbvserverName)
+		log.Printf("[DEBUG]  netscaler-provider: Redirectfromport has changed for lbvserver %s, starting update", lbvserverName)
+
+		if checkLbvserverAttributeNeedsUnset(d, "redirectfromport") {
+			attributesToUnset = append(attributesToUnset, "redirectfromport")
+		} else {
 			lbvserver.Redirectfromport = intPtr(d.Get("redirectfromport").(int))
 			hasChange = true
 		}
@@ -1808,14 +1654,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("redirurl") {
 		log.Printf("[DEBUG] netscaler-provider:  Redirurl has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "redirurl", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "redirurl") {
+			attributesToUnset = append(attributesToUnset, "redirurl")
+		} else {
 			lbvserver.Redirurl = d.Get("redirurl").(string)
 			hasChange = true
 		}
@@ -1828,14 +1669,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("resrule") {
 		log.Printf("[DEBUG] netscaler-provider:  Resrule has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "resrule", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "resrule") {
+			attributesToUnset = append(attributesToUnset, "resrule")
+		} else {
 			lbvserver.Resrule = d.Get("resrule").(string)
 			hasChange = true
 		}
@@ -1858,14 +1694,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("rule") {
 		log.Printf("[DEBUG] netscaler-provider:  Rule has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "rule", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "rule") {
+			attributesToUnset = append(attributesToUnset, "rule")
+		} else {
 			lbvserver.Rule = d.Get("rule").(string)
 			hasChange = true
 		}
@@ -1922,14 +1753,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tcpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Tcpprofilename has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "tcpprofilename", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "tcpprofilename") {
+			attributesToUnset = append(attributesToUnset, "tcpprofilename")
+		} else {
 			lbvserver.Tcpprofilename = d.Get("tcpprofilename").(string)
 			hasChange = true
 		}
@@ -1967,14 +1793,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("vipheader") {
 		log.Printf("[DEBUG] netscaler-provider:  Vipheader has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "vipheader", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "vipheader") {
+			attributesToUnset = append(attributesToUnset, "vipheader")
+		} else {
 			lbvserver.Vipheader = d.Get("vipheader").(string)
 			hasChange = true
 		}
@@ -1982,14 +1803,9 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("quicbridgeprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Quicbridgeprofilename has changed for lbvserver %s, starting update", lbvserverName)
 
-		// Use generic helper function to handle unset
-		wasUnset, err := handleLbvserverAttributeUnset(d, client, "quicbridgeprofilename", lbvserverName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Only proceed with normal update if unset was not performed
-		if !wasUnset {
+		if checkLbvserverAttributeNeedsUnset(d, "quicbridgeprofilename") {
+			attributesToUnset = append(attributesToUnset, "quicbridgeprofilename")
+		} else {
 			lbvserver.Quicbridgeprofilename = d.Get("quicbridgeprofilename").(string)
 			hasChange = true
 		}
@@ -2035,6 +1851,11 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 			log.Printf("[DEBUG] netscaler-provider: sslcertkey has been unbound from lbvserver for sslcertkey %s ", oldSslcertkeyName)
 		}
+	}
+
+	// Execute batch unset for all collected attributes
+	if err := executeLbvserverUnset(client, lbvserverName, attributesToUnset); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if hasChange {
@@ -2171,15 +1992,14 @@ func doLbvserverStateChange(d *schema.ResourceData, client *service.NitroClient)
 	return nil
 }
 
-func handleLbvserverAttributeUnset(
+// checkLbvserverAttributeNeedsUnset determines if an attribute needs to be unset
+// Returns true if the attribute should be unset, false otherwise
+func checkLbvserverAttributeNeedsUnset(
 	d *schema.ResourceData,
-	client *service.NitroClient,
 	attributeName string,
-	lbvserverName string,
-) (bool, error) {
-	// Check if the attribute has changed
+) bool {
 	if !d.HasChange(attributeName) {
-		return false, nil
+		return false
 	}
 
 	oldValue, newValue := d.GetChange(attributeName)
@@ -2189,8 +2009,6 @@ func handleLbvserverAttributeUnset(
 	newRawValue := rawConfig.GetAttr(attributeName)
 
 	// Determine if we need to unset based on attribute type
-	needsUnset := false
-
 	// For string attributes: unset if old had value and new is empty string OR removed
 	// For int attributes: unset if old had value and attribute was removed
 	switch oldVal := oldValue.(type) {
@@ -2199,40 +2017,52 @@ func handleLbvserverAttributeUnset(
 		if oldVal != "" {
 			if newRawValue.IsNull() {
 				// Attribute removed from config
-				needsUnset = true
+				return true
 			} else if newStr, ok := newValue.(string); ok && newStr == "" {
 				// Attribute explicitly set to empty string
-				needsUnset = true
+				return true
 			}
 		}
 	case int:
 		if oldVal != 0 && newRawValue.IsNull() {
-			needsUnset = true
+			return true
 		}
 	default:
 		// For other types, unset if removed from config
 		if newRawValue.IsNull() && oldValue != nil {
-			needsUnset = true
+			return true
 		}
 	}
 
-	if needsUnset {
-		log.Printf("[DEBUG] netscaler-provider: Unsetting %s for lbvserver %s", attributeName, lbvserverName)
+	return false
+}
 
-		unsetData := map[string]interface{}{
-			"name":        lbvserverName,
-			attributeName: "true",
-		}
-
-		err := client.ActOnResource(service.Lbvserver.Type(), unsetData, "unset")
-		if err != nil {
-			return false, fmt.Errorf("error unsetting %s from lbvserver %s: %v", attributeName, lbvserverName, err)
-		}
-
-		log.Printf("[DEBUG] netscaler-provider: %s has been unset from lbvserver %s", attributeName, lbvserverName)
-		return true, nil
+// executeLbvserverUnset performs the actual unset API call with all collected attributes
+func executeLbvserverUnset(
+	client *service.NitroClient,
+	lbvserverName string,
+	attributesToUnset []string,
+) error {
+	if len(attributesToUnset) == 0 {
+		return nil
 	}
 
-	// Normal update should proceed (attribute changed to a different value)
-	return false, nil
+	log.Printf("[DEBUG] netscaler-provider: Unsetting attributes for lbvserver %s: %v", lbvserverName, attributesToUnset)
+
+	unsetData := map[string]interface{}{
+		"name": lbvserverName,
+	}
+
+	// Add all attributes to unset
+	for _, attr := range attributesToUnset {
+		unsetData[attr] = "true"
+	}
+
+	err := client.ActOnResource(service.Lbvserver.Type(), unsetData, "unset")
+	if err != nil {
+		return fmt.Errorf("error unsetting attributes from lbvserver %s: %v", lbvserverName, err)
+	}
+
+	log.Printf("[DEBUG] netscaler-provider: Successfully unset %d attributes from lbvserver %s", len(attributesToUnset), lbvserverName)
+	return nil
 }
