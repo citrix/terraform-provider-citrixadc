@@ -174,8 +174,26 @@ func (c *NitroClient) createHTTPRequest(method string, urlstr string, buff *byte
 			}
 		}
 	} else {
-		req.SetBasicAuth(c.username, c.password)
-		req.Header.Set("_MPS_API_PROXY_MANAGED_INSTANCE_IP", c.proxiedNs)
+		// Proxied NS configuration (ADM)
+		if c.isCloud {
+			// ADM Cloud uses session ID in Cookie header as SESSID
+			c.logger.Trace("Cloud proxied request - IsLoggedIn:", c.IsLoggedIn(), "sessionid:", c.getSessionid())
+			if c.IsLoggedIn() {
+				req.Header.Set("Cookie", "SESSID="+c.getSessionid())
+				c.logger.Trace("Set Cookie with SESSID for Cloud proxied request")
+			} else {
+				// For login request, use Basic Auth in authorizaton header
+				req.SetBasicAuth(c.username, c.password)
+				c.logger.Trace("Using Basic Auth for Cloud login request")
+			}
+		} else {
+			// On-premise MAS uses Basic Auth
+			req.SetBasicAuth(c.username, c.password)
+		}
+		// Only set proxy header for non-login requests
+		if resourceType != "login" {
+			req.Header.Set("_MPS_API_PROXY_MANAGED_INSTANCE_IP", c.proxiedNs)
+		}
 	}
 
 	// User defined headers may overwrite previous headers

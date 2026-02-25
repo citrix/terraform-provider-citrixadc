@@ -45,6 +45,7 @@ type NitroParams struct {
 	Headers       map[string]string
 	LogLevel      string
 	JSONLogFormat bool
+	IsCloud       bool
 }
 
 //NitroClient has methods to configure the NetScaler
@@ -61,6 +62,7 @@ type NitroClient struct {
 	timeout      int
 	headers      map[string]string
 	logger       hclog.Logger
+	isCloud      bool
 }
 
 //NewNitroClient returns a usable NitroClient. Does not check validity of supplied parameters
@@ -96,6 +98,7 @@ func NewNitroClientFromParams(params NitroParams) (*NitroClient, error) {
 	c.proxiedNs = params.ProxiedNs
 	c.sessionid = ""
 	c.timeout = params.Timeout
+	c.isCloud = params.IsCloud
 	if params.SslVerify {
 		if len(params.RootCAPath) > 0 {
 			caCert, err := ioutil.ReadFile(params.RootCAPath)
