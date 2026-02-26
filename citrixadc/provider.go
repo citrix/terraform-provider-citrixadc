@@ -83,7 +83,7 @@ func providerSchema() map[string]*schema.Schema {
 		"proxied_ns": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Target NS ip. When defined username, password and endpoint must refer to MAS.",
+			Description: "Target NS ip. When defined username, password and endpoint must refer to ADM.",
 			DefaultFunc: schema.EnvDefaultFunc("_MPS_API_PROXY_MANAGED_INSTANCE_IP", ""),
 		},
 		"partition": {
@@ -96,6 +96,12 @@ func providerSchema() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Description: "Perform login to NetScaler",
+			Default:     false,
+		},
+		"is_cloud": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Set to true when using ADM Cloud",
 			Default:     false,
 		},
 	}
@@ -929,6 +935,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		ProxiedNs: d.Get("proxied_ns").(string),
 		SslVerify: !d.Get("insecure_skip_verify").(bool),
 		Headers:   userHeaders,
+		IsCloud:   d.Get("is_cloud").(bool),
 	}
 	client, err := service.NewNitroClientFromParams(params)
 	if err != nil {

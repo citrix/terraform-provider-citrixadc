@@ -1,6 +1,0 @@
-2026/02/21 22:16:54 [DEBUG]  citrixadc-provider-test: In init
-=== RUN   TestAccLsnclient_nsacl_bindingDataSource_basic
-    lsnclient_nsacl_binding_test.go:211: TODO: Need to find a way to test this LSN resource!
---- SKIP: TestAccLsnclient_nsacl_bindingDataSource_basic (0.00s)
-PASS
-ok  	github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/acctests	0.011s

@@ -74,7 +74,6 @@ resource "citrixadc_sslcertkey" "foo" {
 `
 
 func TestAccSslcertkey_basic(t *testing.T) {
-	// t.Skip("TODO: Need to find a way to test this resource!")
 	t.Setenv("TF_VAR_sslcertkey_passplain_wo", "123456")
 	t.Setenv("TF_VAR_sslcertkey_passplain_wo_2", "1234567")
 	resource.Test(t, resource.TestCase{
@@ -477,6 +476,77 @@ func TestAccSslcertkey_autoUpdate(t *testing.T) {
 						"citrixadc_sslcertkey.foo", "cert_hash", "76e2a79e8c4526b98fef5077ee7a2f415c450f9ed6796a80f621048dd50041c7"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_sslcertkey.foo", "key_hash", "16b697689dd78539d599d72de6602d17b8bd54bb657ebbb62971d366c845ef82"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSslcertkey_passplain_basic = `
+
+	variable "sslcertkey_passplain_wo_2" {
+	type      = string
+	sensitive = true
+	}
+
+	resource "citrixadc_sslcertkey" "foo" {
+	certkey = "sample_ssl_cert"
+	cert = "/nsconfig/ssl/servercert3.cert"
+	key = "/nsconfig/ssl/servercert3.key"
+	nodomaincheck = true
+	password = true
+	passplain  = var.sslcertkey_passplain_wo_2
+	}
+`
+
+const testAccSslcertkey_passplain_update = `
+
+	variable "sslcertkey_passplain_wo_2" {
+	type      = string
+	sensitive = true
+	}
+
+	resource "citrixadc_sslcertkey" "foo" {
+	certkey = "sample_ssl_cert"
+	cert = "/nsconfig/ssl/servercert3_renewed.cert"
+	key = "/nsconfig/ssl/servercert3_renewed.key"
+	nodomaincheck = true
+	password = true
+	passplain  = var.sslcertkey_passplain_wo_2
+	}
+`
+
+func TestAccSslcertkey_passplain(t *testing.T) {
+	t.Setenv("TF_VAR_sslcertkey_passplain_wo_2", "1234567")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertkey_passplain_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.foo", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.foo", "cert", "/nsconfig/ssl/servercert3.cert"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.foo", "certkey", "sample_ssl_cert"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.foo", "key", "/nsconfig/ssl/servercert3.key"),
+				),
+			},
+			{
+				Config: testAccSslcertkey_passplain_update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.foo", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.foo", "cert", "/nsconfig/ssl/servercert3_renewed.cert"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.foo", "certkey", "sample_ssl_cert"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.foo", "key", "/nsconfig/ssl/servercert3_renewed.key"),
 				),
 			},
 		},

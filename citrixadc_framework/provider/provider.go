@@ -717,6 +717,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnvserver_analyticsprofile_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnvserver_appcontroller_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnvserver_appflowpolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnvserver_appfwpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnvserver_auditnslogpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnvserver_auditsyslogpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnvserver_authenticationcertpolicy_binding"
@@ -781,6 +782,7 @@ type CitrixAdcFrameworkProviderModel struct {
 	ProxiedNs          types.String `tfsdk:"proxied_ns"`
 	Partition          types.String `tfsdk:"partition"`
 	DoLogin            types.Bool   `tfsdk:"do_login"`
+	IsCloud            types.Bool   `tfsdk:"is_cloud"`
 }
 
 // ProviderData contains the configured client for data sources and resources.
@@ -816,7 +818,7 @@ func (p *CitrixAdcFrameworkProvider) Schema(ctx context.Context, req provider.Sc
 				Optional:    true,
 			},
 			"proxied_ns": schema.StringAttribute{
-				Description: "Target NS ip. When defined username, password and endpoint must refer to MAS.",
+				Description: "Target NS ip. When defined username, password and endpoint must refer to ADM.",
 				Optional:    true,
 			},
 			"partition": schema.StringAttribute{
@@ -825,6 +827,10 @@ func (p *CitrixAdcFrameworkProvider) Schema(ctx context.Context, req provider.Sc
 			},
 			"do_login": schema.BoolAttribute{
 				Description: "Perform login to NetScaler",
+				Optional:    true,
+			},
+			"is_cloud": schema.BoolAttribute{
+				Description: "Set to true when using ADM Cloud",
 				Optional:    true,
 			},
 		},
@@ -904,6 +910,11 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 		doLogin = data.DoLogin.ValueBool()
 	}
 
+	isCloud := false
+	if !data.IsCloud.IsNull() {
+		isCloud = data.IsCloud.ValueBool()
+	}
+
 	userHeaders := map[string]string{
 		"User-Agent": "terraform-ctxadc",
 	}
@@ -915,6 +926,7 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 		ProxiedNs: proxiedNs,
 		SslVerify: !insecureSkipVerify,
 		Headers:   userHeaders,
+		IsCloud:   isCloud,
 	}
 
 	client, err := adcnitrogoservice.NewNitroClientFromParams(params)
@@ -960,6 +972,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 	return []func() resource.Resource{
 		lbparameter.NewLbParameterResource,
 		sslcertkey.NewSslCertKeyResource,
+		vpnvserver_appfwpolicy_binding.NewVpnvserverAppfwpolicyBindingResource,
 	}
 }
 
@@ -1695,6 +1708,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		servicegroup_lbmonitor_binding.SErvicegroupLbmonitorBindingDataSource,
 		servicegroup_servicegroupmember_binding.SErvicegroupServicegroupmemberBindingDataSource,
 		snmptrap_snmpuser_binding.SNmptrapSnmpuserBindingDataSource,
+		vpnvserver_appfwpolicy_binding.VpnvserverAppfwpolicyBindingDataSource,
 	}
 }
 

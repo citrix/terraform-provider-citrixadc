@@ -33,9 +33,10 @@ func resourceCitrixAdcSystemfile() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filecontent": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 			"fileencoding": {
 				Type:     schema.TypeString,
