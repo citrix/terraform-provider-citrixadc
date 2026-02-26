@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsencryptionkey`
+# Data Source: nsencryptionkey
 
 The nsencryptionkey data source allows you to retrieve information about encryption keys.
 

@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_bridgetable
+# Data Source: bridgetable
 
 Use this data source to retrieve information about an existing Bridge Table entry.
 

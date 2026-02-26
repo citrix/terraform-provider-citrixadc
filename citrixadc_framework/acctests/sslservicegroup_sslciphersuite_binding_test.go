@@ -235,3 +235,57 @@ func testAccCheckSslservicegroup_sslciphersuite_bindingDestroy(s *terraform.Stat
 
 	return nil
 }
+
+const testAccSslservicegroup_sslciphersuite_bindingDataSource_basic = `
+
+resource "citrixadc_sslservicegroup_sslciphersuite_binding" "tf_sslservicegroup_sslciphersuite_binding" {
+	ciphername       = citrixadc_sslcipher.tf_sslcipher.ciphergroupname
+	servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
+}
+
+resource "citrixadc_sslcipher" "tf_sslcipher" {
+	ciphergroupname = "my_ciphersuite"
+   
+	ciphersuitebinding {
+		ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+		cipherpriority = 1
+	}
+}
+
+resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+	servicegroupname = "my_gslbvservicegroup"
+	servicetype      = "SSL_TCP"
+	cip              = "DISABLED"
+	healthmonitor    = "NO"
+	sitename         = citrixadc_gslbsite.site_local.sitename
+}
+
+resource "citrixadc_gslbsite" "site_local" {
+	sitename        = "Site-Local"
+	siteipaddress   = "172.31.96.234"
+	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
+}
+
+data "citrixadc_sslservicegroup_sslciphersuite_binding" "tf_sslservicegroup_sslciphersuite_binding" {
+	servicegroupname = citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding.servicegroupname
+	ciphername       = citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding.ciphername
+}
+`
+
+func TestAccSslservicegroup_sslciphersuite_bindingDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservicegroup_sslciphersuite_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding", "servicegroupname", "my_gslbvservicegroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding", "ciphername", "my_ciphersuite"),
+				),
+			},
+		},
+	})
+}

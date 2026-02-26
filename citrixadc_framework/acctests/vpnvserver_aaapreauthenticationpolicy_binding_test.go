@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_aaapreauthenticationpolicy_binding_basic = `
@@ -230,4 +231,53 @@ func testAccCheckVpnvserver_aaapreauthenticationpolicy_bindingDestroy(s *terrafo
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_aaapreauthenticationpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "tf_aaaaction"
+		preauthenticationaction = "DENY"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
+	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
+		name 	  = "tf_aaapolicy"
+		rule 	  = "NS_TRUE"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserverexample"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_aaapreauthenticationpolicy_binding" "tf_binding" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy.name
+		priority  = 40
+		secondary = "false"
+		bindpoint = "OTHERTCP_REQUEST"
+	}
+
+	data "citrixadc_vpnvserver_aaapreauthenticationpolicy_binding" "tf_binding" {
+		name   = citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding.name
+		policy = citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding.policy
+	}
+`
+
+func TestAccVpnvserver_aaapreauthenticationpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_aaapreauthenticationpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "name", "tf_vpnvserverexample"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "policy", "tf_aaapolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "priority", "40"),
+				),
+			},
+		},
+	})
 }

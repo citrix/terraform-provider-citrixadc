@@ -38,20 +38,20 @@ func (d *AaagroupAaauserBindingDataSource) Read(ctx context.Context, req datasou
 	var data AaagroupAaauserBindingResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	aaagroup_Name := data.Groupname.ValueString()
-	aaauser_Name := data.Username.ValueString()
+	// Case 4: Array filter with parent ID
+	groupname_Name := data.Groupname.ValueString()
+	username_Name := data.Username
 
 	var dataArr []map[string]interface{}
 	var err error
 
 	findParams := service.FindParams{
 		ResourceType:             service.Aaagroup_aaauser_binding.Type(),
-		ResourceName:             aaagroup_Name,
+		ResourceName:             groupname_Name,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -69,7 +69,19 @@ func (d *AaagroupAaauserBindingDataSource) Read(ctx context.Context, req datasou
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["username"].(string) == aaauser_Name {
+		match := true
+
+		// Check username
+		if val, ok := v["username"].(string); ok {
+			if username_Name.IsNull() || val != username_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !username_Name.IsNull() {
+			match = false
+			continue
+		}
+		if match {
 			foundIndex = i
 			break
 		}
@@ -77,12 +89,11 @@ func (d *AaagroupAaauserBindingDataSource) Read(ctx context.Context, req datasou
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("aaagroup_aaauser_binding with username %s not found", aaauser_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("aaagroup_aaauser_binding with username %s not found", username_Name))
 		return
 	}
 
 	aaagroup_aaauser_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
-
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

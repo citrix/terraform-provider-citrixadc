@@ -225,3 +225,54 @@ func testAccCheckLbvserver_appqoepolicy_bindingDestroy(s *terraform.State) error
 
 	return nil
 }
+
+const testAccLbvserver_appqoepolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "tf_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "appqoe-pol-primd"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		servicetype = "HTTP"
+	}
+	
+	resource "citrixadc_lbvserver_appqoepolicy_binding" "foo" {
+		name = citrixadc_lbvserver.tf_lbvserver.name
+		policyname = citrixadc_appqoepolicy.tf_appqoepolicy.name
+		bindpoint = "REQUEST"
+		gotopriorityexpression = "END"
+		priority = 56 
+	}
+
+	data "citrixadc_lbvserver_appqoepolicy_binding" "foo" {
+		name = citrixadc_lbvserver_appqoepolicy_binding.foo.name
+		policyname = citrixadc_lbvserver_appqoepolicy_binding.foo.policyname
+		depends_on = [citrixadc_lbvserver_appqoepolicy_binding.foo]
+	}
+`
+
+func TestAccLbvserver_appqoepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_appqoepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appqoepolicy_binding.foo", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appqoepolicy_binding.foo", "policyname", "appqoe-pol-primd"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appqoepolicy_binding.foo", "priority", "56"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appqoepolicy_binding.foo", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}

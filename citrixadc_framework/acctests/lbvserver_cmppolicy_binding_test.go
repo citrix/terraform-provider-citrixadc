@@ -183,3 +183,53 @@ func testAccCheckLbvserver_cmppolicy_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccLbvserver_cmppolicy_bindingDataSource_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_lbvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+
+resource "citrixadc_cmppolicy" "tf_cmppolicy" {
+    name = "tf_cmppolicy"
+    rule = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"
+    resaction = "COMPRESS"
+}
+
+resource "citrixadc_lbvserver_cmppolicy_binding" "tf_bind" {
+    name = citrixadc_lbvserver.tf_lbvserver.name
+    policyname = citrixadc_cmppolicy.tf_cmppolicy.name
+    priority = 100
+    bindpoint = "RESPONSE"
+    gotopriorityexpression = "END"
+}
+
+data "citrixadc_lbvserver_cmppolicy_binding" "tf_bind" {
+    name = citrixadc_lbvserver_cmppolicy_binding.tf_bind.name
+    policyname = citrixadc_lbvserver_cmppolicy_binding.tf_bind.policyname
+    bindpoint = citrixadc_lbvserver_cmppolicy_binding.tf_bind.bindpoint
+    depends_on = [citrixadc_lbvserver_cmppolicy_binding.tf_bind]
+}
+`
+
+func TestAccLbvserver_cmppolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_cmppolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_cmppolicy_binding.tf_bind", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_cmppolicy_binding.tf_bind", "policyname", "tf_cmppolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_cmppolicy_binding.tf_bind", "bindpoint", "RESPONSE"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_cmppolicy_binding.tf_bind", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_cmppolicy_binding.tf_bind", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}

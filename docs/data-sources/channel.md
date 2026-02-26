@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `channel`
+# Data Source: channel
 
 The channel data source allows you to retrieve information about Link Aggregation (LA) channels.
 

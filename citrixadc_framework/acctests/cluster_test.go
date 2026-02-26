@@ -129,16 +129,16 @@ const testAccCluster_step1 = `
 
 resource "citrixadc_cluster" "tf_cluster" {
     clid = 1
-    clip = "10.78.60.15"
+    clip = "10.101.132.151"
 	hellointerval = 200
 
     clusternode { 
         nodeid = 0
         delay = 0
         priority = 30
-        endpoint = "http://10.78.60.10"
+        endpoint = "http://10.101.132.152"
         backplane = "0/1/1"
-        ipaddress = "10.78.60.10"
+        ipaddress = "10.101.132.152"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
 
@@ -149,8 +149,8 @@ resource "citrixadc_cluster" "tf_cluster" {
         nodeid = 1
         delay = 0
         priority = 31
-        endpoint = "http://10.78.60.11"
-        ipaddress = "10.78.60.11"
+        endpoint = "http://10.101.132.153"
+        ipaddress = "10.101.132.153"
         backplane = "1/1/1"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
@@ -164,16 +164,16 @@ const testAccCluster_step2 = `
 
 resource "citrixadc_cluster" "tf_cluster" {
     clid = 1
-    clip = "10.78.60.15"
+    clip = "10.101.132.151"
 	hellointerval = 400
 
     clusternode { 
         nodeid = 0
         delay = 0
         priority = 30
-        endpoint = "http://10.78.60.10"
+        endpoint = "http://10.101.132.152"
         backplane = "0/1/1"
-        ipaddress = "10.78.60.10"
+        ipaddress = "10.101.132.152"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
 
@@ -184,8 +184,8 @@ resource "citrixadc_cluster" "tf_cluster" {
         nodeid = 1
         delay = 0
         priority = 20
-        endpoint = "http://10.78.60.11"
-        ipaddress = "10.78.60.11"
+        endpoint = "http://10.101.132.153"
+        ipaddress = "10.101.132.153"
         backplane = "1/1/1"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
@@ -199,15 +199,15 @@ const testAccCluster_step3 = `
 
 resource "citrixadc_cluster" "tf_cluster" {
     clid = 1
-    clip = "10.78.60.15"
+    clip = "10.101.132.151"
 	hellointerval = 400
 
     clusternode { 
         nodeid = 1
         delay = 0
         priority = 20
-        endpoint = "http://10.78.60.11"
-        ipaddress = "10.78.60.11"
+        endpoint = "http://10.101.132.153"
+        ipaddress = "10.101.132.153"
         backplane = "1/1/1"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
@@ -221,16 +221,16 @@ const testAccCluster_step4 = `
 
 resource "citrixadc_cluster" "tf_cluster" {
     clid = 1
-    clip = "10.78.60.15"
+    clip = "10.101.132.151"
 	hellointerval = 400
 
     clusternode { 
         nodeid = 0
         delay = 0
         priority = 30
-        endpoint = "http://10.78.60.10"
+        endpoint = "http://10.101.132.152"
         backplane = "0/1/1"
-        ipaddress = "10.78.60.10"
+        ipaddress = "10.101.132.152"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
 
@@ -241,8 +241,8 @@ resource "citrixadc_cluster" "tf_cluster" {
         nodeid = 1
         delay = 0
         priority = 31
-        endpoint = "http://10.78.60.11"
-        ipaddress = "10.78.60.11"
+        endpoint = "http://10.101.132.153"
+        ipaddress = "10.101.132.153"
         backplane = "1/1/1"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"

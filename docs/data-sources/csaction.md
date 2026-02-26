@@ -2,7 +2,7 @@
 subcategory: "Content Switching"
 ---
 
-# Data Source `csaction`
+# Data Source: csaction
 
 The csaction data source allows you to retrieve information about content switching actions.
 

@@ -2,7 +2,7 @@
 subcategory: "ICA"
 ---
 
-# Data Source `icaparameter`
+# Data Source: icaparameter
 
 The icaparameter data source allows you to retrieve information about ICA (Independent Computing Architecture) parameters configuration.
 

@@ -180,3 +180,43 @@ func testAccCheckPolicystringmap_pattern_bindingDestroy(s *terraform.State) erro
 
 	return nil
 }
+
+const testAccPolicystringmap_pattern_bindingDataSource_basic = `
+
+resource "citrixadc_policystringmap" "tf_policystringmap" {
+    name = "tf_policystringmap_datasource"
+    comment = "Some comment"
+}
+
+resource "citrixadc_policystringmap_pattern_binding" "tf_bind1" {
+    name = citrixadc_policystringmap.tf_policystringmap.name
+    key = "key1"
+    value = "value1"
+	comment = "key1-value1"
+}
+
+data "citrixadc_policystringmap_pattern_binding" "tf_bind1" {
+  name   = citrixadc_policystringmap_pattern_binding.tf_bind1.name
+  key    = citrixadc_policystringmap_pattern_binding.tf_bind1.key
+  depends_on = [citrixadc_policystringmap_pattern_binding.tf_bind1]
+}
+`
+
+func TestAccPolicystringmap_pattern_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicystringmap_pattern_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_policystringmap_pattern_binding.tf_bind1", "name", "tf_policystringmap_datasource"),
+					resource.TestCheckResourceAttr("data.citrixadc_policystringmap_pattern_binding.tf_bind1", "key", "key1"),
+					resource.TestCheckResourceAttr("data.citrixadc_policystringmap_pattern_binding.tf_bind1", "value", "value1"),
+					resource.TestCheckResourceAttr("data.citrixadc_policystringmap_pattern_binding.tf_bind1", "comment", "key1-value1"),
+				),
+			},
+		},
+	})
+}

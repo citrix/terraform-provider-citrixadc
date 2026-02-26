@@ -2,7 +2,7 @@
 subcategory: "GSLB"
 ---
 
-# Data Source `gslbparameter`
+# Data Source: gslbparameter
 
 The gslbparameter data source allows you to retrieve information about GSLB parameter configuration.
 

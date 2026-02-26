@@ -232,3 +232,57 @@ func testAccCheckAuthenticationvserver_authenticationsamlpolicy_bindingDestroy(s
 
 	return nil
 }
+
+const testAccAuthenticationvserverAuthenticationsamlpolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationsamlaction" "tf_samlaction" {
+		name                    = "tf_samlaction"
+		metadataurl             = "http://www.example.com"
+		samltwofactor           = "OFF"
+		requestedauthncontext   = "minimum"
+		digestmethod            = "SHA1"
+		signaturealg            = "RSA-SHA256"
+		metadatarefreshinterval = 1
+	}
+	resource "citrixadc_authenticationsamlpolicy" "tf_samlpolicy" {
+		name      = "tf_samlpolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationsamlaction.tf_samlaction.name
+	}
+	resource "citrixadc_authenticationvserver_authenticationsamlpolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationsamlpolicy.tf_samlpolicy.name
+		priority  = 90
+		bindpoint = "RESPONSE"
+	}
+
+	data "citrixadc_authenticationvserver_authenticationsamlpolicy_binding" "tf_bind" {
+		name   = citrixadc_authenticationvserver_authenticationsamlpolicy_binding.tf_bind.name
+		policy = citrixadc_authenticationvserver_authenticationsamlpolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_authenticationvserver_authenticationsamlpolicy_binding.tf_bind]
+	}
+`
+
+func TestAccAuthenticationvserverAuthenticationsamlpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverAuthenticationsamlpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsamlpolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsamlpolicy_binding.tf_bind", "policy", "tf_samlpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsamlpolicy_binding.tf_bind", "priority", "90"),
+				),
+			},
+		},
+	})
+}

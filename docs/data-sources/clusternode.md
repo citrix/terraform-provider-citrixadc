@@ -2,7 +2,7 @@
 subcategory: "Cluster"
 ---
 
-# Data Source: citrixadc_clusternode
+# Data Source: clusternode
 
 Use this data source to retrieve information about an existing Cluster Node.
 

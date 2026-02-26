@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nshmackey`
+# Data Source: nshmackey
 
 The nshmackey data source allows you to retrieve information about an existing HMAC key configuration.
 

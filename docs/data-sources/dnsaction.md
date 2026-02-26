@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source: citrixadc_dnsaction
+# Data Source: dnsaction
 
 This data source is used to retrieve information about an existing DNS action.
 

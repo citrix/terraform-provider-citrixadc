@@ -2,7 +2,7 @@
 subcategory: "Bot"
 ---
 
-# Data Source: citrixadc_botpolicy
+# Data Source: botpolicy
 
 Use this data source to retrieve information about an existing Bot Policy.
 

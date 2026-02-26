@@ -47,6 +47,23 @@ const testAccVpnglobal_sslcertkey_binding_basic_step2 = `
 	  
 `
 
+const testAccVpnglobal_sslcertkey_bindingDataSource_basic = `
+
+resource "citrixadc_sslcertkey" "foo" {
+	certkey = "sample_ssl_cert"
+	cert    = "/var/tmp/certificate1.crt"
+	key     = "/var/tmp/key1.pem"
+}
+resource "citrixadc_vpnglobal_sslcertkey_binding" "tf_vpnglobal_sslcertkey_binding" {
+	certkeyname = citrixadc_sslcertkey.foo.certkey
+}
+
+data "citrixadc_vpnglobal_sslcertkey_binding" "tf_vpnglobal_sslcertkey_binding" {
+	certkeyname = citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding.certkeyname
+	depends_on  = [citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding]
+}
+`
+
 func TestAccVpnglobal_sslcertkey_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheckSslceriKey(t) },
@@ -206,4 +223,19 @@ func testAccCheckVpnglobal_sslcertkey_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnglobal_sslcertkey_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheckSslceriKey(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_sslcertkey_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding", "certkeyname", "sample_ssl_cert"),
+				),
+			},
+		},
+	})
 }

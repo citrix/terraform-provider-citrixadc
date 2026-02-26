@@ -54,6 +54,36 @@ resource citrixadc_lbmonitor_metric_binding tf_acclbmonitor_metric_binding {
 	}
 `
 
+const testAccLbmonitor_metric_bindingDataSource_basic = `
+
+resource "citrixadc_lbmetrictable" "tab1" {
+	metrictable = "tab1"
+	}
+
+resource "citrixadc_lbmetrictable_metric_binding" "tf_bind" {
+	metric      = "metric1"
+	metrictable = citrixadc_lbmetrictable.tab1.metrictable
+	snmpoid     = "1.3.6.1.4.1.5951.4.1.1.8.0"
+	}
+resource "citrixadc_lbmonitor" "tfmonitor1" {
+  monitorname = "tf-monitor1"
+  type        = "LOAD"
+  metrictable = citrixadc_lbmetrictable.tab1.metrictable
+}
+
+resource citrixadc_lbmonitor_metric_binding tf_acclbmonitor_metric_binding {
+	monitorname = citrixadc_lbmonitor.tfmonitor1.monitorname
+	metric = citrixadc_lbmetrictable_metric_binding.tf_bind.metric
+	metricthreshold = 100
+	}
+
+data "citrixadc_lbmonitor_metric_binding" "tf_acclbmonitor_metric_binding" {
+	monitorname = citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding.monitorname
+	metric = citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding.metric
+	depends_on = [citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding]
+}
+`
+
 func TestAccLbmonitor_metric_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -156,4 +186,21 @@ func testAccCheckLbmonitor_metric_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLbmonitor_metric_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_metric_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "monitorname", "tf-monitor1"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "metric", "metric1"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "metricthreshold", "100"),
+				),
+			},
+		},
+	})
 }

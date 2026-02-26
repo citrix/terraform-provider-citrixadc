@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationvserver_vpnportaltheme_binding_basic = `
@@ -54,6 +55,30 @@ const testAccAuthenticationvserver_vpnportaltheme_binding_basic_step2 = `
 	resource "citrixadc_vpnportaltheme" "tf_vpnportaltheme" {
 		name      = "tf_vpnportaltheme"
 		basetheme = "X1"
+	}
+`
+
+const testAccAuthenticationvserverVpnportalthemeBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_vpnportaltheme" "tf_vpnportaltheme" {
+		name      = "tf_vpnportaltheme"
+		basetheme = "X1"
+	}
+	resource "citrixadc_authenticationvserver_vpnportaltheme_binding" "tf_bind" {
+		name = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		portaltheme = citrixadc_vpnportaltheme.tf_vpnportaltheme.name
+	}
+
+	data "citrixadc_authenticationvserver_vpnportaltheme_binding" "tf_bind" {
+		name        = citrixadc_authenticationvserver_vpnportaltheme_binding.tf_bind.name
+		portaltheme = citrixadc_authenticationvserver_vpnportaltheme_binding.tf_bind.portaltheme
+		depends_on  = [citrixadc_authenticationvserver_vpnportaltheme_binding.tf_bind]
 	}
 `
 
@@ -209,4 +234,21 @@ func testAccCheckAuthenticationvserver_vpnportaltheme_bindingDestroy(s *terrafor
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverVpnportalthemeBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverVpnportalthemeBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_vpnportaltheme_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_vpnportaltheme_binding.tf_bind", "portaltheme", "tf_vpnportaltheme"),
+				),
+			},
+		},
+	})
 }

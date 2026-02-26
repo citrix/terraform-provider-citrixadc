@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaauser_auditnslogpolicy_binding_basic = `
@@ -29,6 +30,7 @@ const testAccAaauser_auditnslogpolicy_binding_basic = `
 	resource "citrixadc_aaauser_auditnslogpolicy_binding" "tf_aaauser_auditnslogpolicy_binding" {
 		username = citrixadc_aaauser.tf_aaauser.username
 		policy   = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+		type     = "REQUEST"
 		priority = 150
 	}
 	resource "citrixadc_aaauser" "tf_aaauser" {
@@ -66,6 +68,36 @@ const testAccAaauser_auditnslogpolicy_binding_basic_step2 = `
 	}
 `
 
+const testAccAaauser_auditnslogpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_aaauser_auditnslogpolicy_binding" "tf_aaauser_auditnslogpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy   = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+		type     = "REQUEST"
+		priority = 150
+	}
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+
+	data "citrixadc_aaauser_auditnslogpolicy_binding" "tf_aaauser_auditnslogpolicy_binding" {
+		username = citrixadc_aaauser_auditnslogpolicy_binding.tf_aaauser_auditnslogpolicy_binding.username
+		policy   = citrixadc_aaauser_auditnslogpolicy_binding.tf_aaauser_auditnslogpolicy_binding.policy
+		depends_on = [citrixadc_aaauser_auditnslogpolicy_binding.tf_aaauser_auditnslogpolicy_binding]
+	}
+`
+
 func TestAccAaauser_auditnslogpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -82,6 +114,24 @@ func TestAccAaauser_auditnslogpolicy_binding_basic(t *testing.T) {
 				Config: testAccAaauser_auditnslogpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaauser_auditnslogpolicy_bindingNotExist("citrixadc_aaauser_auditnslogpolicy_binding.tf_aaauser_auditnslogpolicy_binding", "user1,tf_auditnslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaauser_auditnslogpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_auditnslogpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_auditnslogpolicy_binding.tf_aaauser_auditnslogpolicy_binding", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_auditnslogpolicy_binding.tf_aaauser_auditnslogpolicy_binding", "policy", "my_auditnslogpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_auditnslogpolicy_binding.tf_aaauser_auditnslogpolicy_binding", "priority", "150"),
 				),
 			},
 		},

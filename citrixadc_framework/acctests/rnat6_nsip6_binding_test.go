@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccRnat6_nsip6_binding_basic = `
@@ -210,4 +211,47 @@ func testAccCheckRnat6_nsip6_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccRnat6_nsip6_bindingDataSource_basic = `
+
+	resource "citrixadc_rnat6" "tf_rnat6" {
+		name             = "my_rnat6"
+		network          = "2003::/64"
+		srcippersistency = "ENABLED"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2001:db8:85a3::8a2e:370:7334/64"
+		type = "VIP"
+	}
+
+	resource "citrixadc_rnat6_nsip6_binding" "tf_rnat6_nsip6_binding" {
+		name 	= citrixadc_rnat6.tf_rnat6.name
+		natip6 	= "2001:db8:85a3::8a2e:370:7334"
+		depends_on = [
+			citrixadc_nsip6.tf_nsip6
+		]
+	}
+
+	data "citrixadc_rnat6_nsip6_binding" "tf_rnat6_nsip6_binding" {
+		name = citrixadc_rnat6.tf_rnat6.name
+		natip6 = "2001:db8:85a3::8a2e:370:7334"
+		depends_on = [citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding]
+	}
+`
+
+func TestAccRnat6_nsip6_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRnat6_nsip6_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "name", "my_rnat6"),
+					resource.TestCheckResourceAttr("data.citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "natip6", "2001:db8:85a3::8a2e:370:7334"),
+				),
+			},
+		},
+	})
 }

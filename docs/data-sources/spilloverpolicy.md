@@ -2,7 +2,7 @@
 subcategory: "Spillover"
 ---
 
-# Data Source `spilloverpolicy`
+# Data Source: spilloverpolicy
 
 The spilloverpolicy data source allows you to retrieve information about a spillover policy.
 

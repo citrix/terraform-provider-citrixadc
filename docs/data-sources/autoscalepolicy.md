@@ -2,7 +2,7 @@
 subcategory: "Autoscale"
 ---
 
-# Data Source `autoscalepolicy`
+# Data Source: autoscalepolicy
 
 The autoscalepolicy data source allows you to retrieve information about autoscale policies.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationvserver_responderpolicy_binding_basic = `
@@ -213,4 +214,49 @@ func testAccCheckAuthenticationvserver_responderpolicy_bindingDestroy(s *terrafo
 	}
 
 	return nil
+}
+
+const testAccAuthenticationvserverResponderpolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_responderpolicy" "tf_responder_policy" {
+		name   = "tf_responder_policy"
+		action = "NOOP"
+		rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+	}
+	resource "citrixadc_authenticationvserver_responderpolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_responderpolicy.tf_responder_policy.name
+		priority  = 200
+		bindpoint = "REQUEST"
+	}
+
+	data "citrixadc_authenticationvserver_responderpolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver_responderpolicy_binding.tf_bind.name
+		policy    = citrixadc_authenticationvserver_responderpolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_authenticationvserver_responderpolicy_binding.tf_bind]
+	}
+`
+
+func TestAccAuthenticationvserverResponderpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverResponderpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_responderpolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_responderpolicy_binding.tf_bind", "policy", "tf_responder_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_responderpolicy_binding.tf_bind", "priority", "200"),
+				),
+			},
+		},
+	})
 }

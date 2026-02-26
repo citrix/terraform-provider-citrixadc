@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source: citrixadc_ssldtlsprofile
+# Data Source: ssldtlsprofile
 
 The ssldtlsprofile data source allows you to retrieve information about a DTLS profile.
 

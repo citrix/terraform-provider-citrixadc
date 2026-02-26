@@ -224,3 +224,43 @@ func testAccCheckSslprofile_sslcertkey_bindingDestroy(s *terraform.State) error 
 
 	return nil
 }
+
+const testAccSslprofile_sslcertkey_bindingDataSource_basic = `
+resource "citrixadc_sslprofile" "tfUnit_sslprofile-hello" {
+	name = "tfUnit_sslprofile-hello"
+	ecccurvebindings = ["P_256"]
+	sslinterception = "ENABLED"
+}
+
+resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+	certkey = "tf_sslcertkey"
+	cert = "/nsconfig/ssl/ns-root.cert"
+	key = "/nsconfig/ssl/ns-root.key"
+}
+
+resource "citrixadc_sslprofile_sslcertkey_binding" "demo_sslprofile_sslcertkey_binding" {
+	name = citrixadc_sslprofile.tfUnit_sslprofile-hello.name
+	sslicacertkey = citrixadc_sslcertkey.tf_sslcertkey.certkey
+}
+
+data "citrixadc_sslprofile_sslcertkey_binding" "demo_sslprofile_sslcertkey_binding" {
+	name = citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding.name
+	sslicacertkey = citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding.sslicacertkey
+}
+`
+
+func TestAccSslprofile_sslcertkey_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_sslcertkey_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding", "name", "tfUnit_sslprofile-hello"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding", "sslicacertkey", "tf_sslcertkey"),
+				),
+			},
+		},
+	})
+}

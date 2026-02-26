@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationoauthidppolicy`
+# Data Source: authenticationoauthidppolicy
 
 The authenticationoauthidppolicy data source allows you to retrieve information about authentication OAuth Identity Provider (IdP) policies.
 

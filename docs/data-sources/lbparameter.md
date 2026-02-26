@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source: citrixadc_lbparameter
+# Data Source: lbparameter
 
 The `citrixadc_lbparameter` data source is used to retrieve the load balancing parameters configuration.
 

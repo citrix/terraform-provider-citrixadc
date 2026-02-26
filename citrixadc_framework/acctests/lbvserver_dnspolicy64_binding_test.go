@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLbvserver_dnspolicy64_binding_basic = `
@@ -57,6 +58,33 @@ const testAccLbvserver_dnspolicy64_binding_basic_step2 = `
 		ipv46       = "10.10.10.33"
 		port        = 80
 		servicetype = "DNS_TCP"
+	}
+`
+
+const testAccLbvserver_dnspolicy64_bindingDataSource_basic = `
+
+	resource "citrixadc_dnspolicy64" "dnspolicy64" {
+		name  = "tf_dnspolicy64"
+		rule = "dns.req.question.type.ne(aaaa)"
+		action = "default_DNS64_action"
+	}
+	resource "citrixadc_lbvserver_dnspolicy64_binding" "tf_lbvserver_dnspolicy64_binding" {
+        name = citrixadc_lbvserver.tf_lbvserver.name
+        policyname = citrixadc_dnspolicy64.dnspolicy64.name
+        priority = 1
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "DNS_TCP"
+	}
+
+	data "citrixadc_lbvserver_dnspolicy64_binding" "tf_lbvserver_dnspolicy64_binding" {
+		name = "tf_lbvserver"
+		policyname = "tf_dnspolicy64"
+		depends_on = [citrixadc_lbvserver_dnspolicy64_binding.tf_lbvserver_dnspolicy64_binding]
 	}
 `
 
@@ -212,4 +240,21 @@ func testAccCheckLbvserver_dnspolicy64_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+func TestAccLbvserver_dnspolicy64_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_dnspolicy64_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_dnspolicy64_binding.tf_lbvserver_dnspolicy64_binding", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_dnspolicy64_binding.tf_lbvserver_dnspolicy64_binding", "policyname", "tf_dnspolicy64"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_dnspolicy64_binding.tf_lbvserver_dnspolicy64_binding", "priority", "1"),
+				),
+			},
+		},
+	})
 }

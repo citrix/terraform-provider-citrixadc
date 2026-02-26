@@ -2,7 +2,7 @@
 subcategory: "Responder"
 ---
 
-# Data Source: citrixadc_responderpolicylabel
+# Data Source: responderpolicylabel
 
 The `citrixadc_responderpolicylabel` data source is used to retrieve information about an existing responder policy label configured on the Citrix ADC.
 

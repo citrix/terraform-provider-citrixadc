@@ -2,7 +2,7 @@
 subcategory: "Basic"
 ---
 
-# Data Source: citrixadc_locationfile6
+# Data Source: locationfile6
 
 The citrixadc_locationfile6 data source allows you to retrieve information about the IPv6 location file configuration.
 

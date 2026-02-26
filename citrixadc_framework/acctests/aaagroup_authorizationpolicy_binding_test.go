@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaagroup_authorizationpolicy_binding_basic = `
@@ -29,6 +30,7 @@ const testAccAaagroup_authorizationpolicy_binding_basic = `
 	resource "citrixadc_aaagroup_authorizationpolicy_binding" "tf_aaagroup_authorizationpolicy_binding" {
 		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
 		policy   = citrixadc_authorizationpolicy.tf_authorize.name
+		type     = "REQUEST"
 		priority = 100
 	}
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
@@ -56,6 +58,32 @@ const testAccAaagroup_authorizationpolicy_binding_basic_step2 = `
 	}
 `
 
+const testAccAaagroupAuthorizationpolicyBindingDataSource_basic = `
+
+	resource "citrixadc_aaagroup_authorizationpolicy_binding" "tf_aaagroup_authorizationpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy   = citrixadc_authorizationpolicy.tf_authorize.name
+		type     = "REQUEST"
+		priority = 100
+	}
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_authorizationpolicy" "tf_authorize" {
+		name   = "tp-authorize-1"
+		rule   = "true"
+		action = "ALLOW"
+	}
+
+	data "citrixadc_aaagroup_authorizationpolicy_binding" "tf_aaagroup_authorizationpolicy_binding" {
+		groupname = citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding.groupname
+		policy    = citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding.policy
+		depends_on = [citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding]
+	}
+`
+
 func TestAccAaagroup_authorizationpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -72,6 +100,24 @@ func TestAccAaagroup_authorizationpolicy_binding_basic(t *testing.T) {
 				Config: testAccAaagroup_authorizationpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaagroup_authorizationpolicy_bindingNotExist("citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding", "my_group,tp-authorize-1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaagroupAuthorizationpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroupAuthorizationpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding", "policy", "tp-authorize-1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding", "priority", "100"),
 				),
 			},
 		},

@@ -2,7 +2,7 @@
 subcategory: "PCP"
 ---
 
-# Data Source: citrixadc_pcpserver
+# Data Source: pcpserver
 
 The pcpserver data source allows you to retrieve information about a PCP server configuration.
 

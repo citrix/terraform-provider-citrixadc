@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNetprofile_srcportset_binding_basic = `
@@ -197,4 +198,38 @@ func testAccCheckNetprofile_srcportset_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+const testAccNetprofile_srcportset_bindingDataSource_basic = `
+	resource "citrixadc_netprofile" "tf_netprofile" {
+		name                   = "tf_netprofile"
+		proxyprotocol          = "ENABLED"
+		proxyprotocoltxversion = "V1"
+	}
+	resource "citrixadc_netprofile_srcportset_binding" "tf_binding" {
+		name         = citrixadc_netprofile.tf_netprofile.name
+		srcportrange = "2000"
+	}
+
+	data "citrixadc_netprofile_srcportset_binding" "tf_binding" {
+		name         = citrixadc_netprofile_srcportset_binding.tf_binding.name
+		srcportrange = citrixadc_netprofile_srcportset_binding.tf_binding.srcportrange
+		depends_on   = [citrixadc_netprofile_srcportset_binding.tf_binding]
+	}
+`
+
+func TestAccNetprofile_srcportset_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetprofile_srcportset_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_netprofile_srcportset_binding.tf_binding", "name", "tf_netprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_netprofile_srcportset_binding.tf_binding", "srcportrange", "2000"),
+				),
+			},
+		},
+	})
 }

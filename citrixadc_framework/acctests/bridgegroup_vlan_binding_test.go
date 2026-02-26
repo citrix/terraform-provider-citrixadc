@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccBridgegroup_vlan_binding_basic = `
@@ -207,4 +208,42 @@ func testAccCheckBridgegroup_vlan_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccBridgegroup_vlan_bindingDataSource_basic = `
+	resource "citrixadc_bridgegroup" "tf_bridgegroup" {
+		bridgegroup_id     = 2
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_bridgegroup_vlan_binding" "tf_binding" {
+		bridgegroup_id = citrixadc_bridgegroup.tf_bridgegroup.bridgegroup_id
+		vlan           = citrixadc_vlan.tf_vlan.vlanid
+	}
+
+	data "citrixadc_bridgegroup_vlan_binding" "tf_binding" {
+		bridgegroup_id = citrixadc_bridgegroup_vlan_binding.tf_binding.bridgegroup_id
+		vlan           = citrixadc_bridgegroup_vlan_binding.tf_binding.vlan
+		depends_on     = [citrixadc_bridgegroup_vlan_binding.tf_binding]
+	}
+`
+
+func TestAccbridgegroup_vlan_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBridgegroup_vlan_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_bridgegroup_vlan_binding.tf_binding", "bridgegroup_id", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_bridgegroup_vlan_binding.tf_binding", "vlan", "20"),
+				),
+			},
+		},
+	})
 }

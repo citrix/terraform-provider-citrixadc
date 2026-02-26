@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_auditnslogpolicy_binding_basic = `
@@ -68,6 +69,38 @@ const testAccCsvserver_auditnslogpolicy_binding_basic_step2 = `
 		ipv46 		= "10.202.11.11"
 		port 		= 8080
 		servicetype = "HTTP"
+	}
+`
+
+const testAccCsvserver_auditnslogpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+
+	resource "citrixadc_csvserver_auditnslogpolicy_binding" "tf_csvserver_auditnslogpolicy_binding" {
+        name 		= citrixadc_csvserver.tf_csvserver.name
+        policyname 	= citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+        priority 	= 5
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
+		servicetype = "HTTP"
+	}
+
+	data "citrixadc_csvserver_auditnslogpolicy_binding" "tf_csvserver_auditnslogpolicy_binding" {
+		name       = citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding.name
+		policyname = citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding.policyname
 	}
 `
 
@@ -223,4 +256,22 @@ func testAccCheckCsvserver_auditnslogpolicy_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+func TestAccCsvserver_auditnslogpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_auditnslogpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding", "policyname", "tf_auditnslogpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding", "priority", "5"),
+				),
+			},
+		},
+	})
 }

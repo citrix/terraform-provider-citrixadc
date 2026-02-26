@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `nstimeout`
+# Data Source: nstimeout
 
 The nstimeout data source allows you to retrieve information about global timeout settings configured on the Citrix ADC.
 

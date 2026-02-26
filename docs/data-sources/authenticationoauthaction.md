@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationoauthaction`
+# Data Source: authenticationoauthaction
 
 The authenticationoauthaction data source allows you to retrieve information about OAuth authentication actions configured on Citrix ADC.
 

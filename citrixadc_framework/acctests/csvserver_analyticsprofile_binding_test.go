@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_analyticsprofile_binding_basic = `
@@ -44,6 +45,25 @@ const testAccCsvserver_analyticsprofile_binding_basic_step2 = `
 		ipv46 = "1.1.1.2"
 		port = 80
 		servicetype = "HTTP"
+	}
+`
+
+const testAccCsvserver_analyticsprofile_bindingDataSource_basic = `
+	resource "citrixadc_csvserver_analyticsprofile_binding" "tf_csvserver_analyticsprofile_binding" {
+        name = citrixadc_csvserver.tf_csvserver.name
+		analyticsprofile = "ns_analytics_global_profile"
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name = "tf_csvserver"
+		ipv46 = "1.1.1.2"
+		port = 80
+		servicetype = "HTTP"
+	}
+
+	data "citrixadc_csvserver_analyticsprofile_binding" "tf_csvserver_analyticsprofile_binding" {
+		name = citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding.name
+		analyticsprofile = citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding.analyticsprofile
 	}
 `
 
@@ -199,4 +219,20 @@ func testAccCheckCsvserver_analyticsprofile_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+func TestAccCsvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_analyticsprofile_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding", "analyticsprofile", "ns_analytics_global_profile"),
+				),
+			},
+		},
+	})
 }

@@ -233,3 +233,48 @@ func testAccCheckAppfwprofile_creditcardnumber_bindingDestroy(s *terraform.State
 
 	return nil
 }
+
+const testAccAppfwprofile_creditcardnumber_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_creditcardnumber_binding" "tf_binding1" {
+		name                = citrixadc_appfwprofile.tf_appfwprofile.name
+		creditcardnumber    = "123456789"
+		creditcardnumberurl = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		isautodeployed      = "AUTODEPLOYED"
+		alertonly           = "ON"
+		state               = "ENABLED"
+		comment             = "Testing"
+	}
+
+	data "citrixadc_appfwprofile_creditcardnumber_binding" "tf_binding1_datasource" {
+		name                = citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1.name
+		creditcardnumber    = citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1.creditcardnumber
+		creditcardnumberurl = citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1.creditcardnumberurl
+		depends_on          = [citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1]
+	}
+`
+
+func TestAccAppfwprofile_creditcardnumber_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_creditcardnumber_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1_datasource", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1_datasource", "creditcardnumber", "123456789"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1_datasource", "creditcardnumberurl", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1_datasource", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1_datasource", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1_datasource", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1_datasource", "comment", "Testing"),
+				),
+			},
+		},
+	})
+}

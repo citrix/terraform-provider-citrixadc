@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsnappsprofile_port_binding_basic = `
@@ -190,4 +191,40 @@ func testAccCheckLsnappsprofile_port_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnappsprofile_port_bindingDataSource_basic = `
+
+	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
+		appsprofilename   = "my_lsn_appsprofile"
+		transportprotocol = "TCP"
+		mapping           = "ENDPOINT-INDEPENDENT"
+	}
+
+resource "citrixadc_lsnappsprofile_port_binding" "tf_lsnappsprofile_port_binding" {
+	appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+	lsnport         = "80"
+}
+
+data "citrixadc_lsnappsprofile_port_binding" "tf_lsnappsprofile_port_binding" {
+	appsprofilename = citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding.appsprofilename
+	lsnport         = citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding.lsnport
+}
+`
+
+func TestAccLsnappsprofile_port_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnappsprofile_port_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding", "appsprofilename", "my_lsn_appsprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding", "lsnport", "80"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding", "id"),
+				),
+			},
+		},
+	})
 }

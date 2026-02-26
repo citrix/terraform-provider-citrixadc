@@ -276,3 +276,73 @@ func testAccCheckAppfwprofile_jsonxssurl_bindingDestroy(s *terraform.State) erro
 
 	return nil
 }
+
+const testAccAppfwprofileJsonxssurlBindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_jsonxssurl_binding" "tf_binding" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		jsonxssurl     = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		alertonly      = "OFF"
+		state          = "ENABLED"
+		isautodeployed = "NOTAUTODEPLOYED"
+		comment        = "Testing"
+	}
+	resource "citrixadc_appfwprofile_jsonxssurl_binding" "tf_binding2" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		jsonxssurl     = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		alertonly      = "OFF"
+		state          = "ENABLED"
+		keyname_json_xss = "id"
+		as_value_type_json_xss = "Pattern"
+		as_value_expr_json_xss = "br2"
+		isautodeployed = "NOTAUTODEPLOYED"
+		comment        = "Testing"
+	}
+
+	data "citrixadc_appfwprofile_jsonxssurl_binding" "tf_binding_data" {
+		name       = citrixadc_appfwprofile_jsonxssurl_binding.tf_binding.name
+		jsonxssurl = citrixadc_appfwprofile_jsonxssurl_binding.tf_binding.jsonxssurl
+		depends_on = [citrixadc_appfwprofile_jsonxssurl_binding.tf_binding]
+	}
+
+	data "citrixadc_appfwprofile_jsonxssurl_binding" "tf_binding2_data" {
+		name                   = citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2.name
+		jsonxssurl             = citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2.jsonxssurl
+		keyname_json_xss       = citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2.keyname_json_xss
+		as_value_type_json_xss = citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2.as_value_type_json_xss
+		as_value_expr_json_xss = citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2.as_value_expr_json_xss
+		depends_on             = [citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2]
+	}
+`
+
+func TestAccAppfwprofileJsonxssurlBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileJsonxssurlBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding_data", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding_data", "jsonxssurl", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding_data", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding_data", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding_data", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding_data", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2_data", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2_data", "jsonxssurl", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2_data", "keyname_json_xss", "id"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2_data", "as_value_type_json_xss", "Pattern"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2_data", "as_value_expr_json_xss", "br2"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2_data", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2_data", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2_data", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonxssurl_binding.tf_binding2_data", "comment", "Testing"),
+				),
+			},
+		},
+	})
+}

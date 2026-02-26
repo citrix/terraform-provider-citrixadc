@@ -28,15 +28,15 @@ import (
 const testAccSslvserver_sslcertkey_binding_lb_step1 = `
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
   certkey = "tf_sslcertkey"
-  cert = "/var/tmp/certificate2.crt"
-  key = "/var/tmp/key2.pem"
+  cert = "/nsconfig/ssl/servercert1.cert"
+  key = "/nsconfig/ssl/servercert1.key"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
 
 resource "citrixadc_sslcertkey" "tf_cacertkey" {
   certkey = "tf_cacertkey"
-  cert = "/var/tmp/ca.crt"
+  cert = "/nsconfig/ssl/rootcert1.cert"
 }
 
 resource "citrixadc_lbvserver" "tf_lbvserver" {
@@ -58,15 +58,15 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 const testAccSslvserver_sslcertkey_binding_lb_step2 = `
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
   certkey = "tf_sslcertkey"
-  cert = "/var/tmp/certificate2.crt"
-  key = "/var/tmp/key2.pem"
+  cert = "/nsconfig/ssl/servercert1.cert"
+  key = "/nsconfig/ssl/servercert1.key"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
 
 resource "citrixadc_sslcertkey" "tf_cacertkey" {
   certkey = "tf_cacertkey"
-  cert = "/var/tmp/ca.crt"
+  cert = "/nsconfig/ssl/rootcert1.cert"
 }
 
 resource "citrixadc_lbvserver" "tf_lbvserver" {
@@ -88,15 +88,15 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 const testAccSslvserver_sslcertkey_binding_lb_step3 = `
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
   certkey = "tf_sslcertkey"
-  cert = "/var/tmp/certificate2.crt"
-  key = "/var/tmp/key2.pem"
+  cert = "/nsconfig/ssl/servercert1.cert"
+  key = "/nsconfig/ssl/servercert1.key"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
 
 resource "citrixadc_sslcertkey" "tf_cacertkey" {
   certkey = "tf_cacertkey"
-  cert = "/var/tmp/ca.crt"
+  cert = "/nsconfig/ssl/rootcert1.cert"
 }
 
 resource "citrixadc_lbvserver" "tf_lbvserver" {
@@ -118,15 +118,15 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 const testAccSslvserver_sslcertkey_binding_cs_step1 = `
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
   certkey = "tf_sslcertkey"
-  cert = "/var/tmp/certificate2.crt"
-  key = "/var/tmp/key2.pem"
+  cert = "/nsconfig/ssl/servercert1.cert"
+  key = "/nsconfig/ssl/servercert1.key"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
 
 resource "citrixadc_sslcertkey" "tf_cacertkey" {
   certkey = "tf_cacertkey"
-  cert = "/var/tmp/ca.crt"
+  cert = "/nsconfig/ssl/rootcert1.cert"
 }
 
 
@@ -149,15 +149,15 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 const testAccSslvserver_sslcertkey_binding_cs_step2 = `
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
   certkey = "tf_sslcertkey"
-  cert = "/var/tmp/certificate2.crt"
-  key = "/var/tmp/key2.pem"
+  cert = "/nsconfig/ssl/servercert1.cert"
+  key = "/nsconfig/ssl/servercert1.key"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
 
 resource "citrixadc_sslcertkey" "tf_cacertkey" {
   certkey = "tf_cacertkey"
-  cert = "/var/tmp/ca.crt"
+  cert = "/nsconfig/ssl/rootcert1.cert"
 }
 
 
@@ -178,15 +178,15 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 const testAccSslvserver_sslcertkey_binding_cs_step3 = `
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
   certkey = "tf_sslcertkey"
-  cert = "/var/tmp/certificate2.crt"
-  key = "/var/tmp/key2.pem"
+  cert = "/nsconfig/ssl/servercert1.cert"
+  key = "/nsconfig/ssl/servercert1.key"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
 
 resource "citrixadc_sslcertkey" "tf_cacertkey" {
   certkey = "tf_cacertkey"
-  cert = "/var/tmp/ca.crt"
+  cert = "/nsconfig/ssl/rootcert1.cert"
 }
 
 
@@ -207,7 +207,7 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 
 func TestAccSslvserver_sslcertkey_binding_lb(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslvserver_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
@@ -242,7 +242,7 @@ func TestAccSslvserver_sslcertkey_binding_lb(t *testing.T) {
 
 func TestAccSslvserver_sslcertkey_binding_cs(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslvserver_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
@@ -367,4 +367,54 @@ func testAccCheckSslvserver_sslcertkey_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+const testAccSslvserver_sslcertkey_bindingDataSource_basic = `
+resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+  certkey = "tf_sslcertkey"
+  cert = "/nsconfig/ssl/servercert1.cert"
+  key = "/nsconfig/ssl/servercert1.key"
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  ipv46       = "10.10.10.44"
+  name        = "tf_lbvserver"
+  port        = 443
+  servicetype = "SSL"
+  sslprofile  = "ns_default_ssl_profile_frontend"
+}
+
+resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
+    vservername = citrixadc_lbvserver.tf_lbvserver.name
+	certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
+	snicert = false
+	ca = false
+}
+
+data "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
+	vservername = citrixadc_sslvserver_sslcertkey_binding.tf_binding.vservername
+	certkeyname = citrixadc_sslvserver_sslcertkey_binding.tf_binding.certkeyname
+	ca          = citrixadc_sslvserver_sslcertkey_binding.tf_binding.ca
+	snicert     = citrixadc_sslvserver_sslcertkey_binding.tf_binding.snicert
+	depends_on  = [citrixadc_sslvserver_sslcertkey_binding.tf_binding]
+}
+`
+
+func TestAccSslvserver_sslcertkey_bindingDataSource(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_sslcertkey_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslcertkey_binding.tf_binding", "vservername", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslcertkey_binding.tf_binding", "certkeyname", "tf_sslcertkey"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslcertkey_binding.tf_binding", "ca", "false"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslcertkey_binding.tf_binding", "snicert", "false"),
+				),
+			},
+		},
+	})
 }

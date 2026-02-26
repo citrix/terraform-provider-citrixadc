@@ -234,3 +234,68 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingDestroy(s *terraform.State)
 
 	return nil
 }
+
+const testAccAppfwprofileXmlsqlinjectionBindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding1" {
+		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmlsqlinjection         = "hello"
+		alertonly               = "ON"
+		isautodeployed          = "AUTODEPLOYED"
+		state                   = "ENABLED"
+		comment                 = "Testing"
+	}
+	resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding2" {
+		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmlsqlinjection         = "world"
+		alertonly               = "ON"
+		isautodeployed          = "AUTODEPLOYED"
+		state                   = "ENABLED"
+		comment                 = "Testing"
+	}
+
+	data "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding1_data" {
+		name                     = citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1.name
+		xmlsqlinjection          = citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1.xmlsqlinjection
+		as_scan_location_xmlsql  = "ELEMENT"
+		depends_on               = [citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1]
+	}
+
+	data "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding2_data" {
+		name                     = citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2.name
+		xmlsqlinjection          = citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2.xmlsqlinjection
+		as_scan_location_xmlsql  = "ELEMENT"
+		depends_on               = [citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2]
+	}
+`
+
+func TestAccAppfwprofileXmlsqlinjectionBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileXmlsqlinjectionBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1_data", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1_data", "xmlsqlinjection", "hello"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1_data", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1_data", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1_data", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1_data", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1_data", "as_scan_location_xmlsql", "ELEMENT"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2_data", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2_data", "xmlsqlinjection", "world"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2_data", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2_data", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2_data", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2_data", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2_data", "as_scan_location_xmlsql", "ELEMENT"),
+				),
+			},
+		},
+	})
+}

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"net/url"
-	"testing"
 )
 
 const testAccCmpglobal_cmppolicy_binding_basic = `
@@ -191,4 +192,43 @@ func testAccCheckCmpglobal_cmppolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCmpglobal_cmppolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_cmppolicy" "tf_cmppolicy" {
+		name      = "tf_cmppolicy_ds"
+		rule      = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"
+		resaction = "COMPRESS"
+	}
+
+	resource "citrixadc_cmpglobal_cmppolicy_binding" "tf_cmpglobal_cmppolicy_binding" {
+		policyname = citrixadc_cmppolicy.tf_cmppolicy.name
+		priority   = 100
+		type       = "RES_OVERRIDE"
+	}
+
+	data "citrixadc_cmpglobal_cmppolicy_binding" "tf_cmpglobal_cmppolicy_binding" {
+		policyname = citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding.policyname
+		type       = citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding.type
+		depends_on = [citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding]
+	}
+`
+
+func TestAcccmpglobal_cmppolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmpglobal_cmppolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "policyname", "tf_cmppolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "type", "RES_OVERRIDE"),
+				),
+			},
+		},
+	})
 }

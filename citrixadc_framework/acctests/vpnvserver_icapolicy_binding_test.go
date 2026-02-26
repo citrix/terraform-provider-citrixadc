@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_icapolicy_binding_basic = `
@@ -222,3 +223,52 @@ func testAccCheckVpnvserver_icapolicy_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccVpnvserver_icapolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_icapolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_icapolicy_binding.tf_binding", "name", "tf_vpnvserverexample"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_icapolicy_binding.tf_binding", "policy", "tf_icapolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_icapolicy_binding.tf_binding", "priority", "30"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_icapolicy_binding.tf_binding", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnvserver_icapolicy_bindingDataSource_basic = `
+
+resource "citrixadc_icaaction" "tf_icaaction" {
+	name              = "tf_icaaction"
+	accessprofilename = "default_ica_accessprofile"
+}
+resource "citrixadc_icapolicy" "tf_icapolicy" {
+	name   = "tf_icapolicy"
+	rule   = true
+	action = citrixadc_icaaction.tf_icaaction.name
+}
+resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+	name        = "tf_vpnvserverexample"
+	servicetype = "SSL"
+	ipv46       = "3.3.3.3"
+	port        = 443
+}
+resource "citrixadc_vpnvserver_icapolicy_binding" "tf_binding" {
+	name      = citrixadc_vpnvserver.tf_vpnvserver.name
+	policy    = citrixadc_icapolicy.tf_icapolicy.name
+	priority  = 30
+	bindpoint = "AAA_RESPONSE"
+}
+
+data "citrixadc_vpnvserver_icapolicy_binding" "tf_binding" {
+	name   = citrixadc_vpnvserver_icapolicy_binding.tf_binding.name
+	policy = citrixadc_vpnvserver_icapolicy_binding.tf_binding.policy
+	depends_on = [citrixadc_vpnvserver_icapolicy_binding.tf_binding]
+}
+`

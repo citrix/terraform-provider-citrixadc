@@ -186,3 +186,53 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingDestroy(s *terraform.Sta
 
 	return nil
 }
+
+const testAccAppfwprofile_crosssitescripting_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_crosssitescripting_binding" "tf_binding1" {
+		name                 = citrixadc_appfwprofile.tf_appfwprofile.name
+		crosssitescripting   = "file"
+		isregex_xss          = "NOTREGEX"
+		formactionurl_xss    = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		as_scan_location_xss = "FORMFIELD"
+		as_value_type_xss    = "Tag"
+		isvalueregex_xss     = "REGEX"
+		as_value_expr_xss    = ".*"
+		state                = "ENABLED"
+	}
+
+	data "citrixadc_appfwprofile_crosssitescripting_binding" "tf_binding1" {
+		name                 = citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1.name
+		crosssitescripting   = citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1.crosssitescripting
+		formactionurl_xss    = citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1.formactionurl_xss
+		as_scan_location_xss = citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1.as_scan_location_xss
+		as_value_type_xss    = citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1.as_value_type_xss
+		as_value_expr_xss    = citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1.as_value_expr_xss
+	}
+`
+
+func TestAccAppfwprofile_crosssitescripting_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_crosssitescripting_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "crosssitescripting", "file"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "formactionurl_xss", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "as_scan_location_xss", "FORMFIELD"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "as_value_type_xss", "Tag"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "as_value_expr_xss", ".*"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "isregex_xss", "NOTREGEX"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "isvalueregex_xss", "REGEX"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}

@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationpolicylabel`
+# Data Source: authenticationpolicylabel
 
 The authenticationpolicylabel data source allows you to retrieve information about authentication policy labels.
 

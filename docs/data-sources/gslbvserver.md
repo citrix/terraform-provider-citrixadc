@@ -2,7 +2,7 @@
 subcategory: "GSLB"
 ---
 
-# Data Source `gslbvserver`
+# Data Source: gslbvserver
 
 The gslbvserver data source allows you to retrieve information about GSLB virtual servers.
 

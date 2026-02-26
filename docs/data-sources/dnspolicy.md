@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source: citrixadc_dnspolicy
+# Data Source: dnspolicy
 
 This data source is used to retrieve information about an existing DNS policy.
 

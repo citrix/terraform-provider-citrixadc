@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source: citrixadc_appfwhtmlerrorpage
+# Data Source: appfwhtmlerrorpage
 
 The appfwhtmlerrorpage data source allows you to retrieve information about an Application Firewall HTML error page.
 

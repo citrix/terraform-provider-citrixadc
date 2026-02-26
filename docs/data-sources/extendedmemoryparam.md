@@ -2,7 +2,7 @@
 subcategory: "System"
 ---
 
-# Data Source `extendedmemoryparam`
+# Data Source: extendedmemoryparam
 
 The extendedmemoryparam data source allows you to retrieve information about the extended memory parameters configuration.
 

@@ -26,31 +26,34 @@ import (
 )
 
 const testAccHanode_routemonitor_binding_basic = `
-	resource "citrixadc_hanode" "tf_ha" {
-		hanode_id = 3          
-		ipaddress = "10.222.74.151"
-	}
 
 	resource "citrixadc_hanode_routemonitor_binding" "tf_hanode_routemonitor_binding" {
 		hanode_id = 0
 		routemonitor = "10.222.74.128"
 		netmask = "255.255.255.192"
-		depends_on = [
-			citrixadc_hanode.tf_ha
-		]
 	}
 `
 
 const testAccHanode_routemonitor_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
-	resource "citrixadc_hanode" "tf_ha" {
-		hanode_id = 3          
-		ipaddress = "10.222.74.151"
+`
+
+const testAccHanode_routemonitor_bindingDataSource_basic = `
+	resource "citrixadc_hanode_routemonitor_binding" "tf_hanode_routemonitor_binding" {
+		hanode_id = 0
+		routemonitor = "10.222.74.128"
+		netmask = "255.255.255.192"
+	}
+
+	data "citrixadc_hanode_routemonitor_binding" "tf_hanode_routemonitor_binding" {
+		hanode_id = citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding.hanode_id
+		routemonitor = citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding.routemonitor
+		netmask = citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding.netmask
+		depends_on = [citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding]
 	}
 `
 
 func TestAccHanode_routemonitor_binding_basic(t *testing.T) {
-	if adcTestbed != "HA" {
+	if adcTestbed != "HA_PAIR" {
 		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
@@ -204,4 +207,24 @@ func testAccCheckHanode_routemonitor_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccHanode_routemonitor_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHanode_routemonitor_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "hanode_id", "0"),
+					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "routemonitor", "10.222.74.128"),
+					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "netmask", "255.255.255.192"),
+				),
+			},
+		},
+	})
 }

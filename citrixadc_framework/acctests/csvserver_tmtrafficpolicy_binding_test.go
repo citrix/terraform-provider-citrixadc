@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_tmtrafficpolicy_binding_basic = `
@@ -225,3 +226,53 @@ func testAccCheckCsvserver_tmtrafficpolicy_bindingDestroy(s *terraform.State) er
 
 	return nil
 }
+
+func TestAccCsvserver_tmtrafficpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_tmtrafficpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_tmtrafficpolicy_binding.test", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_tmtrafficpolicy_binding.test", "policyname", "tf_tmttrafficpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_tmtrafficpolicy_binding.test", "priority", "1"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCsvserver_tmtrafficpolicy_bindingDataSource_basic = `
+
+resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+	name             = "my_trafficaction"
+	apptimeout       = 5
+	sso              = "OFF"
+	persistentcookie = "ON"
+}
+resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+	name   = "tf_tmttrafficpolicy"
+	rule   = "true"
+	action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+}
+resource "citrixadc_csvserver" "tf_csvserver" {
+	name 		= "tf_csvserver"
+	ipv46 		= "10.202.11.11"
+	port 		= 8080
+	servicetype = "HTTP"
+}
+resource "citrixadc_csvserver_tmtrafficpolicy_binding" "tf_csvserver_tmtrafficpolicy_binding" {
+	name 		= citrixadc_csvserver.tf_csvserver.name
+	policyname	= citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy.name
+	priority 	= 1
+	bindpoint   = "REQUEST"
+}
+
+data "citrixadc_csvserver_tmtrafficpolicy_binding" "test" {
+	name 		= "tf_csvserver"
+	policyname	= "tf_tmttrafficpolicy"
+	depends_on = [citrixadc_csvserver_tmtrafficpolicy_binding.tf_csvserver_tmtrafficpolicy_binding]
+}
+`

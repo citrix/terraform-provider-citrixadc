@@ -2,7 +2,7 @@
 subcategory: "Policy"
 ---
 
-# Data Source: citrixadc_policyexpression
+# Data Source: policyexpression
 
 The policyexpression data source is used to retrieve information about an existing policy expression.
 

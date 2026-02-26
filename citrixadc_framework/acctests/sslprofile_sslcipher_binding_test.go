@@ -226,3 +226,40 @@ resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
     cipherpriority = 10
 }
 `
+
+const testAccSslprofile_sslcipher_bindingDataSource_basic = `
+resource "citrixadc_sslprofile" "tf_sslprofile" {
+  name = "tf_sslprofile"
+
+  ecccurvebindings = []
+
+}
+
+resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
+    name = citrixadc_sslprofile.tf_sslprofile.name
+    ciphername = "HIGH"
+    cipherpriority = 10
+}
+
+data "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
+    name = citrixadc_sslprofile_sslcipher_binding.tf_binding.name
+    ciphername = citrixadc_sslprofile_sslcipher_binding.tf_binding.ciphername
+}
+`
+
+func TestAccSslprofile_sslcipher_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_sslcipher_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "name", "tf_sslprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "cipheraliasname", "HIGH"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "cipherpriority", "10"),
+				),
+			},
+		},
+	})
+}

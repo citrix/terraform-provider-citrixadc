@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccIpset_nsip_binding_basic = `
@@ -53,6 +54,31 @@ const testAccIpset_nsip_binding_basic_step2 = `
 		ipaddress = "10.1.1.1"
 		type      = "VIP"
 		netmask   = "255.255.255.0"
+	}
+`
+
+const testAccIpset_nsip_bindingDataSource_basic = `
+
+	resource "citrixadc_ipset_nsip_binding" "tf_ipset_nsip_binding" {
+		name    = citrixadc_ipset.tf_ipset.name
+		ipaddress = citrixadc_nsip.tf_nsip.ipaddress
+	}
+	
+	
+	resource "citrixadc_ipset" "tf_ipset" {
+		name = "tf_test_ipset"
+	}
+	
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.1.1.1"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+	}
+
+	data "citrixadc_ipset_nsip_binding" "tf_ipset_nsip_binding" {
+		name       = citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding.name
+		ipaddress  = citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding.ipaddress
+		depends_on = [citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding]
 	}
 `
 
@@ -208,4 +234,21 @@ func testAccCheckIpset_nsip_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccIpset_nsip_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpset_nsip_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", "name", "tf_test_ipset"),
+					resource.TestCheckResourceAttr("data.citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", "ipaddress", "10.1.1.1"),
+				),
+			},
+		},
+	})
 }

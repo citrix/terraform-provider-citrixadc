@@ -17,17 +17,22 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsnclient_network6_binding_basic = `
 
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsnclient"
+}
+
 resource "citrixadc_lsnclient_network6_binding" "tf_lsnclient_network6_binding" {
-	clientname = "my_lsn_client"
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
 	network6    = "2001:db8:5001::/96"
 	}
 `
@@ -37,7 +42,6 @@ const testAccLsnclient_network6_binding_basic_step2 = `
 `
 
 func TestAccLsnclient_network6_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -189,4 +193,39 @@ func testAccCheckLsnclient_network6_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnclient_network6_bindingDataSource_basic = `
+
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsn_client"
+	}
+
+resource "citrixadc_lsnclient_network6_binding" "tf_lsnclient_network6_binding" {
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+	network6   = "2001:db8:5001::/96"
+	td         = 0
+}
+
+data "citrixadc_lsnclient_network6_binding" "tf_lsnclient_network6_binding" {
+	clientname = citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding.clientname
+	network6   = citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding.network6
+}
+`
+
+func TestAccLsnclient_network6_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnclient_network6_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", "clientname", "my_lsn_client"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", "network6", "2001:db8:5001::/96"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", "id"),
+				),
+			},
+		},
+	})
 }

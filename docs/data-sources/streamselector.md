@@ -2,7 +2,7 @@
 subcategory: "Stream"
 ---
 
-# Data Source: citrixadc_streamselector
+# Data Source: streamselector
 
 The streamselector data source allows you to retrieve information about a stream selector configuration.
 

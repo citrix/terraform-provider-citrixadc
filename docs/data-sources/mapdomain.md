@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `mapdomain`
+# Data Source: mapdomain
 
 The mapdomain data source allows you to retrieve information about MAP Domain configurations.
 

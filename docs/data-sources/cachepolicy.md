@@ -2,7 +2,7 @@
 subcategory: "Cache"
 ---
 
-# Data Source `cachepolicy`
+# Data Source: cachepolicy
 
 The cachepolicy data source allows you to retrieve information about integrated cache policies.
 

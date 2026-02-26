@@ -2,7 +2,7 @@
 subcategory: "DB"
 ---
 
-# Data Source: citrixadc_dbuser
+# Data Source: dbuser
 
 The dbuser data source allows you to retrieve information about database users.
 

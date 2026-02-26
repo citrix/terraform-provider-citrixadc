@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnstxtrec`
+# Data Source: dnstxtrec
 
 The dnstxtrec data source allows you to retrieve information about DNS TXT (Text) records configured on the Citrix ADC.
 

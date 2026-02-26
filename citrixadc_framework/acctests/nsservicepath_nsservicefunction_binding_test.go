@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNsservicepath_nsservicefunction_binding_basic = `
@@ -55,6 +56,30 @@ const testAccNsservicepath_nsservicefunction_binding_basic_step2 = `
 	resource "citrixadc_nsservicefunction" "tf_servicefunc" {
 		servicefunctionname = "tf_servicefunc"
 		ingressvlan         = citrixadc_vlan.tf_vlan.vlanid
+	}
+`
+
+const testAccNsservicepath_nsservicefunction_bindingDataSource_basic = `
+	resource "citrixadc_nsservicepath" "tf_servicepath" {
+		servicepathname = "tf_servicepath"
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_nsservicefunction" "tf_servicefunc" {
+		servicefunctionname = "tf_servicefunc"
+		ingressvlan         = citrixadc_vlan.tf_vlan.vlanid
+	}
+	resource "citrixadc_nsservicepath_nsservicefunction_binding" "tf_binding" {
+		servicepathname = citrixadc_nsservicepath.tf_servicepath.servicepathname
+		servicefunction = citrixadc_nsservicefunction.tf_servicefunc.servicefunctionname
+		index           = 2
+	}
+
+	data "citrixadc_nsservicepath_nsservicefunction_binding" "tf_binding" {
+		servicepathname = citrixadc_nsservicepath_nsservicefunction_binding.tf_binding.servicepathname
+		servicefunction = citrixadc_nsservicepath_nsservicefunction_binding.tf_binding.servicefunction
 	}
 `
 
@@ -212,4 +237,21 @@ func testAccCheckNsservicepath_nsservicefunction_bindingDestroy(s *terraform.Sta
 	}
 
 	return nil
+}
+
+func TestAccNsservicepath_nsservicefunction_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsservicepath_nsservicefunction_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", "servicepathname", "tf_servicepath"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", "servicefunction", "tf_servicefunc"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", "index", "2"),
+				),
+			},
+		},
+	})
 }

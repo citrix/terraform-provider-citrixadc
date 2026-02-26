@@ -2,7 +2,7 @@
 subcategory: "SNMP"
 ---
 
-# Data Source: citrixadc_snmpuser
+# Data Source: snmpuser
 
 The `citrixadc_snmpuser` data source is used to retrieve information about an SNMPv3 user configured on the Citrix ADC.
 

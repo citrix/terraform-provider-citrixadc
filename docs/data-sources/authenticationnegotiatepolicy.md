@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationnegotiatepolicy`
+# Data Source: authenticationnegotiatepolicy
 
 The authenticationnegotiatepolicy data source allows you to retrieve information about authentication negotiate policies.
 

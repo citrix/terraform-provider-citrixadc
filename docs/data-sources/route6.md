@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_route6
+# Data Source: route6
 
 The route6 data source allows you to retrieve information about a specific IPv6 route configuration.
 

@@ -17,9 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	//"strings"
 	"testing"
 )
@@ -189,4 +191,41 @@ func testAccCheckBotglobal_botpolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccBotglobalBotpolicyBindingDataSource_basic = `
+	resource "citrixadc_botpolicy" "tf_botpolicy" {
+		name        = "tf_botpolicy"
+		profilename = "BOT_BYPASS"
+		rule        = "true"
+		comment     = "COMMENT FOR BOTPOLICY"
+	}
+	resource "citrixadc_botglobal_botpolicy_binding" "tf_binding" {
+		policyname = citrixadc_botpolicy.tf_botpolicy.name
+		priority   = 90
+		type       = "REQ_OVERRIDE"
+	}
+
+	data "citrixadc_botglobal_botpolicy_binding" "tf_binding" {
+		policyname = citrixadc_botglobal_botpolicy_binding.tf_binding.policyname
+		type       = citrixadc_botglobal_botpolicy_binding.tf_binding.type
+		depends_on = [citrixadc_botglobal_botpolicy_binding.tf_binding]
+	}
+`
+
+func TestAccBotglobalBotpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotglobalBotpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botglobal_botpolicy_binding.tf_binding", "policyname", "tf_botpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_botglobal_botpolicy_binding.tf_binding", "priority", "90"),
+					resource.TestCheckResourceAttr("data.citrixadc_botglobal_botpolicy_binding.tf_binding", "type", "REQ_OVERRIDE"),
+				),
+			},
+		},
+	})
 }

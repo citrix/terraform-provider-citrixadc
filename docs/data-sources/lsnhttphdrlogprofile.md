@@ -2,7 +2,7 @@
 subcategory: "Lsn"
 ---
 
-# Data Source: citrixadc_lsnhttphdrlogprofile
+# Data Source: lsnhttphdrlogprofile
 
 The lsnhttphdrlogprofile data source allows you to retrieve information about an LSN HTTP header logging profile.
 

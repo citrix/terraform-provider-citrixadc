@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source `lbaction`
+# Data Source: lbaction
 
 The lbaction data source allows you to retrieve information about an existing lbaction.
 

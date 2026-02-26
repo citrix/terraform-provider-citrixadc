@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"net/url"
-	"testing"
 )
 
 const testAccResponderglobal_responderpolicy_binding_basic = `
@@ -192,4 +193,42 @@ func testAccCheckResponderglobal_responderpolicy_bindingDestroy(s *terraform.Sta
 	}
 
 	return nil
+}
+
+const testAccResponderglobal_responderpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_responderglobal_responderpolicy_binding" "tf_responderglobal_responderpolicy_binding" {
+		globalbindtype = "SYSTEM_GLOBAL"
+		priority   = 50
+		policyname = citrixadc_responderpolicy.tf_responderpolicy.name
+		type = "REQ_DEFAULT"
+	}
+	
+	resource "citrixadc_responderpolicy" "tf_responderpolicy" {
+		name    = "tf_responderpolicy"
+		action = "NOOP"
+		rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+	}
+
+	data "citrixadc_responderglobal_responderpolicy_binding" "tf_responderglobal_responderpolicy_binding" {
+		policyname = citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding.policyname
+		type = citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding.type
+	}
+`
+
+func TestAccResponderglobal_responderpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderglobal_responderpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "policyname", "tf_responderpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "type", "REQ_DEFAULT"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+				),
+			},
+		},
+	})
 }

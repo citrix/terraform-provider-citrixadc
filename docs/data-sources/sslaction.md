@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source `sslaction`
+# Data Source: sslaction
 
 The sslaction data source allows you to retrieve information about an SSL action.
 

@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnsptrrec`
+# Data Source: dnsptrrec
 
 The dnsptrrec data source allows you to retrieve information about DNS PTR (Pointer) records configured on the Citrix ADC.
 

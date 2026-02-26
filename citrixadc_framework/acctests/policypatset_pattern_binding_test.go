@@ -162,3 +162,39 @@ func testAccCheckPolicypatset_pattern_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccPolicypatset_pattern_bindingDataSource_basic = `
+
+resource "citrixadc_policypatset" "tf_patset" {
+    name = "tf_patset_datasource"
+    comment = "some comment"
+}
+
+resource "citrixadc_policypatset_pattern_binding" "tf_bind" {
+    name = citrixadc_policypatset.tf_patset.name
+    string = "pattern1,/postfix"
+}
+
+data "citrixadc_policypatset_pattern_binding" "tf_bind" {
+  name   = citrixadc_policypatset_pattern_binding.tf_bind.name
+  string = citrixadc_policypatset_pattern_binding.tf_bind.string
+  depends_on = [citrixadc_policypatset_pattern_binding.tf_bind]
+}
+`
+
+func TestAccPolicypatset_pattern_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicypatset_pattern_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_policypatset_pattern_binding.tf_bind", "name", "tf_patset_datasource"),
+					resource.TestCheckResourceAttr("data.citrixadc_policypatset_pattern_binding.tf_bind", "string", "pattern1,/postfix"),
+				),
+			},
+		},
+	})
+}

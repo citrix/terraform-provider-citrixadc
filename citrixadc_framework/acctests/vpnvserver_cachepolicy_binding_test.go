@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_cachepolicy_binding_basic = `
@@ -213,4 +214,50 @@ func testAccCheckVpnvserver_cachepolicy_bindingDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_cachepolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "tf_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_examplecom"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_cachepolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_cachepolicy.tf_cachepolicy.policyname
+		priority  = 5
+		bindpoint = "REQUEST"
+	}
+
+	data "citrixadc_vpnvserver_cachepolicy_binding" "tf_bind_data" {
+		name      = citrixadc_vpnvserver_cachepolicy_binding.tf_bind.name
+		policy    = citrixadc_vpnvserver_cachepolicy_binding.tf_bind.policy
+		bindpoint = citrixadc_vpnvserver_cachepolicy_binding.tf_bind.bindpoint
+		depends_on = [citrixadc_vpnvserver_cachepolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnvserver_cachepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_cachepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_cachepolicy_binding.tf_bind_data", "name", "tf_examplecom"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_cachepolicy_binding.tf_bind_data", "policy", "tf_cachepolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_cachepolicy_binding.tf_bind_data", "priority", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_cachepolicy_binding.tf_bind_data", "bindpoint", "REQUEST"),
+				),
+			},
+		},
+	})
 }

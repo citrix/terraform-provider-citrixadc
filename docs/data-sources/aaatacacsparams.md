@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaatacacsparams`
+# Data Source: aaatacacsparams
 
 The aaatacacsparams data source allows you to retrieve information about global TACACS+ parameters configuration.
 

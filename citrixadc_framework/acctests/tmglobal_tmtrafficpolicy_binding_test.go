@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccTmglobal_tmtrafficpolicy_binding_basic = `
@@ -198,4 +199,46 @@ func testAccCheckTmglobal_tmtrafficpolicy_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccTmglobal_tmtrafficpolicy_binding_DataSource_basic = `
+
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_trafficaction"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "my_tmtrafficpolicy"
+		rule   = "true"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
+
+	resource "citrixadc_tmglobal_tmtrafficpolicy_binding" "tf_tmglobal_tmtrafficpolicy_binding" {
+		priority 	= "100"
+		policyname = citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy.name
+	}
+	
+	data "citrixadc_tmglobal_tmtrafficpolicy_binding" "tf_tmglobal_tmtrafficpolicy_binding" {
+		policyname = citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy.name
+		depends_on = [citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding]
+	}
+`
+
+func TestAccTmglobal_tmtrafficpolicy_binding_DataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmglobal_tmtrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmglobal_tmtrafficpolicy_binding_DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding", "policyname", "my_tmtrafficpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

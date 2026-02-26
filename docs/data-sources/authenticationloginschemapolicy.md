@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationloginschemapolicy`
+# Data Source: authenticationloginschemapolicy
 
 The authenticationloginschemapolicy data source allows you to retrieve information about authentication loginschema policies.
 

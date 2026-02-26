@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnsview`
+# Data Source: dnsview
 
 The dnsview data source allows you to retrieve information about DNS views.
 

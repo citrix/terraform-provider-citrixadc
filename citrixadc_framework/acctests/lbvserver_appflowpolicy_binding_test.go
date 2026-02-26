@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLbvserver_appflowpolicy_binding_basic = `
@@ -246,4 +247,66 @@ func testAccCheckLbvserver_appflowpolicy_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccLbvserver_appflowpolicy_bindingDataSource_basic = `
+
+resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+  depends_on = [ citrixadc_appflowaction.tf_appflowaction ]
+	name      = "tf_appflowpolicy"
+	action    = citrixadc_appflowaction.tf_appflowaction.name
+	rule      = "client.TCP.DSTPORT.EQ(22)"
+}
+resource "citrixadc_appflowaction" "tf_appflowaction" {
+  depends_on = [ citrixadc_appflowcollector.tf_appflowcollector ]
+	name = "test_action"
+	collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+	securityinsight = "ENABLED"
+	botinsight      = "ENABLED"
+	videoanalytics  = "ENABLED"
+}
+resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+	name      = "col1"
+	ipaddress = "192.168.2.2"
+	port      = 80
+}
+
+resource "citrixadc_lbvserver_appflowpolicy_binding" "tf_lbvserver_appflowpolicy_binding" {
+  depends_on  = [citrixadc_appflowpolicy.tf_appflowpolicy, citrixadc_lbvserver.tf_lbvserver]
+	name = citrixadc_lbvserver.tf_lbvserver.name
+	policyname = "tf_appflowpolicy"
+	gotopriorityexpression = "END"
+	priority = 1
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	name        = "tf_lbvserver"
+	ipv46       = "10.10.10.33"
+	port        = 80
+	servicetype = "HTTP"
+}
+
+data "citrixadc_lbvserver_appflowpolicy_binding" "tf_lbvserver_appflowpolicy_binding" {
+	name = "tf_lbvserver"
+	policyname = "tf_appflowpolicy"
+	depends_on = [citrixadc_lbvserver_appflowpolicy_binding.tf_lbvserver_appflowpolicy_binding]
+}
+`
+
+func TestAccLbvserver_appflowpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_appflowpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appflowpolicy_binding.tf_lbvserver_appflowpolicy_binding", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appflowpolicy_binding.tf_lbvserver_appflowpolicy_binding", "policyname", "tf_appflowpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appflowpolicy_binding.tf_lbvserver_appflowpolicy_binding", "priority", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appflowpolicy_binding.tf_lbvserver_appflowpolicy_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
 }

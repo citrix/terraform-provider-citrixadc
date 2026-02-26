@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_vpnclientlessaccesspolicy_binding_basic = `
@@ -185,4 +186,42 @@ func testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingDestroy(s *terraform
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_vpnclientlessaccesspolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnclientlessaccesspolicy" "tf_vpnclientlessaccesspolicy" {
+		name        = "tf_vpnclientlessaccesspolicy"
+		profilename = "ns_cvpn_default_profile"
+		rule        = "true"
+	}
+	resource "citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding" "tf_bind" {
+		policyname     = citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy.name
+		priority       = 90
+		globalbindtype = "VPN_GLOBAL"
+		secondary      = "false"
+		type           = "RES_OVERRIDE"
+	}
+
+	data "citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_vpnclientlessaccesspolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpnclientlessaccesspolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", "policyname", "tf_vpnclientlessaccesspolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", "priority", "90"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", "globalbindtype", "SYSTEM_GLOBAL"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", "type", "REQ_DEFAULT"),
+				),
+			},
+		},
+	})
 }

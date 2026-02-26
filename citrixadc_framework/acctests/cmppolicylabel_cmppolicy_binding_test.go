@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCmppolicylabel_cmppolicy_binding_basic = `
@@ -208,4 +209,48 @@ func testAccCheckCmppolicylabel_cmppolicy_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccCmppolicylabel_cmppolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_cmppolicylabel" "tf_cmppolicylabel" {
+		labelname = "tf_cmppolicylabel_ds"
+		type      = "RES"
+	}
+
+	resource "citrixadc_cmppolicy" "tf_cmppolicy" {
+		name      = "tf_cmppolicy_ds"
+		rule      = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"
+		resaction = "COMPRESS"
+	}
+
+	resource "citrixadc_cmppolicylabel_cmppolicy_binding" "tf_cmppolicylabel_cmppolicy_binding" {
+		labelname  = citrixadc_cmppolicylabel.tf_cmppolicylabel.labelname
+		policyname = citrixadc_cmppolicy.tf_cmppolicy.name
+		priority   = 100
+	}
+
+	data "citrixadc_cmppolicylabel_cmppolicy_binding" "tf_cmppolicylabel_cmppolicy_binding" {
+		labelname  = citrixadc_cmppolicylabel_cmppolicy_binding.tf_cmppolicylabel_cmppolicy_binding.labelname
+		policyname = citrixadc_cmppolicylabel_cmppolicy_binding.tf_cmppolicylabel_cmppolicy_binding.policyname
+		depends_on = [citrixadc_cmppolicylabel_cmppolicy_binding.tf_cmppolicylabel_cmppolicy_binding]
+	}
+`
+
+func TestAcccmppolicylabel_cmppolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmppolicylabel_cmppolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cmppolicylabel_cmppolicy_binding.tf_cmppolicylabel_cmppolicy_binding", "labelname", "tf_cmppolicylabel_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmppolicylabel_cmppolicy_binding.tf_cmppolicylabel_cmppolicy_binding", "policyname", "tf_cmppolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_cmppolicylabel_cmppolicy_binding.tf_cmppolicylabel_cmppolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

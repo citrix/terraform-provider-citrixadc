@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source: citrixadc_lbvserver
+# Data Source: lbvserver
 
 The lbvserver data source is used to retrieve information about an existing load balancing virtual server.
 

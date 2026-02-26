@@ -29,9 +29,7 @@ func doSslcacertgroup_sslcertkey_bindingPreChecks(t *testing.T) {
 	testAccPreCheck(t)
 
 	uploads := []string{
-		"certificate1.crt",
-		"key1.pem",
-		"ca.crt",
+		"rootcert1.cert",
 	}
 
 	c, err := testHelperInstantiateClient("", "", "", false)
@@ -54,17 +52,9 @@ const testAccSslcacertgroup_sslcertkey_binding_basic_step1 = `
         ocspcheck = "Mandatory"
 	}
 
-	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
-		certkey = "tf_sslcertkey"
-		cert = "/var/tmp/certificate1.crt"
-		key = "/var/tmp/key1.pem"
-		notificationperiod = 40
-		expirymonitor = "ENABLED"
-	}
-
 	resource "citrixadc_sslcertkey" "tf_cacertkey" {
 		certkey = "tf_cacertkey"
-		cert = "/var/tmp/ca.crt"
+		cert = "/var/tmp/rootcert1.cert"
 	}
 		
 	resource "citrixadc_sslcacertgroup" "ns_callout_certs1" {
@@ -73,17 +63,10 @@ const testAccSslcacertgroup_sslcertkey_binding_basic_step1 = `
 `
 
 const testAccSslcacertgroup_sslcertkey_binding_basic_step2 = `
-resource "citrixadc_sslcertkey" "tf_sslcertkey" {
-	certkey = "tf_sslcertkey"
-	cert = "/var/tmp/certificate1.crt"
-	key = "/var/tmp/key1.pem"
-	notificationperiod = 40
-	expirymonitor = "ENABLED"
-}
 
 resource "citrixadc_sslcertkey" "tf_cacertkey" {
 	certkey = "tf_cacertkey"
-	cert = "/var/tmp/ca.crt"
+	cert = "/var/tmp/rootcert1.cert"
 }
 	
 resource "citrixadc_sslcacertgroup" "ns_callout_certs1" {
@@ -244,4 +227,43 @@ func testAccCheckSslcacertgroup_sslcertkey_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+const testAccSslcacertgroup_sslcertkey_bindingDataSource_basic = `
+	resource "citrixadc_sslcacertgroup_sslcertkey_binding" "sslcacertgroup_sslcertkey_binding_demo" {	
+        cacertgroupname = citrixadc_sslcacertgroup.ns_callout_certs1.cacertgroupname
+		certkeyname = citrixadc_sslcertkey.tf_cacertkey.certkey
+        ocspcheck = "Mandatory"
+	}
+
+	resource "citrixadc_sslcertkey" "tf_cacertkey" {
+		certkey = "tf_cacertkey"
+		cert = "/var/tmp/rootcert1.cert"
+	}
+		
+	resource "citrixadc_sslcacertgroup" "ns_callout_certs1" {
+		cacertgroupname = "ns_callout_certs1"
+	}
+
+	data "citrixadc_sslcacertgroup_sslcertkey_binding" "sslcacertgroup_sslcertkey_binding_demo" {
+		cacertgroupname = citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo.cacertgroupname
+		certkeyname = citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo.certkeyname
+	}
+`
+
+func TestAccSslcacertgroup_sslcertkey_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcacertgroup_sslcertkey_bindingPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcacertgroup_sslcertkey_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo", "cacertgroupname", "ns_callout_certs1"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo", "certkeyname", "tf_cacertkey"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo", "ocspcheck", "Mandatory"),
+				),
+			},
+		},
+	})
 }

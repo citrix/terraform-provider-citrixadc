@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLbvserver_tmtrafficpolicy_binding_basic = `
@@ -213,4 +214,54 @@ func testAccCheckLbvserver_tmtrafficpolicy_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+const testAccLbvserver_tmtrafficpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_trafficaction"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "tf_tmttrafficpolicy"
+		rule   = "true"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_lbvserver_tmtrafficpolicy_binding" "tf_lbvserver_tmtrafficpolicy_binding" {
+		name 		= citrixadc_lbvserver.tf_lbvserver.name
+		policyname 	= citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy.name
+		priority 	= 1
+	}
+
+	data "citrixadc_lbvserver_tmtrafficpolicy_binding" "tf_lbvserver_tmtrafficpolicy_binding" {
+		name 		= "tf_lbvserver"
+		policyname 	= "tf_tmttrafficpolicy"
+		depends_on  = [citrixadc_lbvserver_tmtrafficpolicy_binding.tf_lbvserver_tmtrafficpolicy_binding]
+	}
+`
+
+func TestAccLbvserver_tmtrafficpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_tmtrafficpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_tmtrafficpolicy_binding.tf_lbvserver_tmtrafficpolicy_binding", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_tmtrafficpolicy_binding.tf_lbvserver_tmtrafficpolicy_binding", "policyname", "tf_tmttrafficpolicy"),
+				),
+			},
+		},
+	})
 }

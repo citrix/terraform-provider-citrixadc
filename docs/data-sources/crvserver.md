@@ -2,7 +2,7 @@
 subcategory: "Cache Redirection"
 ---
 
-# Data Source `crvserver`
+# Data Source: crvserver
 
 The crvserver data source allows you to retrieve information about cache redirection virtual servers.
 

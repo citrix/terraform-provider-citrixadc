@@ -17,18 +17,24 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccClusternodegroup_lbvserver_binding_basic = `
 
-resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
-	name = "my_test_group"
-	vserver = "my_lbvserver"
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "my_lb_vserver_ds"
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
+		name = "my_tf_group"
+		vserver = citrixadc_lbvserver.tf_lbvserver.name
 	}
 `
 
@@ -191,4 +197,43 @@ func testAccCheckClusternodegroup_lbvserver_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+const testAccClusternodegroup_lbvserver_bindingDataSource_basic = `
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "my_lb_vserver_ds"
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
+		name    = "my_tf_group"
+		vserver = citrixadc_lbvserver.tf_lbvserver.name
+	}
+
+	data "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
+		name    = citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding.name
+		vserver = citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding.vserver
+		depends_on = [citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding]
+	}
+`
+
+func TestAccclusternodegroup_lbvserver_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_lbvserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "vserver", "my_lb_vserver_ds"),
+				),
+			},
+		},
+	})
 }

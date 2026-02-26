@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationlocalpolicy`
+# Data Source: authenticationlocalpolicy
 
 The authenticationlocalpolicy data source allows you to retrieve information about authentication local policies.
 

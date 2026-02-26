@@ -17,18 +17,23 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccClusternodegroup_gslbvserver_binding_basic = `
 
-resource "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
-	name = "my_gslb_group"
-	vserver = "my_gslbvserver"
+	resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+		name        = "my_gslb_vserver_ds"
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
+		name = "my_tf_group"
+		vserver = citrixadc_gslbvserver.tf_gslbvserver.name
 	}
 `
 
@@ -191,4 +196,43 @@ func testAccCheckClusternodegroup_gslbvserver_bindingDestroy(s *terraform.State)
 	}
 
 	return nil
+}
+
+const testAccClusternodegroup_gslbvserver_bindingDataSource_basic = `
+
+	resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+		name        = "my_gslb_vserver_ds"
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
+		name    = "my_tf_group"
+		vserver = citrixadc_gslbvserver.tf_gslbvserver.name
+	}
+
+	data "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
+		name    = citrixadc_clusternodegroup_gslbvserver_binding.tf_clusternodegroup_gslbvserver_binding.name
+		vserver = citrixadc_clusternodegroup_gslbvserver_binding.tf_clusternodegroup_gslbvserver_binding.vserver
+		depends_on = [citrixadc_clusternodegroup_gslbvserver_binding.tf_clusternodegroup_gslbvserver_binding]
+	}
+`
+
+func TestAccclusternodegroup_gslbvserver_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_gslbvserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_gslbvserver_binding.tf_clusternodegroup_gslbvserver_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_gslbvserver_binding.tf_clusternodegroup_gslbvserver_binding", "vserver", "my_gslb_vserver_ds"),
+				),
+			},
+		},
+	})
 }

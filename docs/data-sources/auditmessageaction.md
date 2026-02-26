@@ -2,7 +2,7 @@
 subcategory: "Audit"
 ---
 
-# Data Source: citrixadc_auditmessageaction
+# Data Source: auditmessageaction
 
 Use this data source to retrieve information about an existing Audit Message Action.
 

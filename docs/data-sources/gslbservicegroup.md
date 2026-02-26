@@ -2,7 +2,7 @@
 subcategory: "GSLB"
 ---
 
-# Data Source `gslbservicegroup`
+# Data Source: gslbservicegroup
 
 The gslbservicegroup data source allows you to retrieve information about GSLB service groups configured on the Citrix ADC.
 

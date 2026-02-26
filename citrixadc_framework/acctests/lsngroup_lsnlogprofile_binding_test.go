@@ -17,18 +17,38 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsngroup_lsnlogprofile_binding_basic = `
-resource "citrixadc_lsngroup_lsnlogprofile_binding" "tf_lsngroup_lsnlogprofile_binding" {
-	groupname      = "my_lsn_group"
-	logprofilename = "my_lsn_logprofile"
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
 	}
+
+	resource "citrixadc_lsngroup" "tf_lsngroup" {
+		groupname     = "my_lsngroup"
+		clientname    = resource.citrixadc_lsnclient.tf_lsnclient.clientname
+		logging       = "DISABLED"
+		nattype       = "DYNAMIC"
+		snmptraplimit = 50
+	}
+
+	resource "citrixadc_lsnlogprofile" "tf_lsnlogprofile" {
+		logprofilename = "my_lsn_logprofile"
+		logsubscrinfo   = "ENABLED"
+		logcompact      = "ENABLED"
+		logipfix        = "ENABLED"
+	}
+
+resource "citrixadc_lsngroup_lsnlogprofile_binding" "tf_lsngroup_lsnlogprofile_binding" {
+	groupname      = citrixadc_lsngroup.tf_lsngroup.groupname
+	logprofilename = citrixadc_lsnlogprofile.tf_lsnlogprofile.logprofilename
+}
   
 `
 
@@ -36,8 +56,39 @@ const testAccLsngroup_lsnlogprofile_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 `
 
+const testAccLsngroup_lsnlogprofile_bindingDataSource_basic = `
+
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
+	}
+
+	resource "citrixadc_lsngroup" "tf_lsngroup" {
+		groupname     = "my_lsngroup"
+		clientname    = resource.citrixadc_lsnclient.tf_lsnclient.clientname
+		logging       = "DISABLED"
+		nattype       = "DYNAMIC"
+		snmptraplimit = 50
+	}
+
+	resource "citrixadc_lsnlogprofile" "tf_lsnlogprofile" {
+		logprofilename = "my_lsn_logprofile"
+		logsubscrinfo   = "ENABLED"
+		logcompact      = "ENABLED"
+		logipfix        = "ENABLED"
+	}
+
+resource "citrixadc_lsngroup_lsnlogprofile_binding" "tf_lsngroup_lsnlogprofile_binding" {
+	groupname      = citrixadc_lsngroup.tf_lsngroup.groupname
+	logprofilename = citrixadc_lsnlogprofile.tf_lsnlogprofile.logprofilename
+}
+
+data "citrixadc_lsngroup_lsnlogprofile_binding" "tf_lsngroup_lsnlogprofile_binding" {
+	groupname      = citrixadc_lsngroup_lsnlogprofile_binding.tf_lsngroup_lsnlogprofile_binding.groupname
+	logprofilename = citrixadc_lsngroup_lsnlogprofile_binding.tf_lsngroup_lsnlogprofile_binding.logprofilename
+}
+`
+
 func TestAccLsngroup_lsnlogprofile_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -189,4 +240,20 @@ func testAccCheckLsngroup_lsnlogprofile_bindingDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+func TestAccLsngroup_lsnlogprofile_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_lsnlogprofile_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnlogprofile_binding.tf_lsngroup_lsnlogprofile_binding", "groupname", "my_lsngroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnlogprofile_binding.tf_lsngroup_lsnlogprofile_binding", "logprofilename", "my_lsn_logprofile"),
+				),
+			},
+		},
+	})
 }

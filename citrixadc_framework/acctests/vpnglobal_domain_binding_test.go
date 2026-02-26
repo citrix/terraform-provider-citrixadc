@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_domain_binding_basic = `
@@ -170,4 +171,30 @@ func testAccCheckVpnglobal_domain_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_domain_bindingDataSource_basic = `
+	resource "citrixadc_vpnglobal_domain_binding" "tf_bind" {
+		intranetdomain = "http://www.example.com/"
+	}
+
+	data "citrixadc_vpnglobal_domain_binding" "tf_bind" {
+		intranetdomain = citrixadc_vpnglobal_domain_binding.tf_bind.intranetdomain
+		depends_on = [citrixadc_vpnglobal_domain_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_domain_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_domain_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_domain_binding.tf_bind", "intranetdomain", "http://www.example.com/"),
+				),
+			},
+		},
+	})
 }

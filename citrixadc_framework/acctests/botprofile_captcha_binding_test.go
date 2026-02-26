@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccBotprofile_captcha_binding_basic = `
@@ -222,4 +223,56 @@ func testAccCheckBotprofile_captcha_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccBotprofileCaptchaBindingDataSource_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_captcha_binding" "tf_binding" {
+		name                = citrixadc_botprofile.tf_botprofile.name
+		captcharesource     = "true"
+		bot_captcha_url     = "www.example.com"
+		bot_captcha_action  = ["NONE"]
+		bot_captcha_enabled = "OFF"
+		logmessage          = "Testing"
+		retryattempts       = 4
+	}
+
+	data "citrixadc_botprofile_captcha_binding" "tf_binding" {
+		name            = citrixadc_botprofile_captcha_binding.tf_binding.name
+		bot_captcha_url = citrixadc_botprofile_captcha_binding.tf_binding.bot_captcha_url
+	}
+`
+
+func TestAccBotprofileCaptchaBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofileCaptchaBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_captcha_binding.tf_binding", "name", "tf_botprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_captcha_binding.tf_binding", "captcharesource", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_captcha_binding.tf_binding", "bot_captcha_url", "www.example.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_captcha_binding.tf_binding", "bot_captcha_enabled", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_captcha_binding.tf_binding", "logmessage", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_captcha_binding.tf_binding", "retryattempts", "4"),
+				),
+			},
+		},
+	})
 }

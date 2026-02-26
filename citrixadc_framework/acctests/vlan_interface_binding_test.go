@@ -209,3 +209,38 @@ func testAccCheckVlan_interface_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccVlan_interface_bindingDataSource_basic = `
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid = 50
+    aliasname = "Management VLAN"
+}
+
+resource "citrixadc_vlan_interface_binding" "tf_bind" {
+    vlanid = citrixadc_vlan.tf_vlan.vlanid
+    ifnum = "1/1"
+}
+
+data "citrixadc_vlan_interface_binding" "tf_bind" {
+	vlanid = 50
+	ifnum  = "1/1"
+	depends_on = [citrixadc_vlan_interface_binding.tf_bind]
+}
+`
+
+func TestAccVlan_interface_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_interface_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_interface_binding.tf_bind", "vlanid", "50"),
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_interface_binding.tf_bind", "ifnum", "1/1"),
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_interface_binding.tf_bind", "tagged", "false"),
+				),
+			},
+		},
+	})
+}

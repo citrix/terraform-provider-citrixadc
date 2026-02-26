@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `iptunnelparam`
+# Data Source: iptunnelparam
 
 The iptunnelparam data source allows you to retrieve information about IP tunnel parameters configuration.
 

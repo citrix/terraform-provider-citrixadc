@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccGslbvserver_gslbservice_binding_basic = `
@@ -247,4 +248,62 @@ func testAccCheckGslbvserver_gslbservice_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccGslbvserver_gslbservice_bindingDataSource_basic = `
+
+resource "citrixadc_gslbvserver_gslbservice_binding" "tf_gslbvserver_gslbservice_binding"{
+	name = citrixadc_gslbvserver.tf_gslbvserver.name
+	servicename = citrixadc_gslbservice.gslb_svc1.servicename
+}
+resource "citrixadc_gslbsite" "site_local" {
+	sitename        = "Site-Local"
+	siteipaddress   = "172.31.96.234"
+	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
+}
+
+resource "citrixadc_gslbservice" "gslb_svc1" {
+	ip          = "172.16.1.121"
+	port        = "80"
+	servicename = "gslb1vservice"
+	servicetype = "HTTP"
+	sitename    = citrixadc_gslbsite.site_local.sitename
+}
+
+resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+	dnsrecordtype = "A"
+	name          = "gslb_vserver"
+	servicetype   = "HTTP"
+	domain {
+		domainname = "www.fooco.co"
+		ttl        = "60"
+	}
+	domain {
+		domainname = "www.barco.com"
+		ttl        = "65"
+	}
+}
+
+data "citrixadc_gslbvserver_gslbservice_binding" "tf_gslbvserver_gslbservice_binding" {
+	name        = citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding.name
+	servicename = citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding.servicename
+	depends_on  = [citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding]
+}
+`
+
+func TestAccGslbvserver_gslbservice_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_gslbservice_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", "name", "gslb_vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", "servicename", "gslb1vservice"),
+				),
+			},
+		},
+	})
 }

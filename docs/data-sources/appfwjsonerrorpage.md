@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source: citrixadc_appfwjsonerrorpage
+# Data Source: appfwjsonerrorpage
 
 The appfwjsonerrorpage data source allows you to retrieve information about a JSON error page configuration.
 

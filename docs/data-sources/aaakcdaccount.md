@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaakcdaccount`
+# Data Source: aaakcdaccount
 
 The aaakcdaccount data source allows you to retrieve information about AAA KCD (Kerberos Constrained Delegation) accounts.
 

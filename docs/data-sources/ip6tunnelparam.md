@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `ip6tunnelparam`
+# Data Source: ip6tunnelparam
 
 The ip6tunnelparam data source allows you to retrieve information about IPv6 tunnel parameters configured on the Citrix ADC.
 

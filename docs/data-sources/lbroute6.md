@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source: citrixadc_lbroute6
+# Data Source: lbroute6
 
 This data source is used to retrieve information about an existing Load Balancing IPv6 route.
 

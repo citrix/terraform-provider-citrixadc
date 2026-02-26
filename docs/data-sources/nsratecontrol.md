@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsratecontrol`
+# Data Source: nsratecontrol
 
 The nsratecontrol data source allows you to retrieve information about rate control configuration on the NetScaler appliance.
 

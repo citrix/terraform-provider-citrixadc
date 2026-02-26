@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccTransformglobal_transformpolicy_binding_basic = `
@@ -194,4 +195,44 @@ func testAccCheckTransformglobal_transformpolicy_bindingDestroy(s *terraform.Sta
 	}
 
 	return nil
+}
+
+const testAccTransformglobal_transformpolicy_bindingDataSource_basic = `
+resource "citrixadc_transformprofile" "tf_trans_profile" {
+	name = "tf_trans_profile"
+	comment = "Some comment"
+}
+resource "citrixadc_transformpolicy" "tf_trans_policy" {
+	name        = "tf_trans_policy"
+	profilename = citrixadc_transformprofile.tf_trans_profile.name
+	rule        = "http.REQ.URL.CONTAINS(\"test_url\")"
+}
+resource "citrixadc_transformglobal_transformpolicy_binding" "transformglobal_transformpolicy_binding" {
+	policyname = citrixadc_transformpolicy.tf_trans_policy.name
+	priority   = 2
+	type       = "REQ_DEFAULT"
+}
+
+data "citrixadc_transformglobal_transformpolicy_binding" "transformglobal_transformpolicy_binding" {
+	policyname = citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding.policyname
+	type       = citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding.type
+	depends_on = [citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding]
+}
+`
+
+func TestAccTransformglobal_transformpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformglobal_transformpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "policyname", "tf_trans_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "priority", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "type", "REQ_DEFAULT"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaaldapparams`
+# Data Source: aaaldapparams
 
 The aaaldapparams data source allows you to retrieve information about AAA LDAP parameters configuration.
 

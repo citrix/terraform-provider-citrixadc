@@ -2,7 +2,7 @@
 subcategory: "AppQoE"
 ---
 
-# Data Source `appqoeaction`
+# Data Source: appqoeaction
 
 The appqoeaction data source allows you to retrieve information about an existing appqoeaction.
 

@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nssimpleacl`
+# Data Source: nssimpleacl
 
 The nssimpleacl data source allows you to retrieve information about a simple ACL rule.
 

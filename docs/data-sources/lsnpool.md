@@ -2,7 +2,7 @@
 subcategory: "LSN"
 ---
 
-# Data Source `lsnpool`
+# Data Source: lsnpool
 
 The lsnpool data source allows you to retrieve information about LSN (Large Scale NAT) pools.
 

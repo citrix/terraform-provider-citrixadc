@@ -2,7 +2,7 @@
 subcategory: "Policy"
 ---
 
-# Data Source `policymap`
+# Data Source: policymap
 
 The policymap data source allows you to retrieve information about an existing policy map configuration.
 

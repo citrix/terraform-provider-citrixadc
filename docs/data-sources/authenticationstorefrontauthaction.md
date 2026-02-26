@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationstorefrontauthaction`
+# Data Source: authenticationstorefrontauthaction
 
 The authenticationstorefrontauthaction data source allows you to retrieve information about an existing Storefront authentication action.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccMapbmr_bmrv4network_binding_basic = `
@@ -205,4 +206,42 @@ func testAccCheckMapbmr_bmrv4network_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccMapbmr_bmrv4network_bindingDataSource_basic = `
+	resource "citrixadc_mapbmr" "tf_mapbmr" {
+		name           = "tf_mapbmr"
+		ruleipv6prefix = "2001:db8:abcd:12::/64"
+		psidoffset     = 6
+		eabitlength    = 16
+		psidlength     = 8
+	}
+	resource "citrixadc_mapbmr_bmrv4network_binding" "tf_binding" {
+		name    = citrixadc_mapbmr.tf_mapbmr.name
+		network = "1.2.3.0"
+		netmask = "255.255.255.0"
+	}
+	
+	data "citrixadc_mapbmr_bmrv4network_binding" "tf_binding" {
+		name    = citrixadc_mapbmr_bmrv4network_binding.tf_binding.name
+		network = citrixadc_mapbmr_bmrv4network_binding.tf_binding.network
+		depends_on = [citrixadc_mapbmr_bmrv4network_binding.tf_binding]
+	}
+`
+
+func TestAccMapbmr_bmrv4network_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMapbmr_bmrv4network_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_mapbmr_bmrv4network_binding.tf_binding", "name", "tf_mapbmr"),
+					resource.TestCheckResourceAttr("data.citrixadc_mapbmr_bmrv4network_binding.tf_binding", "network", "1.2.3.0"),
+					resource.TestCheckResourceAttr("data.citrixadc_mapbmr_bmrv4network_binding.tf_binding", "netmask", "255.255.255.0"),
+				),
+			},
+		},
+	})
 }

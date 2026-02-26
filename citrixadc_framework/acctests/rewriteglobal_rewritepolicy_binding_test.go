@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccRewriteglobal_rewritepolicy_binding_basic = `
@@ -231,4 +232,57 @@ func testAccCheckRewriteglobal_rewritepolicy_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+const testAccRewriteglobal_rewritepolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+		name = "tf_rewrite_policy"
+		action = "DROP"
+		rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	}
+
+	resource "citrixadc_rewritepolicylabel" "tf_rewritepolicylabel" {
+		labelname = "tf_rewritepolicylabel"
+		transform = "http_req"
+	}
+
+	resource "citrixadc_rewriteglobal_rewritepolicy_binding" "tf_rewriteglobal_rewritepolicy_binding" {
+		policyname = citrixadc_rewritepolicy.tf_rewrite_policy.name
+		priority = 5
+		type = "REQ_DEFAULT"
+		globalbindtype = "SYSTEM_GLOBAL"
+		gotopriorityexpression = "END"
+		invoke = "true"
+		labelname = citrixadc_rewritepolicylabel.tf_rewritepolicylabel.labelname
+		labeltype = "policylabel"
+	}
+
+	data "citrixadc_rewriteglobal_rewritepolicy_binding" "tf_rewriteglobal_rewritepolicy_binding" {
+		policyname = citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding.policyname
+		type = citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding.type
+		depends_on = [citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding]
+	}
+`
+
+func TestAccRewriteglobal_rewritepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewriteglobal_rewritepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "policyname", "tf_rewrite_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "priority", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "type", "REQ_DEFAULT"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "gotopriorityexpression", "END"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "invoke", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "labelname", "tf_rewritepolicylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "labeltype", "policylabel"),
+				),
+			},
+		},
+	})
 }

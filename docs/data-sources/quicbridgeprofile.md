@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source: citrixadc_quicbridgeprofile
+# Data Source: quicbridgeprofile
 
 The `citrixadc_quicbridgeprofile` data source is used to retrieve information about a specific QUIC bridge profile configured on the Citrix ADC.
 

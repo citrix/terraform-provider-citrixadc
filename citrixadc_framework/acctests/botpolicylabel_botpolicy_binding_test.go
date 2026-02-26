@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccBotpolicylabel_botpolicy_binding_basic = `
@@ -51,6 +52,29 @@ const testAccBotpolicylabel_botpolicy_binding_basic_step2 = `
 		profilename = "BOT_BYPASS"
 		rule        = "true"
 		comment     = "COMMENT FOR BOTPOLICY"
+	}
+`
+
+const testAccBotpolicylabelBotpolicyBindingDataSource_basic = `
+	resource "citrixadc_botpolicylabel" "tf_botpolicylabel" {
+		labelname = "tf_botpolicylabel"
+	}
+	resource "citrixadc_botpolicy" "tf_botpolicy" {
+		name        = "tf_botpolicy"
+		profilename = "BOT_BYPASS"
+		rule        = "true"
+		comment     = "COMMENT FOR BOTPOLICY"
+	}
+	resource "citrixadc_botpolicylabel_botpolicy_binding" "tf_binding" {
+		labelname  = citrixadc_botpolicylabel.tf_botpolicylabel.labelname
+		policyname = citrixadc_botpolicy.tf_botpolicy.name
+		priority   = 50
+	}
+
+	data "citrixadc_botpolicylabel_botpolicy_binding" "tf_binding" {
+		labelname  = citrixadc_botpolicylabel_botpolicy_binding.tf_binding.labelname
+		policyname = citrixadc_botpolicylabel_botpolicy_binding.tf_binding.policyname
+		depends_on = [citrixadc_botpolicylabel_botpolicy_binding.tf_binding]
 	}
 `
 
@@ -206,4 +230,21 @@ func testAccCheckBotpolicylabel_botpolicy_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+func TestAccBotpolicylabelBotpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotpolicylabelBotpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel_botpolicy_binding.tf_binding", "labelname", "tf_botpolicylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel_botpolicy_binding.tf_binding", "policyname", "tf_botpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel_botpolicy_binding.tf_binding", "priority", "50"),
+				),
+			},
+		},
+	})
 }

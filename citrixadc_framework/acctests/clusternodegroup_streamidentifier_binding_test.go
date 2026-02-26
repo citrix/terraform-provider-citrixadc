@@ -17,18 +17,34 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccClusternodegroup_streamidentifier_binding_basic = `
 
-resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
-	name           = "my_group"
-	identifiername = "my_identifier"
+	resource "citrixadc_streamselector" "tf_streamselector" {
+		name = "my_streamselector"
+		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
+	}
+	resource "citrixadc_streamidentifier" "tf_streamidentifier" {
+		name         = "my_streamidentifier"
+		selectorname = citrixadc_streamselector.tf_streamselector.name
+		samplecount  = 10
+		sort         = "CONNECTIONS"
+		snmptrap     = "ENABLED"
+		loglimit	 = 500
+		loginterval = 60
+		log = "NONE"
+	}
+
+	resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
+		name           = "my_tf_group"
+		identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
 	}
 `
 
@@ -191,4 +207,53 @@ func testAccCheckClusternodegroup_streamidentifier_bindingDestroy(s *terraform.S
 	}
 
 	return nil
+}
+
+const testAccClusternodegroup_streamidentifier_bindingDataSource_basic = `
+
+	resource "citrixadc_streamselector" "tf_streamselector" {
+		name = "my_streamselector"
+		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
+	}
+	resource "citrixadc_streamidentifier" "tf_streamidentifier" {
+		name         = "my_streamidentifier"
+		selectorname = citrixadc_streamselector.tf_streamselector.name
+		samplecount  = 10
+		sort         = "CONNECTIONS"
+		snmptrap     = "ENABLED"
+		loglimit	 = 500
+		loginterval = 60
+		log = "NONE"
+	}
+
+resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
+name           = "my_tf_group"
+identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
+}
+
+data "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
+name           = citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding.name
+identifiername = citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding.identifiername
+depends_on = [citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding]
+}
+`
+
+func TestAccclusternodegroup_streamidentifier_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_streamidentifier_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", "identifiername", "my_streamidentifier"),
+				),
+			},
+		},
+	})
 }

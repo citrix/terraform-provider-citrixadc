@@ -101,6 +101,56 @@ func TestAccLbvserver_service_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccLbvserver_service_bindingDataSource_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_lbvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_server" "tf_test_svr" {
+	name = "192.168.43.33"
+	ipaddress = "192.168.43.33"
+}
+
+resource "citrixadc_service" "tf_service" {
+    name = "tf_service"
+    ip = citrixadc_server.tf_test_svr.ipaddress
+    servicetype  = "HTTP"
+    port = 80
+}
+
+resource "citrixadc_lbvserver_service_binding" "tf_binding" {
+  name = citrixadc_lbvserver.tf_lbvserver.name
+  servicename = citrixadc_service.tf_service.name
+  weight = 10
+}
+
+data "citrixadc_lbvserver_service_binding" "tf_binding" {
+    name = citrixadc_lbvserver_service_binding.tf_binding.name
+    servicename = citrixadc_lbvserver_service_binding.tf_binding.servicename
+    depends_on = [citrixadc_lbvserver_service_binding.tf_binding]
+}
+`
+
+func TestAccLbvserver_service_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_service_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_service_binding.tf_binding", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_service_binding.tf_binding", "servicename", "tf_service"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_service_binding.tf_binding", "weight", "10"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckLbvserver_service_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

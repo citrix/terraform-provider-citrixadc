@@ -2,7 +2,7 @@
 subcategory: "Responder"
 ---
 
-# Data Source: citrixadc_responderpolicy
+# Data Source: responderpolicy
 
 The `citrixadc_responderpolicy` data source is used to retrieve information about an existing responder policy configured on the Citrix ADC.
 

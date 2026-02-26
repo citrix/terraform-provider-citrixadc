@@ -2,7 +2,7 @@
 subcategory: "Content Switching"
 ---
 
-# Data Source `cspolicylabel`
+# Data Source: cspolicylabel
 
 The cspolicylabel data source allows you to retrieve information about Content Switching policy labels.
 

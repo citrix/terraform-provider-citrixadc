@@ -17,19 +17,42 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsngroup_pcpserver_binding_basic = `
 
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsnclient"
+}
+
+resource "citrixadc_lsngroup" "tf_lsngroup" {
+	groupname  = "my_lsn_group"
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+}
+
+resource "citrixadc_nsip" "tf_nsip" {
+	ipaddress = "10.222.74.185"
+	netmask   = "255.255.255.0"
+	type      = "SNIP"
+}
+
+resource "citrixadc_pcpserver" "tf_pcpserver" {
+	name       = "my_pcpserver"
+	ipaddress  = "10.222.74.185"
+	port       = 5351
+	depends_on = [citrixadc_nsip.tf_nsip]
+}
+
 resource "citrixadc_lsngroup_pcpserver_binding" "tf_lsngroup_pcpserver_binding" {
-	groupname = "my_lsn_group"
-	pcpserver = "my_pcpserver"
-	}
+	groupname = citrixadc_lsngroup.tf_lsngroup.groupname
+	pcpserver = citrixadc_pcpserver.tf_pcpserver.name
+}
   
 `
 
@@ -38,7 +61,6 @@ const testAccLsngroup_pcpserver_binding_basic_step2 = `
 `
 
 func TestAccLsngroup_pcpserver_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -190,4 +212,56 @@ func testAccCheckLsngroup_pcpserver_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsngroup_pcpserver_bindingDataSource_basic = `
+
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsnclient"
+}
+
+resource "citrixadc_lsngroup" "tf_lsngroup" {
+	groupname  = "my_lsn_group"
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+}
+
+resource "citrixadc_nsip" "tf_nsip" {
+	ipaddress = "10.222.74.185"
+	netmask   = "255.255.255.0"
+	type      = "SNIP"
+}
+
+resource "citrixadc_pcpserver" "tf_pcpserver" {
+	name       = "my_pcpserver"
+	ipaddress  = "10.222.74.185"
+	port       = 5351
+	depends_on = [citrixadc_nsip.tf_nsip]
+}
+
+resource "citrixadc_lsngroup_pcpserver_binding" "tf_lsngroup_pcpserver_binding" {
+	groupname = citrixadc_lsngroup.tf_lsngroup.groupname
+	pcpserver = citrixadc_pcpserver.tf_pcpserver.name
+}
+
+data "citrixadc_lsngroup_pcpserver_binding" "tf_lsngroup_pcpserver_binding" {
+	groupname = citrixadc_lsngroup_pcpserver_binding.tf_lsngroup_pcpserver_binding.groupname
+	pcpserver = citrixadc_lsngroup_pcpserver_binding.tf_lsngroup_pcpserver_binding.pcpserver
+}
+`
+
+func TestAccLsngroup_pcpserver_bindingDataSource(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_pcpserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_pcpserver_binding.tf_lsngroup_pcpserver_binding", "groupname", "my_lsn_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_pcpserver_binding.tf_lsngroup_pcpserver_binding", "pcpserver", "my_pcpserver"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lsngroup_pcpserver_binding.tf_lsngroup_pcpserver_binding", "id"),
+				),
+			},
+		},
+	})
 }

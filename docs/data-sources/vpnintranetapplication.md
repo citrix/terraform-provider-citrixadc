@@ -2,7 +2,7 @@
 subcategory: "VPN"
 ---
 
-# Data Source `vpnintranetapplication`
+# Data Source: vpnintranetapplication
 
 The vpnintranetapplication data source allows you to retrieve information about an intranet application configuration.
 

@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source `lbpolicy`
+# Data Source: lbpolicy
 
 The lbpolicy data source allows you to retrieve information about a load balancing policy.
 

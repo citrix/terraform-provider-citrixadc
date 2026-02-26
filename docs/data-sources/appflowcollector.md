@@ -2,7 +2,7 @@
 subcategory: "AppFlow"
 ---
 
-# Data Source `appflowcollector`
+# Data Source: appflowcollector
 
 The appflowcollector data source allows you to retrieve information about an existing appflowcollector.
 

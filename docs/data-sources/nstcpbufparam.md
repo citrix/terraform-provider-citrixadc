@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nstcpbufparam`
+# Data Source: nstcpbufparam
 
 The nstcpbufparam data source allows you to retrieve information about TCP buffering parameters.
 

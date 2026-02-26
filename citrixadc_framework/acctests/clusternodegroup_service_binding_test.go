@@ -17,17 +17,18 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccClusternodegroup_service_binding_basic = `
 
 	resource "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
-		name    = "my_gslb_group"
+		name    = "my_tf_group"
 		service = citrixadc_service.tf_service.name
 	}
 	
@@ -204,4 +205,45 @@ func testAccCheckClusternodegroup_service_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccClusternodegroup_service_bindingDataSource_basic = `
+
+	resource "citrixadc_service" "tf_service" {
+		name        = "my_service_ds"
+		servicetype = "ADNS"
+		ip          = "10.77.33.22"
+		port        = "53"
+	}
+
+	resource "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
+		name    = "my_tf_group"
+		service = citrixadc_service.tf_service.name
+	}
+
+	data "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
+		name    = citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding.name
+		service = citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding.service
+		depends_on = [citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding]
+	}
+`
+
+func TestAccclusternodegroup_service_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_service_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", "service", "my_service_ds"),
+				),
+			},
+		},
+	})
 }

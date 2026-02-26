@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source: citrixadc_lbsipparameters
+# Data Source: lbsipparameters
 
 The lbsipparameters data source allows you to retrieve information about the global SIP parameters configuration.
 

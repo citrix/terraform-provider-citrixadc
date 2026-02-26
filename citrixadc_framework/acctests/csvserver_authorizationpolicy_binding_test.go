@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_authorizationpolicy_binding_basic = `
@@ -213,4 +214,50 @@ func testAccCheckCsvserver_authorizationpolicy_bindingDestroy(s *terraform.State
 	}
 
 	return nil
+}
+
+const testAccCsvserver_authorizationpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_authorizationpolicy" "tf_authorize" {
+		name   = "tf_authorizationpolicy"
+		rule   = "true"
+		action = "ALLOW"
+	}
+
+	resource "citrixadc_csvserver_authorizationpolicy_binding" "tf_csvserver_authorizationpolicy_binding" {
+        name 		= citrixadc_csvserver.tf_csvserver.name
+        policyname 	= citrixadc_authorizationpolicy.tf_authorize.name
+        priority 	= 5
+		bindpoint 	= "REQUEST"
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
+		servicetype = "HTTP"
+	}
+
+	data "citrixadc_csvserver_authorizationpolicy_binding" "tf_csvserver_authorizationpolicy_binding" {
+		name 		= "tf_csvserver"
+		policyname 	= "tf_authorizationpolicy"
+		depends_on 	= [citrixadc_csvserver_authorizationpolicy_binding.tf_csvserver_authorizationpolicy_binding]
+	}
+`
+
+func TestAccCsvserver_authorizationpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_authorizationpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_authorizationpolicy_binding.tf_csvserver_authorizationpolicy_binding", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_authorizationpolicy_binding.tf_csvserver_authorizationpolicy_binding", "policyname", "tf_authorizationpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_authorizationpolicy_binding.tf_csvserver_authorizationpolicy_binding", "priority", "5"),
+				),
+			},
+		},
+	})
 }

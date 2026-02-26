@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccGslbvserver_lbpolicy_binding_basic = `
@@ -54,6 +55,30 @@ const testAccGslbvserver_lbpolicy_binding_basic_step2 = `
 		name   = "tf_pol"
 		rule   = "true"
 		action = "NOLBACTION"
+	}
+`
+
+const testAccGslbvserver_lbpolicy_bindingDataSource_basic = `
+	resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+		name        = "tf_gslbvserver"
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_lbpolicy" "tf_pol" {
+		name   = "tf_pol"
+		rule   = "true"
+		action = "NOLBACTION"
+	}
+	
+	resource "citrixadc_gslbvserver_lbpolicy_binding" "tf_bind" {
+		policyname = citrixadc_lbpolicy.tf_pol.name
+		name       = citrixadc_gslbvserver.tf_gslbvserver.name
+		priority   = 10
+	}
+
+	data "citrixadc_gslbvserver_lbpolicy_binding" "tf_bind" {
+		name       = citrixadc_gslbvserver_lbpolicy_binding.tf_bind.name
+		policyname = citrixadc_gslbvserver_lbpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_gslbvserver_lbpolicy_binding.tf_bind]
 	}
 `
 
@@ -209,4 +234,21 @@ func testAccCheckGslbvserver_lbpolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccGslbvserver_lbpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_lbpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_lbpolicy_binding.tf_bind", "name", "tf_gslbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_lbpolicy_binding.tf_bind", "policyname", "tf_pol"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_lbpolicy_binding.tf_bind", "priority", "10"),
+				),
+			},
+		},
+	})
 }

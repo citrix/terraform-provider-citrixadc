@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNstrafficdomain_vlan_binding_basic = `
@@ -50,6 +51,27 @@ const testAccNstrafficdomain_vlan_binding_basic_step2 = `
 	resource "citrixadc_vlan" "tf_vlan" {
 		vlanid    = 20
 		aliasname = "Management VLAN"
+	}
+`
+
+const testAccNstrafficdomain_vlan_bindingDataSource_basic = `
+	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
+		td        = 2
+		aliasname = "tf_trafficdomain"
+		vmac      = "DISABLED"
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_nstrafficdomain_vlan_binding" "tf_binding" {
+		td   = citrixadc_nstrafficdomain.tf_trafficdomain.td
+		vlan = citrixadc_vlan.tf_vlan.vlanid
+	}
+
+	data "citrixadc_nstrafficdomain_vlan_binding" "tf_binding" {
+		td   = citrixadc_nstrafficdomain_vlan_binding.tf_binding.td
+		vlan = citrixadc_nstrafficdomain_vlan_binding.tf_binding.vlan
 	}
 `
 
@@ -205,4 +227,21 @@ func testAccCheckNstrafficdomain_vlan_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccNstrafficdomain_vlan_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstrafficdomain_vlan_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_vlan_binding.tf_binding", "td", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_vlan_binding.tf_binding", "vlan", "20"),
+				),
+			},
+		},
+	})
 }

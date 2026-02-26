@@ -2,7 +2,7 @@
 subcategory: "Cluster"
 ---
 
-# Data Source `clusterinstance`
+# Data Source: clusterinstance
 
 The clusterinstance data source allows you to retrieve information about a Citrix ADC cluster instance configuration.
 

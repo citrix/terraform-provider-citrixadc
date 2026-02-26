@@ -92,30 +92,30 @@ func testAccCheckNsrpcnodeExist(n string, id *string) resource.TestCheckFunc {
 const testAccNsrpcnode_basic_step1 = `
 
 resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = "10.101.132.123"
+    ipaddress = "10.101.132.152"
     password = "CADS123$%^"
     secure = "ON"
-    srcip = "10.101.132.123"
+    srcip = "10.101.132.152"
 }
 `
 
 const testAccNsrpcnode_basic_step2 = `
 
 resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = "10.101.132.123"
+    ipaddress = "10.101.132.152"
     password = "CADS123$%^"
     secure = "OFF"
-    srcip = "10.101.132.123"
+    srcip = "10.101.132.152"
 }
 `
 
 const testAccNsrpcnodeDataSource_basic = `
 
 resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = "10.101.132.123"
+    ipaddress = "10.101.132.152"
     password = "CADS123$%^"
     secure = "ON"
-    srcip = "10.101.132.123"
+    srcip = "10.101.132.152"
 }
 
 data "citrixadc_nsrpcnode" "tf_nsrpcnode" {
@@ -137,7 +137,7 @@ func TestAccNsrpcnodeDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNsrpcnodeDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_nsrpcnode.tf_nsrpcnode", "ipaddress", "10.101.132.123"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsrpcnode.tf_nsrpcnode", "ipaddress", "10.101.132.152"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsrpcnode.tf_nsrpcnode", "secure", "ON"),
 				),
 			},

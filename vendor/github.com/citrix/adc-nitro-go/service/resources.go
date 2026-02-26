@@ -55,6 +55,7 @@ const (
 	Aaagroup_vpnsessionpolicy_binding
 	Aaagroup_vpntrafficpolicy_binding
 	Aaagroup_vpnurl_binding
+	Aaagroup_vpnurlpolicy_binding
 	Aaakcdaccount
 	Aaaldapparams
 	Aaaotpparameter
@@ -82,10 +83,13 @@ const (
 	Aaauser_vpnsessionpolicy_binding
 	Aaauser_vpntrafficpolicy_binding
 	Aaauser_vpnurl_binding
+	Aaauser_vpnurlpolicy_binding
 	Acctests
+	Analyticsglobal_analyticsprofile_binding
 	Analyticsprofile
 	Appalgparam
 	Appflowaction
+	Appflowaction_analyticsprofile_binding
 	Appflowcollector
 	Appflowglobal_appflowpolicy_binding
 	Appflowglobal_binding
@@ -126,6 +130,7 @@ const (
 	Appfwpolicylabel_policybinding_binding
 	Appfwprofile
 	Appfwprofile_binding
+	Appfwprofile_cmdinjection_binding
 	Appfwprofile_contenttype_binding
 	Appfwprofile_cookieconsistency_binding
 	Appfwprofile_creditcardnumber_binding
@@ -135,6 +140,12 @@ const (
 	Appfwprofile_excluderescontenttype_binding
 	Appfwprofile_fieldconsistency_binding
 	Appfwprofile_fieldformat_binding
+	Appfwprofile_fileuploadtype_binding
+	Appfwprofile_jsoncmdurl_binding
+	Appfwprofile_jsondosurl_binding
+	Appfwprofile_jsonsqlurl_binding
+	Appfwprofile_jsonxssurl_binding
+	Appfwprofile_logexpression_binding
 	Appfwprofile_safeobject_binding
 	Appfwprofile_sqlinjection_binding
 	Appfwprofile_starturl_binding
@@ -165,6 +176,7 @@ const (
 	Auditmessageaction
 	Auditmessages
 	Auditnslogaction
+	Auditnslogglobal_auditnslogpolicy_binding
 	Auditnslogparams
 	Auditnslogpolicy
 	Auditnslogpolicy_aaagroup_binding
@@ -179,6 +191,7 @@ const (
 	Auditnslogpolicy_vpnglobal_binding
 	Auditnslogpolicy_vpnvserver_binding
 	Auditsyslogaction
+	Auditsyslogglobal_auditsyslogpolicy_binding
 	Auditsyslogparams
 	Auditsyslogpolicy
 	Auditsyslogpolicy_aaagroup_binding
@@ -276,6 +289,7 @@ const (
 	Authenticationvserver_authenticationlocalpolicy_binding
 	Authenticationvserver_authenticationloginschemapolicy_binding
 	Authenticationvserver_authenticationnegotiatepolicy_binding
+	Authenticationvserver_authenticationoauthidppolicy_binding
 	Authenticationvserver_authenticationpolicy_binding
 	Authenticationvserver_authenticationradiuspolicy_binding
 	Authenticationvserver_authenticationsamlidppolicy_binding
@@ -283,8 +297,12 @@ const (
 	Authenticationvserver_authenticationtacacspolicy_binding
 	Authenticationvserver_authenticationwebauthpolicy_binding
 	Authenticationvserver_binding
+	Authenticationvserver_cachepolicy_binding
 	Authenticationvserver_cspolicy_binding
+	Authenticationvserver_responderpolicy_binding
+	Authenticationvserver_rewritepolicy_binding
 	Authenticationvserver_tmsessionpolicy_binding
+	Authenticationvserver_vpnportaltheme_binding
 	Authenticationwebauthaction
 	Authenticationwebauthpolicy
 	Authenticationwebauthpolicy_authenticationvserver_binding
@@ -308,9 +326,19 @@ const (
 	Autoscalepolicy_binding
 	Autoscalepolicy_nstimer_binding
 	Autoscaleprofile
+	Botglobal_botpolicy_binding
 	Botpolicy
 	Botpolicylabel
+	Botpolicylabel_botpolicy_binding
 	Botprofile
+	Botprofile_blacklist_binding
+	Botprofile_captcha_binding
+	Botprofile_ipreputation_binding
+	Botprofile_logexpression_binding
+	Botprofile_ratelimit_binding
+	Botprofile_tps_binding
+	Botprofile_trapinsertionurl_binding
+	Botprofile_whitelist_binding
 	Botsettings
 	Botsignature
 	Bridgegroup
@@ -347,6 +375,7 @@ const (
 	Clusterinstance_binding
 	Clusterinstance_clusternode_binding
 	Clusternode
+	Clusternode_routemonitor_binding
 	Clusternodegroup
 	Clusternodegroup_authenticationvserver_binding
 	Clusternodegroup_binding
@@ -379,9 +408,11 @@ const (
 	Configstatus
 	Contentinspectionaction
 	Contentinspectioncallout
+	Contentinspectionglobal_contentinspectionpolicy_binding
 	Contentinspectionparameter
 	Contentinspectionpolicy
 	Contentinspectionpolicylabel
+	Contentinspectionpolicylabel_contentinspectionpolicy_binding
 	Contentinspectionprofile
 	Coparameter
 	Copolicy
@@ -390,8 +421,10 @@ const (
 	Crpolicy_binding
 	Crpolicy_crvserver_binding
 	Crvserver
+	Crvserver_analyticsprofile_binding
 	Crvserver_appflowpolicy_binding
 	Crvserver_appfwpolicy_binding
+	Crvserver_appqoepolicy_binding
 	Crvserver_binding
 	Crvserver_cachepolicy_binding
 	Crvserver_cmppolicy_binding
@@ -416,14 +449,18 @@ const (
 	Cspolicylabel_binding
 	Cspolicylabel_cspolicy_binding
 	Csvserver
+	Csvserver_analyticsprofile_binding
 	Csvserver_appflowpolicy_binding
 	Csvserver_appfwpolicy_binding
+	Csvserver_appqoepolicy_binding
 	Csvserver_auditnslogpolicy_binding
 	Csvserver_auditsyslogpolicy_binding
 	Csvserver_authorizationpolicy_binding
 	Csvserver_binding
+	Csvserver_botpolicy_binding
 	Csvserver_cachepolicy_binding
 	Csvserver_cmppolicy_binding
+	Csvserver_contentinspectionpolicy_binding
 	Csvserver_copolicy_binding
 	Csvserver_cspolicy_binding
 	Csvserver_domain_binding
@@ -483,6 +520,7 @@ const (
 	Dospolicy
 	Extendedmemoryparam
 	Feoaction
+	Feoglobal_feopolicy_binding
 	Feoparameter
 	Feopolicy
 	Filteraction
@@ -518,6 +556,8 @@ const (
 	Gslbservice_dnsview_binding
 	Gslbservice_lbmonitor_binding
 	Gslbservicegroup
+	Gslbservicegroup_gslbservicegroupmember_binding
+	Gslbservicegroup_lbmonitor_binding
 	Gslbsite
 	Gslbsite_binding
 	Gslbsite_gslbservice_binding
@@ -526,6 +566,8 @@ const (
 	Gslbvserver_binding
 	Gslbvserver_domain_binding
 	Gslbvserver_gslbservice_binding
+	Gslbvserver_gslbservicegroup_binding
+	Gslbvserver_lbpolicy_binding
 	Gslbvserver_spilloverpolicy_binding
 	Hafailover
 	Hafiles
@@ -539,6 +581,7 @@ const (
 	Hasync
 	Icaaccessprofile
 	Icaaction
+	Icaglobal_icapolicy_binding
 	Icalatencyprofile
 	Icaparameter
 	Icapolicy
@@ -578,6 +621,7 @@ const (
 	Lbmonitor_metric_binding
 	Lbmonitor_service_binding
 	Lbmonitor_servicegroup_binding
+	Lbmonitor_sslcertkey_binding
 	Lbparameter
 	Lbpersistentsessions
 	Lbpolicy
@@ -586,6 +630,7 @@ const (
 	Lbroute6
 	Lbsipparameters
 	Lbvserver
+	Lbvserver_analyticsprofile_binding
 	Lbvserver_appflowpolicy_binding
 	Lbvserver_appfwpolicy_binding
 	Lbvserver_appqoepolicy_binding
@@ -593,15 +638,18 @@ const (
 	Lbvserver_auditsyslogpolicy_binding
 	Lbvserver_authorizationpolicy_binding
 	Lbvserver_binding
+	Lbvserver_botpolicy_binding
 	Lbvserver_cachepolicy_binding
 	Lbvserver_capolicy_binding
 	Lbvserver_cmppolicy_binding
+	Lbvserver_contentinspectionpolicy_binding
 	Lbvserver_copolicy_binding
 	Lbvserver_csvserver_binding
 	Lbvserver_dnspolicy64_binding
 	Lbvserver_dospolicy_binding
 	Lbvserver_feopolicy_binding
 	Lbvserver_filterpolicy_binding
+	Lbvserver_lbpolicy_binding
 	Lbvserver_pqpolicy_binding
 	Lbvserver_responderpolicy_binding
 	Lbvserver_rewritepolicy_binding
@@ -612,6 +660,8 @@ const (
 	Lbvserver_spilloverpolicy_binding
 	Lbvserver_tmtrafficpolicy_binding
 	Lbvserver_transformpolicy_binding
+	Lbvserver_videooptimizationdetectionpolicy_binding
+	Lbvserver_videooptimizationpacingpolicy_binding
 	Lbwlm
 	Lbwlm_binding
 	Lbwlm_lbvserver_binding
@@ -629,8 +679,20 @@ const (
 	Logout
 	Lsnappsattributes
 	Lsnappsprofile
+	Lsnappsprofile_lsnappsattributes_binding
+	Lsnappsprofile_port_binding
 	Lsnclient
+	Lsnclient_network6_binding
+	Lsnclient_network_binding
+	Lsnclient_nsacl6_binding
+	Lsnclient_nsacl_binding
 	Lsngroup
+	Lsngroup_lsnappsprofile_binding
+	Lsngroup_lsnhttphdrlogprofile_binding
+	Lsngroup_lsnlogprofile_binding
+	Lsngroup_lsnpool_binding
+	Lsngroup_lsntransportprofile_binding
+	Lsngroup_pcpserver_binding
 	Lsnhttphdrlogprofile
 	Lsnip6profile
 	Lsnlogprofile
@@ -641,8 +703,10 @@ const (
 	Lsnstatic
 	Lsntransportprofile
 	Mapbmr
+	Mapbmr_bmrv4network_binding
 	Mapdmr
 	Mapdomain
+	Mapdomain_mapbmr_binding
 	Nat64
 	Nat64param
 	Nd6
@@ -705,6 +769,7 @@ const (
 	Nspartition_binding
 	Nspartition_bridgegroup_binding
 	Nspartition_vlan_binding
+	Nspartition_vxlan_binding
 	Nspbr
 	Nspbr6
 	Nspbrs
@@ -807,6 +872,7 @@ const (
 	Rnat6
 	Rnat6_binding
 	Rnat6_nsip6_binding
+	Rnat_nsip_binding
 	Rnatglobal_auditsyslogpolicy_binding
 	Rnatglobal_binding
 	Rnatparam
@@ -857,6 +923,7 @@ const (
 	Spilloverpolicy_lbvserver_binding
 	Sslaction
 	Sslcacertgroup
+	Sslcacertgroup_sslcertkey_binding
 	Sslcert
 	Sslcertchain
 	Sslcertchain_binding
@@ -915,6 +982,7 @@ const (
 	Sslprofile
 	Sslprofile_binding
 	Sslprofile_ecccurve_binding
+	Sslprofile_sslcertkey_binding
 	Sslprofile_sslcipher_binding
 	Sslprofile_sslciphersuite_binding
 	Sslprofile_sslvserver_binding
@@ -974,6 +1042,7 @@ const (
 	Systemglobaldata
 	Systemgroup
 	Systemgroup_binding
+	Systemgroup_nspartition_binding
 	Systemgroup_systemcmdpolicy_binding
 	Systemgroup_systemuser_binding
 	Systemkek
@@ -1068,6 +1137,7 @@ const (
 	Vpnglobal_intranetip6_binding
 	Vpnglobal_intranetip_binding
 	Vpnglobal_sharefileserver_binding
+	Vpnglobal_sslcertkey_binding
 	Vpnglobal_staserver_binding
 	Vpnglobal_vpnclientlessaccesspolicy_binding
 	Vpnglobal_vpneula_binding
@@ -1077,6 +1147,7 @@ const (
 	Vpnglobal_vpnsessionpolicy_binding
 	Vpnglobal_vpntrafficpolicy_binding
 	Vpnglobal_vpnurl_binding
+	Vpnglobal_vpnurlpolicy_binding
 	Vpnicaconnection
 	Vpnicadtlsconnection
 	Vpnintranetapplication
@@ -1105,6 +1176,7 @@ const (
 	Vpnurlpolicy
 	Vpnvserver
 	Vpnvserver_aaapreauthenticationpolicy_binding
+	Vpnvserver_analyticsprofile_binding
 	Vpnvserver_appcontroller_binding
 	Vpnvserver_appflowpolicy_binding
 	Vpnvserver_auditnslogpolicy_binding
@@ -1115,6 +1187,7 @@ const (
 	Vpnvserver_authenticationlocalpolicy_binding
 	Vpnvserver_authenticationloginschemapolicy_binding
 	Vpnvserver_authenticationnegotiatepolicy_binding
+	Vpnvserver_authenticationoauthidppolicy_binding
 	Vpnvserver_authenticationpolicy_binding
 	Vpnvserver_authenticationradiuspolicy_binding
 	Vpnvserver_authenticationsamlidppolicy_binding
@@ -1141,6 +1214,7 @@ const (
 	Vpnvserver_vpnsessionpolicy_binding
 	Vpnvserver_vpntrafficpolicy_binding
 	Vpnvserver_vpnurl_binding
+	Vpnvserver_vpnurlpolicy_binding
 	Vrid
 	Vrid6
 	Vrid6_binding
@@ -1158,7 +1232,9 @@ const (
 	Vxlan_iptunnel_binding
 	Vxlan_nsip6_binding
 	Vxlan_nsip_binding
+	Vxlan_srcip_binding
 	Vxlanvlanmap
+	Vxlanvlanmap_vxlan_binding
 	Wipackage
 	Wisite
 	Wisite_accessmethod_binding
@@ -1185,6 +1261,7 @@ var resources = []string{
 	"aaagroup_vpnsessionpolicy_binding",
 	"aaagroup_vpntrafficpolicy_binding",
 	"aaagroup_vpnurl_binding",
+	"aaagroup_vpnurlpolicy_binding",
 	"aaakcdaccount",
 	"aaaldapparams",
 	"aaaotpparameter",
@@ -1212,10 +1289,13 @@ var resources = []string{
 	"aaauser_vpnsessionpolicy_binding",
 	"aaauser_vpntrafficpolicy_binding",
 	"aaauser_vpnurl_binding",
+	"aaauser_vpnurlpolicy_binding",
 	"acctests",
+	"analyticsglobal_analyticsprofile_binding",
 	"analyticsprofile",
 	"appalgparam",
 	"appflowaction",
+	"appflowaction_analyticsprofile_binding",
 	"appflowcollector",
 	"appflowglobal_appflowpolicy_binding",
 	"appflowglobal_binding",
@@ -1256,6 +1336,7 @@ var resources = []string{
 	"appfwpolicylabel_policybinding_binding",
 	"appfwprofile",
 	"appfwprofile_binding",
+	"appfwprofile_cmdinjection_binding",
 	"appfwprofile_contenttype_binding",
 	"appfwprofile_cookieconsistency_binding",
 	"appfwprofile_creditcardnumber_binding",
@@ -1265,6 +1346,12 @@ var resources = []string{
 	"appfwprofile_excluderescontenttype_binding",
 	"appfwprofile_fieldconsistency_binding",
 	"appfwprofile_fieldformat_binding",
+	"appfwprofile_fileuploadtype_binding",
+	"appfwprofile_jsoncmdurl_binding",
+	"appfwprofile_jsondosurl_binding",
+	"appfwprofile_jsonsqlurl_binding",
+	"appfwprofile_jsonxssurl_binding",
+	"appfwprofile_logexpression_binding",
 	"appfwprofile_safeobject_binding",
 	"appfwprofile_sqlinjection_binding",
 	"appfwprofile_starturl_binding",
@@ -1295,6 +1382,7 @@ var resources = []string{
 	"auditmessageaction",
 	"auditmessages",
 	"auditnslogaction",
+	"auditnslogglobal_auditnslogpolicy_binding",
 	"auditnslogparams",
 	"auditnslogpolicy",
 	"auditnslogpolicy_aaagroup_binding",
@@ -1309,6 +1397,7 @@ var resources = []string{
 	"auditnslogpolicy_vpnglobal_binding",
 	"auditnslogpolicy_vpnvserver_binding",
 	"auditsyslogaction",
+	"auditsyslogglobal_auditsyslogpolicy_binding",
 	"auditsyslogparams",
 	"auditsyslogpolicy",
 	"auditsyslogpolicy_aaagroup_binding",
@@ -1406,6 +1495,7 @@ var resources = []string{
 	"authenticationvserver_authenticationlocalpolicy_binding",
 	"authenticationvserver_authenticationloginschemapolicy_binding",
 	"authenticationvserver_authenticationnegotiatepolicy_binding",
+	"authenticationvserver_authenticationoauthidppolicy_binding",
 	"authenticationvserver_authenticationpolicy_binding",
 	"authenticationvserver_authenticationradiuspolicy_binding",
 	"authenticationvserver_authenticationsamlidppolicy_binding",
@@ -1413,8 +1503,12 @@ var resources = []string{
 	"authenticationvserver_authenticationtacacspolicy_binding",
 	"authenticationvserver_authenticationwebauthpolicy_binding",
 	"authenticationvserver_binding",
+	"authenticationvserver_cachepolicy_binding",
 	"authenticationvserver_cspolicy_binding",
+	"authenticationvserver_responderpolicy_binding",
+	"authenticationvserver_rewritepolicy_binding",
 	"authenticationvserver_tmsessionpolicy_binding",
+	"authenticationvserver_vpnportaltheme_binding",
 	"authenticationwebauthaction",
 	"authenticationwebauthpolicy",
 	"authenticationwebauthpolicy_authenticationvserver_binding",
@@ -1438,9 +1532,19 @@ var resources = []string{
 	"autoscalepolicy_binding",
 	"autoscalepolicy_nstimer_binding",
 	"autoscaleprofile",
+	"botglobal_botpolicy_binding",
 	"botpolicy",
 	"botpolicylabel",
+	"botpolicylabel_botpolicy_binding",
 	"botprofile",
+	"botprofile_blacklist_binding",
+	"botprofile_captcha_binding",
+	"botprofile_ipreputation_binding",
+	"botprofile_logexpression_binding",
+	"botprofile_ratelimit_binding",
+	"botprofile_tps_binding",
+	"botprofile_trapinsertionurl_binding",
+	"botprofile_whitelist_binding",
 	"botsettings",
 	"botsignature",
 	"bridgegroup",
@@ -1477,6 +1581,7 @@ var resources = []string{
 	"clusterinstance_binding",
 	"clusterinstance_clusternode_binding",
 	"clusternode",
+	"clusternode_routemonitor_binding",
 	"clusternodegroup",
 	"clusternodegroup_authenticationvserver_binding",
 	"clusternodegroup_binding",
@@ -1509,9 +1614,11 @@ var resources = []string{
 	"configstatus",
 	"contentinspectionaction",
 	"contentinspectioncallout",
+	"contentinspectionglobal_contentinspectionpolicy_binding",
 	"contentinspectionparameter",
 	"contentinspectionpolicy",
 	"contentinspectionpolicylabel",
+	"contentinspectionpolicylabel_contentinspectionpolicy_binding",
 	"contentinspectionprofile",
 	"coparameter",
 	"copolicy",
@@ -1520,8 +1627,10 @@ var resources = []string{
 	"crpolicy_binding",
 	"crpolicy_crvserver_binding",
 	"crvserver",
+	"crvserver_analyticsprofile_binding",
 	"crvserver_appflowpolicy_binding",
 	"crvserver_appfwpolicy_binding",
+	"crvserver_appqoepolicy_binding",
 	"crvserver_binding",
 	"crvserver_cachepolicy_binding",
 	"crvserver_cmppolicy_binding",
@@ -1546,14 +1655,18 @@ var resources = []string{
 	"cspolicylabel_binding",
 	"cspolicylabel_cspolicy_binding",
 	"csvserver",
+	"csvserver_analyticsprofile_binding",
 	"csvserver_appflowpolicy_binding",
 	"csvserver_appfwpolicy_binding",
+	"csvserver_appqoepolicy_binding",
 	"csvserver_auditnslogpolicy_binding",
 	"csvserver_auditsyslogpolicy_binding",
 	"csvserver_authorizationpolicy_binding",
 	"csvserver_binding",
+	"csvserver_botpolicy_binding",
 	"csvserver_cachepolicy_binding",
 	"csvserver_cmppolicy_binding",
+	"csvserver_contentinspectionpolicy_binding",
 	"csvserver_copolicy_binding",
 	"csvserver_cspolicy_binding",
 	"csvserver_domain_binding",
@@ -1613,6 +1726,7 @@ var resources = []string{
 	"dospolicy",
 	"extendedmemoryparam",
 	"feoaction",
+	"feoglobal_feopolicy_binding",
 	"feoparameter",
 	"feopolicy",
 	"filteraction",
@@ -1648,6 +1762,8 @@ var resources = []string{
 	"gslbservice_dnsview_binding",
 	"gslbservice_lbmonitor_binding",
 	"gslbservicegroup",
+	"gslbservicegroup_gslbservicegroupmember_binding",
+	"gslbservicegroup_lbmonitor_binding",
 	"gslbsite",
 	"gslbsite_binding",
 	"gslbsite_gslbservice_binding",
@@ -1656,6 +1772,8 @@ var resources = []string{
 	"gslbvserver_binding",
 	"gslbvserver_domain_binding",
 	"gslbvserver_gslbservice_binding",
+	"gslbvserver_gslbservicegroup_binding",
+	"gslbvserver_lbpolicy_binding",
 	"gslbvserver_spilloverpolicy_binding",
 	"hafailover",
 	"hafiles",
@@ -1669,6 +1787,7 @@ var resources = []string{
 	"hasync",
 	"icaaccessprofile",
 	"icaaction",
+	"icaglobal_icapolicy_binding",
 	"icalatencyprofile",
 	"icaparameter",
 	"icapolicy",
@@ -1708,6 +1827,7 @@ var resources = []string{
 	"lbmonitor_metric_binding",
 	"lbmonitor_service_binding",
 	"lbmonitor_servicegroup_binding",
+	"lbmonitor_sslcertkey_binding",
 	"lbparameter",
 	"lbpersistentsessions",
 	"lbpolicy",
@@ -1716,6 +1836,7 @@ var resources = []string{
 	"lbroute6",
 	"lbsipparameters",
 	"lbvserver",
+	"lbvserver_analyticsprofile_binding",
 	"lbvserver_appflowpolicy_binding",
 	"lbvserver_appfwpolicy_binding",
 	"lbvserver_appqoepolicy_binding",
@@ -1723,15 +1844,18 @@ var resources = []string{
 	"lbvserver_auditsyslogpolicy_binding",
 	"lbvserver_authorizationpolicy_binding",
 	"lbvserver_binding",
+	"lbvserver_botpolicy_binding",
 	"lbvserver_cachepolicy_binding",
 	"lbvserver_capolicy_binding",
 	"lbvserver_cmppolicy_binding",
+	"lbvserver_contentinspectionpolicy_binding",
 	"lbvserver_copolicy_binding",
 	"lbvserver_csvserver_binding",
 	"lbvserver_dnspolicy64_binding",
 	"lbvserver_dospolicy_binding",
 	"lbvserver_feopolicy_binding",
 	"lbvserver_filterpolicy_binding",
+	"lbvserver_lbpolicy_binding",
 	"lbvserver_pqpolicy_binding",
 	"lbvserver_responderpolicy_binding",
 	"lbvserver_rewritepolicy_binding",
@@ -1742,6 +1866,8 @@ var resources = []string{
 	"lbvserver_spilloverpolicy_binding",
 	"lbvserver_tmtrafficpolicy_binding",
 	"lbvserver_transformpolicy_binding",
+	"lbvserver_videooptimizationdetectionpolicy_binding",
+	"lbvserver_videooptimizationpacingpolicy_binding",
 	"lbwlm",
 	"lbwlm_binding",
 	"lbwlm_lbvserver_binding",
@@ -1759,8 +1885,20 @@ var resources = []string{
 	"logout",
 	"lsnappsattributes",
 	"lsnappsprofile",
+	"lsnappsprofile_lsnappsattributes_binding",
+	"lsnappsprofile_port_binding",
 	"lsnclient",
+	"lsnclient_network6_binding",
+	"lsnclient_network_binding",
+	"lsnclient_nsacl6_binding",
+	"lsnclient_nsacl_binding",
 	"lsngroup",
+	"lsngroup_lsnappsprofile_binding",
+	"lsngroup_lsnhttphdrlogprofile_binding",
+	"lsngroup_lsnlogprofile_binding",
+	"lsngroup_lsnpool_binding",
+	"lsngroup_lsntransportprofile_binding",
+	"lsngroup_pcpserver_binding",
 	"lsnhttphdrlogprofile",
 	"lsnip6profile",
 	"lsnlogprofile",
@@ -1771,8 +1909,10 @@ var resources = []string{
 	"lsnstatic",
 	"lsntransportprofile",
 	"mapbmr",
+	"mapbmr_bmrv4network_binding",
 	"mapdmr",
 	"mapdomain",
+	"mapdomain_mapbmr_binding",
 	"nat64",
 	"nat64param",
 	"nd6",
@@ -1835,6 +1975,7 @@ var resources = []string{
 	"nspartition_binding",
 	"nspartition_bridgegroup_binding",
 	"nspartition_vlan_binding",
+	"nspartition_vxlan_binding",
 	"nspbr",
 	"nspbr6",
 	"nspbrs",
@@ -1937,6 +2078,7 @@ var resources = []string{
 	"rnat6",
 	"rnat6_binding",
 	"rnat6_nsip6_binding",
+	"rnat_nsip_binding",
 	"rnatglobal_auditsyslogpolicy_binding",
 	"rnatglobal_binding",
 	"rnatparam",
@@ -1987,6 +2129,7 @@ var resources = []string{
 	"spilloverpolicy_lbvserver_binding",
 	"sslaction",
 	"sslcacertgroup",
+	"sslcacertgroup_sslcertkey_binding",
 	"sslcert",
 	"sslcertchain",
 	"sslcertchain_binding",
@@ -2045,6 +2188,7 @@ var resources = []string{
 	"sslprofile",
 	"sslprofile_binding",
 	"sslprofile_ecccurve_binding",
+	"sslprofile_sslcertkey_binding",
 	"sslprofile_sslcipher_binding",
 	"sslprofile_sslciphersuite_binding",
 	"sslprofile_sslvserver_binding",
@@ -2104,6 +2248,7 @@ var resources = []string{
 	"systemglobaldata",
 	"systemgroup",
 	"systemgroup_binding",
+	"systemgroup_nspartition_binding",
 	"systemgroup_systemcmdpolicy_binding",
 	"systemgroup_systemuser_binding",
 	"systemkek",
@@ -2198,6 +2343,7 @@ var resources = []string{
 	"vpnglobal_intranetip6_binding",
 	"vpnglobal_intranetip_binding",
 	"vpnglobal_sharefileserver_binding",
+	"vpnglobal_sslcertkey_binding",
 	"vpnglobal_staserver_binding",
 	"vpnglobal_vpnclientlessaccesspolicy_binding",
 	"vpnglobal_vpneula_binding",
@@ -2207,6 +2353,7 @@ var resources = []string{
 	"vpnglobal_vpnsessionpolicy_binding",
 	"vpnglobal_vpntrafficpolicy_binding",
 	"vpnglobal_vpnurl_binding",
+	"vpnglobal_vpnurlpolicy_binding",
 	"vpnicaconnection",
 	"vpnicadtlsconnection",
 	"vpnintranetapplication",
@@ -2235,6 +2382,7 @@ var resources = []string{
 	"vpnurlpolicy",
 	"vpnvserver",
 	"vpnvserver_aaapreauthenticationpolicy_binding",
+	"vpnvserver_analyticsprofile_binding",
 	"vpnvserver_appcontroller_binding",
 	"vpnvserver_appflowpolicy_binding",
 	"vpnvserver_auditnslogpolicy_binding",
@@ -2245,6 +2393,7 @@ var resources = []string{
 	"vpnvserver_authenticationlocalpolicy_binding",
 	"vpnvserver_authenticationloginschemapolicy_binding",
 	"vpnvserver_authenticationnegotiatepolicy_binding",
+	"vpnvserver_authenticationoauthidppolicy_binding",
 	"vpnvserver_authenticationpolicy_binding",
 	"vpnvserver_authenticationradiuspolicy_binding",
 	"vpnvserver_authenticationsamlidppolicy_binding",
@@ -2271,6 +2420,7 @@ var resources = []string{
 	"vpnvserver_vpnsessionpolicy_binding",
 	"vpnvserver_vpntrafficpolicy_binding",
 	"vpnvserver_vpnurl_binding",
+	"vpnvserver_vpnurlpolicy_binding",
 	"vrid",
 	"vrid6",
 	"vrid6_binding",
@@ -2288,7 +2438,9 @@ var resources = []string{
 	"vxlan_iptunnel_binding",
 	"vxlan_nsip6_binding",
 	"vxlan_nsip_binding",
+	"vxlan_srcip_binding",
 	"vxlanvlanmap",
+	"vxlanvlanmap_vxlan_binding",
 	"wipackage",
 	"wisite",
 	"wisite_accessmethod_binding",

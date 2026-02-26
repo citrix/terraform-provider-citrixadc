@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nslicenseparameters`
+# Data Source: nslicenseparameters
 
 The nslicenseparameters data source allows you to retrieve information about NetScaler license parameters configuration.
 

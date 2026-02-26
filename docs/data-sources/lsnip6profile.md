@@ -2,7 +2,7 @@
 subcategory: "LSN"
 ---
 
-# Data Source `lsnip6profile`
+# Data Source: lsnip6profile
 
 The lsnip6profile data source allows you to retrieve information about LSN (Large Scale NAT) IPv6 profiles.
 

@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaapreauthenticationaction`
+# Data Source: aaapreauthenticationaction
 
 The aaapreauthenticationaction data source allows you to retrieve information about AAA preauthentication actions.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaagroup_vpnurl_binding_basic = `
@@ -66,6 +67,37 @@ const testAccAaagroup_vpnurl_binding_basic_step2 = `
 		urlname          = "Firsturl"
 		vservername      = "server1"
 	}
+`
+
+const testAccAaagroup_vpnurl_bindingDataSource_basic = `
+
+resource "citrixadc_aaagroup" "tf_aaagroup" {
+	groupname = "my_group"
+	weight    = 100
+}
+
+resource "citrixadc_aaagroup_vpnurl_binding" "tf_aaagroup_vpnurl_binding" {
+	groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+	urlname   = citrixadc_vpnurl.tf_url.urlname
+	}
+
+  resource "citrixadc_vpnurl" "tf_url" {
+	actualurl        = "http://www.citrix.com"
+	appjson          = "xyz"
+	applicationtype  = "CVPN"
+	clientlessaccess = "OFF"
+	comment          = "Testing"
+	linkname         = "Description"
+	ssotype          = "unifiedgateway"
+	urlname          = "Firsturl"
+	vservername      = "server1"
+	}
+
+data "citrixadc_aaagroup_vpnurl_binding" "tf_aaagroup_vpnurl_binding" {
+	groupname = citrixadc_aaagroup_vpnurl_binding.tf_aaagroup_vpnurl_binding.groupname
+	urlname   = citrixadc_aaagroup_vpnurl_binding.tf_aaagroup_vpnurl_binding.urlname
+	depends_on = [citrixadc_aaagroup_vpnurl_binding.tf_aaagroup_vpnurl_binding]
+}
 `
 
 func TestAccAaagroup_vpnurl_binding_basic(t *testing.T) {
@@ -220,4 +252,20 @@ func testAccCheckAaagroup_vpnurl_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAaagroup_vpnurl_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_vpnurl_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnurl_binding.tf_aaagroup_vpnurl_binding", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnurl_binding.tf_aaagroup_vpnurl_binding", "urlname", "Firsturl"),
+				),
+			},
+		},
+	})
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_intranetip_binding_basic = `
@@ -172,4 +173,31 @@ func testAccCheckVpnglobal_intranetip_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_intranetip_bindingDataSource_basic = `
+	resource "citrixadc_vpnglobal_intranetip_binding" "tf_bind" {
+		intranetip = "2.3.4.5"
+		netmask    = "255.255.255.0"
+	}
+
+	data "citrixadc_vpnglobal_intranetip_binding" "tf_bind" {
+		intranetip = citrixadc_vpnglobal_intranetip_binding.tf_bind.intranetip
+	}
+`
+
+func TestAccVpnglobal_intranetip_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_intranetip_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_intranetip_binding.tf_bind", "intranetip", "2.3.4.5"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_intranetip_binding.tf_bind", "netmask", "255.255.255.0"),
+				),
+			},
+		},
+	})
 }

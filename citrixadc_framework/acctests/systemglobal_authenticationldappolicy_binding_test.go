@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSystemglobal_authenticationldappolicy_binding_basic = `
@@ -198,4 +199,49 @@ func testAccCheckSystemglobal_authenticationldappolicy_bindingDestroy(s *terrafo
 	}
 
 	return nil
+}
+
+const testAccSystemglobal_authenticationldappolicy_binding_DataSource_basic = `
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "tf_ldapaction"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_authenticationldappolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+	resource "citrixadc_systemglobal_authenticationldappolicy_binding" "tf_bind" {
+		policyname     = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
+		globalbindtype = "SYSTEM_GLOBAL"
+		priority       = 88
+		feature        = "SYSTEM"
+	}
+	
+	data "citrixadc_systemglobal_authenticationldappolicy_binding" "tf_bind" {
+		policyname = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
+		depends_on = [citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind]
+	}
+`
+
+func TestAccSystemglobal_authenticationldappolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemglobal_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemglobal_authenticationldappolicy_binding_DataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind", "policyname", "tf_authenticationldappolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind", "priority", "88"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind", "globalbindtype", "SYSTEM_GLOBAL"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind", "feature", "SYSTEM"),
+				),
+			},
+		},
+	})
 }

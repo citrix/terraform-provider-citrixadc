@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaauser_tmsessionpolicy_binding_basic = `
@@ -45,6 +46,7 @@ const testAccAaauser_tmsessionpolicy_binding_basic = `
 	resource "citrixadc_aaauser_tmsessionpolicy_binding" "tf_aaauser_tmsessionpolicy_binding" {
 		username = citrixadc_aaauser.tf_aaauser.username
 		policy    = citrixadc_tmsessionpolicy.tf_tmsessionpolicy.name
+		type     = "REQUEST"
 		priority  = 100
 	}
 `
@@ -221,4 +223,52 @@ func testAccCheckAaauser_tmsessionpolicy_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccAaauser_tmsessionpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "my_tmsession_action"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
+	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+		name   = "my_tmsession_policy"
+		rule   = "true"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
+	}
+
+	resource "citrixadc_aaauser_tmsessionpolicy_binding" "tf_aaauser_tmsessionpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy    = citrixadc_tmsessionpolicy.tf_tmsessionpolicy.name
+		type     = "REQUEST"
+		priority  = 100
+	}
+
+	data "citrixadc_aaauser_tmsessionpolicy_binding" "tf_aaauser_tmsessionpolicy_binding" {
+		username = citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding.username
+		policy   = citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding.policy
+	}
+`
+
+func TestAccAaauser_tmsessionpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_tmsessionpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding", "policy", "my_tmsession_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

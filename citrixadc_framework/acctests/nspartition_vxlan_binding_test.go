@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNspartition_vxlan_binding_basic = `
@@ -215,4 +216,46 @@ func testAccCheckNspartition_vxlan_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNspartition_vxlan_bindingDataSource_basic = `
+	resource "citrixadc_nspartition" "tf_nspartition" {
+		partitionname = "tf_nspartition"
+		maxbandwidth  = 10240
+		minbandwidth  = 512
+		maxconn       = 512
+		maxmemlimit   = 11
+	}
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_nspartition_vxlan_binding" "tf_binding" {
+		partitionname = citrixadc_nspartition.tf_nspartition.partitionname
+		vxlan         = citrixadc_vxlan.tf_vxlan.vxlanid
+	}
+
+	data "citrixadc_nspartition_vxlan_binding" "tf_binding" {
+		partitionname = citrixadc_nspartition_vxlan_binding.tf_binding.partitionname
+		vxlan         = citrixadc_nspartition_vxlan_binding.tf_binding.vxlan
+	}
+`
+
+func TestAccNspartition_vxlan_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspartition_vxlan_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nspartition_vxlan_binding.tf_binding", "partitionname", "tf_nspartition"),
+					resource.TestCheckResourceAttr("data.citrixadc_nspartition_vxlan_binding.tf_binding", "vxlan", "123"),
+				),
+			},
+		},
+	})
 }

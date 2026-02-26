@@ -2,7 +2,7 @@
 subcategory: "AppFlow"
 ---
 
-# Data Source `appflowpolicylabel`
+# Data Source: appflowpolicylabel
 
 The appflowpolicylabel data source allows you to retrieve information about an existing appflowpolicylabel.
 

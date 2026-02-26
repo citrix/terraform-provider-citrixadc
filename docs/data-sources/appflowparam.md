@@ -2,7 +2,7 @@
 subcategory: "AppFlow"
 ---
 
-# Data Source `appflowparam`
+# Data Source: appflowparam
 
 The appflowparam data source allows you to retrieve information about AppFlow parameters configuration.
 

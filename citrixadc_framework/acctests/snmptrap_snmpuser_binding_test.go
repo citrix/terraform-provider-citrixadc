@@ -236,3 +236,53 @@ func testAccCheckSnmptrap_snmpuser_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccSnmptrap_snmpuser_bindingDataSource_basic = `
+	resource "citrixadc_snmpuser" "tf_snmpuser" {
+		name       = "tf_snmpuser_ds"
+		group      = "all_group"
+		authtype   = "SHA"
+		authpasswd = "secretpassword"
+		privtype   = "AES"
+		privpasswd = "secretpassword"
+	}
+	resource "citrixadc_snmptrap" "tf_snmptrap" {
+		trapclass       = "generic"
+		trapdestination = "10.50.50.11"
+		version         = "V3"
+	}
+	resource "citrixadc_snmptrap_snmpuser_binding" "tf_binding" {
+		trapclass       = citrixadc_snmptrap.tf_snmptrap.trapclass
+		trapdestination = citrixadc_snmptrap.tf_snmptrap.trapdestination
+		username        = citrixadc_snmpuser.tf_snmpuser.name
+		securitylevel   = "authPriv"
+	}
+
+	data "citrixadc_snmptrap_snmpuser_binding" "tf_binding_ds" {
+		trapclass       = citrixadc_snmptrap_snmpuser_binding.tf_binding.trapclass
+		trapdestination = citrixadc_snmptrap_snmpuser_binding.tf_binding.trapdestination
+		username        = citrixadc_snmptrap_snmpuser_binding.tf_binding.username
+		td              = citrixadc_snmptrap_snmpuser_binding.tf_binding.td
+		version         = citrixadc_snmptrap_snmpuser_binding.tf_binding.version
+		depends_on      = [citrixadc_snmptrap_snmpuser_binding.tf_binding]
+	}
+`
+
+func TestAccSnmptrap_snmpuser_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmptrap_snmpuser_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_snmptrap_snmpuser_binding.tf_binding_ds", "trapclass", "generic"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmptrap_snmpuser_binding.tf_binding_ds", "trapdestination", "10.50.50.11"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmptrap_snmpuser_binding.tf_binding_ds", "username", "tf_snmpuser_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_snmptrap_snmpuser_binding.tf_binding_ds", "securitylevel", "authPriv"),
+				),
+			},
+		},
+	})
+}

@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsacl`
+# Data Source: nsacl
 
 The nsacl data source allows you to retrieve information about Citrix ADC extended ACL (Access Control List) rules.
 

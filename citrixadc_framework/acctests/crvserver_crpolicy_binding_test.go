@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_crpolicy_binding_basic = `
@@ -209,4 +210,46 @@ func testAccCheckCrvserver_crpolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCrvserver_crpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_crpolicy" "tf_crpolicy" {
+		policyname = "my_crpolicy_ds"
+		rule       = "true"
+		action     = "ORIGIN"
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+	resource "citrixadc_crvserver_crpolicy_binding" "crvserver_crpolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_crpolicy.tf_crpolicy.policyname
+		priority   = 10
+	}
+
+	data "citrixadc_crvserver_crpolicy_binding" "crvserver_crpolicy_binding" {
+		name       = citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding.name
+		policyname = citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding.policyname
+		depends_on = [citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding]
+	}
+`
+
+func TestAcccrvserver_crpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_crpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding", "policyname", "my_crpolicy_ds"),
+				),
+			},
+		},
+	})
 }

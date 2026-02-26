@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_analyticsprofile_binding_basic = `
@@ -209,4 +210,44 @@ func testAccCheckVpnvserver_analyticsprofile_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_analyticsprofile_bindingDataSource_basic = `
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name = "new_profile"
+		type = "tcpinsight"
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name           = "tf_vserver"
+		servicetype    = "SSL"
+		ipv46          = "3.3.3.3"
+		port           = 443
+	}
+	resource "citrixadc_vpnvserver_analyticsprofile_binding" "tf_bind" {
+		name 			 = citrixadc_vpnvserver.tf_vpnvserver.name
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+
+	data "citrixadc_vpnvserver_analyticsprofile_binding" "tf_bind" {
+		name             = citrixadc_vpnvserver_analyticsprofile_binding.tf_bind.name
+		analyticsprofile = citrixadc_vpnvserver_analyticsprofile_binding.tf_bind.analyticsprofile
+		depends_on       = [citrixadc_vpnvserver_analyticsprofile_binding.tf_bind]
+	}
+`
+
+func TestAccVpnvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_analyticsprofile_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", "name", "tf_vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", "analyticsprofile", "new_profile"),
+				),
+			},
+		},
+	})
 }

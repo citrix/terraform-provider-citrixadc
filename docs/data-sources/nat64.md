@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `nat64`
+# Data Source: nat64
 
 The nat64 data source allows you to retrieve information about NAT64 rule configurations.
 

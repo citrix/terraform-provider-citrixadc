@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNstrafficdomain_vxlan_binding_basic = `
@@ -54,6 +55,29 @@ const testAccNstrafficdomain_vxlan_binding_basic_step2 = `
 		dynamicrouting     = "DISABLED"
 		ipv6dynamicrouting = "DISABLED"
 		innervlantagging   = "ENABLED"
+	}
+`
+
+const testAccNstrafficdomain_vxlan_bindingDataSource_basic = `
+	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
+		td        = 2
+		aliasname = "tf_trafficdomain"
+	}
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_nstrafficdomain_vxlan_binding" "tf_binding" {
+		td    = citrixadc_nstrafficdomain.tf_trafficdomain.td
+		vxlan = citrixadc_vxlan.tf_vxlan.vxlanid
+	}
+
+	data "citrixadc_nstrafficdomain_vxlan_binding" "tf_binding" {
+		td    = citrixadc_nstrafficdomain_vxlan_binding.tf_binding.td
+		vxlan = citrixadc_nstrafficdomain_vxlan_binding.tf_binding.vxlan
 	}
 `
 
@@ -209,4 +233,21 @@ func testAccCheckNstrafficdomain_vxlan_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+func TestAccNstrafficdomain_vxlan_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstrafficdomain_vxlan_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_vxlan_binding.tf_binding", "td", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_vxlan_binding.tf_binding", "vxlan", "123"),
+				),
+			},
+		},
+	})
 }

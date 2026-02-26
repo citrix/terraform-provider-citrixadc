@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source `lbmonitor`
+# Data Source: lbmonitor
 
 The lbmonitor data source allows you to retrieve information about load balancing monitors.
 

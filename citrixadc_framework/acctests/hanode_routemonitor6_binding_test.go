@@ -17,39 +17,43 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccHanode_routemonitor6_binding_basic = `
 
-	resource "citrixadc_hanode" "tf_ha" {
-		hanode_id = 3          
-		ipaddress = "10.222.74.151"
-	}
-
 resource "citrixadc_hanode_routemonitor6_binding" "tf_hanode_routemonitor6_binding" {
 	hanode_id    = 0
 	routemonitor = "fd7f:6bd8:cea9:f32d::/64"
-	depends_on = [
-		citrixadc_hanode.tf_ha
-	]
 	}
 `
 
 const testAccHanode_routemonitor6_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
-	resource "citrixadc_hanode" "tf_ha" {
-		hanode_id = 3          
-		ipaddress = "10.222.74.151"
-	}
+`
+
+const testAccHanode_routemonitor6_bindingDataSource_basic = `
+
+resource "citrixadc_hanode_routemonitor6_binding" "tf_hanode_routemonitor6_binding" {
+	hanode_id    = 0
+	routemonitor = "fd7f:6bd8:ceb9:f32d::/64"
+}
+
+data "citrixadc_hanode_routemonitor6_binding" "tf_hanode_routemonitor6_binding" {
+	hanode_id    = citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding.hanode_id
+	routemonitor = citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding.routemonitor
+	depends_on   = [citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding]
+}
 `
 
 func TestAccHanode_routemonitor6_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -201,4 +205,23 @@ func testAccCheckHanode_routemonitor6_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccHanode_routemonitor6_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHanode_routemonitor6_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding", "hanode_id", "0"),
+					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding", "routemonitor", "fd7f:6bd8:ceb9:f32d::/64"),
+				),
+			},
+		},
+	})
 }

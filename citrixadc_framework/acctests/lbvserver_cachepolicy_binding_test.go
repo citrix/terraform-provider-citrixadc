@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLbvserver_cachepolicy_binding_basic = `
@@ -212,4 +213,49 @@ func testAccCheckLbvserver_cachepolicy_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+const testAccLbvserver_cachepolicy_bindingDataSource_basic = `
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "tf_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_lbvserver_cachepolicy_binding" "tf_citrixadc_lbvserver_cachepolicy_binding" {
+		name 		= citrixadc_lbvserver.tf_lbvserver.name
+		policyname 	= citrixadc_cachepolicy.tf_cachepolicy.policyname
+		priority 	= 1
+		bindpoint 	= "REQUEST"
+	}
+
+	data "citrixadc_lbvserver_cachepolicy_binding" "tf_citrixadc_lbvserver_cachepolicy_binding" {
+		name = citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding.name
+		policyname = citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding.policyname
+		bindpoint = citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding.bindpoint
+		depends_on = [citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding]
+	}
+`
+
+func TestAccLbvserver_cachepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_cachepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding", "policyname", "tf_cachepolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding", "bindpoint", "REQUEST"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding", "priority", "1"),
+				),
+			},
+		},
+	})
 }

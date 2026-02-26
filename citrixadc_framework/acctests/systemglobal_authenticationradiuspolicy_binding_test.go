@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSystemglobal_authenticationradiuspolicy_binding_basic = `
@@ -203,4 +204,47 @@ func testAccCheckSystemglobal_authenticationradiuspolicy_bindingDestroy(s *terra
 	}
 
 	return nil
+}
+
+const testAccSystemglobal_authenticationradiuspolicy_bindingDataSource_basic = `
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+		name         = "tf_radiusaction"
+		radkey       = "secret"
+		serverip     = "1.2.3.4"
+		serverport   = 8080
+		authtimeout  = 2
+		radnasip     = "DISABLED"
+		passencoding = "chap"
+	}
+	resource "citrixadc_authenticationradiuspolicy" "tf_radiuspolicy" {
+		name      = "tf_radiuspolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationradiusaction.tf_radiusaction.name
+	}
+	resource "citrixadc_systemglobal_authenticationradiuspolicy_binding" "tf_systemglobal_authenticationradiuspolicy_binding" {
+		policyname = citrixadc_authenticationradiuspolicy.tf_radiuspolicy.name
+		priority   = 50
+	}
+	
+	data "citrixadc_systemglobal_authenticationradiuspolicy_binding" "tf_systemglobal_authenticationradiuspolicy_binding" {
+		policyname = citrixadc_authenticationradiuspolicy.tf_radiuspolicy.name
+		depends_on = [citrixadc_systemglobal_authenticationradiuspolicy_binding.tf_systemglobal_authenticationradiuspolicy_binding]
+	}
+`
+
+func TestAccSystemglobal_authenticationradiuspolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemglobal_authenticationradiuspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemglobal_authenticationradiuspolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationradiuspolicy_binding.tf_systemglobal_authenticationradiuspolicy_binding", "policyname", "tf_radiuspolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationradiuspolicy_binding.tf_systemglobal_authenticationradiuspolicy_binding", "priority", "50"),
+				),
+			},
+		},
+	})
 }

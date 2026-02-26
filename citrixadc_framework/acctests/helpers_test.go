@@ -27,6 +27,30 @@ type NetScalerNitroClient struct {
 	lock     sync.Mutex
 }
 
+func doAppfwPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"appfw_signatures.xml",
+		"appfwhtmlerrorpage.html",
+		"appfwjsonerrorpage.json",
+		"appfwxmlschema.xml",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	//c := testAccProvider.Meta().(*NetScalerNitroClient)
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
 func doSslcertkeyPreChecks(t *testing.T) {
 	testAccPreCheck(t)
 

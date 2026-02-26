@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccSystemgroup_nspartition_binding_basic = `
@@ -213,4 +214,47 @@ func testAccCheckSystemgroup_nspartition_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccSystemgroup_nspartition_bindingDataSource_basic = `
+
+	resource "citrixadc_systemgroup_nspartition_binding" "tf_systemgroup_nspartition_binding" {
+		groupname     = citrixadc_systemgroup.tf_systemgroup.groupname
+		partitionname = citrixadc_nspartition.tf_nspartition.partitionname
+	}
+	
+	resource "citrixadc_systemgroup" "tf_systemgroup" {
+		groupname = "tf_systemgroup"
+		timeout   = 999
+	}
+	
+	resource "citrixadc_nspartition" "tf_nspartition" {
+		partitionname = "tf_nspartition"
+		maxbandwidth  = 10240
+		minbandwidth  = 512
+		maxconn       = 512
+		maxmemlimit   = 11
+	}
+
+	data "citrixadc_systemgroup_nspartition_binding" "tf_systemgroup_nspartition_binding" {
+		groupname     = citrixadc_systemgroup_nspartition_binding.tf_systemgroup_nspartition_binding.groupname
+		partitionname = citrixadc_systemgroup_nspartition_binding.tf_systemgroup_nspartition_binding.partitionname
+		depends_on    = [citrixadc_systemgroup_nspartition_binding.tf_systemgroup_nspartition_binding]
+	}
+`
+
+func TestAccSystemgroup_nspartition_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemgroup_nspartition_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup_nspartition_binding.tf_systemgroup_nspartition_binding", "groupname", "tf_systemgroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup_nspartition_binding.tf_systemgroup_nspartition_binding", "partitionname", "tf_nspartition"),
+				),
+			},
+		},
+	})
 }

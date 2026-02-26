@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsacls`
+# Data Source: nsacls
 
 The nsacls data source allows you to retrieve information about the ACL configuration.
 

@@ -2,7 +2,7 @@
 subcategory: "Compression"
 ---
 
-# Data Source `cmppolicylabel`
+# Data Source: cmppolicylabel
 
 The cmppolicylabel data source allows you to retrieve information about an existing cmppolicylabel.
 

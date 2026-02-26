@@ -231,3 +231,59 @@ func testAccCheckBotprofile_ratelimit_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccBotprofileRatelimitBindingDataSource_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_ratelimit_binding" "tf_binding" {
+		name                   = citrixadc_botprofile.tf_botprofile.name
+		bot_ratelimit          = true
+		bot_rate_limit_type    = "SESSION"
+		bot_rate_limit_enabled = "ON"
+		cookiename             = "name"
+		rate                   = 3
+		timeslice              = 20
+		bot_rate_limit_action  = ["LOG", "DROP"]
+	}
+
+	data "citrixadc_botprofile_ratelimit_binding" "tf_binding" {
+		name                = citrixadc_botprofile_ratelimit_binding.tf_binding.name
+		bot_rate_limit_type = "SESSION"
+		cookiename          = "name"
+		depends_on          = [citrixadc_botprofile_ratelimit_binding.tf_binding]
+	}
+`
+
+func TestAccBotprofileRatelimitBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofileRatelimitBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_ratelimit_binding.tf_binding", "name", "tf_botprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_ratelimit_binding.tf_binding", "bot_ratelimit", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_ratelimit_binding.tf_binding", "bot_rate_limit_type", "SESSION"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_ratelimit_binding.tf_binding", "bot_rate_limit_enabled", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_ratelimit_binding.tf_binding", "cookiename", "name"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_ratelimit_binding.tf_binding", "rate", "3"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_ratelimit_binding.tf_binding", "timeslice", "20"),
+				),
+			},
+		},
+	})
+}

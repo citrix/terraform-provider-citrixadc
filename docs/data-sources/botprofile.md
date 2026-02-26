@@ -2,7 +2,7 @@
 subcategory: "Bot"
 ---
 
-# Data Source: citrixadc_botprofile
+# Data Source: botprofile
 
 Use this data source to retrieve information about an existing Bot Profile.
 

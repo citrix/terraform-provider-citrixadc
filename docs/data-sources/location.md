@@ -2,7 +2,7 @@
 subcategory: "Basic"
 ---
 
-# Data Source `location`
+# Data Source: location
 
 The location data source allows you to retrieve information about a location configuration on the Citrix ADC.
 

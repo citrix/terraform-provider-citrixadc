@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `linkset`
+# Data Source: linkset
 
 The linkset data source allows you to retrieve information about Link sets.
 

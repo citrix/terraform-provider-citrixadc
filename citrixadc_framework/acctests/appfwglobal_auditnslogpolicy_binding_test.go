@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppfwglobal_auditnslogpolicy_binding_basic = `
@@ -194,4 +195,47 @@ func testAccCheckAppfwglobal_auditnslogpolicy_bindingDestroy(s *terraform.State)
 	}
 
 	return nil
+}
+
+const testAccAppfwglobal_auditnslogpolicy_bindingDataSource_basic = `
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+	resource "citrixadc_appfwglobal_auditnslogpolicy_binding" "tf_binding" {
+	  policyname = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+	  priority   = 80
+	  state      = "DISABLED"
+	  type       = "NONE"
+	}
+
+	data "citrixadc_appfwglobal_auditnslogpolicy_binding" "tf_binding" {
+		policyname = citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding.policyname
+		type       = citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding.type
+		depends_on = [citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding]
+	}
+`
+
+func TestAccAppfwglobal_auditnslogpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwglobal_auditnslogpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding", "policyname", "my_auditnslogpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding", "priority", "80"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding", "type", "NONE"),
+				),
+			},
+		},
+	})
 }

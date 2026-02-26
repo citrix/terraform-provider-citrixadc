@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `ptp`
+# Data Source: ptp
 
 The ptp data source allows you to retrieve information about the Precision Time Protocol (PTP) configuration on the appliance.
 

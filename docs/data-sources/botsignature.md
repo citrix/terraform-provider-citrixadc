@@ -2,7 +2,7 @@
 subcategory: "Bot"
 ---
 
-# Data Source: citrixadc_botsignature
+# Data Source: botsignature
 
 Use this data source to retrieve information about an existing Bot Signature.
 

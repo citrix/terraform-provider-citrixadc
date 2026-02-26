@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_iptunnel
+# Data Source: iptunnel
 
 The iptunnel data source allows you to retrieve information about IP tunnels configured on the Citrix ADC.
 

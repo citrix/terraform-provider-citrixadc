@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `mapbmr`
+# Data Source: mapbmr
 
 The mapbmr data source allows you to retrieve information about MAP Basic Mapping Rule (BMR) configurations.
 

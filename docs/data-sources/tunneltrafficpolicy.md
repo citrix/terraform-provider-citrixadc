@@ -2,7 +2,7 @@
 subcategory: "Tunnel"
 ---
 
-# Data Source `tunneltrafficpolicy`
+# Data Source: tunneltrafficpolicy
 
 The tunneltrafficpolicy data source allows you to retrieve information about a tunnel traffic policy.
 

@@ -25,23 +25,16 @@ import (
 )
 
 const testAccAppfwsignatures_basic = `
-	resource "citrixadc_systemfile" "tf_signature" {
-		filename     = "appfw_signatures.xml"
-		filelocation = "/var/tmp"
-		filecontent  = file("testdata/appfw_signatures.xml")
-	}
 	resource "citrixadc_appfwsignatures" "tf_appfwsignatures" {
 		name       = "tf_appfwsignatures"
 		src        = "local://appfw_signatures.xml"
-		depends_on = [citrixadc_systemfile.tf_signature]
 		comment    = "TestingExample"
 	}
 `
 
 func TestAccAppfwsignatures_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckAppfwsignaturesDestroy,
 		Steps: []resource.TestStep{
@@ -120,15 +113,9 @@ func testAccCheckAppfwsignaturesDestroy(s *terraform.State) error {
 }
 
 const testAccAppfwsignaturesDataSource_basic = `
-	resource "citrixadc_systemfile" "tf_signature_ds" {
-		filename     = "appfw_signatures_ds.xml"
-		filelocation = "/var/tmp"
-		filecontent  = file("testdata/appfw_signatures.xml")
-	}
 	resource "citrixadc_appfwsignatures" "tf_appfwsignatures_ds" {
 		name       = "tf_appfwsignatures_ds"
 		src        = "local://appfw_signatures_ds.xml"
-		depends_on = [citrixadc_systemfile.tf_signature_ds]
 		comment    = "DataSourceTestingExample"
 	}
 
@@ -140,7 +127,7 @@ const testAccAppfwsignaturesDataSource_basic = `
 
 func TestAccAppfwsignaturesDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckAppfwsignaturesDestroy,
 		Steps: []resource.TestStep{

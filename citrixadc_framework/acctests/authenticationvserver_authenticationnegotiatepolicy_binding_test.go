@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_basic = `
@@ -75,6 +76,42 @@ const testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_basic_s
 		name      = "tf_negotiatepolicy"
 		rule      = "ns_true"
 		reqaction = citrixadc_authenticationnegotiateaction.tf_negotiateaction.name
+	}
+`
+
+const testAccAuthenticationvserverAuthenticationnegotiatepolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction" {
+		name                       = "tf_negotiateaction"
+		domain                     = "DomainName"
+		domainuser                 = "usersame"
+		domainuserpasswd           = "password"
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "new_grpname"
+	}
+	resource "citrixadc_authenticationnegotiatepolicy" "tf_negotiatepolicy" {
+		name      = "tf_negotiatepolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationnegotiateaction.tf_negotiateaction.name
+	}
+	resource "citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding" "tf_binding" {
+		name            = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy          = citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy.name
+		priority        = 9
+		groupextraction = "false"
+		bindpoint       = "REQUEST"
+	}
+
+	data "citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding" "tf_binding" {
+		name   = citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding.name
+		policy = citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding.policy
+		depends_on = [citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding]
 	}
 `
 
@@ -230,4 +267,22 @@ func testAccCheckAuthenticationvserver_authenticationnegotiatepolicy_bindingDest
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverAuthenticationnegotiatepolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverAuthenticationnegotiatepolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding", "policy", "tf_negotiatepolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding", "priority", "9"),
+				),
+			},
+		},
+	})
 }

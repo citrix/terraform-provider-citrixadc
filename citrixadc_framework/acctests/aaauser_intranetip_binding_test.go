@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaauser_intranetip_binding_basic = `
@@ -46,6 +47,25 @@ const testAccAaauser_intranetip_binding_basic_step2 = `
 	}
 `
 
+const testAccAaauserIntranetipBindingDataSource_basic = `
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_aaauser_intranetip_binding" "tf_aaauser_intranetip_binding" {
+		username   = citrixadc_aaauser.tf_aaauser.username
+		intranetip = "10.222.74.158"
+		netmask    = "255.255.255.0"
+	}
+
+	data "citrixadc_aaauser_intranetip_binding" "tf_aaauser_intranetip_binding" {
+		username   = citrixadc_aaauser_intranetip_binding.tf_aaauser_intranetip_binding.username
+		intranetip = citrixadc_aaauser_intranetip_binding.tf_aaauser_intranetip_binding.intranetip
+		depends_on = [citrixadc_aaauser_intranetip_binding.tf_aaauser_intranetip_binding]
+	}
+`
+
 func TestAccAaauser_intranetip_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -62,6 +82,23 @@ func TestAccAaauser_intranetip_binding_basic(t *testing.T) {
 				Config: testAccAaauser_intranetip_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaauser_intranetip_bindingNotExist("citrixadc_aaauser_intranetip_binding.tf_aaauser_intranetip_binding", "user1,10.222.74.158"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaauserIntranetipBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauserIntranetipBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_intranetip_binding.tf_aaauser_intranetip_binding", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_intranetip_binding.tf_aaauser_intranetip_binding", "intranetip", "10.222.74.158"),
 				),
 			},
 		},

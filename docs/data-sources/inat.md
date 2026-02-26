@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `inat`
+# Data Source: inat
 
 The inat data source allows you to retrieve information about Inbound NAT (INAT) entries.
 

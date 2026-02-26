@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppflowglobal_appflowpolicy_binding_basic = `
@@ -215,4 +216,57 @@ func testAccCheckAppflowglobal_appflowpolicy_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+const testAccAppflowglobal_appflowpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_appflowglobal_appflowpolicy_binding" "tf_appflowglobal_appflowpolicy_binding" {
+		policyname     = citrixadc_appflowpolicy.tf_appflowpolicy.name
+		globalbindtype = "SYSTEM_GLOBAL"
+		type           = "REQ_OVERRIDE"
+		priority       = 55
+	}
+
+	
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+	  name   = "test_policy"
+	  action = citrixadc_appflowaction.tf_appflowaction.name
+	  rule   = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+	  name            = "test_action"
+	  collectors      = [citrixadc_appflowcollector.tf_appflowcollector.name]
+	  securityinsight = "ENABLED"
+	  botinsight      = "ENABLED"
+	  videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+	  name      = "tf_collector"
+	  ipaddress = "192.168.2.2"
+	  port      = 80
+	}
+
+	data "citrixadc_appflowglobal_appflowpolicy_binding" "tf_appflowglobal_appflowpolicy_binding" {
+		policyname = citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding.policyname
+		type       = citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding.type
+		depends_on = [citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding]
+	}
+`
+
+func TestAccAppflowglobal_appflowpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowglobal_appflowpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "policyname", "test_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "type", "REQ_OVERRIDE"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "priority", "55"),
+				),
+			},
+		},
+	})
 }

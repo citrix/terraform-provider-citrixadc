@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_inatparam
+# Data Source: inatparam
 
 This data source is used to retrieve information about INAT (Inbound NAT) parameters configuration.
 

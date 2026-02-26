@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNstrafficdomain_bridgegroup_binding_basic = `
@@ -54,6 +55,29 @@ const testAccNstrafficdomain_bridgegroup_binding_basic_step2 = `
 		bridgegroup_id     = 2
 		dynamicrouting     = "DISABLED"
 		ipv6dynamicrouting = "DISABLED"
+	}
+`
+
+const testAccNstrafficdomain_bridgegroup_bindingDataSource_basic = `
+
+	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
+		td        = 2
+		aliasname = "tf_trafficdomain"
+		vmac      = "DISABLED"
+	}
+	resource "citrixadc_bridgegroup" "tf_bridgegroup" {
+		bridgegroup_id     = 2
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+	}
+	resource "citrixadc_nstrafficdomain_bridgegroup_binding" "tf_binding" {
+		td          = citrixadc_nstrafficdomain.tf_trafficdomain.td
+		bridgegroup = citrixadc_bridgegroup.tf_bridgegroup.bridgegroup_id
+	}
+
+	data "citrixadc_nstrafficdomain_bridgegroup_binding" "tf_binding" {
+		td          = citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding.td
+		bridgegroup = citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding.bridgegroup
 	}
 `
 
@@ -211,4 +235,21 @@ func testAccCheckNstrafficdomain_bridgegroup_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+func TestAccNstrafficdomain_bridgegroup_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstrafficdomain_bridgegroup_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding", "td", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding", "bridgegroup", "2"),
+				),
+			},
+		},
+	})
 }

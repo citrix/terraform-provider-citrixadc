@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_rewritepolicy_binding_basic = `
@@ -211,4 +212,48 @@ func testAccCheckVpnvserver_rewritepolicy_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_rewritepolicy_bindingDataSource_basic = `
+	resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+		name   = "tf_test_rewrite_policy"
+		action = "DROP"
+		rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_example_server"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_rewritepolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_rewritepolicy.tf_rewrite_policy.name
+		bindpoint = "REQUEST"
+		priority  = 200
+	}
+
+	data "citrixadc_vpnvserver_rewritepolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver_rewritepolicy_binding.tf_bind.name
+		policy    = citrixadc_vpnvserver_rewritepolicy_binding.tf_bind.policy
+		bindpoint = citrixadc_vpnvserver_rewritepolicy_binding.tf_bind.bindpoint
+	}
+`
+
+func TestAccVpnvserver_rewritepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_rewritepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_rewritepolicy_binding.tf_bind", "name", "tf_example_server"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_rewritepolicy_binding.tf_bind", "policy", "tf_test_rewrite_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_rewritepolicy_binding.tf_bind", "bindpoint", "REQUEST"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_rewritepolicy_binding.tf_bind", "priority", "200"),
+				),
+			},
+		},
+	})
 }

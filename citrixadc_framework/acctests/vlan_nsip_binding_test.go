@@ -228,3 +228,48 @@ func testAccCheckVlan_nsip_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccVlan_nsip_bindingDataSource_basic = `
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid 	  = 40
+    aliasname = "Management VLAN"
+}
+
+resource "citrixadc_nsip" "tf_snip" {
+    ipaddress = "10.222.74.145"
+    type 	  = "SNIP"
+    netmask   = "255.255.255.0"
+    icmp 	  = "ENABLED"
+    state 	  = "ENABLED"
+}
+
+resource "citrixadc_vlan_nsip_binding" "tf_bind" {
+    vlanid 	  = citrixadc_vlan.tf_vlan.vlanid
+    ipaddress = citrixadc_nsip.tf_snip.ipaddress
+    netmask   = citrixadc_nsip.tf_snip.netmask
+    td 		  = 0
+}
+
+data "citrixadc_vlan_nsip_binding" "tf_bind" {
+    vlanid 	  = citrixadc_vlan.tf_vlan.vlanid
+    ipaddress = citrixadc_nsip.tf_snip.ipaddress
+    depends_on = [citrixadc_vlan_nsip_binding.tf_bind]
+}
+`
+
+func TestAccVlan_nsip_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_nsip_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_nsip_binding.tf_bind", "vlanid", "40"),
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_nsip_binding.tf_bind", "ipaddress", "10.222.74.145"),
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_nsip_binding.tf_bind", "netmask", "255.255.255.0"),
+				),
+			},
+		},
+	})
+}

@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationtacacspolicy`
+# Data Source: authenticationtacacspolicy
 
 The authenticationtacacspolicy data source allows you to retrieve information about authentication TACACS+ policies.
 

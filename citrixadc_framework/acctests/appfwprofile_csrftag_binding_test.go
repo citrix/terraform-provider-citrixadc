@@ -227,3 +227,46 @@ func testAccCheckAppfwprofile_csrftag_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccAppfwprofile_csrftag_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_csrftag_binding" "tf_binding" {
+		name              = citrixadc_appfwprofile.tf_appfwprofile.name
+		csrftag           = "www.source.com"
+		csrfformactionurl = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		isautodeployed    = "NOTAUTODEPLOYED"
+		comment           = "Testing"
+		state             = "ENABLED"
+		alertonly         = "OFF"
+	}
+
+	data "citrixadc_appfwprofile_csrftag_binding" "tf_binding" {
+		name              = citrixadc_appfwprofile_csrftag_binding.tf_binding.name
+		csrftag           = citrixadc_appfwprofile_csrftag_binding.tf_binding.csrftag
+		csrfformactionurl = citrixadc_appfwprofile_csrftag_binding.tf_binding.csrfformactionurl
+	}
+`
+
+func TestAccAppfwprofile_csrftag_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_csrftag_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_csrftag_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_csrftag_binding.tf_binding", "csrftag", "www.source.com"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_csrftag_binding.tf_binding", "csrfformactionurl", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_csrftag_binding.tf_binding", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_csrftag_binding.tf_binding", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_csrftag_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_csrftag_binding.tf_binding", "alertonly", "OFF"),
+				),
+			},
+		},
+	})
+}

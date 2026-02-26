@@ -2,7 +2,7 @@
 subcategory: "Bot"
 ---
 
-# Data Source `botsettings`
+# Data Source: botsettings
 
 The botsettings data source allows you to retrieve information about Bot Management settings configuration.
 

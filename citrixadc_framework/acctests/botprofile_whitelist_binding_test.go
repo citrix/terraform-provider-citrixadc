@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccBotprofile_whitelist_binding_basic = `
@@ -73,6 +74,39 @@ const testAccBotprofile_whitelist_binding_basic_step2 = `
 	}
 `
 
+const testAccBotprofile_whitelist_bindingDataSource_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_whitelist_binding" "tf_binding" {
+		name                  = citrixadc_botprofile.tf_botprofile.name
+		bot_whitelist         = "true"
+		bot_whitelist_type    = "IPv4"
+		bot_whitelist_value   = "1.2.1.2"
+		bot_bind_comment      = "TestingWhiteList"
+		bot_whitelist_enabled = "ON"
+		log                   = "ON"
+		logmessage            = "BotWhiteListAdded"
+	}
+
+	data "citrixadc_botprofile_whitelist_binding" "tf_binding" {
+		name                = citrixadc_botprofile_whitelist_binding.tf_binding.name
+		bot_whitelist_value = citrixadc_botprofile_whitelist_binding.tf_binding.bot_whitelist_value
+	}
+`
+
 func TestAccBotprofile_whitelist_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -89,6 +123,28 @@ func TestAccBotprofile_whitelist_binding_basic(t *testing.T) {
 				Config: testAccBotprofile_whitelist_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofile_whitelist_bindingNotExist("citrixadc_botprofile_whitelist_binding.tf_binding", "tf_botprofile,1.2.1.2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccbotprofile_whitelist_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_whitelist_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_whitelist_binding.tf_binding", "name", "tf_botprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_whitelist_binding.tf_binding", "bot_whitelist", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_whitelist_binding.tf_binding", "bot_whitelist_value", "1.2.1.2"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_whitelist_binding.tf_binding", "bot_whitelist_type", "IPv4"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_whitelist_binding.tf_binding", "bot_bind_comment", "TestingWhiteList"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_whitelist_binding.tf_binding", "bot_whitelist_enabled", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_whitelist_binding.tf_binding", "log", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_whitelist_binding.tf_binding", "logmessage", "BotWhiteListAdded"),
 				),
 			},
 		},

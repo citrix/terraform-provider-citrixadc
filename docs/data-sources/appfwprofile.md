@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source: citrixadc_appfwprofile
+# Data Source: appfwprofile
 
 Use this data source to retrieve information about an existing Application Firewall Profile.
 

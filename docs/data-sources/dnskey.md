@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnskey`
+# Data Source: dnskey
 
 The dnskey data source allows you to retrieve information about DNS keys used for signing DNS zones.
 

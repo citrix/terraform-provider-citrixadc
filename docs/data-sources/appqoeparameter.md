@@ -2,7 +2,7 @@
 subcategory: "AppQoE"
 ---
 
-# Data Source `appqoeparameter`
+# Data Source: appqoeparameter
 
 The appqoeparameter data source allows you to retrieve information about AppQoE parameters configuration.
 

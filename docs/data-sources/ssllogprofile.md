@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source: citrixadc_ssllogprofile
+# Data Source: ssllogprofile
 
 The ssllogprofile data source allows you to retrieve information about SSL log profiles configured on the Citrix ADC.
 

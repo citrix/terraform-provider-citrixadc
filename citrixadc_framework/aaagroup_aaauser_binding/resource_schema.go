@@ -3,6 +3,7 @@ package aaagroup_aaauser_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
@@ -10,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // AaagroupAaauserBindingResourceModel describes the resource data model.
@@ -84,7 +87,12 @@ func aaagroup_aaauser_bindingSetAttrFromGet(ctx context.Context, data *AaagroupA
 		data.Username = types.StringNull()
 	}
 
-	data.Id = types.StringValue(fmt.Sprintf("%s,%s", data.Groupname.ValueString(), data.Username.ValueString()))
+	// Set ID for the resource
+	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("username:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Username.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

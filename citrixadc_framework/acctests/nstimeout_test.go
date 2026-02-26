@@ -29,7 +29,7 @@ const testAccNstimeout_basic = `
 
 resource "citrixadc_nstimeout" "tf_nstimeout" {
 	zombie     = 60
-	client     = 2000
+	anyclient     = 2000
 	server     = 2000
 	httpclient = 2000
 	reducedrsttimeout = 10
@@ -41,7 +41,7 @@ const testAccNstimeout_update = `
 
 resource "citrixadc_nstimeout" "tf_nstimeout" {
 	zombie     = 70
-	client     = 2300
+	anyclient     = 2300
 	server     = 2400
 	httpclient = 2500
 	reducedrsttimeout = 15
@@ -60,7 +60,7 @@ func TestAccNstimeout_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNstimeoutExist("citrixadc_nstimeout.tf_nstimeout", nil),
 					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "zombie", "60"),
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "client", "2000"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "anyclient", "2000"),
 					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "server", "2000"),
 					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "httpclient", "2000"),
 					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "reducedrsttimeout", "10"),
@@ -71,7 +71,7 @@ func TestAccNstimeout_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNstimeoutExist("citrixadc_nstimeout.tf_nstimeout", nil),
 					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "zombie", "70"),
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "client", "2300"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "anyclient", "2300"),
 					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "server", "2400"),
 					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "httpclient", "2500"),
 					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "reducedrsttimeout", "15"),

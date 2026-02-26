@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_rnatparam
+# Data Source: rnatparam
 
 The rnatparam data source allows you to retrieve information about RNAT parameters configuration.
 

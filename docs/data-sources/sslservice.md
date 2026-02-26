@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source: citrixadc_sslservice
+# Data Source: sslservice
 
 The sslservice data source allows you to retrieve information about an SSL service configuration.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_authenticationradiuspolicy_binding_basic = `
@@ -228,4 +229,54 @@ func testAccCheckVpnvserver_authenticationradiuspolicy_bindingDestroy(s *terrafo
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_authenticationradiuspolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+		name         = "tf_radiusaction"
+		radkey       = "WareTheLorax"
+		serverip     = "2.3.2.1"
+		serverport   = 8080
+		authtimeout  = 2
+		radnasip     = "DISABLED"
+		passencoding = "chap"
+	}
+	resource "citrixadc_authenticationradiuspolicy" "tf_radiuspolicy" {
+		name      = "tf_radiuspolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationradiusaction.tf_radiusaction.name
+	}
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+	}
+	resource "citrixadc_vpnvserver_authenticationradiuspolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationradiuspolicy.tf_radiuspolicy.name
+		priority  = 20
+	}
+
+	data "citrixadc_vpnvserver_authenticationradiuspolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind.policy
+	}
+`
+
+func TestAccVpnvserver_authenticationradiuspolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationradiuspolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", "name", "tf_vpnvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", "policy", "tf_radiuspolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
 }

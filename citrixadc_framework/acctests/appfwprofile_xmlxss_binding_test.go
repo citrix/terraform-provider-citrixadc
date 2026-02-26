@@ -230,3 +230,46 @@ func testAccCheckAppfwprofile_xmlxss_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccAppfwprofileXmlxssBindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_xmlxss_binding" "tf_binding1" {
+		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmlxss                  = "tf_xmlxss"
+		state                   = "ENABLED"
+		alertonly               = "ON"
+		isregex_xmlxss          = "NOTREGEX"
+		isautodeployed          = "AUTODEPLOYED"
+	}
+
+	data "citrixadc_appfwprofile_xmlxss_binding" "tf_binding_data" {
+		name                    = citrixadc_appfwprofile_xmlxss_binding.tf_binding1.name
+		xmlxss                  = citrixadc_appfwprofile_xmlxss_binding.tf_binding1.xmlxss
+		as_scan_location_xmlxss = citrixadc_appfwprofile_xmlxss_binding.tf_binding1.as_scan_location_xmlxss
+		depends_on              = [citrixadc_appfwprofile_xmlxss_binding.tf_binding1]
+	}
+`
+
+func TestAccAppfwprofileXmlxssBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileXmlxssBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlxss_binding.tf_binding_data", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlxss_binding.tf_binding_data", "xmlxss", "tf_xmlxss"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlxss_binding.tf_binding_data", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlxss_binding.tf_binding_data", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlxss_binding.tf_binding_data", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlxss_binding.tf_binding_data", "isregex_xmlxss", "NOTREGEX"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlxss_binding.tf_binding_data", "as_scan_location_xmlxss", "ELEMENT"),
+				),
+			},
+		},
+	})
+}

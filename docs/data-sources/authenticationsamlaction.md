@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationsamlaction`
+# Data Source: authenticationsamlaction
 
 The authenticationsamlaction data source allows you to retrieve information about SAML authentication actions.
 

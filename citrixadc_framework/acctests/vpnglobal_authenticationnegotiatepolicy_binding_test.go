@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_authenticationnegotiatepolicy_binding_basic = `
@@ -199,4 +200,47 @@ func testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingDestroy(s *terra
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_authenticationnegotiatepolicy_bindingDataSource_basic = `
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction" {
+		name                       = "tf_negotiateaction"
+		domain                     = "DomainName"
+		domainuser                 = "usersame"
+		domainuserpasswd           = "password"
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "new_grpname"
+	}
+	resource "citrixadc_authenticationnegotiatepolicy" "tf_negotiatepolicy" {
+		name      = "tf_negotiatepolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationnegotiateaction.tf_negotiateaction.name
+	}
+	resource "citrixadc_vpnglobal_authenticationnegotiatepolicy_binding" "tf_binding" {
+		policyname             = citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy.name
+		secondary              = "false"
+		priority               = 10
+		gotopriorityexpression = "END"
+	}
+
+	data "citrixadc_vpnglobal_authenticationnegotiatepolicy_binding" "tf_binding" {
+		policyname = citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding.policyname
+	}
+`
+
+func TestAccVpnglobal_authenticationnegotiatepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationnegotiatepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding", "policyname", "tf_negotiatepolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding", "secondary", "false"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding", "priority", "10"),
+				),
+			},
+		},
+	})
 }

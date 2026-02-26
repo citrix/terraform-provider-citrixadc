@@ -2,7 +2,7 @@
 subcategory: "Policy"
 ---
 
-# Data Source `policyhttpcallout`
+# Data Source: policyhttpcallout
 
 The policyhttpcallout data source allows you to retrieve information about an existing HTTP callout configuration.
 

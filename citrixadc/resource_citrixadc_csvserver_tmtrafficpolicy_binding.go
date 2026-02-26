@@ -26,7 +26,6 @@ func resourceCitrixAdcCsvserver_tmtrafficpolicy_binding() *schema.Resource {
 			"bindpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 			"gotopriorityexpression": {
@@ -162,7 +161,6 @@ func readCsvserver_tmtrafficpolicy_bindingFunc(ctx context.Context, d *schema.Re
 
 	data := dataArr[foundIndex]
 
-	d.Set("bindpoint", data["bindpoint"])
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("invoke", data["invoke"])
 	d.Set("labelname", data["labelname"])

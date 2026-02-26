@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_trustedlearningclients_binding_basic = `
@@ -221,4 +222,42 @@ func testAccCheckAppfwprofile_trustedlearningclients_bindingDestroy(s *terraform
 	}
 
 	return nil
+}
+
+const testAccAppfwprofile_trustedlearningclients_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_trustedlearningclients_binding" "tf_binding1" {
+		name                   = citrixadc_appfwprofile.tf_appfwprofile.name
+		trustedlearningclients = "1.2.31.1/32"
+		state                  = "ENABLED"
+		isautodeployed         = "NOTAUTODEPLOYED"
+		comment                = "Testing"
+	}
+
+	data "citrixadc_appfwprofile_trustedlearningclients_binding" "tf_binding1" {
+		name                   = citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1.name
+		trustedlearningclients = citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1.trustedlearningclients
+	}
+`
+
+func TestAccAppfwprofile_trustedlearningclients_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_trustedlearningclients_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "trustedlearningclients", "1.2.31.1/32"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "comment", "Testing"),
+				),
+			},
+		},
+	})
 }

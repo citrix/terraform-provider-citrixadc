@@ -2,7 +2,7 @@
 subcategory: "Front End Optimization"
 ---
 
-# Data Source: citrixadc_feoaction
+# Data Source: feoaction
 
 This data source is used to retrieve information about an existing Front End Optimization (FEO) action.
 

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_authenticationtacacspolicy_binding_basic = `
@@ -205,4 +206,50 @@ func testAccCheckVpnglobal_authenticationtacacspolicy_bindingDestroy(s *terrafor
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_authenticationtacacspolicy_bindingDataSource_basic = `
+	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+		name            = "tf_tacacsaction"
+		serverip        = "1.2.3.4"
+		serverport      = 8080
+		authtimeout     = 5
+		authorization   = "ON"
+		accounting      = "ON"
+		auditfailedcmds = "ON"
+		groupattrname   = "group"
+	}
+	resource "citrixadc_authenticationtacacspolicy" "tf_tacacspolicy" {
+		name      = "tf_tacacspolicy"
+		rule      = "NS_FALSE"
+		reqaction = citrixadc_authenticationtacacsaction.tf_tacacsaction.name
+	
+	}
+	resource "citrixadc_vpnglobal_authenticationtacacspolicy_binding" "tf_bind" {
+		policyname      = citrixadc_authenticationtacacspolicy.tf_tacacspolicy.name
+		priority        = 80
+		secondary       = false
+		groupextraction = false
+	}
+
+	data "citrixadc_vpnglobal_authenticationtacacspolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_authenticationtacacspolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationtacacspolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind", "policyname", "tf_tacacspolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind", "priority", "80"),
+				),
+			},
+		},
+	})
 }

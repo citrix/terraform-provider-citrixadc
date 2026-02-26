@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationcertaction`
+# Data Source: authenticationcertaction
 
 The authenticationcertaction data source allows you to retrieve information about authentication certificate actions.
 

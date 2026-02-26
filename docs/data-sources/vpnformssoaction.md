@@ -2,7 +2,7 @@
 subcategory: "VPN"
 ---
 
-# Data Source `vpnformssoaction`
+# Data Source: vpnformssoaction
 
 The vpnformssoaction data source allows you to retrieve information about a form-based single sign-on profile.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_authenticationnegotiatepolicy_binding_basic = `
@@ -227,4 +228,55 @@ func testAccCheckVpnvserver_authenticationnegotiatepolicy_bindingDestroy(s *terr
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_authenticationnegotiatepolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction" {
+		name                       = "tf_negotiateaction"
+		domain                     = "DomainName"
+		domainuser                 = "usersame"
+		domainuserpasswd           = "password"
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "new_grpname"
+	}
+	resource "citrixadc_authenticationnegotiatepolicy" "tf_negotiatepolicy" {
+		name      = "tf_negotiatepolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationnegotiateaction.tf_negotiateaction.name
+	}
+	resource "citrixadc_vpnvserver_authenticationnegotiatepolicy_binding" "tf_binding" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy.name
+		priority  = 33
+		bindpoint = "AAA_REQUEST"
+	}
+
+	data "citrixadc_vpnvserver_authenticationnegotiatepolicy_binding" "tf_binding" {
+		name   = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy = citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy.name
+		depends_on = [citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding]
+	}
+`
+
+func TestAccVpnvserver_authenticationnegotiatepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationnegotiatepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", "name", "tf_vpnvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", "policy", "tf_negotiatepolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", "priority", "33"),
+				),
+			},
+		},
+	})
 }

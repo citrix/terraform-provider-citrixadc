@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaagroup_vpntrafficpolicy_binding_basic = `
@@ -29,6 +30,7 @@ const testAccAaagroup_vpntrafficpolicy_binding_basic = `
 	resource "citrixadc_aaagroup_vpntrafficpolicy_binding" "tf_aaagroup_vpntrafficpolicy_binding" {
 		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
 		policy    = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		type     = "REQUEST"
 		priority  = 100
 	}
 	
@@ -223,4 +225,55 @@ func testAccCheckAaagroup_vpntrafficpolicy_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+const testAccAaagroup_vpntrafficpolicy_bindingDataSource_basic = `
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta        = "ON"
+		hdx        = "ON"
+		name       = "Testingaction"
+		qual       = "tcp"
+		sso        = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
+
+	resource "citrixadc_aaagroup_vpntrafficpolicy_binding" "tf_aaagroup_vpntrafficpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		type     = "REQUEST"
+		priority  = 100
+	}
+
+	data "citrixadc_aaagroup_vpntrafficpolicy_binding" "tf_aaagroup_vpntrafficpolicy_binding" {
+		groupname = citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding.groupname
+		policy    = citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding.policy
+		depends_on = [citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding]
+	}
+`
+
+func TestAccAaagroup_vpntrafficpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_vpntrafficpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding", "policy", "tf_vpntrafficpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

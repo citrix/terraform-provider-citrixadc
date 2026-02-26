@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_vpneula_binding_basic = `
@@ -177,4 +178,33 @@ func testAccCheckVpnglobal_vpneula_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_vpneula_bindingDataSource_basic = `
+	resource "citrixadc_vpneula" "tf_vpneula" {
+		name = "tf_vpneula"	
+	}
+	resource "citrixadc_vpnglobal_vpneula_binding" "tf_bind" {
+		eula = citrixadc_vpneula.tf_vpneula.name
+	}
+
+	data "citrixadc_vpnglobal_vpneula_binding" "tf_bind" {
+		eula = citrixadc_vpnglobal_vpneula_binding.tf_bind.eula
+		depends_on = [citrixadc_vpnglobal_vpneula_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_vpneula_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpneula_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpneula_binding.tf_bind", "eula", "tf_vpneula"),
+				),
+			},
+		},
+	})
 }

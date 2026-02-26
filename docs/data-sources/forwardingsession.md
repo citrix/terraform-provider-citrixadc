@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_forwardingsession
+# Data Source: forwardingsession
 
 Use this data source to retrieve information about an existing Forwarding Session.
 

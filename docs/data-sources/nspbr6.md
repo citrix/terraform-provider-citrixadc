@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nspbr6`
+# Data Source: nspbr6
 
 The nspbr6 data source allows you to retrieve information about IPv6 Policy Based Routes (PBR6).
 

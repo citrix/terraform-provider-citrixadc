@@ -2,7 +2,7 @@
 subcategory: "Rewrite"
 ---
 
-# Data Source: citrixadc_rewriteaction
+# Data Source: rewriteaction
 
 The `citrixadc_rewriteaction` data source is used to retrieve information about an existing rewrite action configured on the Citrix ADC.
 

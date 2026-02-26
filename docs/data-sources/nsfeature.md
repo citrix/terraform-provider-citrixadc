@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsfeature`
+# Data Source: nsfeature
 
 The nsfeature data source allows you to retrieve information about the features enabled on the Citrix ADC appliance.
 

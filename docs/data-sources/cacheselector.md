@@ -2,7 +2,7 @@
 subcategory: "Integrated Caching"
 ---
 
-# Data Source `cacheselector`
+# Data Source: cacheselector
 
 The cacheselector data source allows you to retrieve information about an existing cacheselector.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccBotprofile_tps_binding_basic = `
@@ -228,4 +229,59 @@ func testAccCheckBotprofile_tps_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccbotprofile_tps_bindingDataSource_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_tps_binding" "tf_binding" {
+		name         = citrixadc_botprofile.tf_botprofile.name
+		bot_tps_type = "REQUEST_URL"
+		bot_tps      = "true"
+		logmessage   = "Hellobinding"
+		threshold    = 3
+		percentage   = 20
+		bot_tps_enabled = "ON"
+	}
+
+	data "citrixadc_botprofile_tps_binding" "tf_binding" {
+		name         = citrixadc_botprofile_tps_binding.tf_binding.name
+		bot_tps_type = citrixadc_botprofile_tps_binding.tf_binding.bot_tps_type
+		depends_on   = [citrixadc_botprofile_tps_binding.tf_binding]
+	}
+`
+
+func TestAccbotprofile_tps_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccbotprofile_tps_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_tps_binding.tf_binding", "name", "tf_botprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_tps_binding.tf_binding", "bot_tps_type", "REQUEST_URL"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_tps_binding.tf_binding", "bot_tps", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_tps_binding.tf_binding", "logmessage", "Hellobinding"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_tps_binding.tf_binding", "threshold", "3"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_tps_binding.tf_binding", "percentage", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_botprofile_tps_binding.tf_binding", "bot_tps_enabled", "ON"),
+				),
+			},
+		},
+	})
 }

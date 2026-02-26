@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_authenticationloginschemapolicy_binding_basic = `
@@ -229,4 +230,58 @@ func testAccCheckVpnvserver_authenticationloginschemapolicy_bindingDestroy(s *te
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_authenticationloginschemapolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vserver_example"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_authenticationloginschema" "tf_loginschema" {
+		name                    = "tf_loginschema"
+		authenticationschema    = "LoginSchema/SingleAuth.xml"
+		ssocredentials          = "YES"
+		authenticationstrength  = "30"
+		passwordcredentialindex = "10"
+	}
+	resource "citrixadc_authenticationloginschemapolicy" "tf_loginschemapolicy" {
+		name    = "tf_loginschemapolicy"
+		rule    = "true"
+		action  = citrixadc_authenticationloginschema.tf_loginschema.name
+		comment = "samplenew_testing"
+	}
+	resource "citrixadc_vpnvserver_authenticationloginschemapolicy_binding" "tf_bind" {
+		name            = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy          = citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy.name
+		priority        = 80
+		secondary       = false
+		groupextraction = false
+	}
+
+	data "citrixadc_vpnvserver_authenticationloginschemapolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnvserver_authenticationloginschemapolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationloginschemapolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind", "id"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind", "name", "tf_vserver_example"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind", "policy", "tf_loginschemapolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind", "priority", "80"),
+				),
+			},
+		},
+	})
 }

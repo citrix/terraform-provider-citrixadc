@@ -17,17 +17,35 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccClusternodegroup_vpnvserver_binding_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_clusternode_ds"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "my_vpn_vserver_ds"
+		servicetype = "SSL"
+	}
+
 	resource "citrixadc_clusternodegroup_vpnvserver_binding" "tf_clusternodegroup_vpnvserver_binding" {
-		name    = "my_vpn_group"
-		vserver = "my_vpnvserver"
+		name    = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver = citrixadc_vpnvserver.tf_vpnvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 	
 `
@@ -191,4 +209,43 @@ func testAccCheckClusternodegroup_vpnvserver_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+const testAccClusternodegroup_vpnvserver_bindingDataSource_basic = `
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "my_vpn_vserver_ds"
+		servicetype = "SSL"
+	}
+
+	resource "citrixadc_clusternodegroup_vpnvserver_binding" "tf_clusternodegroup_vpnvserver_binding" {
+		name    = "my_tf_group"
+		vserver = citrixadc_vpnvserver.tf_vpnvserver.name
+	}
+
+	data "citrixadc_clusternodegroup_vpnvserver_binding" "tf_clusternodegroup_vpnvserver_binding" {
+		name    = citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding.name
+		vserver = citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding.vserver
+		depends_on = [citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding]
+	}
+`
+
+func TestAccclusternodegroup_vpnvserver_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_vpnvserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding", "vserver", "my_vpn_vserver_ds"),
+				),
+			},
+		},
+	})
 }

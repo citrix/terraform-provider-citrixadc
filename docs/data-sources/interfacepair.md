@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `interfacepair`
+# Data Source: interfacepair
 
 The interfacepair data source allows you to retrieve information about interface pairs configured on the Citrix ADC.
 

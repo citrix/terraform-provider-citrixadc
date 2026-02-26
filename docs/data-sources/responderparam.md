@@ -2,7 +2,7 @@
 subcategory: "Responder"
 ---
 
-# Data Source: citrixadc_responderparam
+# Data Source: responderparam
 
 The `citrixadc_responderparam` data source is used to retrieve information about the global responder parameters configured on the Citrix ADC.
 

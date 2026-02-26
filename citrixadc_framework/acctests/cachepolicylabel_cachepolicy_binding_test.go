@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCachepolicylabel_cachepolicy_binding_basic = `
@@ -211,4 +212,46 @@ func testAccCheckCachepolicylabel_cachepolicy_bindingDestroy(s *terraform.State)
 	}
 
 	return nil
+}
+
+const testAccCachepolicylabel_cachepolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_cachepolicylabel" "tf_policylabel" {
+		labelname = "my_cachepolicylabel"
+		evaluates = "REQ"
+	}
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+
+	resource "citrixadc_cachepolicylabel_cachepolicy_binding" "tf_cachepolicylabel_cachepolicy_binding" {
+		labelname  = citrixadc_cachepolicylabel.tf_policylabel.labelname
+		priority   = 100
+		policyname = citrixadc_cachepolicy.tf_cachepolicy.policyname
+	}
+
+	data "citrixadc_cachepolicylabel_cachepolicy_binding" "tf_cachepolicylabel_cachepolicy_binding" {
+		labelname  = citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding.labelname
+		policyname = citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding.policyname
+		depends_on = [citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding]
+	}
+`
+
+func TestAcccachepolicylabel_cachepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCachepolicylabel_cachepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding", "labelname", "my_cachepolicylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding", "policyname", "my_cachepolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

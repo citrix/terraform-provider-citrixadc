@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNetbridge_vlan_binding_basic = `
@@ -201,4 +202,40 @@ func testAccCheckNetbridge_vlan_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNetbridge_vlan_bindingDataSource_basic = `
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "tf_netbridge"
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_netbridge_vlan_binding" "tf_binding" {
+		name = citrixadc_netbridge.tf_netbridge.name
+		vlan = citrixadc_vlan.tf_vlan.vlanid
+	}
+
+	data "citrixadc_netbridge_vlan_binding" "tf_binding" {
+		name = citrixadc_netbridge.tf_netbridge.name
+		vlan = citrixadc_vlan.tf_vlan.vlanid
+		depends_on = [citrixadc_netbridge_vlan_binding.tf_binding]
+	}
+`
+
+func TestAccNetbridge_vlan_bindingDataSource(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetbridge_vlan_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge_vlan_binding.tf_binding", "name", "tf_netbridge"),
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge_vlan_binding.tf_binding", "vlan", "20"),
+				),
+			},
+		},
+	})
 }

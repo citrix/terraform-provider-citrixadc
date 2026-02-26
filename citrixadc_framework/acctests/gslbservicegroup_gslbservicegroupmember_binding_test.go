@@ -260,3 +260,54 @@ func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy(s *terra
 
 	return nil
 }
+
+const testAccGslbservicegroup_gslbservicegroupmember_bindingDataSource_basic = `
+
+	resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+		servicegroupname = "test_gslbvservicegroup"
+		servicetype      = "HTTP"
+		cip              = "DISABLED"
+		healthmonitor    = "NO"
+		sitename         = citrixadc_gslbsite.site_local.sitename
+	}
+	resource "citrixadc_gslbsite" "site_local" {
+		sitename        = "Site-Local"
+		siteipaddress   = "172.31.96.234"
+		sessionexchange = "DISABLED"
+		sitepassword = "password123"
+	}
+	resource "citrixadc_server" "tf_server" {
+		name = "tf_server"
+		ipaddress = "192.168.11.13"
+	}
+	
+	resource "citrixadc_gslbservicegroup_gslbservicegroupmember_binding" "tf_binding" {
+		servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
+		servername       = citrixadc_server.tf_server.name
+		port             = 60
+	}
+
+	data "citrixadc_gslbservicegroup_gslbservicegroupmember_binding" "tf_binding" {
+		servicegroupname = citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding.servicegroupname
+		servername       = citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding.servername
+		port             = citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding.port
+	}
+`
+
+func TestAccGslbservicegroup_gslbservicegroupmember_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicegroup_gslbservicegroupmember_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "servicegroupname", "test_gslbvservicegroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "servername", "tf_server"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "port", "60"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "ip", "192.168.11.13"),
+				),
+			},
+		},
+	})
+}

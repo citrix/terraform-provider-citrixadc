@@ -223,3 +223,47 @@ func testAccCheckSslservicegroup_sslcertkey_bindingDestroy(s *terraform.State) e
 
 	return nil
 }
+
+const testAccSslservicegroup_sslcertkey_bindingDataSource_basic = `
+	resource "citrixadc_sslservicegroup_sslcertkey_binding" "tf_sslservicegroup_sslcertkey_binding" {
+		ca = false
+		snicert = false
+        certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
+        servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+	}
+
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey"
+		cert = "/var/tmp/certificate1.crt"
+		key = "/var/tmp/key1.pem"
+	}
+
+	resource "citrixadc_servicegroup" "tf_servicegroup" {
+		servicegroupname = "tf_servicegroup"
+		servicetype = "SSL"
+	}
+
+	data "citrixadc_sslservicegroup_sslcertkey_binding" "tf_sslservicegroup_sslcertkey_binding" {
+		servicegroupname = citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding.servicegroupname
+		certkeyname = citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding.certkeyname
+		ca = citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding.ca
+	}
+`
+
+func TestAccSslservicegroup_sslcertkey_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservicegroup_sslcertkey_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "servicegroupname", "tf_servicegroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "certkeyname", "tf_sslcertkey"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "ca", "false"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "snicert", "false"),
+				),
+			},
+		},
+	})
+}

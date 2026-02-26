@@ -2,7 +2,7 @@
 subcategory: "Content Switching"
 ---
 
-# Data Source `csparameter`
+# Data Source: csparameter
 
 The csparameter data source allows you to retrieve information about content switching parameters configuration.
 

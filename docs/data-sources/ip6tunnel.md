@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `ip6tunnel`
+# Data Source: ip6tunnel
 
 The ip6tunnel data source allows you to retrieve information about IPv6 tunnels configured on the Citrix ADC.
 

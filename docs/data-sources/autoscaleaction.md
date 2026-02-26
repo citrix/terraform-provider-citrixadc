@@ -2,7 +2,7 @@
 subcategory: "Autoscale"
 ---
 
-# Data Source `autoscaleaction`
+# Data Source: autoscaleaction
 
 The autoscaleaction data source allows you to retrieve information about an existing autoscale action.
 

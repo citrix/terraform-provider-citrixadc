@@ -2,7 +2,7 @@
 subcategory: "VPN"
 ---
 
-# Data Source: citrixadc_vpnclientlessaccesspolicy
+# Data Source: vpnclientlessaccesspolicy
 
 The vpnclientlessaccesspolicy data source allows you to retrieve information about a VPN clientless access policy configured on the Citrix ADC.
 

@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_route
+# Data Source: route
 
 The route data source allows you to retrieve information about a specific IPv4 route configuration.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccSslvserver_sslciphersuite_binding_basic = `
@@ -49,6 +50,34 @@ const testAccSslvserver_sslciphersuite_binding_basic_step2 = `
 		servicetype = "SSL"
 		ipv46 = "5.5.5.5"
 		port = 80
+	}
+`
+
+const testAccSslvserver_sslciphersuite_bindingDataSource_basic = `
+	resource "citrixadc_sslvserver_sslciphersuite_binding" "tf_sslvserver_sslciphersuite_binding" {
+		ciphername = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+		vservername = citrixadc_lbvserver.tf_sslvserver.name
+	}
+
+	resource "citrixadc_sslvserver" "tf_sslvserver_ssl" {
+		vservername = citrixadc_lbvserver.tf_sslvserver.name
+		tls1 = "ENABLED"
+		tls11 = "ENABLED"
+		tls12 = "ENABLED"
+		tls13 = "DISABLED"
+	}
+
+	resource "citrixadc_lbvserver" "tf_sslvserver" {
+		name = "tf_sslvserver_ds"
+		servicetype = "SSL"
+		ipv46 = "5.5.5.6"
+		port = 443
+	}
+
+	data "citrixadc_sslvserver_sslciphersuite_binding" "tf_sslvserver_sslciphersuite_binding" {
+		vservername = citrixadc_lbvserver.tf_sslvserver.name
+		ciphername = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+		depends_on = [citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding]
 	}
 `
 
@@ -217,4 +246,24 @@ func testAccCheckSslvserver_sslciphersuite_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+func TestAccSslvserver_sslciphersuite_bindingDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Operation not permitted when SSL profiles are enabled!")
+	if adcTestbed == "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. This test is incompatible with SSL profiles.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_sslciphersuite_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding", "vservername", "tf_sslvserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding", "ciphername", "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"),
+				),
+			},
+		},
+	})
 }

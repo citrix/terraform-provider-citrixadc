@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_interface
+# Data Source: interface
 
 Use this data source to retrieve information about a specific network interface on the Citrix ADC.
 

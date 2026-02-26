@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `ipsecalgprofile`
+# Data Source: ipsecalgprofile
 
 The ipsecalgprofile data source allows you to retrieve information about IPSec ALG profiles.
 

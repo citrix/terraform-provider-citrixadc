@@ -76,6 +76,40 @@ resource "citrixadc_gslbservice" "tf_gslbservice" {
 	}
 `
 
+const testAccGslbservice_lbmonitor_bindingDataSource_basic = `
+
+resource "citrixadc_gslbservice_lbmonitor_binding" "tf_gslbservice_lbmonitor_binding" {
+	monitor_name = citrixadc_lbmonitor.tfmonitor1.monitorname
+	monstate    = "DISABLED"
+	servicename = citrixadc_gslbservice.tf_gslbservice.servicename
+	weight      = "20" 
+}
+
+resource "citrixadc_gslbservice" "tf_gslbservice" {
+	ip          = "172.16.1.200"
+	port        = "80"
+	servicename = "tf_gslb1vservice"
+	servicetype = "HTTP"
+	sitename    = citrixadc_gslbsite.tf_gslbsite.sitename
+}
+
+resource "citrixadc_gslbsite" "tf_gslbsite" {
+	sitename      = "tf_sitename"
+	siteipaddress = "10.222.70.210"
+	sitepassword  = "password123"
+}
+
+resource "citrixadc_lbmonitor" "tfmonitor1" {
+	monitorname = "tf_monitor"
+	type        = "HTTP"
+}
+
+data "citrixadc_gslbservice_lbmonitor_binding" "tf_gslbservice_lbmonitor_binding" {
+	servicename  = citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding.servicename
+	monitor_name = citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding.monitor_name
+}
+`
+
 func TestAccGslbservice_lbmonitor_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -228,4 +262,22 @@ func testAccCheckGslbservice_lbmonitor_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+func TestAccGslbservice_lbmonitor_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservice_lbmonitor_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "servicename", "tf_gslb1vservice"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "monitor_name", "tf_monitor"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "monstate", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "weight", "20"),
+				),
+			},
+		},
+	})
 }

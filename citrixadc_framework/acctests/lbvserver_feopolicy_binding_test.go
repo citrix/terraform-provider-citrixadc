@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLbvserver_feopolicy_binding_basic = `
@@ -215,4 +216,51 @@ func testAccCheckLbvserver_feopolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLbvserver_feopolicy_bindingDataSource_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	name        = "tf_lbvserver"
+	ipv46       = "10.10.10.33"
+	port        = 80
+	servicetype = "HTTP"
+}
+
+resource "citrixadc_feopolicy" "tf_feopolicy" {
+	name   = "tf_feopolicy"
+	action = "BASIC"
+	rule   = "true"
+}
+
+resource "citrixadc_lbvserver_feopolicy_binding" "tf_lbvserver_feopolicy_binding" {
+	bindpoint              = "REQUEST"
+	gotopriorityexpression = "END"
+	name                   = citrixadc_lbvserver.tf_lbvserver.name
+	policyname             = citrixadc_feopolicy.tf_feopolicy.name
+	priority               = 1
+}
+
+data "citrixadc_lbvserver_feopolicy_binding" "tf_lbvserver_feopolicy_binding" {
+	name       = citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding.name
+	policyname = citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding.policyname
+	depends_on = [citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding]
+}
+`
+
+func TestAccLbvserver_feopolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_feopolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", "policyname", "tf_feopolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", "priority", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
 }

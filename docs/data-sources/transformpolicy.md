@@ -2,7 +2,7 @@
 subcategory: "Transform"
 ---
 
-# Data Source `transformpolicy`
+# Data Source: transformpolicy
 
 The transformpolicy data source allows you to retrieve information about a URL Transformation policy.
 

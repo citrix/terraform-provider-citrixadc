@@ -2,7 +2,7 @@
 subcategory: "Cache"
 ---
 
-# Data Source: citrixadc_cachepolicylabel
+# Data Source: cachepolicylabel
 
 The `citrixadc_cachepolicylabel` data source is used to retrieve information about an existing Cache Policy Label configured on a Citrix ADC appliance.
 

@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnsnameserver`
+# Data Source: dnsnameserver
 
 The dnsnameserver data source allows you to retrieve information about a DNS name server configured on the Citrix ADC.
 

@@ -46,7 +46,6 @@ func resourceCitrixAdcAaauser_vpnurlpolicy_binding() *schema.Resource {
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 		},
@@ -135,7 +134,6 @@ func readAaauser_vpnurlpolicy_bindingFunc(ctx context.Context, d *schema.Resourc
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("policy", data["policy"])
 	setToInt("priority", d, data["priority"])
-	d.Set("type", data["type"])
 	d.Set("username", data["username"])
 
 	return nil

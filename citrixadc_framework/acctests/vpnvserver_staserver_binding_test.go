@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_staserver_binding_basic = `
@@ -200,4 +201,41 @@ func testAccCheckVpnvserver_staserver_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_staserver_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_staserver_binding" "tf_binding" {
+		name           = citrixadc_vpnvserver.tf_vpnvserver.name
+		staserver      = "http://www.example.com/"
+		staaddresstype = "IPV6"
+	}
+	
+	data "citrixadc_vpnvserver_staserver_binding" "tf_binding" {
+		name      = citrixadc_vpnvserver_staserver_binding.tf_binding.name
+		staserver = citrixadc_vpnvserver_staserver_binding.tf_binding.staserver
+	}
+`
+
+func TestAccVpnvserver_staserver_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_staserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_staserver_binding.tf_binding", "name", "tf_vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_staserver_binding.tf_binding", "staserver", "http://www.example.com/"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_staserver_binding.tf_binding", "staaddresstype", "IPV6"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_staserver_binding.tf_binding", "id"),
+				),
+			},
+		},
+	})
 }

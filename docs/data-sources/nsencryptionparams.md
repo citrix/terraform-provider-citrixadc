@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsencryptionparams`
+# Data Source: nsencryptionparams
 
 The nsencryptionparams data source allows you to retrieve information about NetScaler encryption parameters configuration.
 

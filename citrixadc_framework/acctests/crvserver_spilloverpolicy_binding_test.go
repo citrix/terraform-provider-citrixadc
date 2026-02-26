@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_spilloverpolicy_binding_basic = `
@@ -224,4 +225,56 @@ func testAccCheckCrvserver_spilloverpolicy_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+const testAccCrvserver_spilloverpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction_ds"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy_ds"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+
+	resource "citrixadc_crvserver_spilloverpolicy_binding" "crvserver_spilloverpolicy_binding" {
+		name                   = citrixadc_crvserver.crvserver.name
+		policyname             = citrixadc_spilloverpolicy.tf_spilloverpolicy.name
+		bindpoint              = "REQUEST"
+		gotopriorityexpression = "END"
+		invoke                 = false
+		priority               = 1
+	}
+
+	data "citrixadc_crvserver_spilloverpolicy_binding" "crvserver_spilloverpolicy_binding" {
+		name       = citrixadc_crvserver_spilloverpolicy_binding.crvserver_spilloverpolicy_binding.name
+		policyname = citrixadc_crvserver_spilloverpolicy_binding.crvserver_spilloverpolicy_binding.policyname
+		depends_on = [citrixadc_crvserver_spilloverpolicy_binding.crvserver_spilloverpolicy_binding]
+	}
+`
+
+func TestAcccrvserver_spilloverpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_spilloverpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_spilloverpolicy_binding.crvserver_spilloverpolicy_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_spilloverpolicy_binding.crvserver_spilloverpolicy_binding", "policyname", "tf_spilloverpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_spilloverpolicy_binding.crvserver_spilloverpolicy_binding", "priority", "1"),
+				),
+			},
+		},
+	})
 }

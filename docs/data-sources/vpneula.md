@@ -2,7 +2,7 @@
 subcategory: "VPN"
 ---
 
-# Data Source: citrixadc_vpneula
+# Data Source: vpneula
 
 The vpneula data source allows you to retrieve information about a VPN End User License Agreement (EULA) configured on the Citrix ADC.
 

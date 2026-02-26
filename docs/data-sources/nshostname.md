@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nshostname`
+# Data Source: nshostname
 
 The nshostname data source allows you to retrieve information about the hostname configured on the Citrix ADC appliance.
 

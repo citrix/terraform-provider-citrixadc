@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `bridgegroup`
+# Data Source: bridgegroup
 
 The bridgegroup data source allows you to retrieve information about bridge groups.
 

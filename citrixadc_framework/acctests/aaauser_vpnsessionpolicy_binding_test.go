@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaauser_vpnsessionpolicy_binding_basic = `
@@ -29,6 +30,7 @@ const testAccAaauser_vpnsessionpolicy_binding_basic = `
 	resource "citrixadc_aaauser_vpnsessionpolicy_binding" "tf_aaauser_vpnsessionpolicy_binding" {
 		username = citrixadc_aaauser.tf_aaauser.username
 		policy   = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
+		type     = "REQUEST"
 		priority = 100
 	}
   
@@ -220,4 +222,55 @@ func testAccCheckAaauser_vpnsessionpolicy_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccAaauser_vpnsessionpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_aaauser_vpnsessionpolicy_binding" "tf_aaauser_vpnsessionpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy   = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
+		type     = "REQUEST"
+		priority = 100
+	}
+
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
+		name                       = "newsession"
+		sesstimeout                = "10"
+		defaultauthorizationaction = "ALLOW"
+	}
+	
+	resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
+		name   = "tf_vpnsessionpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name
+	}
+
+	data "citrixadc_aaauser_vpnsessionpolicy_binding" "tf_aaauser_vpnsessionpolicy_binding" {
+		username = citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding.username
+		policy   = citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding.policy
+		depends_on = [citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding]
+	}
+`
+
+func TestAccAaauser_vpnsessionpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_vpnsessionpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", "policy", "tf_vpnsessionpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

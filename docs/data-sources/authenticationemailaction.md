@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationemailaction`
+# Data Source: authenticationemailaction
 
 The authenticationemailaction data source allows you to retrieve information about authentication email actions.
 

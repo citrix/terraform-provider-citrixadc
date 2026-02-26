@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAnalyticsglobal_analyticsprofile_binding_basic = `
@@ -185,4 +186,36 @@ func testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy(s *terraform.St
 	}
 
 	return nil
+}
+
+const testAccAnalyticsglobal_analyticsprofile_bindingDataSource_basic = `
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name = "new"
+		type = "webinsight"
+	}
+	
+	resource "citrixadc_analyticsglobal_analyticsprofile_binding" "tf_binding" {
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+
+	data "citrixadc_analyticsglobal_analyticsprofile_binding" "tf_binding_data" {
+		analyticsprofile = citrixadc_analyticsglobal_analyticsprofile_binding.tf_binding.analyticsprofile
+		depends_on = [citrixadc_analyticsglobal_analyticsprofile_binding.tf_binding]
+	}
+`
+
+func TestAccAnalyticsglobal_analyticsprofile_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyticsglobal_analyticsprofile_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_analyticsglobal_analyticsprofile_binding.tf_binding_data", "analyticsprofile", "new"),
+				),
+			},
+		},
+	})
 }

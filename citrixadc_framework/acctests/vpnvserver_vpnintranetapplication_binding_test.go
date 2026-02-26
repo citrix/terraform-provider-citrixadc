@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_vpnintranetapplication_binding_basic = `
@@ -211,4 +212,45 @@ func testAccCheckVpnvserver_vpnintranetapplication_bindingDestroy(s *terraform.S
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_vpnintranetapplication_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name           = "tf_examplevserver"
+		servicetype    = "SSL"
+		ipv46          = "3.3.3.3"
+		port           = 443
+	}
+	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+		intranetapplication = "tf_vpnintranetapplication"
+		protocol            = "UDP"
+		destip              = "2.3.6.5"
+		interception        = "TRANSPARENT"
+	}
+	resource "citrixadc_vpnvserver_vpnintranetapplication_binding" "tf_bind" {
+		name 				= citrixadc_vpnvserver.tf_vpnvserver.name
+		intranetapplication = citrixadc_vpnintranetapplication.tf_vpnintranetapplication.intranetapplication
+	}
+
+	data "citrixadc_vpnvserver_vpnintranetapplication_binding" "tf_bind" {
+		name                = citrixadc_vpnvserver_vpnintranetapplication_binding.tf_bind.name
+		intranetapplication = citrixadc_vpnvserver_vpnintranetapplication_binding.tf_bind.intranetapplication
+		depends_on          = [citrixadc_vpnvserver_vpnintranetapplication_binding.tf_bind]
+	}
+`
+
+func TestAccVpnvserver_vpnintranetapplication_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_vpnintranetapplication_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnintranetapplication_binding.tf_bind", "name", "tf_examplevserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnintranetapplication_binding.tf_bind", "intranetapplication", "tf_vpnintranetapplication"),
+				),
+			},
+		},
+	})
 }

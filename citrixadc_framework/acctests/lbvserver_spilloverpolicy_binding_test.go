@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLbvserver_spilloverpolicy_binding_basic = `
@@ -226,4 +227,57 @@ func testAccCheckLbvserver_spilloverpolicy_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+const testAccLbvserver_spilloverpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
+
+	resource "citrixadc_lbvserver_spilloverpolicy_binding" "tf_lbvserver_spilloverpolicy_binding" {
+		name 					= citrixadc_lbvserver.tf_lbvserver.name
+        policyname				= citrixadc_spilloverpolicy.tf_spilloverpolicy.name
+        bindpoint 				= "REQUEST"
+        gotopriorityexpression 	= "END"
+        invoke 					= false
+        priority 				= 1
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+
+	data "citrixadc_lbvserver_spilloverpolicy_binding" "tf_lbvserver_spilloverpolicy_binding" {
+		name 		= citrixadc_lbvserver_spilloverpolicy_binding.tf_lbvserver_spilloverpolicy_binding.name
+		policyname 	= citrixadc_lbvserver_spilloverpolicy_binding.tf_lbvserver_spilloverpolicy_binding.policyname
+	}
+`
+
+func TestAccLbvserver_spilloverpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_spilloverpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_spilloverpolicy_binding.tf_lbvserver_spilloverpolicy_binding", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_spilloverpolicy_binding.tf_lbvserver_spilloverpolicy_binding", "policyname", "tf_spilloverpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_spilloverpolicy_binding.tf_lbvserver_spilloverpolicy_binding", "gotopriorityexpression", "END"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_spilloverpolicy_binding.tf_lbvserver_spilloverpolicy_binding", "priority", "1"),
+				),
+			},
+		},
+	})
 }

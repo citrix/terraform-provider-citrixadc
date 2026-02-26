@@ -2,7 +2,7 @@
 subcategory: "Policy"
 ---
 
-# Data Source `policydataset`
+# Data Source: policydataset
 
 The policydataset data source allows you to retrieve information about an existing policy dataset configuration.
 

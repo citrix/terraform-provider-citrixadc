@@ -2,7 +2,7 @@
 subcategory: "SNMP"
 ---
 
-# Data Source: citrixadc_snmpmanager
+# Data Source: snmpmanager
 
 The `citrixadc_snmpmanager` data source is used to retrieve information about an SNMP manager configured on the Citrix ADC.
 

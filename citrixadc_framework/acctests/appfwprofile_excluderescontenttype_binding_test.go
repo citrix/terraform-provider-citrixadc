@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_excluderescontenttype_binding_basic = `
@@ -221,4 +222,46 @@ func testAccCheckAppfwprofile_excluderescontenttype_bindingDestroy(s *terraform.
 	}
 
 	return nil
+}
+
+const testAccAppfwprofile_excluderescontenttype_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name = "tf_appfwprofile"
+		type = ["HTML"]
+	}
+
+	resource "citrixadc_appfwprofile_excluderescontenttype_binding" "tf_binding1" {
+		name                  = citrixadc_appfwprofile.tf_appfwprofile.name
+		excluderescontenttype = "expressionexample"
+		state                 = "DISABLED"
+		isautodeployed        = "NOTAUTODEPLOYED"
+		alertonly             = "OFF"
+		comment               = "Testing"
+	}
+
+	data "citrixadc_appfwprofile_excluderescontenttype_binding" "tf_binding1_datasource" {
+		name                  = citrixadc_appfwprofile_excluderescontenttype_binding.tf_binding1.name
+		excluderescontenttype = citrixadc_appfwprofile_excluderescontenttype_binding.tf_binding1.excluderescontenttype
+	}
+`
+
+func TestAccAppfwprofile_excluderescontenttype_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_excluderescontenttype_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_excluderescontenttype_binding.tf_binding1_datasource", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_excluderescontenttype_binding.tf_binding1_datasource", "excluderescontenttype", "expressionexample"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_excluderescontenttype_binding.tf_binding1_datasource", "state", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_excluderescontenttype_binding.tf_binding1_datasource", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_excluderescontenttype_binding.tf_binding1_datasource", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_excluderescontenttype_binding.tf_binding1_datasource", "comment", "Testing"),
+				),
+			},
+		},
+	})
 }

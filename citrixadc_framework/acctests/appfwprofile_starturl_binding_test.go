@@ -217,3 +217,62 @@ func testAccCheckAppfwprofile_starturl_bindingDestroy(s *terraform.State) error 
 
 	return nil
 }
+
+const testAccAppfwprofileStarturlBindingDataSource_basic = `
+	resource citrixadc_appfwprofile demo_appfw {
+		name = "tfAcc_appfwprofile"
+		type = ["HTML"]
+	}
+
+	resource citrixadc_appfwprofile_starturl_binding appfwprofile_starturl1 {
+		name = citrixadc_appfwprofile.demo_appfw.name
+		starturl = "^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pif|pdf|css|csv)$"
+		alertonly      = "OFF"
+		isautodeployed = "NOTAUTODEPLOYED"
+		state          = "ENABLED"
+	}
+
+	resource citrixadc_appfwprofile_starturl_binding appfwprofile_starturl2 {
+		name = citrixadc_appfwprofile.demo_appfw.name
+		starturl = "^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pdf|css|csv)$"
+		alertonly      = "OFF"
+		isautodeployed = "NOTAUTODEPLOYED"
+		state          = "ENABLED"
+	}
+
+	data "citrixadc_appfwprofile_starturl_binding" "appfwprofile_starturl1_data" {
+		name       = citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1.name
+		starturl   = citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1.starturl
+		depends_on = [citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1]
+	}
+
+	data "citrixadc_appfwprofile_starturl_binding" "appfwprofile_starturl2_data" {
+		name       = citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2.name
+		starturl   = citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2.starturl
+		depends_on = [citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2]
+	}
+`
+
+func TestAccAppfwprofileStarturlBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileStarturlBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1_data", "name", "tfAcc_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1_data", "starturl", "^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pif|pdf|css|csv)$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1_data", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1_data", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1_data", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2_data", "name", "tfAcc_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2_data", "starturl", "^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pdf|css|csv)$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2_data", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2_data", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2_data", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}

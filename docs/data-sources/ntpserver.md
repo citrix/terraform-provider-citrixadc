@@ -2,7 +2,7 @@
 subcategory: "NTP"
 ---
 
-# Data Source: citrixadc_ntpserver
+# Data Source: ntpserver
 
 The ntpserver data source allows you to retrieve information about an NTP server configured on Citrix ADC.
 

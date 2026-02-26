@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsversion`
+# Data Source: nsversion
 
 The nsversion data source allows you to retrieve information about the version of the target ADC.
 

@@ -2,7 +2,7 @@
 subcategory: "PCP"
 ---
 
-# Data Source `pcpprofile`
+# Data Source: pcpprofile
 
 The pcpprofile data source allows you to retrieve information about PCP (Port Control Protocol) profiles.
 

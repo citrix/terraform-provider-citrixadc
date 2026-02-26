@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nscapacity`
+# Data Source: nscapacity
 
 The nscapacity data source allows you to retrieve information about NetScaler capacity license configuration.
 

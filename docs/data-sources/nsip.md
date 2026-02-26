@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsip`
+# Data Source: nsip
 
 The nsip data source allows you to retrieve information about NetScaler owned IP addresses (NSIP, SNIP, VIP, GSLBsiteIP, and CLIP).
 

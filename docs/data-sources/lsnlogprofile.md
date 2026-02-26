@@ -2,7 +2,7 @@
 subcategory: "LSN"
 ---
 
-# Data Source `lsnlogprofile`
+# Data Source: lsnlogprofile
 
 The lsnlogprofile data source allows you to retrieve information about LSN (Large Scale NAT) logging profiles.
 

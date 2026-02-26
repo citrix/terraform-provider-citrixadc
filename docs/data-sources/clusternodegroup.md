@@ -2,7 +2,7 @@
 subcategory: "Cluster"
 ---
 
-# Data Source `clusternodegroup`
+# Data Source: clusternodegroup
 
 The clusternodegroup data source allows you to retrieve information about cluster node groups.
 

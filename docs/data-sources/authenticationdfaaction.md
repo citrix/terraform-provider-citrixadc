@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationdfaaction`
+# Data Source: authenticationdfaaction
 
 The authenticationdfaaction data source allows you to retrieve information about authentication DFA (Decentralized Factor Authentication) actions.
 

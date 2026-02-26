@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaagroup_tmsessionpolicy_binding_basic = `
@@ -46,6 +47,7 @@ const testAccAaagroup_tmsessionpolicy_binding_basic = `
 	resource "citrixadc_aaagroup_tmsessionpolicy_binding" "tf_aaagroup_tmsessionpolicy_binding" {
 		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
 		policy    = citrixadc_tmsessionpolicy.tf_tmsessionpolicy.name
+		type     = "REQUEST"
 		priority  = 50
 	}
 `
@@ -222,4 +224,55 @@ func testAccCheckAaagroup_tmsessionpolicy_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccAaagroup_tmsessionpolicy_bindingDataSource_basic = `
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "my_tmsession_action"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
+	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+		name   = "my_tmsession_policy"
+		rule   = "true"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
+	}
+
+
+	resource "citrixadc_aaagroup_tmsessionpolicy_binding" "tf_aaagroup_tmsessionpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_tmsessionpolicy.tf_tmsessionpolicy.name
+		type     = "REQUEST"
+		priority  = 50
+	}
+
+	data "citrixadc_aaagroup_tmsessionpolicy_binding" "tf_aaagroup_tmsessionpolicy_binding" {
+		groupname = citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding.groupname
+		policy    = citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding.policy
+		depends_on = [citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding]
+	}
+`
+
+func TestAccAaagroup_tmsessionpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_tmsessionpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "policy", "my_tmsession_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "priority", "50"),
+				),
+			},
+		},
+	})
 }

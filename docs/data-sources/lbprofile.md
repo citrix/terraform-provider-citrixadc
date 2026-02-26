@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source `lbprofile`
+# Data Source: lbprofile
 
 The lbprofile data source allows you to retrieve information about a load balancing profile.
 

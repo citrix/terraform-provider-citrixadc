@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source: citrixadc_authenticationldappolicy
+# Data Source: authenticationldappolicy
 
 The `citrixadc_authenticationldappolicy` data source is used to retrieve information about an existing Authentication LDAP (Lightweight Directory Access Protocol) Policy configured on a Citrix ADC appliance.
 

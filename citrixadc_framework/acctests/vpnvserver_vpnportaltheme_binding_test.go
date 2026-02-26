@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_vpnportaltheme_binding_basic = `
@@ -207,4 +208,43 @@ func testAccCheckVpnvserver_vpnportaltheme_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_vpnportaltheme_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name           = "tf_exampleserver"
+		servicetype    = "SSL"
+		ipv46          = "3.3.3.3"
+		port           = 443
+	}
+	resource "citrixadc_vpnportaltheme" "tf_vpnportaltheme" {
+		name      = "tf_vpnportaltheme"
+		basetheme = "X1"
+	}
+	resource "citrixadc_vpnvserver_vpnportaltheme_binding" "tf_bind" {
+		name 		= citrixadc_vpnvserver.tf_vpnvserver.name
+		portaltheme = citrixadc_vpnportaltheme.tf_vpnportaltheme.name
+	}
+
+	data "citrixadc_vpnvserver_vpnportaltheme_binding" "tf_bind" {
+		name        = citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind.name
+		portaltheme = citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind.portaltheme
+		depends_on  = [citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind]
+	}
+`
+
+func TestAccVpnvserver_vpnportaltheme_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_vpnportaltheme_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind", "name", "tf_exampleserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind", "portaltheme", "tf_vpnportaltheme"),
+				),
+			},
+		},
+	})
 }

@@ -195,3 +195,38 @@ func testAccCheckTunnelglobal_tunneltrafficpolicy_bindingDestroy(s *terraform.St
 
 	return nil
 }
+
+const testAccTunnelglobal_tunneltrafficpolicy_bindingDataSource_basic = `
+resource "citrixadc_tunneltrafficpolicy" "tf_tunneltrafficpolicy" {
+	name   = "my_tunneltrafficpolicy"
+	rule   = "true"
+	action = "COMPRESS"
+}
+
+resource "citrixadc_tunnelglobal_tunneltrafficpolicy_binding" "tf_tunnelglobal_tunneltrafficpolicy_binding" {
+	priority   = 50
+	policyname = citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy.name
+}
+
+data "citrixadc_tunnelglobal_tunneltrafficpolicy_binding" "tf_tunnelglobal_tunneltrafficpolicy_binding" {
+	policyname = citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding.policyname
+	type       = citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding.type
+	depends_on = [citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding]
+}
+`
+
+func TestAccTunnelglobal_tunneltrafficpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTunnelglobal_tunneltrafficpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "policyname", "my_tunneltrafficpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "priority", "50"),
+				),
+			},
+		},
+	})
+}

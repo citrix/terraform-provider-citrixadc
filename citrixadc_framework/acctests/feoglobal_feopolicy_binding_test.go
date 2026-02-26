@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccFeoglobal_feopolicy_binding_basic = `
@@ -45,6 +46,27 @@ const testAccFeoglobal_feopolicy_binding_basic_step2 = `
 		name   = "tf_feopolicy"
 		action = "BASIC"
 		rule   = "true"
+	}
+`
+
+const testAccFeoglobal_feopolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
+
+	resource "citrixadc_feoglobal_feopolicy_binding" "tf_feoglobal_feopolicy_binding" {
+		policyname = citrixadc_feopolicy.tf_feopolicy.name
+		type       = "REQ_DEFAULT"
+		priority   = 100
+	}
+
+	data "citrixadc_feoglobal_feopolicy_binding" "tf_feoglobal_feopolicy_binding" {
+		policyname = citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding.policyname
+		type       = citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding.type
+		depends_on = [citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding]
 	}
 `
 
@@ -188,4 +210,21 @@ func testAccCheckFeoglobal_feopolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccFeoglobal_feopolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeoglobal_feopolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "policyname", "tf_feopolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "type", "REQ_DEFAULT"),
+					resource.TestCheckResourceAttr("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_feopolicy_binding_basic = `
@@ -219,4 +220,51 @@ func testAccCheckCsvserver_feopolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCsvserver_feopolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "my_feopolicy_ds"
+		action = "BASIC"
+		rule   = "true"
+	}
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name 		= "my_csvserver_ds"
+		ipv46 		= "10.202.11.12"
+		port 		= 8081
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_csvserver_feopolicy_binding" "tf_csvserver_feopolicy_binding" {
+		name 					= citrixadc_csvserver.tf_csvserver.name
+		policyname 				= citrixadc_feopolicy.tf_feopolicy.name
+		bindpoint 				= "REQUEST"
+		gotopriorityexpression 	= "END"
+		priority 				= 10  
+	}
+
+	data "citrixadc_csvserver_feopolicy_binding" "tf_csvserver_feopolicy_binding_ds" {
+		name       = citrixadc_csvserver_feopolicy_binding.tf_csvserver_feopolicy_binding.name
+		policyname = citrixadc_csvserver_feopolicy_binding.tf_csvserver_feopolicy_binding.policyname
+		depends_on = [citrixadc_csvserver_feopolicy_binding.tf_csvserver_feopolicy_binding]
+	}
+`
+
+func TestAcccsvserver_feopolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_feopolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_feopolicy_binding.tf_csvserver_feopolicy_binding_ds", "name", "my_csvserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_feopolicy_binding.tf_csvserver_feopolicy_binding_ds", "policyname", "my_feopolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_feopolicy_binding.tf_csvserver_feopolicy_binding_ds", "priority", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_feopolicy_binding.tf_csvserver_feopolicy_binding_ds", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
 }

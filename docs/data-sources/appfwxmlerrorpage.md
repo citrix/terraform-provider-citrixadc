@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source `appfwxmlerrorpage`
+# Data Source: appfwxmlerrorpage
 
 The appfwxmlerrorpage data source allows you to retrieve information about an existing appfwxmlerrorpage.
 

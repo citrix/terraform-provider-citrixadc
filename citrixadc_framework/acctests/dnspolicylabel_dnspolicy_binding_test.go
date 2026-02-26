@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccDnspolicylabel_dnspolicy_binding_basic = `
@@ -211,4 +212,46 @@ func testAccCheckDnspolicylabel_dnspolicy_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccDnspolicylabel_dnspolicy_bindingDataSource_basic = `
+
+resource "citrixadc_dnspolicy" "dnspolicy" {
+	name = "policy_A"
+	rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
+	drop = "YES"
+}
+
+resource "citrixadc_dnspolicylabel" "dnspolicylabel" {
+	labelname = "blue_label"
+	transform = "dns_req"
+}
+
+resource "citrixadc_dnspolicylabel_dnspolicy_binding" "dnspolicylabel_dnspolicy_binding" {
+	labelname  = citrixadc_dnspolicylabel.dnspolicylabel.labelname
+	policyname = citrixadc_dnspolicy.dnspolicy.name
+	priority   = 10
+}
+
+data "citrixadc_dnspolicylabel_dnspolicy_binding" "dnspolicylabel_dnspolicy_binding" {
+	labelname  = citrixadc_dnspolicylabel_dnspolicy_binding.dnspolicylabel_dnspolicy_binding.labelname
+	policyname = citrixadc_dnspolicylabel_dnspolicy_binding.dnspolicylabel_dnspolicy_binding.policyname
+}
+`
+
+func TestAccDnspolicylabel_dnspolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnspolicylabel_dnspolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnspolicylabel_dnspolicy_binding.dnspolicylabel_dnspolicy_binding", "labelname", "blue_label"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnspolicylabel_dnspolicy_binding.dnspolicylabel_dnspolicy_binding", "policyname", "policy_A"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnspolicylabel_dnspolicy_binding.dnspolicylabel_dnspolicy_binding", "priority", "10"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source `sslcertkey`
+# Data Source: sslcertkey
 
 The sslcertkey data source allows you to retrieve information about the TLS certificate keys.
 

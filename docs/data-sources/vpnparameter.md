@@ -2,7 +2,7 @@
 subcategory: "VPN"
 ---
 
-# Data Source `vpnparameter`
+# Data Source: vpnparameter
 
 The vpnparameter data source allows you to retrieve information about global VPN parameter configuration settings.
 

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_sharefileserver_binding_basic = `
@@ -172,3 +173,29 @@ func testAccCheckVpnglobal_sharefileserver_bindingDestroy(s *terraform.State) er
 
 	return nil
 }
+
+func TestAccVpnglobal_sharefileserver_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_sharefileserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_sharefileserver_binding.tf_bind", "sharefile", "3.4.5.2:8080"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnglobal_sharefileserver_binding.tf_bind", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnglobal_sharefileserver_bindingDataSource_basic = `
+	resource "citrixadc_vpnglobal_sharefileserver_binding" "tf_bind" {
+		sharefile = "3.4.5.2:8080"
+	}
+
+	data "citrixadc_vpnglobal_sharefileserver_binding" "tf_bind" {
+		sharefile = citrixadc_vpnglobal_sharefileserver_binding.tf_bind.sharefile
+	}
+`

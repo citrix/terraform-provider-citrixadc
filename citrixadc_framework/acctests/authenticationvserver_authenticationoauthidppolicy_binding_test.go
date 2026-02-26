@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationvserver_authenticationoauthidppolicy_binding_basic = `
@@ -72,6 +73,40 @@ const testAccAuthenticationvserver_authenticationoauthidppolicy_binding_basic_st
 		rule    = "true"
 		action  = citrixadc_authenticationoauthidpprofile.tf_idpprofile.name
 		comment = "aboutpolicy"
+	}
+`
+
+const testAccAuthenticationvserverAuthenticationoauthidppolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationoauthidpprofile" "tf_idpprofile" {
+		name         = "tf_idpprofile"
+		clientid     = "cliId"
+		clientsecret = "secret"
+		redirecturl  = "http://www.example.com/1/"
+	}
+	resource "citrixadc_authenticationoauthidppolicy" "tf_idppolicy" {
+		name    = "tf_idppolicy"
+		rule    = "true"
+		action  = citrixadc_authenticationoauthidpprofile.tf_idpprofile.name
+		comment = "aboutpolicy"
+	}
+	resource "citrixadc_authenticationvserver_authenticationoauthidppolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationoauthidppolicy.tf_idppolicy.name
+		priority  = 90
+		bindpoint = "REQUEST"
+	}
+
+	data "citrixadc_authenticationvserver_authenticationoauthidppolicy_binding" "tf_bind" {
+		name   = citrixadc_authenticationvserver_authenticationoauthidppolicy_binding.tf_bind.name
+		policy = citrixadc_authenticationvserver_authenticationoauthidppolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_authenticationvserver_authenticationoauthidppolicy_binding.tf_bind]
 	}
 `
 
@@ -227,4 +262,22 @@ func testAccCheckAuthenticationvserver_authenticationoauthidppolicy_bindingDestr
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverAuthenticationoauthidppolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverAuthenticationoauthidppolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationoauthidppolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationoauthidppolicy_binding.tf_bind", "policy", "tf_idppolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationoauthidppolicy_binding.tf_bind", "priority", "90"),
+				),
+			},
+		},
+	})
 }

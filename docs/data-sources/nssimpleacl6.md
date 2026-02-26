@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nssimpleacl6`
+# Data Source: nssimpleacl6
 
 The nssimpleacl6 data source allows you to retrieve information about a simple ACL6 rule for IPv6 traffic.
 

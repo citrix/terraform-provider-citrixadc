@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccSystemgroup_systemcmdpolicy_binding_basic = `
@@ -212,4 +213,47 @@ func testAccCheckSystemgroup_systemcmdpolicy_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+const testAccSystemgroup_systemcmdpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_systemgroup" "tf_systemgroup" {
+		groupname    = "tf_systemgroup"
+		timeout      = 999
+		promptstring = "bye>"
+	}
+
+	resource "citrixadc_systemcmdpolicy" "tf_policy" {
+		policyname = "tf_policy"
+		action     = "DENY"
+		cmdspec    = "add.*"
+	}
+
+	resource "citrixadc_systemgroup_systemcmdpolicy_binding" "tf_bind" {
+		groupname  = citrixadc_systemgroup.tf_systemgroup.groupname
+		policyname = citrixadc_systemcmdpolicy.tf_policy.policyname
+		priority   = 100
+	}
+
+	data "citrixadc_systemgroup_systemcmdpolicy_binding" "tf_bind" {
+		groupname  = citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind.groupname
+		policyname = citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind.policyname
+	}
+`
+
+func TestAccSystemgroup_systemcmdpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemgroup_systemcmdpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind", "groupname", "tf_systemgroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind", "policyname", "tf_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind", "priority", "100"),
+				),
+			},
+		},
+	})
 }

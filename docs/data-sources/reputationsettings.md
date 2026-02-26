@@ -2,7 +2,7 @@
 subcategory: "Reputation"
 ---
 
-# Data Source `reputationsettings`
+# Data Source: reputationsettings
 
 The reputationsettings data source allows you to retrieve information about Reputation settings configuration.
 

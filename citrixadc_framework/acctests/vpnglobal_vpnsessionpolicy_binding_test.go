@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_vpnsessionpolicy_binding_basic = `
@@ -195,4 +196,44 @@ func testAccCheckVpnglobal_vpnsessionpolicy_bindingDestroy(s *terraform.State) e
 
 	}
 	return nil
+}
+
+const testAccVpnglobal_vpnsessionpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
+		name                       = "newsession"
+		sesstimeout                = "10"
+		defaultauthorizationaction = "ALLOW"
+	}
+	
+	resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
+		name   = "tf_vpnsessionpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name
+	}
+	resource "citrixadc_vpnglobal_vpnsessionpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
+		priority = 20
+	}
+
+	data "citrixadc_vpnglobal_vpnsessionpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnglobal_vpnsessionpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_vpnglobal_vpnsessionpolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_vpnsessionpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpnsessionpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnsessionpolicy_binding.tf_bind", "policyname", "tf_vpnsessionpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnsessionpolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
 }

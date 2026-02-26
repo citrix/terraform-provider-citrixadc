@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `nd6ravariables`
+# Data Source: nd6ravariables
 
 The nd6ravariables data source allows you to retrieve information about IPv6 Neighbor Discovery Router Advertisement (ND6 RA) variables configured on a VLAN.
 

@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source `lbmetrictable`
+# Data Source: lbmetrictable
 
 The lbmetrictable data source allows you to retrieve information about a load balancing metric table.
 

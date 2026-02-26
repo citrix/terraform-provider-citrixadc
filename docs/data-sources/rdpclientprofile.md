@@ -2,7 +2,7 @@
 subcategory: "RDP"
 ---
 
-# Data Source: citrixadc_rdpclientprofile
+# Data Source: rdpclientprofile
 
 The `citrixadc_rdpclientprofile` data source is used to retrieve information about a specific RDP client profile configured on the Citrix ADC.
 

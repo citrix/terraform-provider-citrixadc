@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationvserver_rewritepolicy_binding_basic = `
@@ -43,7 +44,7 @@ const testAccAuthenticationvserver_rewritepolicy_binding_basic = `
 		priority               = 90
 		bindpoint              = "RESPONSE"
 		gotopriorityexpression = "END"
-		groupextraction        = "false"
+		groupextraction        = false
 	}
 `
 
@@ -60,6 +61,36 @@ const testAccAuthenticationvserver_rewritepolicy_binding_basic_step2 = `
 		name   = "tf_rewrite_policy"
 		action = "DROP"
 		rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	}
+`
+
+const testAccAuthenticationvserverRewritepolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+		name   = "tf_rewrite_policy"
+		action = "DROP"
+		rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	}
+	resource "citrixadc_authenticationvserver_rewritepolicy_binding" "tf_bind" {
+		name                   = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy                 = citrixadc_rewritepolicy.tf_rewrite_policy.name
+		priority               = 90
+		bindpoint              = "RESPONSE"
+		gotopriorityexpression = "END"
+		groupextraction        = false
+	}
+
+	data "citrixadc_authenticationvserver_rewritepolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind.name
+		policy    = citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind.policy
+		bindpoint = citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind.bindpoint
+		depends_on = [citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind]
 	}
 `
 
@@ -215,4 +246,23 @@ func testAccCheckAuthenticationvserver_rewritepolicy_bindingDestroy(s *terraform
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverRewritepolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverRewritepolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind", "policy", "tf_rewrite_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind", "priority", "90"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind", "bindpoint", "RESPONSE"),
+				),
+			},
+		},
+	})
 }

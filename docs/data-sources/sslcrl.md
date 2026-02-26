@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source: citrixadc_sslcrl
+# Data Source: sslcrl
 
 The sslcrl data source allows you to retrieve information about a Certificate Revocation List (CRL).
 

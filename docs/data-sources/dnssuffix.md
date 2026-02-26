@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnssuffix`
+# Data Source: dnssuffix
 
 The dnssuffix data source allows you to retrieve information about DNS suffixes configured on the Citrix ADC.
 

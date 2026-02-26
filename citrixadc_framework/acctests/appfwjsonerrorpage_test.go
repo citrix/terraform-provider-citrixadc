@@ -24,23 +24,16 @@ import (
 )
 
 const testAccAppfwjsonerrorpage_basic = `
-	resource "citrixadc_systemfile" "tf_jsonerrorpage" {
-		filename     = "appfwjsonerrorpage.json"
-		filelocation = "/var/tmp"
-		filecontent  = file("testdata/appfwjsonerrorpage.json")
-	}
 	resource "citrixadc_appfwjsonerrorpage" "tf_appfwjsonerrorpage" {
 		name       = "tf_appfwjsonerrorpage"
 		src        = "local://appfwjsonerrorpage.json"
-		depends_on = [citrixadc_systemfile.tf_jsonerrorpage]
 		comment    = "TestingExample"
 	}
 `
 
 func TestAccAppfwjsonerrorpage_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckAppfwjsonerrorpageDestroy,
 		Steps: []resource.TestStep{
@@ -119,15 +112,9 @@ func testAccCheckAppfwjsonerrorpageDestroy(s *terraform.State) error {
 }
 
 const testAccAppfwjsonerrorpageDataSource_basic = `
-	resource "citrixadc_systemfile" "tf_jsonerrorpage" {
-		filename     = "appfwjsonerrorpage.json"
-		filelocation = "/var/tmp"
-		filecontent  = file("testdata/appfwjsonerrorpage.json")
-	}
 	resource "citrixadc_appfwjsonerrorpage" "tf_appfwjsonerrorpage" {
 		name       = "tf_appfwjsonerrorpage"
 		src        = "local://appfwjsonerrorpage.json"
-		depends_on = [citrixadc_systemfile.tf_jsonerrorpage]
 		comment    = "TestingExample"
 	}
 
@@ -139,7 +126,7 @@ const testAccAppfwjsonerrorpageDataSource_basic = `
 
 func TestAccAppfwjsonerrorpageDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{

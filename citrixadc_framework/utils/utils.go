@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/base64"
 	"fmt"
 	"hash/fnv"
 	"log"
@@ -167,4 +168,10 @@ func ConvertToInt64(value interface{}) (int64, error) {
 	default:
 		return 0, fmt.Errorf("cannot convert %T to int64", value)
 	}
+}
+
+// EncodeToBase64 encodes a string to base64
+func EncodeToBase64(input interface{}) string {
+	stringified := ToString(input)
+	return base64.StdEncoding.EncodeToString([]byte(stringified))
 }

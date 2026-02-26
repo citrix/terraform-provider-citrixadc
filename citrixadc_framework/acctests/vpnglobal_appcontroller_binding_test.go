@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"net/url"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccVpnglobal_appcontroller_binding_basic = `
@@ -134,4 +135,31 @@ func testAccCheckVpnglobal_appcontroller_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_appcontroller_bindingDataSource_basic = `
+
+	resource "citrixadc_vpnglobal_appcontroller_binding" "tf_vpnglobal_appcontroller_binding" {
+		appcontroller = "http://www.citrix.com"
+	}
+
+	data "citrixadc_vpnglobal_appcontroller_binding" "tf_vpnglobal_appcontroller_binding" {
+		appcontroller = citrixadc_vpnglobal_appcontroller_binding.tf_vpnglobal_appcontroller_binding.appcontroller
+		depends_on = [citrixadc_vpnglobal_appcontroller_binding.tf_vpnglobal_appcontroller_binding]
+	}
+`
+
+func TestAccVpnglobal_appcontroller_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_appcontroller_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_appcontroller_binding.tf_vpnglobal_appcontroller_binding", "appcontroller", "http://www.citrix.com"),
+				),
+			},
+		},
+	})
 }

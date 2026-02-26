@@ -2,7 +2,7 @@
 subcategory: "Rewrite"
 ---
 
-# Data Source: citrixadc_rewritepolicy
+# Data Source: rewritepolicy
 
 This data source retrieves information about a specific rewrite policy.
 

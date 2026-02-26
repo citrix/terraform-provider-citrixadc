@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_logexpression_binding_basic = `
@@ -225,4 +226,46 @@ func testAccCheckAppfwprofile_logexpression_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+const testAccAppfwprofile_logexpression_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_logexpression_binding" "tf_binding1" {
+		name             = citrixadc_appfwprofile.tf_appfwprofile.name
+		logexpression    = "tf_logexp"
+		as_logexpression = "HTTP.REQ.IS_VALID"
+		alertonly        = "ON"
+		isautodeployed   = "AUTODEPLOYED"
+		comment          = "Testing"
+		state            = "ENABLED"
+	}
+
+	data "citrixadc_appfwprofile_logexpression_binding" "tf_binding1" {
+		name          = citrixadc_appfwprofile_logexpression_binding.tf_binding1.name
+		logexpression = citrixadc_appfwprofile_logexpression_binding.tf_binding1.logexpression
+	}
+`
+
+func TestAccAppfwprofile_logexpression_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_logexpression_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_logexpression_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_logexpression_binding.tf_binding1", "logexpression", "tf_logexp"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_logexpression_binding.tf_binding1", "as_logexpression", "HTTP.REQ.IS_VALID"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_logexpression_binding.tf_binding1", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_logexpression_binding.tf_binding1", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_logexpression_binding.tf_binding1", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_logexpression_binding.tf_binding1", "state", "ENABLED"),
+				),
+			},
+		},
+	})
 }

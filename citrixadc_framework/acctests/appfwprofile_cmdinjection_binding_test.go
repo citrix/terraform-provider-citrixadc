@@ -264,3 +264,55 @@ func testAccCheckAppfwprofile_cmdinjection_bindingDestroy(s *terraform.State) er
 
 	return nil
 }
+
+const testAccAppfwprofile_cmdinjection_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_cmdinjection_binding" "tf_binding1" {
+		name                 = citrixadc_appfwprofile.tf_appfwprofile.name
+		cmdinjection         = "tf_cmdinjection"
+		formactionurl_cmd    = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		as_scan_location_cmd = "HEADER"
+		as_value_type_cmd    = "Keyword"
+		as_value_expr_cmd    = "[a-z]+grep"
+		alertonly            = "OFF"
+		isvalueregex_cmd     = "REGEX"
+		isautodeployed       = "NOTAUTODEPLOYED"
+		comment              = "Testing"
+	}
+
+	data "citrixadc_appfwprofile_cmdinjection_binding" "tf_binding1" {
+		name                 = citrixadc_appfwprofile_cmdinjection_binding.tf_binding1.name
+		cmdinjection         = citrixadc_appfwprofile_cmdinjection_binding.tf_binding1.cmdinjection
+		formactionurl_cmd    = citrixadc_appfwprofile_cmdinjection_binding.tf_binding1.formactionurl_cmd
+		as_scan_location_cmd = citrixadc_appfwprofile_cmdinjection_binding.tf_binding1.as_scan_location_cmd
+		as_value_type_cmd    = citrixadc_appfwprofile_cmdinjection_binding.tf_binding1.as_value_type_cmd
+		as_value_expr_cmd    = citrixadc_appfwprofile_cmdinjection_binding.tf_binding1.as_value_expr_cmd
+	}
+`
+
+func TestAccAppfwprofile_cmdinjection_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_cmdinjection_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "cmdinjection", "tf_cmdinjection"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "formactionurl_cmd", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "as_scan_location_cmd", "HEADER"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "as_value_type_cmd", "Keyword"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "as_value_expr_cmd", "[a-z]+grep"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "isvalueregex_cmd", "REGEX"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "comment", "Testing"),
+				),
+			},
+		},
+	})
+}

@@ -2,7 +2,7 @@
 subcategory: "SNMP"
 ---
 
-# Data Source: citrixadc_snmpmib
+# Data Source: snmpmib
 
 The `citrixadc_snmpmib` data source is used to retrieve SNMP MIB configuration information from the Citrix ADC.
 

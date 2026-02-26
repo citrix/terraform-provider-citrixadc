@@ -2,7 +2,7 @@
 subcategory: "VPN"
 ---
 
-# Data Source: citrixadc_vpnclientlessaccessprofile
+# Data Source: vpnclientlessaccessprofile
 
 The vpnclientlessaccessprofile data source allows you to retrieve information about a VPN clientless access profile configured on the Citrix ADC.
 

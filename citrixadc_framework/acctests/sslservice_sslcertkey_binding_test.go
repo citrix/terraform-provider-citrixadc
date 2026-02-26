@@ -461,3 +461,89 @@ func testAccCheckSslservice_sslcertkey_bindingDestroy(s *terraform.State) error 
 
 	return nil
 }
+
+const testAccSslservice_sslcertkey_bindingDataSource_basic = `
+resource "citrixadc_sslcertkey" "tf_certkey" {
+	certkey = "tf_certkey"
+	cert = "/nsconfig/ssl/ns-root.cert"
+	key = "/nsconfig/ssl/ns-root.key"
+	notificationperiod = 40
+	expirymonitor = "ENABLED"
+}
+
+resource "citrixadc_sslservice" "demo_sslservice" {
+	cipherredirect = "DISABLED"
+	clientauth = "DISABLED"
+	dh = "DISABLED"
+	dhcount = 0
+	dhkeyexpsizelimit = "DISABLED"
+	dtls12 = "DISABLED"
+	ersa = "DISABLED"
+	redirectportrewrite = "DISABLED"
+	serverauth = "ENABLED"
+	servicename = citrixadc_service.tf_service.name
+	sessreuse = "ENABLED"
+	sesstimeout = 300
+	snienable = "DISABLED"
+	ssl2 = "DISABLED"
+	ssl3 = "ENABLED"
+	sslredirect = "DISABLED"
+	sslv2redirect = "DISABLED"
+	tls1 = "ENABLED"
+	tls11 = "ENABLED"
+	tls12 = "ENABLED"
+	tls13 = "DISABLED"
+	
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	ipv46       = "10.10.10.44"
+	name        = "tf_lbvserver"
+	port        = 443
+	servicetype = "SSL"
+	sslprofile  = "ns_default_ssl_profile_frontend"
+}
+
+resource "citrixadc_service" "tf_service" {
+	name = "tf_service"
+	servicetype = "SSL"
+	port = 443 
+	lbvserver = citrixadc_lbvserver.tf_lbvserver.name
+	ip = "10.77.33.22"
+	depends_on = [citrixadc_sslcertkey.tf_certkey]
+
+}
+  
+resource "citrixadc_sslservice_sslcertkey_binding" "tf_sslservice_sslcertkey_binding" {
+	certkeyname = citrixadc_sslcertkey.tf_certkey.certkey
+	servicename = citrixadc_service.tf_service.name
+	ca = true
+	crlcheck = "Mandatory"
+}
+
+data "citrixadc_sslservice_sslcertkey_binding" "tf_sslservice_sslcertkey_binding" {
+	servicename = citrixadc_service.tf_service.name
+	certkeyname = citrixadc_sslcertkey.tf_certkey.certkey
+	ca = true
+	depends_on = [citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding]
+}
+`
+
+func TestAccSslservice_sslcertkey_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslservice_sslcertkey_bindingPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservice_sslcertkey_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "servicename", "tf_service"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "certkeyname", "tf_certkey"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "ca", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "snicert", "false"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "crlcheck", "Mandatory"),
+				),
+			},
+		},
+	})
+}

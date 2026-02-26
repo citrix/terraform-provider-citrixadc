@@ -2,49 +2,33 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaaglobal_aaapreauthenticationpolicy_binding`
+# Data Source: aaaglobal_aaapreauthenticationpolicy_binding
 
-The aaaglobal_aaapreauthenticationpolicy_binding data source allows you to retrieve information about global AAA preauthentication policy bindings.
-
+The `aaaglobal_aaapreauthenticationpolicy_binding` data source allows you to retrieve information about a specific binding between the global AAA configuration and a preauthentication policy. This binding determines which preauthentication policies are applied globally and their priority order.
 
 ## Example usage
 
 ```terraform
-data "citrixadc_aaaglobal_aaapreauthenticationpolicy_binding" "tf_binding" {
-  policy = "tf_aaapreauthenticationpolicy"
+data "citrixadc_aaaglobal_aaapreauthenticationpolicy_binding" "tf_aaaglobal_aaapreauthenticationpolicy_binding" {
+  policy = "my_policy"
 }
 
-output "priority" {
-  value = data.citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_binding.priority
+output "policy_name" {
+  value = data.citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding.policy
 }
 
-output "gotopriorityexpression" {
-  value = data.citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_binding.gotopriorityexpression
+output "policy_priority" {
+  value = data.citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding.priority
 }
 ```
 
-
 ## Argument Reference
 
-* `policy` - (Required) Name of the AAA preauthentication policy.
+* `policy` - (Required) Name of the policy to be unbound.
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `priority` - The priority of the policy binding.
-* `gotopriorityexpression` - Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.
-* `type` - The type of the policy binding.
-
-## Attribute Reference
-
-* `id` - The id of the aaaglobal_aaapreauthenticationpolicy_binding. It has the same value as the `policy` attribute.
-
-
-## Import
-
-A aaaglobal_aaapreauthenticationpolicy_binding can be imported using its policy name, e.g.
-
-```shell
-terraform import citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_binding tf_aaapreauthenticationpolicy
-```
+* `id` - The id of the aaaglobal_aaapreauthenticationpolicy_binding. It is a system-generated identifier.
+* `priority` - Priority of the bound policy.

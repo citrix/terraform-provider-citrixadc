@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_vpntrafficpolicy_binding_basic = `
@@ -49,6 +50,39 @@ const testAccVpnvserver_vpntrafficpolicy_binding_basic = `
 		priority               = 200
 		bindpoint              = "REQUEST"
 		gotopriorityexpression = "NEXT"
+	}
+`
+
+const testAccVpnvserver_vpntrafficpolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_examplevserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta  = "ON"
+		hdx  = "ON"
+		name = "Testingaction"
+		qual = "tcp"
+		sso  = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
+	resource "citrixadc_vpnvserver_vpntrafficpolicy_binding" "tf_bind" {
+		name                   = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy                 = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		priority               = 200
+		bindpoint              = "REQUEST"
+		gotopriorityexpression = "NEXT"
+	}
+
+	data "citrixadc_vpnvserver_vpntrafficpolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind.policy
 	}
 `
 
@@ -226,4 +260,21 @@ func testAccCheckVpnvserver_vpntrafficpolicy_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+func TestAccVpnvserver_vpntrafficpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_vpntrafficpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind", "name", "tf_examplevserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind", "policy", "tf_vpntrafficpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind", "priority", "200"),
+				),
+			},
+		},
+	})
 }

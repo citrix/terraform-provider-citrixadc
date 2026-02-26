@@ -17,27 +17,71 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsnclient_nsacl_binding_basic = `
 
-resource "citrixadc_lsnclient_nsacl_binding" "tf_lsnclient_nsacl_binding" {
+resource "citrixadc_lsnclient" "tf_lsnclient" {
 	clientname = "my_lsn_client"
-	aclname    = "my_acl"
-	}
+}
+
+resource "citrixadc_nsacl" "foo" {
+
+  aclaction = "ALLOW"
+  aclname = "test_acl"
+  destipval = "192.168.1.33"
+  protocol = "TCP"
+  srcportval = "45-1024"
+  priority = "100"
+
+}
+
+resource "citrixadc_lsnclient_nsacl_binding" "tf_lsnclient_nsacl_binding" {
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+	aclname    = citrixadc_nsacl.foo.aclname
+}
 `
 
 const testAccLsnclient_nsacl_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 `
 
+const testAccLsnclient_nsacl_bindingDataSource_basic = `
+
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsn_client"
+}
+
+resource "citrixadc_nsacl" "foo" {
+
+  aclaction = "ALLOW"
+  aclname = "test_acl"
+  destipval = "192.168.1.33"
+  protocol = "TCP"
+  srcportval = "45-1024"
+  priority = "100"
+
+}
+
+resource "citrixadc_lsnclient_nsacl_binding" "tf_lsnclient_nsacl_binding" {
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+	aclname    = citrixadc_nsacl.foo.aclname
+}
+
+data "citrixadc_lsnclient_nsacl_binding" "tf_lsnclient_nsacl_binding" {
+	clientname = citrixadc_lsnclient_nsacl_binding.tf_lsnclient_nsacl_binding.clientname
+	aclname    = citrixadc_lsnclient_nsacl_binding.tf_lsnclient_nsacl_binding.aclname
+	depends_on = [citrixadc_lsnclient_nsacl_binding.tf_lsnclient_nsacl_binding]
+}
+`
+
 func TestAccLsnclient_nsacl_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -189,4 +233,21 @@ func testAccCheckLsnclient_nsacl_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLsnclient_nsacl_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnclient_nsacl_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_nsacl_binding.tf_lsnclient_nsacl_binding", "clientname", "my_lsn_client"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_nsacl_binding.tf_lsnclient_nsacl_binding", "aclname", "test_acl"),
+				),
+			},
+		},
+	})
 }

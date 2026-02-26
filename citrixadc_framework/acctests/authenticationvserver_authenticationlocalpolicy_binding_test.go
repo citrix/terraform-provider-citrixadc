@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationvserver_authenticationlocalpolicy_binding_basic = `
@@ -56,6 +57,32 @@ const testAccAuthenticationvserver_authenticationlocalpolicy_binding_basic_step2
 	resource "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy" {
 		name = "tf_authenticationlocalpolicy"
 		rule = "ns_true"
+	}
+`
+
+const testAccAuthenticationvserverAuthenticationlocalpolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy" {
+		name = "tf_authenticationlocalpolicy"
+		rule = "ns_true"
+	}
+	resource "citrixadc_authenticationvserver_authenticationlocalpolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy.name
+		priority  = 90
+		bindpoint = "RESPONSE"
+	}
+
+	data "citrixadc_authenticationvserver_authenticationlocalpolicy_binding" "tf_bind" {
+		name   = citrixadc_authenticationvserver_authenticationlocalpolicy_binding.tf_bind.name
+		policy = citrixadc_authenticationvserver_authenticationlocalpolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_authenticationvserver_authenticationlocalpolicy_binding.tf_bind]
 	}
 `
 
@@ -211,4 +238,22 @@ func testAccCheckAuthenticationvserver_authenticationlocalpolicy_bindingDestroy(
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverAuthenticationlocalpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverAuthenticationlocalpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationlocalpolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationlocalpolicy_binding.tf_bind", "policy", "tf_authenticationlocalpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationlocalpolicy_binding.tf_bind", "priority", "90"),
+				),
+			},
+		},
+	})
 }

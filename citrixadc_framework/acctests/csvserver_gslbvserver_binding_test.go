@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_gslbvserver_binding_basic = `
@@ -207,4 +208,46 @@ func testAccCheckCsvserver_gslbvserver_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+const testAccCsvserver_gslbvserver_bindingDataSource_basic = `
+	resource "citrixadc_csvserver" "tf_csvserver_ds" {
+		name = "tf_csvserver_ds"
+		servicetype = "HTTP"
+		targettype = "GSLB"
+	}
+
+	resource "citrixadc_gslbvserver" "tf_gslbvserver_ds" {
+		name = "tf_gslbvserver_ds"
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_csvserver_gslbvserver_binding" "tf_csvserver_gslbvserver_binding_ds" {
+		name = citrixadc_csvserver.tf_csvserver_ds.name
+		vserver = citrixadc_gslbvserver.tf_gslbvserver_ds.name
+	}
+
+	data "citrixadc_csvserver_gslbvserver_binding" "tf_csvserver_gslbvserver_binding_ds_read" {
+		name = citrixadc_csvserver_gslbvserver_binding.tf_csvserver_gslbvserver_binding_ds.name
+		vserver = citrixadc_csvserver_gslbvserver_binding.tf_csvserver_gslbvserver_binding_ds.vserver
+		depends_on = [citrixadc_csvserver_gslbvserver_binding.tf_csvserver_gslbvserver_binding_ds]
+	}
+`
+
+func TestAcccsvserver_gslbvserver_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_gslbvserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_gslbvserver_binding.tf_csvserver_gslbvserver_binding_ds_read", "name", "tf_csvserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_gslbvserver_binding.tf_csvserver_gslbvserver_binding_ds_read", "vserver", "tf_gslbvserver_ds"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_csvserver_gslbvserver_binding.tf_csvserver_gslbvserver_binding_ds_read", "id"),
+				),
+			},
+		},
+	})
 }

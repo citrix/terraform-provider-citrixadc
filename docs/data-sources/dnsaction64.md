@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnsaction64`
+# Data Source: dnsaction64
 
 The dnsaction64 data source allows you to retrieve information about a DNS64 action configuration.
 

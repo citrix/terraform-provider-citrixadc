@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_cspolicy_binding_basic = `
@@ -247,4 +248,71 @@ func testAccCheckCrvserver_cspolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCrvserver_cspolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_server" "tf_server" {
+		name      = "tf_server_ds"
+		ipaddress = "10.71.136.150"
+	}
+	resource "citrixadc_service" "tf_service" {
+		name        = "tf_service_ds"
+		port        = 80
+		servicetype = "HTTP"
+		servername  = citrixadc_server.tf_server.name
+		cachetype   = "TRANSPARENT"
+	}
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		ipv46       = "10.10.10.33"
+		name        = "tf_lbvserver_ds"
+		port        = 80
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_lbvserver_service_binding" "tf_binding" {
+		name        = citrixadc_lbvserver.tf_lbvserver.name
+		servicename = citrixadc_service.tf_service.name
+	}
+	resource "citrixadc_csaction" "tf_csaction" {
+		name            = "tf_csaction_ds"
+		targetlbvserver = citrixadc_lbvserver.tf_lbvserver.name
+	}
+	resource "citrixadc_cspolicy" "tf_cspolicy" {
+		policyname = "tf_cspolicy_ds"
+		rule       = "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.84.0)"
+		action     = citrixadc_csaction.tf_csaction.name
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+	resource "citrixadc_crvserver_cspolicy_binding" "crvserver_cspolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_cspolicy.tf_cspolicy.policyname
+		priority   = 10
+	}
+
+	data "citrixadc_crvserver_cspolicy_binding" "crvserver_cspolicy_binding" {
+		name       = citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding.name
+		policyname = citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding.policyname
+		depends_on = [citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding]
+	}
+`
+
+func TestAcccrvserver_cspolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_cspolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", "policyname", "tf_cspolicy_ds"),
+				),
+			},
+		},
+	})
 }

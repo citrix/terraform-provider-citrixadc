@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_auditsyslogpolicy_binding_basic = `
@@ -229,4 +230,56 @@ func testAccCheckVpnvserver_auditsyslogpolicy_bindingDestroy(s *terraform.State)
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_auditsyslogpolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "tf_syslogaction"
+		serverip   = "10.78.60.33"
+		serverport = 514
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_policy" {
+		name   = "tf_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+	resource "citrixadc_vpnvserver_auditsyslogpolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_auditsyslogpolicy.tf_policy.name
+		priority  = 202
+		bindpoint = "RESPONSE"
+	}
+
+	data "citrixadc_vpnvserver_auditsyslogpolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind.policy
+	}
+`
+
+func TestAccVpnvserver_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_auditsyslogpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind", "id"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind", "name", "tf_vpnvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind", "policy", "tf_auditsyslogpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind", "priority", "202"),
+				),
+			},
+		},
+	})
 }

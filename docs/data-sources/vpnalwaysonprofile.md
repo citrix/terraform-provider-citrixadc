@@ -2,7 +2,7 @@
 subcategory: "VPN"
 ---
 
-# Data Source: citrixadc_vpnalwaysonprofile
+# Data Source: vpnalwaysonprofile
 
 The vpnalwaysonprofile data source allows you to retrieve information about a VPN AlwaysOn profile configured on the Citrix ADC.
 

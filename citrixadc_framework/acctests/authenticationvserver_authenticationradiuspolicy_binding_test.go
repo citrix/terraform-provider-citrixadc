@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationvserver_authenticationradiuspolicy_binding_basic = `
@@ -76,6 +77,42 @@ const testAccAuthenticationvserver_authenticationradiuspolicy_binding_basic_step
 		name      = "tf_radiuspolicy"
 		rule      = "NS_TRUE"
 		reqaction = citrixadc_authenticationradiusaction.tf_radiusaction.name
+	}
+`
+
+const testAccAuthenticationvserverAuthenticationradiuspolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+		name         = "tf_radiusaction"
+		radkey       = "secret"
+		serverip     = "1.2.3.4"
+		serverport   = 8080
+		authtimeout  = 2
+		radnasip     = "DISABLED"
+		passencoding = "chap"
+	}
+	resource "citrixadc_authenticationradiuspolicy" "tf_radiuspolicy" {
+		name      = "tf_radiuspolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationradiusaction.tf_radiusaction.name
+	}
+	resource "citrixadc_authenticationvserver_authenticationradiuspolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationradiuspolicy.tf_radiuspolicy.name
+		priority  = 90
+		bindpoint = "RESPONSE"
+	}
+
+	data "citrixadc_authenticationvserver_authenticationradiuspolicy_binding" "tf_bind" {
+		name   = citrixadc_authenticationvserver_authenticationradiuspolicy_binding.tf_bind.name
+		policy = citrixadc_authenticationvserver_authenticationradiuspolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_authenticationvserver_authenticationradiuspolicy_binding.tf_bind]
 	}
 `
 
@@ -231,4 +268,22 @@ func testAccCheckAuthenticationvserver_authenticationradiuspolicy_bindingDestroy
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverAuthenticationradiuspolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverAuthenticationradiuspolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationradiuspolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationradiuspolicy_binding.tf_bind", "policy", "tf_radiuspolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationradiuspolicy_binding.tf_bind", "priority", "90"),
+				),
+			},
+		},
+	})
 }

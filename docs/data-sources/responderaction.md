@@ -2,7 +2,7 @@
 subcategory: "Responder"
 ---
 
-# Data Source: citrixadc_responderaction
+# Data Source: responderaction
 
 The `citrixadc_responderaction` data source is used to retrieve information about an existing responder action configured on the Citrix ADC.
 

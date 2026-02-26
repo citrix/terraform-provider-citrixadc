@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_authenticationcertpolicy_binding_basic = `
@@ -198,4 +199,46 @@ func testAccCheckVpnglobal_authenticationcertpolicy_bindingDestroy(s *terraform.
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_authenticationcertpolicy_bindingDataSource_basic = `
+	resource "citrixadc_authenticationcertaction" "tf_certaction" {
+		name                       = "tf_certaction"
+		twofactor                  = "ON"
+		defaultauthenticationgroup = "new_group"
+		usernamefield              = "Subject:CN"
+		groupnamefield             = "subject:grp"
+	}
+	resource "citrixadc_authenticationcertpolicy" "tf_certpolicy" {
+		name      = "tf_certpolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationcertaction.tf_certaction.name
+	}
+	resource "citrixadc_vpnglobal_authenticationcertpolicy_binding" "tf_bind" {
+		policyname      = citrixadc_authenticationcertpolicy.tf_certpolicy.name
+		priority        = 20
+		groupextraction = false
+		secondary       = false
+	}
+
+	data "citrixadc_vpnglobal_authenticationcertpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnglobal_authenticationcertpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_vpnglobal_authenticationcertpolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_authenticationcertpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationcertpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationcertpolicy_binding.tf_bind", "policyname", "tf_certpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationcertpolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
 }

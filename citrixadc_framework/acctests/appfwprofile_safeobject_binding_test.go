@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_safeobject_binding_basic = `
@@ -233,4 +234,48 @@ func testAccCheckAppfwprofile_safeobject_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccAppfwprofileSafeobjectBindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_safeobject_binding" "tf_binding1" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		safeobject     = "tf_safeobject"
+		as_expression  = "regularexpression"
+		maxmatchlength = 10
+		state          = "DISABLED"
+		alertonly      = "OFF"
+		isautodeployed = "AUTODEPLOYED"
+		comment        = "Example"
+		action         = ["block", "log"]
+	}
+
+	data "citrixadc_appfwprofile_safeobject_binding" "tf_binding1" {
+		name       = citrixadc_appfwprofile_safeobject_binding.tf_binding1.name
+		safeobject = citrixadc_appfwprofile_safeobject_binding.tf_binding1.safeobject
+	}
+`
+
+func TestAccAppfwprofileSafeobjectBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileSafeobjectBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_safeobject_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_safeobject_binding.tf_binding1", "safeobject", "tf_safeobject"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_safeobject_binding.tf_binding1", "as_expression", "regularexpression"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_safeobject_binding.tf_binding1", "maxmatchlength", "10"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_safeobject_binding.tf_binding1", "state", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_safeobject_binding.tf_binding1", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_safeobject_binding.tf_binding1", "comment", "Example"),
+				),
+			},
+		},
+	})
 }

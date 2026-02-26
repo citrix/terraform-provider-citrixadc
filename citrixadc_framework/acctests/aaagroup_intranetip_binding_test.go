@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaagroup_intranetip_binding_basic = `
@@ -48,6 +49,26 @@ const testAccAaagroup_intranetip_binding_basic_step2 = `
 	}
 `
 
+const testAccAaagroupIntranetipBindingDataSource_basic = `
+
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_aaagroup_intranetip_binding" "tf_aaagroup_intranetip_binding" {
+		groupname  = citrixadc_aaagroup.tf_aaagroup.groupname
+		intranetip = "10.222.73.160"
+		netmask    = "255.255.255.192"
+	}
+
+	data "citrixadc_aaagroup_intranetip_binding" "tf_aaagroup_intranetip_binding" {
+		groupname  = citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding.groupname
+		intranetip = citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding.intranetip
+		depends_on = [citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding]
+	}
+`
+
 func TestAccAaagroup_intranetip_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -64,6 +85,24 @@ func TestAccAaagroup_intranetip_binding_basic(t *testing.T) {
 				Config: testAccAaagroup_intranetip_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaagroup_intranetip_bindingNotExist("citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", "my_group,10.222.74.158"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaagroupIntranetipBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroupIntranetipBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", "intranetip", "10.222.73.160"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", "netmask", "255.255.255.192"),
 				),
 			},
 		},

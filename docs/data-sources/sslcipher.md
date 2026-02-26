@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source: citrixadc_sslcipher
+# Data Source: sslcipher
 
 The sslcipher data source allows you to retrieve information about user-defined SSL cipher groups.
 

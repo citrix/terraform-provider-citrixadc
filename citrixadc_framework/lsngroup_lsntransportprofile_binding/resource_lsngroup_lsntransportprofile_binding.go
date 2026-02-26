@@ -1,0 +1,155 @@
+package lsngroup_lsntransportprofile_binding
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+)
+
+// Ensure provider defined types fully satisfy framework interfaces.
+var _ resource.Resource = &LsngroupLsntransportprofileBindingResource{}
+var _ resource.ResourceWithConfigure = (*LsngroupLsntransportprofileBindingResource)(nil)
+var _ resource.ResourceWithImportState = (*LsngroupLsntransportprofileBindingResource)(nil)
+
+func NewLsngroupLsntransportprofileBindingResource() resource.Resource {
+	return &LsngroupLsntransportprofileBindingResource{}
+}
+
+// LsngroupLsntransportprofileBindingResource defines the resource implementation.
+type LsngroupLsntransportprofileBindingResource struct {
+	client *service.NitroClient
+}
+
+func (r *LsngroupLsntransportprofileBindingResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *LsngroupLsntransportprofileBindingResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_lsngroup_lsntransportprofile_binding"
+}
+
+func (r *LsngroupLsntransportprofileBindingResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+	// Set the client for the resource.
+	r.client = *req.ProviderData.(**service.NitroClient)
+}
+
+func (r *LsngroupLsntransportprofileBindingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data LsngroupLsntransportprofileBindingResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Debug(ctx, "Creating lsngroup_lsntransportprofile_binding resource")
+
+	// lsngroup_lsntransportprofile_binding := lsngroup_lsntransportprofile_bindingGetThePayloadFromtheConfig(ctx, &data)
+
+	// Make API call
+	// err := r.client.UpdateUnnamedResource(service.Lsngroup_lsntransportprofile_binding.Type(), &lsngroup_lsntransportprofile_binding)
+	// if err != nil {
+	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsngroup_lsntransportprofile_binding, got error: %s", err))
+	//	 return
+	// }
+
+	// Generate unique ID for this configuration resource
+	data.Id = types.StringValue("lsngroup_lsntransportprofile_binding-config")
+
+	tflog.Trace(ctx, "Created lsngroup_lsntransportprofile_binding resource")
+
+	// Read the updated state back
+	r.readLsngroupLsntransportprofileBindingFromApi(ctx, &data, &resp.Diagnostics)
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *LsngroupLsntransportprofileBindingResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data LsngroupLsntransportprofileBindingResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Debug(ctx, "Reading lsngroup_lsntransportprofile_binding resource")
+
+	r.readLsngroupLsntransportprofileBindingFromApi(ctx, &data, &resp.Diagnostics)
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *LsngroupLsntransportprofileBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data LsngroupLsntransportprofileBindingResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Debug(ctx, "Updating lsngroup_lsntransportprofile_binding resource")
+
+	// Create API request body from the model
+	// lsngroup_lsntransportprofile_binding := lsngroup_lsntransportprofile_bindingGetThePayloadFromtheConfig(ctx, &data)
+
+	// Make API call
+	// err := r.client.UpdateUnnamedResource(service.Lsngroup_lsntransportprofile_binding.Type(), &lsngroup_lsntransportprofile_binding)
+	// if err != nil {
+	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsngroup_lsntransportprofile_binding, got error: %s", err))
+	//	 return
+	// }
+
+	tflog.Trace(ctx, "Updated lsngroup_lsntransportprofile_binding resource")
+
+	// Read the updated state back
+	r.readLsngroupLsntransportprofileBindingFromApi(ctx, &data, &resp.Diagnostics)
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *LsngroupLsntransportprofileBindingResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data LsngroupLsntransportprofileBindingResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Debug(ctx, "Deleting lsngroup_lsntransportprofile_binding resource")
+
+	// For lsngroup_lsntransportprofile_binding, we don't actually delete the resource as it's a global configuration
+	// We just remove it from state
+	tflog.Trace(ctx, "Deleted lsngroup_lsntransportprofile_binding resource from state")
+}
+
+// Helper function to read lsngroup_lsntransportprofile_binding data from API
+func (r *LsngroupLsntransportprofileBindingResource) readLsngroupLsntransportprofileBindingFromApi(ctx context.Context, data *LsngroupLsntransportprofileBindingResourceModel, diags *diag.Diagnostics) {
+	getResponseData, err := r.client.FindResource(service.Lsngroup_lsntransportprofile_binding.Type(), "")
+	if err != nil {
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsngroup_lsntransportprofile_binding, got error: %s", err))
+		return
+	}
+
+	lsngroup_lsntransportprofile_bindingSetAttrFromGet(ctx, data, getResponseData)
+
+}

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_intranetip6_binding_basic = `
@@ -201,3 +202,42 @@ func testAccCheckVpnvserver_intranetip6_bindingDestroy(s *terraform.State) error
 
 	return nil
 }
+
+func TestAccVpnvserver_intranetip6_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_intranetip6_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_intranetip6_binding.tf_binding", "name", "tf_vserverexample"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_intranetip6_binding.tf_binding", "intranetip6", "2.3.4.5"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_intranetip6_binding.tf_binding", "numaddr", "45"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_intranetip6_binding.tf_binding", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnvserver_intranetip6_bindingDataSource_basic = `
+
+resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+	name        = "tf_vserverexample"
+	servicetype = "SSL"
+	ipv46       = "3.3.3.3"
+	port        = 443
+}
+resource "citrixadc_vpnvserver_intranetip6_binding" "tf_binding" {
+	name        = citrixadc_vpnvserver.tf_vpnvserver.name
+	intranetip6 = "2.3.4.5"
+	numaddr     = "45"
+}
+
+data "citrixadc_vpnvserver_intranetip6_binding" "tf_binding" {
+	name        = citrixadc_vpnvserver_intranetip6_binding.tf_binding.name
+	intranetip6 = citrixadc_vpnvserver_intranetip6_binding.tf_binding.intranetip6
+	depends_on  = [citrixadc_vpnvserver_intranetip6_binding.tf_binding]
+}
+`

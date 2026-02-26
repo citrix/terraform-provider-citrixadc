@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_responderpolicy_binding_basic = `
@@ -210,4 +211,47 @@ func testAccCheckVpnvserver_responderpolicy_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_responderpolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_examplevserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_responderpolicy" "tf_responder_policy" {
+		name   = "tf_responder_policy"
+		action = "DROP"
+		rule   = "TRUE"
+	}
+	resource "citrixadc_vpnvserver_responderpolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_responderpolicy.tf_responder_policy.name
+		priority  = 200
+	}
+
+	data "citrixadc_vpnvserver_responderpolicy_binding" "tf_bind" {
+		name       = citrixadc_vpnvserver_responderpolicy_binding.tf_bind.name
+		policy     = citrixadc_vpnvserver_responderpolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_vpnvserver_responderpolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnvserver_responderpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_responderpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_responderpolicy_binding.tf_bind", "name", "tf_examplevserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_responderpolicy_binding.tf_bind", "policy", "tf_responder_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_responderpolicy_binding.tf_bind", "priority", "200"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationradiuspolicy`
+# Data Source: authenticationradiuspolicy
 
 The authenticationradiuspolicy data source allows you to retrieve information about an existing RADIUS authentication policy.
 

@@ -2,7 +2,7 @@
 subcategory: "Policy"
 ---
 
-# Data Source `nstimer`
+# Data Source: nstimer
 
 The nstimer data source allows you to retrieve information about a timer configured on the Citrix ADC.
 

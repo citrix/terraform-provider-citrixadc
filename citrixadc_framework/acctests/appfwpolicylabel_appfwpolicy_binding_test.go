@@ -74,6 +74,33 @@ const testAccAppfwpolicylabel_appfwpolicy_binding_basic_step2 = `
 	}
 `
 
+const testAccAppfwpolicylabel_appfwpolicy_bindingDataSource_basic = `
+	resource "citrixadc_appfwpolicylabel" "tf_appfwpolicylabel" {
+		labelname       = "tf_appfwpolicylabel"
+		policylabeltype = "http_req"
+	}
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy1" {
+		name        = "tf_appfwpolicy1"
+		profilename = citrixadc_appfwprofile.tf_appfwprofile.name
+		rule        = "true"
+	}
+	resource "citrixadc_appfwpolicylabel_appfwpolicy_binding" "tf_binding1" {
+		labelname  = citrixadc_appfwpolicylabel.tf_appfwpolicylabel.labelname
+		policyname = citrixadc_appfwpolicy.tf_appfwpolicy1.name
+		priority   = 90
+	}
+
+	data "citrixadc_appfwpolicylabel_appfwpolicy_binding" "tf_binding1" {
+		labelname  = citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1.labelname
+		policyname = citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1.policyname
+		depends_on = [citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1]
+	}
+`
+
 func TestAccAppfwpolicylabel_appfwpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -230,4 +257,21 @@ func testAccCheckAppfwpolicylabel_appfwpolicy_bindingDestroy(s *terraform.State)
 	}
 
 	return nil
+}
+
+func TestAccAppfwpolicylabel_appfwpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwpolicylabel_appfwpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1", "labelname", "tf_appfwpolicylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1", "policyname", "tf_appfwpolicy1"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1", "priority", "90"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "ICA"
 ---
 
-# Data Source `icaaccessprofile`
+# Data Source: icaaccessprofile
 
 The icaaccessprofile data source allows you to retrieve information about ICA access profiles for controlling ICA connections and features.
 

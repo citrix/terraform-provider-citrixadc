@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_vpnurl_binding_basic = `
@@ -45,6 +46,35 @@ const testAccVpnvserver_vpnurl_binding_basic = `
 	resource "citrixadc_vpnvserver_vpnurl_binding" "tf_bind" {
 		name    = citrixadc_vpnvserver.tf_vpnvserver.name
 		urlname = citrixadc_vpnurl.url.urlname
+	}
+`
+
+const testAccVpnvserver_vpnurl_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_examplevserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnurl" "url" {
+		actualurl        = "http://www.citrix.com"
+		appjson          = "xyz"
+		applicationtype  = "CVPN"
+		clientlessaccess = "OFF"
+		comment          = "Testing"
+		linkname         = "Description"
+		ssotype          = "unifiedgateway"
+		urlname          = "Firsturl"
+		vservername      = "server1"
+	}
+	resource "citrixadc_vpnvserver_vpnurl_binding" "tf_bind" {
+		name    = citrixadc_vpnvserver.tf_vpnvserver.name
+		urlname = citrixadc_vpnurl.url.urlname
+	}
+
+	data "citrixadc_vpnvserver_vpnurl_binding" "tf_bind" {
+		name    = citrixadc_vpnvserver_vpnurl_binding.tf_bind.name
+		urlname = citrixadc_vpnvserver_vpnurl_binding.tf_bind.urlname
 	}
 `
 
@@ -221,4 +251,20 @@ func testAccCheckVpnvserver_vpnurl_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnvserver_vpnurl_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_vpnurl_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurl_binding.tf_bind", "name", "tf_examplevserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurl_binding.tf_bind", "urlname", "Firsturl"),
+				),
+			},
+		},
+	})
 }

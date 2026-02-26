@@ -214,3 +214,46 @@ func testAccCheckTransformpolicylabel_transformpolicy_bindingDestroy(s *terrafor
 
 	return nil
 }
+
+const testAccTransformpolicylabel_transformpolicy_bindingDataSource_basic = `
+resource "citrixadc_transformprofile" "tf_trans_profile1" {
+	name = "pro_1"
+	}
+  resource "citrixadc_transformpolicy" "tf_trans_policy" {
+	  name = "tf_trans_policy"
+	  profilename = citrixadc_transformprofile.tf_trans_profile1.name
+	  rule = "http.REQ.URL.CONTAINS(\"test_url\")"
+	}
+  resource "citrixadc_transformpolicylabel" "transformpolicylabel" {
+	labelname = "label_1"
+	policylabeltype = "httpquic_req"
+	}
+  resource "citrixadc_transformpolicylabel_transformpolicy_binding" "transformpolicylabel_transformpolicy_binding"{
+	 policyname = citrixadc_transformpolicy.tf_trans_policy.name
+	  labelname = citrixadc_transformpolicylabel.transformpolicylabel.labelname
+	  priority = 2
+	}
+
+data "citrixadc_transformpolicylabel_transformpolicy_binding" "transformpolicylabel_transformpolicy_binding" {
+	labelname  = citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding.labelname
+	policyname = citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding.policyname
+	depends_on = [citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding]
+}
+`
+
+func TestAccTransformpolicylabel_transformpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformpolicylabel_transformpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", "labelname", "label_1"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", "policyname", "tf_trans_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", "priority", "2"),
+				),
+			},
+		},
+	})
+}

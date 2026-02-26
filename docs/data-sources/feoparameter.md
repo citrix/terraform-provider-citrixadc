@@ -2,7 +2,7 @@
 subcategory: "Front End Optimization"
 ---
 
-# Data Source: citrixadc_feoparameter
+# Data Source: feoparameter
 
 This data source is used to retrieve information about the Front End Optimization (FEO) parameters configuration.
 

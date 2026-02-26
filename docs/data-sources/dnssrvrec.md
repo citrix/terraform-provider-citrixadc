@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnssrvrec`
+# Data Source: dnssrvrec
 
 The dnssrvrec data source allows you to retrieve information about DNS SRV (Service) records configured on the Citrix ADC.
 

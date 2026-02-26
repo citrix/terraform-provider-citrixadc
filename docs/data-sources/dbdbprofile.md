@@ -2,7 +2,7 @@
 subcategory: "DB"
 ---
 
-# Data Source `dbdbprofile`
+# Data Source: dbdbprofile
 
 The dbdbprofile data source allows you to retrieve information about a database profile.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_vpnsessionpolicy_binding_basic = `
@@ -220,4 +221,54 @@ func testAccCheckVpnvserver_vpnsessionpolicy_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_vpnsessionpolicy_bindingDataSource_basic = `
+
+resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+	name        = "vpn_vserver"
+	servicetype = "SSL"
+}
+  
+resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
+	name                       = "newsession"
+	sesstimeout                = "10"
+	defaultauthorizationaction = "ALLOW"
+}
+
+resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
+	name   = "tf_vpnsessionpolicy"
+	rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+	action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name
+}
+  
+resource "citrixadc_vpnvserver_vpnsessionpolicy_binding" "tf_bind" {
+	name      = citrixadc_vpnvserver.tf_vpnvserver.name
+	policy    = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
+	priority  = 20
+}
+
+data "citrixadc_vpnvserver_vpnsessionpolicy_binding" "tf_bind" {
+	name       = citrixadc_vpnvserver_vpnsessionpolicy_binding.tf_bind.name
+	policy     = citrixadc_vpnvserver_vpnsessionpolicy_binding.tf_bind.policy
+	depends_on = [citrixadc_vpnvserver_vpnsessionpolicy_binding.tf_bind]
+}
+`
+
+func TestAccVpnvserver_vpnsessionpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_vpnsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_vpnsessionpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnsessionpolicy_binding.tf_bind", "name", "vpn_vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnsessionpolicy_binding.tf_bind", "policy", "tf_vpnsessionpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnsessionpolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
 }

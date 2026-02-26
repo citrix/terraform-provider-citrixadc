@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `l3param`
+# Data Source: l3param
 
 The l3param data source allows you to retrieve information about Layer 3 parameters configuration.
 

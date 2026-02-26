@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `nstrafficdomain`
+# Data Source: nstrafficdomain
 
 The nstrafficdomain data source allows you to retrieve information about a traffic domain configured on the Citrix ADC.
 

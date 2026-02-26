@@ -247,3 +247,64 @@ func testAccCheckVpnvserver_authenticationsamlidppolicy_bindingDestroy(s *terraf
 
 	return nil
 }
+
+const testAccVpnvserver_authenticationsamlidppolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vserver_ds"
+		servicetype = "SSL"
+		ipv46       = "4.4.4.4"
+		port        = 443
+	}
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey_ds"
+		cert    = "/var/tmp/certificate1.crt"
+		key     = "/var/tmp/key1.pem"
+	}
+	resource "citrixadc_authenticationsamlidpprofile" "tf_samlidpprofile" {
+		name                        = "tf_samlidpprofile_ds"
+		samlspcertname              = citrixadc_sslcertkey.tf_sslcertkey.certkey
+		assertionconsumerserviceurl = "http://www.example.com"
+		sendpassword                = "OFF"
+		samlissuername              = "new_user"
+		rejectunsignedrequests      = "ON"
+		signaturealg                = "RSA-SHA1"
+		digestmethod                = "SHA1"
+		nameidformat                = "Unspecified"
+	}
+	resource "citrixadc_authenticationsamlidppolicy" "tf_samlidppolicy" {
+		name    = "tf_samlidppolicy_ds"
+		rule    = "false"
+		action  = citrixadc_authenticationsamlidpprofile.tf_samlidpprofile.name
+		comment = "aSimpleTesting"
+	}
+	resource "citrixadc_vpnvserver_authenticationsamlidppolicy_binding" "tf_binding" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationsamlidppolicy.tf_samlidppolicy.name
+		priority  = 9
+		bindpoint = "REQUEST"
+	}
+
+	data "citrixadc_vpnvserver_authenticationsamlidppolicy_binding" "tf_binding_ds" {
+		name       = citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding.name
+		policy     = citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding.policy
+		depends_on = [citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding]
+	}
+`
+
+func TestAccVpnvserver_authenticationsamlidppolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationsamlidppolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding_ds", "name", "tf_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding_ds", "policy", "tf_samlidppolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding_ds", "priority", "9"),
+				),
+			},
+		},
+	})
+}

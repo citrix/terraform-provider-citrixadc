@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_analyticsprofile_binding_basic = `
@@ -212,4 +213,48 @@ func testAccCheckCrvserver_analyticsprofile_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+const testAccCrvserver_analyticsprofile_bindingDataSource_basic = `
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name             = "new_profile_ds"
+		type             = "webinsight"
+		httppagetracking = "DISABLED"
+		httpurl          = "ENABLED"
+	}
+
+	resource "citrixadc_crvserver_analyticsprofile_binding" "crvserver_analyticsprofile_binding" {
+		name             = citrixadc_crvserver.crvserver.name
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+
+	data "citrixadc_crvserver_analyticsprofile_binding" "crvserver_analyticsprofile_binding" {
+		name             = citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding.name
+		analyticsprofile = citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding.analyticsprofile
+		depends_on       = [citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding]
+	}
+`
+
+func TestAcccrvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_analyticsprofile_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding", "analyticsprofile", "new_profile_ds"),
+				),
+			},
+		},
+	})
 }

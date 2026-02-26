@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLinkset_channel_binding_basic = `
@@ -206,4 +207,44 @@ func testAccCheckLinkset_channel_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLinkset_channel_bindingDataSource_basic = `
+
+resource "citrixadc_linkset_channel_binding" "tf_linkset_channel_binding" {
+	linkset_id = citrixadc_linkset.tf_linkset.linkset_id
+	ifnum      = citrixadc_channel.tf_channel.channel_id
+	}
+  
+  
+  resource "citrixadc_linkset" "tf_linkset"{
+	  linkset_id = "LS/3"
+	}
+  
+  resource "citrixadc_channel" "tf_channel"{
+	  channel_id = "LA/3"
+	}
+
+	data "citrixadc_linkset_channel_binding" "tf_linkset_channel_binding" {
+		linkset_id = "LS/3"
+		ifnum      = "LA/3"
+		depends_on = [citrixadc_linkset_channel_binding.tf_linkset_channel_binding]
+	}
+`
+
+func TestAccLinkset_channel_bindingDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLinkset_channel_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "linkset_id", "LS/3"),
+					resource.TestCheckResourceAttr("data.citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "ifnum", "LA/3"),
+				),
+			},
+		},
+	})
 }

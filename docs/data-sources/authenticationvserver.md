@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationvserver`
+# Data Source: authenticationvserver
 
 The authenticationvserver data source allows you to retrieve information about an existing authentication virtual server.
 

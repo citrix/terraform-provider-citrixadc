@@ -232,3 +232,56 @@ resource "citrixadc_cspolicy" "tf_cspolicy_extra" {
 }
 
 `
+
+const testAccCsvserver_cspolicy_bindingDataSource_basic = `
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_lbvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_cspolicy" "tf_cspolicy" {
+  policyname      = "tf_cspolicy"
+  rule            = "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.85.0)"
+}
+
+resource "citrixadc_csvserver_cspolicy_binding" "tf_csvscspolbind" {
+    name = citrixadc_csvserver.tf_csvserver.name
+    policyname = citrixadc_cspolicy.tf_cspolicy.policyname
+    priority = 100
+	bindpoint = "REQUEST"
+    targetlbvserver = citrixadc_lbvserver.tf_lbvserver.name
+}
+
+data "citrixadc_csvserver_cspolicy_binding" "tf_csvscspolbind" {
+    name = citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind.name
+    policyname = citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind.policyname
+}
+`
+
+func TestAccCsvserver_cspolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_cspolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "policyname", "tf_cspolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "targetlbvserver", "tf_lbvserver"),
+				),
+			},
+		},
+	})
+}

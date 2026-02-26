@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVxlan_srcip_binding_basic = `
@@ -40,6 +41,31 @@ const testAccVxlan_srcip_binding_basic = `
 	resource "citrixadc_vxlan_srcip_binding" "tf_binding" {
 		vxlanid = citrixadc_vxlan.tf_vxlan.vxlanid
 		srcip   = citrixadc_nsip.tf_srcip.ipaddress
+	}
+`
+
+const testAccVxlan_srcip_bindingDataSource_basic = `
+	resource "citrixadc_nsip" "tf_srcip" {
+		ipaddress = "11.22.33.44"
+		type      = "SNIP"
+		netmask   = "255.255.255.0"
+	}
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_vxlan_srcip_binding" "tf_binding" {
+		vxlanid = citrixadc_vxlan.tf_vxlan.vxlanid
+		srcip   = citrixadc_nsip.tf_srcip.ipaddress
+	}
+
+	data "citrixadc_vxlan_srcip_binding" "tf_binding" {
+		vxlanid    = citrixadc_vxlan.tf_vxlan.vxlanid
+		srcip      = citrixadc_nsip.tf_srcip.ipaddress
+		depends_on = [citrixadc_vxlan_srcip_binding.tf_binding]
 	}
 `
 
@@ -211,4 +237,20 @@ func testAccCheckVxlan_srcip_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVxlan_srcip_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVxlan_srcip_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vxlan_srcip_binding.tf_binding", "vxlanid", "123"),
+					resource.TestCheckResourceAttr("data.citrixadc_vxlan_srcip_binding.tf_binding", "srcip", "11.22.33.44"),
+				),
+			},
+		},
+	})
 }

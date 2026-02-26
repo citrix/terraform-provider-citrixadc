@@ -2,7 +2,7 @@
 subcategory: "Appqoe"
 ---
 
-# Data Source: citrixadc_appqoepolicy
+# Data Source: appqoepolicy
 
 The appqoepolicy data source is used to retrieve information about an existing AppQoE (Application Quality of Experience) policy configured on the Citrix ADC.
 

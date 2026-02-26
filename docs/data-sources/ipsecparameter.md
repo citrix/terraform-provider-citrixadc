@@ -2,7 +2,7 @@
 subcategory: "IPSec"
 ---
 
-# Data Source `ipsecparameter`
+# Data Source: ipsecparameter
 
 The ipsecparameter data source allows you to retrieve information about IPSec parameter configuration.
 

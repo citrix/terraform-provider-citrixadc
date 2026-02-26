@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_botpolicy_binding_basic = `
@@ -212,4 +213,48 @@ func testAccCheckCsvserver_botpolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCsvserver_botpolicy_bindingDataSource_basic = `
+	resource "citrixadc_csvserver_botpolicy_binding" "tf_csvserver_botpolicy_binding" {
+        name = citrixadc_csvserver.tf_csvserver.name
+        policyname = citrixadc_botpolicy.tf_botpolicy.name
+        priority = 5
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name = "tf_csvserver"
+		ipv46 = "10.202.11.11"
+		port = 8080
+		servicetype = "HTTP"
+	}
+
+	resource citrixadc_botpolicy tf_botpolicy {
+		name = "tf_botpolicy"  
+		profilename = "BOT_BYPASS"
+		rule  = "true"
+	}
+
+	data "citrixadc_csvserver_botpolicy_binding" "tf_csvserver_botpolicy_binding" {
+		name = "tf_csvserver"
+		policyname = "tf_botpolicy"
+		depends_on = [citrixadc_csvserver_botpolicy_binding.tf_csvserver_botpolicy_binding]
+	}
+`
+
+func TestAccCsvserver_botpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_botpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_botpolicy_binding.tf_csvserver_botpolicy_binding", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_botpolicy_binding.tf_csvserver_botpolicy_binding", "policyname", "tf_botpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_botpolicy_binding.tf_csvserver_botpolicy_binding", "priority", "5"),
+				),
+			},
+		},
+	})
 }

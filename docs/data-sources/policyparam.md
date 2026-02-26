@@ -2,7 +2,7 @@
 subcategory: "Policy"
 ---
 
-# Data Source `policyparam`
+# Data Source: policyparam
 
 The policyparam data source allows you to retrieve information about the policy parameter configuration.
 

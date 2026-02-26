@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_authenticationldappolicy_binding_basic = `
@@ -223,4 +224,53 @@ func testAccCheckVpnvserver_authenticationldappolicy_bindingDestroy(s *terraform
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_authenticationldappolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "tf_ldapaction"
+		serverip      = "5.5.5.5"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_ldappolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "vpn_vserver"
+		servicetype = "SSL"
+	}
+	resource "citrixadc_vpnvserver_authenticationldappolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
+		priority  = 20
+	}
+
+	data "citrixadc_vpnvserver_authenticationldappolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind.policy
+	}
+`
+
+func TestAccVpnvserver_authenticationldappolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationldappolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "id"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "name", "vpn_vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "policy", "tf_ldappolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
 }

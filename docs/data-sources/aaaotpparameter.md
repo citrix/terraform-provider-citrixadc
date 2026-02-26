@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaaotpparameter`
+# Data Source: aaaotpparameter
 
 The aaaotpparameter data source allows you to retrieve information about AAA OTP (One-Time Password) parameters configuration.
 

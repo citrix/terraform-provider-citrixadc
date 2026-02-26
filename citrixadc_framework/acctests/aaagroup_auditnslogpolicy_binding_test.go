@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaagroup_auditnslogpolicy_binding_basic = `
@@ -45,6 +46,7 @@ const testAccAaagroup_auditnslogpolicy_binding_basic = `
 	resource "citrixadc_aaagroup_auditnslogpolicy_binding" "tf_aaagroup_auditnslogpolicy_binding" {
 		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
 		policy    = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+		type     = "REQUEST"
 		priority  = 150
 	}
 `
@@ -68,6 +70,38 @@ const testAccAaagroup_auditnslogpolicy_binding_basic_step2 = `
 	}
 `
 
+const testAccAaagroupAuditnslogpolicyBindingDataSource_basic = `
+
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+
+	resource "citrixadc_aaagroup_auditnslogpolicy_binding" "tf_aaagroup_auditnslogpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+		type      = "REQUEST"
+		priority  = 150
+	}
+
+	data "citrixadc_aaagroup_auditnslogpolicy_binding" "tf_aaagroup_auditnslogpolicy_binding" {
+		groupname = citrixadc_aaagroup_auditnslogpolicy_binding.tf_aaagroup_auditnslogpolicy_binding.groupname
+		policy    = citrixadc_aaagroup_auditnslogpolicy_binding.tf_aaagroup_auditnslogpolicy_binding.policy
+		depends_on = [citrixadc_aaagroup_auditnslogpolicy_binding.tf_aaagroup_auditnslogpolicy_binding]
+	}
+`
+
 func TestAccAaagroup_auditnslogpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -84,6 +118,24 @@ func TestAccAaagroup_auditnslogpolicy_binding_basic(t *testing.T) {
 				Config: testAccAaagroup_auditnslogpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaagroup_auditnslogpolicy_bindingNotExist("citrixadc_aaagroup_auditnslogpolicy_binding.tf_aaagroup_auditnslogpolicy_binding", "my_group,tf_auditnslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaagroupAuditnslogpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroupAuditnslogpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_auditnslogpolicy_binding.tf_aaagroup_auditnslogpolicy_binding", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_auditnslogpolicy_binding.tf_aaagroup_auditnslogpolicy_binding", "policy", "my_auditnslogpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_auditnslogpolicy_binding.tf_aaagroup_auditnslogpolicy_binding", "priority", "150"),
 				),
 			},
 		},

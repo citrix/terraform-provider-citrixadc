@@ -227,3 +227,58 @@ func testAccCheckSslpolicylabel_sslpolicy_bindingDestroy(s *terraform.State) err
 
 	return nil
 }
+
+const testAccSslpolicylabel_sslpolicy_bindingDataSource_basic = `
+resource "citrixadc_sslaction" "certinsertact" {
+	name       = "certinsertact"
+	clientcert = "ENABLED"
+	certheader = "CERT"
+	}
+	
+	resource "citrixadc_sslpolicy" "certinsert_pol" {
+	name   = "certinsert_pol"
+	rule   = "false"
+	action = citrixadc_sslaction.certinsertact.name
+	}
+	
+	resource "citrixadc_sslpolicylabel" "ssl_pol_label" {
+		labelname = "ssl_pol_label"
+		type = "DATA"	
+	}
+	
+	resource "citrixadc_sslpolicylabel_sslpolicy_binding" "demo_sslpolicylabel_sslpolicy_binding" {
+		gotopriorityexpression = "END"
+		invoke = true
+		labelname = citrixadc_sslpolicylabel.ssl_pol_label.labelname
+		labeltype = "policylabel"
+		policyname = citrixadc_sslpolicy.certinsert_pol.name
+		priority = 56       
+		invokelabelname = "ssl_pol_label"
+	}
+
+data "citrixadc_sslpolicylabel_sslpolicy_binding" "demo_sslpolicylabel_sslpolicy_binding" {
+	labelname = citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding.labelname
+	policyname = citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding.policyname
+	depends_on = [citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding]
+}
+`
+
+func TestAccSslpolicylabel_sslpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslpolicylabel_sslpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "labelname", "ssl_pol_label"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "policyname", "certinsert_pol"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "priority", "56"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "gotopriorityexpression", "END"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "labeltype", "policylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "invoke_labelname", "ssl_pol_label"),
+				),
+			},
+		},
+	})
+}

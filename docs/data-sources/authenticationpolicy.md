@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source: citrixadc_authenticationpolicy
+# Data Source: authenticationpolicy
 
 The `citrixadc_authenticationpolicy` data source is used to retrieve information about an authentication policy configured on a Citrix ADC.
 

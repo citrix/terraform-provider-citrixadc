@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source: citrixadc_appfwsettings
+# Data Source: appfwsettings
 
 The appfwsettings data source allows you to retrieve information about Application Firewall global settings configuration.
 

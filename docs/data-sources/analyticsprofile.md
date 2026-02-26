@@ -2,7 +2,7 @@
 subcategory: "Analytics"
 ---
 
-# Data Source `analyticsprofile`
+# Data Source: analyticsprofile
 
 The analyticsprofile data source allows you to retrieve information about analytics profiles.
 

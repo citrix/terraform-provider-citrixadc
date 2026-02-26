@@ -190,3 +190,54 @@ func testAccCheckCsvserver_transformpolicy_bindingDestroy(s *terraform.State) er
 
 	return nil
 }
+
+const testAccCsvserver_transformpolicy_bindingDataSource_basic = `
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.34"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_transformprofile" "tf_trans_profile" {
+  name = "tf_trans_profile"
+  comment = "Some comment"
+}
+
+resource "citrixadc_transformpolicy" "tf_trans_policy" {
+    name = "tf_trans_policy"
+    profilename = citrixadc_transformprofile.tf_trans_profile.name
+    rule = "http.REQ.URL.CONTAINS(\"test_url\")"
+}
+
+resource "citrixadc_csvserver_transformpolicy_binding" "tf_binding" {
+    name = citrixadc_csvserver.tf_csvserver.name
+    policyname = citrixadc_transformpolicy.tf_trans_policy.name
+    priority = 100
+    bindpoint = "REQUEST"
+    gotopriorityexpression = "END"
+}
+
+data "citrixadc_csvserver_transformpolicy_binding" "tf_binding" {
+    name = citrixadc_csvserver_transformpolicy_binding.tf_binding.name
+    policyname = citrixadc_csvserver_transformpolicy_binding.tf_binding.policyname
+}
+`
+
+func TestAccCsvserver_transformpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_transformpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_transformpolicy_binding.tf_binding", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_transformpolicy_binding.tf_binding", "policyname", "tf_trans_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_transformpolicy_binding.tf_binding", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_transformpolicy_binding.tf_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}

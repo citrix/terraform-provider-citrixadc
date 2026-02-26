@@ -81,6 +81,43 @@ const testAccAuthenticationvserver_authenticationtacacspolicy_binding_basic_step
 	}
 `
 
+const testAccAuthenticationvserverAuthenticationtacacspolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+		name            = "tf_tacacsaction"
+		serverip        = "1.2.3.4"
+		serverport      = 8080
+		authtimeout     = 5
+		authorization   = "ON"
+		accounting      = "ON"
+		auditfailedcmds = "ON"
+		groupattrname   = "group"
+	}
+	resource "citrixadc_authenticationtacacspolicy" "tf_tacacspolicy" {
+		name      = "tf_tacacspolicy"
+		rule      = "NS_FALSE"
+		reqaction = citrixadc_authenticationtacacsaction.tf_tacacsaction.name
+	}
+	resource "citrixadc_authenticationvserver_authenticationtacacspolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationtacacspolicy.tf_tacacspolicy.name
+		priority  = 90
+		bindpoint = "AAA_REQUEST"
+	}
+
+	data "citrixadc_authenticationvserver_authenticationtacacspolicy_binding" "tf_bind" {
+		name   = citrixadc_authenticationvserver_authenticationtacacspolicy_binding.tf_bind.name
+		policy = citrixadc_authenticationvserver_authenticationtacacspolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_authenticationvserver_authenticationtacacspolicy_binding.tf_bind]
+	}
+`
+
 func TestAccAuthenticationvserver_authenticationtacacspolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -233,4 +270,22 @@ func testAccCheckAuthenticationvserver_authenticationtacacspolicy_bindingDestroy
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverAuthenticationtacacspolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverAuthenticationtacacspolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationtacacspolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationtacacspolicy_binding.tf_bind", "policy", "tf_tacacspolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationtacacspolicy_binding.tf_bind", "priority", "90"),
+				),
+			},
+		},
+	})
 }

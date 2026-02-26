@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccIcaglobal_icapolicy_binding_basic = `
@@ -53,6 +54,31 @@ const testAccIcaglobal_icapolicy_binding_basic_step2 = `
 		name   = "tf_icapolicy"
 		rule   = true
 		action = citrixadc_icaaction.tf_icaaction.name
+	}
+`
+
+const testAccIcaglobal_icapolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
+
+	resource "citrixadc_icaglobal_icapolicy_binding" "tf_icaglobal_icapolicy_binding" {
+		policyname = citrixadc_icapolicy.tf_icapolicy.name
+		priority   = 100
+		type       = "ICA_REQ_DEFAULT"
+	}
+
+	data "citrixadc_icaglobal_icapolicy_binding" "tf_icaglobal_icapolicy_binding" {
+		policyname = citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding.policyname
+		type       = citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding.type
+		depends_on = [citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding]
 	}
 `
 
@@ -197,4 +223,21 @@ func testAccCheckIcaglobal_icapolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccIcaglobal_icapolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcaglobal_icapolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "policyname", "tf_icapolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "type", "ICA_REQ_DEFAULT"),
+				),
+			},
+		},
+	})
 }

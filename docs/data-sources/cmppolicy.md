@@ -2,7 +2,7 @@
 subcategory: "Compression"
 ---
 
-# Data Source `cmppolicy`
+# Data Source: cmppolicy
 
 The cmppolicy data source allows you to retrieve information about HTTP compression policies.
 

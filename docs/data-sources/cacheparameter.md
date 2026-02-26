@@ -2,7 +2,7 @@
 subcategory: "Integrated Caching"
 ---
 
-# Data Source `cacheparameter`
+# Data Source: cacheparameter
 
 The cacheparameter data source allows you to retrieve information about cache parameter configuration.
 

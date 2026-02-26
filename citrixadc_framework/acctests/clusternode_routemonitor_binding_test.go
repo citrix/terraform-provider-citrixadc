@@ -17,19 +17,20 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccClusternode_routemonitor_binding_basic = `
 
 resource "citrixadc_clusternode_routemonitor_binding" "tf_clusternode_routemonitor_binding" {
-	nodeid       = 1
-	routemonitor = "10.222.74.128"
-	netmask      = "255.255.255.192"
+		nodeid       = 0
+		routemonitor = "10.222.74.128"
+		netmask      = "255.255.255.192"
 	}
 `
 
@@ -192,4 +193,41 @@ func testAccCheckClusternode_routemonitor_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccClusternode_routemonitor_bindingDataSource_basic = `
+
+	resource "citrixadc_clusternode_routemonitor_binding" "tf_clusternode_routemonitor_binding" {
+		nodeid       = 0
+		routemonitor = "10.222.74.128"
+		netmask      = "255.255.255.192"
+	}
+
+	data "citrixadc_clusternode_routemonitor_binding" "tf_clusternode_routemonitor_binding" {
+		nodeid       = citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding.nodeid
+		routemonitor = citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding.routemonitor
+		netmask      = citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding.netmask
+		depends_on   = [citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding]
+	}
+`
+
+func TestAccclusternode_routemonitor_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternode_routemonitor_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "nodeid", "0"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "routemonitor", "10.222.74.128"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "netmask", "255.255.255.192"),
+				),
+			},
+		},
+	})
 }

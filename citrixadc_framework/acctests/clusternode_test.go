@@ -29,7 +29,7 @@ const testAccClusternode_basic_nogroup_config = `
 
 resource "citrixadc_clusternode" "tf_clusternode" {
 	nodeid             = 1
-	ipaddress          = "10.222.74.150"
+	ipaddress          = "10.101.132.153"
 	state              = "PASSIVE"
 	}
   
@@ -39,7 +39,7 @@ const testAccClusternode_update_nogroup_config = `
 
 resource "citrixadc_clusternode" "tf_clusternode" {
 	nodeid             = 1
-	ipaddress          = "10.222.74.150"
+	ipaddress          = "10.101.132.153"
 	state              = "ACTIVE"  
 	}
   
@@ -58,7 +58,7 @@ func TestAccClusternode_basic(t *testing.T) {
 				Config: testAccClusternode_basic_nogroup_config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
-					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.222.74.150"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.101.132.153"),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "state", "PASSIVE"),
 				),
 			},
@@ -66,7 +66,7 @@ func TestAccClusternode_basic(t *testing.T) {
 				Config: testAccClusternode_update_nogroup_config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
-					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.222.74.150"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.101.132.153"),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "state", "ACTIVE"),
 				),
 			},
@@ -79,7 +79,7 @@ const testAccClusternode_basic_group_config_yes = `
 
 	resource "citrixadc_clusternode" "tf_clusternode" {
 		nodeid               = 1
-		ipaddress            = "10.222.74.150"
+		ipaddress            = "10.101.132.153"
 		state                = "PASSIVE"
 		clearnodegroupconfig = "YES"
 	}
@@ -89,7 +89,7 @@ const testAccClusternode_update_group_config_yes = `
 
 	resource "citrixadc_clusternode" "tf_clusternode" {
 		nodeid               = 1
-		ipaddress            = "10.222.74.150"
+		ipaddress            = "10.101.132.153"
 		state                = "ACTIVE"
 		clearnodegroupconfig = "YES"
 	}
@@ -109,7 +109,7 @@ func TestAccClusternode_group_config_yes(t *testing.T) {
 				Config: testAccClusternode_basic_group_config_yes,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
-					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.222.74.150"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.101.132.153"),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "state", "PASSIVE"),
 				),
 			},
@@ -117,7 +117,7 @@ func TestAccClusternode_group_config_yes(t *testing.T) {
 				Config: testAccClusternode_update_group_config_yes,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
-					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.222.74.150"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.101.132.153"),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "state", "ACTIVE"),
 				),
 			},
@@ -130,7 +130,7 @@ const testAccClusternode_basic_group_config_no = `
 
 	resource "citrixadc_clusternode" "tf_clusternode" {
 		nodeid               = 1
-		ipaddress            = "10.222.74.150"
+		ipaddress            = "10.101.132.153"
 		state                = "PASSIVE"
 		clearnodegroupconfig = "NO"
 	}
@@ -140,7 +140,7 @@ const testAccClusternode_update_group_config_no = `
 
 	resource "citrixadc_clusternode" "tf_clusternode" {
 		nodeid               = 1
-		ipaddress            = "10.222.74.150"
+		ipaddress            = "10.101.132.153"
 		state                = "ACTIVE"
 		clearnodegroupconfig = "NO"
 	}
@@ -160,7 +160,7 @@ func TestAccClusternode_group_config_no(t *testing.T) {
 				Config: testAccClusternode_basic_group_config_no,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
-					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.222.74.150"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.101.132.153"),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "state", "PASSIVE"),
 				),
 			},
@@ -168,7 +168,7 @@ func TestAccClusternode_group_config_no(t *testing.T) {
 				Config: testAccClusternode_update_group_config_no,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
-					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.222.74.150"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "ipaddress", "10.101.132.153"),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "state", "ACTIVE"),
 				),
 			},

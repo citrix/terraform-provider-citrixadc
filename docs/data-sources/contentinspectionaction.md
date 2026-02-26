@@ -2,7 +2,7 @@
 subcategory: "Content Inspection"
 ---
 
-# Data Source `contentinspectionaction`
+# Data Source: contentinspectionaction
 
 The contentinspectionaction data source allows you to retrieve information about a content inspection action.
 

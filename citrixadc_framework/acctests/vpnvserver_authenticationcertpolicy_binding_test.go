@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_authenticationcertpolicy_binding_basic = `
@@ -226,4 +227,56 @@ func testAccCheckVpnvserver_authenticationcertpolicy_bindingDestroy(s *terraform
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_authenticationcertpolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_authenticationcertaction" "tf_certaction" {
+		name                       = "tf_certaction"
+		twofactor                  = "ON"
+		defaultauthenticationgroup = "new_group"
+		usernamefield              = "Subject:CN"
+		groupnamefield             = "subject:grp"
+	}
+	resource "citrixadc_authenticationcertpolicy" "tf_certpolicy" {
+		name      = "tf_certpolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationcertaction.tf_certaction.name
+	}
+	resource "citrixadc_vpnvserver_authenticationcertpolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationcertpolicy.tf_certpolicy.name
+		priority  = 80
+		secondary = false
+		bindpoint = "REQUEST"
+	}
+
+	data "citrixadc_vpnvserver_authenticationcertpolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind.policy
+	}
+`
+
+func TestAccVpnvserver_authenticationcertpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationcertpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind", "id"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind", "name", "tf_vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind", "policy", "tf_certpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind", "priority", "80"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind", "secondary", "false"),
+				),
+			},
+		},
+	})
 }

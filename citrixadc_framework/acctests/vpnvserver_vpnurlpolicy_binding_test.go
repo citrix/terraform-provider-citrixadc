@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_vpnurlpolicy_binding_basic = `
@@ -52,6 +53,42 @@ const testAccVpnvserver_vpnurlpolicy_binding_basic = `
 		priority               = 20
 		bindpoint              = "REQUEST"
 		gotopriorityexpression = "next"
+	}
+`
+
+const testAccVpnvserver_vpnurlpolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_example_vserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
+		name             = "tf_vpnurlaction"
+		linkname         = "new_link"
+		actualurl        = "http://www.citrix.com"
+		applicationtype  = "CVPN"
+		clientlessaccess = "OFF"
+		comment          = "Testing"
+		ssotype          = "unifiedgateway"
+		vservername      = "vserver1"
+	}
+	resource "citrixadc_vpnurlpolicy" "tf_vpnurlpolicy" {
+		name   = "new_policy"
+		rule   = "true"
+		action = citrixadc_vpnurlaction.tf_vpnurlaction.name
+	}
+	resource "citrixadc_vpnvserver_vpnurlpolicy_binding" "tf_bind" {
+		name                   = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy                 = citrixadc_vpnurlpolicy.tf_vpnurlpolicy.name
+		priority               = 20
+		bindpoint              = "REQUEST"
+		gotopriorityexpression = "next"
+	}
+
+	data "citrixadc_vpnvserver_vpnurlpolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_vpnurlpolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_vpnurlpolicy_binding.tf_bind.policy
 	}
 `
 
@@ -232,4 +269,22 @@ func testAccCheckVpnvserver_vpnurlpolicy_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+func TestAccVpnvserver_vpnurlpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_vpnurlpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurlpolicy_binding.tf_bind", "name", "tf_example_vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurlpolicy_binding.tf_bind", "policy", "new_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurlpolicy_binding.tf_bind", "priority", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurlpolicy_binding.tf_bind", "gotopriorityexpression", "next"),
+				),
+			},
+		},
+	})
 }

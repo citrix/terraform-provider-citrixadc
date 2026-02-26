@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source: citrixadc_authenticationdfapolicy
+# Data Source: authenticationdfapolicy
 
 The `citrixadc_authenticationdfapolicy` data source is used to retrieve information about an existing Authentication DFA (Distributed Fingerprint Authentication) Policy configured on a Citrix ADC appliance.
 

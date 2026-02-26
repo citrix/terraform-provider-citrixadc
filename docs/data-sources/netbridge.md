@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `netbridge`
+# Data Source: netbridge
 
 The netbridge data source allows you to retrieve information about an existing network bridge.
 

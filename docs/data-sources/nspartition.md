@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nspartition`
+# Data Source: nspartition
 
 The nspartition data source allows you to retrieve information about NetScaler partitions.
 

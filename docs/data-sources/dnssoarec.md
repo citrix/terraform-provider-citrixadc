@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnssoarec`
+# Data Source: dnssoarec
 
 The dnssoarec data source allows you to retrieve information about DNS SOA (Start of Authority) records configured on the Citrix ADC.
 

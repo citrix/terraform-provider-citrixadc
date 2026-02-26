@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccContentinspectionglobal_contentinspectionpolicy_binding_basic = `
@@ -188,4 +189,61 @@ func testAccCheckContentinspectionglobal_contentinspectionpolicy_bindingDestroy(
 	}
 
 	return nil
+}
+
+const testAccContentinspectionglobal_contentinspectionpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
+		name             = "new_profile_ds"
+		uri              = "/example"
+		mode             = "REQMOD"
+		reqtimeout       = 4
+		reqtimeoutaction = "RESET"
+		preview          = "ENABLED"
+		previewlength    = 4096
+	}
+
+	resource "citrixadc_contentinspectionaction" "tf_contentinspectionaction" {
+		name            = "tf_contentinspectionaction_ds"
+		type            = "ICAP"
+		icapprofilename = citrixadc_nsicapprofile.tf_nsicapprofile.name
+		serverip        = "10.77.33.22"
+		ifserverdown    = "DROP"
+	}
+
+	resource "citrixadc_contentinspectionpolicy" "tf_contentinspectionpolicy" {
+		name   = "tf_contentinspectionpolicy_ds"
+		rule   = "true"
+		action = citrixadc_contentinspectionaction.tf_contentinspectionaction.name
+	}
+
+	resource "citrixadc_contentinspectionglobal_contentinspectionpolicy_binding" "tf_contentinspectionglobal_contentinspectionpolicy_binding" {
+		policyname = citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy.name
+		priority   = 100
+		type       = "REQ_OVERRIDE"
+	}
+
+	data "citrixadc_contentinspectionglobal_contentinspectionpolicy_binding" "tf_contentinspectionglobal_contentinspectionpolicy_binding" {
+		policyname = citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_contentinspectionglobal_contentinspectionpolicy_binding.policyname
+		type       = citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_contentinspectionglobal_contentinspectionpolicy_binding.type
+		depends_on = [citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_contentinspectionglobal_contentinspectionpolicy_binding]
+	}
+`
+
+func TestAcccontentinspectionglobal_contentinspectionpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectionglobal_contentinspectionpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_contentinspectionglobal_contentinspectionpolicy_binding", "policyname", "tf_contentinspectionpolicy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_contentinspectionglobal_contentinspectionpolicy_binding", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_contentinspectionglobal_contentinspectionpolicy_binding", "type", "REQ_OVERRIDE"),
+				),
+			},
+		},
+	})
 }

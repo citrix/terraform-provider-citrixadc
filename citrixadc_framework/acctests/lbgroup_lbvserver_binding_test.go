@@ -208,3 +208,43 @@ func testAccCheckLbgroup_lbvserver_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccLbgroup_lbvserver_bindingDataSource_basic = `
+	resource "citrixadc_lbgroup_lbvserver_binding" "tf_lbvserverbinding" {
+		name = citrixadc_lbgroup.tf_lbgroup.name
+		vservername = citrixadc_lbvserver.tf_lbvserver.name
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name 		= "tf_lbvserver"
+		ipv46       = "1.1.1.8"
+		port        = "80"
+		servicetype = "HTTP"
+	}
+	
+	resource "citrixadc_lbgroup" "tf_lbgroup" {
+		name = "tf_lbgroup"
+	}
+
+	data "citrixadc_lbgroup_lbvserver_binding" "tf_lbvserverbinding" {
+		name = citrixadc_lbgroup.tf_lbgroup.name
+		vservername = citrixadc_lbvserver.tf_lbvserver.name
+		depends_on = [citrixadc_lbgroup_lbvserver_binding.tf_lbvserverbinding]
+	}
+`
+
+func TestAccLbgroup_lbvserver_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbgroup_lbvserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbgroup_lbvserver_binding.tf_lbvserverbinding", "name", "tf_lbgroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbgroup_lbvserver_binding.tf_lbvserverbinding", "vservername", "tf_lbvserver"),
+				),
+			},
+		},
+	})
+}

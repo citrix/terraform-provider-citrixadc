@@ -216,3 +216,44 @@ func testAccCheckAppfwprofile_denyurl_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccAppfwprofile_denyurl_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name = "tf_appfwprofile"
+		type = ["HTML"]
+	}
+
+	resource "citrixadc_appfwprofile_denyurl_binding" "tf_binding" {
+		name = citrixadc_appfwprofile.tf_appfwprofile.name
+		denyurl = "test[.][^/?]*(|[?].*)$"
+		alertonly      = "OFF"
+		isautodeployed = "NOTAUTODEPLOYED"
+		state          = "ENABLED"
+		comment        = "Test denyurl binding"
+	}
+
+	data "citrixadc_appfwprofile_denyurl_binding" "tf_binding" {
+		name    = citrixadc_appfwprofile_denyurl_binding.tf_binding.name
+		denyurl = citrixadc_appfwprofile_denyurl_binding.tf_binding.denyurl
+	}
+`
+
+func TestAccAppfwprofile_denyurl_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_denyurl_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_denyurl_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_denyurl_binding.tf_binding", "denyurl", "test[.][^/?]*(|[?].*)$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_denyurl_binding.tf_binding", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_denyurl_binding.tf_binding", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_denyurl_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_denyurl_binding.tf_binding", "comment", "Test denyurl binding"),
+				),
+			},
+		},
+	})
+}

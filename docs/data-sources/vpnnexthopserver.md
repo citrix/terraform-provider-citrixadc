@@ -2,7 +2,7 @@
 subcategory: "VPN"
 ---
 
-# Data Source `vpnnexthopserver`
+# Data Source: vpnnexthopserver
 
 The vpnnexthopserver data source allows you to retrieve information about a Citrix Gateway next hop server configuration used in double-hop DMZ deployments.
 

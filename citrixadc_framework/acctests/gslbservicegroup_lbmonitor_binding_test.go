@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccGslbservicegroup_lbmonitor_binding_basic = `
@@ -229,4 +230,56 @@ func testAccCheckGslbservicegroup_lbmonitor_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+const testAccGslbservicegroup_lbmonitor_bindingDataSource_basic = `
+
+resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+	servicegroupname = "test_gslbvservicegroup"
+	servicetype      = "HTTP"
+	cip              = "DISABLED"
+	healthmonitor    = "NO"
+	sitename         = citrixadc_gslbsite.site_local.sitename
+}
+
+resource "citrixadc_gslbsite" "site_local" {
+	sitename        = "Site-Local"
+	siteipaddress   = "172.31.96.234"
+	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
+}
+
+resource "citrixadc_lbmonitor" "tfmonitor1" {
+	monitorname = "tf_monitor"
+	type        = "HTTP"
+}
+
+resource "citrixadc_gslbservicegroup_lbmonitor_binding" "tf_gslbservicegroup_lbmonitor_binding" {
+	weight           = 20
+	servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
+	monitor_name     = citrixadc_lbmonitor.tfmonitor1.monitorname
+}
+
+data "citrixadc_gslbservicegroup_lbmonitor_binding" "tf_gslbservicegroup_lbmonitor_binding" {
+	servicegroupname = citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding.servicegroupname
+	monitor_name     = citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding.monitor_name
+	depends_on       = [citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding]
+}
+`
+
+func TestAccGslbservicegroup_lbmonitor_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicegroup_lbmonitor_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding", "servicegroupname", "test_gslbvservicegroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding", "monitor_name", "tf_monitor"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding", "weight", "20"),
+				),
+			},
+		},
+	})
 }

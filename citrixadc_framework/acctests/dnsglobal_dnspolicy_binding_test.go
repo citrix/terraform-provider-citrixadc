@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccDnsglobal_dnspolicy_binding_basic = `
@@ -44,6 +45,26 @@ const testAccDnsglobal_dnspolicy_binding_basic_step2 = `
 		rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
 		drop = "YES"
 	}
+`
+
+const testAccDnsglobal_dnspolicy_bindingDataSource_basic = `
+
+resource "citrixadc_dnspolicy" "dnspolicy" {
+	name = "policy_A"
+	rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
+	drop = "YES"
+}
+resource "citrixadc_dnsglobal_dnspolicy_binding" "dnsglobal_dnspolicy_binding" {
+	policyname = citrixadc_dnspolicy.dnspolicy.name
+	priority   = 30
+	type       = "REQ_DEFAULT"
+}
+
+data "citrixadc_dnsglobal_dnspolicy_binding" "dnsglobal_dnspolicy_binding" {
+	policyname = citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding.policyname
+	type       = citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding.type
+	depends_on = [citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding]
+}
 `
 
 func TestAccDnsglobal_dnspolicy_binding_basic(t *testing.T) {
@@ -186,4 +207,21 @@ func testAccCheckDnsglobal_dnspolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnsglobal_dnspolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsglobal_dnspolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "policyname", "policy_A"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "type", "REQ_DEFAULT"),
+					resource.TestCheckResourceAttr("data.citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "priority", "30"),
+				),
+			},
+		},
+	})
 }

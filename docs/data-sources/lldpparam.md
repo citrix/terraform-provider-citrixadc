@@ -2,7 +2,7 @@
 subcategory: "LLDP"
 ---
 
-# Data Source `lldpparam`
+# Data Source: lldpparam
 
 The lldpparam data source allows you to retrieve information about LLDP (Link Layer Discovery Protocol) parameters configuration.
 

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_staserver_binding_basic = `
@@ -32,6 +33,18 @@ const testAccVpnglobal_staserver_binding_basic = `
 
 const testAccVpnglobal_staserver_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+`
+
+const testAccVpnglobal_staserver_bindingDataSource_basic = `
+	resource "citrixadc_vpnglobal_staserver_binding" "tf_bind" {
+		staserver      = "http://www.example.com/"
+		staaddresstype = "IPV4"
+	}
+
+	data "citrixadc_vpnglobal_staserver_binding" "tf_bind" {
+		staserver  = citrixadc_vpnglobal_staserver_binding.tf_bind.staserver
+		depends_on = [citrixadc_vpnglobal_staserver_binding.tf_bind]
+	}
 `
 
 func TestAccVpnglobal_staserver_binding_basic(t *testing.T) {
@@ -171,4 +184,20 @@ func testAccCheckVpnglobal_staserver_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnglobal_staserver_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_staserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "staserver", "http://www.example.com/"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "staaddresstype", "IPV4"),
+				),
+			},
+		},
+	})
 }

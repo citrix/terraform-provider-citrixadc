@@ -2,7 +2,7 @@
 subcategory: "Content Switching"
 ---
 
-# Data Source `cspolicy`
+# Data Source: cspolicy
 
 The cspolicy data source allows you to retrieve information about content switching policies.
 

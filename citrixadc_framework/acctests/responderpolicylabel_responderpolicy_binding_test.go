@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccResponderpolicylabel_responderpolicy_binding_basic = `
@@ -212,4 +213,51 @@ func testAccCheckResponderpolicylabel_responderpolicy_bindingDestroy(s *terrafor
 	}
 
 	return nil
+}
+
+const testAccResponderpolicylabel_responderpolicy_bindingDataSource_basic = `
+
+resource "citrixadc_responderpolicylabel_responderpolicy_binding" "tf_responderpolicylabel_responderpolicy_binding" {
+	labelname = citrixadc_responderpolicylabel.tf_responderpolicylabel.labelname
+	policyname = citrixadc_responderpolicy.tf_responderpolicy.name
+	priority = 5  
+	gotopriorityexpression = "END"
+	invoke = false
+}
+
+resource "citrixadc_responderpolicylabel" "tf_responderpolicylabel" {
+	labelname = "tf_responderpolicylabel"
+	policylabeltype = "HTTP"
+}
+
+resource "citrixadc_responderpolicy" "tf_responderpolicy" {
+	name    = "tf_responderpolicy"
+	action = "NOOP"
+	rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+}
+
+data "citrixadc_responderpolicylabel_responderpolicy_binding" "tf_responderpolicylabel_responderpolicy_binding" {
+	labelname = citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding.labelname
+	policyname = citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding.policyname
+	depends_on = [citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding]
+}
+`
+
+func TestAccResponderpolicylabel_responderpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicylabel_responderpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "labelname", "tf_responderpolicylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "policyname", "tf_responderpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "priority", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "gotopriorityexpression", "END"),
+					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "invoke", "false"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `nat64param`
+# Data Source: nat64param
 
 The nat64param data source allows you to retrieve information about NAT64 parameter configuration.
 

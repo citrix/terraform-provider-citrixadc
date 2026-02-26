@@ -1,11 +1,8 @@
 ---
-page_title: "citrixadc_sslparameter Data Source - citrixadc"
 subcategory: "SSL"
-description: |-
-  Data source to read the SSL parameter configuration of the Citrix ADC.
 ---
 
-# citrixadc_sslparameter (Data Source)
+# Data Source: sslparameter
 
 This data source is used to read the SSL parameter configuration of the Citrix ADC. SSL parameters are global settings that affect SSL processing on the appliance.
 
@@ -23,14 +20,13 @@ data "citrixadc_sslparameter" "default" {
 }
 ```
 
-## Schema
+## Argument Reference
 
-### Read-Only
+This datasource does not require any arguments.
+
+## Attribute Reference
 
 - `id` (String) The ID of this resource.
-
-### Optional
-
 - `crlmemorysizemb` (Number) Maximum memory size to use for certificate revocation lists (CRLs). This parameter reserves memory for a CRL but sets a limit to the maximum memory that the CRLs loaded on the appliance can consume.
 - `cryptodevdisablelimit` (Number) Limit to the number of disabled SSL chips after which the ADC restarts. A value of zero implies that the ADC does not automatically restart.
 - `defaultprofile` (String) Global parameter used to enable default profile feature.

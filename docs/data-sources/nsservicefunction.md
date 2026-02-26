@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsservicefunction`
+# Data Source: nsservicefunction
 
 The nsservicefunction data source allows you to retrieve information about service functions configured on the NetScaler appliance.
 

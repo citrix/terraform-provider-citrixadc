@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `nstcpparam`
+# Data Source: nstcpparam
 
 The nstcpparam data source allows you to retrieve information about global TCP parameters configured on the Citrix ADC.
 

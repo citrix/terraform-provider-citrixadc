@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source: citrixadc_nsicapprofile
+# Data Source: nsicapprofile
 
 This data source is used to retrieve information about an existing NS ICAP profile.
 

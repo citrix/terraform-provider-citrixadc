@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source `lbgroup`
+# Data Source: lbgroup
 
 The lbgroup data source allows you to retrieve information about a load balancing virtual server group.
 

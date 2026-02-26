@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsdhcpparams`
+# Data Source: nsdhcpparams
 
 The nsdhcpparams data source allows you to retrieve information about the DHCP parameters configuration on the Citrix ADC.
 

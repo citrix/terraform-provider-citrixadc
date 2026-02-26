@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppflowaction_analyticsprofile_binding_basic = `
@@ -229,4 +230,53 @@ func testAccCheckAppflowaction_analyticsprofile_bindingDestroy(s *terraform.Stat
 	}
 
 	return nil
+}
+
+const testAccAppflowaction_analyticsprofile_bindingDataSource_basic = `
+
+	resource "citrixadc_appflowaction_analyticsprofile_binding" "tf_appflowaction_analyticsprofile_binding" {
+		name             = citrixadc_appflowaction.tf_appflowaction.name
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+	
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name             = "my_analyticsprofile"
+		type             = "webinsight"
+		httppagetracking = "DISABLED"
+		httpurl          = "ENABLED"
+	}
+	
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name            = "test_action"
+		collectors      = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "tf_collector"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
+
+	data "citrixadc_appflowaction_analyticsprofile_binding" "tf_appflowaction_analyticsprofile_binding" {
+		name             = citrixadc_appflowaction_analyticsprofile_binding.tf_appflowaction_analyticsprofile_binding.name
+		analyticsprofile = citrixadc_appflowaction_analyticsprofile_binding.tf_appflowaction_analyticsprofile_binding.analyticsprofile
+	}
+`
+
+func TestAccAppflowaction_analyticsprofile_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowaction_analyticsprofile_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appflowaction_analyticsprofile_binding.tf_appflowaction_analyticsprofile_binding", "name", "test_action"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowaction_analyticsprofile_binding.tf_appflowaction_analyticsprofile_binding", "analyticsprofile", "my_analyticsprofile"),
+				),
+			},
+		},
+	})
 }

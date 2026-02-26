@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_policymap_binding_basic = `
@@ -247,4 +248,73 @@ func testAccCheckCrvserver_policymap_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCrvserver_policymap_bindingDataSource_basic = `
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver_ds"
+		servicetype = "HTTP"
+		ipv46       = "10.102.80.65"
+		port        = 8091
+		cachetype   = "REVERSE"
+	}
+	resource "citrixadc_policymap" "tf_policymap" {
+		mappolicyname = "ia_mappol123_ds"
+		sd            = "amazon.com"
+		td            = "apple.com"
+	}
+	resource "citrixadc_lbvserver" "foo_lbvserver" {
+		name        = "test_lbvserver_ds"
+		servicetype = "HTTP"
+		ipv46       = "192.122.3.41"
+		port        = 8001
+		comment     = "hello"
+	}
+	resource "citrixadc_server" "tf_server" {
+		name      = "tf_server_ds_pm"
+		ipaddress = "10.33.10.100"
+	}
+	resource "citrixadc_service" "tf_service" {
+		name        = "tf_service_ds"
+		port        = 8082
+		servicetype = "HTTP"
+		servername  = citrixadc_server.tf_server.name
+		cachetype   = "TRANSPARENT"
+	}
+	resource "citrixadc_lbvserver_service_binding" "tf_binding" {
+		name        = citrixadc_lbvserver.foo_lbvserver.name
+		servicename = citrixadc_service.tf_service.name
+	}
+	resource "citrixadc_crvserver_policymap_binding" "crvserver_policymap_binding" {
+		name          = citrixadc_crvserver.crvserver.name
+		policyname    = citrixadc_policymap.tf_policymap.mappolicyname
+		targetvserver = citrixadc_lbvserver.foo_lbvserver.name
+		depends_on = [
+			citrixadc_service.tf_service
+		]
+	}
+
+	data "citrixadc_crvserver_policymap_binding" "crvserver_policymap_binding" {
+		name       = citrixadc_crvserver_policymap_binding.crvserver_policymap_binding.name
+		policyname = citrixadc_crvserver_policymap_binding.crvserver_policymap_binding.policyname
+		depends_on = [citrixadc_crvserver_policymap_binding.crvserver_policymap_binding]
+	}
+`
+
+func TestAcccrvserver_policymap_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_policymap_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_policymap_binding.crvserver_policymap_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_policymap_binding.crvserver_policymap_binding", "policyname", "ia_mappol123_ds"),
+				),
+			},
+		},
+	})
 }

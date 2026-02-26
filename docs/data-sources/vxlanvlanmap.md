@@ -24,6 +24,4 @@ output "name" {
 
 ## Attribute Reference
 
-In addition to the arguments, the following attributes are available:
-
 No additional attributes are available for this resource beyond the name identifier.

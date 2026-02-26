@@ -17,18 +17,39 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsngroup_lsnpool_binding_basic = `
 
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
+	}
+
+	resource "citrixadc_lsngroup" "tf_lsngroup" {
+		groupname     = "my_lsngroup"
+		clientname    = resource.citrixadc_lsnclient.tf_lsnclient.clientname
+		logging       = "DISABLED"
+		nattype       = "DYNAMIC"
+		snmptraplimit = 50
+	}
+
+	resource "citrixadc_lsnpool" "tf_lsnpool" {
+		poolname            = "my_lsn_pool"
+		nattype             = "DYNAMIC"
+		portblockallocation = "DISABLED"
+		maxportrealloctmq   = 50
+		portrealloctimeout  = 50
+	}
+
 	resource "citrixadc_lsngroup_lsnpool_binding" "tf_lsngroup_lsnpool_binding" {
-		groupname = "my_lsn_group"
-		poolname  = "my_pool"
+		groupname = citrixadc_lsngroup.tf_lsngroup.groupname
+		poolname  = citrixadc_lsnpool.tf_lsnpool.poolname
 	}
   
 `
@@ -38,7 +59,6 @@ const testAccLsngroup_lsnpool_binding_basic_step2 = `
 `
 
 func TestAccLsngroup_lsnpool_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -190,4 +210,56 @@ func testAccCheckLsngroup_lsnpool_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsngroup_lsnpool_bindingDataSource_basic = `
+
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
+	}
+
+	resource "citrixadc_lsngroup" "tf_lsngroup" {
+		groupname     = "my_lsngroup"
+		clientname    = resource.citrixadc_lsnclient.tf_lsnclient.clientname
+		logging       = "DISABLED"
+		nattype       = "DYNAMIC"
+		snmptraplimit = 50
+	}
+
+	resource "citrixadc_lsnpool" "tf_lsnpool" {
+		poolname            = "my_lsn_pool"
+		nattype             = "DYNAMIC"
+		portblockallocation = "DISABLED"
+		maxportrealloctmq   = 50
+		portrealloctimeout  = 50
+	}
+
+	resource "citrixadc_lsngroup_lsnpool_binding" "tf_lsngroup_lsnpool_binding" {
+		groupname = citrixadc_lsngroup.tf_lsngroup.groupname
+		poolname  = citrixadc_lsnpool.tf_lsnpool.poolname
+	}
+
+	data "citrixadc_lsngroup_lsnpool_binding" "tf_lsngroup_lsnpool_binding" {
+		groupname = citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding.groupname
+		poolname  = citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding.poolname
+		depends_on = [citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding]
+	}
+  
+`
+
+func TestAccLsngroup_lsnpool_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnpool_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_lsnpool_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "groupname", "my_lsngroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "poolname", "my_lsn_pool"),
+				),
+			},
+		},
+	})
 }

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_lbvserver_binding_basic = `
@@ -231,4 +232,58 @@ func testAccCheckCrvserver_lbvserver_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCrvserver_lbvserver_bindingDataSource_basic = `
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+	resource "citrixadc_lbvserver" "foo_lbvserver" {
+		name        = "test_lbvserver_ds"
+		servicetype = "HTTP"
+		ipv46       = "192.0.0.0"
+		port        = 8000
+		comment     = "hello"
+	}
+	resource "citrixadc_service" "tf_service" {
+		lbvserver   = citrixadc_lbvserver.foo_lbvserver.name
+		name        = "tf_service_ds"
+		port        = 8081
+		ip          = "10.33.4.5"
+		servicetype = "HTTP"
+		cachetype   = "TRANSPARENT"
+	}
+	resource "citrixadc_crvserver_lbvserver_binding" "crvserver_lbvserver_binding" {
+		name      = citrixadc_crvserver.crvserver.name
+		lbvserver = citrixadc_lbvserver.foo_lbvserver.name
+		depends_on = [
+			citrixadc_service.tf_service
+		]
+	}
+
+	data "citrixadc_crvserver_lbvserver_binding" "crvserver_lbvserver_binding" {
+		name       = citrixadc_crvserver_lbvserver_binding.crvserver_lbvserver_binding.name
+		lbvserver  = citrixadc_crvserver_lbvserver_binding.crvserver_lbvserver_binding.lbvserver
+		depends_on = [citrixadc_crvserver_lbvserver_binding.crvserver_lbvserver_binding]
+	}
+`
+
+func TestAcccrvserver_lbvserver_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_lbvserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_lbvserver_binding.crvserver_lbvserver_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_lbvserver_binding.crvserver_lbvserver_binding", "lbvserver", "test_lbvserver_ds"),
+				),
+			},
+		},
+	})
 }

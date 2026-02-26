@@ -217,3 +217,44 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingDestroy(s *terraform.State) erro
 
 	return nil
 }
+
+const testAccAppfwglobal_appfwpolicy_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
+		name        = "tf_appfwpolicy"
+		profilename = citrixadc_appfwprofile.tf_appfwprofile.name
+		rule        = "true"
+	}
+	resource "citrixadc_appfwglobal_appfwpolicy_binding" "tf_binding" {
+		policyname = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		priority   = 30
+		state      = "ENABLED"
+	}
+
+	data "citrixadc_appfwglobal_appfwpolicy_binding" "tf_binding" {
+		policyname = citrixadc_appfwglobal_appfwpolicy_binding.tf_binding.policyname
+		type       = citrixadc_appfwglobal_appfwpolicy_binding.tf_binding.type
+		depends_on = [citrixadc_appfwglobal_appfwpolicy_binding.tf_binding]
+	}
+`
+
+func TestAccAppfwglobal_appfwpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwglobal_appfwpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "policyname", "tf_appfwpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "priority", "30"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "type", "REQ_DEFAULT"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+				),
+			},
+		},
+	})
+}

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccService_lbmonitor_binding_basic = `
@@ -60,6 +61,34 @@ const testAccService_lbmonitor_binding_basic_step2 = `
 	resource "citrixadc_lbmonitor" "tf_monitor" {
 		monitorname = "tf_monitor"
 		type        = "HTTP"
+	}
+`
+
+const testAccService_lbmonitor_bindingDataSource_basic = `
+	resource "citrixadc_service" "tf_service" {
+		servicetype         = "HTTP"
+		name                = "tf_service"
+		ipaddress           = "10.77.33.22"
+		ip                  = "10.77.33.22"
+		port                = "80"
+		state               = "ENABLED"
+		wait_until_disabled = true
+	}
+	resource "citrixadc_lbmonitor" "tf_monitor" {
+		monitorname = "tf_monitor"
+		type        = "HTTP"
+	}
+	resource "citrixadc_service_lbmonitor_binding" "tf_binding" {
+		name         = citrixadc_service.tf_service.name
+		monitor_name = citrixadc_lbmonitor.tf_monitor.monitorname
+		monstate     = "ENABLED"
+		weight       = 2
+	}
+
+	data "citrixadc_service_lbmonitor_binding" "tf_binding" {
+		name         = "tf_service"
+		monitor_name = "tf_monitor"
+		depends_on   = [citrixadc_service_lbmonitor_binding.tf_binding]
 	}
 `
 
@@ -215,4 +244,22 @@ func testAccCheckService_lbmonitor_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccService_lbmonitor_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccService_lbmonitor_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_service_lbmonitor_binding.tf_binding", "name", "tf_service"),
+					resource.TestCheckResourceAttr("data.citrixadc_service_lbmonitor_binding.tf_binding", "monitor_name", "tf_monitor"),
+					resource.TestCheckResourceAttr("data.citrixadc_service_lbmonitor_binding.tf_binding", "monstate", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_service_lbmonitor_binding.tf_binding", "weight", "2"),
+				),
+			},
+		},
+	})
 }

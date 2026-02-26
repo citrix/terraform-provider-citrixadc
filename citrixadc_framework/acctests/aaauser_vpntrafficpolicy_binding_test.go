@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaauser_vpntrafficpolicy_binding_basic = `
@@ -29,6 +30,7 @@ const testAccAaauser_vpntrafficpolicy_binding_basic = `
 	resource "citrixadc_aaauser_vpntrafficpolicy_binding" "tf_aaauser_vpntrafficpolicy_binding" {
 		username = citrixadc_aaauser.tf_aaauser.username
 		policy    = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		type     = "REQUEST"
 		priority  = 100
 	}
 	
@@ -69,6 +71,40 @@ const testAccAaauser_vpntrafficpolicy_binding_basic_step2 = `
 		name   = "tf_vpntrafficpolicy"
 		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
 		action = citrixadc_vpntrafficaction.foo.name
+	}
+`
+
+const testAccAaauser_vpntrafficpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_aaauser_vpntrafficpolicy_binding" "tf_aaauser_vpntrafficpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy    = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		type     = "REQUEST"
+		priority  = 100
+	}
+	
+		
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta        = "ON"
+		hdx        = "ON"
+		name       = "Testingaction"
+		qual       = "tcp"
+		sso        = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
+
+	data "citrixadc_aaauser_vpntrafficpolicy_binding" "tf_aaauser_vpntrafficpolicy_binding" {
+		username = citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding.username
+		policy = citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding.policy
+		depends_on = [citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding]
 	}
 `
 
@@ -224,4 +260,21 @@ func testAccCheckAaauser_vpntrafficpolicy_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+func TestAccAaauser_vpntrafficpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_vpntrafficpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding", "policy", "tf_vpntrafficpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

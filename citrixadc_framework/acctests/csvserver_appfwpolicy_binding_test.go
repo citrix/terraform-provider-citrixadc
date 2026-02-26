@@ -183,3 +183,81 @@ func testAccCheckCsvserver_appfwpolicy_bindingDestroy(s *terraform.State) error 
 
 	return nil
 }
+
+const testAccCsvserver_appfwpolicy_bindingDataSource_basic = `
+	resource citrixadc_csvserver_appfwpolicy_binding demo_binding {
+		name = citrixadc_csvserver.demo_cs.name
+		priority = 100
+		policyname  = citrixadc_appfwpolicy.demo_appfwpolicy.name
+		gotopriorityexpression = "END"
+	}
+	resource "citrixadc_csvserver" "demo_cs" {
+		ipv46       = "10.10.10.33"
+		name        = "demo_csvserver"
+		port        = 80
+		servicetype = "HTTP"
+	}
+
+	resource citrixadc_appfwprofile demo_appfwprofile {
+		name = "demo_appfwprofile"
+		bufferoverflowaction = ["none"]
+		contenttypeaction = ["none"]
+		cookieconsistencyaction = ["none"]
+		creditcard = ["none"]
+		creditcardaction = ["none"]
+		crosssitescriptingaction = ["none"]
+		csrftagaction = ["none"]
+		denyurlaction = ["none"]
+		dynamiclearning = ["none"]
+		fieldconsistencyaction = ["none"]
+		fieldformataction = ["none"]
+		fileuploadtypesaction = ["none"]
+		inspectcontenttypes = ["none"]
+		jsondosaction = ["none"]
+		jsonsqlinjectionaction = ["none"]
+		jsonxssaction = ["none"]
+		multipleheaderaction = ["none"]
+		sqlinjectionaction = ["none"]
+		starturlaction = ["none"]
+		type = ["HTML"]
+		xmlattachmentaction = ["none"]
+		xmldosaction = ["none"]
+		xmlformataction = ["none"]
+		xmlsoapfaultaction = ["none"]
+		xmlsqlinjectionaction = ["none"]
+		xmlvalidationaction = ["none"]
+		xmlwsiaction = ["none"]
+		xmlxssaction = ["none"]
+	}
+
+	resource citrixadc_appfwpolicy demo_appfwpolicy {
+		name = "demo_appfwpolicy"
+		profilename = citrixadc_appfwprofile.demo_appfwprofile.name
+		rule = "true"
+	}
+
+	data "citrixadc_csvserver_appfwpolicy_binding" "demo_binding" {
+		name       = citrixadc_csvserver.demo_cs.name
+		policyname = citrixadc_appfwpolicy.demo_appfwpolicy.name
+		depends_on = [citrixadc_csvserver_appfwpolicy_binding.demo_binding]
+	}
+`
+
+func TestAccCsvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_appfwpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appfwpolicy_binding.demo_binding", "name", "demo_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appfwpolicy_binding.demo_binding", "policyname", "demo_appfwpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appfwpolicy_binding.demo_binding", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appfwpolicy_binding.demo_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}

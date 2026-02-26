@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_xmlwsiurl_binding_basic = `
@@ -206,4 +207,47 @@ func testAccCheckAppfwprofile_xmlwsiurl_bindingDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+const testAccAppfwprofileXmlwsiurlBindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_xmlwsiurl_binding" "tf_binding" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmlwsiurl      = ".*"
+		state          = "DISABLED"
+		xmlwsichecks   = "R1140"
+		isautodeployed = "AUTODEPLOYED"
+		comment        = "Testing"
+		alertonly      = "ON"
+	}
+
+	data "citrixadc_appfwprofile_xmlwsiurl_binding" "tf_binding_data" {
+		name       = citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding.name
+		xmlwsiurl  = citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding.xmlwsiurl
+		depends_on = [citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding]
+	}
+`
+
+func TestAccAppfwprofileXmlwsiurlBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileXmlwsiurlBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding_data", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding_data", "xmlwsiurl", ".*"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding_data", "state", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding_data", "xmlwsichecks", "BP1201, R1140"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding_data", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding_data", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding_data", "alertonly", "OFF"),
+				),
+			},
+		},
+	})
 }

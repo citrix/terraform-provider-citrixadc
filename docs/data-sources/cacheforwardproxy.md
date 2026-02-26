@@ -2,7 +2,7 @@
 subcategory: "Integrated Caching"
 ---
 
-# Data Source `cacheforwardproxy`
+# Data Source: cacheforwardproxy
 
 The cacheforwardproxy data source allows you to retrieve information about cache forward proxy configurations.
 

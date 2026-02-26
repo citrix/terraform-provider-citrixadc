@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnscnamerec`
+# Data Source: dnscnamerec
 
 The dnscnamerec data source allows you to retrieve information about DNS CNAME (Canonical Name) records configured on the Citrix ADC.
 

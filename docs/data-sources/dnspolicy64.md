@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnspolicy64`
+# Data Source: dnspolicy64
 
 The dnspolicy64 data source allows you to retrieve information about DNS64 policies.
 

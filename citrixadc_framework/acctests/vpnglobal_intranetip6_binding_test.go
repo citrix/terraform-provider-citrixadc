@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_intranetip6_binding_basic = `
@@ -171,4 +172,33 @@ func testAccCheckVpnglobal_intranetip6_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_intranetip6_bindingDataSource_basic = `
+	resource "citrixadc_vpnglobal_intranetip6_binding" "tf_bind" {
+		intranetip6 = "2.3.4.5"
+		numaddr     = "45"
+	}
+
+	data "citrixadc_vpnglobal_intranetip6_binding" "tf_bind" {
+		intranetip6 = citrixadc_vpnglobal_intranetip6_binding.tf_bind.intranetip6
+		numaddr     = citrixadc_vpnglobal_intranetip6_binding.tf_bind.numaddr
+		depends_on  = [citrixadc_vpnglobal_intranetip6_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_intranetip6_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_intranetip6_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_intranetip6_binding.tf_bind", "intranetip6", "2.3.4.5"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_intranetip6_binding.tf_bind", "numaddr", "45"),
+				),
+			},
+		},
+	})
 }

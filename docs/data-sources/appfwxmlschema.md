@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source `appfwxmlschema`
+# Data Source: appfwxmlschema
 
 The appfwxmlschema data source allows you to retrieve information about Application Firewall XML Schema objects.
 

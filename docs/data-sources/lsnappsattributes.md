@@ -2,7 +2,7 @@
 subcategory: "LSN"
 ---
 
-# Data Source `lsnappsattributes`
+# Data Source: lsnappsattributes
 
 The lsnappsattributes data source allows you to retrieve information about LSN Application Port ATTRIBUTES.
 

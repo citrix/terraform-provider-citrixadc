@@ -239,3 +239,49 @@ func testAccCheckAppfwprofile_fieldconsistency_bindingDestroy(s *terraform.State
 
 	return nil
 }
+
+const testAccAppfwprofile_fieldconsistency_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_fieldconsistency_binding" "tf_binding" {
+		name              = citrixadc_appfwprofile.tf_appfwprofile.name
+		fieldconsistency  = "tf_field"
+		formactionurl_ffc = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		isautodeployed    = "NOTAUTODEPLOYED"
+		state             = "DISABLED"
+		alertonly         = "OFF"
+		isregex_ffc       = "REGEX"
+		comment           = "Testing"
+	}
+
+	data "citrixadc_appfwprofile_fieldconsistency_binding" "tf_binding_datasource" {
+		name              = citrixadc_appfwprofile_fieldconsistency_binding.tf_binding.name
+		fieldconsistency  = citrixadc_appfwprofile_fieldconsistency_binding.tf_binding.fieldconsistency
+		formactionurl_ffc = citrixadc_appfwprofile_fieldconsistency_binding.tf_binding.formactionurl_ffc
+	}
+`
+
+func TestAccAppfwprofile_fieldconsistency_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_fieldconsistency_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldconsistency_binding.tf_binding_datasource", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldconsistency_binding.tf_binding_datasource", "fieldconsistency", "tf_field"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldconsistency_binding.tf_binding_datasource", "formactionurl_ffc", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldconsistency_binding.tf_binding_datasource", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldconsistency_binding.tf_binding_datasource", "state", "DISABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldconsistency_binding.tf_binding_datasource", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldconsistency_binding.tf_binding_datasource", "isregex_ffc", "REGEX"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldconsistency_binding.tf_binding_datasource", "comment", "Testing"),
+				),
+			},
+		},
+	})
+}

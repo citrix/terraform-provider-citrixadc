@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthorizationpolicylabel_authorizationpolicy_binding_basic = `
@@ -49,6 +50,29 @@ const testAccAuthorizationpolicylabel_authorizationpolicy_binding_basic_step2 = 
 	}
 	resource "citrixadc_authorizationpolicylabel" "authorizationpolicylabel" {
 	labelname = "trans_http_url"
+	}
+`
+
+const testAccAuthorizationpolicylabel_authorizationpolicy_bindingDataSource_basic = `
+
+resource "citrixadc_authorizationpolicy" "authorize" {
+	name   = "tp-authorize-1"
+	rule   = "true"
+	action = "DENY"
+	}
+  resource "citrixadc_authorizationpolicylabel" "authorizationpolicylabel" {
+	labelname = "trans_http_url"
+	}
+  resource "citrixadc_authorizationpolicylabel_authorizationpolicy_binding" "authorizationpolicylabel_authorizationpolicy_binding" {
+	policyname = citrixadc_authorizationpolicy.authorize.name
+	labelname = citrixadc_authorizationpolicylabel.authorizationpolicylabel.labelname
+	priority = 2
+	}
+
+	data "citrixadc_authorizationpolicylabel_authorizationpolicy_binding" "authorizationpolicylabel_authorizationpolicy_binding" {
+		labelname  = citrixadc_authorizationpolicylabel_authorizationpolicy_binding.authorizationpolicylabel_authorizationpolicy_binding.labelname
+		policyname = citrixadc_authorizationpolicylabel_authorizationpolicy_binding.authorizationpolicylabel_authorizationpolicy_binding.policyname
+		depends_on = [citrixadc_authorizationpolicylabel_authorizationpolicy_binding.authorizationpolicylabel_authorizationpolicy_binding]
 	}
 `
 
@@ -204,4 +228,21 @@ func testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingDestroy(s *
 	}
 
 	return nil
+}
+
+func TestAccAuthorizationpolicylabel_authorizationpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthorizationpolicylabel_authorizationpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicylabel_authorizationpolicy_binding.authorizationpolicylabel_authorizationpolicy_binding", "labelname", "trans_http_url"),
+					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicylabel_authorizationpolicy_binding.authorizationpolicylabel_authorizationpolicy_binding", "policyname", "tp-authorize-1"),
+					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicylabel_authorizationpolicy_binding.authorizationpolicylabel_authorizationpolicy_binding", "priority", "2"),
+				),
+			},
+		},
+	})
 }

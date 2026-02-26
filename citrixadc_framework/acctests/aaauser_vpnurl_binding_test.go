@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaauser_vpnurl_binding_basic = `
@@ -218,4 +219,51 @@ func testAccCheckAaauser_vpnurl_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAaauser_vpnurl_bindingDataSource_basic = `
+
+resource "citrixadc_aaauser_vpnurl_binding" "tf_aaauser_vpnurl_binding" {
+	username = citrixadc_aaauser.tf_aaauser.username
+	urlname   = citrixadc_vpnurl.tf_url.urlname
+	}
+  
+  resource "citrixadc_aaauser" "tf_aaauser" {
+	username = "user1"
+	password = "my_pass"
+	}
+  resource "citrixadc_vpnurl" "tf_url" {
+	actualurl        = "http://www.citrix.com"
+	appjson          = "xyz"
+	applicationtype  = "CVPN"
+	clientlessaccess = "OFF"
+	comment          = "Testing"
+	linkname         = "Description"
+	ssotype          = "unifiedgateway"
+	urlname          = "Firsturl"
+	vservername      = "server1"
+	}
+
+data "citrixadc_aaauser_vpnurl_binding" "tf_aaauser_vpnurl_binding" {
+	username = citrixadc_aaauser.tf_aaauser.username
+	urlname = citrixadc_vpnurl.tf_url.urlname
+	depends_on = [citrixadc_aaauser_vpnurl_binding.tf_aaauser_vpnurl_binding]
+}
+`
+
+func TestAccAaauser_vpnurl_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_vpnurl_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnurl_binding.tf_aaauser_vpnurl_binding", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnurl_binding.tf_aaauser_vpnurl_binding", "urlname", "Firsturl"),
+				),
+			},
+		},
+	})
 }

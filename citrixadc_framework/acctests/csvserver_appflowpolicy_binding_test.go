@@ -16,11 +16,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_appflowpolicy_binding_basic = `
@@ -49,6 +50,9 @@ resource "citrixadc_csvserver_appflowpolicy_binding" "tf_csvserver_appflowpolicy
 	invoke = true
 	labeltype = "reqvserver"
 	priority = 1
+	lifecycle {
+		ignore_changes = [bindpoint]
+	}
 }
 resource "citrixadc_csvserver" "tf_csvserver" {
 	name        = "tf_csvserver"
@@ -233,4 +237,67 @@ func testAccCheckCsvserver_appflowpolicy_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccCsvserver_appflowpolicy_bindingDataSource_basic = `
+resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+	name      = "tf_appflowpolicy"
+	action    = citrixadc_appflowaction.tf_appflowaction.name
+	rule      = "client.TCP.DSTPORT.EQ(22)"
+}
+resource "citrixadc_appflowaction" "tf_appflowaction" {
+	name = "test_action"
+	collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+	securityinsight = "ENABLED"
+	botinsight      = "ENABLED"
+	videoanalytics  = "ENABLED"
+}
+resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+	name      = "col1"
+	ipaddress = "192.168.2.2"
+	port      = 80
+}
+resource "citrixadc_csvserver_appflowpolicy_binding" "tf_csvserver_appflowpolicy_binding" {
+	name = citrixadc_csvserver.tf_csvserver.name
+	policyname = citrixadc_appflowpolicy.tf_appflowpolicy.name
+	labelname = citrixadc_csvserver.tf_csvserver.name
+	gotopriorityexpression = "END"
+	invoke = true
+	labeltype = "reqvserver"
+	priority = 1
+}
+resource "citrixadc_csvserver" "tf_csvserver" {
+	name        = "tf_csvserver"
+	ipv46       = "10.10.10.33"
+	port        = 80
+	servicetype = "HTTP"
+}
+
+data "citrixadc_csvserver_appflowpolicy_binding" "tf_csvserver_appflowpolicy_binding" {
+	name       = "tf_csvserver"
+	policyname = "tf_appflowpolicy"
+	depends_on = [citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding]
+}
+`
+
+func TestAccCsvserver_appflowpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_appflowpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "policyname", "tf_appflowpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "priority", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "labelname", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "gotopriorityexpression", "END"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "invoke", "true"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "labeltype", "reqvserver"),
+				),
+			},
+		},
+	})
 }

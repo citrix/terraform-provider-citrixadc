@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `l4param`
+# Data Source: l4param
 
 The l4param data source allows you to retrieve information about L4 parameters configuration.
 

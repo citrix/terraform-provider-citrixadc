@@ -17,18 +17,26 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccClusternodegroup_csvserver_binding_basic = `
 
-resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
-	name = "my_cs_group"
-	vserver = "my_csvserver"
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name        = "my_content_server_ds"
+		servicetype = "HTTP"
+		ipv46       = "10.71.139.100"
+		port        = "80"
+	}
+
+	resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
+		name = "my_tf_group"
+		vserver = citrixadc_csvserver.tf_csvserver.name
 	}
 `
 
@@ -190,4 +198,45 @@ func testAccCheckClusternodegroup_csvserver_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+const testAccClusternodegroup_csvserver_bindingDataSource_basic = `
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name        = "my_content_server_ds"
+		servicetype = "HTTP"
+		ipv46       = "10.71.139.100"
+		port        = "80"
+	}
+
+	resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
+		name    = "my_tf_group"
+		vserver = citrixadc_csvserver.tf_csvserver.name
+	}
+
+	data "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
+		name    = citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding.name
+		vserver = citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding.vserver
+		depends_on = [citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding]
+	}
+`
+
+func TestAccclusternodegroup_csvserver_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_csvserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "vserver", "my_content_server_ds"),
+				),
+			},
+		},
+	})
 }

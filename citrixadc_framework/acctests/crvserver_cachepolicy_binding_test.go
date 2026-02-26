@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_cachepolicy_binding_basic = `
@@ -211,4 +212,47 @@ func testAccCheckCrvserver_cachepolicy_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+const testAccCrvserver_cachepolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy_ds"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+	resource "citrixadc_crvserver_cachepolicy_binding" "crvserver_cachepolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_cachepolicy.tf_cachepolicy.policyname
+		priority   = 10
+		bindpoint  = "REQUEST"
+	}
+
+	data "citrixadc_crvserver_cachepolicy_binding" "crvserver_cachepolicy_binding" {
+		name       = citrixadc_crvserver_cachepolicy_binding.crvserver_cachepolicy_binding.name
+		policyname = citrixadc_crvserver_cachepolicy_binding.crvserver_cachepolicy_binding.policyname
+		depends_on = [citrixadc_crvserver_cachepolicy_binding.crvserver_cachepolicy_binding]
+	}
+`
+
+func TestAcccrvserver_cachepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_cachepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_cachepolicy_binding.crvserver_cachepolicy_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_cachepolicy_binding.crvserver_cachepolicy_binding", "policyname", "my_cachepolicy_ds"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsip6`
+# Data Source: nsip6
 
 The nsip6 data source allows you to retrieve information about NetScaler owned IPv6 addresses (NSIP6, SNIP6, VIP6, GSLBsiteIP6, and CLIP6).
 

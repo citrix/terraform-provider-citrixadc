@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppflowpolicylabel_appflowpolicy_binding_basic = `
@@ -234,4 +235,59 @@ func testAccCheckAppflowpolicylabel_appflowpolicy_bindingDestroy(s *terraform.St
 	}
 
 	return nil
+}
+
+const testAccAppflowpolicylabel_appflowpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_appflowpolicylabel_appflowpolicy_binding" "tf_appflowpolicylabel_appflowpolicy_binding" {
+		labelname  = citrixadc_appflowpolicylabel.tf_appflowpolicylabel.labelname
+		policyname = citrixadc_appflowpolicy.tf_appflowpolicy.name
+		priority   = 30
+	}
+
+	resource "citrixadc_appflowpolicylabel" "tf_appflowpolicylabel" {
+	  labelname       = "tf_policylabel"
+	  policylabeltype = "OTHERTCP"
+	}
+	
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+	  name      = "test_policy"
+	  action    = citrixadc_appflowaction.tf_appflowaction.name
+	  rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+	  name = "test_action"
+	  collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+	  securityinsight = "ENABLED"
+	  botinsight      = "ENABLED"
+	  videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+	  name      = "tf_collector"
+	  ipaddress = "192.168.2.2"
+	  port      = 80
+	}
+
+	data "citrixadc_appflowpolicylabel_appflowpolicy_binding" "tf_appflowpolicylabel_appflowpolicy_binding" {
+		labelname  = citrixadc_appflowpolicylabel_appflowpolicy_binding.tf_appflowpolicylabel_appflowpolicy_binding.labelname
+		policyname = citrixadc_appflowpolicylabel_appflowpolicy_binding.tf_appflowpolicylabel_appflowpolicy_binding.policyname
+		depends_on = [citrixadc_appflowpolicylabel_appflowpolicy_binding.tf_appflowpolicylabel_appflowpolicy_binding]
+	}
+`
+
+func TestAccAppflowpolicylabel_appflowpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowpolicylabel_appflowpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicylabel_appflowpolicy_binding.tf_appflowpolicylabel_appflowpolicy_binding", "labelname", "tf_policylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicylabel_appflowpolicy_binding.tf_appflowpolicylabel_appflowpolicy_binding", "policyname", "test_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicylabel_appflowpolicy_binding.tf_appflowpolicylabel_appflowpolicy_binding", "priority", "30"),
+				),
+			},
+		},
+	})
 }

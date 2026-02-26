@@ -2,7 +2,7 @@
 subcategory: "LSN"
 ---
 
-# Data Source: citrixadc_lsnappsprofile
+# Data Source: lsnappsprofile
 
 The lsnappsprofile data source allows you to retrieve information about LSN (Large Scale NAT) application profile entities.
 

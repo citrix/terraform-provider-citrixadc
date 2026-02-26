@@ -2,7 +2,7 @@
 subcategory: "Stream"
 ---
 
-# Data Source: citrixadc_streamidentifier
+# Data Source: streamidentifier
 
 The streamidentifier data source allows you to retrieve information about stream identifiers.
 

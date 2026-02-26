@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLbvserver_authorizationpolicy_binding_basic = `
@@ -187,6 +188,52 @@ func testAccCheckLbvserver_authorizationpolicy_bindingNotExist(n string, id stri
 
 		return nil
 	}
+}
+
+const testAccLbvserver_authorizationpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_authorizationpolicy" "tf_authorize" {
+		name   = "tf_authorizationpolicy"
+		rule   = "true"
+		action = "ALLOW"
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_lbvserver_authorizationpolicy_binding" "tf_lbvserver_authorizationpolicy_binding" {
+		name 		= citrixadc_lbvserver.tf_lbvserver.name
+		policyname 	= citrixadc_authorizationpolicy.tf_authorize.name
+		priority 	= 100
+		bindpoint   = "REQUEST"
+	}
+
+	data "citrixadc_lbvserver_authorizationpolicy_binding" "tf_lbvserver_authorizationpolicy_binding" {
+		name = citrixadc_lbvserver_authorizationpolicy_binding.tf_lbvserver_authorizationpolicy_binding.name
+		policyname = citrixadc_lbvserver_authorizationpolicy_binding.tf_lbvserver_authorizationpolicy_binding.policyname
+		depends_on = [citrixadc_lbvserver_authorizationpolicy_binding.tf_lbvserver_authorizationpolicy_binding]
+	}
+`
+
+func TestAccLbvserver_authorizationpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_authorizationpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_authorizationpolicy_binding.tf_lbvserver_authorizationpolicy_binding", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_authorizationpolicy_binding.tf_lbvserver_authorizationpolicy_binding", "policyname", "tf_authorizationpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_authorizationpolicy_binding.tf_lbvserver_authorizationpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckLbvserver_authorizationpolicy_bindingDestroy(s *terraform.State) error {

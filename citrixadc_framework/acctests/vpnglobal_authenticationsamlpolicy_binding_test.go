@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_authenticationsamlpolicy_binding_basic = `
@@ -61,6 +62,34 @@ const testAccVpnglobal_authenticationsamlpolicy_binding_basic_step2 = `
 		name      = "tf_samlpolicy"
 		rule      = "NS_TRUE"
 		reqaction = citrixadc_authenticationsamlaction.tf_samlaction.name
+	}
+`
+
+const testAccVpnglobal_authenticationsamlpolicy_bindingDataSource_basic = `
+	resource "citrixadc_authenticationsamlaction" "tf_samlaction" {
+		name                    = "tf_samlaction"
+		metadataurl             = "http://www.example.com"
+		samltwofactor           = "OFF"
+		requestedauthncontext   = "minimum"
+		digestmethod            = "SHA1"
+		signaturealg            = "RSA-SHA256"
+		metadatarefreshinterval = 1
+	}
+	resource "citrixadc_authenticationsamlpolicy" "tf_samlpolicy" {
+		name      = "tf_samlpolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationsamlaction.tf_samlaction.name
+	}
+	resource "citrixadc_vpnglobal_authenticationsamlpolicy_binding" "tf_bind" {
+		policyname      = citrixadc_authenticationsamlpolicy.tf_samlpolicy.name
+		priority        = 80
+		groupextraction = false
+		secondary       = false
+	}
+
+	data "citrixadc_vpnglobal_authenticationsamlpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind]
 	}
 `
 
@@ -202,4 +231,21 @@ func testAccCheckVpnglobal_authenticationsamlpolicy_bindingDestroy(s *terraform.
 	}
 
 	return nil
+}
+
+func TestAccVpnglobal_authenticationsamlpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationsamlpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind", "policyname", "tf_samlpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind", "priority", "80"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind", "secondary", "false"),
+				),
+			},
+		},
+	})
 }

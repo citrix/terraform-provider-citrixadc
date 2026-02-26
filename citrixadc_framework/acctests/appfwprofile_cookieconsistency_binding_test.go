@@ -206,3 +206,35 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingDestroy(s *terraform.Stat
 
 	return nil
 }
+
+const testAccAppfwprofile_cookieconsistency_bindingDataSource_basic = `
+	resource citrixadc_appfwprofile demo_appfw {
+		name                     = "demo_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource citrixadc_appfwprofile_cookieconsistency_binding demo_binding1 {
+		name              = citrixadc_appfwprofile.demo_appfw.name
+		cookieconsistency = "^logon_[0-9A-Za-z]{2,15}$"
+	}
+
+	data "citrixadc_appfwprofile_cookieconsistency_binding" "demo_binding1" {
+		name              = citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1.name
+		cookieconsistency = citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1.cookieconsistency
+	}
+`
+
+func TestAccAppfwprofile_cookieconsistency_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_cookieconsistency_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1", "name", "demo_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1", "cookieconsistency", "^logon_[0-9A-Za-z]{2,15}$"),
+				),
+			},
+		},
+	})
+}

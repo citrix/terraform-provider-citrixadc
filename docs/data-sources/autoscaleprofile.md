@@ -2,7 +2,7 @@
 subcategory: "Autoscale"
 ---
 
-# Data Source `autoscaleprofile`
+# Data Source: autoscaleprofile
 
 The autoscaleprofile data source allows you to retrieve information about autoscale profiles.
 

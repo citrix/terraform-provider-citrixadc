@@ -2,7 +2,7 @@
 subcategory: "ICA"
 ---
 
-# Data Source `icaaction`
+# Data Source: icaaction
 
 The icaaction data source allows you to retrieve information about ICA actions that are used to configure settings for ICA connections.
 

@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source `appfwfieldtype`
+# Data Source: appfwfieldtype
 
 The appfwfieldtype data source allows you to retrieve information about an existing appfwfieldtype.
 

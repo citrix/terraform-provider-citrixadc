@@ -29,7 +29,7 @@ const testAccClusternodegroup_gslbsite_binding_basic = `
 
 resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
 	gslbsite = citrixadc_gslbsite.site_remote.sitename
-	name     = "my_group"
+	name     = "my_tf_group"
 	}
   
   resource "citrixadc_gslbsite" "site_remote" {
@@ -206,4 +206,46 @@ func testAccCheckClusternodegroup_gslbsite_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+const testAccClusternodegroup_gslbsite_bindingDataSource_basic = `
+
+	resource "citrixadc_gslbsite" "tf_gslbsite" {
+		sitename        = "my_gslb_site_ds"
+		siteipaddress   = "192.0.2.1"
+		sessionexchange = "DISABLED"
+		sitetype        = "LOCAL"
+		sitepassword    = "secret"
+	}
+
+	resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
+		name     = "my_tf_group"
+		gslbsite = citrixadc_gslbsite.tf_gslbsite.sitename
+	}
+
+	data "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
+		name     = citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding.name
+		gslbsite = citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding.gslbsite
+		depends_on = [citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding]
+	}
+`
+
+func TestAccclusternodegroup_gslbsite_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_gslbsite_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "gslbsite", "my_gslb_site_ds"),
+				),
+			},
+		},
+	})
 }

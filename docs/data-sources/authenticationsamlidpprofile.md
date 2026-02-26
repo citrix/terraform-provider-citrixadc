@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source: citrixadc_authenticationsamlidpprofile
+# Data Source: authenticationsamlidpprofile
 
 Use this data source to retrieve information about an existing SAML Identity Provider (IdP) profile.
 

@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `ipv6`
+# Data Source: ipv6
 
 The ipv6 data source allows you to retrieve information about IPv6 global configuration settings.
 

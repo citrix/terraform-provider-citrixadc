@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_appflowpolicy_binding_basic = `
@@ -241,4 +242,61 @@ func testAccCheckVpnvserver_appflowpolicy_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_appflowpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name      = "tf_appflowpolicy"
+		action    = citrixadc_appflowaction.tf_appflowaction.name
+		rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name = "test_action"
+		collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "col1"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_appflowpolicy_binding" "tf_bind" {
+		name                   = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy                 = citrixadc_appflowpolicy.tf_appflowpolicy.name
+		bindpoint              = "ICA_REQUEST"
+		priority               = 200
+		gotopriorityexpression = "END"
+	}
+
+	data "citrixadc_vpnvserver_appflowpolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_appflowpolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_appflowpolicy_binding.tf_bind.policy
+	}
+`
+
+func TestAccVpnvserver_appflowpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_appflowpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appflowpolicy_binding.tf_bind", "name", "tf_vpnvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appflowpolicy_binding.tf_bind", "policy", "tf_appflowpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appflowpolicy_binding.tf_bind", "priority", "200"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appflowpolicy_binding.tf_bind", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
 }

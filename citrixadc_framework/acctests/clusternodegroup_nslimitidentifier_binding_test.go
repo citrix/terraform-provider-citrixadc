@@ -17,18 +17,25 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccClusternodegroup_nslimitidentifier_binding_basic = `
 
+	resource "citrixadc_nslimitidentifier" "tf_nslimitidentifier" {
+		limitidentifier = "my_ns_limit_identifier_ds"
+		threshold       = 100
+		timeslice       = 1000
+	}
+
 	resource "citrixadc_clusternodegroup_nslimitidentifier_binding" "tf_clusternodegroup_nslimitidentifier_binding" {
-		name           = "my_group"
-		identifiername = "my_nslimitidentifier"
+		name           = "my_tf_group"
+		identifiername = citrixadc_nslimitidentifier.tf_nslimitidentifier.limitidentifier
 	}
   
 `
@@ -192,4 +199,44 @@ func testAccCheckClusternodegroup_nslimitidentifier_bindingDestroy(s *terraform.
 	}
 
 	return nil
+}
+
+const testAccClusternodegroup_nslimitidentifier_bindingDataSource_basic = `
+
+	resource "citrixadc_nslimitidentifier" "tf_nslimitidentifier" {
+		limitidentifier = "my_ns_limit_identifier_ds"
+		threshold       = 100
+		timeslice       = 1000
+	}
+
+	resource "citrixadc_clusternodegroup_nslimitidentifier_binding" "tf_clusternodegroup_nslimitidentifier_binding" {
+		name           = "my_tf_group"
+		identifiername = citrixadc_nslimitidentifier.tf_nslimitidentifier.limitidentifier
+	}
+
+	data "citrixadc_clusternodegroup_nslimitidentifier_binding" "tf_clusternodegroup_nslimitidentifier_binding" {
+		name           = citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding.name
+		identifiername = citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding.identifiername
+		depends_on = [citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding]
+	}
+`
+
+func TestAccclusternodegroup_nslimitidentifier_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_nslimitidentifier_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding", "identifiername", "my_ns_limit_identifier_ds"),
+				),
+			},
+		},
+	})
 }

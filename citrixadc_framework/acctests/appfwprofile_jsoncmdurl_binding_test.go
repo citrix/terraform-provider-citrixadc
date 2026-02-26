@@ -299,3 +299,52 @@ func testAccCheckAppfwprofile_jsoncmdurl_bindingDestroy(s *terraform.State) erro
 
 	return nil
 }
+
+const testAccAppfwprofile_jsoncmdurl_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_jsoncmdurl_binding" "tf_binding2" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		jsoncmdurl     = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"
+		keyname_json_cmd = "id"
+		as_value_type_json_cmd = "SpecialString"
+		as_value_expr_json_cmd = "$"
+		alertonly      = "ON"
+		isautodeployed = "AUTODEPLOYED"
+		comment        = "Testing"
+		state          = "DISABLED"
+	}
+
+	data "citrixadc_appfwprofile_jsoncmdurl_binding" "tf_binding2" {
+		name                   = citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2.name
+		jsoncmdurl             = citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2.jsoncmdurl
+		keyname_json_cmd       = citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2.keyname_json_cmd
+		as_value_type_json_cmd = citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2.as_value_type_json_cmd
+		as_value_expr_json_cmd = citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2.as_value_expr_json_cmd
+	}
+`
+
+func TestAccAppfwprofile_jsoncmdurl_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_jsoncmdurl_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "jsoncmdurl", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "keyname_json_cmd", "id"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "as_value_type_json_cmd", "SpecialString"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "as_value_expr_json_cmd", "$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "state", "DISABLED"),
+				),
+			},
+		},
+	})
+}

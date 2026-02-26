@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSystemglobal_authenticationlocalpolicy_binding_basic = `
@@ -182,4 +183,36 @@ func testAccCheckSystemglobal_authenticationlocalpolicy_bindingDestroy(s *terraf
 	}
 
 	return nil
+}
+
+const testAccSystemglobal_authenticationlocalpolicy_bindingDataSource_basic = `
+	resource "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy" {
+		name   = "tf_authenticationlocalpolicy"
+		rule   = "ns_true"
+	}
+	resource "citrixadc_systemglobal_authenticationlocalpolicy_binding" "tf_bind" {
+		policyname = citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy.name
+		priority   = 50
+	}
+
+	data "citrixadc_systemglobal_authenticationlocalpolicy_binding" "tf_bind" {
+		policyname = citrixadc_systemglobal_authenticationlocalpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_systemglobal_authenticationlocalpolicy_binding.tf_bind]
+	}
+`
+
+func TestAccSystemglobal_authenticationlocalpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemglobal_authenticationlocalpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationlocalpolicy_binding.tf_bind", "policyname", "tf_authenticationlocalpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationlocalpolicy_binding.tf_bind", "priority", "50"),
+				),
+			},
+		},
+	})
 }

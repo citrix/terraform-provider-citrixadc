@@ -2,7 +2,7 @@
 subcategory: "Front End Optimization"
 ---
 
-# Data Source `feopolicy`
+# Data Source: feopolicy
 
 The feopolicy data source allows you to retrieve information about an existing front end optimization policy.
 

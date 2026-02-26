@@ -2,7 +2,7 @@
 subcategory: "AppFlow"
 ---
 
-# Data Source `appflowpolicy`
+# Data Source: appflowpolicy
 
 The appflowpolicy data source allows you to retrieve information about an existing appflowpolicy.
 

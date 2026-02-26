@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source: citrixadc_nshttpprofile
+# Data Source: nshttpprofile
 
 The `citrixadc_nshttpprofile` data source allows you to retrieve information about an HTTP profile configured on the Citrix ADC.
 

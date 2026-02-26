@@ -2,7 +2,7 @@
 subcategory: "GSLB"
 ---
 
-# Data Source `gslbsite`
+# Data Source: gslbsite
 
 The gslbsite data source allows you to retrieve information about a GSLB (Global Server Load Balancing) site configuration.
 

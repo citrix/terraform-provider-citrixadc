@@ -2,7 +2,7 @@
 subcategory: "SNMP"
 ---
 
-# Data Source `snmpview`
+# Data Source: snmpview
 
 The snmpview data source allows you to retrieve information about an SNMPv3 view.
 

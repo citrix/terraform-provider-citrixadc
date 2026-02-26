@@ -2,7 +2,7 @@
 subcategory: "Audit"
 ---
 
-# Data Source: citrixadc_auditnslogaction
+# Data Source: auditnslogaction
 
 Use this data source to retrieve information about an existing Audit NS Log Action.
 

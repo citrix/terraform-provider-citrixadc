@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsnappsprofile_lsnappsattributes_binding_basic = `
@@ -35,6 +36,32 @@ resource "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile
 
 const testAccLsnappsprofile_lsnappsattributes_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+`
+
+const testAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic = `
+
+	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
+		appsprofilename   = "my_lsn_appsprofile"
+		transportprotocol = "TCP"
+		mapping           = "ENDPOINT-INDEPENDENT"
+	}
+
+	resource "citrixadc_lsnappsattributes" "tf_lsnappsattributes" {
+		name              = "my_lsn_appattributes"
+		transportprotocol = "TCP"
+		port              = 90
+		sessiontimeout    = 40
+	}
+resource "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {
+	appsprofilename    = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+	appsattributesname = citrixadc_lsnappsattributes.tf_lsnappsattributes.name
+}
+
+data "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {
+	appsprofilename    = citrixadc_lsnappsprofile_lsnappsattributes_binding.tf_lsnappsprofile_lsnappsattributes_binding.appsprofilename
+	appsattributesname = citrixadc_lsnappsprofile_lsnappsattributes_binding.tf_lsnappsprofile_lsnappsattributes_binding.appsattributesname
+	depends_on         = [citrixadc_lsnappsprofile_lsnappsattributes_binding.tf_lsnappsprofile_lsnappsattributes_binding]
+}
 `
 
 func TestAccLsnappsprofile_lsnappsattributes_binding_basic(t *testing.T) {
@@ -190,4 +217,20 @@ func testAccCheckLsnappsprofile_lsnappsattributes_bindingDestroy(s *terraform.St
 	}
 
 	return nil
+}
+
+func TestAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile_lsnappsattributes_binding.tf_lsnappsprofile_lsnappsattributes_binding", "appsprofilename", "my_lsn_profile"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile_lsnappsattributes_binding.tf_lsnappsprofile_lsnappsattributes_binding", "appsattributesname", "my_lsn_appattributes"),
+				),
+			},
+		},
+	})
 }

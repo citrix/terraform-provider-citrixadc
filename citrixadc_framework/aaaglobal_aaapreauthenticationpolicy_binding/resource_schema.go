@@ -75,6 +75,7 @@ func aaaglobal_aaapreauthenticationpolicy_bindingSetAttrFromGet(ctx context.Cont
 	}
 
 	// Set ID for the resource
+	// Case 2: Single unique attribute
 	data.Id = types.StringValue(data.Policy.ValueString())
 
 	return data

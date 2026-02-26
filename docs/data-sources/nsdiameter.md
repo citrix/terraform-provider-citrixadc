@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source: citrixadc_nsdiameter
+# Data Source: nsdiameter
 
 The `citrixadc_nsdiameter` data source is used to retrieve information about the Diameter configuration on a Citrix ADC appliance. Diameter is a protocol used for Authentication, Authorization, and Accounting (AAA) in modern networks.
 

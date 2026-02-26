@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationcitrixauthaction`
+# Data Source: authenticationcitrixauthaction
 
 The authenticationcitrixauthaction data source allows you to retrieve information about authentication Citrix auth actions.
 

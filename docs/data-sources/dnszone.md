@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnszone`
+# Data Source: dnszone
 
 The dnszone data source allows you to retrieve information about DNS zones configured on the Citrix ADC.
 

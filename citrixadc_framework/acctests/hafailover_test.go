@@ -25,7 +25,7 @@ const testAccHafailover_basic = `
 
 	resource "citrixadc_hafailover" "tf_failover" {
 		
-		ipaddress = "10.222.74.152"
+		ipaddress = "10.101.132.124"
 		state = "Secondary"
 		force = true
 	}
@@ -35,7 +35,7 @@ const testAccHafailover_basic_update = `
 
 	resource "citrixadc_hafailover" "tf_failover" {
 		
-		ipaddress = "10.222.74.152"
+		ipaddress = "10.101.132.124"
 		state = "Primary"
 		force = true
 	}

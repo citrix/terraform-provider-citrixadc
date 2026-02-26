@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationcaptchaaction`
+# Data Source: authenticationcaptchaaction
 
 The authenticationcaptchaaction data source allows you to retrieve information about authentication captcha actions.
 

@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `mapdmr`
+# Data Source: mapdmr
 
 The mapdmr data source allows you to retrieve information about MAP Default Mapping Rule (DMR) configurations.
 

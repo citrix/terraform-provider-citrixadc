@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_appfwpolicy_binding_basic = `
@@ -274,4 +275,47 @@ func testAccCheckCrvserver_appfwpolicy_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+const testAccCrvserver_appfwpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp = "OFF"
+	}
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
+		name      = "tf_appfwpolicy_ds"
+		rule      = "true"
+		profilename = "APPFW_BYPASS"
+	}
+	
+	resource "citrixadc_crvserver_appfwpolicy_binding" "crvserver_appfwpolicy_binding" {
+		name = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		priority = 1
+	}
+
+	data "citrixadc_crvserver_appfwpolicy_binding" "crvserver_appfwpolicy_binding" {
+		name       = citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding.name
+		policyname = citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding.policyname
+		depends_on = [citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding]
+	}
+`
+
+func TestAcccrvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_appfwpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", "policyname", "tf_appfwpolicy_ds"),
+				),
+			},
+		},
+	})
 }

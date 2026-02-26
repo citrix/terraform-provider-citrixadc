@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaapreauthenticationpolicy`
+# Data Source: aaapreauthenticationpolicy
 
 The aaapreauthenticationpolicy data source allows you to retrieve information about AAA preauthentication policies.
 

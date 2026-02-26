@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source: citrixadc_authenticationoauthidpprofile
+# Data Source: authenticationoauthidpprofile
 
 This data source is used to retrieve information about a specific `authenticationoauthidpprofile` resource.
 

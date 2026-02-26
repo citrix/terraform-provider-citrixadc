@@ -2,7 +2,7 @@
 subcategory: "Authorization"
 ---
 
-# Data Source `authorizationpolicylabel`
+# Data Source: authorizationpolicylabel
 
 The authorizationpolicylabel data source allows you to retrieve information about an existing authorization policy label.
 

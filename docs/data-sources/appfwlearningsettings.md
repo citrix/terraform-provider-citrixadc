@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source `citrixadc_appfwlearningsettings`
+# Data Source: appfwlearningsettings
 
 The appfwlearningsettings data source allows you to retrieve information about Application Firewall learning settings for a specific profile.
 

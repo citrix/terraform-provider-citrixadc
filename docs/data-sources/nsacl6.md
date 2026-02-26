@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsacl6`
+# Data Source: nsacl6
 
 The nsacl6 data source allows you to retrieve information about IPv6 ACL (Access Control List) rules configured on Citrix ADC.
 

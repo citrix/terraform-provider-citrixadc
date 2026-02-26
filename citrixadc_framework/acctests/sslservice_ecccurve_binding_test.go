@@ -276,3 +276,78 @@ func testAccCheckSslservice_ecccurve_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccSslservice_ecccurve_bindingDataSource_basic = `
+resource "citrixadc_sslservice" "demo_sslservice" {
+	cipherredirect = "DISABLED"
+	clientauth = "DISABLED"
+	dh = "DISABLED"
+	dhcount = 0
+	dhkeyexpsizelimit = "DISABLED"
+	dtls12 = "DISABLED"
+	ersa = "DISABLED"
+	redirectportrewrite = "DISABLED"
+	serverauth = "ENABLED"
+	servicename = citrixadc_service.tf_service.name
+	sessreuse = "ENABLED"
+	sesstimeout = 300
+	snienable = "DISABLED"
+	ssl2 = "DISABLED"
+	ssl3 = "ENABLED"
+	sslredirect = "DISABLED"
+	sslv2redirect = "DISABLED"
+	tls1 = "ENABLED"
+	tls11 = "ENABLED"
+	tls12 = "ENABLED"
+	tls13 = "DISABLED"
+	
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	ipv46       = "10.10.10.44"
+	name        = "tf_lbvserver"
+	port        = 443
+	servicetype = "SSL"
+	sslprofile  = "ns_default_ssl_profile_frontend"
+}
+
+resource "citrixadc_service" "tf_service" {
+	name = "tf_service"
+	servicetype = "SSL"
+	port = 443 
+	lbvserver = citrixadc_lbvserver.tf_lbvserver.name
+	ip = "10.77.33.22"
+}
+
+resource "citrixadc_sslservice_ecccurve_binding" "tf_sslservice_ecccurve_binding" {
+	ecccurvename = "P_256"
+	servicename = citrixadc_service.tf_service.name
+	
+}
+
+data "citrixadc_sslservice_ecccurve_binding" "tf_sslservice_ecccurve_binding_ds" {
+	servicename  = citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding.servicename
+	ecccurvename = citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding.ecccurvename
+	depends_on   = [citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding]
+}
+`
+
+func TestAccSslservice_ecccurve_bindingDataSource_basic(t *testing.T) {
+	// if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	// }
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservice_ecccurve_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding_ds", "servicename", "tf_service"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding_ds", "ecccurvename", "P_256"),
+				),
+			},
+		},
+	})
+}

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccSystemuser_systemcmdpolicy_binding_basic = `
@@ -211,4 +212,47 @@ func testAccCheckSystemuser_systemcmdpolicy_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+const testAccSystemuser_systemcmdpolicy_bindingDataSource_basic = `
+	resource "citrixadc_systemuser" "tf_user" {
+		username = "tf_user"
+		password = "tf_password"
+		timeout  = 200
+	}
+
+	resource "citrixadc_systemcmdpolicy" "tf_policy" {
+		policyname = "tf_policy"
+		action     = "DENY"
+		cmdspec    = "add.*"
+	}
+
+	resource "citrixadc_systemuser_systemcmdpolicy_binding" "tf_bind" {
+		username   = citrixadc_systemuser.tf_user.username
+		policyname = citrixadc_systemcmdpolicy.tf_policy.policyname
+		priority   = 100
+	}
+
+	data "citrixadc_systemuser_systemcmdpolicy_binding" "tf_bind" {
+		username   = citrixadc_systemuser_systemcmdpolicy_binding.tf_bind.username
+		policyname = citrixadc_systemuser_systemcmdpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_systemuser_systemcmdpolicy_binding.tf_bind]
+	}
+`
+
+func TestAccSystemuser_systemcmdpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemuser_systemcmdpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", "username", "tf_user"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", "policyname", "tf_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", "priority", "100"),
+				),
+			},
+		},
+	})
 }

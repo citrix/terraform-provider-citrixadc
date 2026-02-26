@@ -2,7 +2,7 @@
 subcategory: "User"
 ---
 
-# Data Source: citrixadc_uservserver
+# Data Source: uservserver
 
 The citrixadc_uservserver data source is used to retrieve information about an existing user virtual server.
 

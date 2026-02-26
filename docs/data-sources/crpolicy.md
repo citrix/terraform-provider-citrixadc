@@ -2,7 +2,7 @@
 subcategory: "Cache Redirection"
 ---
 
-# Data Source `crpolicy`
+# Data Source: crpolicy
 
 The crpolicy data source allows you to retrieve information about cache redirection policies.
 

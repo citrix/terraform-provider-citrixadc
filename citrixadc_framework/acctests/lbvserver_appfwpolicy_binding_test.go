@@ -192,3 +192,82 @@ func testAccCheckLbvserver_appfwpolicy_bindingDestroy(s *terraform.State) error 
 
 	return nil
 }
+
+const testAccLbvserver_appfwpolicy_bindingDataSource_basic = `
+	resource "citrixadc_lbvserver" "tf_acc_test_lb" {
+		name        = "tf_acc_test_lb"
+		ipv46       = "10.10.10.33"
+		port        = "80"
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_appfwprofile" "tf_acc_test_appfwprofile" {
+		name = "tf_acc_test_appfwprofile"
+		bufferoverflowaction = ["none"]
+		contenttypeaction = ["none"]
+		cookieconsistencyaction = ["none"]
+		creditcard = ["none"]
+		creditcardaction = ["none"]
+		crosssitescriptingaction = ["none"]
+		csrftagaction = ["none"]
+		denyurlaction = ["none"]
+		dynamiclearning = ["none"]
+		fieldconsistencyaction = ["none"]
+		fieldformataction = ["none"]
+		fileuploadtypesaction = ["none"]
+		inspectcontenttypes = ["none"]
+		jsondosaction = ["none"]
+		jsonsqlinjectionaction = ["none"]
+		jsonxssaction = ["none"]
+		multipleheaderaction = ["none"]
+		sqlinjectionaction = ["none"]
+		starturlaction = ["none"]
+		type = ["HTML"]
+		xmlattachmentaction = ["none"]
+		xmldosaction = ["none"]
+		xmlformataction = ["none"]
+		xmlsoapfaultaction = ["none"]
+		xmlsqlinjectionaction = ["none"]
+		xmlvalidationaction = ["none"]
+		xmlwsiaction = ["none"]
+		xmlxssaction = ["none"]
+	}
+
+	resource "citrixadc_appfwpolicy" "tf_acc_test_appfwpolicy" {
+		name = "tf_acc_test_appfwpolicy"
+		profilename = citrixadc_appfwprofile.tf_acc_test_appfwprofile.name
+		rule = "true"
+	}
+
+	resource "citrixadc_lbvserver_appfwpolicy_binding" "tf_acc_test_binding" {
+		name = citrixadc_lbvserver.tf_acc_test_lb.name
+		priority = 100
+		bindpoint = "REQUEST"
+		policyname  = citrixadc_appfwpolicy.tf_acc_test_appfwpolicy.name
+		gotopriorityexpression = "END"
+	}
+
+	data "citrixadc_lbvserver_appfwpolicy_binding" "tf_acc_test_binding" {
+		name = citrixadc_lbvserver_appfwpolicy_binding.tf_acc_test_binding.name
+		policyname = citrixadc_lbvserver_appfwpolicy_binding.tf_acc_test_binding.policyname
+		depends_on = [citrixadc_lbvserver_appfwpolicy_binding.tf_acc_test_binding]
+	}
+`
+
+func TestAccLbvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_appfwpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appfwpolicy_binding.tf_acc_test_binding", "name", "tf_acc_test_lb"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appfwpolicy_binding.tf_acc_test_binding", "policyname", "tf_acc_test_appfwpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appfwpolicy_binding.tf_acc_test_binding", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appfwpolicy_binding.tf_acc_test_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccSystemgroup_systemuser_binding_basic = `
@@ -213,4 +214,47 @@ func testAccCheckSystemgroup_systemuser_bindingDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+const testAccSystemgroup_systemuser_bindingDataSource_basic = `
+
+	resource "citrixadc_systemgroup" "tf_systemgroup" {
+		groupname    = "tf_systemgroup"
+		timeout      = 999
+		promptstring = "bye>"
+	}
+
+	resource "citrixadc_systemuser" "tf_user" {
+		username = "tf_user"
+		password = "tf_password"
+		timeout  = 200
+	}
+
+	resource "citrixadc_systemgroup_systemuser_binding" "tf_bind" {
+		groupname = citrixadc_systemgroup.tf_systemgroup.groupname
+		username  = citrixadc_systemuser.tf_user.username
+	}
+
+	data "citrixadc_systemgroup_systemuser_binding" "tf_bind" {
+		groupname = citrixadc_systemgroup_systemuser_binding.tf_bind.groupname
+		username  = citrixadc_systemgroup_systemuser_binding.tf_bind.username
+		depends_on = [citrixadc_systemgroup_systemuser_binding.tf_bind]
+	}
+`
+
+func TestAccSystemgroup_systemuser_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemgroup_systemuser_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemgroup_systemuser_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup_systemuser_binding.tf_bind", "groupname", "tf_systemgroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemgroup_systemuser_binding.tf_bind", "username", "tf_user"),
+				),
+			},
+		},
+	})
 }

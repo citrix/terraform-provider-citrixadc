@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source: citrixadc_radiusnode
+# Data Source: radiusnode
 
 The `citrixadc_radiusnode` data source is used to retrieve information about a specific RADIUS node configured on the Citrix ADC.
 

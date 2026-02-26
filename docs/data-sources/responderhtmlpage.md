@@ -2,7 +2,7 @@
 subcategory: "Responder"
 ---
 
-# Data Source: citrixadc_responderhtmlpage
+# Data Source: responderhtmlpage
 
 The `citrixadc_responderhtmlpage` data source is used to retrieve information about an existing responder HTML page object configured on the Citrix ADC.
 

@@ -2,7 +2,7 @@
 subcategory: "Basic"
 ---
 
-# Data Source `locationfile`
+# Data Source: locationfile
 
 The locationfile data source allows you to retrieve information about the location file configuration on the Citrix ADC.
 

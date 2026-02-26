@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsspparams`
+# Data Source: nsspparams
 
 The nsspparams data source allows you to retrieve information about surge protection parameters.
 

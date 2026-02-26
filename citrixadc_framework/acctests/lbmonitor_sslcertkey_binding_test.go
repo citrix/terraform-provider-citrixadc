@@ -58,6 +58,32 @@ const testAccLbmonitor_sslcertkey_binding_basic_step2 = `
 	}
 `
 
+const testAccLbmonitor_sslcertkey_bindingDataSource_basic = `
+	resource "citrixadc_lbmonitor" "tf_monitor" {
+		monitorname = "tf_monitor"
+		type = "HTTP"
+		sslprofile = "ns_default_ssl_profile_backend"
+	}
+
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey"
+		cert = "/var/tmp/certificate1.crt"
+		key = "/var/tmp/key1.pem"
+	}
+
+	resource "citrixadc_lbmonitor_sslcertkey_binding" "tf_lbmonitor_sslcertkey_binding" {
+		monitorname = citrixadc_lbmonitor.tf_monitor.monitorname
+		certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
+	}
+
+	data "citrixadc_lbmonitor_sslcertkey_binding" "tf_lbmonitor_sslcertkey_binding" {
+		monitorname = citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding.monitorname
+		certkeyname = citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding.certkeyname
+		ca          = false
+		depends_on  = [citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding]
+	}
+`
+
 func TestAccLbmonitor_sslcertkey_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
@@ -210,4 +236,21 @@ func testAccCheckLbmonitor_sslcertkey_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLbmonitor_sslcertkey_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_sslcertkey_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "monitorname", "tf_monitor"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "certkeyname", "tf_sslcertkey"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "ca", "false"),
+				),
+			},
+		},
+	})
 }

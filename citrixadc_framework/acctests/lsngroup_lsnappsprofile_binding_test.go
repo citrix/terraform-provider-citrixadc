@@ -17,19 +17,38 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsngroup_lsnappsprofile_binding_basic = `
 
-resource "citrixadc_lsngroup_lsnappsprofile_binding" "tf_lsngroup_lsnappsprofile_binding" {
-	groupname       = "my_group"
-	appsprofilename = "my_lsn_profile"
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
 	}
+
+	resource "citrixadc_lsngroup" "tf_lsngroup" {
+		groupname     = "my_lsngroup"
+		clientname    = citrixadc_lsnclient.tf_lsnclient.clientname
+		logging       = "DISABLED"
+		nattype       = "DYNAMIC"
+		snmptraplimit = 50
+	}
+
+	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
+		appsprofilename   = "my_lsn_appsprofile"
+		transportprotocol = "TCP"
+		mapping           = "ENDPOINT-INDEPENDENT"
+	}
+
+resource "citrixadc_lsngroup_lsnappsprofile_binding" "tf_lsngroup_lsnappsprofile_binding" {
+	groupname       = citrixadc_lsngroup.tf_lsngroup.groupname
+	appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+}
   
 `
 
@@ -38,7 +57,6 @@ const testAccLsngroup_lsnappsprofile_binding_basic_step2 = `
 `
 
 func TestAccLsngroup_lsnappsprofile_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -190,4 +208,53 @@ func testAccCheckLsngroup_lsnappsprofile_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccLsngroup_lsnappsprofile_bindingDataSource_basic = `
+
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
+	}
+
+	resource "citrixadc_lsngroup" "tf_lsngroup" {
+		groupname     = "my_lsngroup"
+		clientname    = citrixadc_lsnclient.tf_lsnclient.clientname
+		logging       = "DISABLED"
+		nattype       = "DYNAMIC"
+		snmptraplimit = 50
+	}
+
+	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
+		appsprofilename   = "my_lsn_appsprofile"
+		transportprotocol = "TCP"
+		mapping           = "ENDPOINT-INDEPENDENT"
+	}
+
+resource "citrixadc_lsngroup_lsnappsprofile_binding" "tf_lsngroup_lsnappsprofile_binding" {
+	groupname       = citrixadc_lsngroup.tf_lsngroup.groupname
+	appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+}
+
+data "citrixadc_lsngroup_lsnappsprofile_binding" "tf_lsngroup_lsnappsprofile_binding" {
+	groupname       = citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding.groupname
+	appsprofilename = citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding.appsprofilename
+	depends_on      = [citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding]
+}
+`
+
+func TestAccLsngroup_lsnappsprofile_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnappsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_lsnappsprofile_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding", "groupname", "my_lsngroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding", "appsprofilename", "my_lsn_appsprofile"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `onlinkipv6prefix`
+# Data Source: onlinkipv6prefix
 
 The onlinkipv6prefix data source allows you to retrieve information about an existing IPv6 prefix configuration for Router Advertisement (RA) messages.
 

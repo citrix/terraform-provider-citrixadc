@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_rsskeytype
+# Data Source: rsskeytype
 
 The rsskeytype data source allows you to retrieve information about RSS key type configuration.
 

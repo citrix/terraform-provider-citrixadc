@@ -2,7 +2,7 @@
 subcategory: "Integrated Caching"
 ---
 
-# Data Source `cachecontentgroup`
+# Data Source: cachecontentgroup
 
 The cachecontentgroup data source allows you to retrieve information about an existing cachecontentgroup.
 

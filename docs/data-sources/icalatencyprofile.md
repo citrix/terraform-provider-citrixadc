@@ -2,7 +2,7 @@
 subcategory: "ICA"
 ---
 
-# Data Source `icalatencyprofile`
+# Data Source: icalatencyprofile
 
 The icalatencyprofile data source allows you to retrieve information about an ICA latency profile configuration.
 

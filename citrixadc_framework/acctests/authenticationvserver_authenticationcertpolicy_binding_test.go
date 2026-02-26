@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationvserver_authenticationcertpolicy_binding_basic = `
@@ -72,6 +73,40 @@ const testAccAuthenticationvserver_authenticationcertpolicy_binding_basic_step2 
 		name      = "tf_certpolicy"
 		rule      = "ns_true"
 		reqaction = citrixadc_authenticationcertaction.tf_certaction.name
+	}
+`
+
+const testAccAuthenticationvserverAuthenticationcertpolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationcertaction" "tf_certaction" {
+		name                       = "tf_certaction"
+		twofactor                  = "ON"
+		defaultauthenticationgroup = "new_group"
+		usernamefield              = "Subject:CN"
+		groupnamefield             = "subject:grp"
+	}
+	resource "citrixadc_authenticationcertpolicy" "tf_certpolicy" {
+		name      = "tf_certpolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationcertaction.tf_certaction.name
+	}
+	resource "citrixadc_authenticationvserver_authenticationcertpolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationcertpolicy.tf_certpolicy.name
+		priority  = 90
+		bindpoint = "AAA_RESPONSE"
+	}
+
+	data "citrixadc_authenticationvserver_authenticationcertpolicy_binding" "tf_bind" {
+		name   = citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind.name
+		policy = citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind]
 	}
 `
 
@@ -227,4 +262,22 @@ func testAccCheckAuthenticationvserver_authenticationcertpolicy_bindingDestroy(s
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverAuthenticationcertpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverAuthenticationcertpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind", "policy", "tf_certpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind", "priority", "90"),
+				),
+			},
+		},
+	})
 }

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNetprofile_natrule_binding_basic = `
@@ -199,4 +200,41 @@ func testAccCheckNetprofile_natrule_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNetprofile_natrule_bindingDataSource_basic = `
+	resource "citrixadc_netprofile" "tf_netprofile" {
+		name                   = "tf_netprofile"
+		proxyprotocol          = "ENABLED"
+		proxyprotocoltxversion = "V1"
+	}
+	resource "citrixadc_netprofile_natrule_binding" "tf_binding" {
+		name      = citrixadc_netprofile.tf_netprofile.name
+		natrule   = "10.10.10.10"
+		netmask   = "255.255.255.255"
+		rewriteip = "3.3.3.3"
+	}
+
+	data "citrixadc_netprofile_natrule_binding" "tf_binding" {
+		name    = citrixadc_netprofile_natrule_binding.tf_binding.name
+		natrule = citrixadc_netprofile_natrule_binding.tf_binding.natrule
+	}
+`
+
+func TestAccNetprofile_natrule_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetprofile_natrule_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_netprofile_natrule_binding.tf_binding", "name", "tf_netprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_netprofile_natrule_binding.tf_binding", "natrule", "10.10.10.10"),
+					resource.TestCheckResourceAttr("data.citrixadc_netprofile_natrule_binding.tf_binding", "netmask", "255.255.255.255"),
+					resource.TestCheckResourceAttr("data.citrixadc_netprofile_natrule_binding.tf_binding", "rewriteip", "3.3.3.3"),
+				),
+			},
+		},
+	})
 }

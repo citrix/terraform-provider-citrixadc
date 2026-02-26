@@ -1,4 +1,8 @@
-# citrixadc_sslpolicy
+---
+subcategory: "SSL"
+---
+
+# Data Source: sslpolicy
 
 This datasource is used to retrieve information about an existing SSL policy on the Citrix ADC.
 

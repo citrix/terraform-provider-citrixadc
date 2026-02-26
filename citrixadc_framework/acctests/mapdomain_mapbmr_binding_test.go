@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccMapdomain_mapbmr_binding_basic = `
@@ -218,4 +219,48 @@ func testAccCheckMapdomain_mapbmr_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccMapdomain_mapbmr_bindingDataSource_basic = `
+	resource "citrixadc_mapbmr" "tf_mapbmr" {
+		name           = "tf_mapbmr"
+		ruleipv6prefix = "2001:db8:abcd:12::/64"
+		psidoffset     = 6
+		eabitlength    = 16
+		psidlength     = 8
+	}
+	resource "citrixadc_mapdmr" "tf_mapdmr" {
+		name         = "tf_mapdmr"
+		bripv6prefix = "2002:db8::/64"
+	}
+	resource "citrixadc_mapdomain" "tf_mapdomain" {
+		name       = "tf_mapdomain"
+		mapdmrname = citrixadc_mapdmr.tf_mapdmr.name
+	}
+	resource "citrixadc_mapdomain_mapbmr_binding" "tf_binding" {
+		name       = citrixadc_mapdomain.tf_mapdomain.name
+		mapbmrname = citrixadc_mapbmr.tf_mapbmr.name
+	}
+	
+	data "citrixadc_mapdomain_mapbmr_binding" "tf_binding_ds" {
+		name       = citrixadc_mapdomain_mapbmr_binding.tf_binding.name
+		mapbmrname = citrixadc_mapdomain_mapbmr_binding.tf_binding.mapbmrname
+		depends_on = [citrixadc_mapdomain_mapbmr_binding.tf_binding]
+	}
+`
+
+func TestAccMapdomain_mapbmr_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMapdomain_mapbmr_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_mapdomain_mapbmr_binding.tf_binding_ds", "name", "tf_mapdomain"),
+					resource.TestCheckResourceAttr("data.citrixadc_mapdomain_mapbmr_binding.tf_binding_ds", "mapbmrname", "tf_mapbmr"),
+				),
+			},
+		},
+	})
 }

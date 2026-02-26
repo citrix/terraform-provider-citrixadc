@@ -26,9 +26,16 @@ import (
 
 const testAccClusternodegroup_authenticationvserver_binding_basic = `
 
+resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+	name           = "my_authentication_server"
+	servicetype    = "SSL"
+	authentication = "ON"
+	state          = "ENABLED"
+}
+
 resource "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {
-	name     = "my_authentication_group"
-	vserver = "my_authentication_server"
+	name     = "my_tf_group"
+	vserver = citrixadc_authenticationvserver.tf_authenticationvserver.name
 	}
   
 `
@@ -192,4 +199,45 @@ func testAccCheckClusternodegroup_authenticationvserver_bindingDestroy(s *terraf
 	}
 
 	return nil
+}
+
+const testAccClusternodegroup_authenticationvserver_bindingDataSource_basic = `
+
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "my_authentication_server_ds"
+		servicetype    = "SSL"
+		authentication = "ON"
+		state          = "ENABLED"
+	}
+
+	resource "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {
+		name    = "my_tf_group"
+		vserver = citrixadc_authenticationvserver.tf_authenticationvserver.name
+	}
+
+	data "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {
+		name    = citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding.name
+		vserver = citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding.vserver
+		depends_on = [citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding]
+	}
+`
+
+func TestAccclusternodegroup_authenticationvserver_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_authenticationvserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding", "vserver", "my_authentication_server_ds"),
+				),
+			},
+		},
+	})
 }

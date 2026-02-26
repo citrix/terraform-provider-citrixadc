@@ -2,7 +2,7 @@
 subcategory: "Audit"
 ---
 
-# Data Source `auditsyslogpolicy`
+# Data Source: auditsyslogpolicy
 
 The auditsyslogpolicy data source allows you to retrieve information about audit syslog policies.
 

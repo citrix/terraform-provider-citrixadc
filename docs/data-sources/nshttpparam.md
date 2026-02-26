@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nshttpparam`
+# Data Source: nshttpparam
 
 The nshttpparam data source allows you to retrieve information about the HTTP parameters configured on the Citrix ADC appliance.
 

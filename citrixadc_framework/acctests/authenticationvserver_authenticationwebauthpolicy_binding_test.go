@@ -79,6 +79,42 @@ const testAccAuthenticationvserver_authenticationwebauthpolicy_binding_basic_ste
 	}
 `
 
+const testAccAuthenticationvserverAuthenticationwebauthpolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationwebauthaction" "tf_webauthaction" {
+		name                       = "tf_webauthaction"
+		serverip                   = "1.2.3.4"
+		serverport                 = 8080
+		fullreqexpr                = "TRUE"
+		scheme                     = "http"
+		successrule                = "http.RES.STATUS.EQ(200)"
+		defaultauthenticationgroup = "new_group"
+	}
+	resource "citrixadc_authenticationwebauthpolicy" "tf_webauthpolicy" {
+		name   = "tf_webauthpolicy"
+		rule   = "NS_TRUE"
+		action = citrixadc_authenticationwebauthaction.tf_webauthaction.name
+	}
+	resource "citrixadc_authenticationvserver_authenticationwebauthpolicy_binding" "tf_bind" {
+		name 	  = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationwebauthpolicy.tf_webauthpolicy.name
+		priority  = 80 
+		bindpoint = "AAA_RESPONSE"
+	}
+
+	data "citrixadc_authenticationvserver_authenticationwebauthpolicy_binding" "tf_bind" {
+		name   = citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind.name
+		policy = citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind]
+	}
+`
+
 func TestAccAuthenticationvserver_authenticationwebauthpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -231,4 +267,21 @@ func testAccCheckAuthenticationvserver_authenticationwebauthpolicy_bindingDestro
 	}
 
 	return nil
+}
+func TestAccAuthenticationvserverAuthenticationwebauthpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverAuthenticationwebauthpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "policy", "tf_webauthpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "priority", "80"),
+				),
+			},
+		},
+	})
 }

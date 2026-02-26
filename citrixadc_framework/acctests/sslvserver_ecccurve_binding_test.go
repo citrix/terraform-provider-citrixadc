@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccSslvserver_ecccurve_binding_basic = `
@@ -201,4 +202,44 @@ func testAccCheckSslvserver_ecccurve_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccSslvserver_ecccurve_bindingDataSource_basic = `
+
+	resource "citrixadc_sslvserver_ecccurve_binding" "tf_sslvserver_ecccurve_binding" {
+		ecccurvename = "P_256"
+        vservername = citrixadc_lbvserver.tf_sslvserver.name
+        
+	}
+
+	resource "citrixadc_lbvserver" "tf_sslvserver" {
+		name        = "tf_sslvserver"
+		servicetype = "SSL"
+	}
+
+	data "citrixadc_sslvserver_ecccurve_binding" "tf_sslvserver_ecccurve_binding" {
+		ecccurvename = citrixadc_sslvserver_ecccurve_binding.tf_sslvserver_ecccurve_binding.ecccurvename
+		vservername  = citrixadc_sslvserver_ecccurve_binding.tf_sslvserver_ecccurve_binding.vservername
+		depends_on   = [citrixadc_sslvserver_ecccurve_binding.tf_sslvserver_ecccurve_binding]
+	}
+`
+
+func TestAccSslvserver_ecccurve_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_ecccurve_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_ecccurve_binding.tf_sslvserver_ecccurve_binding", "ecccurvename", "P_256"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_ecccurve_binding.tf_sslvserver_ecccurve_binding", "vservername", "tf_sslvserver"),
+				),
+			},
+		},
+	})
 }

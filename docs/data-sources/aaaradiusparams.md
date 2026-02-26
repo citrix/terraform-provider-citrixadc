@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaaradiusparams`
+# Data Source: aaaradiusparams
 
 The aaaradiusparams data source allows you to retrieve information about AAA RADIUS parameters configuration.
 

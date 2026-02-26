@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationvserver_cachepolicy_binding_basic = `
@@ -59,6 +60,34 @@ const testAccAuthenticationvserver_cachepolicy_binding_basic_step2 = `
 		comment        = "new"
 		authentication = "ON"
 		state          = "DISABLED"
+	}
+`
+
+const testAccAuthenticationvserverCachepolicyBindingDataSource_basic = `
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationvserver_cachepolicy_binding" "tf_binding" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_cachepolicy.tf_cachepolicy.policyname
+		bindpoint = "REQUEST"
+		priority  = 9
+	}
+
+	data "citrixadc_authenticationvserver_cachepolicy_binding" "tf_binding" {
+		name      = citrixadc_authenticationvserver_cachepolicy_binding.tf_binding.name
+		policy    = citrixadc_authenticationvserver_cachepolicy_binding.tf_binding.policy
+		bindpoint = citrixadc_authenticationvserver_cachepolicy_binding.tf_binding.bindpoint
+		depends_on = [citrixadc_authenticationvserver_cachepolicy_binding.tf_binding]
 	}
 `
 
@@ -214,4 +243,23 @@ func testAccCheckAuthenticationvserver_cachepolicy_bindingDestroy(s *terraform.S
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverCachepolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverCachepolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_cachepolicy_binding.tf_binding", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_cachepolicy_binding.tf_binding", "policy", "my_cachepolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_cachepolicy_binding.tf_binding", "bindpoint", "REQUEST"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_cachepolicy_binding.tf_binding", "priority", "9"),
+				),
+			},
+		},
+	})
 }

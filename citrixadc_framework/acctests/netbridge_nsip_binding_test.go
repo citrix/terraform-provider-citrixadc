@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNetbridge_nsip_binding_basic = `
@@ -219,4 +220,51 @@ func testAccCheckNetbridge_nsip_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNetbridge_nsip_bindingDataSource_basic = `
+
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "my_netbridge"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.128"
+		type      = "VIP"
+		netmask   = "255.255.255.255"
+		icmp      = "ENABLED"
+	}
+	resource "citrixadc_netbridge_nsip_binding" "tf_netbridge_nsip_binding" {
+		name      = citrixadc_netbridge.tf_netbridge.name
+		netmask   = citrixadc_nsip.tf_nsip.netmask
+		ipaddress = citrixadc_nsip.tf_nsip.ipaddress
+	}
+
+	data "citrixadc_netbridge_nsip_binding" "tf_netbridge_nsip_binding" {
+		name      = citrixadc_netbridge.tf_netbridge.name
+		ipaddress = citrixadc_nsip.tf_nsip.ipaddress
+		netmask   = citrixadc_nsip.tf_nsip.netmask
+		depends_on = [citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding]
+	}
+`
+
+func TestAccNetbridge_nsip_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetbridge_nsip_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", "name", "my_netbridge"),
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", "ipaddress", "10.222.74.128"),
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", "netmask", "255.255.255.255"),
+				),
+			},
+		},
+	})
 }

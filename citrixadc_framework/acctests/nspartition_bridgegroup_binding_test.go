@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNspartition_bridgegroup_binding_basic = `
@@ -213,4 +214,45 @@ func testAccCheckNspartition_bridgegroup_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccNspartition_bridgegroup_bindingDataSource_basic = `
+	resource "citrixadc_nspartition" "tf_nspartition" {
+		partitionname = "tf_nspartition"
+		maxbandwidth  = 10240
+		minbandwidth  = 512
+		maxconn       = 512
+		maxmemlimit   = 11
+	}
+	resource "citrixadc_bridgegroup" "tf_bridgegroup" {
+		bridgegroup_id     = 2
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+	}
+	resource "citrixadc_nspartition_bridgegroup_binding" "tf_binding" {
+		partitionname = citrixadc_nspartition.tf_nspartition.partitionname
+		bridgegroup   = citrixadc_bridgegroup.tf_bridgegroup.bridgegroup_id
+	}
+
+	data "citrixadc_nspartition_bridgegroup_binding" "tf_binding" {
+		partitionname = citrixadc_nspartition_bridgegroup_binding.tf_binding.partitionname
+		bridgegroup   = citrixadc_nspartition_bridgegroup_binding.tf_binding.bridgegroup
+		depends_on    = [citrixadc_nspartition_bridgegroup_binding.tf_binding]
+	}
+`
+
+func TestAccNspartition_bridgegroup_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspartition_bridgegroup_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nspartition_bridgegroup_binding.tf_binding", "partitionname", "tf_nspartition"),
+					resource.TestCheckResourceAttr("data.citrixadc_nspartition_bridgegroup_binding.tf_binding", "bridgegroup", "2"),
+				),
+			},
+		},
+	})
 }

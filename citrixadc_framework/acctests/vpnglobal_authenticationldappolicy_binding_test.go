@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_authenticationldappolicy_binding_basic = `
@@ -198,4 +199,44 @@ func testAccCheckVpnglobal_authenticationldappolicy_bindingDestroy(s *terraform.
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_authenticationldappolicy_bindingDataSource_basic = `
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "tf_ldapaction"
+		serverip      = "5.5.5.5"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_ldappolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+	resource "citrixadc_vpnglobal_authenticationldappolicy_binding" "tf_bind" {
+		policyname = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
+		priority = 20
+	}
+
+	data "citrixadc_vpnglobal_authenticationldappolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_authenticationldappolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationldappolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", "policyname", "tf_ldappolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
 }

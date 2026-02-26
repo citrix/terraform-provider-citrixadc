@@ -2,7 +2,7 @@
 subcategory: "LSN"
 ---
 
-# Data Source `lsntransportprofile`
+# Data Source: lsntransportprofile
 
 The lsntransportprofile data source allows you to retrieve information about LSN (Large Scale NAT) transport profiles.
 

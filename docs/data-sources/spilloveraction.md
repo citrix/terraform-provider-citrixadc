@@ -2,7 +2,7 @@
 subcategory: "Spillover"
 ---
 
-# Data Source `spilloveraction`
+# Data Source: spilloveraction
 
 The spilloveraction data source allows you to retrieve information about a spillover action.
 

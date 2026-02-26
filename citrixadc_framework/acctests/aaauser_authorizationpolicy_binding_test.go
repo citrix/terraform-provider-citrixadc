@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaauser_authorizationpolicy_binding_basic = `
@@ -29,6 +30,7 @@ const testAccAaauser_authorizationpolicy_binding_basic = `
 	resource "citrixadc_aaauser_authorizationpolicy_binding" "tf_aaauser_authorizationpolicy_binding" {
 		username = citrixadc_aaauser.tf_aaauser.username
 		policy   = citrixadc_authorizationpolicy.tf_authorize.name
+		type     = "REQUEST"
 		priority = 100
 	}
 
@@ -52,6 +54,31 @@ const testAccAaauser_authorizationpolicy_binding_basic_step2 = `
 		name   = "tp-authorize-1"
 		rule   = "true"
 		action = "ALLOW"
+	}
+`
+
+const testAccAaauserAuthorizationpolicyBindingDataSource_basic = `
+
+	resource "citrixadc_aaauser_authorizationpolicy_binding" "tf_aaauser_authorizationpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy   = citrixadc_authorizationpolicy.tf_authorize.name
+		type     = "REQUEST"
+		priority = 100
+	}
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_authorizationpolicy" "tf_authorize" {
+		name   = "tp-authorize-1"
+		rule   = "true"
+		action = "ALLOW"
+	}
+
+	data "citrixadc_aaauser_authorizationpolicy_binding" "tf_aaauser_authorizationpolicy_binding" {
+		username = citrixadc_aaauser_authorizationpolicy_binding.tf_aaauser_authorizationpolicy_binding.username
+		policy   = citrixadc_aaauser_authorizationpolicy_binding.tf_aaauser_authorizationpolicy_binding.policy
 	}
 `
 
@@ -207,4 +234,22 @@ func testAccCheckAaauser_authorizationpolicy_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+func TestAccAaauserAuthorizationpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauserAuthorizationpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_authorizationpolicy_binding.tf_aaauser_authorizationpolicy_binding", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_authorizationpolicy_binding.tf_aaauser_authorizationpolicy_binding", "policy", "tp-authorize-1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_authorizationpolicy_binding.tf_aaauser_authorizationpolicy_binding", "type", "REQUEST"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_authorizationpolicy_binding.tf_aaauser_authorizationpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

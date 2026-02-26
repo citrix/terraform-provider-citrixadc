@@ -2,7 +2,7 @@
 subcategory: "CI"
 ---
 
-# Data Source `contentinspectioncallout`
+# Data Source: contentinspectioncallout
 
 The contentinspectioncallout data source allows you to retrieve information about content inspection callouts.
 

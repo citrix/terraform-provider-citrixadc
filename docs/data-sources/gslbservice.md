@@ -2,7 +2,7 @@
 subcategory: "GSLB"
 ---
 
-# Data Source `gslbservice`
+# Data Source: gslbservice
 
 The gslbservice data source allows you to retrieve information about a GSLB service.
 

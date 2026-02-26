@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationwebauthaction`
+# Data Source: authenticationwebauthaction
 
 The authenticationwebauthaction data source allows you to retrieve information about Web Authentication actions.
 

@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source: citrixadc_sslvserver
+# Data Source: sslvserver
 
 The sslvserver data source allows you to retrieve information about advanced SSL configuration for an SSL virtual server.
 

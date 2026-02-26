@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaacertparams`
+# Data Source: aaacertparams
 
 The aaacertparams data source allows you to retrieve information about AAA certificate parameters configuration.
 

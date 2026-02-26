@@ -47,6 +47,26 @@ const testAccGslbvserver_domain_binding_basic_step2 = `
 	}
 `
 
+const testAccGslbvserver_domain_bindingDataSource_basic = `
+
+resource "citrixadc_gslbvserver_domain_binding" "tf_gslbvserver_domain_binding"{
+	name = citrixadc_gslbvserver.tf_gslbvserver.name
+	domainname = "www.exampledomain.com"
+	backupipflag = false
+}
+resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+	dnsrecordtype = "A"
+	name          = "GSLB-East-Coast-Vserver"
+	servicetype   = "HTTP"
+}
+
+data "citrixadc_gslbvserver_domain_binding" "tf_gslbvserver_domain_binding" {
+	name = citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding.name
+	domainname = citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding.domainname
+	depends_on = [citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding]
+}
+`
+
 func TestAccGslbvserver_domain_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -199,4 +219,20 @@ func testAccCheckGslbvserver_domain_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccGslbvserver_domain_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_domain_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", "name", "GSLB-East-Coast-Vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", "domainname", "www.exampledomain.com"),
+				),
+			},
+		},
+	})
 }

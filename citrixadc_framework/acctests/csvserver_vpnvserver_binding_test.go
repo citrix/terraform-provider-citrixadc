@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_vpnvserver_binding_basic = `
@@ -222,4 +223,51 @@ func testAccCheckCsvserver_vpnvserver_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCsvserver_vpnvserver_bindingDataSource_basic = `
+
+resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+	name           = "tf_vpnvserver"
+	servicetype    = "SSL"
+}
+
+resource "citrixadc_csvserver_vpnvserver_binding" "tf_csvserver_vpnvserver_binding" {
+	name = citrixadc_csvserver.tf_csvserver.name
+	vserver = citrixadc_vpnvserver.tf_vpnvserver.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+	name = "tf_csvserver"
+	ipv46 = "10.202.11.11"
+	port = 8080
+	servicetype = "SSL"
+	sslprofile = citrixadc_sslprofile.tf_sslprofile.name
+}
+
+resource "citrixadc_sslprofile" "tf_sslprofile" {
+	name = "tf_sslprofile"
+	ecccurvebindings = []
+}
+
+data "citrixadc_csvserver_vpnvserver_binding" "tf_csvserver_vpnvserver_binding" {
+	name = citrixadc_csvserver_vpnvserver_binding.tf_csvserver_vpnvserver_binding.name
+	vserver = citrixadc_csvserver_vpnvserver_binding.tf_csvserver_vpnvserver_binding.vserver
+}
+`
+
+func TestAccCsvserver_vpnvserver_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_vpnvserver_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_vpnvserver_binding.tf_csvserver_vpnvserver_binding", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_vpnvserver_binding.tf_csvserver_vpnvserver_binding", "vserver", "tf_vpnvserver"),
+				),
+			},
+		},
+	})
 }

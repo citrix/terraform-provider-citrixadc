@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source: citrixadc_appfwwsdl
+# Data Source: appfwwsdl
 
 The `citrixadc_appfwwsdl` data source is used to retrieve information about an existing Application Firewall WSDL file configured on the Citrix ADC.
 

@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationcertpolicy`
+# Data Source: authenticationcertpolicy
 
 The authenticationcertpolicy data source allows you to retrieve information about authentication certificate policies.
 

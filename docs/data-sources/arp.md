@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `arp`
+# Data Source: arp
 
 The arp data source allows you to retrieve information about an existing ARP entry.
 

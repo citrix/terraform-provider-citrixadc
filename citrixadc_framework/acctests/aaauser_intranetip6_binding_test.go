@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaauser_intranetip6_binding_basic = `
@@ -40,6 +41,24 @@ const testAccAaauser_intranetip6_binding_basic_step2 = `
 	resource "citrixadc_aaauser" "tf_aaauser" {
 		username = "user1"
 		password = "my_pass"
+	}
+`
+
+const testAccAaauser_intranetip6_bindingDataSource_basic = `
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_aaauser_intranetip6_binding" "tf_aaauser_intranetip6_binding" {
+		username    = citrixadc_aaauser.tf_aaauser.username
+		intranetip6 = "2003:db8:100::fb/128"
+		numaddr     = 1
+	}
+
+	data "citrixadc_aaauser_intranetip6_binding" "tf_aaauser_intranetip6_binding" {
+		username    = citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding.username
+		intranetip6 = citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding.intranetip6
+		depends_on = [citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding]
 	}
 `
 
@@ -195,4 +214,22 @@ func testAccCheckAaauser_intranetip6_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAaauser_intranetip6_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_intranetip6_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding", "intranetip6", "2003:db8:100::fb/128"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding", "numaddr", "1"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source: citrixadc_authenticationloginschema
+# Data Source: authenticationloginschema
 
 The `citrixadc_authenticationloginschema` data source is used to retrieve information about an existing Authentication Login Schema configured on a Citrix ADC appliance.
 

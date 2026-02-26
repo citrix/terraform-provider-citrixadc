@@ -2,7 +2,7 @@
 subcategory: "Basic"
 ---
 
-# Data Source: citrixadc_server
+# Data Source: server
 
 The server data source allows you to retrieve information about a server configuration.
 

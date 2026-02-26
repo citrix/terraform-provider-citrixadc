@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccSslservicegroup_ecccurve_binding_basic = `
@@ -198,4 +199,49 @@ func testAccCheckSslservicegroup_ecccurve_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccSslservicegroup_ecccurve_bindingDataSource_basic = `
+	resource "citrixadc_servicegroup" "tf_servicegroup" {
+		servicegroupname = "tf_servicegroup"
+		servicetype = "SSL"
+	}
+
+	resource "citrixadc_sslservicegroup" "tf_sslservicegroup" {
+		servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+		sesstimeout = 50
+		sessreuse = "ENABLED"
+		ssl3 = "ENABLED"
+	}
+
+	resource "citrixadc_sslservicegroup_ecccurve_binding" "tf_sslservicegroup_ecccurve_binding" {
+		ecccurvename = "P_256"
+		servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+	}
+
+	data "citrixadc_sslservicegroup_ecccurve_binding" "tf_sslservicegroup_ecccurve_binding_ds" {
+		servicegroupname = citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding.servicegroupname
+		ecccurvename     = citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding.ecccurvename
+		depends_on       = [citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding]
+	}
+`
+
+func TestAccSslservicegroup_ecccurve_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservicegroup_ecccurve_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding_ds", "servicegroupname", "tf_servicegroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding_ds", "ecccurvename", "P_256"),
+				),
+			},
+		},
+	})
 }

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLbmetrictable_metric_binding_basic = `
@@ -196,4 +197,39 @@ func testAccCheckLbmetrictable_metric_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLbmetrictable_metric_bindingDataSource_basic = `
+
+resource "citrixadc_lbmetrictable" "Table" {
+	metrictable = "Table-Custom"
+}
+resource "citrixadc_lbmetrictable_metric_binding" "tf_bind" {
+	metric      = "2.3.6.4.5"
+	metrictable = citrixadc_lbmetrictable.Table.metrictable
+	snmpoid     = "1.2.3.6.5"
+}
+
+data "citrixadc_lbmetrictable_metric_binding" "tf_bind" {
+	metric      = citrixadc_lbmetrictable_metric_binding.tf_bind.metric
+	metrictable = citrixadc_lbmetrictable_metric_binding.tf_bind.metrictable
+	depends_on  = [citrixadc_lbmetrictable_metric_binding.tf_bind]
+}
+`
+
+func TestAccLbmetrictable_metric_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmetrictable_metric_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable_metric_binding.tf_bind", "metric", "2.3.6.4.5"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable_metric_binding.tf_bind", "metrictable", "Table-Custom"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable_metric_binding.tf_bind", "snmpoid", "1.2.3.6.5"),
+				),
+			},
+		},
+	})
 }

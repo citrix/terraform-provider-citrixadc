@@ -2,7 +2,7 @@
 subcategory: "Policy"
 ---
 
-# Data Source `policystringmap`
+# Data Source: policystringmap
 
 The policystringmap data source allows you to retrieve information about an existing policy string map configuration.
 

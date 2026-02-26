@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnsaaaarec`
+# Data Source: dnsaaaarec
 
 The dnsaaaarec data source allows you to retrieve information about DNS AAAA (IPv6 Address) records configured on the Citrix ADC.
 

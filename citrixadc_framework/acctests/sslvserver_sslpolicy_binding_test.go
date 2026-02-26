@@ -263,3 +263,51 @@ resource "citrixadc_sslvserver_sslpolicy_binding" "tf_binding_cs" {
     type = "REQUEST"
 }
 `
+
+const testAccSslvserver_sslpolicy_bindingDataSource_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  name        = "tf_lbvserver"
+  ipv46       = "192.168.34.21"
+  port        = "443"
+  servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_sslpolicy"
+  rule   = "true"
+  action = "NOOP"
+}
+
+resource "citrixadc_sslvserver_sslpolicy_binding" "tf_binding_lb" {
+    vservername = citrixadc_lbvserver.tf_lbvserver.name
+    policyname = citrixadc_sslpolicy.tf_sslpolicy.name
+    priority = 333
+    type = "REQUEST"
+}
+
+data "citrixadc_sslvserver_sslpolicy_binding" "tf_binding_lb" {
+    vservername = citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb.vservername
+    policyname = citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb.policyname
+    type = citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb.type
+    depends_on = [citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb]
+}
+`
+
+func TestAccSslvserver_sslpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_sslpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "vservername", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "policyname", "tf_sslpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "priority", "333"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "type", "REQUEST"),
+				),
+			},
+		},
+	})
+}

@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnsnaptrrec`
+# Data Source: dnsnaptrrec
 
 The dnsnaptrrec data source allows you to retrieve information about DNS NAPTR (Naming Authority Pointer) records.
 

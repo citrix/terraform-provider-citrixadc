@@ -25,24 +25,48 @@ import (
 
 const testAccUservserver_basic = `
 
+	resource "citrixadc_userprotocol" "tf_userprotocol" {
+		name      = "MQTT"
+		transport = "TCP"
+		extension = "mqtt_code"
+		comment   = "my_comment"
+	}
+
+	resource "citrixadc_lbvserver" "tf_defaultlb" {
+		name        = "tf_defaultlb"
+		servicetype = "USER_TCP"
+	}
 
 	resource "citrixadc_uservserver" "tf_uservserver" {
 		name         = "my_user_vserver"
 		userprotocol = "MQTT"
 		ipaddress    = "10.222.74.180"
 		port         = 3200
-		defaultlb    = "mysv"
+		defaultlb    = citrixadc_lbvserver.tf_defaultlb.name
+		depends_on   = [citrixadc_userprotocol.tf_userprotocol, citrixadc_lbvserver.tf_defaultlb]
 	}
+
 `
 const testAccUservserver_update = `
 
+	resource "citrixadc_userprotocol" "tf_userprotocol" {
+		name      = "MQTT"
+		transport = "TCP"
+		extension = "mqtt_code"
+		comment   = "my_comment"
+	}
+
+	resource "citrixadc_lbvserver" "tf_defaultlb" {
+		name        = "tf_defaultlb"
+		servicetype = "USER_TCP"
+	}
 
 	resource "citrixadc_uservserver" "tf_uservserver" {
 		name         = "my_user_vserver"
-		userprotocol = "my_user_protocol"
+		userprotocol = "MQTT"
 		ipaddress    = "10.222.74.200"
 		port         = 3500
-		defaultlb    = "mysv"
+		defaultlb    = citrixadc_lbvserver.tf_defaultlb.name
 	}
 `
 
@@ -64,7 +88,7 @@ const testAccUservserverDataSource_basic = `
 		name         = "my_user_vserver"
 		userprotocol = "MQTT"
 		ipaddress    = "10.222.74.180"
-		port         = 80
+		port         = 3200
 		defaultlb    = citrixadc_lbvserver.tf_defaultlb.name
 		depends_on   = [citrixadc_userprotocol.tf_userprotocol, citrixadc_lbvserver.tf_defaultlb]
 	}
@@ -76,7 +100,7 @@ const testAccUservserverDataSource_basic = `
 `
 
 func TestAccUservserver_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
+	t.Skip("TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -90,7 +114,7 @@ func TestAccUservserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "userprotocol", "MQTT"),
 					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "ipaddress", "10.222.74.180"),
 					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "port", "3200"),
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "defaultlb", "mysv"),
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "defaultlb", "tf_defaultlb"),
 				),
 			},
 			{
@@ -98,10 +122,10 @@ func TestAccUservserver_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUservserverExist("citrixadc_uservserver.tf_uservserver", nil),
 					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "name", "my_user_vserver"),
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "userprotocol", "my_user_protocol"),
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "userprotocol", "MQTT"),
 					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "ipaddress", "10.222.74.200"),
 					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "port", "3500"),
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "defaultlb", "mysv"),
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "defaultlb", "tf_defaultlb"),
 				),
 			},
 		},
@@ -173,6 +197,7 @@ func testAccCheckUservserverDestroy(s *terraform.State) error {
 }
 
 func TestAccUservserverDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -183,7 +208,7 @@ func TestAccUservserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "name", "my_user_vserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "userprotocol", "MQTT"),
 					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "ipaddress", "10.222.74.180"),
-					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "port", "80"),
+					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "port", "3200"),
 				),
 			},
 		},

@@ -231,3 +231,67 @@ func testAccCheckAppfwprofile_jsondosurl_bindingDestroy(s *terraform.State) erro
 
 	return nil
 }
+
+const testAccAppfwprofile_jsondosurl_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_jsondosurl_binding" "tf_binding1" {
+		name                        = citrixadc_appfwprofile.tf_appfwprofile.name
+		jsondosurl                  = ".*"
+		state                       = "ENABLED"
+		alertonly                   = "ON"
+		isautodeployed              = "AUTODEPLOYED"
+		jsonmaxarraylengthcheck     = "ON"
+		jsonmaxdocumentlengthcheck  = "ON"
+		jsonmaxcontainerdepth       = 5
+		jsonmaxobjectkeylengthcheck = "OFF"
+		jsonmaxarraylength          = 100000
+		jsonmaxdocumentlength       = 200000
+		jsonmaxobjectkeycountcheck  = "ON"
+		jsonmaxobjectkeylength      = 128
+		jsonmaxobjectkeycount       = 1000
+		jsonmaxstringlengthcheck    = "ON"
+		jsonmaxcontainerdepthcheck  = "ON"
+		jsonmaxstringlength         = 1000
+		comment                     = "Testing"
+	}
+
+	data "citrixadc_appfwprofile_jsondosurl_binding" "tf_binding1" {
+		name       = citrixadc_appfwprofile_jsondosurl_binding.tf_binding1.name
+		jsondosurl = citrixadc_appfwprofile_jsondosurl_binding.tf_binding1.jsondosurl
+	}
+`
+
+func TestAccAppfwprofile_jsondosurl_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_jsondosurl_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsondosurl", ".*"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxarraylengthcheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxdocumentlengthcheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxcontainerdepth", "5"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxobjectkeylengthcheck", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxarraylength", "100000"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxdocumentlength", "200000"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxobjectkeycountcheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxobjectkeylength", "128"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxobjectkeycount", "1000"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxstringlengthcheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxcontainerdepthcheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxstringlength", "1000"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "comment", "Testing"),
+				),
+			},
+		},
+	})
+}

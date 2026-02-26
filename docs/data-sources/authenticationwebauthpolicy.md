@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationwebauthpolicy`
+# Data Source: authenticationwebauthpolicy
 
 The authenticationwebauthpolicy data source allows you to retrieve information about an existing WebAuth authentication policy.
 

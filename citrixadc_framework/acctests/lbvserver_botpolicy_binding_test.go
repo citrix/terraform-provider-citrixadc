@@ -250,3 +250,71 @@ func testAccCheckLbvserver_botpolicy_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccLbvserver_botpolicy_bindingDataSource_basic = `
+	resource "citrixadc_lbvserver" "tf_acc_test_lb" {
+		name        = "tf_acc_test_lb"
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_botprofile" "tf_acc_test_botprofile" {
+		name = "tf_acc_test_botprofile"
+		errorurl = "http://www.citrix.com"
+		trapurl = "/http://www.citrix.com"
+		comment = "tf_acc_test_botprofile comment"
+		bot_enable_white_list = "ON"
+		bot_enable_black_list = "ON"
+		bot_enable_rate_limit = "ON"
+		devicefingerprint = "ON"
+		devicefingerprintaction = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap = "ON"
+		trapaction = ["LOG", "RESET"]
+		bot_enable_tps = "ON"
+	}
+
+	resource "citrixadc_botpolicy" "tf_acc_test_botpolicy" {
+		name = "tf_acc_test_botpolicy"
+		profilename = citrixadc_botprofile.tf_acc_test_botprofile.name
+		rule = "true"
+		comment = "tf_acc_test_botpolicy comment"
+	}
+
+	resource "citrixadc_lbvserver_botpolicy_binding" "tf_acc_test_binding" {
+		name                   = citrixadc_lbvserver.tf_acc_test_lb.name
+		policyname             = citrixadc_botpolicy.tf_acc_test_botpolicy.name
+		priority               = 100
+		bindpoint              = "REQUEST"
+		gotopriorityexpression = "END"
+		labeltype              = "reqvserver"
+		labelname              = citrixadc_lbvserver.tf_acc_test_lb.name
+		invoke                 = true
+	}
+
+	data "citrixadc_lbvserver_botpolicy_binding" "tf_acc_test_binding" {
+		name = citrixadc_lbvserver_botpolicy_binding.tf_acc_test_binding.name
+		policyname = citrixadc_lbvserver_botpolicy_binding.tf_acc_test_binding.policyname
+		depends_on = [citrixadc_lbvserver_botpolicy_binding.tf_acc_test_binding]
+	}
+`
+
+func TestAccLbvserver_botpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_botpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_botpolicy_binding.tf_acc_test_binding", "name", "tf_acc_test_lb"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_botpolicy_binding.tf_acc_test_binding", "policyname", "tf_acc_test_botpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_botpolicy_binding.tf_acc_test_binding", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_botpolicy_binding.tf_acc_test_binding", "gotopriorityexpression", "END"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_botpolicy_binding.tf_acc_test_binding", "labeltype", "reqvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_botpolicy_binding.tf_acc_test_binding", "labelname", "tf_acc_test_lb"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_botpolicy_binding.tf_acc_test_binding", "invoke", "true"),
+				),
+			},
+		},
+	})
+}

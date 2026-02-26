@@ -250,3 +250,42 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingDestroy(s *terraform.State) 
 
 	return nil
 }
+
+const testAccAppfwprofile_fileuploadtype_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_fileuploadtype_binding" "tf_binding1" {
+		name                   = citrixadc_appfwprofile.tf_appfwprofile.name
+		fileuploadtype         = "tf_uploadtype"
+		as_fileuploadtypes_url = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		filetype               = ["pdf", "text"]
+	}
+
+	data "citrixadc_appfwprofile_fileuploadtype_binding" "tf_binding1" {
+		name                   = citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1.name
+		fileuploadtype         = citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1.fileuploadtype
+		as_fileuploadtypes_url = citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1.as_fileuploadtypes_url
+		filetype               = citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1.filetype
+	}
+`
+
+func TestAccAppfwprofile_fileuploadtype_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_fileuploadtype_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "fileuploadtype", "tf_uploadtype"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "as_fileuploadtypes_url", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "filetype.0", "pdf"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "filetype.1", "text"),
+				),
+			},
+		},
+	})
+}

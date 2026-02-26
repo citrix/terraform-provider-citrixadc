@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source `sslcipher_sslvserver_bindings`
+# Data Source: sslcipher_sslvserver_bindings
 
 The sslcipher_sslvserver_bindings data source allows you to retrieve information about the bound sslvserver to a sslcipher
 

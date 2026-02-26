@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccCacheglobal_cachepolicy_binding_basic = `
@@ -190,4 +191,40 @@ func testAccCheckCacheglobal_cachepolicy_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccCacheglobal_cachepolicy_bindingDataSource_basic = `
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_cacheglobal_cachepolicy_binding" "tf_cacheglobal_cachepolicy_binding" {
+		policy   = citrixadc_cachepolicy.tf_cachepolicy.policyname
+		priority = 100
+		type     = "REQ_DEFAULT"
+	}
+
+	data "citrixadc_cacheglobal_cachepolicy_binding" "tf_cacheglobal_cachepolicy_binding" {
+		policy   = citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding.policy
+		type     = citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding.type
+		depends_on = [citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding]
+	}
+`
+
+func TestAcccacheglobal_cachepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCacheglobal_cachepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "policy", "my_cachepolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "type", "REQ_DEFAULT"),
+				),
+			},
+		},
+	})
 }

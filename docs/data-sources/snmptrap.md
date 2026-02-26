@@ -2,7 +2,7 @@
 subcategory: "SNMP"
 ---
 
-# Data Source: citrixadc_snmptrap
+# Data Source: snmptrap
 
 The `citrixadc_snmptrap` data source is used to retrieve information about an SNMP trap configuration on the Citrix ADC.
 

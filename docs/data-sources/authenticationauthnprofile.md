@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source: citrixadc_authenticationauthnprofile
+# Data Source: authenticationauthnprofile
 
 The `citrixadc_authenticationauthnprofile` data source is used to retrieve information about an existing Authentication Profile configured on a Citrix ADC appliance.
 

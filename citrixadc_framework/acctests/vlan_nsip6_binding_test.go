@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVlan_nsip6_binding_basic = `
@@ -206,4 +207,42 @@ func testAccCheckVlan_nsip6_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVlan_nsip6_bindingDataSource_basic = `
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid = 2
+		aliasname = "VLAN"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2001::a/96"
+		type = "VIP"
+	}
+
+	resource "citrixadc_vlan_nsip6_binding" "tf_vlan_nsip6_binding" {
+		vlanid    = citrixadc_vlan.tf_vlan.vlanid
+		ipaddress = citrixadc_nsip6.tf_nsip6.ipv6address
+	}
+
+	data "citrixadc_vlan_nsip6_binding" "tf_vlan_nsip6_binding" {
+		vlanid      = citrixadc_vlan.tf_vlan.vlanid
+		ipaddress   = citrixadc_nsip6.tf_nsip6.ipv6address
+		depends_on = [citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding]
+	}
+`
+
+func TestAccVlan_nsip6_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_nsip6_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", "vlanid", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", "ipaddress", "2001::a/96"),
+				),
+			},
+		},
+	})
 }

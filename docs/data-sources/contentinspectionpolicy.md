@@ -2,7 +2,7 @@
 subcategory: "Content Inspection"
 ---
 
-# Data Source: citrixadc_contentinspectionpolicy
+# Data Source: contentinspectionpolicy
 
 The `citrixadc_contentinspectionpolicy` data source is used to retrieve information about an existing Content Inspection Policy configured on a Citrix ADC appliance.
 

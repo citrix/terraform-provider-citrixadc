@@ -25,24 +25,17 @@ import (
 )
 
 const testAccAppfwhtmlerrorpage_basic = `
-	resource "citrixadc_systemfile" "tf_errorpage" {
-		filename     = "appfwhtmlerrorpage.html"
-		filelocation = "/var/tmp"
-		filecontent  = file("testdata/appfwhtmlerrorpage.html")
-	}
 	resource "citrixadc_appfwhtmlerrorpage" "tf_appfwhtmlerrorpage" {
 		name       = "tf_appfwhtmlerrorpage"
 		src        = "local://appfwhtmlerrorpage.html"
-		depends_on = [citrixadc_systemfile.tf_errorpage]
 		comment    = "TestingExample"
 	}
 `
 
 func TestAccAppfwhtmlerrorpage_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckAppfwhtmlerrorpageDestroy,
 		Steps: []resource.TestStep{
@@ -121,15 +114,9 @@ func testAccCheckAppfwhtmlerrorpageDestroy(s *terraform.State) error {
 }
 
 const testAccAppfwhtmlerrorpageDataSource_basic = `
-	resource "citrixadc_systemfile" "tf_errorpage" {
-		filename     = "appfwhtmlerrorpage.html"
-		filelocation = "/var/tmp"
-		filecontent  = file("testdata/appfwhtmlerrorpage.html")
-	}
 	resource "citrixadc_appfwhtmlerrorpage" "tf_appfwhtmlerrorpage" {
 		name       = "tf_appfwhtmlerrorpage"
 		src        = "local://appfwhtmlerrorpage.html"
-		depends_on = [citrixadc_systemfile.tf_errorpage]
 		comment    = "TestingExample"
 	}
 
@@ -141,7 +128,7 @@ const testAccAppfwhtmlerrorpageDataSource_basic = `
 
 func TestAccAppfwhtmlerrorpageDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{

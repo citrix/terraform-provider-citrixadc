@@ -2,7 +2,7 @@
 subcategory: "Transform"
 ---
 
-# Data Source `transformprofile`
+# Data Source: transformprofile
 
 The transformprofile data source allows you to retrieve information about a URL Transformation profile.
 

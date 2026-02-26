@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationtacacsaction`
+# Data Source: authenticationtacacsaction
 
 The authenticationtacacsaction data source allows you to retrieve information about an existing TACACS+ authentication action.
 

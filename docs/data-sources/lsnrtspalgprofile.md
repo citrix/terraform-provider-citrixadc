@@ -2,7 +2,7 @@
 subcategory: "LSN"
 ---
 
-# Data Source `lsnrtspalgprofile`
+# Data Source: lsnrtspalgprofile
 
 The lsnrtspalgprofile data source allows you to retrieve information about LSN RTSP Application Layer Gateway profiles.
 

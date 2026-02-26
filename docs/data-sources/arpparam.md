@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `arpparam`
+# Data Source: arpparam
 
 The arpparam data source allows you to retrieve information about ARP parameters configuration.
 

@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nscqaparam`
+# Data Source: nscqaparam
 
 The nscqaparam data source allows you to retrieve information about NS Connection Quality Assessment (CQA) parameters configuration.
 

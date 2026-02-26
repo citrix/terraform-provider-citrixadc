@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaassoprofile`
+# Data Source: aaassoprofile
 
 The aaassoprofile data source allows you to retrieve information about SSO Profiles for single sign-on configuration.
 

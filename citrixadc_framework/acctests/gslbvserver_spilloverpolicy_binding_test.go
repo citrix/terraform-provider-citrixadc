@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccGslbvserver_spilloverpolicy_binding_basic = `
@@ -239,4 +240,61 @@ func testAccCheckGslbvserver_spilloverpolicy_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+const testAccGslbvserver_spilloverpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
+
+resource "citrixadc_gslbvserver_spilloverpolicy_binding" "tf_gslbvserver_spilloverpolicy_binding" {
+	name       = citrixadc_gslbvserver.tf_gslbvserver.name
+	policyname = citrixadc_spilloverpolicy.tf_spilloverpolicy.name
+	priority   = 100
+  
+	}
+  
+  resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+	dnsrecordtype = "A"
+	name          = "gslb_vserver"
+	servicetype   = "HTTP"
+	domain {
+	  domainname = "www.fooco.co"
+	  ttl        = "60"
+	}
+	domain {
+	  domainname = "www.barco.com"
+	  ttl        = "65"
+	}
+	}
+
+data "citrixadc_gslbvserver_spilloverpolicy_binding" "tf_gslbvserver_spilloverpolicy_binding" {
+	name       = citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding.name
+	policyname = citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding.policyname
+}
+`
+
+func TestAccGslbvserver_spilloverpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_spilloverpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding", "name", "gslb_vserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding", "policyname", "tf_spilloverpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

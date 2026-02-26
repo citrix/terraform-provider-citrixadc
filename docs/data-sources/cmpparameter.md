@@ -2,7 +2,7 @@
 subcategory: "CMP"
 ---
 
-# Data Source `cmpparameter`
+# Data Source: cmpparameter
 
 The cmpparameter data source allows you to retrieve information about compression parameters configuration.
 

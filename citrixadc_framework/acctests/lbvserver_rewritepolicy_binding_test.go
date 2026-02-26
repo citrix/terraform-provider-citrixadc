@@ -97,6 +97,35 @@ resource "citrixadc_lbvserver_rewritepolicy_binding" "tf_bind2" {
 }
 `
 
+const testAccLbvserver_rewritepolicy_bindingDataSource_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_lbvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+  name   = "tf_test_rewrite_policy"
+  action = "DROP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+}
+
+resource "citrixadc_lbvserver_rewritepolicy_binding" "tf_bind" {
+    name = citrixadc_lbvserver.tf_lbvserver.name
+    policyname = citrixadc_rewritepolicy.tf_rewrite_policy.name
+    priority = 100
+    bindpoint = "REQUEST"
+}
+
+data "citrixadc_lbvserver_rewritepolicy_binding" "tf_bind" {
+    name = citrixadc_lbvserver_rewritepolicy_binding.tf_bind.name
+    policyname = citrixadc_lbvserver_rewritepolicy_binding.tf_bind.policyname
+    bindpoint = citrixadc_lbvserver_rewritepolicy_binding.tf_bind.bindpoint
+    depends_on = [citrixadc_lbvserver_rewritepolicy_binding.tf_bind]
+}
+`
+
 func TestAccLbvserver_rewritepolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -205,4 +234,22 @@ func testAccCheckLbvserver_rewritepolicy_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+func TestAccLbvserver_rewritepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_rewritepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_rewritepolicy_binding.tf_bind", "name", "tf_lbvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_rewritepolicy_binding.tf_bind", "policyname", "tf_test_rewrite_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_rewritepolicy_binding.tf_bind", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_rewritepolicy_binding.tf_bind", "bindpoint", "REQUEST"),
+				),
+			},
+		},
+	})
 }

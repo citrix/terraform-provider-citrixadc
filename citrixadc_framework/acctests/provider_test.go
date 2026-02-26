@@ -97,10 +97,15 @@ func testAccGetFrameworkClient() (*service.NitroClient, error) {
 		return nil, fmt.Errorf("NS_URL environment variable must be set")
 	}
 
+	userHeaders := map[string]string{
+		"User-Agent": "terraform-ctxadc",
+	}
+
 	params := service.NitroParams{
 		Url:      endpoint,
 		Username: username,
 		Password: password,
+		Headers:  userHeaders,
 	}
 
 	client, err := service.NewNitroClientFromParams(params)

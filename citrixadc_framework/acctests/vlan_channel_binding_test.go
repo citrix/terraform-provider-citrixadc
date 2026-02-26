@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVlan_channel_binding_basic = `
@@ -206,4 +207,44 @@ func testAccCheckVlan_channel_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVlan_channel_bindingDataSource_basic = `
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid = 2
+	}
+	resource "citrixadc_channel" "tf_channel" {
+		channel_id = "LA/3"
+		tagall     = "ON"
+		speed      = "1000"
+	}
+	resource "citrixadc_vlan_channel_binding" "tf_vlan_channel_binding" {
+		vlanid = citrixadc_vlan.tf_vlan.vlanid
+		ifnum  = citrixadc_channel.tf_channel.channel_id
+		tagged = false
+	}
+
+	data "citrixadc_vlan_channel_binding" "tf_vlan_channel_binding" {
+		vlanid = 2
+		ifnum  = "LA/3"
+		depends_on = [citrixadc_vlan_channel_binding.tf_vlan_channel_binding]
+	}
+`
+
+func TestAccVlan_channel_bindingDataSource_basic(t *testing.T) {
+	// t.Skipf("Need Channel")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_channel_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_channel_binding.tf_vlan_channel_binding", "vlanid", "2"),
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_channel_binding.tf_vlan_channel_binding", "ifnum", "LA/3"),
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_channel_binding.tf_vlan_channel_binding", "tagged", "false"),
+				),
+			},
+		},
+	})
 }

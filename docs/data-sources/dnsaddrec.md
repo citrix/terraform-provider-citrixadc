@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnsaddrec`
+# Data Source: dnsaddrec
 
 The dnsaddrec data source allows you to retrieve information about DNS A (Address) records configured on the Citrix ADC.
 

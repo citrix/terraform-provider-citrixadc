@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_xmlattachmenturl_binding_basic = `
@@ -213,4 +214,54 @@ func testAccCheckAppfwprofile_xmlattachmenturl_bindingDestroy(s *terraform.State
 	}
 
 	return nil
+}
+
+const testAccAppfwprofileXmlattachmenturlBindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_xmlattachmenturl_binding" "tf_binding" {
+		name                          = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmlattachmenturl              = ".*"
+		xmlattachmentcontenttype      = "abc*"
+		alertonly                     = "ON"
+		state                         = "ENABLED"
+		isautodeployed                = "AUTODEPLOYED"
+		comment                       = "Testing"
+		xmlattachmentcontenttypecheck = "ON"
+		xmlmaxattachmentsize          = "1000"
+		xmlmaxattachmentsizecheck     = "ON"
+	}
+
+	data "citrixadc_appfwprofile_xmlattachmenturl_binding" "tf_binding" {
+		name             = citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding.name
+		xmlattachmenturl = citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding.xmlattachmenturl
+		depends_on       = [citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding]
+	}
+`
+
+func TestAccAppfwprofileXmlattachmenturlBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileXmlattachmenturlBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "xmlattachmenturl", ".*"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "xmlattachmentcontenttype", "abc*"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "xmlattachmentcontenttypecheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "xmlmaxattachmentsize", "1000"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "xmlmaxattachmentsizecheck", "ON"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "Audit"
 ---
 
-# Data Source: citrixadc_auditnslogpolicy
+# Data Source: auditnslogpolicy
 
 Use this data source to retrieve information about an existing Audit NS Log Policy.
 

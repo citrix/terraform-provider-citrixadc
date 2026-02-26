@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_auditsyslogpolicy_binding_basic = `
@@ -201,4 +202,47 @@ func testAccCheckVpnglobal_auditsyslogpolicy_bindingDestroy(s *terraform.State) 
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_auditsyslogpolicy_bindingDataSource_basic = `
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "new_syslogaction"
+		serverip   = "20.3.3.3"
+		serverport = 54
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_policy" {
+		name   = "new_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+	resource "citrixadc_vpnglobal_auditsyslogpolicy_binding" "tf_bind" {
+		policyname             = citrixadc_auditsyslogpolicy.tf_policy.name
+		priority               = 300
+		gotopriorityexpression = "NEXT"
+	}
+
+	data "citrixadc_vpnglobal_auditsyslogpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnglobal_auditsyslogpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_vpnglobal_auditsyslogpolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_auditsyslogpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_auditsyslogpolicy_binding.tf_bind", "policyname", "new_auditsyslogpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_auditsyslogpolicy_binding.tf_bind", "priority", "300"),
+				),
+			},
+		},
+	})
 }

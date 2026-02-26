@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationepaaction`
+# Data Source: authenticationepaaction
 
 The authenticationepaaction data source allows you to retrieve information about authentication EPA (Endpoint Analysis) actions.
 

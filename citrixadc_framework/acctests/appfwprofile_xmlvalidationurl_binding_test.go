@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_xmlvalidationurl_binding_basic = `
@@ -205,4 +206,45 @@ func testAccCheckAppfwprofile_xmlvalidationurl_bindingDestroy(s *terraform.State
 	}
 
 	return nil
+}
+
+const testAccAppfwprofileXmlvalidationurlBindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_xmlvalidationurl_binding" "tf_binding" {
+		name             = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmlvalidationurl = ".*"
+		isautodeployed   = "AUTODEPLOYED"
+		comment          = "Testing"
+		alertonly        = "ON"
+		state            = "ENABLED"
+	}
+
+	data "citrixadc_appfwprofile_xmlvalidationurl_binding" "tf_binding_data" {
+		name              = citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding.name
+		xmlvalidationurl  = citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding.xmlvalidationurl
+		depends_on        = [citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding]
+	}
+`
+
+func TestAccAppfwprofileXmlvalidationurlBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileXmlvalidationurlBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding_data", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding_data", "xmlvalidationurl", ".*"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding_data", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding_data", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding_data", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding_data", "state", "ENABLED"),
+				),
+			},
+		},
+	})
 }

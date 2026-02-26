@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source: citrixadc_appfwsignatures
+# Data Source: appfwsignatures
 
 Use this data source to retrieve information about an existing Application Firewall Signatures object.
 

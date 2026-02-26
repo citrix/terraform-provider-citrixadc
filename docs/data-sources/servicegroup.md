@@ -2,7 +2,7 @@
 subcategory: "Basic"
 ---
 
-# Data Source: citrixadc_servicegroup
+# Data Source: servicegroup
 
 The servicegroup data source allows you to retrieve information about a service group configuration.
 

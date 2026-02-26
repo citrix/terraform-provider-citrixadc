@@ -2,7 +2,7 @@
 subcategory: "LSN"
 ---
 
-# Data Source: citrixadc_lsnclient
+# Data Source: lsnclient
 
 The lsnclient data source allows you to retrieve information about LSN (Large Scale NAT) client entities.
 

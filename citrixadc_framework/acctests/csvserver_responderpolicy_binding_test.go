@@ -206,3 +206,48 @@ func testAccCheckCsvserver_responderpolicy_bindingDestroy(s *terraform.State) er
 
 	return nil
 }
+
+const testAccCsvserver_responderpolicy_bindingDataSource_basic = `
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_responderpolicy" "tf_responder_policy" {
+  name   = "tf_responder_policy"
+  action = "NOOP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+}
+
+resource "citrixadc_csvserver_responderpolicy_binding" "tf_bind" {
+    name = citrixadc_csvserver.tf_csvserver.name
+    policyname = citrixadc_responderpolicy.tf_responder_policy.name
+    priority = 100
+    bindpoint = "REQUEST"
+}
+
+data "citrixadc_csvserver_responderpolicy_binding" "tf_bind" {
+    name = citrixadc_csvserver_responderpolicy_binding.tf_bind.name
+    policyname = citrixadc_csvserver_responderpolicy_binding.tf_bind.policyname
+}
+`
+
+func TestAccCsvserver_responderpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_responderpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_responderpolicy_binding.tf_bind", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_responderpolicy_binding.tf_bind", "policyname", "tf_responder_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_responderpolicy_binding.tf_bind", "priority", "100"),
+				),
+			},
+		},
+	})
+}

@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `fis`
+# Data Source: fis
 
 The fis data source allows you to retrieve information about FIS (Forward Information Base) configurations.
 

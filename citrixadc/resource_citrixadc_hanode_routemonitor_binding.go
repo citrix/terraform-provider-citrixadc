@@ -2,15 +2,17 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ha"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcHanode_routemonitor_binding() *schema.Resource {
@@ -119,7 +121,7 @@ func readHanode_routemonitor_bindingFunc(ctx context.Context, d *schema.Resource
 
 	data := dataArr[foundIndex]
 
-	d.Set("id", data["id"])
+	setToInt("hanode_id", d, data["id"])
 	d.Set("netmask", data["netmask"])
 	d.Set("routemonitor", data["routemonitor"])
 

@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `netprofile`
+# Data Source: netprofile
 
 The netprofile data source allows you to retrieve information about a network profile configured on the Citrix ADC.
 

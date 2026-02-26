@@ -2,7 +2,7 @@
 subcategory: "Application Firewall"
 ---
 
-# Data Source: citrixadc_appfwpolicy
+# Data Source: appfwpolicy
 
 The `citrixadc_appfwpolicy` data source is used to retrieve information about an existing Application Firewall Policy configured on the Citrix ADC.
 

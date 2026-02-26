@@ -2,7 +2,7 @@
 subcategory: "ICA"
 ---
 
-# Data Source `icapolicy`
+# Data Source: icapolicy
 
 The icapolicy data source allows you to retrieve information about ICA policies.
 

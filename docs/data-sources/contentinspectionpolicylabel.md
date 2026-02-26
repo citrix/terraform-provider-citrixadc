@@ -2,7 +2,7 @@
 subcategory: "Content Inspection"
 ---
 
-# Data Source `contentinspectionpolicylabel`
+# Data Source: contentinspectionpolicylabel
 
 The contentinspectionpolicylabel data source allows you to retrieve information about a Content Inspection policy label.
 

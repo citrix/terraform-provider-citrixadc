@@ -205,3 +205,88 @@ func testAccCheckAppfwprofile_sqlinjection_bindingDestroy(s *terraform.State) er
 
 	return nil
 }
+
+const testAccAppfwprofileSqlinjectionBindingDataSource_basic = `
+	resource "citrixadc_appfwprofile_sqlinjection_binding" "appfw-szw-bi-test-sqlinject-relax-7" {
+		name                 = citrixadc_appfwprofile.demo_appfw.name
+		sqlinjection         = "data"
+		isautodeployed       = "NOTAUTODEPLOYED"
+		as_scan_location_sql = "FORMFIELD"
+		formactionurl_sql    = "^https://citrix.csg.com/analytics/saw.dll$"
+		as_value_type_sql    = "Keyword"
+		isvalueregex_sql     = "REGEX"
+		as_value_expr_sql    = ".*"
+		state                = "ENABLED"
+		depends_on           = [citrixadc_appfwprofile.demo_appfw]
+	}
+
+	resource "citrixadc_appfwprofile_sqlinjection_binding" "appfw-szw-bi-test-sqlinject-relax-8" {
+		name                 = citrixadc_appfwprofile.demo_appfw.name
+		sqlinjection         = "data"
+		isautodeployed       = "NOTAUTODEPLOYED"
+		as_scan_location_sql = "FORMFIELD"
+		formactionurl_sql    = "^https://citrix.csg.com/dv/ui/api/v1/maps/suggest$"
+		as_value_type_sql    = "Keyword"
+		isvalueregex_sql     = "REGEX"
+		as_value_expr_sql    = ".*"
+		state                = "ENABLED"
+		depends_on           = [citrixadc_appfwprofile.demo_appfw]
+	}
+
+	resource "citrixadc_appfwprofile" "demo_appfw" {
+		name                     = "demo_appfwprofile"
+		type                     = ["HTML"]
+	}
+
+	data "citrixadc_appfwprofile_sqlinjection_binding" "tf_binding_data" {
+		name                 = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7.name
+		sqlinjection         = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7.sqlinjection
+		as_scan_location_sql = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7.as_scan_location_sql
+		formactionurl_sql    = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7.formactionurl_sql
+		as_value_type_sql    = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7.as_value_type_sql
+		as_value_expr_sql    = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7.as_value_expr_sql
+		depends_on           = [citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7]
+	}
+
+	data "citrixadc_appfwprofile_sqlinjection_binding" "tf_binding2_data" {
+		name                 = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8.name
+		sqlinjection         = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8.sqlinjection
+		as_scan_location_sql = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8.as_scan_location_sql
+		formactionurl_sql    = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8.formactionurl_sql
+		as_value_type_sql    = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8.as_value_type_sql
+		as_value_expr_sql    = citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8.as_value_expr_sql
+		depends_on           = [citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8]
+	}
+`
+
+func TestAccAppfwprofileSqlinjectionBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileSqlinjectionBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding_data", "name", "demo_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding_data", "sqlinjection", "data"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding_data", "formactionurl_sql", "^https://citrix.csg.com/analytics/saw.dll$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding_data", "as_scan_location_sql", "FORMFIELD"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding_data", "as_value_type_sql", "Keyword"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding_data", "as_value_expr_sql", ".*"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding_data", "isvalueregex_sql", "REGEX"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding_data", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding_data", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "name", "demo_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "sqlinjection", "data"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "formactionurl_sql", "^https://citrix.csg.com/dv/ui/api/v1/maps/suggest$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "as_scan_location_sql", "FORMFIELD"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "as_value_type_sql", "Keyword"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "as_value_expr_sql", ".*"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "isvalueregex_sql", "REGEX"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "isautodeployed", "NOTAUTODEPLOYED"),
+				),
+			},
+		},
+	})
+}

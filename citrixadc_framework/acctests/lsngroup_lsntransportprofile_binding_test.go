@@ -17,19 +17,34 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsngroup_lsntransportprofile_binding_basic = `
 
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsnclient"
+}
+
+resource "citrixadc_lsngroup" "tf_lsngroup" {
+	groupname = "my_lsngroup"
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+}
+
+resource "citrixadc_lsntransportprofile" "tf_lsntransportprofile" {
+	transportprofilename = "my_lsntransportprofile"
+	transportprotocol = "TCP"
+}
+
 resource "citrixadc_lsngroup_lsntransportprofile_binding" "tf_lsngroup_lsntransportprofile_binding" {
-	groupname            = "my_lsn_group"
-	transportprofilename = "my_lsntransportfile"
-	}
+	groupname            = citrixadc_lsngroup.tf_lsngroup.groupname
+	transportprofilename = citrixadc_lsntransportprofile.tf_lsntransportprofile.transportprofilename
+}
   
 `
 
@@ -38,7 +53,6 @@ const testAccLsngroup_lsntransportprofile_binding_basic_step2 = `
 `
 
 func TestAccLsngroup_lsntransportprofile_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -190,4 +204,48 @@ func testAccCheckLsngroup_lsntransportprofile_bindingDestroy(s *terraform.State)
 	}
 
 	return nil
+}
+
+const testAccLsngroup_lsntransportprofile_bindingDataSource_basic = `
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsnclient"
+}
+
+resource "citrixadc_lsngroup" "tf_lsngroup" {
+	groupname = "my_lsngroup"
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+}
+
+resource "citrixadc_lsntransportprofile" "tf_lsntransportprofile" {
+	transportprofilename = "my_lsntransportprofile"
+	transportprotocol = "TCP"
+}
+
+resource "citrixadc_lsngroup_lsntransportprofile_binding" "tf_lsngroup_lsntransportprofile_binding" {
+	groupname            = citrixadc_lsngroup.tf_lsngroup.groupname
+	transportprofilename = citrixadc_lsntransportprofile.tf_lsntransportprofile.transportprofilename
+}
+
+data "citrixadc_lsngroup_lsntransportprofile_binding" "tf_lsngroup_lsntransportprofile_binding" {
+	groupname            = citrixadc_lsngroup.tf_lsngroup.groupname
+	transportprofilename = citrixadc_lsntransportprofile.tf_lsntransportprofile.transportprofilename
+	depends_on           = [citrixadc_lsngroup_lsntransportprofile_binding.tf_lsngroup_lsntransportprofile_binding]
+}
+`
+
+func TestAccLsngroup_lsntransportprofile_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_lsntransportprofile_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsntransportprofile_binding.tf_lsngroup_lsntransportprofile_binding", "groupname", "my_lsngroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsntransportprofile_binding.tf_lsngroup_lsntransportprofile_binding", "transportprofilename", "my_lsntransportprofile"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lsngroup_lsntransportprofile_binding.tf_lsngroup_lsntransportprofile_binding", "id"),
+				),
+			},
+		},
+	})
 }

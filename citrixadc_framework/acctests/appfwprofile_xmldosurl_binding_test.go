@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_xmldosurl_binding_basic = `
@@ -235,4 +236,74 @@ func testAccCheckAppfwprofile_xmldosurl_bindingDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+const testAccAppfwprofile_xmldosurl_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_xmldosurl_binding" "tf_binding" {
+		name                           = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmldosurl                      = ".*"
+		state                          = "ENABLED"
+		xmlsoaparraycheck              = "ON"
+		xmlmaxelementdepthcheck        = "ON"
+		xmlmaxfilesize                 = 100000
+		xmlmaxfilesizecheck            = "OFF"
+		xmlmaxnamespaceurilength       = 200
+		xmlmaxnamespaceurilengthcheck  = "ON"
+		xmlmaxelementnamelength        = 300
+		xmlmaxelementnamelengthcheck   = "ON"
+		xmlmaxelements                 = 30
+		xmlmaxelementscheck            = "ON"
+		xmlmaxattributes               = 20
+		xmlmaxattributescheck          = "ON"
+		xmlmaxchardatalength           = 1000
+		xmlmaxchardatalengthcheck      = "ON"
+		xmlmaxnamespaces               = 30
+		xmlmaxnamespacescheck          = "ON"
+		xmlmaxattributenamelength      = 200
+		xmlmaxattributenamelengthcheck = "ON"
+	}
+
+	data "citrixadc_appfwprofile_xmldosurl_binding" "tf_binding" {
+		name      = citrixadc_appfwprofile_xmldosurl_binding.tf_binding.name
+		xmldosurl = citrixadc_appfwprofile_xmldosurl_binding.tf_binding.xmldosurl
+	}
+`
+
+func TestAccAppfwprofile_xmldosurl_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_xmldosurl_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmldosurl", ".*"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlsoaparraycheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxelementdepthcheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxfilesize", "100000"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxfilesizecheck", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxnamespaceurilength", "200"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxnamespaceurilengthcheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxelementnamelength", "300"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxelementnamelengthcheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxelements", "30"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxelementscheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxattributes", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxattributescheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxchardatalength", "1000"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxchardatalengthcheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxnamespaces", "30"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxnamespacescheck", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxattributenamelength", "200"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxattributenamelengthcheck", "ON"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "SMPP"
 ---
 
-# Data Source: citrixadc_smppparam
+# Data Source: smppparam
 
 The smppparam data source allows you to retrieve information about SMPP parameters configuration.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_responderpolicy_binding_basic = `
@@ -210,4 +211,46 @@ func testAccCheckCrvserver_responderpolicy_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+const testAccCrvserver_responderpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_responderpolicy" "tf_responderpolicy" {
+		name   = "tf_responderpolicy_ds"
+		action = "NOOP"
+		rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"test_url\")"
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+	resource "citrixadc_crvserver_responderpolicy_binding" "crvserver_responderpolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_responderpolicy.tf_responderpolicy.name
+		priority   = 10
+	}
+
+	data "citrixadc_crvserver_responderpolicy_binding" "crvserver_responderpolicy_binding" {
+		name       = citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding.name
+		policyname = citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding.policyname
+		depends_on = [citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding]
+	}
+`
+
+func TestAcccrvserver_responderpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_responderpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", "policyname", "tf_responderpolicy_ds"),
+				),
+			},
+		},
+	})
 }

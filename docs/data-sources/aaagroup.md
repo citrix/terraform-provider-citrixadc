@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaagroup`
+# Data Source: aaagroup
 
 The aaagroup data source allows you to retrieve information about AAA groups.
 

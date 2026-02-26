@@ -17,19 +17,26 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsnclient_network_binding_basic = `
 
-resource "citrixadc_lsnclient_network_binding" "tf_lsnclient_network_binding" {
+resource "citrixadc_lsnclient" "tf_lsnclient" {
 	clientname = "my_lsnclient"
+}
+
+resource "citrixadc_lsnclient_network_binding" "tf_lsnclient_network_binding" {
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
 	network    = "10.222.74.160"
-	}
+	netmask    = "255.255.255.255"
+	td         = 0
+}
   
 `
 
@@ -38,7 +45,6 @@ const testAccLsnclient_network_binding_basic_step2 = `
 `
 
 func TestAccLsnclient_network_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -190,4 +196,40 @@ func testAccCheckLsnclient_network_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccLsnclient_network_bindingDataSource_basic = `
+
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsnclient"
+}
+
+resource "citrixadc_lsnclient_network_binding" "tf_lsnclient_network_binding" {
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+	network    = "10.222.74.160"
+	netmask    = "255.255.255.255"
+	td         = 0
+}
+
+data "citrixadc_lsnclient_network_binding" "tf_lsnclient_network_binding" {
+	clientname = citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding.clientname
+	network    = citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding.network
+}
+`
+
+func TestAccLsnclient_network_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnclient_network_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding", "clientname", "my_lsnclient"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding", "network", "10.222.74.160"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding", "netmask", "255.255.255.255"),
+				),
+			},
+		},
+	})
 }

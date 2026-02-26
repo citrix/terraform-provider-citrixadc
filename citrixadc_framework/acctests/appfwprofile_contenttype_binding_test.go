@@ -221,3 +221,43 @@ func testAccCheckAppfwprofile_contenttype_bindingDestroy(s *terraform.State) err
 
 	return nil
 }
+
+const testAccAppfwprofile_contenttype_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_contenttype_binding" "tf_binding1" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		contenttype    = "hello"
+		state          = "ENABLED"
+		alertonly      = "ON"
+		isautodeployed = "NOTAUTODEPLOYED"
+		comment        = "Testing"
+	}
+
+	data "citrixadc_appfwprofile_contenttype_binding" "tf_binding1" {
+		name        = citrixadc_appfwprofile_contenttype_binding.tf_binding1.name
+		contenttype = citrixadc_appfwprofile_contenttype_binding.tf_binding1.contenttype
+	}
+`
+
+func TestAccAppfwprofile_contenttype_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_contenttype_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_contenttype_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_contenttype_binding.tf_binding1", "contenttype", "hello"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_contenttype_binding.tf_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_contenttype_binding.tf_binding1", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_contenttype_binding.tf_binding1", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_contenttype_binding.tf_binding1", "comment", "Testing"),
+				),
+			},
+		},
+	})
+}

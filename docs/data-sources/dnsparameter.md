@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnsparameter`
+# Data Source: dnsparameter
 
 The dnsparameter data source allows you to retrieve information about DNS parameter configuration.
 

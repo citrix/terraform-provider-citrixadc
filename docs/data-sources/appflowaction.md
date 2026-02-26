@@ -2,7 +2,7 @@
 subcategory: "AppFlow"
 ---
 
-# Data Source `appflowaction`
+# Data Source: appflowaction
 
 The appflowaction data source allows you to retrieve information about an existing appflowaction.
 

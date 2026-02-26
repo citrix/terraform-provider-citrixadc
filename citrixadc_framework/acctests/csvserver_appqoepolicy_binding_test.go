@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_appqoepolicy_binding_basic = `
@@ -226,4 +227,55 @@ func testAccCheckCsvserver_appqoepolicy_bindingDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+const testAccCsvserver_appqoepolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "tf_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "tf_appqoepolicy"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+
+	resource "citrixadc_csvserver_appqoepolicy_binding" "tf_csvserver_appqoepolicy_binding" {
+		name 		= citrixadc_csvserver.tf_csvserver.name
+		policyname 	= citrixadc_appqoepolicy.tf_appqoepolicy.name
+		bindpoint 	= "REQUEST"
+		priority 	= 5
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name        = "tf_csvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+
+	data "citrixadc_csvserver_appqoepolicy_binding" "tf_csvserver_appqoepolicy_binding" {
+		name 		= citrixadc_csvserver_appqoepolicy_binding.tf_csvserver_appqoepolicy_binding.name
+		policyname 	= citrixadc_csvserver_appqoepolicy_binding.tf_csvserver_appqoepolicy_binding.policyname
+	}
+`
+
+func TestAccCsvserver_appqoepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_appqoepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appqoepolicy_binding.tf_csvserver_appqoepolicy_binding", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appqoepolicy_binding.tf_csvserver_appqoepolicy_binding", "policyname", "tf_appqoepolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appqoepolicy_binding.tf_csvserver_appqoepolicy_binding", "priority", "5"),
+				),
+			},
+		},
+	})
 }

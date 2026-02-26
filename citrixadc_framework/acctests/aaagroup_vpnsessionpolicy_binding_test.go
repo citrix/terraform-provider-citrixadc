@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaagroup_vpnsessionpolicy_binding_basic = `
@@ -29,6 +30,7 @@ const testAccAaagroup_vpnsessionpolicy_binding_basic = `
 	resource "citrixadc_aaagroup_vpnsessionpolicy_binding" "tf_aaagroup_vpnsessionpolicy_binding" {
 		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
 		policy    = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
+		type     = "REQUEST"
 		priority  = 100
 	}
 		
@@ -219,4 +221,52 @@ func testAccCheckAaagroup_vpnsessionpolicy_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+const testAccAaagroup_vpnsessionpolicy_bindingDataSource_basic = `
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
+		name                       = "newsession"
+		sesstimeout                = "10"
+		defaultauthorizationaction = "ALLOW"
+	}
+	resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
+		name   = "tf_vpnsessionpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name
+	}
+	resource "citrixadc_aaagroup_vpnsessionpolicy_binding" "tf_aaagroup_vpnsessionpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
+		type      = "REQUEST"
+		priority  = 100
+	}
+
+	data "citrixadc_aaagroup_vpnsessionpolicy_binding" "tf_aaagroup_vpnsessionpolicy_binding" {
+		groupname = citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding.groupname
+		policy    = citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding.policy
+		depends_on = [citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding]
+	}
+`
+
+func TestAccAaagroup_vpnsessionpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_vpnsessionpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", "policy", "tf_vpnsessionpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

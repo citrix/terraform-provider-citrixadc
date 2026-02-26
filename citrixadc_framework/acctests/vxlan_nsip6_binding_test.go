@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVxlan_nsip6_binding_basic = `
@@ -223,4 +224,46 @@ func testAccCheckVxlan_nsip6_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVxlan_nsip6_bindingDataSource_basic = `
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_nsip6" "test_nsip" {
+		ipv6address = "2001:db8:100::fb/64"
+		type        = "VIP"
+		icmp        = "DISABLED"
+	}
+	resource "citrixadc_vxlan_nsip6_binding" "tf_binding" {
+		vxlanid   = citrixadc_vxlan.tf_vxlan.vxlanid
+		ipaddress = citrixadc_nsip6.test_nsip.ipv6address
+		netmask   = "255.255.255.0"
+	}
+
+	data "citrixadc_vxlan_nsip6_binding" "tf_binding" {
+		vxlanid   = citrixadc_vxlan_nsip6_binding.tf_binding.vxlanid
+		ipaddress = citrixadc_vxlan_nsip6_binding.tf_binding.ipaddress
+		depends_on = [citrixadc_vxlan_nsip6_binding.tf_binding]
+	}
+`
+
+func TestAccVxlan_nsip6_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVxlan_nsip6_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vxlan_nsip6_binding.tf_binding", "vxlanid", "123"),
+					resource.TestCheckResourceAttr("data.citrixadc_vxlan_nsip6_binding.tf_binding", "ipaddress", "2001:db8:100::fb/64"),
+				),
+			},
+		},
+	})
 }

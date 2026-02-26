@@ -2,7 +2,7 @@
 subcategory: "Application"
 ---
 
-# Data Source `appalgparam`
+# Data Source: appalgparam
 
 The appalgparam data source allows you to retrieve information about Application ALG (Application Level Gateway) parameters configuration.
 

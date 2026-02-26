@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaaparameter`
+# Data Source: aaaparameter
 
 The aaaparameter data source allows you to retrieve information about AAA parameters configuration.
 

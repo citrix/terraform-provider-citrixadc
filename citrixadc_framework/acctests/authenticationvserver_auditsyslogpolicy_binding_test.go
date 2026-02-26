@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationvserver_auditsyslogpolicy_binding_basic = `
@@ -76,6 +77,42 @@ const testAccAuthenticationvserver_auditsyslogpolicy_binding_basic_step2 = `
 		name   = "tf_auditsyslogpolicy"
 		rule   = "ns_true"
 		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+`
+
+const testAccAuthenticationvserverAuditsyslogpolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "tf_syslogaction"
+		serverip   = "10.78.60.33"
+		serverport = 514
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_policy" {
+		name   = "tf_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+	resource "citrixadc_authenticationvserver_auditsyslogpolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_auditsyslogpolicy.tf_policy.name
+		priority  = 80
+		bindpoint = "REQUEST"
+	}
+
+	data "citrixadc_authenticationvserver_auditsyslogpolicy_binding" "tf_bind" {
+		name   = citrixadc_authenticationvserver_auditsyslogpolicy_binding.tf_bind.name
+		policy = citrixadc_authenticationvserver_auditsyslogpolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_authenticationvserver_auditsyslogpolicy_binding.tf_bind]
 	}
 `
 
@@ -231,4 +268,22 @@ func testAccCheckAuthenticationvserver_auditsyslogpolicy_bindingDestroy(s *terra
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverAuditsyslogpolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverAuditsyslogpolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_auditsyslogpolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_auditsyslogpolicy_binding.tf_bind", "policy", "tf_auditsyslogpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_auditsyslogpolicy_binding.tf_bind", "priority", "80"),
+				),
+			},
+		},
+	})
 }

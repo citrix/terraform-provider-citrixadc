@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source `sslocspresponder`
+# Data Source: sslocspresponder
 
 The sslocspresponder data source allows you to retrieve information about OCSP (Online Certificate Status Protocol) responders.
 

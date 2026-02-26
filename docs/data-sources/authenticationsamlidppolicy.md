@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationsamlidppolicy`
+# Data Source: authenticationsamlidppolicy
 
 The authenticationsamlidppolicy data source allows you to retrieve information about SAML Identity Provider (IdP) authentication policies.
 

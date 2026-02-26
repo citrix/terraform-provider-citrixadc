@@ -241,3 +241,50 @@ func testAccCheckAppfwprofile_fieldformat_bindingDestroy(s *terraform.State) err
 
 	return nil
 }
+
+const testAccAppfwprofile_fieldformat_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_fieldformat_binding" "tf_binding1" {
+		name                 = citrixadc_appfwprofile.tf_appfwprofile.name
+		fieldformat          = "tf_field"
+		formactionurl_ff     = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		comment              = "Testing"
+		state                = "ENABLED"
+		fieldformatmaxlength = 20
+		isregexff            = "NOTREGEX"
+		fieldtype            = "alpha"
+		alertonly            = "OFF"
+	}
+
+	data "citrixadc_appfwprofile_fieldformat_binding" "tf_binding1" {
+		name             = citrixadc_appfwprofile_fieldformat_binding.tf_binding1.name
+		fieldformat      = citrixadc_appfwprofile_fieldformat_binding.tf_binding1.fieldformat
+		formactionurl_ff = citrixadc_appfwprofile_fieldformat_binding.tf_binding1.formactionurl_ff
+	}
+`
+
+func TestAccAppfwprofile_fieldformat_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_fieldformat_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldformat_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldformat_binding.tf_binding1", "fieldformat", "tf_field"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldformat_binding.tf_binding1", "formactionurl_ff", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldformat_binding.tf_binding1", "comment", "Testing"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldformat_binding.tf_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldformat_binding.tf_binding1", "fieldformatmaxlength", "20"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldformat_binding.tf_binding1", "isregexff", "NOTREGEX"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldformat_binding.tf_binding1", "fieldtype", "alpha"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldformat_binding.tf_binding1", "alertonly", "OFF"),
+				),
+			},
+		},
+	})
+}

@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaapreauthenticationparameter`
+# Data Source: aaapreauthenticationparameter
 
 The aaapreauthenticationparameter data source allows you to retrieve information about AAA preauthentication parameters configuration.
 

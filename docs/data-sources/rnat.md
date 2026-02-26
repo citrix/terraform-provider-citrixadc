@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_rnat
+# Data Source: rnat
 
 This data source retrieves information about a specific RNAT (Reverse NAT) rule.
 

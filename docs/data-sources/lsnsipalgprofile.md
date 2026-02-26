@@ -2,7 +2,7 @@
 subcategory: "LSN"
 ---
 
-# Data Source `lsnsipalgprofile`
+# Data Source: lsnsipalgprofile
 
 The lsnsipalgprofile data source allows you to retrieve information about LSN (Large Scale NAT) SIP Application Layer Gateway profiles.
 

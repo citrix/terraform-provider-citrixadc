@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNetbridge_iptunnel_binding_basic = `
@@ -225,4 +226,53 @@ func testAccCheckNetbridge_iptunnel_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNetbridge_iptunnel_bindingDataSource_basic = `
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_nsip" "nsip" {
+		ipaddress = "2.2.2.1"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+	}
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "tf_netbridge"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+	resource "citrixadc_iptunnel" "tf_iptunnel" {
+		name             = "tf_iptunnel"
+		remote           = "66.0.0.11"
+		remotesubnetmask = "255.255.255.255"
+		local            = citrixadc_nsip.nsip.ipaddress
+		protocol         = "GRE"
+	}
+	resource "citrixadc_netbridge_iptunnel_binding" "tf_binding" {
+		name   = citrixadc_netbridge.tf_netbridge.name
+		tunnel = citrixadc_iptunnel.tf_iptunnel.name
+	}
+
+	data "citrixadc_netbridge_iptunnel_binding" "tf_binding" {
+		name   = citrixadc_netbridge.tf_netbridge.name
+		tunnel = citrixadc_iptunnel.tf_iptunnel.name
+		depends_on = [citrixadc_netbridge_iptunnel_binding.tf_binding]
+	}
+`
+
+func TestAccNetbridge_iptunnel_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetbridge_iptunnel_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge_iptunnel_binding.tf_binding", "name", "tf_netbridge"),
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge_iptunnel_binding.tf_binding", "tunnel", "tf_iptunnel"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_netbridge_iptunnel_binding.tf_binding", "id"),
+				),
+			},
+		},
+	})
 }

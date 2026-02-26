@@ -2,7 +2,7 @@
 subcategory: "Authorization"
 ---
 
-# Data Source `authorizationpolicy`
+# Data Source: authorizationpolicy
 
 The authorizationpolicy data source allows you to retrieve information about authorization policies.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccRnat_nsip_binding_basic = `
@@ -218,4 +219,49 @@ func testAccCheckRnat_nsip_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccRnat_nsip_bindingDataSource_basic = `
+
+	resource "citrixadc_rnat" "tfrnat" {
+		name             = "my_rnat"
+		network          = "10.2.2.0"
+		netmask          = "255.255.255.255"
+		useproxyport     = "ENABLED"
+		srcippersistency = "DISABLED"
+		connfailover     = "DISABLED"
+	}
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.200"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+		icmp      = "ENABLED"
+	}
+	resource "citrixadc_rnat_nsip_binding" "tf_rnat_nsip_binding" {
+		name  = citrixadc_rnat.tfrnat.name
+		natip = citrixadc_nsip.tf_nsip.ipaddress
+	}
+
+	data "citrixadc_rnat_nsip_binding" "tf_rnat_nsip_binding" {
+		name  = citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding.name
+		natip = citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding.natip
+		depends_on = [citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding]
+	}
+`
+
+func TestAccRnat_nsip_bindingDataSource(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRnat_nsip_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding", "name", "my_rnat"),
+					resource.TestCheckResourceAttr("data.citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding", "natip", "10.222.74.200"),
+				),
+			},
+		},
+	})
 }

@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnsmxrec`
+# Data Source: dnsmxrec
 
 The dnsmxrec data source allows you to retrieve information about DNS MX (Mail Exchange) records configured on the Citrix ADC.
 

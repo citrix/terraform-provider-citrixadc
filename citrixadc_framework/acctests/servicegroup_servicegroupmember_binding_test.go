@@ -466,3 +466,45 @@ func testAccCheckServicegroup_servicegroupmember_bindingDestroy(s *terraform.Sta
 
 	return nil
 }
+
+const testAccServicegroup_servicegroupmember_bindingDataSource_basic = `
+
+resource "citrixadc_servicegroup" "tf_servicegroup" {
+  servicegroupname = "tf_servicegroup"
+  servicetype      = "HTTP"
+}
+
+resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
+    servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+    ip = "10.78.22.33"
+    port = 80
+    order = 100
+}
+
+data "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
+	servicegroupname = citrixadc_servicegroup_servicegroupmember_binding.tf_binding.servicegroupname
+	ip = citrixadc_servicegroup_servicegroupmember_binding.tf_binding.ip
+	port = citrixadc_servicegroup_servicegroupmember_binding.tf_binding.port
+	depends_on = [citrixadc_servicegroup_servicegroupmember_binding.tf_binding]
+}
+`
+
+func TestAccServicegroup_servicegroupmember_bindingDataSource(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServicegroup_servicegroupmember_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "servicegroupname", "tf_servicegroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "ip", "10.78.22.33"),
+					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "port", "80"),
+					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "servername", "10.78.22.33"),
+					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "order", "100"),
+				),
+			},
+		},
+	})
+}

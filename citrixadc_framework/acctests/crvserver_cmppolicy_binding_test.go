@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_cmppolicy_binding_basic = `
@@ -211,4 +212,47 @@ func testAccCheckCrvserver_cmppolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccCrvserver_cmppolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_cmppolicy" "tf_cmppolicy" {
+		name      = "my_cmppolicy_ds"
+		rule      = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"
+		resaction = "COMPRESS"
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+	resource "citrixadc_crvserver_cmppolicy_binding" "crvserver_cmppolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_cmppolicy.tf_cmppolicy.name
+		priority   = 10
+		bindpoint  = "RESPONSE"
+	}
+
+	data "citrixadc_crvserver_cmppolicy_binding" "crvserver_cmppolicy_binding" {
+		name       = citrixadc_crvserver_cmppolicy_binding.crvserver_cmppolicy_binding.name
+		policyname = citrixadc_crvserver_cmppolicy_binding.crvserver_cmppolicy_binding.policyname
+		depends_on = [citrixadc_crvserver_cmppolicy_binding.crvserver_cmppolicy_binding]
+	}
+`
+
+func TestAcccrvserver_cmppolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_cmppolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_cmppolicy_binding.crvserver_cmppolicy_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_cmppolicy_binding.crvserver_cmppolicy_binding", "policyname", "my_cmppolicy_ds"),
+				),
+			},
+		},
+	})
 }

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_rewritepolicy_binding_basic = `
@@ -210,4 +211,49 @@ func testAccCheckCrvserver_rewritepolicy_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccCrvserver_rewritepolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+	resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+		name   = "tf_rewrite_policy_ds"
+		action = "DROP"
+		rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	}
+	resource "citrixadc_crvserver_rewritepolicy_binding" "crvserver_rewritepolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_rewritepolicy.tf_rewrite_policy.name
+		priority   = 10
+		bindpoint  = "RESPONSE"
+	}
+
+	data "citrixadc_crvserver_rewritepolicy_binding" "crvserver_rewritepolicy_binding" {
+		name       = citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding.name
+		policyname = citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding.policyname
+		bindpoint  = citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding.bindpoint
+		depends_on = [citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding]
+	}
+`
+
+func TestAcccrvserver_rewritepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_rewritepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding", "policyname", "tf_rewrite_policy_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding", "bindpoint", "RESPONSE"),
+				),
+			},
+		},
+	})
 }

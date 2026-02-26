@@ -259,3 +259,68 @@ resource "citrixadc_servicegroup_lbmonitor_binding" "bind1" {
 }
 
 `
+
+const testAccServicegroup_lbmonitor_bindingDataSource_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  name        = "tf_lbvserver"
+  ipv46       = "192.168.13.46"
+  port        = "80"
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_lbmonitor" "tfmonitor1" {
+  monitorname = "tf-monitor1"
+  type        = "HTTP"
+}
+
+resource "citrixadc_lbmonitor" "tfmonitor2" {
+  monitorname = "tfmonitor2"
+  type        = "PING"
+}
+
+resource "citrixadc_servicegroup" "tf_servicegroup" {
+  servicegroupname = "tf_servicegroup"
+  lbvservers       = [citrixadc_lbvserver.tf_lbvserver.name]
+  servicetype      = "HTTP"
+  servicegroupmembers = [
+    "192.168.33.33:80:1",
+  ]
+
+}
+
+resource "citrixadc_servicegroup_lbmonitor_binding" "bind1" {
+    servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+    monitorname = citrixadc_lbmonitor.tfmonitor1.monitorname
+    weight = 80
+    port = 0
+}
+
+resource "citrixadc_servicegroup_lbmonitor_binding" "bind2" {
+    servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+    monitorname = citrixadc_lbmonitor.tfmonitor2.monitorname
+    weight = 20
+}
+
+data "citrixadc_servicegroup_lbmonitor_binding" "bind1" {
+    servicegroupname = citrixadc_servicegroup_lbmonitor_binding.bind1.servicegroupname
+    monitor_name = citrixadc_servicegroup_lbmonitor_binding.bind1.monitorname
+    depends_on = [citrixadc_servicegroup_lbmonitor_binding.bind1]
+}
+`
+
+func TestAccServicegroup_lbmonitor_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServicegroup_lbmonitor_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_lbmonitor_binding.bind1", "servicegroupname", "tf_servicegroup"),
+					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_lbmonitor_binding.bind1", "monitor_name", "tf-monitor1"),
+					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_lbmonitor_binding.bind1", "weight", "80"),
+				),
+			},
+		},
+	})
+}

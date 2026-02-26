@@ -58,7 +58,7 @@ func (r *AaaglobalAaapreauthenticationpolicyBindingResource) Create(ctx context.
 	// aaaglobal_aaapreauthenticationpolicy_binding := aaaglobal_aaapreauthenticationpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.AaaglobalAaapreauthenticationpolicyBinding.Type(), &aaaglobal_aaapreauthenticationpolicy_binding)
+	// err := r.client.UpdateUnnamedResource(service.Aaaglobal_aaapreauthenticationpolicy_binding.Type(), &aaaglobal_aaapreauthenticationpolicy_binding)
 	// if err != nil {
 	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaaglobal_aaapreauthenticationpolicy_binding, got error: %s", err))
 	//	 return
@@ -110,7 +110,7 @@ func (r *AaaglobalAaapreauthenticationpolicyBindingResource) Update(ctx context.
 	// aaaglobal_aaapreauthenticationpolicy_binding := aaaglobal_aaapreauthenticationpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.AaaglobalAaapreauthenticationpolicyBinding.Type(), &aaaglobal_aaapreauthenticationpolicy_binding)
+	// err := r.client.UpdateUnnamedResource(service.Aaaglobal_aaapreauthenticationpolicy_binding.Type(), &aaaglobal_aaapreauthenticationpolicy_binding)
 	// if err != nil {
 	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaaglobal_aaapreauthenticationpolicy_binding, got error: %s", err))
 	//	 return

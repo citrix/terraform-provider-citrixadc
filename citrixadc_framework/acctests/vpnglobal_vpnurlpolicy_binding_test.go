@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_vpnurlpolicy_binding_basic = `
@@ -204,4 +205,48 @@ func testAccCheckVpnglobal_vpnurlpolicy_bindingDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_vpnurlpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
+		name             = "tf_vpnurlaction"
+		linkname         = "new_link"
+		actualurl        = "http://www.citrix.com"
+		applicationtype  = "CVPN"
+		clientlessaccess = "OFF"
+		comment          = "Testing"
+		ssotype          = "unifiedgateway"
+		vservername      = "vserver1"
+	}
+	resource "citrixadc_vpnurlpolicy" "citrixadc_vpnurlpolicy" {
+		name   = "new_policy"
+		rule   = "true"
+		action = citrixadc_vpnurlaction.tf_vpnurlaction.name
+	}
+	resource "citrixadc_vpnglobal_vpnurlpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnurlpolicy.citrixadc_vpnurlpolicy.name
+		priority = "20"
+	}
+
+	data "citrixadc_vpnglobal_vpnurlpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_vpnurlpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpnurlpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", "policyname", "new_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
 }

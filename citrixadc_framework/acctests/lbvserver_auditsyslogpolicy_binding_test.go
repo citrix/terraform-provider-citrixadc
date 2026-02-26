@@ -230,3 +230,55 @@ func testAccCheckLbvserver_auditsyslogpolicy_bindingDestroy(s *terraform.State) 
 
 	return nil
 }
+
+const testAccLbvserver_auditsyslogpolicy_bindingDataSource_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver3" {
+	name        = "tf_lbvserver3"
+	servicetype = "HTTP"
+}
+
+resource "citrixadc_auditsyslogaction" "tf_syslogaction2" {
+	name = "tf_syslogaction2"
+	serverip = "10.124.67.99"
+	loglevel = [
+		"ERROR",
+		"NOTICE",
+	]
+}
+
+resource "citrixadc_auditsyslogpolicy" "tf_syslogpolicy2" {
+	name = "tf_syslogpolicy2"
+	rule = "true"
+	action = citrixadc_auditsyslogaction.tf_syslogaction2.name
+}
+
+resource "citrixadc_lbvserver_auditsyslogpolicy_binding" "demo" {
+	name = citrixadc_lbvserver.tf_lbvserver3.name
+	policyname = citrixadc_auditsyslogpolicy.tf_syslogpolicy2.name
+	invoke = false
+	priority = 56
+}
+
+data "citrixadc_lbvserver_auditsyslogpolicy_binding" "demo" {
+	name = citrixadc_lbvserver.tf_lbvserver3.name
+	policyname = citrixadc_auditsyslogpolicy.tf_syslogpolicy2.name
+	depends_on = [citrixadc_lbvserver_auditsyslogpolicy_binding.demo]
+}
+`
+
+func TestAccLbvserver_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_auditsyslogpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_auditsyslogpolicy_binding.demo", "name", "tf_lbvserver3"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_auditsyslogpolicy_binding.demo", "policyname", "tf_syslogpolicy2"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_auditsyslogpolicy_binding.demo", "priority", "56"),
+				),
+			},
+		},
+	})
+}

@@ -2,7 +2,7 @@
 subcategory: "CI"
 ---
 
-# Data Source `contentinspectionprofile`
+# Data Source: contentinspectionprofile
 
 The contentinspectionprofile data source allows you to retrieve information about content inspection profiles.
 

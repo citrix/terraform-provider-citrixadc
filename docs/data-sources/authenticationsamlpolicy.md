@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationsamlpolicy`
+# Data Source: authenticationsamlpolicy
 
 The authenticationsamlpolicy data source allows you to retrieve information about an existing SAML authentication policy.
 

@@ -73,6 +73,40 @@ resource "citrixadc_gslbsite" "site_remote" {
 	}
 `
 
+const testAccGslbservice_dnsview_bindingDataSource_basic = `
+
+resource "citrixadc_gslbservice_dnsview_binding" "tf_gslbservice_dnsview_binding" {
+	servicename = citrixadc_gslbservice.gslb_svc1.servicename
+	viewname    = citrixadc_dnsview.tf_dnsview.viewname
+	viewip      = "192.168.2.1"
+}
+
+resource "citrixadc_gslbsite" "site_remote" {
+	sitename        = "Site-Remote"
+	siteipaddress   = "172.31.48.18"
+	sessionexchange = "ENABLED"
+	sitepassword = "password123"
+}
+
+resource "citrixadc_gslbservice" "gslb_svc1" {
+	ip          = "172.16.1.121"
+	port        = "80"
+	servicename = "gslb1vservice"
+	servicetype = "HTTP"
+	sitename    = citrixadc_gslbsite.site_remote.sitename
+}
+
+resource "citrixadc_dnsview" "tf_dnsview" {
+	viewname = "view4"
+}
+
+data "citrixadc_gslbservice_dnsview_binding" "tf_gslbservice_dnsview_binding" {
+	servicename = citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding.servicename
+	viewname    = citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding.viewname
+	depends_on  = [citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding]
+}
+`
+
 func TestAccGslbservice_dnsview_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -225,4 +259,21 @@ func testAccCheckGslbservice_dnsview_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccGslbservice_dnsview_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservice_dnsview_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding", "servicename", "gslb1vservice"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding", "viewname", "view4"),
+					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding", "viewip", "192.168.2.1"),
+				),
+			},
+		},
+	})
 }

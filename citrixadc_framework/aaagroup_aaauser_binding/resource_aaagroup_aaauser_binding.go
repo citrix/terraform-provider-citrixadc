@@ -58,7 +58,7 @@ func (r *AaagroupAaauserBindingResource) Create(ctx context.Context, req resourc
 	// aaagroup_aaauser_binding := aaagroup_aaauser_bindingGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.AaagroupAaauserBinding.Type(), &aaagroup_aaauser_binding)
+	// err := r.client.UpdateUnnamedResource(service.Aaagroup_aaauser_binding.Type(), &aaagroup_aaauser_binding)
 	// if err != nil {
 	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaagroup_aaauser_binding, got error: %s", err))
 	//	 return
@@ -110,7 +110,7 @@ func (r *AaagroupAaauserBindingResource) Update(ctx context.Context, req resourc
 	// aaagroup_aaauser_binding := aaagroup_aaauser_bindingGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.AaagroupAaauserBinding.Type(), &aaagroup_aaauser_binding)
+	// err := r.client.UpdateUnnamedResource(service.Aaagroup_aaauser_binding.Type(), &aaagroup_aaauser_binding)
 	// if err != nil {
 	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaagroup_aaauser_binding, got error: %s", err))
 	//	 return
@@ -144,10 +144,7 @@ func (r *AaagroupAaauserBindingResource) Delete(ctx context.Context, req resourc
 
 // Helper function to read aaagroup_aaauser_binding data from API
 func (r *AaagroupAaauserBindingResource) readAaagroupAaauserBindingFromApi(ctx context.Context, data *AaagroupAaauserBindingResourceModel, diags *diag.Diagnostics) {
-
-	aaagroup_Name := data.Groupname.ValueString()
-
-	getResponseData, err := r.client.FindResource(service.Aaagroup_aaauser_binding.Type(), aaagroup_Name)
+	getResponseData, err := r.client.FindResource(service.Aaagroup_aaauser_binding.Type(), "")
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaagroup_aaauser_binding, got error: %s", err))
 		return

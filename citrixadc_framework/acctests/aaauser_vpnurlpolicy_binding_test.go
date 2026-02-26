@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaauser_vpnurlpolicy_binding_basic = `
@@ -29,6 +30,7 @@ const testAccAaauser_vpnurlpolicy_binding_basic = `
 resource "citrixadc_aaauser_vpnurlpolicy_binding" "tf_aaauser_vpnurlpolicy_binding" {
 	username = citrixadc_aaauser.tf_aaauser.username
 	policy    = citrixadc_vpnurlpolicy.tf_vpnurlpolicy.name
+	type     = "REQUEST"
 	priority  = 100
 	}
   
@@ -230,4 +232,56 @@ func testAccCheckAaauser_vpnurlpolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccAaauser_vpnurlpolicy_bindingDataSource_basic = `
+
+resource "citrixadc_aaauser_vpnurlpolicy_binding" "tf_aaauser_vpnurlpolicy_binding" {
+	username = citrixadc_aaauser.tf_aaauser.username
+	policy    = citrixadc_vpnurlpolicy.tf_vpnurlpolicy.name
+	type     = "REQUEST"
+	priority  = 100
+}
+
+resource "citrixadc_aaauser" "tf_aaauser" {
+	username = "user1"
+	password = "my_pass"
+}
+resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
+	name             = "tf_vpnurlaction"
+	linkname         = "new_link"
+	actualurl        = "http://www.citrix.com"
+	applicationtype  = "CVPN"
+	clientlessaccess = "OFF"
+	comment          = "Testing"
+	ssotype          = "unifiedgateway"
+	vservername      = "vserver1"
+}
+resource "citrixadc_vpnurlpolicy" "tf_vpnurlpolicy" {
+	name   = "new_policy"
+	rule   = "true"
+	action = citrixadc_vpnurlaction.tf_vpnurlaction.name
+}
+
+data "citrixadc_aaauser_vpnurlpolicy_binding" "tf_aaauser_vpnurlpolicy_binding" {
+	username = citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding.username
+	policy   = citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding.policy
+}
+`
+
+func TestAccAaauser_vpnurlpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_vpnurlpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", "policy", "new_policy"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
 }

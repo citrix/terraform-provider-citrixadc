@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source: citrixadc_authenticationnegotiateaction
+# Data Source: authenticationnegotiateaction
 
 The `citrixadc_authenticationnegotiateaction` data source is used to retrieve information about an existing Authentication Negotiate Action configured on a Citrix ADC appliance. This action represents the AD KDC server profile used for Kerberos/NTLM authentication.
 

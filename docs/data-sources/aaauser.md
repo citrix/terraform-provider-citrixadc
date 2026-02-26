@@ -2,7 +2,7 @@
 subcategory: "AAA"
 ---
 
-# Data Source `aaauser`
+# Data Source: aaauser
 
 The aaauser data source allows you to retrieve information about AAA users.
 

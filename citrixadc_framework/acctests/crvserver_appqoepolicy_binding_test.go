@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_appqoepolicy_binding_basic = `
@@ -222,4 +223,54 @@ func testAccCheckCrvserver_appqoepolicy_bindingDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+const testAccCrvserver_appqoepolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp = "OFF"
+	}
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name              = "tf_appqoeaction_ds"
+		priority          = "HIGH"
+		respondwith       = "NS"
+		delay             = 0
+		maxconn           = 10000
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "tf_appqoepolicy_ds"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+	
+	resource "citrixadc_crvserver_appqoepolicy_binding" "crvserver_appqoepolicy_binding" {
+		name = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_appqoepolicy.tf_appqoepolicy.name
+		priority = 1
+	}
+
+	data "citrixadc_crvserver_appqoepolicy_binding" "crvserver_appqoepolicy_binding" {
+		name       = citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding.name
+		policyname = citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding.policyname
+		depends_on = [citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding]
+	}
+`
+
+func TestAcccrvserver_appqoepolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_appqoepolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", "policyname", "tf_appqoepolicy_ds"),
+				),
+			},
+		},
+	})
 }

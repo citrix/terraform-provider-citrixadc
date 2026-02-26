@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsappflowcollector`
+# Data Source: nsappflowcollector
 
 The nsappflowcollector data source allows you to retrieve information about AppFlow collectors configured on the NetScaler ADC.
 

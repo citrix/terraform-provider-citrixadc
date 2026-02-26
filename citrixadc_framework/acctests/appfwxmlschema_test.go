@@ -25,23 +25,16 @@ import (
 )
 
 const testAccAppfwxmlschema_basic = `
-	resource "citrixadc_systemfile" "tf_xmlschema" {
-		filename     = "appfwxmlschema.xml"
-		filelocation = "/var/tmp"
-		filecontent  = file("testdata/appfwxmlschema.xml")
-	}
 	resource "citrixadc_appfwxmlschema" "tf_appfwxmlschema" {
 		name       = "tf_appfwxmlschema"
 		src        = "local://appfwxmlschema.xml"
-		depends_on = [citrixadc_systemfile.tf_xmlschema]
 		comment    = "TestingExample"
 	}
 `
 
 func TestAccAppfwxmlschema_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckAppfwxmlschemaDestroy,
 		Steps: []resource.TestStep{
@@ -120,15 +113,9 @@ func testAccCheckAppfwxmlschemaDestroy(s *terraform.State) error {
 }
 
 const testAccAppfwxmlschemaDataSource_basic = `
-	resource "citrixadc_systemfile" "tf_xmlschema_ds" {
-		filename     = "appfwxmlschema_ds.xml"
-		filelocation = "/var/tmp"
-		filecontent  = file("testdata/appfwxmlschema.xml")
-	}
 	resource "citrixadc_appfwxmlschema" "tf_appfwxmlschema_ds" {
 		name       = "tf_appfwxmlschema_ds"
-		src        = "local://appfwxmlschema_ds.xml"
-		depends_on = [citrixadc_systemfile.tf_xmlschema_ds]
+		src        = "local://appfwxmlschema.xml"
 		comment    = "TestingDataSource"
 	}
 	
@@ -139,7 +126,7 @@ const testAccAppfwxmlschemaDataSource_basic = `
 
 func TestAccAppfwxmlschemaDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckAppfwxmlschemaDestroy,
 		Steps: []resource.TestStep{

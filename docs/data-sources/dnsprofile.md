@@ -2,7 +2,7 @@
 subcategory: "DNS"
 ---
 
-# Data Source `dnsprofile`
+# Data Source: dnsprofile
 
 The dnsprofile data source allows you to retrieve information about a DNS profile configured on the Citrix ADC.
 

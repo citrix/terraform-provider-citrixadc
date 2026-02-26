@@ -2,7 +2,7 @@
 subcategory: "Cmp"
 ---
 
-# Data Source `cmpaction`
+# Data Source: cmpaction
 
 The cmpaction data source allows you to retrieve information about an existing compression action.
 

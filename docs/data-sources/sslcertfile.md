@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source `sslcertfile`
+# Data Source: sslcertfile
 
 The sslcertfile data source allows you to retrieve information about SSL certificate files.
 

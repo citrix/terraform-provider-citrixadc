@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source: citrixadc_l2param
+# Data Source: l2param
 
 This data source is used to retrieve information about the Layer 2 parameters configuration.
 

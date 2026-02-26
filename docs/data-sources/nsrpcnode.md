@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsrpcnode`
+# Data Source: nsrpcnode
 
 The nsrpcnode data source allows you to retrieve information about RPC nodes configured on the NetScaler appliance. This is typically used in cluster configurations.
 

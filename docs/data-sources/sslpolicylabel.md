@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source `sslpolicylabel`
+# Data Source: sslpolicylabel
 
 The sslpolicylabel data source allows you to retrieve information about an existing sslpolicylabel.
 

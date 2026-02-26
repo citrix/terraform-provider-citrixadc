@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationnoauthaction`
+# Data Source: authenticationnoauthaction
 
 The authenticationnoauthaction data source allows you to retrieve information about authentication no-authentication actions.
 

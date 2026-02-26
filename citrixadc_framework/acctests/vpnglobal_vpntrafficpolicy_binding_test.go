@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_vpntrafficpolicy_binding_basic = `
@@ -200,4 +201,45 @@ func testAccCheckVpnglobal_vpntrafficpolicy_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_vpntrafficpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta   = "ON"
+		hdx   = "ON"
+		name  = "Testingaction"
+		qual  = "tcp"
+		sso   = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
+	resource "citrixadc_vpngobal_vpntrafficpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		priority   = 20
+	}
+
+	data "citrixadc_vpnglobal_vpntrafficpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind]
+	}
+`
+
+func TestAccVpnglobal_vpntrafficpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpntrafficpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", "policyname", "tf_vpntrafficpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
 }

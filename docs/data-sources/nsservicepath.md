@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nsservicepath`
+# Data Source: nsservicepath
 
 The nsservicepath data source allows you to retrieve information about a service path.
 

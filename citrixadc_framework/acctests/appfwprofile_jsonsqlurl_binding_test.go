@@ -291,3 +291,52 @@ func testAccCheckAppfwprofile_jsonsqlurl_bindingDestroy(s *terraform.State) erro
 
 	return nil
 }
+
+const testAccAppfwprofile_jsonsqlurl_bindingDataSource_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		jsonsqlurl     = "[abc][a-z]a*"
+		keyname_json_sql = "id"
+		as_value_type_json_sql = "SpecialString"
+		as_value_expr_json_sql = "p"
+		isautodeployed = "AUTODEPLOYED"
+		state          = "ENABLED"
+		alertonly      = "ON"
+		comment        = "Testing"
+	}
+
+	data "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding" {
+		name = citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding.name
+		jsonsqlurl = citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding.jsonsqlurl
+		keyname_json_sql = citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding.keyname_json_sql
+		as_value_type_json_sql = citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding.as_value_type_json_sql
+		as_value_expr_json_sql = citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding.as_value_expr_json_sql
+	}
+`
+
+func TestAccAppfwprofile_jsonsqlurl_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_jsonsqlurl_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "jsonsqlurl", "[abc][a-z]a*"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "keyname_json_sql", "id"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "as_value_type_json_sql", "SpecialString"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "as_value_expr_json_sql", "p"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "comment", "Testing"),
+				),
+			},
+		},
+	})
+}

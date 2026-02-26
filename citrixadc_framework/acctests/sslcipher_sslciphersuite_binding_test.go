@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccSslcipher_sslciphersuite_binding_basic = `
@@ -198,4 +199,41 @@ func testAccCheckSslcipher_sslciphersuite_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccSslcipher_sslciphersuite_bindingDataSource_basic = `
+
+	resource "citrixadc_sslcipher" "tfsslcipher" {
+		ciphergroupname = "tfsslcipher"
+	}
+
+	resource "citrixadc_sslcipher_sslciphersuite_binding" "tf_bind" {
+		ciphergroupname = citrixadc_sslcipher.tfsslcipher.ciphergroupname
+		ciphername      = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+		cipherpriority  = 1
+	}
+
+	data "citrixadc_sslcipher_sslciphersuite_binding" "tf_bind" {
+		ciphergroupname = citrixadc_sslcipher_sslciphersuite_binding.tf_bind.ciphergroupname
+		ciphername      = citrixadc_sslcipher_sslciphersuite_binding.tf_bind.ciphername
+		depends_on      = [citrixadc_sslcipher_sslciphersuite_binding.tf_bind]
+	}
+
+`
+
+func TestAccSslcipher_sslciphersuite_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcipher_sslciphersuite_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslcipher_sslciphersuite_binding.tf_bind", "ciphergroupname", "tfsslcipher"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcipher_sslciphersuite_binding.tf_bind", "ciphername", "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslcipher_sslciphersuite_binding.tf_bind", "cipherpriority", "1"),
+				),
+			},
+		},
+	})
 }

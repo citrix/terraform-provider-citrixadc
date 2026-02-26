@@ -17,18 +17,32 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccLsngroup_lsnhttphdrlogprofile_binding_basic = `
-	resource "citrixadc_lsngroup_lsnhttphdrlogprofile_binding" "tf_lsngroup_lsnhttphdrlogprofile_binding" {
-		groupname             = "my_lsn_group"
-		httphdrlogprofilename = "my_httplogprofile"
-	}
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsn_client"
+}
+
+resource "citrixadc_lsngroup" "tf_lsngroup" {
+	groupname  = "my_lsn_group"
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+}
+
+resource "citrixadc_lsnhttphdrlogprofile" "tf_lsnhttphdrlogprofile" {
+	httphdrlogprofilename = "my_httplogprofile"
+}
+
+resource "citrixadc_lsngroup_lsnhttphdrlogprofile_binding" "tf_lsngroup_lsnhttphdrlogprofile_binding" {
+	groupname             = citrixadc_lsngroup.tf_lsngroup.groupname
+	httphdrlogprofilename = citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile.httphdrlogprofilename
+}
   
 `
 
@@ -37,7 +51,6 @@ const testAccLsngroup_lsnhttphdrlogprofile_binding_basic_step2 = `
 `
 
 func TestAccLsngroup_lsnhttphdrlogprofile_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -189,4 +202,48 @@ func testAccCheckLsngroup_lsnhttphdrlogprofile_bindingDestroy(s *terraform.State
 	}
 
 	return nil
+}
+
+const testAccLsngroup_lsnhttphdrlogprofile_bindingDataSource_basic = `
+
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsn_client"
+}
+
+resource "citrixadc_lsngroup" "tf_lsngroup" {
+	groupname  = "my_lsn_group"
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+}
+
+resource "citrixadc_lsnhttphdrlogprofile" "tf_lsnhttphdrlogprofile" {
+	httphdrlogprofilename = "my_httplogprofile"
+}
+
+resource "citrixadc_lsngroup_lsnhttphdrlogprofile_binding" "tf_lsngroup_lsnhttphdrlogprofile_binding" {
+	groupname             = citrixadc_lsngroup.tf_lsngroup.groupname
+	httphdrlogprofilename = citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile.httphdrlogprofilename
+}
+
+data "citrixadc_lsngroup_lsnhttphdrlogprofile_binding" "tf_lsngroup_lsnhttphdrlogprofile_binding" {
+	groupname             = citrixadc_lsngroup_lsnhttphdrlogprofile_binding.tf_lsngroup_lsnhttphdrlogprofile_binding.groupname
+	httphdrlogprofilename = citrixadc_lsngroup_lsnhttphdrlogprofile_binding.tf_lsngroup_lsnhttphdrlogprofile_binding.httphdrlogprofilename
+	depends_on            = [citrixadc_lsngroup_lsnhttphdrlogprofile_binding.tf_lsngroup_lsnhttphdrlogprofile_binding]
+}
+`
+
+func TestAccLsngroup_lsnhttphdrlogprofile_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnhttphdrlogprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_lsnhttphdrlogprofile_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnhttphdrlogprofile_binding.tf_lsngroup_lsnhttphdrlogprofile_binding", "groupname", "my_lsn_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnhttphdrlogprofile_binding.tf_lsngroup_lsnhttphdrlogprofile_binding", "httphdrlogprofilename", "my_httplogprofile"),
+				),
+			},
+		},
+	})
 }

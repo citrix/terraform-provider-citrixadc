@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAaauser_vpnintranetapplication_binding_basic = `
@@ -40,6 +41,32 @@ const testAccAaauser_vpnintranetapplication_binding_basic = `
 		protocol            = "UDP"
 		destip              = "2.3.6.5"
 		interception        = "TRANSPARENT"
+	}
+  
+`
+
+const testAccAaauser_vpnintranetapplication_bindingDataSource_basic = `
+
+	resource "citrixadc_aaauser_vpnintranetapplication_binding" "tf_aaauser_vpnintranetapplication_binding" {
+		username            = citrixadc_aaauser.tf_aaauser.username
+		intranetapplication = citrixadc_vpnintranetapplication.tf_vpnintranetapplication.intranetapplication
+	}
+	
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+		intranetapplication = "tf_vpnintranetapplication"
+		protocol            = "UDP"
+		destip              = "2.3.6.5"
+		interception        = "TRANSPARENT"
+	}
+
+	data "citrixadc_aaauser_vpnintranetapplication_binding" "tf_aaauser_vpnintranetapplication_binding" {
+		username            = citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding.username
+		intranetapplication = citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding.intranetapplication
+		depends_on          = [citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding]
 	}
   
 `
@@ -210,4 +237,20 @@ func testAccCheckAaauser_vpnintranetapplication_bindingDestroy(s *terraform.Stat
 	}
 
 	return nil
+}
+
+func TestAccAaauser_vpnintranetapplication_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_vpnintranetapplication_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", "username", "user1"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", "intranetapplication", "tf_vpnintranetapplication"),
+				),
+			},
+		},
+	})
 }

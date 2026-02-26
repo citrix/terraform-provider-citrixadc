@@ -2,7 +2,7 @@
 subcategory: "Rewrite"
 ---
 
-# Data Source: citrixadc_rewriteparam
+# Data Source: rewriteparam
 
 This data source retrieves the global rewrite parameter configuration.
 

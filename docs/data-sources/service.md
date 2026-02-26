@@ -2,7 +2,7 @@
 subcategory: "Basic"
 ---
 
-# Data Source: citrixadc_service
+# Data Source: service
 
 The service data source allows you to retrieve information about a service configuration.
 

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCrvserver_appflowpolicy_binding_basic = `
@@ -238,4 +239,59 @@ func testAccCheckCrvserver_appflowpolicy_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccCrvserver_appflowpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name = "my_vserver_ds"
+		servicetype = "HTTP"
+		arp = "OFF"
+	}
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name      = "tf_appflowpolicy_ds"
+		action    = citrixadc_appflowaction.tf_appflowaction.name
+		rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name = "test_action_ds"
+		collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "tf_collector_ds"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
+
+	resource "citrixadc_crvserver_appflowpolicy_binding" "crvserver_appflowpolicy_binding" {
+		name = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_appflowpolicy.tf_appflowpolicy.name
+		priority = 1
+	}
+
+	data "citrixadc_crvserver_appflowpolicy_binding" "crvserver_appflowpolicy_binding" {
+		name       = citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding.name
+		policyname = citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding.policyname
+		depends_on = [citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding]
+	}
+`
+
+func TestAcccrvserver_appflowpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_appflowpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding", "name", "my_vserver_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding", "policyname", "tf_appflowpolicy_ds"),
+				),
+			},
+		},
+	})
 }

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccCsvserver_contentinspectionpolicy_binding_basic = `
@@ -60,6 +61,35 @@ const testAccCsvserver_contentinspectionpolicy_binding_basic_step2 = `
 		ipv46 		= "10.202.11.11"
 		port 		= 8080
 		servicetype = "HTTP"
+	}
+`
+
+const testAccCsvserver_contentinspectionpolicy_bindingDataSource_basic = `
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_contentinspectionpolicy" "tf_contentinspectionpolicy" {
+		name   = "tf_contentinspectionpolicy"
+		rule   = "false"
+		action = "DROP"
+	}
+
+	resource "citrixadc_csvserver_contentinspectionpolicy_binding" "tf_csvserver_contentinspectionpolicy_binding" {
+		name 					= citrixadc_csvserver.tf_csvserver.name
+		policyname 				= citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy.name
+		bindpoint 				= "REQUEST"
+		gotopriorityexpression 	= "END"
+		priority 				= 1    
+	}
+
+	data "citrixadc_csvserver_contentinspectionpolicy_binding" "tf_csvserver_contentinspectionpolicy_binding" {
+		name 		= citrixadc_csvserver_contentinspectionpolicy_binding.tf_csvserver_contentinspectionpolicy_binding.name
+		policyname 	= citrixadc_csvserver_contentinspectionpolicy_binding.tf_csvserver_contentinspectionpolicy_binding.policyname
+		bindpoint 				= "REQUEST"
 	}
 `
 
@@ -215,4 +245,23 @@ func testAccCheckCsvserver_contentinspectionpolicy_bindingDestroy(s *terraform.S
 	}
 
 	return nil
+}
+
+func TestAccCsvserver_contentinspectionpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_contentinspectionpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_contentinspectionpolicy_binding.tf_csvserver_contentinspectionpolicy_binding", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_contentinspectionpolicy_binding.tf_csvserver_contentinspectionpolicy_binding", "policyname", "tf_contentinspectionpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_contentinspectionpolicy_binding.tf_csvserver_contentinspectionpolicy_binding", "priority", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_contentinspectionpolicy_binding.tf_csvserver_contentinspectionpolicy_binding", "bindpoint", "REQUEST"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_contentinspectionpolicy_binding.tf_csvserver_contentinspectionpolicy_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
 }

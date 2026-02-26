@@ -180,3 +180,51 @@ func testAccCheckCsvserver_cmppolicy_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccCsvserver_cmppolicy_bindingDataSource_basic = `
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_cmppolicy" "tf_cmppolicy" {
+    name = "tf_cmppolicy"
+    rule = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"
+    resaction = "COMPRESS"
+}
+
+resource "citrixadc_csvserver_cmppolicy_binding" "tf_bind" {
+    name = citrixadc_csvserver.tf_csvserver.name
+    policyname = citrixadc_cmppolicy.tf_cmppolicy.name
+    priority = 100
+    bindpoint = "RESPONSE"
+    gotopriorityexpression = "END"
+}
+
+data "citrixadc_csvserver_cmppolicy_binding" "tf_bind" {
+    name = citrixadc_csvserver_cmppolicy_binding.tf_bind.name
+    policyname = citrixadc_csvserver_cmppolicy_binding.tf_bind.policyname
+    bindpoint = citrixadc_csvserver_cmppolicy_binding.tf_bind.bindpoint
+}
+`
+
+func TestAccCsvserver_cmppolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_cmppolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cmppolicy_binding.tf_bind", "name", "tf_csvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cmppolicy_binding.tf_bind", "policyname", "tf_cmppolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cmppolicy_binding.tf_bind", "priority", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cmppolicy_binding.tf_bind", "bindpoint", "RESPONSE"),
+					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cmppolicy_binding.tf_bind", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_vpnclientlessaccesspolicy_binding_basic = `
@@ -211,4 +212,47 @@ func testAccCheckVpnvserver_vpnclientlessaccesspolicy_bindingDestroy(s *terrafor
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_vpnclientlessaccesspolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_example"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnclientlessaccesspolicy" "tf_vpnclientlessaccesspolicy" {
+		name        = "tf_vpnclientlessaccesspolicy"
+		profilename = "ns_cvpn_default_profile"
+		rule        = "true"
+	}
+	resource "citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy.name
+		priority  = 20
+		bindpoint = "REQUEST"
+	}
+	
+	data "citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding.tf_bind.policy
+	}
+`
+
+func TestAccVpnvserver_vpnclientlessaccesspolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_vpnclientlessaccesspolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding.tf_bind", "name", "tf_example"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding.tf_bind", "policy", "tf_vpnclientlessaccesspolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding.tf_bind", "priority", "20"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding.tf_bind", "id"),
+				),
+			},
+		},
+	})
 }

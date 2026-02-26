@@ -38,18 +38,18 @@ func (d *AaaglobalAaapreauthenticationpolicyBindingDataSource) Read(ctx context.
 	var data AaaglobalAaapreauthenticationpolicyBindingResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	policyName := data.Policy.ValueString()
+	// Case 3: Array filter without parent ID
+	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
 	var err error
 
 	findParams := service.FindParams{
-		ResourceType:             "aaaglobal_aaapreauthenticationpolicy_binding",
+		ResourceType:             service.Aaaglobal_aaapreauthenticationpolicy_binding.Type(),
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -67,7 +67,20 @@ func (d *AaaglobalAaapreauthenticationpolicyBindingDataSource) Read(ctx context.
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["policy"].(string) == policyName {
+		match := true
+
+		// Check policy
+		if val, ok := v["policy"].(string); ok {
+			if policy_Name.IsNull() || val != policy_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !policy_Name.IsNull() {
+			match = false
+			continue
+		}
+
+		if match {
 			foundIndex = i
 			break
 		}
@@ -75,14 +88,11 @@ func (d *AaaglobalAaapreauthenticationpolicyBindingDataSource) Read(ctx context.
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("aaaglobal_aaapreauthenticationpolicy_binding with policy %s not found", policyName))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("aaaglobal_aaapreauthenticationpolicy_binding with policy %s not found", policy_Name))
 		return
 	}
 
-	// Fallthrough
-
 	aaaglobal_aaapreauthenticationpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
-
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnglobal_vpnurl_binding_basic = `
@@ -194,4 +195,40 @@ func testAccCheckVpnglobal_vpnurl_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_vpnurl_bindingDataSource_basic = `
+	resource "citrixadc_vpnurl" "url" {
+		urlname          = "Firsturl"
+		actualurl        = "http://www.citrix.com"
+		appjson          = "xyz"
+		applicationtype  = "CVPN"
+		clientlessaccess = "OFF"
+		comment          = "Testing"
+		linkname         = "Description"
+		ssotype          = "unifiedgateway"
+		vservername      = "server1"
+	}
+	resource "citrixadc_vpnglobal_vpnurl_binding" "tf_bind" {
+		urlname = citrixadc_vpnurl.url.urlname
+	}
+
+	data "citrixadc_vpnglobal_vpnurl_binding" "tf_bind" {
+		urlname = citrixadc_vpnglobal_vpnurl_binding.tf_bind.urlname
+	}
+`
+
+func TestAccVpnglobal_vpnurl_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpnurl_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnurl_binding.tf_bind", "urlname", "Firsturl"),
+				),
+			},
+		},
+	})
 }

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_authenticationdfapolicy_binding_basic = `
@@ -224,4 +225,54 @@ func testAccCheckVpnvserver_authenticationdfapolicy_bindingDestroy(s *terraform.
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_authenticationdfapolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_authenticationdfaaction" "tf_dfaaction" {
+		name       = "tf_dfaaction"
+		serverurl  = "https://example.com/"
+		clientid   = "cliId"
+		passphrase = "secret"
+	}
+	resource "citrixadc_authenticationdfapolicy" "td_dfapolicy" {
+		name   = "tf_dfapolicy"
+		rule   = "ns_true"
+		action = citrixadc_authenticationdfaaction.tf_dfaaction.name
+	}
+	resource "citrixadc_vpnvserver_authenticationdfapolicy_binding" "tf_bind" {
+		name            = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy          = citrixadc_authenticationdfapolicy.td_dfapolicy.name
+		priority        = 50
+		groupextraction = false
+		bindpoint       = "REQUEST"
+	}
+
+	data "citrixadc_vpnvserver_authenticationdfapolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind.policy
+	}
+`
+
+func TestAccVpnvserver_authenticationdfapolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationdfapolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind", "id"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind", "name", "tf_vpnvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind", "policy", "tf_dfapolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind", "priority", "50"),
+				),
+			},
+		},
+	})
 }

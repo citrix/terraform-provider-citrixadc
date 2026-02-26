@@ -2,7 +2,7 @@
 subcategory: "Network"
 ---
 
-# Data Source `nstcpprofile`
+# Data Source: nstcpprofile
 
 The nstcpprofile data source allows you to retrieve information about a TCP profile configured on the Citrix ADC.
 

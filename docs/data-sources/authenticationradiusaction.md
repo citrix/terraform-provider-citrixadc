@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationradiusaction`
+# Data Source: authenticationradiusaction
 
 The authenticationradiusaction data source allows you to retrieve information about authentication RADIUS actions.
 

@@ -2,7 +2,7 @@
 subcategory: "Transform"
 ---
 
-# Data Source `transformpolicylabel`
+# Data Source: transformpolicylabel
 
 The transformpolicylabel data source allows you to retrieve information about a URL Transformation policy label.
 

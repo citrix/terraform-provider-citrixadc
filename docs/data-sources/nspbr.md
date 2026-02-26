@@ -2,7 +2,7 @@
 subcategory: "NS"
 ---
 
-# Data Source `nspbr`
+# Data Source: nspbr
 
 The nspbr data source allows you to retrieve information about NetScaler Policy-Based Routes (PBR).
 

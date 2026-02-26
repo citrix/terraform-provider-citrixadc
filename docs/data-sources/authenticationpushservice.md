@@ -2,7 +2,7 @@
 subcategory: "Authentication"
 ---
 
-# Data Source `authenticationpushservice`
+# Data Source: authenticationpushservice
 
 The authenticationpushservice data source allows you to retrieve information about authentication push services.
 

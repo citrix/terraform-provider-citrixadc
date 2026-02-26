@@ -198,3 +198,37 @@ func testAccCheckSslprofile_ecccurve_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testAccSslprofile_ecccurve_bindingDataSource_basic = `
+
+resource "citrixadc_sslparameter" "tf_sslparam" {
+	defaultprofile = "ENABLED"
+}
+
+resource "citrixadc_sslprofile" "tf_sslprofile" {
+	name             = "tf_sslprofile_ds"
+	ecccurvebindings = ["P_256", "P_384"]
+	depends_on       = [citrixadc_sslparameter.tf_sslparam]
+}
+
+data "citrixadc_sslprofile_ecccurve_binding" "tf_sslprofile_ecccurve_binding" {
+	name         = citrixadc_sslprofile.tf_sslprofile.name
+	ecccurvename = "P_256"
+}
+`
+
+func TestAccSslprofile_ecccurve_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_ecccurve_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "name", "tf_sslprofile_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "ecccurvename", "P_256"),
+				),
+			},
+		},
+	})
+}

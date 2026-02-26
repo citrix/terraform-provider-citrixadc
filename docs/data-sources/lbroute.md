@@ -2,7 +2,7 @@
 subcategory: "Load Balancing"
 ---
 
-# Data Source: citrixadc_lbroute
+# Data Source: lbroute
 
 This data source is used to retrieve information about an existing Load Balancing route.
 

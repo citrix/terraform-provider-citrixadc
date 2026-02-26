@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNetbridge_nsip6_binding_basic = `
@@ -214,4 +215,46 @@ func testAccCheckNetbridge_nsip6_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNetbridge_nsip6_bindingDataSource_basic = `
+
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "my_netbridge"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "dea:97c5:d381:e72b::/64"
+		type 		= "VIP"
+		icmp 		= "DISABLED"
+	}
+
+	resource "citrixadc_netbridge_nsip6_binding" "tf_netbridge_nsip6_binding" {
+		name      = citrixadc_netbridge.tf_netbridge.name
+		ipaddress = citrixadc_nsip6.tf_nsip6.ipv6address
+	}
+
+	data "citrixadc_netbridge_nsip6_binding" "tf_netbridge_nsip6_binding" {
+		name      = citrixadc_netbridge_nsip6_binding.tf_netbridge_nsip6_binding.name
+		ipaddress = citrixadc_netbridge_nsip6_binding.tf_netbridge_nsip6_binding.ipaddress
+	}
+`
+
+func TestAccNetbridge_nsip6_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetbridge_nsip6_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge_nsip6_binding.tf_netbridge_nsip6_binding", "name", "my_netbridge"),
+					resource.TestCheckResourceAttr("data.citrixadc_netbridge_nsip6_binding.tf_netbridge_nsip6_binding", "ipaddress", "dea:97c5:d381:e72b::/64"),
+				),
+			},
+		},
+	})
 }

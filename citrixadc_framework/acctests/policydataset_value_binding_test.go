@@ -200,3 +200,45 @@ resource "citrixadc_policydataset_value_binding" "tf_value3" {
   endrange = 360
 }
 `
+
+const testAccPolicydataset_value_bindingDataSource_basic = `
+resource "citrixadc_policydataset" "tf_dataset" {
+  name    = "tf_dataset"
+  type    = "number"
+  comment = "hello"
+}
+
+resource "citrixadc_policydataset_value_binding" "tf_value1" {
+  name = citrixadc_policydataset.tf_dataset.name
+
+  value    = 100
+  index    = 111
+  endrange = 150
+}
+
+data "citrixadc_policydataset_value_binding" "tf_value1" {
+  name     = citrixadc_policydataset_value_binding.tf_value1.name
+  value    = citrixadc_policydataset_value_binding.tf_value1.value
+  endrange = citrixadc_policydataset_value_binding.tf_value1.endrange
+  depends_on = [citrixadc_policydataset_value_binding.tf_value1]
+}
+`
+
+func TestAccPolicydataset_value_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicydataset_value_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_policydataset_value_binding.tf_value1", "name", "tf_dataset"),
+					resource.TestCheckResourceAttr("data.citrixadc_policydataset_value_binding.tf_value1", "value", "100"),
+					resource.TestCheckResourceAttr("data.citrixadc_policydataset_value_binding.tf_value1", "index", "111"),
+					resource.TestCheckResourceAttr("data.citrixadc_policydataset_value_binding.tf_value1", "endrange", "150"),
+				),
+			},
+		},
+	})
+}

@@ -2,7 +2,7 @@
 subcategory: "SNMP"
 ---
 
-# Data Source: citrixadc_snmpoption
+# Data Source: snmpoption
 
 The `citrixadc_snmpoption` data source is used to retrieve SNMP option configuration from the Citrix ADC.
 

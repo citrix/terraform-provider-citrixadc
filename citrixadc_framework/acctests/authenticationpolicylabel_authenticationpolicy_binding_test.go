@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic = `
@@ -68,6 +69,38 @@ const testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic_step2 
 		name   = "tf_authenticationpolicy"
 		rule   = "true"
 		action = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+`
+
+const testAccAuthenticationpolicylabel_authenticationpolicy_bindingDataSource_basic = `
+
+	resource "citrixadc_authenticationpolicylabel" "tf_authenticationpolicylabel" {
+		labelname = "tf_authenticationpolicylabel"
+		type      = "AAATM_REQ"
+		comment   = "Testing"
+	}
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "ldapaction"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationpolicy" "tf_authenticationpolicy" {
+		name   = "tf_authenticationpolicy"
+		rule   = "true"
+		action = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+	resource "citrixadc_authenticationpolicylabel_authenticationpolicy_binding" "tf_bind" {
+		labelname  = citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel.labelname
+		policyname = citrixadc_authenticationpolicy.tf_authenticationpolicy.name
+		priority   = 20
+	}
+
+	data "citrixadc_authenticationpolicylabel_authenticationpolicy_binding" "tf_bind" {
+		labelname  = citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind.labelname
+		policyname = citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind]
 	}
 `
 
@@ -226,4 +259,21 @@ func testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingDestroy(s
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationpolicylabel_authenticationpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpolicylabel_authenticationpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", "labelname", "tf_authenticationpolicylabel"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", "policyname", "tf_authenticationpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
 }

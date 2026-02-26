@@ -2,7 +2,7 @@
 subcategory: "SSL"
 ---
 
-# Data Source `sslcacertgroup`
+# Data Source: sslcacertgroup
 
 The sslcacertgroup data source allows you to retrieve information about an SSL CA certificate group.
 

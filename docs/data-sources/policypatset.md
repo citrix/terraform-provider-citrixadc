@@ -2,7 +2,7 @@
 subcategory: "Policy"
 ---
 
-# Data Source `policypatset`
+# Data Source: policypatset
 
 The policypatset data source allows you to retrieve information about an existing policy pattern set configuration.
 

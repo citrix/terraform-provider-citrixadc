@@ -28,7 +28,7 @@ const testAccUserprotocol_basic = `
 	resource "citrixadc_userprotocol" "tf_userprotocol" {
 		name      = "my_userprotocol"
 		transport = "TCP"
-		extension = "my_extension"
+		extension = "mqtt_code"
 		comment   = "my_comment"
 	}
 `
@@ -37,7 +37,7 @@ const testAccUserprotocol_update = `
 	resource "citrixadc_userprotocol" "tf_userprotocol" {
 		name      = "my_userprotocol"
 		transport = "SSL"
-		extension = "my_extension_mqtt"
+		extension = "mqtt_code"
 		comment   = "my_new_comment"
 	}
 `
@@ -57,7 +57,7 @@ const testAccUserprotocolDataSource_basic = `
 `
 
 func TestAccUserprotocol_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
+	t.Skip("TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -69,7 +69,7 @@ func TestAccUserprotocol_basic(t *testing.T) {
 					testAccCheckUserprotocolExist("citrixadc_userprotocol.tf_userprotocol", nil),
 					resource.TestCheckResourceAttr("citrixadc_userprotocol.tf_userprotocol", "name", "my_userprotocol"),
 					resource.TestCheckResourceAttr("citrixadc_userprotocol.tf_userprotocol", "transport", "TCP"),
-					resource.TestCheckResourceAttr("citrixadc_userprotocol.tf_userprotocol", "extension", "my_extension"),
+					resource.TestCheckResourceAttr("citrixadc_userprotocol.tf_userprotocol", "extension", "mqtt_code"),
 					resource.TestCheckResourceAttr("citrixadc_userprotocol.tf_userprotocol", "comment", "my_comment"),
 				),
 			},
@@ -79,7 +79,7 @@ func TestAccUserprotocol_basic(t *testing.T) {
 					testAccCheckUserprotocolExist("citrixadc_userprotocol.tf_userprotocol", nil),
 					resource.TestCheckResourceAttr("citrixadc_userprotocol.tf_userprotocol", "name", "my_userprotocol"),
 					resource.TestCheckResourceAttr("citrixadc_userprotocol.tf_userprotocol", "transport", "SSL"),
-					resource.TestCheckResourceAttr("citrixadc_userprotocol.tf_userprotocol", "extension", "my_extension_mqtt"),
+					resource.TestCheckResourceAttr("citrixadc_userprotocol.tf_userprotocol", "extension", "mqtt_code"),
 					resource.TestCheckResourceAttr("citrixadc_userprotocol.tf_userprotocol", "comment", "my_new_comment"),
 				),
 			},
@@ -152,6 +152,7 @@ func testAccCheckUserprotocolDestroy(s *terraform.State) error {
 }
 
 func TestAccUserprotocolDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

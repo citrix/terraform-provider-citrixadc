@@ -96,6 +96,51 @@ const testAccAuthenticationvserver_authenticationsamlidppolicy_binding_basic_ste
 	}
 `
 
+const testAccAuthenticationvserverAuthenticationsamlidppolicyBindingDataSource_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey"
+		cert    = "/var/tmp/certificate1.crt"
+		key     = "/var/tmp/key1.pem"
+	}
+	resource "citrixadc_authenticationsamlidpprofile" "tf_samlidpprofile" {
+		name                        = "tf_samlidpprofile"
+		samlspcertname              = citrixadc_sslcertkey.tf_sslcertkey.certkey
+		assertionconsumerserviceurl = "http://www.example.com"
+		sendpassword                = "OFF"
+		samlissuername              = "new_user"
+		rejectunsignedrequests      = "ON"
+		signaturealg                = "RSA-SHA1"
+		digestmethod                = "SHA1"
+		nameidformat                = "Unspecified"
+	}
+	resource "citrixadc_authenticationsamlidppolicy" "tf_samlidppolicy" {
+		name    = "tf_samlidppolicy"
+		rule    = "false"
+		action  = citrixadc_authenticationsamlidpprofile.tf_samlidpprofile.name
+		comment = "aSimpleTesting"
+	}
+	resource "citrixadc_authenticationvserver_authenticationsamlidppolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationsamlidppolicy.tf_samlidppolicy.name
+		bindpoint = "REQUEST"
+		priority  = 88
+		secondary = "false"
+	}
+
+	data "citrixadc_authenticationvserver_authenticationsamlidppolicy_binding" "tf_bind" {
+		name   = citrixadc_authenticationvserver_authenticationsamlidppolicy_binding.tf_bind.name
+		policy = citrixadc_authenticationvserver_authenticationsamlidppolicy_binding.tf_bind.policy
+		depends_on = [citrixadc_authenticationvserver_authenticationsamlidppolicy_binding.tf_bind]
+	}
+`
+
 func TestAccAuthenticationvserver_authenticationsamlidppolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -248,4 +293,22 @@ func testAccCheckAuthenticationvserver_authenticationsamlidppolicy_bindingDestro
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationvserverAuthenticationsamlidppolicyBindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserverAuthenticationsamlidppolicyBindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsamlidppolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsamlidppolicy_binding.tf_bind", "policy", "tf_samlidppolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsamlidppolicy_binding.tf_bind", "priority", "88"),
+				),
+			},
+		},
+	})
 }

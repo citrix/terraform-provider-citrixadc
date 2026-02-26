@@ -17,19 +17,16 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccNd6ravariables_onlinkipv6prefix_binding_basic = `
 
-	resource "citrixadc_vlan" "tf_vlan" {
-		vlanid 		= 40
-		aliasname 	= "Management VLAN"
-	}
 	resource "citrixadc_onlinkipv6prefix" "tf_onlinkipv6prefix" {
 		ipv6prefix      = "2003::/64"
 		onlinkprefix    = "YES"
@@ -37,7 +34,7 @@ const testAccNd6ravariables_onlinkipv6prefix_binding_basic = `
 	}
 
 	resource "citrixadc_nd6ravariables_onlinkipv6prefix_binding" "tf_nd6ravariables_onlinkipv6prefix_binding" {
-		vlan      = citrixadc_vlan.tf_vlan.vlanid
+		vlan      = 1
 		ipv6prefix = citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix.ipv6prefix
 	}
 `
@@ -45,10 +42,6 @@ const testAccNd6ravariables_onlinkipv6prefix_binding_basic = `
 const testAccNd6ravariables_onlinkipv6prefix_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 
-	resource "citrixadc_vlan" "tf_vlan" {
-		vlanid 		= 40
-		aliasname 	= "Management VLAN"
-	}
 	resource "citrixadc_onlinkipv6prefix" "tf_onlinkipv6prefix" {
 		ipv6prefix      = "2003::/64"
 		onlinkprefix    = "YES"
@@ -56,8 +49,26 @@ const testAccNd6ravariables_onlinkipv6prefix_binding_basic_step2 = `
 	}
 `
 
+const testAccNd6ravariables_onlinkipv6prefix_bindingDataSource_basic = `
+
+	resource "citrixadc_onlinkipv6prefix" "tf_onlinkipv6prefix" {
+		ipv6prefix      = "2003::/64"
+		onlinkprefix    = "YES"
+		autonomusprefix = "NO"
+	}
+
+	resource "citrixadc_nd6ravariables_onlinkipv6prefix_binding" "tf_nd6ravariables_onlinkipv6prefix_binding" {
+		vlan      = 1
+		ipv6prefix = citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix.ipv6prefix
+	}
+
+	data "citrixadc_nd6ravariables_onlinkipv6prefix_binding" "tf_nd6ravariables_onlinkipv6prefix_binding" {
+		vlan      = citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding.vlan
+		ipv6prefix = citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding.ipv6prefix
+	}
+`
+
 func TestAccNd6ravariables_onlinkipv6prefix_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -72,7 +83,7 @@ func TestAccNd6ravariables_onlinkipv6prefix_binding_basic(t *testing.T) {
 			{
 				Config: testAccNd6ravariables_onlinkipv6prefix_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNd6ravariables_onlinkipv6prefix_bindingNotExist("citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", "40,2003::/64"),
+					testAccCheckNd6ravariables_onlinkipv6prefix_bindingNotExist("citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", "1,2003::/64"),
 				),
 			},
 		},
@@ -209,4 +220,21 @@ func testAccCheckNd6ravariables_onlinkipv6prefix_bindingDestroy(s *terraform.Sta
 	}
 
 	return nil
+}
+
+func TestAccNd6ravariables_onlinkipv6prefix_bindingDataSource_basic(t *testing.T) {
+	// t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNd6ravariables_onlinkipv6prefix_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", "vlan", "1"),
+					resource.TestCheckResourceAttr("data.citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", "ipv6prefix", "2003::/64"),
+				),
+			},
+		},
+	})
 }

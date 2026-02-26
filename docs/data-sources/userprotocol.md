@@ -2,7 +2,7 @@
 subcategory: "User"
 ---
 
-# Data Source: citrixadc_userprotocol
+# Data Source: userprotocol
 
 The citrixadc_userprotocol data source is used to retrieve information about an existing userprotocol resource.
 

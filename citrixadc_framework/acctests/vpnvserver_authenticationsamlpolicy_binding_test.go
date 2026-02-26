@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccVpnvserver_authenticationsamlpolicy_binding_basic = `
@@ -229,4 +230,55 @@ func testAccCheckVpnvserver_authenticationsamlpolicy_bindingDestroy(s *terraform
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_authenticationsamlpolicy_bindingDataSource_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name           = "tf_vserver_examples"
+		servicetype    = "SSL"
+		ipv46          = "3.3.3.3"
+		port           = 443
+	}
+	resource "citrixadc_authenticationsamlaction" "tf_samlaction" {
+		name                    = "tf_samlaction"
+		metadataurl             = "http://www.example.com"
+		samltwofactor           = "OFF"
+		requestedauthncontext   = "minimum"
+		digestmethod            = "SHA1"
+		signaturealg            = "RSA-SHA256"
+		metadatarefreshinterval = 1
+	}
+	resource "citrixadc_authenticationsamlpolicy" "tf_samlpolicy" {
+		name      = "tf_samlpolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationsamlaction.tf_samlaction.name
+	}
+	resource "citrixadc_vpnvserver_authenticationsamlpolicy_binding" "tf_bind" {
+		name 	  = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationsamlpolicy.tf_samlpolicy.name
+		priority  = 80
+		bindpoint = "RESPONSE"
+	}
+
+	data "citrixadc_vpnvserver_authenticationsamlpolicy_binding" "tf_bind" {
+		name   = citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind.name
+		policy = citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind.policy
+	}
+`
+
+func TestAccVpnvserver_authenticationsamlpolicy_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationsamlpolicy_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind", "name", "tf_vserver_examples"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind", "policy", "tf_samlpolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind", "priority", "80"),
+				),
+			},
+		},
+	})
 }

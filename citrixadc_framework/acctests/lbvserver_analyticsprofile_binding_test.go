@@ -141,3 +141,37 @@ func testAccCheckLbvserver_analyticsprofile_bindingDestroy(s *terraform.State) e
 
 	return nil
 }
+
+const testAccLbvserver_analyticsprofile_bindingDataSource_basic = `
+resource "citrixadc_lbvserver" "test_server" {
+	name = "test_server"
+	servicetype = "HTTP"
+}
+
+resource "citrixadc_lbvserver_analyticsprofile_binding" "foo" {
+	name = citrixadc_lbvserver.test_server.name
+    analyticsprofile = "ns_analytics_global_profile"
+}
+
+data "citrixadc_lbvserver_analyticsprofile_binding" "foo" {
+	name = citrixadc_lbvserver_analyticsprofile_binding.foo.name
+	analyticsprofile = citrixadc_lbvserver_analyticsprofile_binding.foo.analyticsprofile
+	depends_on = [citrixadc_lbvserver_analyticsprofile_binding.foo]
+}
+`
+
+func TestAccLbvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_analyticsprofile_bindingDataSource_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_analyticsprofile_binding.foo", "name", "test_server"),
+					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_analyticsprofile_binding.foo", "analyticsprofile", "ns_analytics_global_profile"),
+				),
+			},
+		},
+	})
+}

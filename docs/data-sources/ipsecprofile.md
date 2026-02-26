@@ -2,7 +2,7 @@
 subcategory: "IPSec"
 ---
 
-# Data Source `ipsecprofile`
+# Data Source: ipsecprofile
 
 The ipsecprofile data source allows you to retrieve information about IPSec profiles.
 
