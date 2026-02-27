@@ -160,10 +160,10 @@ func (c *NitroClient) Login() error {
 	if c.IsLoggedIn() {
 		return nil
 	}
-	
+
 	var body []byte
 	var err error
-	
+
 	if c.isCloud {
 		// ADM Cloud uses ID and Secret
 		cloudLoginObj := cloudLogin{
@@ -180,7 +180,7 @@ func (c *NitroClient) Login() error {
 		}
 		body, err = c.AddResourceReturnBody(Login.Type(), "login", loginObj)
 	}
-	
+
 	if err != nil {
 		return err
 	}
@@ -190,7 +190,7 @@ func (c *NitroClient) Login() error {
 	if err == nil {
 		c.logger.Trace("Login response data:", data)
 		var sessionid string
-		
+
 		if c.isCloud {
 			c.logger.Trace("Parsing Cloud login response")
 			// Cloud response: {"login": [{"sessionid": "...", "customerId": "...", ...}]}
@@ -201,8 +201,8 @@ func (c *NitroClient) Login() error {
 						sessionid = sid
 						c.logger.Trace("Extracted sessionid from Cloud response:", sessionid)
 					}
-				} 
-			} 
+				}
+			}
 		} else {
 			c.logger.Trace("Parsing on-prem login response")
 			// On-prem response: {"sessionid": "..."}
@@ -211,11 +211,11 @@ func (c *NitroClient) Login() error {
 				c.logger.Trace("Extracted sessionid from on-prem response:", sessionid)
 			}
 		}
-		
+
 		if sessionid != "" {
 			c.logger.Trace("Updating session ID to:", sessionid)
 			c.updateSessionid(sessionid)
-			} 
+		}
 	}
 	c.logger.Trace("Login successful")
 	return err
@@ -378,7 +378,12 @@ func (c *NitroClient) ChangeResource(resourceType string, name string, resourceS
 // DeleteResource deletes a resource of supplied type and name
 func (c *NitroClient) DeleteResource(resourceType string, resourceName string) error {
 
-	_, err := c.listResource(resourceType, resourceName)
+	var err error
+	if resourceType == "appqoecustomresp" {
+		_, err = c.listResource(resourceType, "")
+	} else {
+		_, err = c.listResource(resourceType, resourceName)
+	}
 	if err == nil { // resource exists
 		c.logger.Trace("DeleteResource Found resource ", "resourceType", resourceType, "resourceName", resourceName)
 		_, err = c.deleteResource(resourceType, resourceName)
@@ -673,6 +678,10 @@ func (c *NitroClient) FindResourceArrayWithParams(findParams FindParams) ([]map[
 	// Fallthrough
 
 	// Check if resource type key exists
+	if findParams.ResourceType == "interface" {
+		// Special handling for interface as NITRO returns different key name
+		findParams.ResourceType = "Interface"
+	}
 	resourceData, ok := nitroData[findParams.ResourceType]
 	if !ok {
 		// Since errorcode is 0 we persume this is the expected behavior for a missing resource
@@ -718,6 +727,10 @@ func (c *NitroClient) FindAllResources(resourceType string) ([]map[string]interf
 	if err = json.Unmarshal(result, &data); err != nil {
 		c.logger.Error("FindAllResources: Failed to unmarshal Netscaler Response!")
 		return nil, fmt.Errorf("[ERROR] nitro-go: FindAllResources: Failed to unmarshal Netscaler Response: of type %s", resourceType)
+	}
+	if resourceType == "interface" {
+		// Special handling for cachepolicylabel as NITRO returns different key name
+		resourceType = "Interface"
 	}
 	rsrcs, ok := data[resourceType]
 	if !ok || rsrcs == nil {
