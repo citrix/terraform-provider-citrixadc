@@ -2078,6 +2078,7 @@ var resources = []string{
 	"vpnvserver_aaapreauthenticationpolicy_binding",
 	"vpnvserver_appcontroller_binding",
 	"vpnvserver_appflowpolicy_binding",
+	"vpnvserver_appfwpolicy_binding",
 	"vpnvserver_auditnslogpolicy_binding",
 	"vpnvserver_auditsyslogpolicy_binding",
 	"vpnvserver_authenticationcertpolicy_binding",
