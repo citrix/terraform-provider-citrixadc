@@ -115,7 +115,7 @@ func testAccCheckAppfwsignaturesDestroy(s *terraform.State) error {
 const testAccAppfwsignaturesDataSource_basic = `
 	resource "citrixadc_appfwsignatures" "tf_appfwsignatures_ds" {
 		name       = "tf_appfwsignatures_ds"
-		src        = "local://appfw_signatures_ds.xml"
+		src        = "local://appfw_signatures.xml"
 		comment    = "DataSourceTestingExample"
 	}
 
@@ -135,7 +135,7 @@ func TestAccAppfwsignaturesDataSource_basic(t *testing.T) {
 				Config: testAccAppfwsignaturesDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwsignatures.tf_appfwsignatures_ds", "name", "tf_appfwsignatures_ds"),
-					resource.TestCheckResourceAttr("data.citrixadc_appfwsignatures.tf_appfwsignatures_ds", "src", "appfw_signatures_ds.xml"),
+					resource.TestCheckResourceAttr("data.citrixadc_appfwsignatures.tf_appfwsignatures_ds", "src", "appfw_signatures.xml"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_appfwsignatures.tf_appfwsignatures_ds", "id"),
 				),
 			},

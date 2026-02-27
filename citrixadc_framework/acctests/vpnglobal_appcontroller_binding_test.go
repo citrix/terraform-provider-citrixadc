@@ -97,7 +97,8 @@ func testAccCheckVpnglobal_appcontroller_bindingExist(n string, id *string) reso
 		// Iterate through results to find the one with the right id
 		foundIndex := -1
 		for i, v := range dataArr {
-			if v["appcontroller"].(string) == appcontroller {
+			appcontrollerFromData, _ := url.QueryUnescape(v["appcontroller"].(string))
+			if appcontrollerFromData == appcontroller {
 				foundIndex = i
 				break
 			}

@@ -85,7 +85,8 @@ func readVpnglobal_appcontroller_bindingFunc(ctx context.Context, d *schema.Reso
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["appcontroller"].(string) == appcontroller {
+		appcontrollerFromData, _ := url.QueryUnescape(v["appcontroller"].(string))
+		if appcontrollerFromData == appcontroller {
 			foundIndex = i
 			break
 		}
@@ -116,7 +117,7 @@ func deleteVpnglobal_appcontroller_bindingFunc(ctx context.Context, d *schema.Re
 	appcontroller := d.Id()
 
 	argsMap := make(map[string]string)
-	argsMap["appcontroller"] = appcontroller
+	argsMap["appcontroller"] = url.QueryEscape(appcontroller)
 
 	err := client.DeleteResourceWithArgsMap(service.Vpnglobal_appcontroller_binding.Type(), "", argsMap)
 	if err != nil {

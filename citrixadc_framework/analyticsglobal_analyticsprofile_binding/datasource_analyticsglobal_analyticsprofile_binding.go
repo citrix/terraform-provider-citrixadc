@@ -49,7 +49,7 @@ func (d *AnalyticsglobalAnalyticsprofileBindingDataSource) Read(ctx context.Cont
 	var err error
 
 	findParams := service.FindParams{
-		ResourceType:             service.Analyticsglobal_analyticsprofile_binding.Type(),
+		ResourceType:             "analyticsglobal",
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
