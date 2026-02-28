@@ -4,7 +4,7 @@ go 1.24.0
 
 godebug tlsrsakex=1
 
-toolchain go1.24.6
+toolchain go1.24.13
 
 require (
 	github.com/citrix/adc-nitro-go v0.0.0-20260227002633-9e385375a1ff
