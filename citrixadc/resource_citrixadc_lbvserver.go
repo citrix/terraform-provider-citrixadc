@@ -462,12 +462,12 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"sessionless": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "DISABLED",
+				Computed: true,
 			},
 			"skippersistency": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "None",
+				Computed: true,
 			},
 			"sobackupaction": {
 				Type:     schema.TypeString,
@@ -482,7 +482,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"sopersistence": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "DISABLED",
+				Computed: true,
 			},
 			"sopersistencetimeout": {
 				Type:     schema.TypeInt,
@@ -1982,12 +1982,7 @@ func doLbvserverStateChange(d *schema.ResourceData, client *service.NitroClient)
 	return nil
 }
 
-// checkLbvserverAttributeNeedsUnset determines if an attribute needs to be unset.
-// Returns true if the attribute should be unset, false otherwise.
-//
-// This relies on all unset-able attributes using Optional+Computed (no Default)
-// in their schema definition, so that GetRawConfig() returns null when the user
-// removes the attribute from their Terraform config.
+
 func checkLbvserverAttributeNeedsUnset(
 	d *schema.ResourceData,
 	attributeName string,
@@ -2000,8 +1995,6 @@ func checkLbvserverAttributeNeedsUnset(
 	oldValue, _ := d.GetChange(attributeName)
 
 	// Check if the attribute has been removed from config (is null in raw config).
-	// Because these attributes are Optional+Computed (no Default), the SDK leaves
-	// the raw config as null when the user omits the attribute.
 	rawConfig := d.GetRawConfig()
 	newRawValue := rawConfig.GetAttr(attributeName)
 	attributeRemovedFromConfig := newRawValue.IsNull()
