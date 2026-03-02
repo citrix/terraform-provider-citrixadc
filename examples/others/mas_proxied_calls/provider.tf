@@ -23,8 +23,8 @@ terraform {
 # - do_login: Set to true to establish session
 provider "citrixadc" {
   endpoint   = "https://alps.adm.cloudburrito.com/"
-  username   = "4857042f-4913-44f6-b54e-3d726493a3d8"
-  password   = "nhwopMqXlXdhFfAPbnTPxw=="
+  username   = "4tytuyuutf-4713-46f6-b54e-3d986493a3d8"
+  password   = "nhwopMqXlXdhFfAPbnTPxw==="
   proxied_ns = "10.146.88.126"
   is_cloud   = true
   do_login   = true
