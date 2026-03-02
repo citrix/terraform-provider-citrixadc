@@ -94,7 +94,8 @@ The following arguments are supported.
 - `password` - This is the password to access to Citrix ADC. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
 - `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/` or `http://<NS_IP>:<PORT>/`. Can be specified in environment variable `NS_URL`
 * `insecure_skip_verify` - (Optional, true/false) Whether to accept the untrusted certificate on the Citrix ADC when the Citrix ADC endpoint is `https`
-- `proxied_ns` - (Optional, NSIP) The target Citrix ADC NSIP for MAS proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the MAS proxy.
+- `proxied_ns` - (Optional, NSIP) The target Citrix ADC NSIP for proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the MAS proxy.
+- `is_cloud` - (Optional, true/false) Whether using Console Service for proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the Console Service.
 
 The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`.
 
