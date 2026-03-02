@@ -69,12 +69,12 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "ENABLED",
+				Computed: true,
 			},
 			"authentication": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "OFF",
+				Computed: true,
 			},
 			"authenticationhost": {
 				Type:     schema.TypeString,
@@ -84,7 +84,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"authn401": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "OFF",
+				Computed: true,
 			},
 			"authnprofile": {
 				Type:     schema.TypeString,
@@ -99,7 +99,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"backuplbmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "ROUNDROBIN",
+				Computed: true,
 			},
 			"backuppersistencetimeout": {
 				Type:     schema.TypeInt,
@@ -118,7 +118,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"cacheable": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "NO",
+				Computed: true,
 			},
 			"clttimeout": {
 				Type:     schema.TypeInt,
@@ -133,7 +133,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"connfailover": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "DISABLED",
+				Computed: true,
 			},
 			"cookiename": {
 				Type:     schema.TypeString,
@@ -163,7 +163,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"disableprimaryondown": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "DISABLED",
+				Computed: true,
 			},
 			"dns64": {
 				Type:     schema.TypeString,
@@ -178,7 +178,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"downstateflush": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "ENABLED",
+				Computed: true,
 			},
 			"hashlength": {
 				Type:     schema.TypeInt,
@@ -203,12 +203,12 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"icmpvsrresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "PASSIVE",
+				Computed: true,
 			},
 			"insertvserveripport": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "OFF",
+				Computed: true,
 			},
 			"ipmask": {
 				Type:     schema.TypeString,
@@ -233,12 +233,12 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"l2conn": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "OFF",
+				Computed: true,
 			},
 			"lbmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "LEASTCONNECTION",
+				Computed: true,
 			},
 			"lbprofilename": {
 				Type:     schema.TypeString,
@@ -248,7 +248,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"listenpolicy": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "NONE",
+				Computed: true,
 			},
 			"listenpriority": {
 				Type:     schema.TypeInt,
@@ -258,12 +258,12 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"m": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "IP",
+				Computed: true,
 			},
 			"macmoderetainvlan": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "DISABLED",
+				Computed: true,
 			},
 			"maxautoscalemembers": {
 				Type:     schema.TypeInt,
@@ -339,17 +339,17 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"persistencebackup": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "NONE",
+				Computed: true,
 			},
 			"persistencetype": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "NONE",
+				Computed: true,
 			},
 			"persistmask": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "255.255.255.255",
+				Computed: true,
 			},
 			"port": {
 				Type:     schema.TypeInt,
@@ -380,7 +380,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"pushlabel": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "none",
+				Computed: true,
 			},
 			"pushmulticlients": {
 				Type:     schema.TypeString,
@@ -1982,8 +1982,12 @@ func doLbvserverStateChange(d *schema.ResourceData, client *service.NitroClient)
 	return nil
 }
 
-// checkLbvserverAttributeNeedsUnset determines if an attribute needs to be unset
-// Returns true if the attribute should be unset, false otherwise
+// checkLbvserverAttributeNeedsUnset determines if an attribute needs to be unset.
+// Returns true if the attribute should be unset, false otherwise.
+//
+// This relies on all unset-able attributes using Optional+Computed (no Default)
+// in their schema definition, so that GetRawConfig() returns null when the user
+// removes the attribute from their Terraform config.
 func checkLbvserverAttributeNeedsUnset(
 	d *schema.ResourceData,
 	attributeName string,
@@ -1995,7 +1999,9 @@ func checkLbvserverAttributeNeedsUnset(
 
 	oldValue, _ := d.GetChange(attributeName)
 
-	// Check if the attribute has been removed from config (is null in raw config)
+	// Check if the attribute has been removed from config (is null in raw config).
+	// Because these attributes are Optional+Computed (no Default), the SDK leaves
+	// the raw config as null when the user omits the attribute.
 	rawConfig := d.GetRawConfig()
 	newRawValue := rawConfig.GetAttr(attributeName)
 	attributeRemovedFromConfig := newRawValue.IsNull()
