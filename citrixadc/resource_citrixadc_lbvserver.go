@@ -28,7 +28,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"toggleorder": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "ASCENDING",
 			},
 			"quicprofilename": {
 				Type:     schema.TypeString,
@@ -69,12 +69,12 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "ENABLED",
 			},
 			"authentication": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "OFF",
 			},
 			"authenticationhost": {
 				Type:     schema.TypeString,
@@ -84,7 +84,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"authn401": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "OFF",
 			},
 			"authnprofile": {
 				Type:     schema.TypeString,
@@ -99,7 +99,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"backuplbmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "ROUNDROBIN",
 			},
 			"backuppersistencetimeout": {
 				Type:     schema.TypeInt,
@@ -118,7 +118,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"cacheable": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "NO",
 			},
 			"clttimeout": {
 				Type:     schema.TypeInt,
@@ -133,7 +133,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"connfailover": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "DISABLED",
 			},
 			"cookiename": {
 				Type:     schema.TypeString,
@@ -163,7 +163,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"disableprimaryondown": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "DISABLED",
 			},
 			"dns64": {
 				Type:     schema.TypeString,
@@ -178,7 +178,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"downstateflush": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "ENABLED",
 			},
 			"hashlength": {
 				Type:     schema.TypeInt,
@@ -203,12 +203,12 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"icmpvsrresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "PASSIVE",
 			},
 			"insertvserveripport": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "OFF",
 			},
 			"ipmask": {
 				Type:     schema.TypeString,
@@ -233,12 +233,12 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"l2conn": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "OFF",
 			},
 			"lbmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "LEASTCONNECTION",
 			},
 			"lbprofilename": {
 				Type:     schema.TypeString,
@@ -248,7 +248,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"listenpolicy": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "NONE",
 			},
 			"listenpriority": {
 				Type:     schema.TypeInt,
@@ -258,12 +258,12 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"m": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "IP",
 			},
 			"macmoderetainvlan": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "DISABLED",
 			},
 			"maxautoscalemembers": {
 				Type:     schema.TypeInt,
@@ -339,17 +339,17 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"persistencebackup": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "NONE",
 			},
 			"persistencetype": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "NONE",
 			},
 			"persistmask": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "255.255.255.255",
 			},
 			"port": {
 				Type:     schema.TypeInt,
@@ -380,7 +380,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"pushlabel": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "none",
 			},
 			"pushmulticlients": {
 				Type:     schema.TypeString,
@@ -462,12 +462,12 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"sessionless": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "DISABLED",
 			},
 			"skippersistency": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "None",
 			},
 			"sobackupaction": {
 				Type:     schema.TypeString,
@@ -482,7 +482,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			"sopersistence": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "DISABLED",
 			},
 			"sopersistencetimeout": {
 				Type:     schema.TypeInt,
@@ -1668,13 +1668,8 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("resrule") {
 		log.Printf("[DEBUG] netscaler-provider:  Resrule has changed for lbvserver %s, starting update", lbvserverName)
-
-		if checkLbvserverAttributeNeedsUnset(d, "resrule") {
-			attributesToUnset = append(attributesToUnset, "resrule")
-		} else {
-			lbvserver.Resrule = d.Get("resrule").(string)
-			hasChange = true
-		}
+		lbvserver.Resrule = d.Get("resrule").(string)
+		hasChange = true
 	}
 	if d.HasChange("retainconnectionsoncluster") {
 		log.Printf("[DEBUG]  netscaler-provider: Retainconnectionsoncluster has changed for lbvserver %s, starting update", lbvserverName)
@@ -1693,13 +1688,8 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("rule") {
 		log.Printf("[DEBUG] netscaler-provider:  Rule has changed for lbvserver %s, starting update", lbvserverName)
-
-		if checkLbvserverAttributeNeedsUnset(d, "rule") {
-			attributesToUnset = append(attributesToUnset, "rule")
-		} else {
-			lbvserver.Rule = d.Get("rule").(string)
-			hasChange = true
-		}
+		lbvserver.Rule = d.Get("rule").(string)
+		hasChange = true
 	}
 	if d.HasChange("servicename") {
 		log.Printf("[DEBUG] netscaler-provider:  Servicename has changed for lbvserver %s, starting update", lbvserverName)
@@ -1998,43 +1988,33 @@ func checkLbvserverAttributeNeedsUnset(
 	d *schema.ResourceData,
 	attributeName string,
 ) bool {
+	// Check if the attribute has changed
 	if !d.HasChange(attributeName) {
 		return false
 	}
 
-	oldValue, newValue := d.GetChange(attributeName)
+	oldValue, _ := d.GetChange(attributeName)
 
 	// Check if the attribute has been removed from config (is null in raw config)
 	rawConfig := d.GetRawConfig()
 	newRawValue := rawConfig.GetAttr(attributeName)
+	attributeRemovedFromConfig := newRawValue.IsNull()
 
-	// Determine if we need to unset based on attribute type
-	// For string attributes: unset if old had value and new is empty string OR removed
-	// For int attributes: unset if old had value and attribute was removed
-	switch oldVal := oldValue.(type) {
-	case string:
-		// For strings: unset if old was non-empty AND (new is empty OR removed from config)
-		if oldVal != "" {
-			if newRawValue.IsNull() {
-				// Attribute removed from config
-				return true
-			} else if newStr, ok := newValue.(string); ok && newStr == "" {
-				// Attribute explicitly set to empty string
-				return true
-			}
-		}
-	case int:
-		if oldVal != 0 && newRawValue.IsNull() {
-			return true
-		}
-	default:
-		// For other types, unset if removed from config
-		if newRawValue.IsNull() && oldValue != nil {
-			return true
-		}
+	// Unset only if: removed from config AND old value was non-empty/non-zero
+	if !attributeRemovedFromConfig {
+		return false
 	}
 
-	return false
+	switch oldVal := oldValue.(type) {
+	case string:
+		return oldVal != ""
+	case int:
+		return oldVal != 0
+	case bool:
+		return oldVal != false
+	default:
+		return oldValue != nil
+	}
 }
 
 // executeLbvserverUnset performs the actual unset API call with all collected attributes
