@@ -142,7 +142,9 @@ func readSslservice_sslcertkey_bindingFunc(ctx context.Context, d *schema.Resour
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
+		snicertVal, _ := v["snicert"].(bool)
+		caVal, _ := v["ca"].(bool)
+		if v["certkeyname"].(string) == certkeyname && snicertVal == snicert && caVal == ca {
 			foundIndex = i
 			break
 		}
