@@ -244,6 +244,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 	return []func() resource.Resource{
 		lbparameter.NewLbParameterResource,
 		sslcertkey.NewSslCertKeyResource,
+		sslcertkey.NewSslCertKeyUpdateResource,
 		vpnvserver_appfwpolicy_binding.NewVpnvserverAppfwpolicyBindingResource,
 	}
 }
