@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -97,8 +98,11 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Name of and, optionally, path to the private-key file that is used to form the certificate-key pair.",
 			},
 			"nodomaincheck": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Override the check for matching domain names during a certificate update operation.",
 			},
 			"passplain": schema.StringAttribute{
@@ -111,8 +115,11 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Pass phrase used to encrypt the private-key. Required when updating an encrypted private-key in PEM format.",
 			},
 			"password": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Passphrase that was used to encrypt the private-key. Use this option to load encrypted private-keys in PEM format.",
 			},
 			"linkcertkeyname": schema.StringAttribute{
