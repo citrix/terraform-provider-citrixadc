@@ -375,7 +375,9 @@ func testAccCheckSslservice_sslcertkey_bindingExist(n string, id *string) resour
 		// Iterate through results to find the one with the right monitor name
 		found := false
 		for _, v := range dataArr {
-			if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
+			snicertVal, _ := v["snicert"].(bool)
+			caVal, _ := v["ca"].(bool)
+			if v["certkeyname"].(string) == certkeyname && snicertVal == snicert && caVal == ca {
 				found = true
 				break
 			}
@@ -422,7 +424,9 @@ func testAccCheckSslservice_sslcertkey_bindingNotExist(n string, id string) reso
 		// Iterate through results to find the one with the right monitor name
 		found := false
 		for _, v := range dataArr {
-			if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
+			snicertVal, _ := v["snicert"].(bool)
+			caVal, _ := v["ca"].(bool)
+			if v["certkeyname"].(string) == certkeyname && snicertVal == snicert && caVal == ca {
 				found = true
 				break
 			}
