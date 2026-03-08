@@ -1,3 +1,20 @@
+## 2.1.2 (Mar 07, 2026)
+
+BUG FIXES
+* **citrixadc_sslcertkey**: Rectified `bundle` attribute to prevent unnecessary drift detection. [#1237]
+* **citrixadc_lbparameter**: Rectified `cookiepassphrase` attribute to prevent unnecessary drift detection. [#1361]
+* **citrixadc_sslcertkey_update**: Migrated sslcertkey_update resource to Plugin framework. [#1370]
+* **citrixadc_sslvserver_sslcertkey_binding**: Fixed nil type assertion error for `ca` and `snicert` attributes.
+
+ENHANCEMENTS
+* **provider**: Added support for proxying NetScaler APIs through Console Service.
+* **GoLang version**: Updated GoLang toolchain version to 1.24.13.
+
+[#1237]: https://github.com/citrix/terraform-provider-citrixadc/issues/1237
+[#1361]: https://github.com/citrix/terraform-provider-citrixadc/issues/1361
+[#1370]: https://github.com/citrix/terraform-provider-citrixadc/issues/1370
+
+
 ## 2.1.1 (Feb 17, 2026)
 
 BUG FIXES
