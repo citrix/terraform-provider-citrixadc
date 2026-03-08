@@ -24,8 +24,15 @@ import (
 )
 
 const testAccSslcertkeyUpdate_basic = `
+
+	resource "citrixadc_sslcertkey" "tf_cert" {
+		certkey = "sample_ssl_cert"
+		cert    = "/nsconfig/ssl/servercert1.cert"
+		key     = "/nsconfig/ssl/servercert1.key"
+	}
+
 	resource "citrixadc_sslcertkey_update" "tf_cert" {
-		certkey = "lmj_test_certkey"
+		certkey = citrixadc_sslcertkey.tf_cert.certkey
 		cert    = "/nsconfig/ssl/servercert1.cert"
 		key     = "/nsconfig/ssl/servercert1.key"
 	}
@@ -33,7 +40,7 @@ const testAccSslcertkeyUpdate_basic = `
 
 func TestAccSslcertkeyUpdate_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
