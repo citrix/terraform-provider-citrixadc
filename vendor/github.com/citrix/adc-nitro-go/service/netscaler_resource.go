@@ -176,7 +176,7 @@ func (c *NitroClient) createHTTPRequest(method string, urlstr string, buff *byte
 	} else {
 		// Proxied NS configuration (ADM)
 		if c.isCloud {
-			// ADM Cloud uses session ID in Cookie header as SESSID
+			// Console Cloud uses session ID in Cookie header as SESSID
 			c.logger.Trace("Cloud proxied request - IsLoggedIn:", c.IsLoggedIn(), "sessionid:", c.getSessionid())
 			if c.IsLoggedIn() {
 				req.Header.Set("Cookie", "SESSID="+c.getSessionid())

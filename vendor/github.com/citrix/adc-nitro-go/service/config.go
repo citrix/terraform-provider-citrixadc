@@ -160,12 +160,12 @@ func (c *NitroClient) Login() error {
 	if c.IsLoggedIn() {
 		return nil
 	}
-	
+
 	var body []byte
 	var err error
-	
+
 	if c.isCloud {
-		// ADM Cloud uses ID and Secret
+		// NetScaler Console Cloud uses ID and Secret
 		cloudLoginObj := cloudLogin{
 			ID:     c.username,
 			Secret: c.password,
@@ -180,7 +180,7 @@ func (c *NitroClient) Login() error {
 		}
 		body, err = c.AddResourceReturnBody(Login.Type(), "login", loginObj)
 	}
-	
+
 	if err != nil {
 		return err
 	}
@@ -190,7 +190,7 @@ func (c *NitroClient) Login() error {
 	if err == nil {
 		c.logger.Trace("Login response data:", data)
 		var sessionid string
-		
+
 		if c.isCloud {
 			c.logger.Trace("Parsing Cloud login response")
 			// Cloud response: {"login": [{"sessionid": "...", "customerId": "...", ...}]}
@@ -201,8 +201,8 @@ func (c *NitroClient) Login() error {
 						sessionid = sid
 						c.logger.Trace("Extracted sessionid from Cloud response:", sessionid)
 					}
-				} 
-			} 
+				}
+			}
 		} else {
 			c.logger.Trace("Parsing on-prem login response")
 			// On-prem response: {"sessionid": "..."}
@@ -211,11 +211,11 @@ func (c *NitroClient) Login() error {
 				c.logger.Trace("Extracted sessionid from on-prem response:", sessionid)
 			}
 		}
-		
+
 		if sessionid != "" {
 			c.logger.Trace("Updating session ID to:", sessionid)
 			c.updateSessionid(sessionid)
-			} 
+		}
 	}
 	c.logger.Trace("Login successful")
 	return err

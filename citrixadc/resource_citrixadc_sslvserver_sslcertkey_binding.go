@@ -2,14 +2,16 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslvserver_sslcertkey_binding() *schema.Resource {
@@ -147,7 +149,9 @@ func readSslvserver_sslcertkey_bindingFunc(ctx context.Context, d *schema.Resour
 	// Iterate through results to find the one with the right certkeyname
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert && v["ca"].(bool) == ca {
+		snicertVal, _ := v["snicert"].(bool)
+		caVal, _ := v["ca"].(bool)
+		if v["certkeyname"].(string) == certkeyname && snicertVal == snicert && caVal == ca {
 			foundIndex = i
 			break
 		}

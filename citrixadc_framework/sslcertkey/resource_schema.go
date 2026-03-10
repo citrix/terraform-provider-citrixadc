@@ -94,7 +94,6 @@ func (r *SslCertKeyResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"bundle": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
 				Description: "Parse the certificate chain as a single file after linking the server certificate to its issuer's certificate within the file. Possible values: YES, NO. The following fields cannot be changed after creation: certkey, bundle, hsmkey.",
 			},
 			"linkcertkeyname": schema.StringAttribute{
@@ -249,11 +248,6 @@ func sslcertkeySetAttrFromGet(ctx context.Context, data *SslCertKeyResourceModel
 		}
 	} else {
 		data.NotificationPeriod = types.Int64Null()
-	}
-	if val, ok := getResponseData["bundle"]; ok && val != nil {
-		data.Bundle = types.StringValue(val.(string))
-	} else {
-		data.Bundle = types.StringNull()
 	}
 	if val, ok := getResponseData["linkcertkeyname"]; ok && val != nil {
 		data.LinkCertKeyName = types.StringValue(val.(string))

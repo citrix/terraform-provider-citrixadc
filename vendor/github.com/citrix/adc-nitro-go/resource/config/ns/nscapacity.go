@@ -41,11 +41,11 @@ type Nscapacity struct {
 	*/
 	Unit string `json:"unit,omitempty"`
 	/**
-	* Username to authenticate with ADM Agent for LAS licensing. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
+	* Username to authenticate with NetScaler Console Agent for LAS licensing. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 	*/
 	Username string `json:"username,omitempty"`
 	/**
-	* Password to use when authenticating with ADM Agent for LAS licensing.
+	* Password to use when authenticating with NetScaler Console Agent for LAS licensing.
 	*/
 	Password string `json:"password,omitempty"`
 	/**

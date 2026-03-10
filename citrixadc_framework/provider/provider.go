@@ -830,7 +830,7 @@ func (p *CitrixAdcFrameworkProvider) Schema(ctx context.Context, req provider.Sc
 				Optional:    true,
 			},
 			"is_cloud": schema.BoolAttribute{
-				Description: "Set to true when using ADM Cloud",
+				Description: "Set to true when using NetScaler Console Cloud",
 				Optional:    true,
 			},
 		},
@@ -972,6 +972,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 	return []func() resource.Resource{
 		lbparameter.NewLbParameterResource,
 		sslcertkey.NewSslCertKeyResource,
+		sslcertkey.NewSslCertKeyUpdateResource,
 		vpnvserver_appfwpolicy_binding.NewVpnvserverAppfwpolicyBindingResource,
 	}
 }
