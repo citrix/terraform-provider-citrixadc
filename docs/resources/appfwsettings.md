@@ -40,7 +40,7 @@ resource "citrixadc_appfwsettings" "tf_appfwsettings" {
 ## Argument Reference
 
 * `ceflogging` - (Optional) Enable CEF format logs.
-* `centralizedlearning` - (Optional) Flag used to enable/disable ADM centralized learning
+* `centralizedlearning` - (Optional) Flag used to enable/disable NetScaler Console centralized learning
 * `clientiploggingheader` - (Optional) Name of an HTTP header that contains the IP address that the client used to connect to the protected web site or service.
 * `cookiepostencryptprefix` - (Optional) String that is prepended to all encrypted cookie values.
 * `defaultprofile` - (Optional) Profile to use when a connection does not match any policy. Default setting is APPFW_BYPASS, which sends unmatched connections back to the Citrix ADC without attempting to filter them further.
