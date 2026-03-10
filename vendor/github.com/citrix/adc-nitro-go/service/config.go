@@ -165,7 +165,7 @@ func (c *NitroClient) Login() error {
 	var err error
 
 	if c.isCloud {
-		// ADM Cloud uses ID and Secret
+		// NetScaler Console Cloud uses ID and Secret
 		cloudLoginObj := cloudLogin{
 			ID:     c.username,
 			Secret: c.password,

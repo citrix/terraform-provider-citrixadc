@@ -9,17 +9,17 @@ terraform {
 # provider "citrixadc" {
 #   endpoint   = "http://10.102.201.246/"
 #   username   = "nsroot"
-#   password   = "ConfigADC#123"
+#   password   = "ConfigADC#123dsd"
 #   proxied_ns = "10.102.201.73"
 # }
 
-# ADM Cloud Proxied API Configuration
-# When using ADM Cloud:
-# - endpoint: Your ADM Cloud URL (e.g., https://alps.adm.cloudburrito.com/)
+# NetScaler Console Cloud Cloud Proxied API Configuration
+# When using NetScaler Console Cloud:
+# - endpoint: Your NetScaler Console Cloud URL (e.g., https://alps.adm.cloudburrito.com/)
 # - username: API Client ID 
 # - password: API Client Secret 
-# - proxied_ns: IP of the target NetScaler instance (must be managed by ADM)
-# - is_cloud: Set to true for ADM Cloud
+# - proxied_ns: IP of the target NetScaler instance (must be managed by NetScaler Console)
+# - is_cloud: Set to true for NetScaler Console Cloud
 # - do_login: Set to true to establish session
 provider "citrixadc" {
   endpoint   = "https://alps.adm.cloudburrito.com/"
