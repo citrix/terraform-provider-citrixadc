@@ -58,6 +58,40 @@ const testAccLbmonitor_sslcertkey_binding_basic_step2 = `
 	}
 `
 
+const testAccLbmonitor_sslcertkey_binding_ca = `
+	resource "citrixadc_lbmonitor_sslcertkey_binding" "tf_lbmonitor_sslcertkey_binding" {
+		ca = true
+		monitorname = citrixadc_lbmonitor.tf_monitor.monitorname
+		certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
+	}
+
+	resource "citrixadc_lbmonitor" "tf_monitor" {
+		monitorname = "tf_monitor_ca"
+		type = "HTTP"
+		sslprofile = "ns_default_ssl_profile_backend"
+	}
+
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey_ca"
+		cert = "/var/tmp/ca_certificate.crt"
+		key = "/var/tmp/ca_key.pem"
+	}
+`
+
+const testAccLbmonitor_sslcertkey_binding_ca_step2 = `
+	resource "citrixadc_lbmonitor" "tf_monitor" {
+		monitorname = "tf_monitor_ca"
+		type = "HTTP"
+		sslprofile = "ns_default_ssl_profile_backend"
+	}
+
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey_ca"
+		cert = "/var/tmp/ca_certificate.crt"
+		key = "/var/tmp/ca_key.pem"
+	}
+`
+
 func TestAccLbmonitor_sslcertkey_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
@@ -74,6 +108,29 @@ func TestAccLbmonitor_sslcertkey_binding_basic(t *testing.T) {
 				Config: testAccLbmonitor_sslcertkey_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbmonitor_sslcertkey_bindingNotExist("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "tf_monitor,tf_sslcertkey"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbmonitor_sslcertkey_binding_ca(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitor_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_sslcertkey_binding_ca,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitor_sslcertkey_bindingExist("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "ca", "true"),
+				),
+			},
+			{
+				Config: testAccLbmonitor_sslcertkey_binding_ca_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitor_sslcertkey_bindingNotExist("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "tf_monitor_ca,tf_sslcertkey_ca"),
 				),
 			},
 		},

@@ -156,6 +156,10 @@ func deleteLbmonitor_sslcertkey_bindingFunc(ctx context.Context, d *schema.Resou
 	argsMap := make(map[string]string)
 	argsMap["certkeyname"] = url.QueryEscape(sslcertkeyName)
 
+	if v, ok := d.GetOk("ca"); ok && v.(bool) {
+		argsMap["ca"] = url.QueryEscape(fmt.Sprintf("%v", v))
+	}
+
 	if v, ok := d.GetOk("bindpoint"); ok {
 		argsMap["bindpoint"] = url.QueryEscape(v.(string))
 	}
