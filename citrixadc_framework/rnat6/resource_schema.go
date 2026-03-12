@@ -1,0 +1,166 @@
+package rnat6
+
+import (
+	"context"
+
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+)
+
+// Rnat6ResourceModel describes the resource data model.
+type Rnat6ResourceModel struct {
+	Id               types.String `tfsdk:"id"`
+	Acl6name         types.String `tfsdk:"acl6name"`
+	Name             types.String `tfsdk:"name"`
+	Network          types.String `tfsdk:"network"`
+	Ownergroup       types.String `tfsdk:"ownergroup"`
+	Redirectport     types.Int64  `tfsdk:"redirectport"`
+	Srcippersistency types.String `tfsdk:"srcippersistency"`
+	Td               types.Int64  `tfsdk:"td"`
+}
+
+func (r *Rnat6Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Version: 1,
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The ID of the rnat6 resource.",
+			},
+			"acl6name": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Name of any configured ACL6 whose action is ALLOW. The rule of the ACL6 is used as an RNAT6 rule.",
+			},
+			"name": schema.StringAttribute{
+				Required:    true,
+				Description: "Name for the RNAT6 rule. Must begin with a letter, number, or the underscore character (_), and can consist of letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore characters. Cannot be changed after the rule is created. Choose a name that helps identify the RNAT6 rule.",
+			},
+			"network": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "IPv6 address of the network on whose traffic you want the Citrix ADC to do RNAT processing.",
+			},
+			"ownergroup": schema.StringAttribute{
+				Optional:    true,
+				Default:     stringdefault.StaticString("DEFAULT_NG"),
+				Description: "The owner node group in a Cluster for this rnat rule.",
+			},
+			"redirectport": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Port number to which the IPv6 packets are redirected. Applicable to TCP and UDP protocols.",
+			},
+			"srcippersistency": schema.StringAttribute{
+				Optional:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
+				Description: "Enable source ip persistency, which enables the Citrix ADC to use the RNAT ips using source ip.",
+			},
+			"td": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
+				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
+			},
+		},
+	}
+}
+
+func rnat6GetThePayloadFromtheConfig(ctx context.Context, data *Rnat6ResourceModel) network.Rnat6 {
+	tflog.Debug(ctx, "In rnat6GetThePayloadFromtheConfig Function")
+
+	// Create API request body from the model
+	rnat6 := network.Rnat6{}
+	if !data.Acl6name.IsNull() {
+		rnat6.Acl6name = data.Acl6name.ValueString()
+	}
+	if !data.Name.IsNull() {
+		rnat6.Name = data.Name.ValueString()
+	}
+	if !data.Network.IsNull() {
+		rnat6.Network = data.Network.ValueString()
+	}
+	if !data.Ownergroup.IsNull() {
+		rnat6.Ownergroup = data.Ownergroup.ValueString()
+	}
+	if !data.Redirectport.IsNull() {
+		rnat6.Redirectport = utils.IntPtr(int(data.Redirectport.ValueInt64()))
+	}
+	if !data.Srcippersistency.IsNull() {
+		rnat6.Srcippersistency = data.Srcippersistency.ValueString()
+	}
+	if !data.Td.IsNull() {
+		rnat6.Td = utils.IntPtr(int(data.Td.ValueInt64()))
+	}
+
+	return rnat6
+}
+
+func rnat6SetAttrFromGet(ctx context.Context, data *Rnat6ResourceModel, getResponseData map[string]interface{}) *Rnat6ResourceModel {
+	tflog.Debug(ctx, "In rnat6SetAttrFromGet Function")
+
+	// Convert API response to model
+	if val, ok := getResponseData["acl6name"]; ok && val != nil {
+		data.Acl6name = types.StringValue(val.(string))
+	} else {
+		data.Acl6name = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else {
+		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["network"]; ok && val != nil {
+		data.Network = types.StringValue(val.(string))
+	} else {
+		data.Network = types.StringNull()
+	}
+	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
+		data.Ownergroup = types.StringValue(val.(string))
+	} else {
+		data.Ownergroup = types.StringNull()
+	}
+	if val, ok := getResponseData["redirectport"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Redirectport = types.Int64Value(intVal)
+		}
+	} else {
+		data.Redirectport = types.Int64Null()
+	}
+	if val, ok := getResponseData["srcippersistency"]; ok && val != nil {
+		data.Srcippersistency = types.StringValue(val.(string))
+	} else {
+		data.Srcippersistency = types.StringNull()
+	}
+	if val, ok := getResponseData["td"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Td = types.Int64Value(intVal)
+		}
+	} else {
+		data.Td = types.Int64Null()
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute
+	data.Id = types.StringValue(data.Name.ValueString())
+
+	return data
+}

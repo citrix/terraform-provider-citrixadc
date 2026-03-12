@@ -2,7 +2,7 @@
 subcategory: "Generic"
 ---
 
-# Data Source `nitro_info`
+# Data Source: nitro_info
 
 The nitro_info data source allows you to retrieve information of various NITRO objects.
 
