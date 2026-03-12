@@ -758,6 +758,86 @@ func TestAccLbvserver_backupvserver(t *testing.T) {
 	})
 }
 
+const testAccLbvserver_redirectfromport_step1 = `
+resource "citrixadc_lbvserver" "tf_test_redirectfromport_lb" {
+	name = "redirect_test_lb"
+	ipv46 = "10.202.11.30"
+	port = 443
+	servicetype = "SSL"
+	redirectfromport = 80
+}
+`
+
+const testAccLbvserver_redirectfromport_step2 = `
+resource "citrixadc_lbvserver" "tf_test_redirectfromport_lb" {
+	name = "redirect_test_lb"
+	ipv46 = "10.202.11.30"
+	port = 443
+	servicetype = "SSL"
+}
+`
+
+const testAccLbvserver_redirectfromport_step3 = `
+resource "citrixadc_lbvserver" "tf_test_redirectfromport_lb" {
+	name = "redirect_test_lb"
+	ipv46 = "10.202.11.30"
+	port = 443
+	servicetype = "SSL"
+	redirectfromport = 8080
+}
+`
+
+const testAccLbvserver_redirectfromport_step4 = `
+resource "citrixadc_lbvserver" "tf_test_redirectfromport_lb" {
+	name = "redirect_test_lb"
+	ipv46 = "10.202.11.30"
+	port = 443
+	servicetype = "SSL"
+}
+`
+
+func TestAccLbvserver_redirectfromport(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			// Create with redirectfromport = 80
+			{
+				Config: testAccLbvserver_redirectfromport_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_redirectfromport_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_redirectfromport_lb", "redirectfromport", "80"),
+				),
+			},
+			// Unset redirectfromport (remove attribute entirely)
+			{
+				Config: testAccLbvserver_redirectfromport_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_redirectfromport_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_redirectfromport_lb", "redirectfromport", "0"),
+				),
+			},
+			// Change to different redirectfromport value
+			{
+				Config: testAccLbvserver_redirectfromport_step3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_redirectfromport_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_redirectfromport_lb", "redirectfromport", "8080"),
+				),
+			},
+			// Remove redirectfromport attribute again
+			{
+				Config: testAccLbvserver_redirectfromport_step4,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_redirectfromport_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_redirectfromport_lb", "redirectfromport", "0"),
+				),
+			},
+		},
+	})
+}
+
 const testAccLbvserverDataSource_basic = `
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		ipv46 = "10.202.11.11"

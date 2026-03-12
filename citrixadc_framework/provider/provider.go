@@ -818,7 +818,7 @@ func (p *CitrixAdcFrameworkProvider) Schema(ctx context.Context, req provider.Sc
 				Optional:    true,
 			},
 			"proxied_ns": schema.StringAttribute{
-				Description: "Target NS ip. When defined username, password and endpoint must refer to ADM.",
+				Description: "Target NS ip. When defined username, password and endpoint must refer to NetScaler Console.",
 				Optional:    true,
 			},
 			"partition": schema.StringAttribute{
