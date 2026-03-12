@@ -36,7 +36,7 @@ type Nscentralmanagementserver struct {
 	*/
 	Password string `json:"password,omitempty"`
 	/**
-	* Activation code is used to register to NetScaler Console service
+	* Activation code is used to register to ADM service
 	*/
 	Activationcode string `json:"activationcode,omitempty"`
 	/**
@@ -44,7 +44,7 @@ type Nscentralmanagementserver struct {
 	*/
 	Ipaddress string `json:"ipaddress,omitempty"`
 	/**
-	* Fully qualified domain name of the central management server or service-url to locate NetScaler Console service.
+	* Fully qualified domain name of the central management server or service-url to locate ADM service.
 	*/
 	Servername string `json:"servername,omitempty"`
 	/**
@@ -52,15 +52,15 @@ type Nscentralmanagementserver struct {
 	*/
 	Validatecert string `json:"validatecert,omitempty"`
 	/**
-	* Device profile is created on NetScaler Console and contains the user name and password of the instance(s).
+	* Device profile is created on ADM and contains the user name and password of the instance(s).
 	*/
 	Deviceprofilename string `json:"deviceprofilename,omitempty"`
 	/**
-	* ADC username used to create device profile on NetScaler Console
+	* ADC username used to create device profile on ADM
 	*/
 	Adcusername string `json:"adcusername,omitempty"`
 	/**
-	* ADC password used to create device profile on NetScaler Console
+	* ADC password used to create device profile on ADM
 	*/
 	Adcpassword string `json:"adcpassword,omitempty"`
 
