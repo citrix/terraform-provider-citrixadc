@@ -1983,6 +1983,16 @@ func doLbvserverStateChange(d *schema.ResourceData, client *service.NitroClient)
 }
 
 
+// checkLbvserverAttributeNeedsUnset determines if an attribute should be unset via the API.
+// This is needed because Citrix ADC doesn't accept empty/zero values for some attributes,
+// and they must be explicitly unset instead.
+//
+// Returns true if the attribute should be unset in the following cases:
+// 1. String attributes: Changed from non-empty to empty string ("")
+// 2. Any attribute: Removed entirely from the Terraform config
+//
+// For case 1, this handles scenarios where users set an attribute to "" in their config,
+// which Terraform treats as present (not null) but empty.
 func checkLbvserverAttributeNeedsUnset(
 	d *schema.ResourceData,
 	attributeName string,
@@ -1992,18 +2002,26 @@ func checkLbvserverAttributeNeedsUnset(
 		return false
 	}
 
-	oldValue, _ := d.GetChange(attributeName)
+	oldValue, newValue := d.GetChange(attributeName)
 
 	// Check if the attribute has been removed from config (is null in raw config).
 	rawConfig := d.GetRawConfig()
 	newRawValue := rawConfig.GetAttr(attributeName)
 	attributeRemovedFromConfig := newRawValue.IsNull()
 
-	// Unset only if: removed from config AND old value was non-empty/non-zero
+	// For string attributes: also unset if changed to empty string
 	if !attributeRemovedFromConfig {
+		// If not removed from config, check if it's a string changed to empty
+		if oldStr, ok := oldValue.(string); ok {
+			if newStr, ok := newValue.(string); ok {
+				// Unset if old value was non-empty and new value is empty
+				return oldStr != "" && newStr == ""
+			}
+		}
 		return false
 	}
 
+	// Unset only if: removed from config AND old value was non-empty/non-zero
 	switch oldVal := oldValue.(type) {
 	case string:
 		return oldVal != ""
