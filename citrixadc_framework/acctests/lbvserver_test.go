@@ -793,6 +793,16 @@ resource "citrixadc_lbvserver" "tf_test_redirectfromport_lb" {
 	ipv46 = "10.202.11.30"
 	port = 443
 	servicetype = "SSL"
+	redirectfromport = 0
+}
+`
+
+const testAccLbvserver_redirectfromport_step5 = `
+resource "citrixadc_lbvserver" "tf_test_redirectfromport_lb" {
+	name = "redirect_test_lb"
+	ipv46 = "10.202.11.30"
+	port = 443
+	servicetype = "SSL"
 }
 `
 
@@ -826,9 +836,17 @@ func TestAccLbvserver_redirectfromport(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_redirectfromport_lb", "redirectfromport", "8080"),
 				),
 			},
-			// Remove redirectfromport attribute again
+			// Explicitly set redirectfromport to 0 (should unset)
 			{
 				Config: testAccLbvserver_redirectfromport_step4,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_redirectfromport_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_redirectfromport_lb", "redirectfromport", "0"),
+				),
+			},
+			// Remove redirectfromport attribute entirely again
+			{
+				Config: testAccLbvserver_redirectfromport_step5,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_test_redirectfromport_lb", nil),
 					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_test_redirectfromport_lb", "redirectfromport", "0"),
