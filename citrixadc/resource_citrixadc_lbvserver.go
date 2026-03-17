@@ -1982,7 +1982,6 @@ func doLbvserverStateChange(d *schema.ResourceData, client *service.NitroClient)
 	return nil
 }
 
-
 func checkLbvserverAttributeNeedsUnset(
 	d *schema.ResourceData,
 	attributeName string,
