@@ -11,7 +11,6 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	lasutils "github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -19,7 +18,6 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &NSLASLicenseOfflineResource{}
-var _ resource.ResourceWithImportState = &NSLASLicenseOfflineResource{}
 
 func NewNSLASLicenseOfflineResource() resource.Resource {
 	return &NSLASLicenseOfflineResource{}
@@ -400,8 +398,4 @@ func (r *NSLASLicenseOfflineResource) Delete(ctx context.Context, req resource.D
 	// NO-OP: Offline licenses are not removed from the device on destroy
 	// The license remains active on the device; only Terraform state is removed
 	tflog.Info(ctx, "Delete operation is a no-op for offline license resource")
-}
-
-func (r *NSLASLicenseOfflineResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -33,7 +33,7 @@ func (r *NSLASLicenseOfflineResource) Schema(ctx context.Context, req resource.S
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "NetScaler",
+				MarkdownDescription: "The system generated id for the nslaslicense_offline resource.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -55,7 +55,6 @@ func (r *NSLASLicenseOfflineResource) Schema(ctx context.Context, req resource.S
 			"las_secrets_json": schema.StringAttribute{
 				MarkdownDescription: "File path containing LAS secrets (ccid, client, password, las_endpoint, cc_endpoint)",
 				Required:            true,
-				Sensitive:           true,
 			},
 			"lsguid": schema.StringAttribute{
 				MarkdownDescription: "License Server GUID (computed from device)",

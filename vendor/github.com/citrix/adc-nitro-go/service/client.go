@@ -65,6 +65,23 @@ type NitroClient struct {
 	isCloud      bool
 }
 
+// GetUsername returns the username used for authentication
+func (c *NitroClient) GetUsername() string {
+	return c.username
+}
+
+// GetPassword returns the password used for authentication
+func (c *NitroClient) GetPassword() string {
+	return c.password
+}
+
+// GetURL returns the base NITRO API URL (without /nitro/v1/config/)
+func (c *NitroClient) GetURL() string {
+	// Remove the /nitro/v1/config/ suffix to get base URL
+	baseURL := strings.TrimSuffix(c.url, "/nitro/v1/config/")
+	return baseURL
+}
+
 //NewNitroClient returns a usable NitroClient. Does not check validity of supplied parameters
 //This is for backwards compatibility.
 //Please use NewNitroClientFromParams
