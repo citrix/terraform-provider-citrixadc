@@ -30,13 +30,13 @@ output "license_status" {
 
 ## LAS Secrets File
 
-The `las_secrets_json` file must contain the following JSON structure:
+The `las_secrets_json` file must contain the following JSON structure with your actual credentials:
 
 ```json
 {
-  "ccid": "your_citrix_customer_id",
-  "client": "your_client_id",
-  "password": "your_client_secret",
+  "ccid": "<your_citrix_customer_id>",
+  "client": "<your_client_id>",
+  "password": "<your_client_secret>",
   "las_endpoint": "https://las.cloud.com",
   "cc_endpoint": "https://trust.citrixworkspacesapi.net/root/tokens/clients"
 }

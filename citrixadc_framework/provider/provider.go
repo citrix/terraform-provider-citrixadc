@@ -294,6 +294,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_cspolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_feopolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_gslbvserver_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_lbvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_responderpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_rewritepolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_spilloverpolicy_binding"
@@ -969,6 +970,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		sslcertkey.NewSslCertKeyUpdateResource,
 		vpnvserver_appfwpolicy_binding.NewVpnvserverAppfwpolicyBindingResource,
 		nslaslicense_offline.NewNSLASLicenseOfflineResource,
+		csvserver_lbvserver_binding.NewCsvserverLbvserverBindingResource,
 	}
 }
 
@@ -1705,6 +1707,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		servicegroup_servicegroupmember_binding.SErvicegroupServicegroupmemberBindingDataSource,
 		snmptrap_snmpuser_binding.SNmptrapSnmpuserBindingDataSource,
 		vpnvserver_appfwpolicy_binding.VpnvserverAppfwpolicyBindingDataSource,
+		csvserver_lbvserver_binding.CSvserverLbvserverBindingDataSource,
 	}
 }
 

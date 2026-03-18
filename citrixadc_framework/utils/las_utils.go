@@ -620,10 +620,6 @@ func (ltg *LASTokenGenerator) GetFingerprintForLSGUID(ctx context.Context) (stri
 			if lsObj, ok := ls.(map[string]interface{}); ok {
 				if lsguid, _ := lsObj["lsguid"].(string); lsguid == ltg.LSGUID {
 					fingerprint, _ := lsObj["lsfingerprint"].(string)
-					// if fingerprint != "" {
-					// 	tflog.Info(ctx, "Found existing license server, deregistering", map[string]interface{}{"fingerprint": fingerprint})
-					// 	ltg.DeregisterLicense(ctx, fingerprint)
-					// }
 					return fingerprint, nil
 				}
 			}
@@ -631,55 +627,6 @@ func (ltg *LASTokenGenerator) GetFingerprintForLSGUID(ctx context.Context) (stri
 	}
 
 	return "", nil
-}
-
-// DeregisterLicense deregisters a license by fingerprint
-func (ltg *LASTokenGenerator) DeregisterLicense(ctx context.Context, fingerprint string) error {
-	url := fmt.Sprintf("%s/%s/%s/deregisterls", ltg.BaseURL, ltg.CCID, ltg.Endpoint)
-	payload := map[string]string{
-		"lsfingerprint": fingerprint,
-		"ver":           "1.0",
-	}
-	body, _ := json.Marshal(payload)
-
-	// Log request
-	tflog.Debug(ctx, "API Call: DeregisterLicense", map[string]interface{}{
-		"url":         url,
-		"method":      "POST",
-		"fingerprint": fingerprint,
-	})
-	tflog.Debug(ctx, "Request Payload", map[string]interface{}{
-		"body": string(body),
-	})
-
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
-	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "CWSAuth bearer="+ltg.BearerToken)
-
-	resp, err := ltg.HTTPClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to deregister: %w", err)
-	}
-	defer resp.Body.Close()
-
-	tflog.Debug(ctx, "Response Status", map[string]interface{}{
-		"status_code": resp.StatusCode,
-	})
-
-	if resp.StatusCode >= 400 {
-		respBody, _ := io.ReadAll(resp.Body)
-		tflog.Error(ctx, "Deregister Failed", map[string]interface{}{
-			"status_code": resp.StatusCode,
-			"response":    string(respBody),
-		})
-		return fmt.Errorf("HTTP error %d: %s", resp.StatusCode, string(respBody))
-	}
-
-	tflog.Info(ctx, "Deregistered license", map[string]interface{}{"fingerprint": fingerprint})
-	return nil
 }
 
 // ImportOfflineActivationRequest imports the offline activation request
