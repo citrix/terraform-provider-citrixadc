@@ -93,6 +93,20 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
+	// Early validation: Check if request_pem is valid before starting expensive operations
+	requestPEM := data.RequestPEM.ValueString()
+	if requestPEM != "" {
+		if _, ok := lasutils.PEMEntitlementMapping[requestPEM]; !ok {
+			resp.Diagnostics.AddError(
+				"Invalid Request PEM",
+				fmt.Sprintf("Request PEM '%s' is not a valid Platform Entitlement Model code. "+
+					"Please refer to the provider documentation for valid PEM codes.", requestPEM),
+			)
+			return
+		}
+		tflog.Debug(ctx, "Request PEM validation passed", map[string]interface{}{"pem": requestPEM})
+	}
+
 	// Read LAS secrets from file
 	lasSecretsPath := data.LASSecretsJson.ValueString()
 	lasSecretsData, err := os.ReadFile(lasSecretsPath)

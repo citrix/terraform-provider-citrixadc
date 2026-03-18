@@ -949,7 +949,13 @@ func ApplyLicenseBlobNS(ctx context.Context, ip, username, password string, blob
 		"body": string(respBody),
 	})
 
-	// Check if reboot is needed
+	// Check for error code 1043 (invalid license blob)
+	if strings.Contains(string(respBody), "\"errorcode\": 1043") {
+		tflog.Error(ctx, "Invalid license blob", map[string]interface{}{"ip": ip, "response": string(respBody)})
+		return fmt.Errorf("invalid license blob (error code 1043): the license file is invalid or incompatible with this device")
+	}
+
+	// Check if reboot is needed (error code 1125)
 	if strings.Contains(string(respBody), "\"errorcode\": 1125") {
 		tflog.Info(ctx, "Rebooting device after license application", map[string]interface{}{"ip": ip})
 		// Trigger reboot
@@ -966,6 +972,12 @@ func ApplyLicenseBlobNS(ctx context.Context, ip, username, password string, blob
 		rebootFormData := fmt.Sprintf("object=%s", string(rebootJSON))
 		rebootBody := []byte(rebootFormData)
 		RunCurlHTTPSFallback(ctx, rebootURL, "POST", auth, rebootBody, headers)
+	} else if !strings.Contains(string(respBody), "\"errorcode\": 0") {
+		// If we don't get error code 0 (success) or 1125 (reboot required), something went wrong
+		tflog.Warn(ctx, "Unexpected response from license application", map[string]interface{}{
+			"ip":       ip,
+			"response": string(respBody),
+		})
 	}
 
 	tflog.Info(ctx, "Applied license blob", map[string]interface{}{"ip": ip})
