@@ -483,6 +483,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsicapprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsip"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsip6"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslaslicense_offline"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslicense"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslicenseparameters"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslicenseproxyserver"
@@ -956,13 +957,6 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 		}
 	}
 
-	// providerData := &ProviderData{
-	// 	Client:   client,
-	// 	Username: username,
-	// 	Password: password,
-	// 	Endpoint: endpoint,
-	// }
-
 	resp.DataSourceData = &client
 	resp.ResourceData = &client
 
@@ -975,6 +969,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		sslcertkey.NewSslCertKeyResource,
 		sslcertkey.NewSslCertKeyUpdateResource,
 		vpnvserver_appfwpolicy_binding.NewVpnvserverAppfwpolicyBindingResource,
+		nslaslicense_offline.NewNSLASLicenseOfflineResource,
 		csvserver_lbvserver_binding.NewCsvserverLbvserverBindingResource,
 	}
 }

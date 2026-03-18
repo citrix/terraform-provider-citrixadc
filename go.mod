@@ -7,7 +7,7 @@ godebug tlsrsakex=1
 toolchain go1.24.13
 
 require (
-	github.com/citrix/adc-nitro-go v0.0.0-20260310174630-1972c5f2c022
+	github.com/citrix/adc-nitro-go v0.0.0-20260317185310-4ba2168fe460
 	github.com/gruntwork-io/terratest v0.51.0
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/terraform-plugin-framework v1.16.1
