@@ -61,6 +61,7 @@ func resourceCitrixAdcLsngroup() *schema.Resource {
 			"nattype": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"portblocksize": {

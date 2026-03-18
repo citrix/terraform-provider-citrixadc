@@ -121,7 +121,7 @@ func readHanode_routemonitor6_bindingFunc(ctx context.Context, d *schema.Resourc
 
 	data := dataArr[foundIndex]
 
-	d.Set("hanode_id", data["id"])
+	setToInt("hanode_id", d, data["id"])
 	d.Set("netmask", data["netmask"])
 	d.Set("routemonitor", data["routemonitor"])
 

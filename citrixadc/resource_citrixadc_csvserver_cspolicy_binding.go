@@ -25,7 +25,6 @@ func resourceCitrixAdcCsvserver_cspolicy_binding() *schema.Resource {
 			"bindpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 			"gotopriorityexpression": {
@@ -169,7 +168,6 @@ func readCsvserver_cspolicy_bindingFunc(ctx context.Context, d *schema.ResourceD
 	data := dataArr[foundIndex]
 
 	d.Set("name", data["name"])
-	d.Set("bindpoint", data["bindpoint"])
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("invoke", data["invoke"])
 	d.Set("labelname", data["labelname"])

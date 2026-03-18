@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -12,8 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // SslCertKeyResourceModel describes the resource data model.

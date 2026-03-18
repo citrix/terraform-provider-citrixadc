@@ -188,7 +188,9 @@ func readSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData, 
 	setToInt("requesttimeout", d, data["requesttimeout"])
 	setToInt("revalidationtimeout", d, data["revalidationtimeout"])
 	d.Set("service", data["service"])
-	d.Set("servicepathavp", data["servicepathavp"])
+	if servicepathavp, ok := data["servicepathavp"]; ok && servicepathavp != nil {
+		d.Set("servicepathavp", stringListToIntList(servicepathavp.([]interface{})))
+	}
 	setToInt("servicepathvendorid", d, data["servicepathvendorid"])
 	d.Set("vserver", data["vserver"])
 

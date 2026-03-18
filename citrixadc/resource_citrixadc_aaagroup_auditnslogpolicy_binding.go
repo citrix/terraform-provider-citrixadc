@@ -46,7 +46,6 @@ func resourceCitrixAdcAaagroup_auditnslogpolicy_binding() *schema.Resource {
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 		},
@@ -136,7 +135,6 @@ func readAaagroup_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.Re
 	d.Set("groupname", data["groupname"])
 	d.Set("policy", data["policy"])
 	setToInt("priority", d, data["priority"])
-	d.Set("type", data["type"])
 
 	return nil
 
