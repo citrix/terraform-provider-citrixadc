@@ -4,7 +4,7 @@ subcategory: "NS"
 
 # Resource: nslaslicense_offline
 
-The nslaslicense_offline resource is used to generate and apply offline LAS licenses for NetScaler VPX and MPX appliances. This resource orchestrates the complete offline licensing workflow including request generation, LAS server interaction, and license application to the device.
+The nslaslicense_offline resource is used to generate and apply offline LAS licenses for NetScaler VPX and MPX appliances. This resource orchestrates the complete offline licensing workflow including request generation, LAS service interaction, and license application to the device.
 
 
 ## Example usage
@@ -34,13 +34,21 @@ The `las_secrets_json` file must contain the following JSON structure with your 
 
 ```json
 {
-  "ccid": "<your_citrix_customer_id>",
-  "client": "<your_client_id>",
-  "password": "<your_client_secret>",
+  "ccid": "",
+  "client": "",
+  "password": "",
   "las_endpoint": "https://las.cloud.com",
   "cc_endpoint": "https://trust.citrixworkspacesapi.net/root/tokens/clients"
 }
 ```
+
+**Field Descriptions:**
+
+* `ccid` - Your Citrix Customer ID (CCID) obtained from the Citrix Cloud portal
+* `client` - Your client ID for API authentication, generated in Citrix Cloud
+* `password` - Your client secret corresponding to the client ID
+* `las_endpoint` - The LAS (License Activation Service) API endpoint URL, typically `https://las.cloud.com`
+* `cc_endpoint` - The Citrix Cloud token endpoint for authentication, typically `https://trust.citrixworkspacesapi.net/root/tokens/clients`
 
 
 ## Argument Reference
