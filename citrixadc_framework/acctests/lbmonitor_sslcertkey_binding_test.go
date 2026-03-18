@@ -84,6 +84,40 @@ const testAccLbmonitor_sslcertkey_bindingDataSource_basic = `
 	}
 `
 
+const testAccLbmonitor_sslcertkey_binding_ca = `
+	resource "citrixadc_lbmonitor_sslcertkey_binding" "tf_lbmonitor_sslcertkey_binding" {
+		ca = true
+		monitorname = citrixadc_lbmonitor.tf_monitor.monitorname
+		certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
+	}
+
+	resource "citrixadc_lbmonitor" "tf_monitor" {
+		monitorname = "tf_monitor_ca"
+		type = "HTTP"
+		sslprofile = "ns_default_ssl_profile_backend"
+	}
+
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey_ca"
+		cert = "/var/tmp/ca_certificate.crt"
+		key = "/var/tmp/ca_key.pem"
+	}
+`
+
+const testAccLbmonitor_sslcertkey_binding_ca_step2 = `
+	resource "citrixadc_lbmonitor" "tf_monitor" {
+		monitorname = "tf_monitor_ca"
+		type = "HTTP"
+		sslprofile = "ns_default_ssl_profile_backend"
+	}
+
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey_ca"
+		cert = "/var/tmp/ca_certificate.crt"
+		key = "/var/tmp/ca_key.pem"
+	}
+`
+
 func TestAccLbmonitor_sslcertkey_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
