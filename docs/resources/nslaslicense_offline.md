@@ -34,21 +34,13 @@ The `las_secrets_json` file must contain the following JSON structure with your 
 
 ```json
 {
-  "ccid": "",
-  "client": "",
-  "password": "",
+  "ccid": "<your_citrix_customer_id>",
+  "client": "<your_client_id>",
+  "password": "<your_client_secret>",
   "las_endpoint": "https://las.cloud.com",
   "cc_endpoint": "https://trust.citrixworkspacesapi.net/root/tokens/clients"
 }
 ```
-
-**Field Descriptions:**
-
-* `ccid` - Your Citrix Customer ID (CCID) obtained from the Citrix Cloud portal
-* `client` - Your client ID for API authentication, generated in Citrix Cloud
-* `password` - Your client secret corresponding to the client ID
-* `las_endpoint` - The LAS (License Activation Service) API endpoint URL, typically `https://las.cloud.com`
-* `cc_endpoint` - The Citrix Cloud token endpoint for authentication, typically `https://trust.citrixworkspacesapi.net/root/tokens/clients`
 
 
 ## Argument Reference
