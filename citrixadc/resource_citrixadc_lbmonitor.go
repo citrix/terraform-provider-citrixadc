@@ -885,7 +885,6 @@ func readLbmonitorFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	setToInt("vendorspecificvendorid", d, data["vendorspecificvendorid"])
 	// Fixed drift detection for respcode attribute. NetScaler returns default ["200"] for HTTP monitors when not specified.
 	// Schema updated to Computed: true to accept API defaults. See: https://github.com/citrix/terraform-provider-citrixadc/issues/1384
-	log.Printf("[DEBUG] respcode from NetScaler - Type: %T, Value: %#v", data["respcode"], data["respcode"])
 	d.Set("respcode", data["respcode"])
 	d.Set("secureargs", data["secureargs"])
 	d.Set("authapplicationid", data["authapplicationid"])
