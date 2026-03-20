@@ -521,11 +521,12 @@ func resourceCitrixAdcLbmonitor() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			// Computed: true because NetScaler returns default ["200"] for HTTP monitors when not specified - https://github.com/citrix/terraform-provider-citrixadc/issues/1384
 			"respcode": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				Computed: false,
+				Computed: true,
 			},
 			"secureargs": {
 				Type:     schema.TypeString,
@@ -882,7 +883,10 @@ func readLbmonitorFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("validatecred", data["validatecred"])
 	setToInt("vendorid", d, data["vendorid"])
 	setToInt("vendorspecificvendorid", d, data["vendorspecificvendorid"])
-	// d.Set("respcode", data["respcode"]) // we receive different value from NetScaler
+	// Fixed drift detection for respcode attribute. NetScaler returns default ["200"] for HTTP monitors when not specified.
+	// Schema updated to Computed: true to accept API defaults. See: https://github.com/citrix/terraform-provider-citrixadc/issues/1384
+	log.Printf("[DEBUG] respcode from NetScaler - Type: %T, Value: %#v", data["respcode"], data["respcode"])
+	d.Set("respcode", data["respcode"])
 	d.Set("secureargs", data["secureargs"])
 	d.Set("authapplicationid", data["authapplicationid"])
 	d.Set("acctapplicationid", data["acctapplicationid"])
