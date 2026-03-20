@@ -89,7 +89,7 @@ github.com/citrix/adc-nitro-go/resource/config/utility
 github.com/citrix/adc-nitro-go/resource/config/videooptimization
 github.com/citrix/adc-nitro-go/resource/config/vpn
 github.com/citrix/adc-nitro-go/service
-# github.com/cloudflare/circl v1.6.1
+# github.com/cloudflare/circl v1.6.3
 ## explicit; go 1.22.0
 github.com/cloudflare/circl/dh/x25519
 github.com/cloudflare/circl/dh/x448
@@ -262,8 +262,6 @@ github.com/hashicorp/terraform-plugin-framework/schema/validator
 github.com/hashicorp/terraform-plugin-framework/tfsdk
 github.com/hashicorp/terraform-plugin-framework/types
 github.com/hashicorp/terraform-plugin-framework/types/basetypes
-# github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
-## explicit; go 1.24.0
 # github.com/hashicorp/terraform-plugin-go v0.29.0
 ## explicit; go 1.24.0
 github.com/hashicorp/terraform-plugin-go/internal/logging
