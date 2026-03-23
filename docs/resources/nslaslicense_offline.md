@@ -12,8 +12,7 @@ The nslaslicense_offline resource is used to generate and apply offline LAS lice
 ```hcl
 
 resource "citrixadc_nslaslicense_offline" "license_vpx" {
-  request_pem      = "CNS_V10000_SERVER"
-  request_edition  = "Premium"
+  entitlement_name = "VPX 10000 Premium"
   is_fips          = false
   las_secrets_json = "${path.module}/las_secrets.json"
 }
@@ -45,8 +44,7 @@ The `las_secrets_json` file must contain the following JSON structure with your 
 
 ## Argument Reference
 
-* `request_pem` - (Required) Platform Entitlement Model (PEM) code. Examples: CNS_V1000_SERVER, CNS_V3000_SERVER, CNS_V10000_SERVER. Required for NetScaler VPX and MPX.
-* `request_edition` - (Required) License edition. Valid values: Advanced, Standard, Premium.
+* `entitlement_name` - (Required) Entitlement name for the VPX/MPX license as listed in LAS customer entitlements (e.g., `VPX 10000 Premium`)
 * `las_secrets_json` - (Required) File path containing LAS authentication secrets and endpoints (ccid, client, password, las_endpoint, cc_endpoint).
 * `is_fips` - (Optional) Whether this is a FIPS-enabled device. Default: false.
 

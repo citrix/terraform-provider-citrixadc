@@ -93,19 +93,55 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	// Early validation: Check if request_pem is valid before starting expensive operations
-	requestPEM := data.RequestPEM.ValueString()
-	if requestPEM != "" {
-		if _, ok := lasutils.PEMEntitlementMapping[requestPEM]; !ok {
-			resp.Diagnostics.AddError(
-				"Invalid Request PEM",
-				fmt.Sprintf("Request PEM '%s' is not a valid Platform Entitlement Model code. "+
-					"Please refer to the provider documentation for valid PEM codes.", requestPEM),
-			)
-			return
-		}
-		tflog.Debug(ctx, "Request PEM validation passed", map[string]interface{}{"pem": requestPEM})
+	// Early validation: Check if entitlement_name starts with a known prefix
+	validEntitlementPrefixes := []string{
+		"FIPS MPX 14",
+		"FIPS MPX 16",
+		"FIPS MPX 91",
+		"MPS 14",
+		"MPX 15",
+		"MPX 16",
+		"MPX 17",
+		"MPS 25",
+		"MPX 26",
+		"MPX 59",
+		"MPX 89",
+		"MPX 91",
+		"MPX 92",
+		"VPX",
 	}
+	entitlementNameVal := data.EntitlementName.ValueString()
+	validEntitlement := false
+	var matchedPrefix string
+	for _, prefix := range validEntitlementPrefixes {
+		if strings.HasPrefix(entitlementNameVal, prefix) {
+			validEntitlement = true
+			matchedPrefix = prefix
+			break
+		}
+	}
+	if !validEntitlement {
+		resp.Diagnostics.AddError(
+			"Invalid Entitlement Name",
+			fmt.Sprintf("entitlement_name '%s' must start with a valid VPX/MPX model prefix. Valid prefixes: %s",
+				entitlementNameVal, strings.Join(validEntitlementPrefixes, ", ")),
+		)
+		return
+	}
+
+	// // Early validation: Check if request_pem is valid before starting expensive operations
+	// requestPEM := data.RequestPEM.ValueString()
+	// if requestPEM != "" {
+	// 	if _, ok := lasutils.PEMEntitlementMapping[requestPEM]; !ok {
+	// 		resp.Diagnostics.AddError(
+	// 			"Invalid Request PEM",
+	// 			fmt.Sprintf("Request PEM '%s' is not a valid Platform Entitlement Model code. "+
+	// 				"Please refer to the provider documentation for valid PEM codes.", requestPEM),
+	// 		)
+	// 		return
+	// 	}
+	// 	tflog.Debug(ctx, "Request PEM validation passed", map[string]interface{}{"pem": requestPEM})
+	// }
 
 	// Read LAS secrets from file
 	lasSecretsPath := data.LASSecretsJson.ValueString()
@@ -137,17 +173,17 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	// Validate FIPS settings
-	if data.IsFIPS.ValueBool() {
-		requestPEM := data.RequestPEM.ValueString()
-		if requestPEM != "" && len(requestPEM) >= 7 && requestPEM[:7] == "CNS_14" {
-			resp.Diagnostics.AddError(
-				"Invalid FIPS Configuration",
-				"MPX14k doesn't need fips argument",
-			)
-			return
-		}
-	}
+	// // Validate FIPS settings
+	// if data.IsFIPS.ValueBool() {
+	// 	requestPEM := data.RequestPEM.ValueString()
+	// 	if requestPEM != "" && len(requestPEM) >= 7 && requestPEM[:7] == "CNS_14" {
+	// 		resp.Diagnostics.AddError(
+	// 			"Invalid FIPS Configuration",
+	// 			"MPX14k doesn't need fips argument",
+	// 		)
+	// 		return
+	// 	}
+	// }
 
 	tflog.Info(ctx, "Starting offline LAS license generation for NetScaler", map[string]interface{}{
 		"device_ip": deviceIP,
@@ -221,17 +257,17 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 
 	tflog.Info(ctx, "Extracted LSGUID", map[string]interface{}{"lsguid": lsguid})
 
-	// Step 6: Determine entitlement name for NetScaler fixed bandwidth
+	// Step 6: Use entitlement_name directly
+	// entitlementName, err := lasutils.GetEntitlementNameForFixedBW(data.RequestPEM.ValueString(), data.RequestED.ValueString(), data.IsFIPS.ValueBool())
+	// if err != nil {
+	// 	resp.Diagnostics.AddError(
+	// 		"Invalid Entitlement Configuration",
+	// 		fmt.Sprintf("Failed to determine entitlement name: %s", err.Error()),
+	// 	)
+	// 	return
+	// }
 	lasEndpoint := "netscalerfixedbw"
-	entitlementName, err := lasutils.GetEntitlementNameForFixedBW(data.RequestPEM.ValueString(), data.RequestED.ValueString(), data.IsFIPS.ValueBool())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Invalid Entitlement Configuration",
-			fmt.Sprintf("Failed to determine entitlement name: %s", err.Error()),
-		)
-		return
-	}
-	tflog.Info(ctx, "Determined entitlement", map[string]interface{}{"entitlementName": entitlementName})
+	tflog.Info(ctx, "Using entitlement name", map[string]interface{}{"entitlementName": entitlementNameVal})
 
 	// Step 7: Initialize LAS Token Generator
 	ltg := lasutils.NewLASTokenGenerator(
@@ -253,6 +289,39 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 		)
 		return
 	}
+
+	// Step 8a: Fetch customer entitlements from LAS and validate entitlement_name
+	customerEntitlements, err := ltg.GetCustomerEntitlements(ctx, matchedPrefix)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Failed to Fetch Customer Entitlements",
+			fmt.Sprintf("Failed to retrieve entitlements for platform '%s': %s", matchedPrefix, err.Error()),
+		)
+		return
+	}
+	validEntitlementName := false
+	validNames := []string{}
+	if entitlements, ok := customerEntitlements["entitlements"].([]interface{}); ok {
+		for _, e := range entitlements {
+			if obj, ok := e.(map[string]interface{}); ok {
+				if name, ok := obj["type"].(string); ok {
+					validNames = append(validNames, name)
+					if name == entitlementNameVal {
+						validEntitlementName = true
+					}
+				}
+			}
+		}
+	}
+	if !validEntitlementName {
+		resp.Diagnostics.AddError(
+			"Invalid Entitlement Name",
+			fmt.Sprintf("entitlement_name '%s' is not available for your account. Available entitlements: %s",
+				entitlementNameVal, strings.Join(validNames, ", ")),
+		)
+		return
+	}
+	tflog.Info(ctx, "Entitlement name validated against LAS", map[string]interface{}{"entitlementName": entitlementNameVal})
 
 	// Step 9: Get fingerprint
 	fingerprint, err := ltg.GetFingerprintForLSGUID(ctx)
@@ -276,7 +345,7 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 	tflog.Info(ctx, "Import successful", map[string]interface{}{"importToken": importToken})
 
 	// Step 11: Generate offline activation
-	activationResp, err := ltg.GenerateOfflineActivation(ctx, importToken, entitlementName)
+	activationResp, err := ltg.GenerateOfflineActivation(ctx, importToken, entitlementNameVal)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Activation Generation Failed",

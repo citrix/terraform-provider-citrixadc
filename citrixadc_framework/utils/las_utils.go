@@ -563,6 +563,69 @@ func (ltg *LASTokenGenerator) GenerateBearerToken(ctx context.Context) (string, 
 	return token, nil
 }
 
+// GetCustomerEntitlements fetches valid entitlements from the LAS endpoint for a given platform
+func (ltg *LASTokenGenerator) GetCustomerEntitlements(ctx context.Context, platform string) (map[string]interface{}, error) {
+	url := fmt.Sprintf("%s/%s/%s/customerentitlements", ltg.BaseURL, ltg.CCID, ltg.Endpoint)
+
+	payload := map[string]string{
+		"ver":      "1.0",
+		"platform": platform,
+	}
+	body, _ := json.Marshal(payload)
+
+	tflog.Debug(ctx, "API Call: GetCustomerEntitlements", map[string]interface{}{
+		"url":      url,
+		"method":   "POST",
+		"platform": platform,
+	})
+	tflog.Debug(ctx, "Request Payload", map[string]interface{}{
+		"body": string(body),
+	})
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "CWSAuth bearer="+ltg.BearerToken)
+
+	resp, err := ltg.HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get customer entitlements: %w", err)
+	}
+	defer resp.Body.Close()
+
+	tflog.Debug(ctx, "Response Status", map[string]interface{}{
+		"status_code": resp.StatusCode,
+	})
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	tflog.Debug(ctx, "Response Body", map[string]interface{}{
+		"body": string(respBody),
+	})
+
+	if resp.StatusCode >= 400 {
+		tflog.Error(ctx, "Get Customer Entitlements Failed", map[string]interface{}{
+			"status_code": resp.StatusCode,
+			"response":    string(respBody),
+			"platform":    platform,
+		})
+		return nil, fmt.Errorf("HTTP error %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("invalid JSON response: %w", err)
+	}
+
+	tflog.Info(ctx, "Fetched customer entitlements", map[string]interface{}{"platform": platform})
+	return result, nil
+}
+
 // GetFingerprintForLSGUID gets fingerprint for LSGUID and deregisters if exists
 func (ltg *LASTokenGenerator) GetFingerprintForLSGUID(ctx context.Context) (string, error) {
 	url := fmt.Sprintf("%s/support/%s/%s/listls", ltg.BaseURL, ltg.CCID, ltg.Endpoint)
