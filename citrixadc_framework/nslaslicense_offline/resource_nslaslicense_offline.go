@@ -96,8 +96,11 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 	// Early validation: Check if entitlement_name starts with a known prefix
 	validEntitlementPrefixes := []string{
 		"FIPS MPX 14",
+		"FIPS MPX 15",
 		"FIPS MPX 16",
+		"FIPS MPX 89",
 		"FIPS MPX 91",
+		"FIPS MPX 92",
 		"MPS 14",
 		"MPX 15",
 		"MPX 16",

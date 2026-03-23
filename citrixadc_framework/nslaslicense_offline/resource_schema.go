@@ -14,8 +14,6 @@ import (
 // NSLASLicenseOfflineResourceModel describes the resource data model.
 type NSLASLicenseOfflineResourceModel struct {
 	Id types.String `tfsdk:"id"`
-	// RequestPEM   types.String `tfsdk:"request_pem"`
-	// RequestED    types.String `tfsdk:"request_edition"`
 	EntitlementName types.String `tfsdk:"entitlement_name"`
 	IsFIPS          types.Bool   `tfsdk:"is_fips"`
 	LASSecretsJson  types.String `tfsdk:"las_secrets_json"`
