@@ -13,17 +13,18 @@ import (
 
 // NSLASLicenseOfflineResourceModel describes the resource data model.
 type NSLASLicenseOfflineResourceModel struct {
-	Id             types.String `tfsdk:"id"`
-	RequestPEM     types.String `tfsdk:"request_pem"`
-	RequestED      types.String `tfsdk:"request_edition"`
-	IsFIPS         types.Bool   `tfsdk:"is_fips"`
-	LASSecretsJson types.String `tfsdk:"las_secrets_json"`
-	LSGUID         types.String `tfsdk:"lsguid"`
-	Version        types.String `tfsdk:"version"`
-	Build          types.String `tfsdk:"build"`
-	LicenseBlob    types.String `tfsdk:"license_blob_path"`
-	Status         types.String `tfsdk:"status"`
-	LastUpdated    types.String `tfsdk:"last_updated"`
+	Id types.String `tfsdk:"id"`
+	// RequestPEM   types.String `tfsdk:"request_pem"`
+	// RequestED    types.String `tfsdk:"request_edition"`
+	EntitlementName types.String `tfsdk:"entitlement_name"`
+	IsFIPS          types.Bool   `tfsdk:"is_fips"`
+	LASSecretsJson  types.String `tfsdk:"las_secrets_json"`
+	LSGUID          types.String `tfsdk:"lsguid"`
+	Version         types.String `tfsdk:"version"`
+	Build           types.String `tfsdk:"build"`
+	LicenseBlob     types.String `tfsdk:"license_blob_path"`
+	Status          types.String `tfsdk:"status"`
+	LastUpdated     types.String `tfsdk:"last_updated"`
 }
 
 func (r *NSLASLicenseOfflineResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -38,12 +39,8 @@ func (r *NSLASLicenseOfflineResource) Schema(ctx context.Context, req resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"request_pem": schema.StringAttribute{
-				MarkdownDescription: "Platform Entitlement Model (PEM) code (e.g., CNS_V1000_SERVER). Required for NetScaler VPX and MPX.",
-				Required:            true,
-			},
-			"request_edition": schema.StringAttribute{
-				MarkdownDescription: "License edition: Advanced, Standard, Premium, 50G, 50S, or 100G. Required for NetScaler VPX and MPX.",
+			"entitlement_name": schema.StringAttribute{
+				MarkdownDescription: "Entitlement name for the license (e.g., VPX 10000 Premium).",
 				Required:            true,
 			},
 			"is_fips": schema.BoolAttribute{
