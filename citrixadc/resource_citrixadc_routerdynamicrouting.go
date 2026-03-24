@@ -28,12 +28,6 @@ func resourceCitrixAdcRouterdynamicrouting() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"nodeid": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
@@ -53,7 +47,6 @@ func applyRouterdynamicroutingFunc(ctx context.Context, d *schema.ResourceData, 
 
 	routerdynamicrouting := router.Routerdynamicrouting{
 		Commandstring: cmdString,
-		Nodeid:        intPtr(d.Get("nodeid").(int)),
 	}
 
 	err := client.ActOnResource("routerdynamicrouting", &routerdynamicrouting, "apply")
