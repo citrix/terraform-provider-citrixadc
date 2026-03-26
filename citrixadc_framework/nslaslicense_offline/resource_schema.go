@@ -13,8 +13,9 @@ import (
 
 // NSLASLicenseOfflineResourceModel describes the resource data model.
 type NSLASLicenseOfflineResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id              types.String `tfsdk:"id"`
 	EntitlementName types.String `tfsdk:"entitlement_name"`
+	RestrictedMode  types.Bool   `tfsdk:"restricted_mode"`
 	IsFIPS          types.Bool   `tfsdk:"is_fips"`
 	LASSecretsJson  types.String `tfsdk:"las_secrets_json"`
 	LSGUID          types.String `tfsdk:"lsguid"`
@@ -40,6 +41,12 @@ func (r *NSLASLicenseOfflineResource) Schema(ctx context.Context, req resource.S
 			"entitlement_name": schema.StringAttribute{
 				MarkdownDescription: "Entitlement name for the license (e.g., VPX 10000 Premium).",
 				Required:            true,
+			},
+			"restricted_mode": schema.BoolAttribute{
+				MarkdownDescription: "When enabled, uses restricted offline activation (JSON-based) instead of file upload.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 			"is_fips": schema.BoolAttribute{
 				MarkdownDescription: "Whether this is a FIPS-enabled device",

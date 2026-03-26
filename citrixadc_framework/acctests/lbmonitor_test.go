@@ -355,5 +355,3 @@ func TestAccLbmonitor_dns_empty(t *testing.T) {
 		},
 	})
 }
-
-

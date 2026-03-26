@@ -9,6 +9,8 @@ The nslaslicense_offline resource is used to generate and apply offline LAS lice
 
 ## Example usage
 
+### Standard mode (file upload)
+
 ```hcl
 
 resource "citrixadc_nslaslicense_offline" "license_vpx" {
@@ -19,11 +21,25 @@ resource "citrixadc_nslaslicense_offline" "license_vpx" {
 
 output "license_status" {
   value = {
-    status       = citrixadc_nslaslicense_offline.license_vpx.status
-    build       = citrixadc_nslaslicense_offline.license_vpx.build
-    version      = citrixadc_nslaslicense_offline.license_vpx.version
-    blob_path    = citrixadc_nslaslicense_offline.license_vpx.license_blob_path
+    status    = citrixadc_nslaslicense_offline.license_vpx.status
+    build     = citrixadc_nslaslicense_offline.license_vpx.build
+    version   = citrixadc_nslaslicense_offline.license_vpx.version
+    blob_path = citrixadc_nslaslicense_offline.license_vpx.license_blob_path
   }
+}
+```
+
+### Restricted mode (JSON-based, no file upload)
+
+Use this when the environment restricts file uploads to the Citrix Cloud API.
+
+```hcl
+
+resource "citrixadc_nslaslicense_offline" "license_vpx_restricted" {
+  entitlement_name = "VPX 10000 Premium"
+  is_fips          = false
+  restricted_mode  = true
+  las_secrets_json = "${path.module}/las_secrets.json"
 }
 ```
 
@@ -46,7 +62,8 @@ The `las_secrets_json` file must contain the following JSON structure with your 
 
 * `entitlement_name` - (Required) Entitlement name for the VPX/MPX license as listed in LAS customer entitlements (e.g., `VPX 10000 Premium`)
 * `las_secrets_json` - (Required) File path containing LAS authentication secrets and endpoints (ccid, client, password, las_endpoint, cc_endpoint).
-* `is_fips` - (Optional) Whether this is a FIPS-enabled device. Default: false.
+* `is_fips` - (Optional) Whether this is a FIPS-enabled device. Default: `false`.
+* `restricted_mode` - (Optional) When `true`, uses a JSON-based restricted activation API instead of uploading the request package as a file. Use this in environments where file uploads to the Citrix LAS Service are blocked. Default: `false`.
 
 
 ## Attribute Reference
