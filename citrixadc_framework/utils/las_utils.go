@@ -157,7 +157,7 @@ func makeHTTPRequest(ctx context.Context, client *http.Client, url, method strin
 		"url":    url,
 	})
 	if body != nil && len(body) > 0 {
-		tflog.Debug(ctx, "Request Body", map[string]interface{}{
+		tflog.Debug(ctx, "Request Payload", map[string]interface{}{
 			"body": string(body),
 		})
 	}
@@ -183,7 +183,7 @@ func makeHTTPRequest(ctx context.Context, client *http.Client, url, method strin
 	defer resp.Body.Close()
 
 	// Log response details
-	tflog.Debug(ctx, "HTTP Response", map[string]interface{}{
+	tflog.Debug(ctx, "Response Status", map[string]interface{}{
 		"status_code": resp.StatusCode,
 	})
 
@@ -498,6 +498,61 @@ func ExtractLSGUIDFromPackageNS(ctx context.Context, packageData []byte) (string
 	return "", fmt.Errorf("JSON file %s not found in package", jsonFile)
 }
 
+// ExtractLSIDAndPubKeyFromPackageNS extracts lsid and pubkey from NetScaler request package
+func ExtractLSIDAndPubKeyFromPackageNS(ctx context.Context, packageData []byte) (string, string, error) {
+	jsonFile := "ns_offline_activation_request.json"
+
+	gzReader, err := gzip.NewReader(bytes.NewReader(packageData))
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create gzip reader: %w", err)
+	}
+	defer gzReader.Close()
+
+	tarReader := tar.NewReader(gzReader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", "", fmt.Errorf("failed to read tar: %w", err)
+		}
+
+		if header.Name == jsonFile || strings.HasSuffix(header.Name, "/"+jsonFile) {
+			jsonData, err := io.ReadAll(tarReader)
+			if err != nil {
+				return "", "", fmt.Errorf("failed to read JSON file: %w", err)
+			}
+
+			var result map[string]interface{}
+			if err := json.Unmarshal(jsonData, &result); err != nil {
+				return "", "", fmt.Errorf("failed to parse JSON: %w", err)
+			}
+
+			dataObj, ok := result["data"].(map[string]interface{})
+			if !ok {
+				return "", "", fmt.Errorf("data object not found in JSON")
+			}
+
+			lsid, ok := dataObj["lsid"].(string)
+			if !ok || lsid == "" {
+				return "", "", fmt.Errorf("lsid not found in JSON data object")
+			}
+
+			pubkey, ok := dataObj["pubkey"].(string)
+			if !ok || pubkey == "" {
+				return "", "", fmt.Errorf("pubkey not found in JSON data object")
+			}
+
+			tflog.Info(ctx, "Extracted lsid and pubkey from NetScaler package", map[string]interface{}{"lsid": lsid})
+			return lsid, pubkey, nil
+		}
+	}
+
+	return "", "", fmt.Errorf("JSON file %s not found in package", jsonFile)
+}
+
 // GenerateBearerToken generates a bearer token for LAS API
 func (ltg *LASTokenGenerator) GenerateBearerToken(ctx context.Context) (string, error) {
 	payload := map[string]string{
@@ -557,7 +612,7 @@ func (ltg *LASTokenGenerator) GenerateBearerToken(ctx context.Context) (string, 
 
 	ltg.BearerToken = token
 	tflog.Info(ctx, "Generated bearer token")
-	tflog.Debug(ctx, "Response Payload", map[string]interface{}{
+	tflog.Debug(ctx, "Response Body", map[string]interface{}{
 		"token": "***REDACTED***",
 	})
 	return token, nil
@@ -727,7 +782,7 @@ func (ltg *LASTokenGenerator) ImportOfflineActivationRequest(ctx context.Context
 		"fingerprint":  fingerprint,
 		"package_size": len(requestPackage),
 	})
-	tflog.Debug(ctx, "Request Data Field", map[string]interface{}{
+	tflog.Debug(ctx, "Request Payload", map[string]interface{}{
 		"data": string(dataJSON),
 	})
 
@@ -776,6 +831,76 @@ func (ltg *LASTokenGenerator) ImportOfflineActivationRequest(ctx context.Context
 	}
 
 	tflog.Info(ctx, "Imported offline activation request", map[string]interface{}{"importToken": importToken})
+	return importToken, nil
+}
+
+// ImportRestrictedOfflineActivationRequest imports the offline activation request for restricted environments
+// where file uploads are not permitted. Instead of a multipart file upload, it sends a JSON body
+// containing the license server ID and public key.
+func (ltg *LASTokenGenerator) ImportRestrictedOfflineActivationRequest(ctx context.Context, lsid, pubkey string) (string, error) {
+	url := fmt.Sprintf("%s/support/%s/%s/importrestrictedofflineactivationrequest", ltg.BaseURL, ltg.CCID, ltg.Endpoint)
+
+	payload := map[string]string{
+		"ver":    "1.0",
+		"lsid":   lsid,
+		"pubkey": pubkey,
+	}
+	body, _ := json.Marshal(payload)
+
+	tflog.Debug(ctx, "API Call: ImportRestrictedOfflineActivationRequest", map[string]interface{}{
+		"url":    url,
+		"method": "POST",
+		"lsid":   lsid,
+	})
+	tflog.Debug(ctx, "Request Payload", map[string]interface{}{
+		"body": string(body),
+	})
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "CWSAuth bearer="+ltg.BearerToken)
+
+	resp, err := ltg.HTTPClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to import restricted request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	tflog.Debug(ctx, "Response Status", map[string]interface{}{
+		"status_code": resp.StatusCode,
+	})
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	tflog.Debug(ctx, "Response Body", map[string]interface{}{
+		"body": string(respBody),
+	})
+
+	if resp.StatusCode >= 400 {
+		tflog.Error(ctx, "Import Restricted Request Failed", map[string]interface{}{
+			"status_code": resp.StatusCode,
+			"response":    string(respBody),
+		})
+		return "", fmt.Errorf("HTTP error %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return "", fmt.Errorf("invalid JSON response: %w", err)
+	}
+
+	importToken, ok := result["importrequesttoken"].(string)
+	if !ok || importToken == "" {
+		return "", fmt.Errorf("importrequesttoken not found in response")
+	}
+
+	tflog.Info(ctx, "Imported restricted offline activation request", map[string]interface{}{"importToken": importToken})
 	return importToken, nil
 }
 
@@ -890,7 +1015,7 @@ func (ltg *LASTokenGenerator) ExportOfflineActivationResponse(ctx context.Contex
 		return nil, fmt.Errorf("failed to read response: %w", err)
 	}
 
-	tflog.Debug(ctx, "Response Body Size", map[string]interface{}{
+	tflog.Debug(ctx, "Response Body", map[string]interface{}{
 		"size_bytes": len(respBody),
 	})
 
