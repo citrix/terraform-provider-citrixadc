@@ -1,3 +1,8 @@
+## 2.1.4 (Mar 26, 2026)
+
+ENHANCEMENTS
+* **citrixadc_nslaslicense_offline**: Support for Offline LAS Licensing in restricted mode.
+
 ## 2.1.3 (Mar 24, 2026)
 
 FEATURES
