@@ -104,10 +104,10 @@ func gslbservice_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data *Gslb
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("monitor_name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("servicename:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Servicename.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("monitor_name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("servicename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicename.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

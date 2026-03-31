@@ -179,10 +179,10 @@ func cacheglobal_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *Ca
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("type:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Type.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

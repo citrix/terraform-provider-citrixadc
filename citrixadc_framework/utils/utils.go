@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"log"
+	"net/url"
 	"strconv"
 	"sync"
 	"time"
@@ -174,4 +175,17 @@ func ConvertToInt64(value interface{}) (int64, error) {
 func EncodeToBase64(input interface{}) string {
 	stringified := ToString(input)
 	return base64.StdEncoding.EncodeToString([]byte(stringified))
+}
+
+// UrlEncode URL-encodes a value so it is safe to embed in a comma-separated ID string.
+// Regular ADC resource names (alphanumeric, hyphens, underscores) pass through unchanged;
+// only characters that would break parsing (e.g. commas, colons) are percent-encoded.
+func UrlEncode(input interface{}) string {
+	return url.QueryEscape(ToString(input))
+}
+
+// UrlDecode decodes a URL-encoded string back to its original value.
+// Returns the decoded string and an error if the input is malformed.
+func UrlDecode(encoded string) (string, error) {
+	return url.QueryUnescape(encoded)
 }

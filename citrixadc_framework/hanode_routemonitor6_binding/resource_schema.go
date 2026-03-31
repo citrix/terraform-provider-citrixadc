@@ -90,10 +90,10 @@ func hanode_routemonitor6_bindingSetAttrFromGet(ctx context.Context, data *Hanod
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("hanode_id:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Hanodeid.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("routemonitor:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Routemonitor.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("hanode_id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Hanodeid.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("routemonitor:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Routemonitor.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

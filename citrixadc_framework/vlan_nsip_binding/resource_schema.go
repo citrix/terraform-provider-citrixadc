@@ -121,10 +121,10 @@ func vlan_nsip_bindingSetAttrFromGet(ctx context.Context, data *VlanNsipBindingR
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("vlanid:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Vlanid.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("vlanid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vlanid.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

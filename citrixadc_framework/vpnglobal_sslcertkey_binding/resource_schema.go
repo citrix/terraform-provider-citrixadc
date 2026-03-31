@@ -131,11 +131,11 @@ func vpnglobal_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Vpngl
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("cacert:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Cacert.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("userdataencryptionkey:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Userdataencryptionkey.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("cacert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Cacert.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("userdataencryptionkey:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Userdataencryptionkey.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

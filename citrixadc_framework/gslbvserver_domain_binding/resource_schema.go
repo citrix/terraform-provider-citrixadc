@@ -202,12 +202,12 @@ func gslbvserver_domain_bindingSetAttrFromGet(ctx context.Context, data *Gslbvse
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("backupipflag:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Backupipflag.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("cookie_domainflag:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.CookieDomainflag.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("domainname:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Domainname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("backupipflag:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Backupipflag.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("cookie_domainflag:%s", utils.UrlEncode(fmt.Sprintf("%v", data.CookieDomainflag.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("domainname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Domainname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

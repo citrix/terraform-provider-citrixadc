@@ -88,10 +88,10 @@ func aaagroup_vpnintranetapplication_bindingSetAttrFromGet(ctx context.Context, 
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Groupname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("intranetapplication:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Intranetapplication.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("intranetapplication:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetapplication.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

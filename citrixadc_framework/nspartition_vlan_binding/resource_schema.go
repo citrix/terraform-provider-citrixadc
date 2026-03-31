@@ -76,10 +76,10 @@ func nspartition_vlan_bindingSetAttrFromGet(ctx context.Context, data *Nspartiti
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("partitionname:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Partitionname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("vlan:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Vlan.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("partitionname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Partitionname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("vlan:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vlan.ValueInt64()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

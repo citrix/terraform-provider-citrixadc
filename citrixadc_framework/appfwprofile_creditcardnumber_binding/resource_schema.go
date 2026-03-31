@@ -163,11 +163,11 @@ func appfwprofile_creditcardnumber_bindingSetAttrFromGet(ctx context.Context, da
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("creditcardnumber:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Creditcardnumber.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("creditcardnumberurl:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Creditcardnumberurl.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("creditcardnumber:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Creditcardnumber.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("creditcardnumberurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Creditcardnumberurl.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

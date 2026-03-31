@@ -177,11 +177,11 @@ func appfwprofile_fieldconsistency_bindingSetAttrFromGet(ctx context.Context, da
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("fieldconsistency:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Fieldconsistency.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("formactionurl_ffc:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.FormactionurlFfc.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("fieldconsistency:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Fieldconsistency.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("formactionurl_ffc:%s", utils.UrlEncode(fmt.Sprintf("%v", data.FormactionurlFfc.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

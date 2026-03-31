@@ -74,10 +74,10 @@ func lsnappsprofile_port_bindingSetAttrFromGet(ctx context.Context, data *Lsnapp
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("appsprofilename:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Appsprofilename.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("lsnport:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Lsnport.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("appsprofilename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Appsprofilename.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("lsnport:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Lsnport.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

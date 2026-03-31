@@ -93,10 +93,10 @@ func sslservicegroup_sslciphersuite_bindingSetAttrFromGet(ctx context.Context, d
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ciphername:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Ciphername.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ciphername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ciphername.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

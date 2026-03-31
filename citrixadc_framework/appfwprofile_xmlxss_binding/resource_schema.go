@@ -177,11 +177,11 @@ func appfwprofile_xmlxss_bindingSetAttrFromGet(ctx context.Context, data *Appfwp
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("as_scan_location_xmlxss:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.AsScanLocationXmlxss.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("xmlxss:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Xmlxss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_scan_location_xmlxss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsScanLocationXmlxss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("xmlxss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Xmlxss.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

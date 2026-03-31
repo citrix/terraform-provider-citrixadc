@@ -240,14 +240,14 @@ func botprofile_ratelimit_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_type:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.BotRateLimitType.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_url:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.BotRateLimitUrl.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("condition:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Condition.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("cookiename:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Cookiename.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("countrycode:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Countrycode.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRateLimitType.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRateLimitUrl.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("condition:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Condition.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("cookiename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Cookiename.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("countrycode:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Countrycode.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

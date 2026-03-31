@@ -73,10 +73,10 @@ func linkset_channel_bindingSetAttrFromGet(ctx context.Context, data *LinksetCha
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("linkset_id:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Linksetid.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("linkset_id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Linksetid.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

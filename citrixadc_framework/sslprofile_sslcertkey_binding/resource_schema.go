@@ -90,10 +90,10 @@ func sslprofile_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Sslp
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("sslicacertkey:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Sslicacertkey.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("sslicacertkey:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Sslicacertkey.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

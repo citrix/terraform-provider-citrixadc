@@ -104,10 +104,10 @@ func lsnclient_network_bindingSetAttrFromGet(ctx context.Context, data *Lsnclien
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Clientname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("network:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Network.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
