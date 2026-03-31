@@ -22,10 +22,10 @@ terraform {
 # - is_cloud: Set to true for NetScaler Console Cloud
 # - do_login: Set to true to establish session
 provider "citrixadc" {
-  endpoint   = "https://alps.adm.cloudburrito.com/"
-  username   = "4tytuyuutf-4713-46f6-b54e-3d986493a3d8"
-  password   = "nhwopMqXlXdhFfAPbnTPxw==="
-  proxied_ns = "10.146.88.126"
+  endpoint   = "https://<<ADM_CLOUD_URL>>/"
+  username   = "<<USERNAME>>"
+  password   = "<<PASSWORD>>"
+  proxied_ns = "<<NS_IP>>"
   is_cloud   = true
   do_login   = true
 }
