@@ -233,14 +233,14 @@ func appfwprofile_crosssitescripting_bindingSetAttrFromGet(ctx context.Context, 
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("as_scan_location_xss:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.AsScanLocationXss.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("as_value_expr_xss:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.AsValueExprXss.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("as_value_type_xss:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.AsValueTypeXss.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("crosssitescripting:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Crosssitescripting.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("formactionurl_xss:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.FormactionurlXss.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_scan_location_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsScanLocationXss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_value_expr_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueExprXss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_value_type_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueTypeXss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("crosssitescripting:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Crosssitescripting.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("formactionurl_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.FormactionurlXss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

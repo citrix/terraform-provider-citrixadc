@@ -74,10 +74,10 @@ func rnat_nsip_bindingSetAttrFromGet(ctx context.Context, data *RnatNsipBindingR
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("natip:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Natip.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("natip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Natip.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

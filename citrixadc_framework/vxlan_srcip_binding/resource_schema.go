@@ -76,10 +76,10 @@ func vxlan_srcip_bindingSetAttrFromGet(ctx context.Context, data *VxlanSrcipBind
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("vxlanid:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Vxlanid.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("srcip:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Srcip.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("vxlanid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vxlanid.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("srcip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Srcip.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

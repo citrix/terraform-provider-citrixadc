@@ -131,13 +131,13 @@ func snmptrap_snmpuser_bindingSetAttrFromGet(ctx context.Context, data *Snmptrap
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Td.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("trapclass:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Trapclass.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("trapdestination:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Trapdestination.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("username:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Username.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("version:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Version.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("trapclass:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Trapclass.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("trapdestination:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Trapdestination.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("username:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Username.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("version:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Version.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

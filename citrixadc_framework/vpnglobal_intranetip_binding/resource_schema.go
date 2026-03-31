@@ -89,9 +89,9 @@ func vpnglobal_intranetip_bindingSetAttrFromGet(ctx context.Context, data *Vpngl
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("intranetip:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Intranetip.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("intranetip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

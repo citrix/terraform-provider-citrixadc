@@ -144,14 +144,14 @@ func sslvserver_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Sslv
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Ca.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("crlcheck:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Crlcheck.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ocspcheck:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Ocspcheck.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("vservername:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Vservername.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("crlcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Crlcheck.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ocspcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ocspcheck.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("vservername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vservername.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

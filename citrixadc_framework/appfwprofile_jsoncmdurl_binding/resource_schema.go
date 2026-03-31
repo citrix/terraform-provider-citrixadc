@@ -219,13 +219,13 @@ func appfwprofile_jsoncmdurl_bindingSetAttrFromGet(ctx context.Context, data *Ap
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("as_value_expr_json_cmd:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.AsValueExprJsonCmd.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("as_value_type_json_cmd:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.AsValueTypeJsonCmd.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("jsoncmdurl:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Jsoncmdurl.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("keyname_json_cmd:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.KeynameJsonCmd.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_value_expr_json_cmd:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueExprJsonCmd.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_value_type_json_cmd:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueTypeJsonCmd.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("jsoncmdurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Jsoncmdurl.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("keyname_json_cmd:%s", utils.UrlEncode(fmt.Sprintf("%v", data.KeynameJsonCmd.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

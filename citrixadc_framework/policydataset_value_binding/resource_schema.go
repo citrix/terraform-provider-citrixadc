@@ -117,11 +117,11 @@ func policydataset_value_bindingSetAttrFromGet(ctx context.Context, data *Policy
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("endrange:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Endrange.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("value:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Value.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("endrange:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Endrange.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Value.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

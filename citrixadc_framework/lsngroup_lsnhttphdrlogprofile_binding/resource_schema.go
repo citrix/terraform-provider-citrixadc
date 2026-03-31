@@ -74,10 +74,10 @@ func lsngroup_lsnhttphdrlogprofile_bindingSetAttrFromGet(ctx context.Context, da
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Groupname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("httphdrlogprofilename:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Httphdrlogprofilename.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("httphdrlogprofilename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Httphdrlogprofilename.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

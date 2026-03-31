@@ -233,14 +233,14 @@ func appfwprofile_cmdinjection_bindingSetAttrFromGet(ctx context.Context, data *
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("as_scan_location_cmd:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.AsScanLocationCmd.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("as_value_expr_cmd:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.AsValueExprCmd.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("as_value_type_cmd:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.AsValueTypeCmd.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("cmdinjection:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Cmdinjection.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("formactionurl_cmd:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.FormactionurlCmd.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_scan_location_cmd:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsScanLocationCmd.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_value_expr_cmd:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueExprCmd.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_value_type_cmd:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueTypeCmd.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("cmdinjection:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Cmdinjection.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("formactionurl_cmd:%s", utils.UrlEncode(fmt.Sprintf("%v", data.FormactionurlCmd.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

@@ -78,10 +78,10 @@ func nstrafficdomain_vxlan_bindingSetAttrFromGet(ctx context.Context, data *Nstr
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Td.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("vxlan:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Vxlan.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("vxlan:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vxlan.ValueInt64()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

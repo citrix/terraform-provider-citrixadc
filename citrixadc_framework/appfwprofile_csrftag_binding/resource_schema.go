@@ -163,11 +163,11 @@ func appfwprofile_csrftag_bindingSetAttrFromGet(ctx context.Context, data *Appfw
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("csrfformactionurl:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Csrfformactionurl.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("csrftag:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Csrftag.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("csrfformactionurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Csrfformactionurl.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("csrftag:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Csrftag.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

@@ -211,12 +211,12 @@ func appfwprofile_fileuploadtype_bindingSetAttrFromGet(ctx context.Context, data
 		data.Filetype = types.ListNull(types.StringType)
 	}
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:base64(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("as_fileuploadtypes_url:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.AsFileuploadtypesUrl.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("filetype:%s", utils.EncodeToBase64(fmt.Sprintf("%v", dataFiletype))))
-	idParts = append(idParts, fmt.Sprintf("fileuploadtype:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Fileuploadtype.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.EncodeToBase64(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_fileuploadtypes_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsFileuploadtypesUrl.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("filetype:%s", utils.UrlEncode(fmt.Sprintf("%v", dataFiletype))))
+	idParts = append(idParts, fmt.Sprintf("fileuploadtype:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Fileuploadtype.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
