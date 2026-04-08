@@ -808,9 +808,9 @@ resource "citrixadc_lbvserver" "tf_test_redirectfromport_lb" {
 
 func TestAccLbvserver_redirectfromport(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		CheckDestroy:      testAccCheckLbvserverDestroy,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Create with redirectfromport = 80
 			{

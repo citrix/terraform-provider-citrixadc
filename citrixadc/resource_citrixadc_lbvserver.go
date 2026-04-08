@@ -1982,8 +1982,39 @@ func doLbvserverStateChange(d *schema.ResourceData, client *service.NitroClient)
 	return nil
 }
 
+func checkLbvserverAttributeNeedsUnset(
+	d *schema.ResourceData,
+	attributeName string,
+) bool {
+	// Check if the attribute has changed
+	if !d.HasChange(attributeName) {
+		return false
+	}
 
-// checkAttributeNeedsUnset determines if an attribute should be unset via the API.
+	oldValue, _ := d.GetChange(attributeName)
+
+	// Check if the attribute has been removed from config (is null in raw config).
+	rawConfig := d.GetRawConfig()
+	newRawValue := rawConfig.GetAttr(attributeName)
+	attributeRemovedFromConfig := newRawValue.IsNull()
+
+	// Unset only if: removed from config AND old value was non-empty/non-zero
+	if !attributeRemovedFromConfig {
+		return false
+	}
+
+	switch oldVal := oldValue.(type) {
+	case string:
+		return oldVal != ""
+	case int:
+		return oldVal != 0
+	case bool:
+		return oldVal != false
+	default:
+		return oldValue != nil
+	}
+}
+
 // executeLbvserverUnset performs the actual unset API call with all collected attributes
 func executeLbvserverUnset(
 	client *service.NitroClient,

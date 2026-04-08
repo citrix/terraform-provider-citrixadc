@@ -193,3 +193,165 @@ func TestAccLbmonitorDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccLbmonitor_respcode = `
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_respcode" {
+	monitorname = "tf_test_lbmonitor_respcode"
+	type        = "HTTP"
+	interval    = 5
+	resptimeout = 2
+	respcode    = ["200", "301"]
+}
+`
+
+func TestAccLbmonitor_respcode(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_respcode,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_respcode", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode", "monitorname", "tf_test_lbmonitor_respcode"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode", "type", "HTTP"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode", "respcode.#", "2"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode", "respcode.0", "200"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode", "respcode.1", "301"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbmonitor_respcode_empty = `
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_respcode_empty" {
+	monitorname = "tf_test_lbmonitor_respcode_empty"
+	type        = "HTTP"
+	interval    = 5
+	resptimeout = 2
+	# respcode not specified - NetScaler will use default ["200"]
+}
+`
+
+func TestAccLbmonitor_respcode_empty(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_respcode_empty,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_respcode_empty", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode_empty", "monitorname", "tf_test_lbmonitor_respcode_empty"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode_empty", "type", "HTTP"),
+					// When respcode is not specified, NetScaler returns default ["200"]
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode_empty", "respcode.#", "1"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode_empty", "respcode.0", "200"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbmonitor_respcode_single = `
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_respcode_single" {
+	monitorname = "tf_test_lbmonitor_respcode_single"
+	type        = "HTTP"
+	interval    = 5
+	resptimeout = 2
+	respcode    = ["200"]
+}
+`
+
+func TestAccLbmonitor_respcode_single(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_respcode_single,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_respcode_single", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode_single", "monitorname", "tf_test_lbmonitor_respcode_single"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode_single", "type", "HTTP"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode_single", "respcode.#", "1"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_respcode_single", "respcode.0", "200"),
+				),
+			},
+		},
+	})
+}
+
+// DNS Monitor Tests - respcode does not apply to DNS type monitors
+
+const testAccLbmonitor_dns_basic = `
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_dns_basic" {
+	monitorname = "tf_test_lbmonitor_dns_basic"
+	type        = "DNS"
+	query       = "example.com"
+	querytype   = "Address"
+	interval    = 5
+	resptimeout = 2
+}
+`
+
+func TestAccLbmonitor_dns_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_dns_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_dns_basic", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_dns_basic", "monitorname", "tf_test_lbmonitor_dns_basic"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_dns_basic", "type", "DNS"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_dns_basic", "query", "example.com"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_dns_basic", "querytype", "Address"),
+					// NetScaler returns nil for respcode on DNS monitors
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_dns_basic", "respcode.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbmonitor_dns_empty = `
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_dns_empty" {
+	monitorname = "tf_test_lbmonitor_dns_empty"
+	type        = "DNS"
+	interval    = 5
+	resptimeout = 2
+	# No query, querytype, or respcode specified
+}
+`
+
+func TestAccLbmonitor_dns_empty(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_dns_empty,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_dns_empty", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_dns_empty", "monitorname", "tf_test_lbmonitor_dns_empty"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_dns_empty", "type", "DNS"),
+					// NetScaler returns nil for respcode on DNS monitors
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_dns_empty", "respcode.#", "0"),
+				),
+			},
+		},
+	})
+}

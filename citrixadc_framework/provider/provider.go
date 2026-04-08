@@ -294,6 +294,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_cspolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_feopolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_gslbvserver_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_lbvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_responderpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_rewritepolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_spilloverpolicy_binding"
@@ -482,6 +483,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsicapprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsip"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsip6"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslaslicense_offline"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslicense"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslicenseparameters"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslicenseproxyserver"
@@ -955,13 +957,6 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 		}
 	}
 
-	// providerData := &ProviderData{
-	// 	Client:   client,
-	// 	Username: username,
-	// 	Password: password,
-	// 	Endpoint: endpoint,
-	// }
-
 	resp.DataSourceData = &client
 	resp.ResourceData = &client
 
@@ -974,6 +969,8 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		sslcertkey.NewSslCertKeyResource,
 		sslcertkey.NewSslCertKeyUpdateResource,
 		vpnvserver_appfwpolicy_binding.NewVpnvserverAppfwpolicyBindingResource,
+		nslaslicense_offline.NewNSLASLicenseOfflineResource,
+		csvserver_lbvserver_binding.NewCsvserverLbvserverBindingResource,
 	}
 }
 
@@ -1710,6 +1707,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		servicegroup_servicegroupmember_binding.SErvicegroupServicegroupmemberBindingDataSource,
 		snmptrap_snmpuser_binding.SNmptrapSnmpuserBindingDataSource,
 		vpnvserver_appfwpolicy_binding.VpnvserverAppfwpolicyBindingDataSource,
+		csvserver_lbvserver_binding.CSvserverLbvserverBindingDataSource,
 	}
 }
 

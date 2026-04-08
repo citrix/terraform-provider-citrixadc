@@ -1,3 +1,27 @@
+## 2.1.4 (Mar 26, 2026)
+
+ENHANCEMENTS
+* **citrixadc_nslaslicense_offline**: Support for Offline LAS Licensing in restricted mode.
+
+## 2.1.3 (Mar 24, 2026)
+
+FEATURES
+* **New Resource**: Support for creating and managing citrixadc_csvserver_lbvserver_binding.
+* **New Resource**: Support for configuring citrixadc_nslaslicense_offline resource for Offline LAS licensing.
+
+BUG FIXES
+* **citrixadc_lbmonitor_sslcertkey_binding**: Fixed `ca` attribute not being passed in the API call when deleting lbmonitor_sslcertkey_binding. [#1377]
+* **citrixadc_lbmonitor**: Rectified `respcode` attribute handling to prevent unnecessary drift detection. [#1384]
+* **citrixadc_routerdynamicrouting**: Fixed dynamic routing config resource to not require node id for create/apply. [#1388]
+
+UPDATES
+* **google.golang.org/grpc**: Version upgrade from 1.75.1 to 1.79.3.
+* **github.com/cloudflare/circl**: Version upgrade from 1.6.1 to 1.6.3.
+
+[#1377]: https://github.com/citrix/terraform-provider-citrixadc/issues/1377
+[#1384]: https://github.com/citrix/terraform-provider-citrixadc/issues/1384
+[#1388]: https://github.com/citrix/terraform-provider-citrixadc/issues/1388
+
 ## 2.1.2 (Mar 07, 2026)
 
 BUG FIXES

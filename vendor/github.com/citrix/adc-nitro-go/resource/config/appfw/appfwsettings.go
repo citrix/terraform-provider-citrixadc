@@ -97,7 +97,7 @@ type Appfwsettings struct {
 	 */
 	Malformedreqaction []string `json:"malformedreqaction,omitempty"`
 	/**
-	* Flag used to enable/disable NetScaler Console centralized learning
+	* Flag used to enable/disable ADM centralized learning
 	 */
 	Centralizedlearning string `json:"centralizedlearning,omitempty"`
 	/**
