@@ -136,3 +136,75 @@ func hashString(input string) int {
 func intPtr(i int) *int {
 	return &i
 }
+
+// checkAttributeNeedsUnset determines if an attribute should be unset via the API.
+// This is a generic function that can be used across all Citrix ADC resources.
+//
+// The Citrix ADC API doesn't accept empty/zero values for some attributes and requires
+// them to be explicitly unset instead of being set to empty/zero values.
+//
+// Returns true if the attribute should be unset in the following cases:
+// 1. String attributes: Changed from non-empty to empty string ("")
+// 2. Integer attributes: Changed from non-zero to zero (0)
+// 3. Any attribute: Removed entirely from the Terraform config
+//
+// Parameters:
+//   - d: The ResourceData from Terraform
+//   - attributeName: The name of the attribute to check
+//
+// Example usage:
+//
+//	if checkAttributeNeedsUnset(d, "comment") {
+//	    attributesToUnset = append(attributesToUnset, "comment")
+//	} else {
+//	    resource.Comment = d.Get("comment").(string)
+//	    hasChange = true
+//	}
+func checkAttributeNeedsUnset(
+	d *schema.ResourceData,
+	attributeName string,
+) bool {
+	// Check if the attribute has changed
+	if !d.HasChange(attributeName) {
+		return false
+	}
+
+	oldValue, newValue := d.GetChange(attributeName)
+
+	// Check if the attribute has been removed from config (is null in raw config).
+	rawConfig := d.GetRawConfig()
+	newRawValue := rawConfig.GetAttr(attributeName)
+	attributeRemovedFromConfig := newRawValue.IsNull()
+
+	// For attributes still present in config but changed to "empty" values:
+	// These need to be unset because the API doesn't accept empty/zero values
+	if !attributeRemovedFromConfig {
+		// String attributes: unset if changed from non-empty to empty string
+		if oldStr, ok := oldValue.(string); ok {
+			if newStr, ok := newValue.(string); ok {
+				return oldStr != "" && newStr == ""
+			}
+		}
+
+		// Integer attributes: unset if changed from non-zero to zero
+		if oldInt, ok := oldValue.(int); ok {
+			if newInt, ok := newValue.(int); ok {
+				return oldInt != 0 && newInt == 0
+			}
+		}
+
+		return false
+	}
+
+	// Unset only if: removed from config AND old value was non-empty/non-zero
+	switch oldVal := oldValue.(type) {
+	case string:
+		return oldVal != ""
+	case int:
+		return oldVal != 0
+	case bool:
+		return oldVal != false
+	default:
+		return oldValue != nil
+	}
+}
