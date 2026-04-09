@@ -94,6 +94,15 @@ func AuthenticationradiusactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Key shared between the RADIUS server and the Citrix ADC.\nRequired to allow the Citrix ADC to communicate with the RADIUS server.",
 			},
+			"radkey_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Key shared between the RADIUS server and the Citrix ADC.\nRequired to allow the Citrix ADC to communicate with the RADIUS server.",
+			},
+			"radkey_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a radkey_wo update.",
+			},
 			"radnasid": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

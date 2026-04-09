@@ -141,6 +141,132 @@ func testAccCheckAuthenticationtacacsactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+// Test backward-compatible path: using tacacssecret (Sensitive attribute)
+const testAccAuthenticationtacacsaction_tacacssecret_step1 = `
+
+	variable "tacacsaction_tacacssecret" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+		name          = "tf_tacacsaction"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 5
+		tacacssecret  = var.tacacsaction_tacacssecret
+		authorization = "ON"
+	}
+`
+
+const testAccAuthenticationtacacsaction_tacacssecret_step2 = `
+
+	variable "tacacsaction_tacacssecret_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+		name          = "tf_tacacsaction"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 5
+		tacacssecret  = var.tacacsaction_tacacssecret_2
+		authorization = "ON"
+	}
+`
+
+func TestAccAuthenticationtacacsaction_tacacssecret_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_tacacsaction_tacacssecret", "oldsecret123")
+	t.Setenv("TF_VAR_tacacsaction_tacacssecret_2", "newsecret456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationtacacsactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationtacacsaction_tacacssecret_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationtacacsactionExist("citrixadc_authenticationtacacsaction.tf_tacacsaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationtacacsaction.tf_tacacsaction", "name", "tf_tacacsaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationtacacsaction.tf_tacacsaction", "authorization", "ON"),
+				),
+			},
+			{
+				Config: testAccAuthenticationtacacsaction_tacacssecret_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationtacacsactionExist("citrixadc_authenticationtacacsaction.tf_tacacsaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationtacacsaction.tf_tacacsaction", "name", "tf_tacacsaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationtacacsaction.tf_tacacsaction", "authorization", "ON"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using tacacssecret_wo (WriteOnly attribute) with version tracker
+const testAccAuthenticationtacacsaction_tacacssecret_wo_step1 = `
+
+	variable "tacacsaction_tacacssecret_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+		name                   = "tf_tacacsaction"
+		serverip               = "1.2.3.4"
+		serverport             = 8080
+		authtimeout            = 5
+		tacacssecret_wo        = var.tacacsaction_tacacssecret_wo
+		tacacssecret_wo_version = 1
+		authorization          = "ON"
+	}
+`
+
+const testAccAuthenticationtacacsaction_tacacssecret_wo_step2 = `
+
+	variable "tacacsaction_tacacssecret_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+		name                   = "tf_tacacsaction"
+		serverip               = "1.2.3.4"
+		serverport             = 8080
+		authtimeout            = 5
+		tacacssecret_wo        = var.tacacsaction_tacacssecret_wo_2
+		tacacssecret_wo_version = 2
+		authorization          = "ON"
+	}
+`
+
+func TestAccAuthenticationtacacsaction_tacacssecret_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_tacacsaction_tacacssecret_wo", "ephemeral_tacacs1")
+	t.Setenv("TF_VAR_tacacsaction_tacacssecret_wo_2", "ephemeral_tacacs2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationtacacsactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationtacacsaction_tacacssecret_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationtacacsactionExist("citrixadc_authenticationtacacsaction.tf_tacacsaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationtacacsaction.tf_tacacsaction", "tacacssecret_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationtacacsaction_tacacssecret_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationtacacsactionExist("citrixadc_authenticationtacacsaction.tf_tacacsaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationtacacsaction.tf_tacacsaction", "tacacssecret_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 const testAccAuthenticationtacacsactionDataSource_basic = `
 	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
 		name            = "tf_tacacsaction_ds"

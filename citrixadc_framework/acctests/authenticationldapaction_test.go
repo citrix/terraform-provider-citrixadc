@@ -134,6 +134,132 @@ func testAccCheckAuthenticationldapactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+// Test backward-compatible path: using ldapbinddnpassword (Sensitive attribute)
+const testAccAuthenticationldapaction_ldapbinddnpassword_step1 = `
+
+	variable "ldapaction_ldapbinddnpassword" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationldapaction" "foo" {
+		name               = "ldapaction"
+		serverip           = "1.2.3.4"
+		serverport         = 8080
+		authtimeout        = 1
+		ldaploginname      = "username"
+		ldapbinddnpassword = var.ldapaction_ldapbinddnpassword
+	}
+`
+
+const testAccAuthenticationldapaction_ldapbinddnpassword_step2 = `
+
+	variable "ldapaction_ldapbinddnpassword_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationldapaction" "foo" {
+		name               = "ldapaction"
+		serverip           = "1.2.3.4"
+		serverport         = 8080
+		authtimeout        = 1
+		ldaploginname      = "username"
+		ldapbinddnpassword = var.ldapaction_ldapbinddnpassword_2
+	}
+`
+
+func TestAccAuthenticationldapaction_ldapbinddnpassword_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_ldapaction_ldapbinddnpassword", "oldldappass123")
+	t.Setenv("TF_VAR_ldapaction_ldapbinddnpassword_2", "newldappass456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationldapactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationldapaction_ldapbinddnpassword_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationldapactionExist("citrixadc_authenticationldapaction.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.foo", "name", "ldapaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.foo", "serverip", "1.2.3.4"),
+				),
+			},
+			{
+				Config: testAccAuthenticationldapaction_ldapbinddnpassword_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationldapactionExist("citrixadc_authenticationldapaction.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.foo", "name", "ldapaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.foo", "serverip", "1.2.3.4"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using ldapbinddnpassword_wo (WriteOnly attribute) with version tracker
+const testAccAuthenticationldapaction_ldapbinddnpassword_wo_step1 = `
+
+	variable "ldapaction_ldapbinddnpassword_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationldapaction" "foo" {
+		name                          = "ldapaction"
+		serverip                      = "1.2.3.4"
+		serverport                    = 8080
+		authtimeout                   = 1
+		ldaploginname                 = "username"
+		ldapbinddnpassword_wo         = var.ldapaction_ldapbinddnpassword_wo
+		ldapbinddnpassword_wo_version = 1
+	}
+`
+
+const testAccAuthenticationldapaction_ldapbinddnpassword_wo_step2 = `
+
+	variable "ldapaction_ldapbinddnpassword_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationldapaction" "foo" {
+		name                          = "ldapaction"
+		serverip                      = "1.2.3.4"
+		serverport                    = 8080
+		authtimeout                   = 1
+		ldaploginname                 = "username"
+		ldapbinddnpassword_wo         = var.ldapaction_ldapbinddnpassword_wo_2
+		ldapbinddnpassword_wo_version = 2
+	}
+`
+
+func TestAccAuthenticationldapaction_ldapbinddnpassword_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_ldapaction_ldapbinddnpassword_wo", "ephemeral_ldap1")
+	t.Setenv("TF_VAR_ldapaction_ldapbinddnpassword_wo_2", "ephemeral_ldap2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationldapactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationldapaction_ldapbinddnpassword_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationldapactionExist("citrixadc_authenticationldapaction.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.foo", "ldapbinddnpassword_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationldapaction_ldapbinddnpassword_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationldapactionExist("citrixadc_authenticationldapaction.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.foo", "ldapbinddnpassword_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 const testAccAuthenticationldapactionDataSource_basic = `
 	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
 		name   		  = "tf_authenticationldapaction"

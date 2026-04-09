@@ -2,13 +2,15 @@ package authenticationradiusaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,6 +37,8 @@ type AuthenticationradiusactionResourceModel struct {
 	Radgroupseparator          types.String `tfsdk:"radgroupseparator"`
 	Radgroupsprefix            types.String `tfsdk:"radgroupsprefix"`
 	Radkey                     types.String `tfsdk:"radkey"`
+	RadkeyWo                   types.String `tfsdk:"radkey_wo"`
+	RadkeyWoVersion            types.Int64  `tfsdk:"radkey_wo_version"`
 	Radnasid                   types.String `tfsdk:"radnasid"`
 	Radnasip                   types.String `tfsdk:"radnasip"`
 	Radvendorid                types.Int64  `tfsdk:"radvendorid"`
@@ -61,22 +65,22 @@ func (r *AuthenticationradiusactionResource) Schema(ctx context.Context, req res
 			},
 			"authentication": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Configure the RADIUS server state to accept or refuse authentication messages.",
 			},
 			"authservretry": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Number of retry by the Citrix ADC before getting response from the RADIUS server.",
 			},
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Number of seconds the Citrix ADC waits for a response from the RADIUS server.",
 			},
 			"callingstationid": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Send Calling-Station-ID of the client to the RADIUS server. IP Address of the client is sent as its Calling-Station-ID.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -96,16 +100,19 @@ func (r *AuthenticationradiusactionResource) Schema(ctx context.Context, req res
 			},
 			"messageauthenticator": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Control whether the Message-Authenticator attribute is included in a RADIUS Access-Request packet.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the RADIUS action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the RADIUS action is added.",
 			},
 			"passencoding": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("pap"),
+				Computed:    true,
 				Description: "Encoding type for passwords in RADIUS packets that the Citrix ADC sends to the RADIUS server.",
 			},
 			"pwdattributetype": schema.Int64Attribute{
@@ -134,8 +141,21 @@ func (r *AuthenticationradiusactionResource) Schema(ctx context.Context, req res
 				Description: "RADIUS groups prefix string.\nThis groups prefix precedes the group names within a RADIUS attribute for RADIUS group extraction.",
 			},
 			"radkey": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "Key shared between the RADIUS server and the Citrix ADC.\nRequired to allow the Citrix ADC to communicate with the RADIUS server.",
+			},
+			"radkey_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Key shared between the RADIUS server and the Citrix ADC.\nRequired to allow the Citrix ADC to communicate with the RADIUS server.",
+			},
+			"radkey_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a radkey_wo update.",
 			},
 			"radnasid": schema.StringAttribute{
 				Optional:    true,
@@ -174,20 +194,20 @@ func (r *AuthenticationradiusactionResource) Schema(ctx context.Context, req res
 			},
 			"transport": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("UDP"),
+				Computed:    true,
 				Description: "Transport mode to RADIUS server.",
 			},
 			"tunnelendpointclientip": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Send Tunnel Endpoint Client IP address to the RADIUS server.",
 			},
 		},
 	}
 }
 
-func authenticationradiusactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationradiusactionResourceModel) authentication.Authenticationradiusaction {
-	tflog.Debug(ctx, "In authenticationradiusactionGetThePayloadFromtheConfig Function")
+func authenticationradiusactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationradiusactionResourceModel) authentication.Authenticationradiusaction {
+	tflog.Debug(ctx, "In authenticationradiusactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationradiusaction := authentication.Authenticationradiusaction{}
@@ -242,6 +262,8 @@ func authenticationradiusactionGetThePayloadFromtheConfig(ctx context.Context, d
 	if !data.Radkey.IsNull() {
 		authenticationradiusaction.Radkey = data.Radkey.ValueString()
 	}
+	// Skip write-only attribute: radkey_wo
+	// Skip version tracker attribute: radkey_wo_version
 	if !data.Radnasid.IsNull() {
 		authenticationradiusaction.Radnasid = data.Radnasid.ValueString()
 	}
@@ -271,6 +293,19 @@ func authenticationradiusactionGetThePayloadFromtheConfig(ctx context.Context, d
 	}
 
 	return authenticationradiusaction
+}
+
+func authenticationradiusactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationradiusactionResourceModel, payload *authentication.Authenticationradiusaction) {
+	tflog.Debug(ctx, "In authenticationradiusactionGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: radkey_wo -> radkey
+	if !data.RadkeyWo.IsNull() {
+		radkeyWo := data.RadkeyWo.ValueString()
+		if radkeyWo != "" {
+			payload.Radkey = radkeyWo
+		}
+	}
 }
 
 func authenticationradiusactionSetAttrFromGet(ctx context.Context, data *AuthenticationradiusactionResourceModel, getResponseData map[string]interface{}) *AuthenticationradiusactionResourceModel {
@@ -371,11 +406,9 @@ func authenticationradiusactionSetAttrFromGet(ctx context.Context, data *Authent
 	} else {
 		data.Radgroupsprefix = types.StringNull()
 	}
-	if val, ok := getResponseData["radkey"]; ok && val != nil {
-		data.Radkey = types.StringValue(val.(string))
-	} else {
-		data.Radkey = types.StringNull()
-	}
+	// radkey is not returned by NITRO API (secret/ephemeral) - retain from config
+	// radkey_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// radkey_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["radnasid"]; ok && val != nil {
 		data.Radnasid = types.StringValue(val.(string))
 	} else {
@@ -427,8 +460,8 @@ func authenticationradiusactionSetAttrFromGet(ctx context.Context, data *Authent
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

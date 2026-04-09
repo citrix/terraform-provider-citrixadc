@@ -2,13 +2,15 @@ package authenticationldapaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -17,62 +19,64 @@ import (
 
 // AuthenticationldapactionResourceModel describes the resource data model.
 type AuthenticationldapactionResourceModel struct {
-	Id                         types.String `tfsdk:"id"`
-	Alternateemailattr         types.String `tfsdk:"alternateemailattr"`
-	Attribute1                 types.String `tfsdk:"attribute1"`
-	Attribute10                types.String `tfsdk:"attribute10"`
-	Attribute11                types.String `tfsdk:"attribute11"`
-	Attribute12                types.String `tfsdk:"attribute12"`
-	Attribute13                types.String `tfsdk:"attribute13"`
-	Attribute14                types.String `tfsdk:"attribute14"`
-	Attribute15                types.String `tfsdk:"attribute15"`
-	Attribute16                types.String `tfsdk:"attribute16"`
-	Attribute2                 types.String `tfsdk:"attribute2"`
-	Attribute3                 types.String `tfsdk:"attribute3"`
-	Attribute4                 types.String `tfsdk:"attribute4"`
-	Attribute5                 types.String `tfsdk:"attribute5"`
-	Attribute6                 types.String `tfsdk:"attribute6"`
-	Attribute7                 types.String `tfsdk:"attribute7"`
-	Attribute8                 types.String `tfsdk:"attribute8"`
-	Attribute9                 types.String `tfsdk:"attribute9"`
-	Attributes                 types.String `tfsdk:"attributes"`
-	Authentication             types.String `tfsdk:"authentication"`
-	Authtimeout                types.Int64  `tfsdk:"authtimeout"`
-	Cloudattributes            types.String `tfsdk:"cloudattributes"`
-	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
-	Email                      types.String `tfsdk:"email"`
-	Followreferrals            types.String `tfsdk:"followreferrals"`
-	Groupattrname              types.String `tfsdk:"groupattrname"`
-	Groupnameidentifier        types.String `tfsdk:"groupnameidentifier"`
-	Groupsearchattribute       types.String `tfsdk:"groupsearchattribute"`
-	Groupsearchfilter          types.String `tfsdk:"groupsearchfilter"`
-	Groupsearchsubattribute    types.String `tfsdk:"groupsearchsubattribute"`
-	Kbattribute                types.String `tfsdk:"kbattribute"`
-	Ldapbase                   types.String `tfsdk:"ldapbase"`
-	Ldapbinddn                 types.String `tfsdk:"ldapbinddn"`
-	Ldapbinddnpassword         types.String `tfsdk:"ldapbinddnpassword"`
-	Ldaphostname               types.String `tfsdk:"ldaphostname"`
-	Ldaploginname              types.String `tfsdk:"ldaploginname"`
-	Maxldapreferrals           types.Int64  `tfsdk:"maxldapreferrals"`
-	Maxnestinglevel            types.Int64  `tfsdk:"maxnestinglevel"`
-	Mssrvrecordlocation        types.String `tfsdk:"mssrvrecordlocation"`
-	Name                       types.String `tfsdk:"name"`
-	Nestedgroupextraction      types.String `tfsdk:"nestedgroupextraction"`
-	Otpsecret                  types.String `tfsdk:"otpsecret"`
-	Passwdchange               types.String `tfsdk:"passwdchange"`
-	Pushservice                types.String `tfsdk:"pushservice"`
-	Referraldnslookup          types.String `tfsdk:"referraldnslookup"`
-	Requireuser                types.String `tfsdk:"requireuser"`
-	Searchfilter               types.String `tfsdk:"searchfilter"`
-	Sectype                    types.String `tfsdk:"sectype"`
-	Serverip                   types.String `tfsdk:"serverip"`
-	Servername                 types.String `tfsdk:"servername"`
-	Serverport                 types.Int64  `tfsdk:"serverport"`
-	Sshpublickey               types.String `tfsdk:"sshpublickey"`
-	Ssonameattribute           types.String `tfsdk:"ssonameattribute"`
-	Subattributename           types.String `tfsdk:"subattributename"`
-	Svrtype                    types.String `tfsdk:"svrtype"`
-	Validateservercert         types.String `tfsdk:"validateservercert"`
+	Id                          types.String `tfsdk:"id"`
+	Alternateemailattr          types.String `tfsdk:"alternateemailattr"`
+	Attribute1                  types.String `tfsdk:"attribute1"`
+	Attribute10                 types.String `tfsdk:"attribute10"`
+	Attribute11                 types.String `tfsdk:"attribute11"`
+	Attribute12                 types.String `tfsdk:"attribute12"`
+	Attribute13                 types.String `tfsdk:"attribute13"`
+	Attribute14                 types.String `tfsdk:"attribute14"`
+	Attribute15                 types.String `tfsdk:"attribute15"`
+	Attribute16                 types.String `tfsdk:"attribute16"`
+	Attribute2                  types.String `tfsdk:"attribute2"`
+	Attribute3                  types.String `tfsdk:"attribute3"`
+	Attribute4                  types.String `tfsdk:"attribute4"`
+	Attribute5                  types.String `tfsdk:"attribute5"`
+	Attribute6                  types.String `tfsdk:"attribute6"`
+	Attribute7                  types.String `tfsdk:"attribute7"`
+	Attribute8                  types.String `tfsdk:"attribute8"`
+	Attribute9                  types.String `tfsdk:"attribute9"`
+	Attributes                  types.String `tfsdk:"attributes"`
+	Authentication              types.String `tfsdk:"authentication"`
+	Authtimeout                 types.Int64  `tfsdk:"authtimeout"`
+	Cloudattributes             types.String `tfsdk:"cloudattributes"`
+	Defaultauthenticationgroup  types.String `tfsdk:"defaultauthenticationgroup"`
+	Email                       types.String `tfsdk:"email"`
+	Followreferrals             types.String `tfsdk:"followreferrals"`
+	Groupattrname               types.String `tfsdk:"groupattrname"`
+	Groupnameidentifier         types.String `tfsdk:"groupnameidentifier"`
+	Groupsearchattribute        types.String `tfsdk:"groupsearchattribute"`
+	Groupsearchfilter           types.String `tfsdk:"groupsearchfilter"`
+	Groupsearchsubattribute     types.String `tfsdk:"groupsearchsubattribute"`
+	Kbattribute                 types.String `tfsdk:"kbattribute"`
+	Ldapbase                    types.String `tfsdk:"ldapbase"`
+	Ldapbinddn                  types.String `tfsdk:"ldapbinddn"`
+	Ldapbinddnpassword          types.String `tfsdk:"ldapbinddnpassword"`
+	LdapbinddnpasswordWo        types.String `tfsdk:"ldapbinddnpassword_wo"`
+	LdapbinddnpasswordWoVersion types.Int64  `tfsdk:"ldapbinddnpassword_wo_version"`
+	Ldaphostname                types.String `tfsdk:"ldaphostname"`
+	Ldaploginname               types.String `tfsdk:"ldaploginname"`
+	Maxldapreferrals            types.Int64  `tfsdk:"maxldapreferrals"`
+	Maxnestinglevel             types.Int64  `tfsdk:"maxnestinglevel"`
+	Mssrvrecordlocation         types.String `tfsdk:"mssrvrecordlocation"`
+	Name                        types.String `tfsdk:"name"`
+	Nestedgroupextraction       types.String `tfsdk:"nestedgroupextraction"`
+	Otpsecret                   types.String `tfsdk:"otpsecret"`
+	Passwdchange                types.String `tfsdk:"passwdchange"`
+	Pushservice                 types.String `tfsdk:"pushservice"`
+	Referraldnslookup           types.String `tfsdk:"referraldnslookup"`
+	Requireuser                 types.String `tfsdk:"requireuser"`
+	Searchfilter                types.String `tfsdk:"searchfilter"`
+	Sectype                     types.String `tfsdk:"sectype"`
+	Serverip                    types.String `tfsdk:"serverip"`
+	Servername                  types.String `tfsdk:"servername"`
+	Serverport                  types.Int64  `tfsdk:"serverport"`
+	Sshpublickey                types.String `tfsdk:"sshpublickey"`
+	Ssonameattribute            types.String `tfsdk:"ssonameattribute"`
+	Subattributename            types.String `tfsdk:"subattributename"`
+	Svrtype                     types.String `tfsdk:"svrtype"`
+	Validateservercert          types.String `tfsdk:"validateservercert"`
 }
 
 func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -175,17 +179,17 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			},
 			"authentication": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Perform LDAP authentication.\nIf authentication is disabled, any LDAP authentication attempt returns authentication success if the user is found.\nCAUTION! Authentication should be disabled only for authorization group extraction or where other (non-LDAP) authentication methods are in use and either bound to a primary list or flagged as secondary.",
 			},
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Number of seconds the Citrix ADC waits for a response from the RADIUS server.",
 			},
 			"cloudattributes": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "The Citrix ADC uses the cloud attributes to extract additional attributes from LDAP servers required for Citrix Cloud operations",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -195,7 +199,7 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			},
 			"email": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("mail"),
+				Computed:    true,
 				Description: "The Citrix ADC uses the email attribute to query the Active Directory for the email id of a user",
 			},
 			"followreferrals": schema.StringAttribute{
@@ -245,8 +249,20 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			},
 			"ldapbinddnpassword": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Password used to bind to the LDAP server.",
+			},
+			"ldapbinddnpassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password used to bind to the LDAP server.",
+			},
+			"ldapbinddnpassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a ldapbinddnpassword_wo update.",
 			},
 			"ldaphostname": schema.StringAttribute{
 				Optional:    true,
@@ -260,12 +276,12 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			},
 			"maxldapreferrals": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Specifies the maximum number of nested referrals to follow.",
 			},
 			"maxnestinglevel": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2),
+				Computed:    true,
 				Description: "If nested group extraction is ON, specifies the number of levels up to which group extraction is performed.",
 			},
 			"mssrvrecordlocation": schema.StringAttribute{
@@ -274,7 +290,10 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 				Description: "MSSRV Specific parameter. Used to locate the DNS node to which the SRV record pertains in the domainname. The domainname is appended to it to form the srv record.\nExample : For \"dc._msdcs\", the srv record formed is _ldap._tcp.dc._msdcs.<domainname>.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new LDAP action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the LDAP action is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication action\" or 'my authentication action').",
 			},
 			"nestedgroupextraction": schema.StringAttribute{
@@ -289,7 +308,7 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			},
 			"passwdchange": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Allow password change requests.",
 			},
 			"pushservice": schema.StringAttribute{
@@ -299,12 +318,12 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			},
 			"referraldnslookup": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("A-REC"),
+				Computed:    true,
 				Description: "Specifies the DNS Record lookup Type for the referrals",
 			},
 			"requireuser": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Require a successful user search for authentication.\nCAUTION!  This field should be set to NO only if usersearch not required [Both username validation as well as password validation skipped] and (non-LDAP) authentication methods are in use and either bound to a primary list or flagged as secondary.",
 			},
 			"searchfilter": schema.StringAttribute{
@@ -314,7 +333,7 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			},
 			"sectype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("PLAINTEXT"),
+				Computed:    true,
 				Description: "Type of security used for communications between the Citrix ADC and the LDAP server. For the PLAINTEXT setting, no encryption is required.",
 			},
 			"serverip": schema.StringAttribute{
@@ -329,7 +348,7 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			},
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(389),
+				Computed:    true,
 				Description: "Port on which the LDAP server accepts connections.",
 			},
 			"sshpublickey": schema.StringAttribute{
@@ -349,7 +368,7 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			},
 			"svrtype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("AAA_LDAP_SERVER_TYPE_DEFAULT"),
+				Computed:    true,
 				Description: "The type of LDAP server.",
 			},
 			"validateservercert": schema.StringAttribute{
@@ -361,8 +380,8 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 	}
 }
 
-func authenticationldapactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationldapactionResourceModel) authentication.Authenticationldapaction {
-	tflog.Debug(ctx, "In authenticationldapactionGetThePayloadFromtheConfig Function")
+func authenticationldapactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationldapactionResourceModel) authentication.Authenticationldapaction {
+	tflog.Debug(ctx, "In authenticationldapactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationldapaction := authentication.Authenticationldapaction{}
@@ -465,6 +484,8 @@ func authenticationldapactionGetThePayloadFromtheConfig(ctx context.Context, dat
 	if !data.Ldapbinddnpassword.IsNull() {
 		authenticationldapaction.Ldapbinddnpassword = data.Ldapbinddnpassword.ValueString()
 	}
+	// Skip write-only attribute: ldapbinddnpassword_wo
+	// Skip version tracker attribute: ldapbinddnpassword_wo_version
 	if !data.Ldaphostname.IsNull() {
 		authenticationldapaction.Ldaphostname = data.Ldaphostname.ValueString()
 	}
@@ -533,6 +554,19 @@ func authenticationldapactionGetThePayloadFromtheConfig(ctx context.Context, dat
 	}
 
 	return authenticationldapaction
+}
+
+func authenticationldapactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationldapactionResourceModel, payload *authentication.Authenticationldapaction) {
+	tflog.Debug(ctx, "In authenticationldapactionGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: ldapbinddnpassword_wo -> ldapbinddnpassword
+	if !data.LdapbinddnpasswordWo.IsNull() {
+		ldapbinddnpasswordWo := data.LdapbinddnpasswordWo.ValueString()
+		if ldapbinddnpasswordWo != "" {
+			payload.Ldapbinddnpassword = ldapbinddnpasswordWo
+		}
+	}
 }
 
 func authenticationldapactionSetAttrFromGet(ctx context.Context, data *AuthenticationldapactionResourceModel, getResponseData map[string]interface{}) *AuthenticationldapactionResourceModel {
@@ -701,11 +735,9 @@ func authenticationldapactionSetAttrFromGet(ctx context.Context, data *Authentic
 	} else {
 		data.Ldapbinddn = types.StringNull()
 	}
-	if val, ok := getResponseData["ldapbinddnpassword"]; ok && val != nil {
-		data.Ldapbinddnpassword = types.StringValue(val.(string))
-	} else {
-		data.Ldapbinddnpassword = types.StringNull()
-	}
+	// ldapbinddnpassword is not returned by NITRO API (secret/ephemeral) - retain from config
+	// ldapbinddnpassword_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// ldapbinddnpassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["ldaphostname"]; ok && val != nil {
 		data.Ldaphostname = types.StringValue(val.(string))
 	} else {
@@ -824,8 +856,8 @@ func authenticationldapactionSetAttrFromGet(ctx context.Context, data *Authentic
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

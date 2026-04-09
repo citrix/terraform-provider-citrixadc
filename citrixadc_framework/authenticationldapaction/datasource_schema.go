@@ -175,6 +175,15 @@ func AuthenticationldapactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password used to bind to the LDAP server.",
 			},
+			"ldapbinddnpassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Password used to bind to the LDAP server.",
+			},
+			"ldapbinddnpassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a ldapbinddnpassword_wo update.",
+			},
 			"ldaphostname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

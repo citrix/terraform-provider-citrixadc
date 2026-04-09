@@ -22,6 +22,11 @@ func SystemuserDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Whether to use external authentication servers for the system user authentication or not",
 			},
+			"hashedpassword": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Hashed password for the system user, as returned by the NITRO API.",
+			},
 			"logging": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -37,6 +42,15 @@ func SystemuserDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password for the system user. Can include any ASCII character.",
 			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Password for the system user. Can include any ASCII character.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a password_wo update.",
+			},
 			"promptstring": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -50,6 +64,25 @@ func SystemuserDataSourceSchema() schema.Schema {
 			"username": schema.StringAttribute{
 				Required:    true,
 				Description: "Name for a user. Must begin with a letter, number, or the underscore (_) character, and must contain only alphanumeric, hyphen (-), period (.), hash (#), space ( ), at (@), equal (=), colon (:), and underscore characters. Cannot be changed after the user is added.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my user\" or 'my user').",
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"cmdpolicybinding": schema.SetNestedBlock{
+				Description: "Inline command policy bindings for the system user.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"policyname": schema.StringAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "The name of command policy.",
+						},
+						"priority": schema.Int64Attribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "The priority of the policy.",
+						},
+					},
+				},
 			},
 		},
 	}

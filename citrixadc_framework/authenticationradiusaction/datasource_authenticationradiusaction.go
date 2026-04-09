@@ -38,7 +38,6 @@ func (d *AuthenticationradiusactionDataSource) Read(ctx context.Context, req dat
 	var data AuthenticationradiusactionResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

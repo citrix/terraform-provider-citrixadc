@@ -144,6 +144,15 @@ func AuthenticationtacacsactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Key shared between the TACACS+ server and the Citrix ADC.\nRequired for allowing the Citrix ADC to communicate with the TACACS+ server.",
 			},
+			"tacacssecret_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Key shared between the TACACS+ server and the Citrix ADC.\nRequired for allowing the Citrix ADC to communicate with the TACACS+ server.",
+			},
+			"tacacssecret_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a tacacssecret_wo update.",
+			},
 		},
 	}
 }

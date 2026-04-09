@@ -175,3 +175,117 @@ func TestAccSystemuserDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Test backward-compatible path: using password (Sensitive attribute)
+const testAccSystemuser_password_step1 = `
+
+	variable "systemuser_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_systemuser" "tf_user_secret" {
+		username = "tf_user_secret"
+		password = var.systemuser_password
+		timeout  = 900
+	}
+`
+
+const testAccSystemuser_password_step2 = `
+
+	variable "systemuser_password_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_systemuser" "tf_user_secret" {
+		username = "tf_user_secret"
+		password = var.systemuser_password_2
+		timeout  = 900
+	}
+`
+
+func TestAccSystemuser_password_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_systemuser_password", "oldpass123")
+	t.Setenv("TF_VAR_systemuser_password_2", "newpass456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemuser_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuserExist("citrixadc_systemuser.tf_user_secret", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_user_secret", "username", "tf_user_secret"),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_user_secret", "timeout", "900"),
+				),
+			},
+			{
+				Config: testAccSystemuser_password_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuserExist("citrixadc_systemuser.tf_user_secret", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_user_secret", "username", "tf_user_secret"),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_user_secret", "timeout", "900"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
+const testAccSystemuser_password_wo_step1 = `
+
+	variable "systemuser_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_systemuser" "tf_user_ephemeral" {
+		username            = "tf_user_ephemeral"
+		password_wo         = var.systemuser_password_wo
+		password_wo_version = 1
+		timeout             = 900
+	}
+`
+
+const testAccSystemuser_password_wo_step2 = `
+
+	variable "systemuser_password_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_systemuser" "tf_user_ephemeral" {
+		username            = "tf_user_ephemeral"
+		password_wo         = var.systemuser_password_wo_2
+		password_wo_version = 2
+		timeout             = 900
+	}
+`
+
+func TestAccSystemuser_password_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_systemuser_password_wo", "ephemeral_pass1")
+	t.Setenv("TF_VAR_systemuser_password_wo_2", "ephemeral_pass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemuser_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuserExist("citrixadc_systemuser.tf_user_ephemeral", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_user_ephemeral", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccSystemuser_password_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuserExist("citrixadc_systemuser.tf_user_ephemeral", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_user_ephemeral", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

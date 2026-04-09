@@ -9,6 +9,8 @@ The lbparameter resource is used to set load balancing parameters.
 
 ## Example usage
 
+### Basic usage
+
 ```hcl
 resource "citrixadc_lbparameter" "tf_lbparameter" {
   httponlycookieflag = "ENABLED"
@@ -31,13 +33,56 @@ resource "citrixadc_lbparameter" "tf_lbparameter" {
 }
 ```
 
+### Using cookiepassphrase (sensitive attribute - persisted in state)
+
+```hcl
+variable "lb_cookiepassphrase" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbparameter" "tf_lbparameter" {
+  cookiepassphrase              = var.lb_cookiepassphrase
+  useencryptedpersistencecookie = "ENABLED"
+}
+```
+
+### Using cookiepassphrase_wo (write-only/ephemeral - NOT persisted in state)
+
+The `cookiepassphrase_wo` attribute provides an ephemeral path for the cookie passphrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the passphrase value changes, increment `cookiepassphrase_wo_version`.
+
+```hcl
+variable "lb_cookiepassphrase" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbparameter" "tf_lbparameter" {
+  cookiepassphrase_wo           = var.lb_cookiepassphrase
+  cookiepassphrase_wo_version   = 1
+  useencryptedpersistencecookie = "ENABLED"
+}
+```
+
+To rotate the passphrase, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_lbparameter" "tf_lbparameter" {
+  cookiepassphrase_wo           = var.lb_cookiepassphrase
+  cookiepassphrase_wo_version   = 2  # Bumped to trigger update
+  useencryptedpersistencecookie = "ENABLED"
+}
+```
+
 
 ## Argument Reference
 
 * `httponlycookieflag` - (Optional) Include the HttpOnly attribute in persistence cookies. The HttpOnly attribute limits the scope of a cookie to HTTP requests and helps mitigate the risk of cross-site scripting attacks. Possible values: [ ENABLED, DISABLED ]
 * `usesecuredpersistencecookie` - (Optional) Encode persistence cookie values using SHA2 hash. Possible values: [ ENABLED, DISABLED ]
 * `useencryptedpersistencecookie` - (Optional) Encode persistence cookie values using SHA2 hash. Possible values: [ ENABLED, DISABLED ]
-* `cookiepassphrase` - (Optional) Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.
+* `cookiepassphrase` - (Optional, Sensitive) Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters. The value is persisted in Terraform state (encrypted). See also `cookiepassphrase_wo` for an ephemeral alternative.
+* `cookiepassphrase_wo` - (Optional, Sensitive, WriteOnly) Same as `cookiepassphrase`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `cookiepassphrase_wo_version`. If both `cookiepassphrase` and `cookiepassphrase_wo` are set, `cookiepassphrase_wo` takes precedence.
+* `cookiepassphrase_wo_version` - (Optional) An integer version tracker for `cookiepassphrase_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the passphrase has changed and trigger an update. Defaults to `1`.
 * `consolidatedlconn` - (Optional) To find the service with the fewest connections, the virtual server uses the consolidated connection statistics from all the packet engines. The NO setting allows consideration of only the number of connections on the packet engine that received the new connection. Possible values: [ YES, NO ]
 * `useportforhashlb` - (Optional) Include the port number of the service when creating a hash for hash based load balancing methods. With the NO setting, only the IP address of the service is considered when creating a hash. Possible values: [ YES, NO ]
 * `preferdirectroute` - (Optional) Perform route lookup for traffic received by the Citrix ADC, and forward the traffic according to configured routes. Do not set this parameter if you want a wildcard virtual server to direct packets received by the appliance to an intermediary device, such as a firewall, even if their destination is directly connected to the appliance. Route lookup is performed after the packets have been processed and returned by the intermediary device. Possible values: [ YES, NO ]

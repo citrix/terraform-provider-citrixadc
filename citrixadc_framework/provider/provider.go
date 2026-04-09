@@ -965,18 +965,23 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 
 func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		lbparameter.NewLbParameterResource,
 		sslcertkey.NewSslCertKeyResource,
 		sslcertkey.NewSslCertKeyUpdateResource,
 		vpnvserver_appfwpolicy_binding.NewVpnvserverAppfwpolicyBindingResource,
 		nslaslicense_offline.NewNSLASLicenseOfflineResource,
 		csvserver_lbvserver_binding.NewCsvserverLbvserverBindingResource,
+		authenticationldapaction.NewAuthenticationldapactionResource,
+		authenticationradiusaction.NewAuthenticationradiusactionResource,
+		authenticationtacacsaction.NewAuthenticationtacacsactionResource,
+		lbparameter.NewLbparameterResource,
+		nsrpcnode.NewNsrpcnodeResource,
+		snmpuser.NewSnmpuserResource,
+		systemuser.NewSystemuserResource,
 	}
 }
 
 func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		lbparameter.LBParameterDataSource,
 		sslcertkey.SslCertKeyDataSource,
 		aaacertparams.AAacertparamsDataSource,
 		aaaglobal_aaapreauthenticationpolicy_binding.AAaglobalAaapreauthenticationpolicyBindingDataSource,
@@ -1708,6 +1713,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		snmptrap_snmpuser_binding.SNmptrapSnmpuserBindingDataSource,
 		vpnvserver_appfwpolicy_binding.VpnvserverAppfwpolicyBindingDataSource,
 		csvserver_lbvserver_binding.CSvserverLbvserverBindingDataSource,
+		lbparameter.LBparameterDataSource,
 	}
 }
 
