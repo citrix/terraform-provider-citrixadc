@@ -9,40 +9,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
-var _ datasource.DataSource = (*LbParameterDataSource)(nil)
+var _ datasource.DataSource = (*LbparameterDataSource)(nil)
 
-func LBParameterDataSource() datasource.DataSource {
-	return &LbParameterDataSource{}
+func LBparameterDataSource() datasource.DataSource {
+	return &LbparameterDataSource{}
 }
 
-type LbParameterDataSource struct {
+type LbparameterDataSource struct {
 	client *service.NitroClient
 }
 
-func (d *LbParameterDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *LbparameterDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_lbparameter"
 }
 
-func (d *LbParameterDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *LbparameterDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
 	d.client = *req.ProviderData.(**service.NitroClient)
 }
 
-func (d *LbParameterDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = LBParameterDataSourceSchema()
+func (d *LbparameterDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = LbparameterDataSourceSchema()
 }
 
-func (d *LbParameterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data LbParameterResourceModel
+func (d *LbparameterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data LbparameterResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
 	var err error
 

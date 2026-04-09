@@ -2,12 +2,15 @@ package authenticationtacacsaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -44,6 +47,8 @@ type AuthenticationtacacsactionResourceModel struct {
 	Serverip                   types.String `tfsdk:"serverip"`
 	Serverport                 types.Int64  `tfsdk:"serverport"`
 	Tacacssecret               types.String `tfsdk:"tacacssecret"`
+	TacacssecretWo             types.String `tfsdk:"tacacssecret_wo"`
+	TacacssecretWoVersion      types.Int64  `tfsdk:"tacacssecret_wo_version"`
 }
 
 func (r *AuthenticationtacacsactionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -156,7 +161,7 @@ func (r *AuthenticationtacacsactionResource) Schema(ctx context.Context, req res
 			},
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Number of seconds the Citrix ADC waits for a response from the TACACS+ server.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -170,7 +175,10 @@ func (r *AuthenticationtacacsactionResource) Schema(ctx context.Context, req res
 				Description: "TACACS+ group attribute name.\nUsed for group extraction on the TACACS+ server.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the TACACS+ profile (action).\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after TACACS profile is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication action\" or 'y authentication action').",
 			},
 			"serverip": schema.StringAttribute{
@@ -180,20 +188,32 @@ func (r *AuthenticationtacacsactionResource) Schema(ctx context.Context, req res
 			},
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(49),
+				Computed:    true,
 				Description: "Port number on which the TACACS+ server listens for connections.",
 			},
 			"tacacssecret": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Key shared between the TACACS+ server and the Citrix ADC.\nRequired for allowing the Citrix ADC to communicate with the TACACS+ server.",
+			},
+			"tacacssecret_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Key shared between the TACACS+ server and the Citrix ADC.\nRequired for allowing the Citrix ADC to communicate with the TACACS+ server.",
+			},
+			"tacacssecret_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a tacacssecret_wo update.",
 			},
 		},
 	}
 }
 
-func authenticationtacacsactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationtacacsactionResourceModel) authentication.Authenticationtacacsaction {
-	tflog.Debug(ctx, "In authenticationtacacsactionGetThePayloadFromtheConfig Function")
+func authenticationtacacsactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationtacacsactionResourceModel) authentication.Authenticationtacacsaction {
+	tflog.Debug(ctx, "In authenticationtacacsactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationtacacsaction := authentication.Authenticationtacacsaction{}
@@ -278,8 +298,23 @@ func authenticationtacacsactionGetThePayloadFromtheConfig(ctx context.Context, d
 	if !data.Tacacssecret.IsNull() {
 		authenticationtacacsaction.Tacacssecret = data.Tacacssecret.ValueString()
 	}
+	// Skip write-only attribute: tacacssecret_wo
+	// Skip version tracker attribute: tacacssecret_wo_version
 
 	return authenticationtacacsaction
+}
+
+func authenticationtacacsactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationtacacsactionResourceModel, payload *authentication.Authenticationtacacsaction) {
+	tflog.Debug(ctx, "In authenticationtacacsactionGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: tacacssecret_wo -> tacacssecret
+	if !data.TacacssecretWo.IsNull() {
+		tacacssecretWo := data.TacacssecretWo.ValueString()
+		if tacacssecretWo != "" {
+			payload.Tacacssecret = tacacssecretWo
+		}
+	}
 }
 
 func authenticationtacacsactionSetAttrFromGet(ctx context.Context, data *AuthenticationtacacsactionResourceModel, getResponseData map[string]interface{}) *AuthenticationtacacsactionResourceModel {
@@ -420,15 +455,13 @@ func authenticationtacacsactionSetAttrFromGet(ctx context.Context, data *Authent
 	} else {
 		data.Serverport = types.Int64Null()
 	}
-	if val, ok := getResponseData["tacacssecret"]; ok && val != nil {
-		data.Tacacssecret = types.StringValue(val.(string))
-	} else {
-		data.Tacacssecret = types.StringNull()
-	}
+	// tacacssecret is not returned by NITRO API (secret/ephemeral) - retain from config
+	// tacacssecret_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// tacacssecret_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

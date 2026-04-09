@@ -153,6 +153,254 @@ func testAccCheckSnmpuserDestroy(s *terraform.State) error {
 	return nil
 }
 
+// Test backward-compatible path: using authpasswd (Sensitive attribute)
+const testAccSnmpuser_authpasswd_step1 = `
+
+	variable "snmpuser_authpasswd" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_snmpuser" "tf_snmpuser" {
+		name       = "test_user"
+		group      = "test_group"
+		authtype   = "SHA"
+		authpasswd = var.snmpuser_authpasswd
+		privtype   = "DES"
+		privpasswd = "this_is_my_password2"
+	}
+`
+
+const testAccSnmpuser_authpasswd_step2 = `
+
+	variable "snmpuser_authpasswd_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_snmpuser" "tf_snmpuser" {
+		name       = "test_user"
+		group      = "test_group"
+		authtype   = "SHA"
+		authpasswd = var.snmpuser_authpasswd_2
+		privtype   = "DES"
+		privpasswd = "this_is_my_password2"
+	}
+`
+
+func TestAccSnmpuser_authpasswd_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_snmpuser_authpasswd", "oldauthpass123")
+	t.Setenv("TF_VAR_snmpuser_authpasswd_2", "newauthpass456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpuser_authpasswd_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpuser.tf_snmpuser", "authtype", "SHA"),
+				),
+			},
+			{
+				Config: testAccSnmpuser_authpasswd_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpuser.tf_snmpuser", "authtype", "SHA"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using authpasswd_wo (WriteOnly attribute) with version tracker
+const testAccSnmpuser_authpasswd_wo_step1 = `
+
+	variable "snmpuser_authpasswd_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_snmpuser" "tf_snmpuser" {
+		name                 = "test_user"
+		group                = "test_group"
+		authtype             = "SHA"
+		authpasswd_wo        = var.snmpuser_authpasswd_wo
+		authpasswd_wo_version = 1
+		privtype             = "DES"
+		privpasswd           = "this_is_my_password2"
+	}
+`
+
+const testAccSnmpuser_authpasswd_wo_step2 = `
+
+	variable "snmpuser_authpasswd_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_snmpuser" "tf_snmpuser" {
+		name                 = "test_user"
+		group                = "test_group"
+		authtype             = "SHA"
+		authpasswd_wo        = var.snmpuser_authpasswd_wo_2
+		authpasswd_wo_version = 2
+		privtype             = "DES"
+		privpasswd           = "this_is_my_password2"
+	}
+`
+
+func TestAccSnmpuser_authpasswd_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_snmpuser_authpasswd_wo", "ephemeral_auth1")
+	t.Setenv("TF_VAR_snmpuser_authpasswd_wo_2", "ephemeral_auth2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpuser_authpasswd_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpuser.tf_snmpuser", "authpasswd_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccSnmpuser_authpasswd_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpuser.tf_snmpuser", "authpasswd_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+// Test backward-compatible path: using privpasswd (Sensitive attribute)
+const testAccSnmpuser_privpasswd_step1 = `
+
+	variable "snmpuser_privpasswd" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_snmpuser" "tf_snmpuser" {
+		name       = "test_user"
+		group      = "test_group"
+		authtype   = "SHA"
+		authpasswd = "this_is_my_password"
+		privtype   = "DES"
+		privpasswd = var.snmpuser_privpasswd
+	}
+`
+
+const testAccSnmpuser_privpasswd_step2 = `
+
+	variable "snmpuser_privpasswd_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_snmpuser" "tf_snmpuser" {
+		name       = "test_user"
+		group      = "test_group"
+		authtype   = "SHA"
+		authpasswd = "this_is_my_password"
+		privtype   = "DES"
+		privpasswd = var.snmpuser_privpasswd_2
+	}
+`
+
+func TestAccSnmpuser_privpasswd_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_snmpuser_privpasswd", "oldprivpass123")
+	t.Setenv("TF_VAR_snmpuser_privpasswd_2", "newprivpass456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpuser_privpasswd_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpuser.tf_snmpuser", "privtype", "DES"),
+				),
+			},
+			{
+				Config: testAccSnmpuser_privpasswd_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpuser.tf_snmpuser", "privtype", "DES"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using privpasswd_wo (WriteOnly attribute) with version tracker
+const testAccSnmpuser_privpasswd_wo_step1 = `
+
+	variable "snmpuser_privpasswd_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_snmpuser" "tf_snmpuser" {
+		name                 = "test_user"
+		group                = "test_group"
+		authtype             = "SHA"
+		authpasswd           = "this_is_my_password"
+		privtype             = "DES"
+		privpasswd_wo        = var.snmpuser_privpasswd_wo
+		privpasswd_wo_version = 1
+	}
+`
+
+const testAccSnmpuser_privpasswd_wo_step2 = `
+
+	variable "snmpuser_privpasswd_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_snmpuser" "tf_snmpuser" {
+		name                 = "test_user"
+		group                = "test_group"
+		authtype             = "SHA"
+		authpasswd           = "this_is_my_password"
+		privtype             = "DES"
+		privpasswd_wo        = var.snmpuser_privpasswd_wo_2
+		privpasswd_wo_version = 2
+	}
+`
+
+func TestAccSnmpuser_privpasswd_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_snmpuser_privpasswd_wo", "ephemeral_priv1")
+	t.Setenv("TF_VAR_snmpuser_privpasswd_wo_2", "ephemeral_priv2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpuser_privpasswd_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpuser.tf_snmpuser", "privpasswd_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccSnmpuser_privpasswd_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpuser.tf_snmpuser", "privpasswd_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSnmpuserDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

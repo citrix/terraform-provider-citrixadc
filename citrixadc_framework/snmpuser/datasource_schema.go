@@ -15,6 +15,15 @@ func SnmpuserDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Plain-text pass phrase to be used by the authentication algorithm specified by the authType (Authentication Type) parameter. Can consist of 8 to 63 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the pass phrase includes one or more spaces, enclose it in double or single quotation marks (for example, \"my phrase\" or 'my phrase').",
 			},
+			"authpasswd_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Plain-text pass phrase to be used by the authentication algorithm specified by the authType (Authentication Type) parameter. Can consist of 8 to 63 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the pass phrase includes one or more spaces, enclose it in double or single quotation marks (for example, \"my phrase\" or 'my phrase').",
+			},
+			"authpasswd_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a authpasswd_wo update.",
+			},
 			"authtype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -33,6 +42,15 @@ func SnmpuserDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Encryption key to be used by the encryption algorithm specified by the privType (Encryption Type) parameter. Can consist of 8 to 63 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the key includes one or more spaces, enclose it in double or single quotation marks (for example, \"my key\" or 'my key').",
+			},
+			"privpasswd_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Encryption key to be used by the encryption algorithm specified by the privType (Encryption Type) parameter. Can consist of 8 to 63 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the key includes one or more spaces, enclose it in double or single quotation marks (for example, \"my key\" or 'my key').",
+			},
+			"privpasswd_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a privpasswd_wo update.",
 			},
 			"privtype": schema.StringAttribute{
 				Optional:    true,

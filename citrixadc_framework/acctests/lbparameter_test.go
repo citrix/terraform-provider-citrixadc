@@ -178,6 +178,134 @@ func testAccCheckLbparameterDestroy(s *terraform.State) error {
 	return nil
 }
 
+// Test backward-compatible path: using cookiepassphrase (Sensitive attribute)
+const testAccLbparameter_cookiepassphrase_step1 = `
+
+	variable "lbparameter_cookiepassphrase" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_lbparameter" "tf_lbparameter" {
+		httponlycookieflag            = "ENABLED"
+		useencryptedpersistencecookie = "ENABLED"
+		cookiepassphrase              = var.lbparameter_cookiepassphrase
+		usesecuredpersistencecookie   = "ENABLED"
+	}
+`
+
+// Update backward-compatible path: change cookiepassphrase value
+const testAccLbparameter_cookiepassphrase_step2 = `
+
+	variable "lbparameter_cookiepassphrase_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_lbparameter" "tf_lbparameter" {
+		httponlycookieflag            = "ENABLED"
+		useencryptedpersistencecookie = "ENABLED"
+		cookiepassphrase              = var.lbparameter_cookiepassphrase_2
+		usesecuredpersistencecookie   = "ENABLED"
+	}
+`
+
+func TestAccLbparameter_cookiepassphrase_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_lbparameter_cookiepassphrase", "oldpassphrase123")
+	t.Setenv("TF_VAR_lbparameter_cookiepassphrase_2", "newpassphrase456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbparameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbparameter_cookiepassphrase_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbparameterExist("citrixadc_lbparameter.tf_lbparameter", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "httponlycookieflag", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "useencryptedpersistencecookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "usesecuredpersistencecookie", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccLbparameter_cookiepassphrase_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbparameterExist("citrixadc_lbparameter.tf_lbparameter", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "httponlycookieflag", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "useencryptedpersistencecookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "usesecuredpersistencecookie", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using cookiepassphrase_wo (WriteOnly attribute) with version tracker
+const testAccLbparameter_cookiepassphrase_wo_step1 = `
+
+	variable "lbparameter_cookiepassphrase_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_lbparameter" "tf_lbparameter" {
+		httponlycookieflag            = "ENABLED"
+		useencryptedpersistencecookie = "ENABLED"
+		cookiepassphrase_wo           = var.lbparameter_cookiepassphrase_wo
+		cookiepassphrase_wo_version   = 1
+		usesecuredpersistencecookie   = "ENABLED"
+	}
+`
+
+// Update ephemeral path: bump version to trigger update with new passphrase
+const testAccLbparameter_cookiepassphrase_wo_step2 = `
+
+	variable "lbparameter_cookiepassphrase_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_lbparameter" "tf_lbparameter" {
+		httponlycookieflag            = "ENABLED"
+		useencryptedpersistencecookie = "ENABLED"
+		cookiepassphrase_wo           = var.lbparameter_cookiepassphrase_wo_2
+		cookiepassphrase_wo_version   = 2
+		usesecuredpersistencecookie   = "ENABLED"
+	}
+`
+
+func TestAccLbparameter_cookiepassphrase_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_lbparameter_cookiepassphrase_wo", "ephemeral_pass1")
+	t.Setenv("TF_VAR_lbparameter_cookiepassphrase_wo_2", "ephemeral_pass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbparameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbparameter_cookiepassphrase_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbparameterExist("citrixadc_lbparameter.tf_lbparameter", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "httponlycookieflag", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "useencryptedpersistencecookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "cookiepassphrase_wo_version", "1"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "usesecuredpersistencecookie", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccLbparameter_cookiepassphrase_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbparameterExist("citrixadc_lbparameter.tf_lbparameter", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "httponlycookieflag", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "useencryptedpersistencecookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "cookiepassphrase_wo_version", "2"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "usesecuredpersistencecookie", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
 const testAccLbparameterDataSource_basic = `
 
 	resource "citrixadc_lbparameter" "tf_lbparameter" {

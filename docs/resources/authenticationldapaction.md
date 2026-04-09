@@ -9,11 +9,63 @@ The authenticationldapaction resource is used to create LDAP action resource.
 
 ## Example usage
 
+### Basic usage
+
 ```hcl
 resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
   name       = "ldapaction"
   serverip   = "1.2.3.4"
   serverport = 8080
+}
+```
+
+### Using ldapbinddnpassword (sensitive attribute - persisted in state)
+
+```hcl
+variable "ldapaction_ldapbinddnpassword" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+  name               = "ldapaction"
+  serverip           = "1.2.3.4"
+  serverport         = 8080
+  ldapbinddnpassword = var.ldapaction_ldapbinddnpassword
+  ldapbinddn         = "cn=Manager,dc=netscaler,dc=com"
+}
+```
+
+### Using ldapbinddnpassword_wo (write-only/ephemeral - NOT persisted in state)
+
+The `ldapbinddnpassword_wo` attribute provides an ephemeral path for the LDAP bind password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the password value changes, increment `ldapbinddnpassword_wo_version`.
+
+```hcl
+variable "ldapaction_ldapbinddnpassword" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+  name                          = "ldapaction"
+  serverip                      = "1.2.3.4"
+  serverport                    = 8080
+  ldapbinddnpassword_wo         = var.ldapaction_ldapbinddnpassword
+  ldapbinddnpassword_wo_version = 1
+  ldapbinddn                    = "cn=Manager,dc=netscaler,dc=com"
+}
+```
+
+To rotate the password, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+  name                          = "ldapaction"
+  serverip                      = "1.2.3.4"
+  serverport                    = 8080
+  ldapbinddnpassword_wo         = var.ldapaction_ldapbinddnpassword
+  ldapbinddnpassword_wo_version = 2  # Bumped to trigger update
+  ldapbinddn                    = "cn=Manager,dc=netscaler,dc=com"
 }
 ```
 
@@ -53,7 +105,9 @@ resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
 * `kbattribute` - (Optional) KnowledgeBasedAuthentication(KBA) attribute on AD. This attribute is used to store and retrieve preconfigured Question and Answer knowledge base used for KBA authentication.
 * `ldapbase` - (Optional) Base (node) from which to start LDAP searches.  If the LDAP server is running locally, the default value of base is dc=netscaler, dc=com.
 * `ldapbinddn` - (Optional) Full distinguished name (DN) that is used to bind to the LDAP server.  Default: cn=Manager,dc=netscaler,dc=com
-* `ldapbinddnpassword` - (Optional) Password used to bind to the LDAP server.
+* `ldapbinddnpassword` - (Optional, Sensitive) Password used to bind to the LDAP server. The value is persisted in Terraform state (encrypted). See also `ldapbinddnpassword_wo` for an ephemeral alternative.
+* `ldapbinddnpassword_wo` - (Optional, Sensitive, WriteOnly) Same as `ldapbinddnpassword`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `ldapbinddnpassword_wo_version`. If both `ldapbinddnpassword` and `ldapbinddnpassword_wo` are set, `ldapbinddnpassword_wo` takes precedence.
+* `ldapbinddnpassword_wo_version` - (Optional) An integer version tracker for `ldapbinddnpassword_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the password has changed and trigger an update. Defaults to `1`.
 * `ldaphostname` - (Optional) Hostname for the LDAP server.  If -validateServerCert is ON then this must be the host name on the certificate from the LDAP server. A hostname mismatch will cause a connection failure.
 * `ldaploginname` - (Optional) LDAP login name attribute.  The Citrix ADC uses the LDAP login name to query external LDAP servers or Active Directories.
 * `maxldapreferrals` - (Optional) Specifies the maximum number of nested referrals to follow.

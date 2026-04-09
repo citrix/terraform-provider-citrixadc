@@ -9,10 +9,11 @@ The authenticationradiusaction resource is used to create authentication radiusa
 
 ## Example usage
 
+### Basic usage
+
 ```hcl
 resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
   name         = "tf_radiusaction"
-  radkey       = "secret"
   serverip     = "1.2.3.4"
   serverport   = 8080
   authtimeout  = 2
@@ -21,11 +22,69 @@ resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
 }
 ```
 
+### Using radkey (sensitive attribute - persisted in state)
+
+```hcl
+variable "radiusaction_radkey" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+  name         = "tf_radiusaction"
+  radkey       = var.radiusaction_radkey
+  serverip     = "1.2.3.4"
+  serverport   = 8080
+  authtimeout  = 2
+  radnasip     = "DISABLED"
+  passencoding = "chap"
+}
+```
+
+### Using radkey_wo (write-only/ephemeral - NOT persisted in state)
+
+The `radkey_wo` attribute provides an ephemeral path for the RADIUS shared key. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the key value changes, increment `radkey_wo_version`.
+
+```hcl
+variable "radiusaction_radkey" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+  name              = "tf_radiusaction"
+  radkey_wo         = var.radiusaction_radkey
+  radkey_wo_version = 1
+  serverip          = "1.2.3.4"
+  serverport        = 8080
+  authtimeout       = 2
+  radnasip          = "DISABLED"
+  passencoding      = "chap"
+}
+```
+
+To rotate the key, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+  name              = "tf_radiusaction"
+  radkey_wo         = var.radiusaction_radkey
+  radkey_wo_version = 2  # Bumped to trigger update
+  serverip          = "1.2.3.4"
+  serverport        = 8080
+  authtimeout       = 2
+  radnasip          = "DISABLED"
+  passencoding      = "chap"
+}
+```
+
 
 ## Argument Reference
 
 * `name` - (Required) Name for the RADIUS action.  Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the RADIUS action is added.
-* `radkey` - (Required) Key shared between the RADIUS server and the Citrix ADC.  Required to allow the Citrix ADC to communicate with the RADIUS server.
+* `radkey` - (Optional, Sensitive) Key shared between the RADIUS server and the Citrix ADC. Required to allow the Citrix ADC to communicate with the RADIUS server. The value is persisted in Terraform state (encrypted). See also `radkey_wo` for an ephemeral alternative.
+* `radkey_wo` - (Optional, Sensitive, WriteOnly) Same as `radkey`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `radkey_wo_version`. If both `radkey` and `radkey_wo` are set, `radkey_wo` takes precedence.
+* `radkey_wo_version` - (Optional) An integer version tracker for `radkey_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the key has changed and trigger an update. Defaults to `1`.
 * `accounting` - (Optional) Whether the RADIUS server is currently accepting accounting messages.
 * `authentication` - (Optional) Configure the RADIUS server state to accept or refuse authentication messages.
 * `authservretry` - (Optional) Number of retry by the Citrix ADC before getting response from the RADIUS server.

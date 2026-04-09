@@ -2,24 +2,29 @@ package nsrpcnode
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // NsrpcnodeResourceModel describes the resource data model.
 type NsrpcnodeResourceModel struct {
-	Id           types.String `tfsdk:"id"`
-	Ipaddress    types.String `tfsdk:"ipaddress"`
-	Password     types.String `tfsdk:"password"`
-	Secure       types.String `tfsdk:"secure"`
-	Srcip        types.String `tfsdk:"srcip"`
-	Validatecert types.String `tfsdk:"validatecert"`
+	Id                types.String `tfsdk:"id"`
+	Ipaddress         types.String `tfsdk:"ipaddress"`
+	Password          types.String `tfsdk:"password"`
+	PasswordWo        types.String `tfsdk:"password_wo"`
+	PasswordWoVersion types.Int64  `tfsdk:"password_wo_version"`
+	Secure            types.String `tfsdk:"secure"`
+	Srcip             types.String `tfsdk:"srcip"`
+	Validatecert      types.String `tfsdk:"validatecert"`
 }
 
 func (r *NsrpcnodeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -31,17 +36,32 @@ func (r *NsrpcnodeResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The ID of the nsrpcnode resource.",
 			},
 			"ipaddress": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IP address of the node. This has to be in the same subnet as the NSIP address.",
 			},
 			"password": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Password to be used in authentication with the peer system node.",
+			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password to be used in authentication with the peer system node.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a password_wo update.",
 			},
 			"secure": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "State of the channel when talking to the node.",
 			},
 			"srcip": schema.StringAttribute{
@@ -58,8 +78,8 @@ func (r *NsrpcnodeResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func nsrpcnodeGetThePayloadFromtheConfig(ctx context.Context, data *NsrpcnodeResourceModel) ns.Nsrpcnode {
-	tflog.Debug(ctx, "In nsrpcnodeGetThePayloadFromtheConfig Function")
+func nsrpcnodeGetThePayloadFromthePlan(ctx context.Context, data *NsrpcnodeResourceModel) ns.Nsrpcnode {
+	tflog.Debug(ctx, "In nsrpcnodeGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	nsrpcnode := ns.Nsrpcnode{}
@@ -69,6 +89,8 @@ func nsrpcnodeGetThePayloadFromtheConfig(ctx context.Context, data *NsrpcnodeRes
 	if !data.Password.IsNull() {
 		nsrpcnode.Password = data.Password.ValueString()
 	}
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
 	if !data.Secure.IsNull() {
 		nsrpcnode.Secure = data.Secure.ValueString()
 	}
@@ -82,6 +104,19 @@ func nsrpcnodeGetThePayloadFromtheConfig(ctx context.Context, data *NsrpcnodeRes
 	return nsrpcnode
 }
 
+func nsrpcnodeGetThePayloadFromtheConfig(ctx context.Context, data *NsrpcnodeResourceModel, payload *ns.Nsrpcnode) {
+	tflog.Debug(ctx, "In nsrpcnodeGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: password_wo -> password
+	if !data.PasswordWo.IsNull() {
+		passwordWo := data.PasswordWo.ValueString()
+		if passwordWo != "" {
+			payload.Password = passwordWo
+		}
+	}
+}
+
 func nsrpcnodeSetAttrFromGet(ctx context.Context, data *NsrpcnodeResourceModel, getResponseData map[string]interface{}) *NsrpcnodeResourceModel {
 	tflog.Debug(ctx, "In nsrpcnodeSetAttrFromGet Function")
 
@@ -91,11 +126,9 @@ func nsrpcnodeSetAttrFromGet(ctx context.Context, data *NsrpcnodeResourceModel, 
 	} else {
 		data.Ipaddress = types.StringNull()
 	}
-	if val, ok := getResponseData["password"]; ok && val != nil {
-		data.Password = types.StringValue(val.(string))
-	} else {
-		data.Password = types.StringNull()
-	}
+	// password is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["secure"]; ok && val != nil {
 		data.Secure = types.StringValue(val.(string))
 	} else {
@@ -113,8 +146,8 @@ func nsrpcnodeSetAttrFromGet(ctx context.Context, data *NsrpcnodeResourceModel, 
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Ipaddress.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Ipaddress.ValueString()))
 
 	return data
 }

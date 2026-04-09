@@ -9,6 +9,8 @@ The authenticationtacacsaction resource is used to create authentication tacacsa
 
 ## Example usage
 
+### Basic usage
+
 ```hcl
 resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
   name            = "tf_tacacsaction"
@@ -19,6 +21,59 @@ resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
   accounting      = "ON"
   auditfailedcmds = "ON"
   groupattrname   = "group"
+}
+```
+
+### Using tacacssecret (sensitive attribute - persisted in state)
+
+```hcl
+variable "tacacsaction_tacacssecret" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+  name          = "tf_tacacsaction"
+  serverip      = "1.2.3.4"
+  serverport    = 8080
+  authtimeout   = 5
+  tacacssecret  = var.tacacsaction_tacacssecret
+  authorization = "ON"
+}
+```
+
+### Using tacacssecret_wo (write-only/ephemeral - NOT persisted in state)
+
+The `tacacssecret_wo` attribute provides an ephemeral path for the TACACS+ shared secret key. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the secret value changes, increment `tacacssecret_wo_version`.
+
+```hcl
+variable "tacacsaction_tacacssecret" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+  name                    = "tf_tacacsaction"
+  serverip                = "1.2.3.4"
+  serverport              = 8080
+  authtimeout             = 5
+  tacacssecret_wo         = var.tacacsaction_tacacssecret
+  tacacssecret_wo_version = 1
+  authorization           = "ON"
+}
+```
+
+To rotate the secret, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+  name                    = "tf_tacacsaction"
+  serverip                = "1.2.3.4"
+  serverport              = 8080
+  authtimeout             = 5
+  tacacssecret_wo         = var.tacacsaction_tacacssecret
+  tacacssecret_wo_version = 2  # Bumped to trigger update
+  authorization           = "ON"
 }
 ```
 
@@ -51,7 +106,9 @@ resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
 * `groupattrname` - (Optional) TACACS+ group attribute name. Used for group extraction on the TACACS+ server.
 * `serverip` - (Optional) IP address assigned to the TACACS+ server.
 * `serverport` - (Optional) Port number on which the TACACS+ server listens for connections.
-* `tacacssecret` - (Optional) Key shared between the TACACS+ server and the Citrix ADC.  Required for allowing the Citrix ADC to communicate with the TACACS+ server.
+* `tacacssecret` - (Optional, Sensitive) Key shared between the TACACS+ server and the Citrix ADC. Required for allowing the Citrix ADC to communicate with the TACACS+ server. The value is persisted in Terraform state (encrypted). See also `tacacssecret_wo` for an ephemeral alternative.
+* `tacacssecret_wo` - (Optional, Sensitive, WriteOnly) Same as `tacacssecret`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `tacacssecret_wo_version`. If both `tacacssecret` and `tacacssecret_wo` are set, `tacacssecret_wo` takes precedence.
+* `tacacssecret_wo_version` - (Optional) An integer version tracker for `tacacssecret_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the secret has changed and trigger an update. Defaults to `1`.
 
 
 ## Attribute Reference

@@ -147,6 +147,136 @@ func testAccCheckAuthenticationradiusactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+// Test backward-compatible path: using radkey (Sensitive attribute)
+const testAccAuthenticationradiusaction_radkey_step1 = `
+
+	variable "radiusaction_radkey" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+		name         = "tf_radiusaction"
+		radkey       = var.radiusaction_radkey
+		serverip     = "1.2.3.4"
+		serverport   = 8080
+		authtimeout  = 2
+		radnasip     = "DISABLED"
+		passencoding = "chap"
+	}
+`
+
+const testAccAuthenticationradiusaction_radkey_step2 = `
+
+	variable "radiusaction_radkey_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+		name         = "tf_radiusaction"
+		radkey       = var.radiusaction_radkey_2
+		serverip     = "1.2.3.4"
+		serverport   = 8080
+		authtimeout  = 2
+		radnasip     = "DISABLED"
+		passencoding = "chap"
+	}
+`
+
+func TestAccAuthenticationradiusaction_radkey_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_radiusaction_radkey", "oldradkey123")
+	t.Setenv("TF_VAR_radiusaction_radkey_2", "newradkey456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationradiusactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationradiusaction_radkey_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationradiusactionExist("citrixadc_authenticationradiusaction.tf_radiusaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "name", "tf_radiusaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "radnasip", "DISABLED"),
+				),
+			},
+			{
+				Config: testAccAuthenticationradiusaction_radkey_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationradiusactionExist("citrixadc_authenticationradiusaction.tf_radiusaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "name", "tf_radiusaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "radnasip", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using radkey_wo (WriteOnly attribute) with version tracker
+const testAccAuthenticationradiusaction_radkey_wo_step1 = `
+
+	variable "radiusaction_radkey_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+		name              = "tf_radiusaction"
+		radkey_wo         = var.radiusaction_radkey_wo
+		radkey_wo_version = 1
+		serverip          = "1.2.3.4"
+		serverport        = 8080
+		authtimeout       = 2
+		radnasip          = "DISABLED"
+		passencoding      = "chap"
+	}
+`
+
+const testAccAuthenticationradiusaction_radkey_wo_step2 = `
+
+	variable "radiusaction_radkey_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+		name              = "tf_radiusaction"
+		radkey_wo         = var.radiusaction_radkey_wo_2
+		radkey_wo_version = 2
+		serverip          = "1.2.3.4"
+		serverport        = 8080
+		authtimeout       = 2
+		radnasip          = "DISABLED"
+		passencoding      = "chap"
+	}
+`
+
+func TestAccAuthenticationradiusaction_radkey_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_radiusaction_radkey_wo", "ephemeral_rad1")
+	t.Setenv("TF_VAR_radiusaction_radkey_wo_2", "ephemeral_rad2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationradiusactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationradiusaction_radkey_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationradiusactionExist("citrixadc_authenticationradiusaction.tf_radiusaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "radkey_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationradiusaction_radkey_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationradiusactionExist("citrixadc_authenticationradiusaction.tf_radiusaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "radkey_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 const testAccAuthenticationradiusactionDataSource_basic = `
 
 	resource "citrixadc_authenticationradiusaction" "tf_radiusaction_ds" {
