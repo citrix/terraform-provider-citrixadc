@@ -33,11 +33,7 @@ If the name includes one or more spaces, enclose the name in double or single qu
 In addition to the arguments, the following attributes are available:
 
 * `rule` - Name of the Citrix ADC named rule, or an expression, that the policy uses to perform the authentication.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationlocalpolicy. It has the same value as the `name` attribute.
-
 
 ## Import
 

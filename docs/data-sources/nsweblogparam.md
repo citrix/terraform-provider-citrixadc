@@ -39,6 +39,3 @@ The following attributes are exported:
 * `customreqhdrs` - List of HTTP request header names whose values should be exported by the Web Logging feature.
 * `customrsphdrs` - List of HTTP response header names whose values should be exported by the Web Logging feature.
 
-## Notes
-
-The nsweblogparam resource is a singleton resource on the Citrix ADC appliance that contains web logging parameters. These parameters control how HTTP headers are logged and the buffer size for log data.

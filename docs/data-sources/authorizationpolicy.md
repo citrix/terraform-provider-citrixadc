@@ -39,11 +39,7 @@ In addition to the arguments, the following attributes are available:
 * `action` - Action to perform if the policy matches: either allow or deny the request.
 * `rule` - Name of the Citrix ADC named rule, or an expression, that the policy uses to perform the authentication.
 * `newname` - The new name of the author policy.
-
-## Attribute Reference
-
 * `id` - The id of the authorizationpolicy. It has the same value as the `name` attribute.
-
 
 ## Import
 

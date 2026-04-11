@@ -10,16 +10,9 @@ The nspartition data source allows you to retrieve information about NetScaler p
 ## Example usage
 
 ```terraform
-resource "citrixadc_nspartition" "my_partition" {
-  partitionname = "my_partition"
-  maxbandwidth  = 10240
-  minbandwidth  = 10240
-  maxconn       = 1024
-  maxmemlimit   = 10
-}
 
 data "citrixadc_nspartition" "my_partition_data" {
-  partitionname = citrixadc_nspartition.my_partition.partitionname
+  partitionname = "my_partition"
 }
 
 output "partition_mac" {

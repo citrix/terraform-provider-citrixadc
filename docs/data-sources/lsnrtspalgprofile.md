@@ -35,9 +35,6 @@ In addition to the arguments, the following attributes are available:
 * `rtspidletimeout` - Idle timeout for the rtsp sessions in seconds.
 * `rtspportrange` - port for the RTSP
 * `rtsptransportprotocol` - RTSP ALG Profile transport protocol type.
-
-## Attribute Reference
-
 * `id` - The id of the lsnrtspalgprofile. It has the same value as the `rtspalgprofilename` attribute.
 
 

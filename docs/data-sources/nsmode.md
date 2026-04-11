@@ -54,6 +54,3 @@ In addition to the arguments above, the following attributes are exported:
 * `bridgebpdus` - Bridge BPDUs mode. When enabled, bridges Bridge Protocol Data Units.
 * `ulfd` - Use Link Failure Detection mode. When enabled, detects link failures.
 
-## Notes
-
-The nsmode resource is a singleton resource on the Citrix ADC appliance. All modes are boolean values indicating whether the particular mode is enabled or disabled on the appliance.

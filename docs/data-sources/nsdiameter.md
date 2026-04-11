@@ -53,9 +53,3 @@ In addition to the arguments, the following attributes are exported:
   Now whenever Citrix ADC system needs to use realm in diameter messages, it will use 'com' as Origin-Realm AVP.
 
 * `serverclosepropagation` - When a server connection goes down, whether to close the corresponding client connection if there were requests pending on the server. Possible values: `YES`, `NO`.
-
-## Notes
-
-* The nsdiameter configuration is typically a singleton resource, meaning there is only one diameter configuration per node.
-* In standalone deployments, use `ownernode = -1` to reference the default node.
-* In cluster deployments, use the appropriate cluster node ID.

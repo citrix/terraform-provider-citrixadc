@@ -38,9 +38,6 @@ In addition to the arguments, the following attributes are available:
 
 * `acl6name` - Name of any configured ACL6 whose action is ALLOW.  IPv6 Packets matching the condition of this ACL6 rule and destination IP address of these packets matching the NAT64 IPv6 prefix are considered for NAT64 translation.
 * `netprofile` - Name of the configured netprofile. The Citrix ADC selects one of the IP address in the netprofile as the source IP address of the translated IPv4 packet to be sent to the IPv4 server.
-
-## Attribute Reference
-
 * `id` - The id of the nat64. It has the same value as the `name` attribute.
 
 

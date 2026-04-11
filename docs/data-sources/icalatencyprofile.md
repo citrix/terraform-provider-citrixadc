@@ -10,15 +10,9 @@ The icalatencyprofile data source allows you to retrieve information about an IC
 ## Example usage
 
 ```terraform
-resource "citrixadc_icalatencyprofile" "tf_icalatencyprofile" {
-  name                     = "my_ica_latencyprofile"
-  l7latencymonitoring      = "ENABLED"
-  l7latencythresholdfactor = 120
-  l7latencywaittime        = 100
-}
 
 data "citrixadc_icalatencyprofile" "tf_icalatencyprofile_ds" {
-  name = citrixadc_icalatencyprofile.tf_icalatencyprofile.name
+  name = "my_ica_latencyprofile"
 }
 
 output "l7latencymonitoring" {

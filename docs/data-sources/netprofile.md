@@ -40,9 +40,6 @@ In addition to the arguments, the following attributes are available:
 * `srcip` - IP address or the name of an IP set.
 * `srcippersistency` - When the net profile is associated with a virtual server or its bound services, this option enables the Citrix ADC to use the same address, specified in the net profile, to communicate to servers for all sessions initiated from a particular client to the virtual server.
 * `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
-
-## Attribute Reference
-
 * `id` - The id of the netprofile. It has the same value as the `name` attribute.
 
 

@@ -10,15 +10,9 @@ The nsrpcnode data source allows you to retrieve information about RPC nodes con
 ## Example usage
 
 ```terraform
-resource "citrixadc_nsrpcnode" "my_nsrpcnode" {
-  ipaddress = "10.222.74.146"
-  password  = "mypassword"
-  secure    = "ON"
-  srcip     = "10.222.74.146"
-}
 
 data "citrixadc_nsrpcnode" "my_nsrpcnode_data" {
-  ipaddress = citrixadc_nsrpcnode.my_nsrpcnode.ipaddress
+  ipaddress = "10.222.74.146"
 }
 
 output "rpcnode_secure" {

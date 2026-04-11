@@ -36,11 +36,7 @@ In addition to the arguments, the following attributes are available:
 * `loginschema` - Login schema associated with authentication policy label. Login schema defines the UI rendering by providing customization option of the fields. If user intervention is not needed for a given factor such as group extraction, a loginSchema whose authentication schema is "noschema" should be used.
 * `newname` - The new name of the auth policy label.
 * `type` - Type of feature (aaatm or rba) against which to match the policies bound to this policy label.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationpolicylabel. It has the same value as the `labelname` attribute.
-
 
 ## Import
 

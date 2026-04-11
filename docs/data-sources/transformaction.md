@@ -40,9 +40,6 @@ In addition to the arguments, the following attributes are available:
 * `resurlfrom` - PCRE-format regular expression that describes the response URL pattern to be transformed.
 * `resurlinto` - PCRE-format regular expression that describes the transformation to be performed on URLs that match the resUrlFrom pattern.
 * `state` - Enable or disable this action.
-
-## Attribute Reference
-
 * `id` - The id of the transformaction. It has the same value as the `name` attribute.
 
 ## Import

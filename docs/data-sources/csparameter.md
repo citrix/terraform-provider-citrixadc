@@ -28,7 +28,4 @@ This datasource does not require any arguments.
 The following attributes are available:
 
 * `stateupdate` - Specifies whether the virtual server checks the attached load balancing server for state information. Possible values: `ENABLED`, `DISABLED`.
-
-## Attribute Reference
-
 * `id` - The id of the csparameter. It is a system-generated identifier.

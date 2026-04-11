@@ -47,9 +47,6 @@ In addition to the arguments, the following attributes are available:
 * `syncheck` - Silently drop any non-SYN packets for connections for which there is no LSN-NAT session present on the Citrix ADC. If you disable this parameter, the Citrix ADC accepts any non-SYN packets and creates a new LSN session entry for this connection. Following are some reasons for the Citrix ADC to receive such packets: LSN session for a connection existed but the Citrix ADC removed this session because the LSN session was idle for a time that exceeded the configured session timeout; Such packets can be a part of a DoS attack.
 * `synidletimeout` - SYN Idle timeout.
 * `transportprotocol` - Protocol for which to set the LSN transport profile parameters.
-
-## Attribute Reference
-
 * `id` - The id of the lsntransportprofile. It has the same value as the `transportprofilename` attribute.
 
 

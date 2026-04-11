@@ -57,11 +57,7 @@ In addition to the arguments, the following attributes are available:
 * `targetlbvserver` - If transport mode is TLS, specify the name of LB vserver to associate. The LB vserver needs to be of type TCP and service associated needs to be SSL_TCP.
 * `transport` - Transport mode to RADIUS server.
 * `tunnelendpointclientip` - Send Tunnel Endpoint Client IP address to the RADIUS server.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationradiusaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

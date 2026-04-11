@@ -80,11 +80,7 @@ In addition to the arguments, the following attributes are available:
 * `skewtime` - This option specifies the allowed clock skew in number of minutes that Citrix ADC ServiceProvider allows on an incoming assertion. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.
 * `statechecks` - Boolean expression that will be evaluated to validate HTTP requests on SAML endpoints.
 * `storesamlresponse` - Option to store entire SAML Response through the life of user session.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationsamlaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

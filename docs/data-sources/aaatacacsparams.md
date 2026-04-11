@@ -44,7 +44,4 @@ The following attributes are available:
 * `auditfailedcmds` - The option for sending accounting messages to the TACACS+ server.
 * `defaultauthenticationgroup` - This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 * `groupattrname` - TACACS+ group attribute name. Used for group extraction on the TACACS+ server.
-
-## Attribute Reference
-
 * `id` - The id of the aaatacacsparams. It is a system-generated identifier.

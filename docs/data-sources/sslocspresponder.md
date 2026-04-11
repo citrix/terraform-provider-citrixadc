@@ -50,9 +50,6 @@ In addition to the arguments, the following attributes are available:
 * `trustresponder` - A certificate to use to validate OCSP responses. Alternatively, if -trustResponder is specified, no verification will be done on the reponse. If both are omitted, only the response times (producedAt, lastUpdate, nextUpdate) will be verified.
 * `url` - URL of the OCSP responder.
 * `usenonce` - Enable the OCSP nonce extension, which is designed to prevent replay attacks.
-
-## Attribute Reference
-
 * `id` - The id of the sslocspresponder. It has the same value as the `name` attribute.
 
 

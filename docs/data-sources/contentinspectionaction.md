@@ -46,11 +46,7 @@ In addition to the arguments, the following attributes are available:
   * MIRROR - Forwards cloned packets for Intrusion Detection.
   * NOINSPECTION - This does not forward incoming and outgoing packets to the Inspection device.
   * NSTRACE - capture current and further incoming packets on this transaction.
-
-## Attribute Reference
-
 * `id` - The id of the contentinspectionaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

@@ -37,6 +37,3 @@ In addition to the arguments above, the following attributes are exported:
 * `namespace` - The XML namespace URI associated with the prefix.
 * `description` - Description of the XML namespace.
 
-## Notes
-
-XML namespaces are used in policy expressions to work with XML content. They allow you to define prefix-to-URI mappings that can be referenced when parsing and manipulating XML data in policies.

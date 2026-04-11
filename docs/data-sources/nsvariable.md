@@ -43,6 +43,3 @@ In addition to the arguments above, the following attributes are exported:
 * `scope` - Scope of the variable (global or transaction).
 * `type` - Specification of the variable type (ulong, text, or map).
 
-## Notes
-
-NS variables are used in policy expressions to store and manipulate data during policy evaluation. They can be singleton variables or maps for more complex data structures.

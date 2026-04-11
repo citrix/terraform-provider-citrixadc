@@ -106,10 +106,3 @@ In addition to the argument above, the following attributes are exported:
 
 * `userdefinedauditlog` - Log user-configurable log messages to nslog. Setting this parameter to NO causes auditing to ignore all user-configured message actions. Setting this parameter to YES causes auditing to log user-configured message actions that meet the other logging criteria. Possible values: `YES`, `NO`.
 
-## Notes
-
-* Audit nslog actions define how audit logs are sent to external syslog servers.
-* The action specifies the server IP/FQDN, port, log levels, and what types of events to log.
-* When using with policies, the action determines where and how logs are sent when the policy rule matches.
-* Either `serverip` or `serverdomainname` must be specified, but not both.
-* The `loglevel` attribute is a list that can contain multiple log levels to enable.

@@ -36,11 +36,7 @@ In addition to the arguments, the following attributes are available:
 * `comment` - Any comments to preserve information about the JSON error object.
 * `overwrite` - Overwrite any existing JSON error object of the same name.
 * `src` - URL (protocol, host, path, and name) for the location at which to store the imported JSON error object. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
-
-## Attribute Reference
-
 * `id` - The id of the appfwjsonerrorpage. It has the same value as the `name` attribute.
-
 
 ## Import
 

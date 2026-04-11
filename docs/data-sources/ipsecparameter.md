@@ -40,7 +40,4 @@ The following attributes are available:
 * `perfectforwardsecrecy` - Enable/Disable PFS.
 * `replaywindowsize` - IPSec Replay window size for the data traffic.
 * `retransmissiontime` - The interval in seconds to retry sending the IKE messages to peer, three consecutive attempts are done with doubled interval after every failure, increases for every retransmit till 6 retransmits.
-
-## Attribute Reference
-
 * `id` - The id of the ipsecparameter. It is a system-generated identifier.

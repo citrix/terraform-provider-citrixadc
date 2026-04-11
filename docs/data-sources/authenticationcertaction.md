@@ -36,7 +36,4 @@ In addition to the arguments, the following attributes are available:
 * `groupnamefield` - Client-cert field from which the group is extracted. Must be set to either "Subject" and "Issuer" (include both sets of double quotation marks). Format: <field>:<subfield>
 * `twofactor` - Enables or disables two-factor authentication. Two factor authentication is client cert authentication followed by password authentication.
 * `usernamefield` - Client-cert field from which the username is extracted. Must be set to either "Subject" and "Issuer" (include both sets of double quotation marks). Format: <field>:<subfield>.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationcertaction. It has the same value as the `name` attribute.

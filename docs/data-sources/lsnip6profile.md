@@ -35,12 +35,6 @@ In addition to the arguments, the following attributes are available:
 * `natprefix` - IPv6 address(es) of the LSN subscriber(s) or subscriber network(s) on whose traffic you want the Citrix ADC to perform Large Scale NAT.
 * `network6` - IPv6 address of the Citrix ADC AFTR device
 * `type` - IPv6 translation type for which to set the LSN IP6 profile parameters.
-
-
-## Attribute Reference
-
-In addition to the arguments, the following attributes are available:
-
 * `id` - The id of the lsnip6profile. It has the same value as the `name` attribute.
 
 

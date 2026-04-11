@@ -41,9 +41,6 @@ In addition to the arguments, the following attributes are available:
 * `logipfix` - Logs in IPFIX  format if option is enabled.
 * `logsessdeletion` - LSN Session deletion will not be logged if disabled.
 * `logsubscrinfo` - Subscriber ID information is logged if option is enabled.
-
-## Attribute Reference
-
 * `id` - The id of the lsnlogprofile. It has the same value as the `logprofilename` attribute.
 
 

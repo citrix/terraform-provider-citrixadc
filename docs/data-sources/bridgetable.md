@@ -87,10 +87,3 @@ output "bridge_vtep" {
   description = "VTEP IP address for the MAC"
 }
 ```
-
-## Notes
-
-* Bridge table entries are typically learned dynamically when VXLAN tunnels are configured.
-* The datasource retrieves bridge table information from the Citrix ADC.
-* Multiple bridge table entries may exist; filter appropriately using the optional parameters.
-* The `bridgeage` parameter determines how long entries remain in the bridge table before timing out.

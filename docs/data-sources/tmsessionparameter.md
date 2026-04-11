@@ -39,7 +39,4 @@ The following attributes are available:
 * `sso` - Log users on to all web applications automatically after they authenticate, or pass users to the web application logon page to authenticate for each application. Note that this configuration does not honor the following authentication types for security reason. BASIC, DIGEST, and NTLM (without Negotiate NTLM2 Key or Negotiate Sign Flag). Use TM TrafficAction to configure SSO for these authentication types.
 * `ssocredential` - Use primary or secondary authentication credentials for single sign-on.
 * `ssodomain` - Domain to use for single sign-on.
-
-## Attribute Reference
-
 * `id` - The id of the tmsessionparameter. It is a system-generated identifier.

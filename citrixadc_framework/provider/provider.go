@@ -465,7 +465,6 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/netprofile_srcportset_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsacl"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsacl6"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsacls"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsappflowcollector"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsassignment"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nscapacity"
@@ -1206,7 +1205,6 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		netprofile.NEtprofileDataSource,
 		nsacl.NSaclDataSource,
 		nsacl6.NSacl6DataSource,
-		nsacls.NSaclsDataSource,
 		nsappflowcollector.NSappflowcollectorDataSource,
 		nsassignment.NSassignmentDataSource,
 		nscapacity.NScapacityDataSource,

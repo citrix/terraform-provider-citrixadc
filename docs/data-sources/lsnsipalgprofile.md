@@ -48,9 +48,6 @@ In addition to the arguments, the following attributes are available:
 * `sipsessiontimeout` - SIP control channel session timeout in seconds.
 * `sipsrcportrange` - Source port range for SIP_UDP and SIP_TCP.
 * `siptransportprotocol` - SIP ALG Profile transport protocol type.
-
-## Attribute Reference
-
 * `id` - The id of the lsnsipalgprofile. It has the same value as the `sipalgprofilename` attribute.
 
 

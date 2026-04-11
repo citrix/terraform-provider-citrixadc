@@ -28,24 +28,6 @@ output "sip503ratethreshold" {
 }
 ```
 
-### Usage with resource dependency
-
-```terraform
-resource "citrixadc_lbsipparameters" "tf_lbsipparameters" {
-  addrportvip         = "ENABLED"
-  retrydur            = 100
-  rnatdstport         = 80
-  rnatsecuredstport   = 81
-  rnatsecuresrcport   = 82
-  rnatsrcport         = 83
-  sip503ratethreshold = 15
-}
-
-data "citrixadc_lbsipparameters" "tf_lbsipparameters" {
-  depends_on = [citrixadc_lbsipparameters.tf_lbsipparameters]
-}
-```
-
 
 ## Argument Reference
 

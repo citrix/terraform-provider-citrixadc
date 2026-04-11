@@ -32,6 +32,3 @@ In addition to the arguments above, the following attributes are exported:
 * `id` - The ID of the snmpengineid datasource.
 * `engineid` - A hexadecimal value of at least 10 characters, uniquely identifying the engineid.
 
-## Notes
-
-The SNMP engine ID is a unique identifier used by SNMP v3 for authentication and privacy. Each SNMP agent must have a unique engine ID. In a cluster environment, each node can have its own engine ID, identified by the ownernode parameter.

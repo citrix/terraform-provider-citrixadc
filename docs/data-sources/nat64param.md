@@ -46,7 +46,4 @@ The following attributes are available:
 * `nat64ignoretos` - Ignore TOS. Possible values: [ YES, NO ]
 * `nat64v6mtu` - MTU setting for the IPv6 side. If the incoming IPv4 packet greater than this, either fragment or send icmp need fragmentation error.
 * `nat64zerochecksum` - Calculate checksum for UDP packets with zero checksum. Possible values: [ ENABLED, DISABLED ]
-
-## Attribute Reference
-
 * `id` - The id of the nat64param. It is a system-generated identifier.

@@ -49,11 +49,7 @@ In addition to the arguments, the following attributes are available:
 * `serverport` - Port of the Content Inspection server.
 * `type` - Type of the Content Inspection callout. It must be one of the following:
   * ICAP - Sends ICAP request to the configured ICAP server.
-
-## Attribute Reference
-
 * `id` - The id of the contentinspectioncallout. It has the same value as the `name` attribute.
-
 
 ## Import
 

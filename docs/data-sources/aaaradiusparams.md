@@ -57,7 +57,4 @@ The following attributes are available:
 * `defaultauthenticationgroup` - This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 * `callingstationid` - Send Calling-Station-ID of the client to the RADIUS server. Possible values: [ ENABLED, DISABLED ]
 * `tunnelendpointclientip` - Send Tunnel Endpoint Client IP address to the RADIUS server. Possible values: [ ENABLED, DISABLED ]
-
-## Attribute Reference
-
 * `id` - The id of the aaaradiusparams. It is a system-generated identifier.

@@ -51,7 +51,4 @@ The following attributes are available:
 * `groupsearchsubattribute` - LDAP group search subattribute.
 * `groupsearchfilter` - String to be combined with the default LDAP group search string to form the value to use when executing an LDAP search.
 * `defaultauthenticationgroup` - This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
-
-## Attribute Reference
-
 * `id` - The id of the aaaldapparams. It is a system-generated identifier.

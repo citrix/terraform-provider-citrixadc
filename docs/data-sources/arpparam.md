@@ -33,7 +33,4 @@ The following attributes are available:
 
 * `timeout` - Time-out value (aging time) for the dynamically learned ARP entries, in seconds. The new value applies only to ARP entries that are dynamically learned after the new value is set. Previously existing ARP entries expire after the previously configured aging time.
 * `spoofvalidation` - Enable/disable ARP spoofing validation. Possible values: `ENABLED`, `DISABLED`.
-
-## Attribute Reference
-
 * `id` - The id of the arpparam. It is a system-generated identifier.

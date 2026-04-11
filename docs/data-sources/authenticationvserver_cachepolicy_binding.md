@@ -39,7 +39,4 @@ In addition to the arguments, the following attributes are available:
 * `nextfactor` - Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor
 * `priority` - The priority, if any, of the vpn vserver policy.
 * `secondary` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor
-
-## Attribute Reference
-
 * `id` - The id of the authenticationvserver_cachepolicy_binding. It is a system-generated identifier.

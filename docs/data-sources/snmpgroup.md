@@ -37,6 +37,5 @@ In addition to the arguments above, the following attributes are exported:
 * `id` - The ID of the snmpgroup datasource.
 * `readviewname` - Name of the configured SNMPv3 view that is bound to this SNMPv3 group. An SNMPv3 user bound to this group can access the subtrees that are bound to this SNMPv3 view as type INCLUDED, but cannot access the ones that are type EXCLUDED.
 
-## Notes
 
-SNMPv3 groups provide a way to organize users and define security policies. Each group has a security level that determines the authentication and encryption requirements for all users in that group. Groups are also associated with SNMP views that control which MIB objects the users can access.
+SNMPv3 groups provide a way to organize users and define security policies. Each group has a security level that determines the authentication and encryption requirements for all users in that group. Groups are also associated with SNMP views that control which MIB objects the users can access.#

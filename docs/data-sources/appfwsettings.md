@@ -55,7 +55,4 @@ The following attributes are available:
 * `signatureurl` - URL to download the mapping file from server.
 * `undefaction` - Profile to use when an application firewall policy evaluates to undefined (UNDEF). An UNDEF event indicates an internal error condition. The APPFW_BLOCK built-in profile is the default setting. You can specify a different built-in or user-created profile as the UNDEF profile.
 * `useconfigurablesecretkey` - Use configurable secret key in AppFw operations. Possible values: [ ON, OFF ]
-
-## Attribute Reference
-
 * `id` - The id of the appfwsettings. It is a system-generated identifier.

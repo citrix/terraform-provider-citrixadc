@@ -43,8 +43,4 @@ In addition to the arguments, the following attributes are available:
 * `priority` - Priority.
 * `labeltype` - The invocation type.
 * `order` - Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.
-
-
-## Attribute Reference
-
 * `id` - The id of the lbvserver_contentinspectionpolicy_binding. It is a system-generated identifier.

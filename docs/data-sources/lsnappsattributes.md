@@ -39,9 +39,6 @@ In addition to the arguments, the following attributes are available:
 * `port` - Port numbers or range of port numbers to match against the destination port of the incoming packet from a subscriber. When the destination port is matched, the LSN application profile is applied for the LSN session. Separate a range of ports with a hyphen. For example, 40-90.
 * `sessiontimeout` - Timeout, in seconds, for an idle LSN session. If an LSN session is idle for a time that exceeds this value, the Citrix ADC removes the session. This timeout does not apply for a TCP LSN session when a FIN or RST message is received from either of the endpoints.
 * `transportprotocol` - Name of the protocol (TCP, UDP) for which the parameters of this LSN application port ATTRIBUTES applies.
-
-## Attribute Reference
-
 * `id` - The id of the lsnappsattributes. It has the same value as the `name` attribute.
 
 

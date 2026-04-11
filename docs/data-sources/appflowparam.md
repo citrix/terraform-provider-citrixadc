@@ -82,7 +82,4 @@ The following attributes are available:
 * `usagerecordinterval` - On enabling this option, the NGS will send bandwidth usage record to configured collectors.
 * `videoinsight` - Enable/disable the feature individually on appflow action.
 * `websaasappusagereporting` - On enabling this option, NGS will send data used by Web/saas app at the end of every HTTP transaction to configured collectors.
-
-## Attribute Reference
-
 * `id` - The id of the appflowparam. It is a system-generated identifier.

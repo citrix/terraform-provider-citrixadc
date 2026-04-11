@@ -9,20 +9,9 @@ This datasource is used to retrieve information about an existing SSL policy on 
 ## Example Usage
 
 ```hcl
-resource "citrixadc_sslaction" "foo" {
-  name                   = "tf_sslaction"
-  clientauth             = "DOCLIENTAUTH"
-  clientcertverification = "Mandatory"
-}
-
-resource "citrixadc_sslpolicy" "foo" {
-  name   = "tf_sslpolicy"
-  rule   = "false"
-  action = citrixadc_sslaction.foo.name
-}
 
 data "citrixadc_sslpolicy" "foo" {
-  name = citrixadc_sslpolicy.foo.name
+  name = "tf_sslpolicy"
 }
 ```
 

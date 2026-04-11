@@ -35,7 +35,4 @@ The following attributes are available:
 * `deletefiles` - String specifying the path(s) to the file(s) to be deleted by the endpoint analysis (EPA) tool.
 * `rule` - Expression that the Citrix ADC evaluates to allow or deny the user from logging on.
 * `killprocess` - String specifying the name of a process to be terminated by the endpoint analysis (EPA) tool.
-
-## Attribute Reference
-
 * `id` - The id of the aaapreauthenticationparameter. It is a system-generated identifier.

@@ -44,11 +44,7 @@ The following requirement applies only to the Citrix ADC CLI:
 If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my oauthidppolicy policy" or 'my oauthidppolicy policy').
 * `rule` - Expression that the policy uses to determine whether to respond to the specified request.
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only DROP/RESET actions can be used.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationoauthidppolicy. It has the same value as the `name` attribute.
-
 
 ## Import
 

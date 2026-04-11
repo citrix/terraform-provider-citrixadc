@@ -29,11 +29,7 @@ output "defaultauthenticationgroup" {
 In addition to the arguments, the following attributes are available:
 
 * `defaultauthenticationgroup` - This is the group that is added to user sessions that match current policy.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationnoauthaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

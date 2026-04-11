@@ -35,9 +35,6 @@ In addition to the arguments, the following attributes are available:
 * `comment` - Any comments to preserve information about this URL Transformation profile.
 * `onlytransformabsurlinbody` - In the HTTP body, transform only absolute URLs. Relative URLs are ignored.
 * `type` - Type of transformation. Always URL for URL Transformation profiles.
-
-## Attribute Reference
-
 * `id` - The id of the transformprofile. It has the same value as the `name` attribute.
 
 

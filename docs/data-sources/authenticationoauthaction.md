@@ -77,11 +77,7 @@ In addition to the arguments, the following attributes are available:
 * `tokenendpointauthmethod` - Option to select the variant of token authentication method. This method is used while exchanging code with IdP.
 * `userinfourl` - URL to which OAuth access token will be posted to obtain user information.
 * `usernamefield` - Attribute in the token from which username should be extracted.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationoauthaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

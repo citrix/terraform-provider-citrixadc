@@ -10,18 +10,9 @@ The nsservicefunction data source allows you to retrieve information about servi
 ## Example usage
 
 ```terraform
-resource "citrixadc_vlan" "my_vlan" {
-  vlanid    = 25
-  aliasname = "Test VLAN"
-}
-
-resource "citrixadc_nsservicefunction" "my_servicefunction" {
-  servicefunctionname = "my_servicefunction"
-  ingressvlan         = citrixadc_vlan.my_vlan.vlanid
-}
 
 data "citrixadc_nsservicefunction" "my_servicefunction_data" {
-  servicefunctionname = citrixadc_nsservicefunction.my_servicefunction.servicefunctionname
+  servicefunctionname = "my_servicefunction"
 }
 
 output "servicefunction_vlan" {

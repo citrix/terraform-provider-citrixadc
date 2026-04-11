@@ -35,9 +35,6 @@ In addition to the arguments, the following attributes are available:
 * `level` - Level of data to be backed up.
 * `skipbackup` - Use this option to skip taking backup during restore operation.
 * `uselocaltimezone` - This option will create backup file with local timezone timestamp.
-
-## Attribute Reference
-
 * `id` - The id of the systembackup. It has the same value as the `filename` attribute.
 
 ## Import

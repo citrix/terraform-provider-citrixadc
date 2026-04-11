@@ -35,11 +35,7 @@ In addition to the arguments, the following attributes are available:
 * `newname` - New name for the compression policy. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Choose a name that reflects the function that the policy performs.
 * `resaction` - The built-in or user-defined compression action to apply to the response when the policy matches a request or response.
 * `rule` - Expression that determines which HTTP requests or responses match the compression policy.
-
-## Attribute Reference
-
 * `id` - The id of the cmppolicy. It has the same value as the `name` attribute.
-
 
 ## Import
 

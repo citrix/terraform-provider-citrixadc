@@ -31,7 +31,4 @@ The following attributes are available:
 
 * `listeningservice` - Name of RADIUS LISTENING service that will process RADIUS accounting requests.
 * `radiusinterimasstart` - Treat radius interim message as start radius messages.
-
-## Attribute Reference
-
 * `id` - The id of the subscriberradiusinterface. It is a system-generated identifier.

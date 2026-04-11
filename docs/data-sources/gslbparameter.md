@@ -47,7 +47,4 @@ The following attributes are available:
 * `svcstatelearningtime` - Time (in seconds) within which local or child site services remain in learning phase. GSLB site will enter the learning phase after reboot, HA failover, Cluster GSLB owner node changes or MEP being enabled on local node. Backup parent (if configured) will selectively move the adopted children's GSLB services to learning phase when primary parent goes down. While a service is in learning period, remote site will not honour the state and stats got through MEP for that service. State can be learnt from health monitor if bound explicitly.
 * `undefaction` - Action to perform when policy evaluation creates an UNDEF condition. Possible values: `NOLBACTION`, `RESET`, `DROP`.
 * `v6ldnsmasklen` - Mask for creating LDNS entries for IPv6 source addresses. The mask is defined as the number of leading bits to consider, in the source IP address, when creating an LDNS entry.
-
-## Attribute Reference
-
 * `id` - The id of the gslbparameter. It is a system-generated identifier.

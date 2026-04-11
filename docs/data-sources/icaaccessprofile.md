@@ -46,9 +46,6 @@ In addition to the arguments, the following attributes are available:
 * `multistream` - Allow Default access/Disable the multistream feature for the specified users.
 * `smartcardredirection` - Allow default access or disable smart card redirection. Smart card virtual channel is always allowed in CVAD.
 * `wiaredirection` - Allow default access or disable WIA scanner redirection.
-
-## Attribute Reference
-
 * `id` - The id of the icaaccessprofile. It has the same value as the `name` attribute.
 
 

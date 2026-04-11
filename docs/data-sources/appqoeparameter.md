@@ -35,7 +35,4 @@ The following attributes are available:
 * `avgwaitingclient` - Average number of client connections, that can sit in service waiting queue.
 * `maxaltrespbandwidth` - Maximum bandwidth which will determine whether to send alternate content response.
 * `dosattackthresh` - Average number of client connection that can queue up on vserver level without triggering DoS mitigation module.
-
-## Attribute Reference
-
 * `id` - The id of the appqoeparameter. It is a system-generated identifier.
