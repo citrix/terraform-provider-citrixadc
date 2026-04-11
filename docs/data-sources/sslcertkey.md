@@ -47,12 +47,6 @@ In addition to the arguments, the following attributes are available:
 * `ocspstaplingcache` -  Clear cached ocspStapling response in certkey.
 * `deletecertkeyfilesonremoval` -  This option is used to automatically delete certificate/key files from physical device when the added certkey is removed. When deleteCertKeyFilesOnRemoval option is used at rm certkey command, it overwrites the deleteCertKeyFilesOnRemoval setting used at add/set certkey command
 * `deletefromdevice` -  Delete cert/key file from file system.
-
-
-## Attribute Reference
-
-In addition to the arguments, the following attributes are available:
-
 * `id` - The id of the sslcertkey. It has the same value as the `certkey` attribute.
 
 

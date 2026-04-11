@@ -46,7 +46,4 @@ The following attributes are available:
 * `trapurlautogenerate` - Enable/disable trap URL auto generation. When enabled, trap URL is updated within the configured interval.
 * `trapurlinterval` - Time in seconds after which trap URL is updated.
 * `trapurllength` - Length of the auto-generated trap URL.
-
-## Attribute Reference
-
 * `id` - The id of the botsettings. It is a system-generated identifier.

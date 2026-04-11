@@ -61,9 +61,3 @@ Application Firewall signatures can be imported using the signature object name:
 ```shell
 terraform import citrixadc_appfwsignatures.example my_signature_object
 ```
-
-## Notes
-
-* The `src` attribute returned by the data source may differ from the input format. For example, a signature imported from `local://appfw_signatures.xml` may be returned as just `appfw_signatures.xml`.
-* Some attributes like `comment` may not be returned by the API in the GET response, even if they were set during creation.
-* Signature objects are typically used in conjunction with Application Firewall profiles to provide protection against web application attacks.

@@ -50,7 +50,4 @@ The following attributes are available:
 * `servicepathavp` - The AVP code in which PCRF sends service path applicable for subscriber.
 * `servicepathvendorid` - The vendorid of the AVP in which PCRF sends service path for subscriber.
 * `vserver` - Name of the load balancing, or content switching vserver to which the Gx connections are established. The service type of the virtual server must be DIAMETER/SSL_DIAMETER. Mutually exclusive with the service parameter. Therefore, you cannot set both service and the Virtual Server in the Gx Interface.
-
-## Attribute Reference
-
 * `id` - The id of the subscribergxinterface. It is a system-generated identifier.

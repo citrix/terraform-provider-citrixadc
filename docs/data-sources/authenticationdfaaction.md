@@ -36,11 +36,7 @@ In addition to the arguments, the following attributes are available:
 * `defaultauthenticationgroup` - This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 * `passphrase` - Key shared between the DFA server and the Citrix ADC. Required to allow the Citrix ADC to communicate with the DFA server.
 * `serverurl` - DFA Server URL.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationdfaaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

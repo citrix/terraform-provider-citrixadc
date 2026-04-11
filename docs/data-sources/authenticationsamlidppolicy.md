@@ -38,11 +38,7 @@ In addition to the arguments, the following attributes are available:
 * `newname` - New name for the SAML IdentityProvider policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 * `rule` - Expression which is evaluated to choose a profile for authentication.
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationsamlidppolicy. It has the same value as the `name` attribute.
-
 
 ## Import
 

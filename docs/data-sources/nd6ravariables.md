@@ -45,7 +45,4 @@ In addition to the arguments, the following attributes are available:
 * `retranstime` - Retransmission time, in milliseconds.
 * `sendrouteradv` - whether the router sends periodic RAs and responds to Router Solicitations.
 * `srclinklayeraddroption` - Include source link layer address option in RA messages.
-
-## Attribute Reference
-
 * `id` - The id of the nd6ravariables. It has the same value as the `vlan` attribute.

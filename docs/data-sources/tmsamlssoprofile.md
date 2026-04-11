@@ -109,9 +109,6 @@ In addition to the arguments, the following attributes are available:
 * `signassertion` - Option to sign portions of assertion when Citrix ADC IDP sends one. Based on the user selection, either Assertion or Response or Both or none can be signed.
 * `signaturealg` - Algorithm to be used to sign/verify SAML transactions.
 * `skewtime` - This option specifies the number of minutes on either side of current time that the assertion would be valid. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.
-
-## Attribute Reference
-
 * `id` - The id of the tmsamlssoprofile. It has the same value as the `name` attribute.
 
 ## Import

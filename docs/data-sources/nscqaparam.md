@@ -55,7 +55,4 @@ The following attributes are available:
 * `net3cclscale` - Three congestion level scores limits corresponding to None, Low, Medium.
 * `net3csqscale` - Three signal quality level scores limits corresponding to Excellent, Good, Fair.
 * `net3logcoef` - Connection quality ranking Log coefficients of network 3.
-
-## Attribute Reference
-
 * `id` - The id of the nscqaparam. It is a system-generated identifier.

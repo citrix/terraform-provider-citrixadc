@@ -33,7 +33,4 @@ The following attributes are available:
 
 * `dhcpclient` - Enables DHCP client to acquire IP address from the DHCP server in the next boot. When set to OFF, disables the DHCP client in the next boot. Possible values: [ ON, OFF ]
 * `saveroute` - DHCP acquired routes are saved on the Citrix ADC. Possible values: [ ON, OFF ]
-
-## Attribute Reference
-
 * `id` - The id of the nsdhcpparams. It is a system-generated identifier.

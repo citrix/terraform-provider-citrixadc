@@ -40,9 +40,6 @@ In addition to the arguments, the following attributes are available:
 * `psidlength` - Length of Port Set Identifier Port Set Identifier(PSID) in Embedded Address (EA) bits.
 * `psidoffset` - Start bit position of Port Set Identifier(PSID) value in Embedded Address (EA) bits.
 * `ruleipv6prefix` - IPv6 prefix of Customer Edge(CE) device. MAP-T CE will send ipv6 packets with this ipv6 prefix as source ipv6 address prefix.
-
-## Attribute Reference
-
 * `id` - The id of the mapbmr. It has the same value as the `name` attribute.
 
 

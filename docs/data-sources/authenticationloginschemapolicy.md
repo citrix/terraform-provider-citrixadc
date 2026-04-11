@@ -49,11 +49,7 @@ The following requirements apply only to the Citrix ADC CLI:
 * If the expression itself includes double quotation marks, escape the quotations by using the \ character.
 * Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationloginschemapolicy. It has the same value as the `name` attribute.
-
 
 ## Import
 

@@ -29,8 +29,4 @@ This datasource does not require any arguments.
 The following attributes are available:
 
 * `enabled` - (Required) Boolean value indicating the effective state of the extra management CPU.
-
-
-## Attribute Reference
-
 * `id` - The id of the systemextramgmtcpu. It is a system-generated identifier.

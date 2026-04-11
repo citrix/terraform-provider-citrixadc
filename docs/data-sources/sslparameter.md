@@ -9,14 +9,8 @@ This data source is used to read the SSL parameter configuration of the Citrix A
 ## Example Usage
 
 ```hcl
-resource "citrixadc_sslparameter" "default" {
-	denysslreneg   = "NONSECURE"
-	defaultprofile = "ENABLED"
-	operationqueuelimit = 4096
-}
 
 data "citrixadc_sslparameter" "default" {
-	depends_on = [citrixadc_sslparameter.default]
 }
 ```
 

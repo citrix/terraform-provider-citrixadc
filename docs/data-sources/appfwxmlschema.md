@@ -35,11 +35,7 @@ In addition to the arguments, the following attributes are available:
 * `comment` - Any comments to preserve information about the XML Schema object.
 * `overwrite` - Overwrite any existing XML Schema object of the same name.
 * `src` - URL (protocol, host, path, and file name) for the location at which to store the imported XML Schema. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
-
-## Attribute Reference
-
 * `id` - The id of the appfwxmlschema. It has the same value as the `name` attribute.
-
 
 ## Import
 

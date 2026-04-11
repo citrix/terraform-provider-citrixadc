@@ -106,8 +106,3 @@ Similar patterns apply for `attribute2` through `attribute16` with their respect
 * `sendpassword` - Option to send password in assertion.
 * `signatureservice` - Name of the service in cloud used to sign the data.
 
-## Notes
-
-* The datasource retrieves read-only information about existing SAML IdP profiles.
-* All attributes marked as Optional in the schema are computed from the NetScaler ADC configuration.
-* The profile must exist on the NetScaler ADC before it can be retrieved using this datasource.

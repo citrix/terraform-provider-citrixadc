@@ -41,6 +41,3 @@ In addition to the arguments above, the following attributes are exported:
 * `thresholdvalue` - Value for the high threshold. The Citrix ADC generates an SNMP trap message when the value of the attribute associated with the alarm is greater than or equal to the specified high threshold value.
 * `time` - Interval, in seconds, at which the Citrix ADC generates SNMP trap messages when the conditions specified in the SNMP alarm are met. Can be specified for various alarms like SYNFLOOD, HA-VERSION-MISMATCH, CLUSTER-NODE-HEALTH, etc.
 
-## Notes
-
-SNMP alarms are used to configure thresholds and severity levels for trap messages that the ADC sends to monitoring systems. Different alarms monitor different system parameters like CPU usage, memory usage, HA status, and cluster health.

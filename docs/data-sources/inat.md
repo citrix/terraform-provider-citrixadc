@@ -44,9 +44,6 @@ In addition to the arguments, the following attributes are available:
 * `useproxyport` - Enable the Citrix ADC to proxy the source port of packets before sending the packets to the server.
 * `usip` - Enable the Citrix ADC to retain the source IP address of packets before sending the packets to the server.
 * `usnip` - Enable the Citrix ADC to use a SNIP address as the source IP address of packets before sending the packets to the server.
-
-## Attribute Reference
-
 * `id` - The id of the inat. It has the same value as the `name` attribute.
 
 

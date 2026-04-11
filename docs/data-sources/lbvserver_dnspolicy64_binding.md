@@ -42,7 +42,4 @@ In addition to the arguments, the following attributes are available:
 * `labelname` - Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.
 * `labeltype` - Type of policy label to invoke. Applicable only to rewrite, videooptimization and cache policies. Available settings function as follows: reqvserver - Evaluate the request against the request-based policies bound to the specified virtual server. resvserver - Evaluate the response against the response-based policies bound to the specified virtual server. policylabel - invoke the request or response against the specified user-defined policy label.
 * `order` - Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.
-
-## Attribute Reference
-
 * `id` - The id of the lbvserver_dnspolicy64_binding. It is a system-generated identifier.

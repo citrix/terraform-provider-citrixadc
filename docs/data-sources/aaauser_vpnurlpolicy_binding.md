@@ -39,7 +39,4 @@ In addition to the arguments, the following attributes are available:
   * An expression that evaluates to a number.
 * `type` - Bindpoint to which the policy is bound. Possible values: [ REQUEST, UDP_REQUEST, DNS_REQUEST, ICMP_REQUEST ]
 * `priority` - Integer specifying the priority of the policy. A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies max priority is 64000.
-
-## Attribute Reference
-
 * `id` - The id of the aaauser_vpnurlpolicy_binding. It is a system-generated identifier.

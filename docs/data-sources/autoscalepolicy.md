@@ -37,11 +37,7 @@ In addition to the arguments, the following attributes are available:
 * `logaction` - The log action associated with the autoscale policy.
 * `newname` - The new name of the autoscale policy.
 * `rule` - The rule associated with the policy.
-
-## Attribute Reference
-
 * `id` - The id of the autoscalepolicy. It has the same value as the `name` attribute.
-
 
 ## Import
 

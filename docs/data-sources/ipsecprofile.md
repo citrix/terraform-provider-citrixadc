@@ -45,9 +45,6 @@ In addition to the arguments, the following attributes are available:
 * `publickey` - Public key file path.
 * `replaywindowsize` - IPSec Replay window size for the data traffic.
 * `retransmissiontime` - The interval in seconds to retry sending the IKE messages to peer, three consecutive attempts are done with doubled interval after every failure.
-
-## Attribute Reference
-
 * `id` - The id of the ipsecprofile. It has the same value as the `name` attribute.
 
 

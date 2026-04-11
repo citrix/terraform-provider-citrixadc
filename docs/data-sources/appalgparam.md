@@ -28,7 +28,4 @@ This datasource does not require any arguments.
 The following attributes are available:
 
 * `pptpgreidletimeout` - Interval in sec, after which data sessions of PPTP GRE is cleared.
-
-## Attribute Reference
-
 * `id` - The id of the appalgparam. It is a system-generated identifier.

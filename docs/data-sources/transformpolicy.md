@@ -37,9 +37,6 @@ In addition to the arguments, the following attributes are available:
 * `newname` - New name for the policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 * `profilename` - Name of the URL Transformation profile to use to transform requests and responses that match the policy.
 * `rule` - Expression, or name of a named expression, against which to evaluate traffic.
-
-## Attribute Reference
-
 * `id` - The id of the transformpolicy. It has the same value as the `name` attribute.
 
 

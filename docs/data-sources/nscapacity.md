@@ -43,7 +43,4 @@ The following attributes are available:
 * `unit` - Bandwidth unit. Possible values: [ Gbps, Mbps ]
 * `username` - Username to authenticate with ADM Agent for LAS licensing. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 * `vcpu` - Licensed using vcpu pool.
-
-## Attribute Reference
-
 * `id` - The id of the nscapacity. It is a system-generated identifier.

@@ -32,6 +32,3 @@ In addition to the arguments above, the following attributes are exported:
 * `id` - The ID of the snmpcommunity datasource.
 * `permissions` - The SNMP V1 or V2 query-type privilege that is associated with this SNMP community. Possible values include GET, GET_BULK, GET_NEXT, and ALL.
 
-## Notes
-
-SNMP communities are used for authentication in SNMP V1 and V2c protocols. The community string acts as a password that grants different levels of access to the SNMP agent on the ADC appliance. Different permissions can be assigned to different community strings to control what operations can be performed.

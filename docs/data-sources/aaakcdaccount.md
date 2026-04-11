@@ -41,9 +41,6 @@ In addition to the arguments, the following attributes are available:
 * `enterpriserealm` - Enterprise realm of the user. This value is used only when the realm based KCD is configured.
 * `keytab` - Keytab file to use for the KCD account.
 * `cacert` - CA certificate to verify the KDC.
-
-## Attribute Reference
-
 * `id` - The id of the aaakcdaccount. It has the same value as the `kcdaccount` attribute.
 
 

@@ -119,11 +119,3 @@ output "cluster_nodes" {
   }
 }
 ```
-
-## Notes
-
-* The cluster node must already exist in the Citrix ADC cluster configuration before it can be retrieved using this data source.
-* Cluster nodes are identified by their unique `nodeid`.
-* The node state can be ACTIVE, SPARE, or PASSIVE, each serving different purposes in cluster operation.
-* Priority values determine the configuration coordinator selection in a cluster setup.
-* This data source requires a CLUSTER testbed environment for proper operation.

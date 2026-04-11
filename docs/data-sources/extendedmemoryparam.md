@@ -28,7 +28,4 @@ No required arguments. This data source retrieves the global extended memory par
 In addition to the arguments, the following attributes are available:
 
 * `memlimit` - Amount of NetScaler memory to reserve for the memory used by LSN and Subscriber Session Store feature, in multiples of 2MB. Note: If you later reduce the value of this parameter, the amount of active memory is not reduced. Changing the configured memory limit can only increase the amount of active memory.
-
-## Attribute Reference
-
 * `id` - The id of the extendedmemoryparam.

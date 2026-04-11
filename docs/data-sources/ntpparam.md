@@ -40,6 +40,3 @@ The following attributes are exported:
 * `revokelogsec` - Interval between re-randomizations of the autokey seeds to prevent brute-force attacks on the autokey algorithms.
 * `trustedkey` - List of key identifiers that are trusted for server authentication with symmetric key cryptography in the keys file.
 
-## Notes
-
-The ntpparam resource is a singleton resource on the Citrix ADC appliance that contains NTP parameters. These parameters control how the ADC synchronizes its time with NTP servers and manages authentication.

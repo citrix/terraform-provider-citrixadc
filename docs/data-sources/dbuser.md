@@ -10,13 +10,9 @@ The dbuser data source allows you to retrieve information about database users.
 ## Example usage
 
 ```terraform
-resource "citrixadc_dbuser" "tf_dbuser" {
-  username = "user1"
-  password = "1234"
-}
 
 data "citrixadc_dbuser" "tf_dbuser_ds" {
-  username = citrixadc_dbuser.tf_dbuser.username
+  username = "user1"
   loggedin = false
 }
 

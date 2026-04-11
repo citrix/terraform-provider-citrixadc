@@ -43,7 +43,4 @@ The following attributes are available:
 * `aaadloglevel` - AAAD log level. Possible values: [ EMERGENCY, ALERT, CRITICAL, ERROR, WARNING, NOTICE, INFORMATIONAL, DEBUG ]
 * `dynaddr` - Enable or disable dynamic address allocation. Possible values: [ ON, OFF ]
 * `ftmode` - Enable or disable fault tolerance for AAA. Possible values: [ ON, OFF, HA ]
-
-## Attribute Reference
-
 * `id` - The id of the aaaparameter. It is a system-generated identifier.

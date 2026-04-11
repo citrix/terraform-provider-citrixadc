@@ -37,11 +37,7 @@ In addition to the arguments, the following attributes are available:
 * `secretkey` - Secret of gateway as established at the captcha source. (Note: This value is encrypted when retrieved from the API)
 * `serverurl` - This is the endpoint at which captcha response is validated.
 * `sitekey` - Sitekey to identify gateway fqdn while loading captcha. (Note: This value is encrypted when retrieved from the API)
-
-## Attribute Reference
-
 * `id` - The id of the authenticationcaptchaaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

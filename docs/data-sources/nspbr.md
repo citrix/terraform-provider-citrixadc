@@ -10,20 +10,9 @@ The nspbr data source allows you to retrieve information about NetScaler Policy-
 ## Example usage
 
 ```terraform
-resource "citrixadc_nspbr" "my_pbr" {
-  name     = "my_pbr"
-  action   = "DENY"
-  srcip    = true
-  srcipop  = "="
-  srcipval = "192.0.2.0-192.0.2.255"
-  destip   = true
-  destipop = "="
-  destipval = "203.0.113.0-203.0.113.255"
-  priority = 100
-}
 
 data "citrixadc_nspbr" "my_pbr_data" {
-  name = citrixadc_nspbr.my_pbr.name
+  name = "my_pbr"
 }
 
 output "pbr_action" {

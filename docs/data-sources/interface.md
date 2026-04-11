@@ -20,20 +20,6 @@ output "interface_mtu" {
 }
 ```
 
-### Using with Resource
-
-```hcl
-resource "citrixadc_interface" "tf_interface" {
-  interface_id = "1/1"
-  hamonitor    = "OFF"
-  mtu          = 2000
-}
-
-data "citrixadc_interface" "tf_interface" {
-  interface_id = citrixadc_interface.tf_interface.interface_id
-}
-```
-
 ## Argument Reference
 
 * `interface_id` - (Required) Interface number, in C/U format, where C can take one of the following values:

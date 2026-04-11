@@ -41,9 +41,6 @@ In addition to the arguments, the following attributes are available:
 * `samlssoprofile` - Profile to be used for doing SAML SSO to remote relying party.
 * `sso` - Use single sign-on for the resource that the user is accessing now.
 * `userexpression` - expression that will be evaluated to obtain username for SingleSignOn.
-
-## Attribute Reference
-
 * `id` - The id of the tmtrafficaction. It has the same value as the `name` attribute.
 
 ## Import

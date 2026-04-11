@@ -43,8 +43,4 @@ In addition to the arguments, the following attributes are available:
 * `priority` - Priority for the policy.
 * `labeltype` - The invocation type.
 * `targetlbvserver` - Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE.
-
-
-## Attribute Reference
-
 * `id` - The id of the csvserver_cachepolicy_binding. It is a system-generated identifier.

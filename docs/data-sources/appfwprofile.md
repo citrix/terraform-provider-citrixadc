@@ -154,15 +154,3 @@ In addition to the argument above, the following attributes are exported:
 * `xmlerrorstatusmessage` - Response status message associated with XML error page.
 * `as_prof_bypass_list_enable` - Enable bypass list for the profile.
 * `as_prof_deny_list_enable` - Enable deny list for the profile.
-
-## Usage Notes
-
-1. The data source requires the profile to exist on the Citrix ADC. If the profile doesn't exist, Terraform will return an error.
-
-2. When using this data source with a resource in the same configuration, use `depends_on` to ensure the resource is created before the data source attempts to read it.
-
-3. All attributes returned by the data source are read-only and reflect the current state of the profile on the Citrix ADC.
-
-4. The `name` attribute is case-sensitive and must exactly match the profile name on the Citrix ADC.
-
-5. Many attributes are lists representing multiple actions that can be enabled simultaneously (e.g., `["block", "log", "stats"]`).

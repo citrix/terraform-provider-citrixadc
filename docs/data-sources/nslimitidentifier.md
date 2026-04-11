@@ -45,21 +45,3 @@ In addition to the arguments above, the following attributes are exported:
 * `threshold` - Maximum number of requests that are allowed in the given timeslice when requests (mode is set as `REQUEST_RATE`) are tracked per timeslice. When connections (mode is set as `CONNECTION`) are tracked, it is the total number of connections that would be let through.
 * `timeslice` - Time interval, in milliseconds, specified in multiples of 10, during which requests are tracked to check if they cross the threshold. This argument is needed only when the mode is set to `REQUEST_RATE`.
 * `trapsintimeslice` - Number of traps to be sent in the timeslice configured. A value of 0 indicates that traps are disabled.
-
-## Example Usage with Resource
-
-```hcl
-resource "citrixadc_nslimitidentifier" "rate_limiter" {
-  limitidentifier  = "api_rate_limiter"
-  threshold        = 100
-  timeslice        = 1000
-  limittype        = "BURSTY"
-  mode             = "REQUEST_RATE"
-  maxbandwidth     = 500
-  trapsintimeslice = 5
-}
-
-data "citrixadc_nslimitidentifier" "rate_limiter_info" {
-  limitidentifier = citrixadc_nslimitidentifier.rate_limiter.limitidentifier
-}
-```

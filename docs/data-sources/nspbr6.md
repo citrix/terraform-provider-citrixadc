@@ -10,20 +10,9 @@ The nspbr6 data source allows you to retrieve information about IPv6 Policy Base
 ## Example usage
 
 ```terraform
-resource "citrixadc_nspbr6" "my_nspbr6" {
-  name      = "my_nspbr6"
-  action    = "ALLOW"
-  srcipv6   = true
-  srcipv6val = "2001:db8::/32"
-  destipv6  = true
-  destipv6val = "2001:db8:1::/48"
-  nexthop   = true
-  nexthopval = "2001:db8:2::1"
-  priority  = 10
-}
 
 data "citrixadc_nspbr6" "my_nspbr6_data" {
-  name   = citrixadc_nspbr6.my_nspbr6.name
+  name   = "my_nspbr6"
   detail = false
 }
 

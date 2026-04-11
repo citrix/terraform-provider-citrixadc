@@ -34,9 +34,6 @@ In addition to the arguments, the following attributes are available:
 
 * `metric` - Name of the metric for which to change the SNMP OID.
 * `snmpoid` - New SNMP OID of the metric.
-
-## Attribute Reference
-
 * `id` - The id of the lbmetrictable. It has the same value as the `metrictable` attribute.
 
 

@@ -46,9 +46,6 @@ In addition to the arguments, the following attributes are available:
 * `sitepassword` - Password to be used for mep communication between gslb site nodes.
 * `sitetype` - Type of site to create. If the type is not specified, the appliance automatically detects and sets the type on the basis of the IP address being assigned to the site. If the specified site IP address is owned by the appliance (for example, a MIP address or SNIP address), the site is a local site. Otherwise, it is a remote site.
 * `triggermonitor` - Specify the conditions under which the GSLB service must be monitored by a monitor, if one is bound. Available settings function as follows: ALWAYS - Monitor the GSLB service at all times. MEPDOWN - Monitor the GSLB service only when the exchange of metrics through the Metrics Exchange Protocol (MEP) is disabled. MEPDOWN_SVCDOWN - Monitor the service in either of the following situations: The exchange of metrics through MEP is disabled, or the exchange of metrics through MEP is enabled but the status of the service, learned through metrics exchange, is DOWN.
-
-## Attribute Reference
-
 * `id` - The id of the gslbsite. It has the same value as the `sitename` attribute.
 
 

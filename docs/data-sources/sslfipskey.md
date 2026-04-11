@@ -46,9 +46,6 @@ PEM - Privacy Enhanced Mail; select when importing a non-FIPS key.
 * `keytype` - Only RSA key and ECDSA Key are supported.
 * `modulus` - Modulus, in multiples of 64, of the FIPS key to be created.
 * `wrapkeyname` - Name of the wrap key to use for importing the key. Required for importing a non-FIPS key.
-
-## Attribute Reference
-
 * `id` - The id of the sslfipskey. It has the same value as the `fipskeyname` attribute.
 
 ## Import

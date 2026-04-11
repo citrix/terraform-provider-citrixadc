@@ -30,9 +30,6 @@ In addition to the arguments, the following attributes are available:
 
 * `newname` - New name for the policy label.
 * `policylabeltype` - Types of transformations allowed by the policies bound to the label. For URL transformation, always http_req (HTTP Request).
-
-## Attribute Reference
-
 * `id` - The id of the transformpolicylabel. It has the same value as the `labelname` attribute.
 
 

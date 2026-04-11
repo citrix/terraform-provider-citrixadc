@@ -10,15 +10,8 @@ The nsratecontrol data source allows you to retrieve information about rate cont
 ## Example usage
 
 ```terraform
-resource "citrixadc_nsratecontrol" "my_nsratecontrol" {
-  tcpthreshold    = 100
-  udpthreshold    = 100
-  icmpthreshold   = 100
-  tcprstthreshold = 100
-}
 
 data "citrixadc_nsratecontrol" "my_nsratecontrol_data" {
-  depends_on = [citrixadc_nsratecontrol.my_nsratecontrol]
 }
 
 output "tcp_threshold" {

@@ -32,9 +32,6 @@ In addition to the arguments, the following attributes are available:
 
 * `action` - Name of the action to apply to requests or connections that match this policy.
 * `rule` - Name of the Citrix ADC named expression, or an expression, that the policy uses to determine whether to apply certain action on the current traffic.
-
-## Attribute Reference
-
 * `id` - The id of the tmtrafficpolicy. It has the same value as the `name` attribute.
 
 ## Import

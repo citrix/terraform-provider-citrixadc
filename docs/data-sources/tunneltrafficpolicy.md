@@ -37,9 +37,6 @@ In addition to the arguments, the following attributes are available:
 * `logaction` - Name of the messagelog action to use for requests that match this policy.
 * `newname` - New name for the tunnel traffic policy. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 * `rule` - Expression, against which traffic is evaluated.
-
-## Attribute Reference
-
 * `id` - The id of the tunneltrafficpolicy. It has the same value as the `name` attribute.
 
 

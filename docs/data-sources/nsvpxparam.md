@@ -38,8 +38,3 @@ In addition to the arguments above, the following attributes are exported:
 * `kvmvirtiomultiqueue` - Multi-queue setting for KVM VPX with virtio NICs. Options: YES (use multiple queues), NO (use single queue).
 * `masterclockcpu1` - (Deprecated) Master clock CPU setting.
 
-## Notes
-
-These parameters are specific to Citrix ADC VPX (virtual appliances) running in virtualized environments. The settings affect CPU management and network interface behavior in hypervisors like KVM.
-
-In a cluster setup, use the `ownernode` parameter to specify which cluster node's parameters you want to query.

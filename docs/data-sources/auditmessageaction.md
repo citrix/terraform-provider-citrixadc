@@ -62,9 +62,3 @@ In addition to the argument above, the following attributes are exported:
 * `logtonewnslog` - Send the message to the new nslog. Possible values: `YES`, `NO`.
 
 * `bypasssafetycheck` - Bypass the safety check and allow unsafe expressions. This should be used with caution as it allows expressions that might have security implications. Possible values: `YES`, `NO`.
-
-## Notes
-
-* Audit message actions are used to define custom log messages that can be generated during policy evaluation.
-* The `stringbuilderexpr` parameter accepts default syntax expressions, allowing you to create dynamic log messages based on request/response data.
-* When using with policies, the action defines what log message to generate when the policy rule matches.

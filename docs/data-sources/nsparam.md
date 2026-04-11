@@ -64,6 +64,3 @@ In addition to the arguments above, the following attributes are exported:
 * `timezone` - Time zone for the Citrix ADC appliance.
 * `useproxyport` - Enable or disable use_proxy_port setting.
 
-## Notes
-
-The nsparam resource is a singleton resource on the Citrix ADC appliance that contains global system parameters. These parameters affect the overall behavior and configuration of the ADC.

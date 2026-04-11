@@ -61,7 +61,4 @@ The following attributes are available:
 * `retries` - Maximum number of retry attempts when no response is received for a query sent to a name server. Applies to end resolver and forwarder configurations.
 * `splitpktqueryprocessing` - Processing requests split across multiple packets
 * `zonetransfer` - Flag to enable/disable DNS zones configuration transfer to remote GSLB site nodes
-
-## Attribute Reference
-
 * `id` - The id of the dnsparameter. It is a system-generated identifier.

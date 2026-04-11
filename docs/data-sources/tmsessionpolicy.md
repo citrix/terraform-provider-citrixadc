@@ -32,9 +32,6 @@ In addition to the arguments, the following attributes are available:
 
 * `action` - Action to be applied to connections that match this policy.
 * `rule` - Expression, against which traffic is evaluated. Both classic and advance expressions are supported in default partition but only advance expressions in non-default partition.
-
-## Attribute Reference
-
 * `id` - The id of the tmsessionpolicy. It has the same value as the `name` attribute.
 
 ## Import

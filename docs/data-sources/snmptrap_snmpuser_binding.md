@@ -39,7 +39,4 @@ output "username" {
 In addition to the arguments, the following attributes are available:
 
 * `securitylevel` - Security level of the SNMPv3 trap.
-
-## Attribute Reference
-
 * `id` - The id of the snmptrap_snmpuser_binding. It is a system-generated identifier.

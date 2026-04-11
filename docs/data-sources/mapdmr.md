@@ -33,9 +33,6 @@ output "bripv6prefix" {
 In addition to the arguments, the following attributes are available:
 
 * `bripv6prefix` - IPv6 prefix of Border Relay (Citrix ADC) device. MAP-T CE will send ipv6 packets to this ipv6 prefix. The DMR IPv6 prefix length SHOULD be 64 bits long by default and in any case MUST NOT exceed 96 bits.
-
-## Attribute Reference
-
 * `id` - The id of the mapdmr. It has the same value as the `name` attribute.
 
 

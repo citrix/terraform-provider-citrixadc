@@ -38,11 +38,7 @@ In addition to the arguments, the following attributes are available:
 * `deviceposture` - Parameter to enable/disable device posture service scan.
 * `killprocess` - String specifying the name of a process to be terminated by the endpoint analysis (EPA) tool. Multiple processes to be delimited by comma.
 * `quarantinegroup` - This is the quarantine group that is chosen when the EPA check fails if configured.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationepaaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

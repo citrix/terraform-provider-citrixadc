@@ -37,11 +37,7 @@ In addition to the arguments, the following attributes are available:
 * `targetlbvserver` - Name of the load balancing virtual server to which the content is switched.
 * `targetvserver` - Name of the VPN, GSLB or Authentication virtual server to which the content is switched.
 * `targetvserverexpr` - Information about this content switching action.
-
-## Attribute Reference
-
 * `id` - The id of the csaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

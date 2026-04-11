@@ -40,11 +40,7 @@ In addition to the arguments, the following attributes are available:
 * `strict` - Specifies whether cluster nodes, that are not part of the nodegroup, will be used as backup for the nodegroup.
   * Enabled - When one of the nodes goes down, no other cluster node is picked up to replace it. When the node comes up, it will continue being part of the nodegroup.
   * Disabled - When one of the nodes goes down, a non-nodegroup cluster node is picked up and acts as part of the nodegroup. When the original node of the nodegroup comes up, the backup node will be replaced.
-
-## Attribute Reference
-
 * `id` - The id of the clusternodegroup. It has the same value as the `name` attribute.
-
 
 ## Import
 

@@ -33,7 +33,4 @@ The following attributes are available:
 
 * `encryption` - To encrypt otp secret in AD or not. Default value is OFF.
 * `maxotpdevices` - Maximum number of otp devices user can register. Default value is 4. Max value is 255.
-
-## Attribute Reference
-
 * `id` - The id of the aaaotpparameter. It is a system-generated identifier.

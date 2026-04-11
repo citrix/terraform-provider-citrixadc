@@ -32,7 +32,3 @@ In addition to the arguments above, the following attributes are exported:
 
 * `id` - The ID of the smppuser datasource.
 * `password` - Password for binding to the SMPP server. Must be the same as the password specified in the SMPP server.
-
-## Notes
-
-SMPP (Short Message Peer-to-Peer) users are configured for authentication when the ADC communicates with SMPP servers for SMS message handling.

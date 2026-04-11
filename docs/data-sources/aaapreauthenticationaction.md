@@ -37,11 +37,7 @@ In addition to the arguments, the following attributes are available:
 * `defaultepagroup` - This is the default group that is chosen when the EPA check succeeds.
 * `killprocess` - String specifying the name of a process to be terminated by the endpoint analysis (EPA) tool. Multiple processes are specified by using the process name as a string with commas separating multiple processes.
 * `quarantinegroup` - This is the quarantine group that is chosen when the EPA check fails.
-
-## Attribute Reference
-
 * `id` - The id of the aaapreauthenticationaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

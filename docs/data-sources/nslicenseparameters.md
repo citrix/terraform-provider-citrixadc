@@ -36,7 +36,4 @@ The following attributes are available:
 * `heartbeatinterval` - Heartbeat between ADC and Licenseserver is configurable and applicable in case of pooled licensing.
 * `inventoryrefreshinterval` - Inventory refresh interval between ADC and Licenseserver is configurable and applicable in case of pooled licensing.
 * `licenseexpiryalerttime` - If ADC license contract expiry date is nearer then GUI/SNMP license expiry alert will be raised.
-
-## Attribute Reference
-
 * `id` - The id of the nslicenseparameters. It is a system-generated identifier.

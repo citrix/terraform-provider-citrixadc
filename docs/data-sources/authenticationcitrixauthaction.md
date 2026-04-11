@@ -34,11 +34,7 @@ In addition to the arguments, the following attributes are available:
 
 * `authentication` - Authentication needs to be disabled for searching user object without performing authentication.
 * `authenticationtype` - Type of the Citrix Authentication implementation. Default implementation uses Citrix Cloud Connector.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationcitrixauthaction. It has the same value as the `name` attribute.
-
 
 ## Import
 

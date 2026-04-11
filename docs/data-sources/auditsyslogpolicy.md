@@ -34,11 +34,7 @@ In addition to the arguments, the following attributes are available:
 
 * `action` - Syslog server action to perform when this policy matches traffic. NOTE: A syslog server action must be associated with a syslog audit policy.
 * `rule` - Name of the Citrix ADC named rule, or an expression, that defines the messages to be logged to the syslog server.
-
-## Attribute Reference
-
 * `id` - The id of the auditsyslogpolicy. It has the same value as the `name` attribute.
-
 
 ## Import
 

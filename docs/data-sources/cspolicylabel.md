@@ -46,11 +46,7 @@ In addition to the arguments, the following attributes are available:
   * MYSQL - Supports policies that process MYSQL traffic.
   * MSSQL - Supports policies that process Microsoft SQL traffic.
 * `newname` - The new name of the content switching policylabel.
-
-## Attribute Reference
-
 * `id` - The id of the cspolicylabel. It has the same value as the `labelname` attribute.
-
 
 ## Import
 

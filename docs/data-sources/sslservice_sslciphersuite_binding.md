@@ -34,7 +34,4 @@ In addition to the arguments, the following attributes are available:
 
 * `cipherdefaulton` - Flag indicating whether the bound cipher was the DEFAULT cipher, bound at boot time, or any other cipher from the CLI.
 * `description` - The cipher suite description.
-
-## Attribute Reference
-
 * `id` - The id of the sslservice_sslciphersuite_binding. It is a system-generated identifier.

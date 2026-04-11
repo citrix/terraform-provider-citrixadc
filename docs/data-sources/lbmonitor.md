@@ -141,7 +141,4 @@ In addition to the arguments, the following attributes are available:
 * `vendorspecificacctapplicationids` - List of Vendor-Specific-Acct-Application-Id attribute value pairs (AVPs) to use for monitoring Diameter servers. A maximum of eight of these AVPs are supported in a monitoring message.
 * `vendorspecificauthapplicationids` - List of Vendor-Specific-Auth-Application-Id attribute value pairs (AVPs) for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers. A maximum of eight of these AVPs are supported in a monitoring message.
 * `vendorspecificvendorid` - Vendor-Id to use in the Vendor-Specific-Application-Id grouped attribute-value pair (AVP) in the monitoring CER message.
-
-## Attribute Reference
-
 * `id` - The id of the lbmonitor. It has the same value as the `monitorname` attribute.

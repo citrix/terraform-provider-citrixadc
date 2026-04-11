@@ -36,11 +36,7 @@ In addition to the arguments, the following attributes are available:
 * `logaction` - The log action associated with the content switching policy.
 * `newname` - The new name of the content switching policy.
 * `rule` - Expression, or name of a named expression, against which traffic is evaluated. The following requirements apply only to the Citrix ADC CLI: If the expression includes one or more spaces, enclose the entire expression in double quotation marks. If the expression itself includes double quotation marks, escape the quotations by using the  character. Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
-
-## Attribute Reference
-
 * `id` - The id of the cspolicy. It has the same value as the `policyname` attribute.
-
 
 ## Import
 

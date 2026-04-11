@@ -38,11 +38,7 @@ In addition to the arguments, the following attributes are available:
 
 * `reqaction` - Name of the TACACS+ action to perform if the policy matches.
 * `rule` - Name of the Citrix ADC named rule, or an expression, that the policy uses to determine whether to attempt to authenticate the user with the TACACS+ server.
-
-## Attribute Reference
-
 * `id` - The id of the authenticationtacacspolicy. It has the same value as the `name` attribute.
-
 
 ## Import
 

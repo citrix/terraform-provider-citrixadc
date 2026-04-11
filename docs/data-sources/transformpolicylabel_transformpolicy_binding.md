@@ -43,7 +43,4 @@ In addition to the arguments, the following attributes are available:
   * reqvserver - Forward the request to the specified request virtual server.
   * policylabel - Invoke the specified policy label.
 * `priority` - Specifies the priority of the policy.
-
-## Attribute Reference
-
 * `id` - The id of the transformpolicylabel_transformpolicy_binding. It is a system-generated identifier.
