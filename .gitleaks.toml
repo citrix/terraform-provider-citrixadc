@@ -1,0 +1,9 @@
+title = "Gitleaks Configuration"
+
+[allowlist]
+  description = "Allow test credentials in acceptance test files"
+  paths = [
+    '''_test\.go$''',
+    '''docs/resources/.*''',
+    '''docs/data-sources/.*''',
+  ]
