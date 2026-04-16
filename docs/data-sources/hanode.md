@@ -47,6 +47,15 @@ In addition to the arguments, the following attributes are available:
 * `rpcnodepassword` - Password to be used in authentication with the peer rpc node.
 * `syncstatusstrictmode` - Strict mode flag for sync status.
 * `syncvlan` - Vlan on which HA related communication is sent. This include sync, propagation, connection mirroring, LB persistency config sync, persistent session sync and session state sync. However HA heartbeats can go all interfaces.
+* `completedfliptime` - To inform user whether flip time is elapsed or not.
+* `curflips` - Keeps track of number of flips that have happened till now in current interval.
+* `enaifaces` - Enabled interfaces.
+* `masterstatetime` - Time elapsed in current master state.
+* `netmask` - The netmask.
+* `routemonitor` - The IP address (IPv4 or IPv6).
+* `routemonitorstate` - State for route monitor.
+* `ssl2` - SSL card status.
+* `state` - HA master state.
 * `id` - The id of the hanode. It has the same value as the `hanode_id` attribute.
 
 ## Import

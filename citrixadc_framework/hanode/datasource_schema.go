@@ -10,10 +10,22 @@ func HanodeDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"completedfliptime": schema.Int64Attribute{
+				Computed:    true,
+				Description: "To inform user whether flip time is elapsed or not.",
+			},
+			"curflips": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Keeps track of number of flips that have happened till now in current interval.",
+			},
 			"deadinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Number of seconds after which a peer node is marked DOWN if heartbeat messages are not received from the peer node.",
+			},
+			"enaifaces": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Enabled interfaces.",
 			},
 			"failsafe": schema.StringAttribute{
 				Optional:    true,
@@ -54,6 +66,10 @@ func HanodeDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The NSIP or NSIP6 address of the node to be added for an HA configuration. This setting is neither propagated nor synchronized.",
 			},
+			"masterstatetime": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time elapsed in current master state.",
+			},
 			"maxflips": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -64,10 +80,30 @@ func HanodeDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Interval after which flipping of node states can again start",
 			},
+			"netmask": schema.StringAttribute{
+				Computed:    true,
+				Description: "The netmask.",
+			},
+			"routemonitor": schema.StringAttribute{
+				Computed:    true,
+				Description: "The IP address (IPv4 or IPv6).",
+			},
+			"routemonitorstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "State for route monitor.",
+			},
 			"rpcnodepassword": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Password to be used in authentication with the peer rpc node.",
+			},
+			"ssl2": schema.StringAttribute{
+				Computed:    true,
+				Description: "SSL card status.",
+			},
+			"state": schema.StringAttribute{
+				Computed:    true,
+				Description: "HA master state.",
 			},
 			"syncstatusstrictmode": schema.StringAttribute{
 				Optional:    true,
