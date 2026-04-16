@@ -20,7 +20,10 @@ import (
 // HanodeResourceModel describes the resource data model.
 type HanodeResourceModel struct {
 	Id                   types.String `tfsdk:"id"`
+	Completedfliptime    types.Int64  `tfsdk:"completedfliptime"`
+	Curflips             types.Int64  `tfsdk:"curflips"`
 	Deadinterval         types.Int64  `tfsdk:"deadinterval"`
+	Enaifaces            types.Int64  `tfsdk:"enaifaces"`
 	Failsafe             types.String `tfsdk:"failsafe"`
 	Haprop               types.String `tfsdk:"haprop"`
 	Hastatus             types.String `tfsdk:"hastatus"`
@@ -29,9 +32,15 @@ type HanodeResourceModel struct {
 	Hanodeid             types.Int64  `tfsdk:"hanode_id"`
 	Inc                  types.String `tfsdk:"inc"`
 	Ipaddress            types.String `tfsdk:"ipaddress"`
+	Masterstatetime      types.Int64  `tfsdk:"masterstatetime"`
 	Maxflips             types.Int64  `tfsdk:"maxflips"`
 	Maxfliptime          types.Int64  `tfsdk:"maxfliptime"`
+	Netmask              types.String `tfsdk:"netmask"`
+	Routemonitor         types.String `tfsdk:"routemonitor"`
+	Routemonitorstate    types.String `tfsdk:"routemonitorstate"`
 	Rpcnodepassword      types.String `tfsdk:"rpcnodepassword"`
+	Ssl2                 types.String `tfsdk:"ssl2"`
+	State                types.String `tfsdk:"state"`
 	Syncstatusstrictmode types.String `tfsdk:"syncstatusstrictmode"`
 	Syncvlan             types.Int64  `tfsdk:"syncvlan"`
 }
@@ -44,10 +53,22 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Computed:    true,
 				Description: "The ID of the hanode resource.",
 			},
+			"completedfliptime": schema.Int64Attribute{
+				Computed:    true,
+				Description: "To inform user whether flip time is elapsed or not.",
+			},
+			"curflips": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Keeps track of number of flips that have happened till now in current interval.",
+			},
 			"deadinterval": schema.Int64Attribute{
 				Optional:    true,
 				Default:     int64default.StaticInt64(3),
 				Description: "Number of seconds after which a peer node is marked DOWN if heartbeat messages are not received from the peer node.",
+			},
+			"enaifaces": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Enabled interfaces.",
 			},
 			"failsafe": schema.StringAttribute{
 				Optional:    true,
@@ -93,6 +114,10 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 				Description: "The NSIP or NSIP6 address of the node to be added for an HA configuration. This setting is neither propagated nor synchronized.",
 			},
+			"masterstatetime": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time elapsed in current master state.",
+			},
 			"maxflips": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -103,6 +128,18 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Computed:    true,
 				Description: "Interval after which flipping of node states can again start",
 			},
+			"netmask": schema.StringAttribute{
+				Computed:    true,
+				Description: "The netmask.",
+			},
+			"routemonitor": schema.StringAttribute{
+				Computed:    true,
+				Description: "The IP address (IPv4 or IPv6).",
+			},
+			"routemonitorstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "State for route monitor.",
+			},
 			"rpcnodepassword": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -110,6 +147,14 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Password to be used in authentication with the peer rpc node.",
+			},
+			"ssl2": schema.StringAttribute{
+				Computed:    true,
+				Description: "SSL card status.",
+			},
+			"state": schema.StringAttribute{
+				Computed:    true,
+				Description: "HA master state.",
 			},
 			"syncstatusstrictmode": schema.StringAttribute{
 				Optional:    true,
@@ -180,12 +225,33 @@ func hanodeSetAttrFromGet(ctx context.Context, data *HanodeResourceModel, getRes
 	tflog.Debug(ctx, "In hanodeSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["completedfliptime"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Completedfliptime = types.Int64Value(intVal)
+		}
+	} else {
+		data.Completedfliptime = types.Int64Null()
+	}
+	if val, ok := getResponseData["curflips"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Curflips = types.Int64Value(intVal)
+		}
+	} else {
+		data.Curflips = types.Int64Null()
+	}
 	if val, ok := getResponseData["deadinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Deadinterval = types.Int64Value(intVal)
 		}
 	} else {
 		data.Deadinterval = types.Int64Null()
+	}
+	if val, ok := getResponseData["enaifaces"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Enaifaces = types.Int64Value(intVal)
+		}
+	} else {
+		data.Enaifaces = types.Int64Null()
 	}
 	if val, ok := getResponseData["failsafe"]; ok && val != nil {
 		data.Failsafe = types.StringValue(val.(string))
@@ -231,6 +297,13 @@ func hanodeSetAttrFromGet(ctx context.Context, data *HanodeResourceModel, getRes
 	} else {
 		data.Ipaddress = types.StringNull()
 	}
+	if val, ok := getResponseData["masterstatetime"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Masterstatetime = types.Int64Value(intVal)
+		}
+	} else {
+		data.Masterstatetime = types.Int64Null()
+	}
 	if val, ok := getResponseData["maxflips"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxflips = types.Int64Value(intVal)
@@ -245,10 +318,35 @@ func hanodeSetAttrFromGet(ctx context.Context, data *HanodeResourceModel, getRes
 	} else {
 		data.Maxfliptime = types.Int64Null()
 	}
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	} else {
+		data.Netmask = types.StringNull()
+	}
+	if val, ok := getResponseData["routemonitor"]; ok && val != nil {
+		data.Routemonitor = types.StringValue(val.(string))
+	} else {
+		data.Routemonitor = types.StringNull()
+	}
+	if val, ok := getResponseData["routemonitorstate"]; ok && val != nil {
+		data.Routemonitorstate = types.StringValue(val.(string))
+	} else {
+		data.Routemonitorstate = types.StringNull()
+	}
 	if val, ok := getResponseData["rpcnodepassword"]; ok && val != nil {
 		data.Rpcnodepassword = types.StringValue(val.(string))
 	} else {
 		data.Rpcnodepassword = types.StringNull()
+	}
+	if val, ok := getResponseData["ssl2"]; ok && val != nil {
+		data.Ssl2 = types.StringValue(val.(string))
+	} else {
+		data.Ssl2 = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["syncstatusstrictmode"]; ok && val != nil {
 		data.Syncstatusstrictmode = types.StringValue(val.(string))
