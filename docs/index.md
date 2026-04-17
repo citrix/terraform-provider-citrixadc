@@ -55,7 +55,7 @@ provider "citrixadc" {
 provider "citrixadc" {
   endpoint   = "https://<<ADM_CLOUD_URL>>/"
   username   = "<<USERNAME>>"
-  password   = "<<PASSWORD>>"
+  password   = ""
   proxied_ns = "<<NS_IP>>"
   is_cloud   = true
   do_login   = true
