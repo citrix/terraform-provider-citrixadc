@@ -22,6 +22,12 @@ func resourceCitrixAdcSslprofile_sslcipher_binding() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"remove_existing_sslcipher_binding": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
 			"ciphername": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -49,6 +55,20 @@ func createSslprofile_sslcipher_bindingFunc(ctx context.Context, d *schema.Resou
 
 	// Use `,` as the separator since it is invalid character for adc entity strings
 	bindingId := fmt.Sprintf("%s,%s", profileName, cipherName)
+
+	if val, ok := d.GetOk("remove_existing_sslcipher_binding"); ok && val.(bool) {
+		log.Printf("[DEBUG]  citrixadc-provider: Removing all sslprofile_sslcipher_binding from %s", profileName)
+		existingCiphers, err := getExistingSslprofileSslcipherBindings(d, meta)
+		log.Printf("[DEBUG] citrixadc-provider: existingSslprofileSslcipherBindings: %v", existingCiphers)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		for _, cipher := range existingCiphers {
+			if err := deleteSingleSslprofileSslcipherBinding(d, meta, cipher); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
 
 	sslprofile_sslcipher_binding := ssl.Sslprofilecipherbinding{
 		Ciphername:     d.Get("ciphername").(string),
@@ -157,6 +177,39 @@ func deleteSslprofile_sslcipher_bindingFunc(ctx context.Context, d *schema.Resou
 	}
 
 	d.SetId("")
+
+	return nil
+}
+
+func getExistingSslprofileSslcipherBindings(d *schema.ResourceData, meta interface{}) ([]string, error) {
+	log.Printf("[DEBUG]  citrixadc-provider: In getExistingSslprofileSslcipherBindings")
+	client := meta.(*NetScalerNitroClient).client
+	profileName := d.Get("name").(string)
+	bindings, _ := client.FindResourceArray(service.Sslprofile_sslcipher_binding.Type(), profileName)
+	log.Printf("bindings %v\n", bindings)
+
+	cipherNames := make([]string, len(bindings))
+	for i, val := range bindings {
+		cipherNames[i] = val["cipheraliasname"].(string)
+	}
+
+	return cipherNames, nil
+}
+
+func deleteSingleSslprofileSslcipherBinding(d *schema.ResourceData, meta interface{}, ciphername string) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteSingleSslprofileSslcipherBinding")
+	client := meta.(*NetScalerNitroClient).client
+
+	profileName := d.Get("name").(string)
+	args := make([]string, 0, 1)
+	args = append(args, fmt.Sprintf("ciphername:%s", ciphername))
+
+	log.Printf("args is %v", args)
+
+	if err := client.DeleteResourceWithArgs(service.Sslprofile_sslcipher_binding.Type(), profileName, args); err != nil {
+		log.Printf("[DEBUG]  citrixadc-provider: Error deleting sslcipher binding %v\n", profileName)
+		return err
+	}
 
 	return nil
 }

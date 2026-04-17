@@ -25,6 +25,73 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+const testAccSslprofile_sslcipher_binding_basic_step1 = `
+
+resource "citrixadc_sslprofile" "tf_sslprofile" {
+  name = "tf_sslprofile"
+
+  ecccurvebindings = []
+
+}
+
+resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
+    name = citrixadc_sslprofile.tf_sslprofile.name
+    ciphername = "HIGH"
+    cipherpriority = 10
+    remove_existing_sslcipher_binding = false
+}
+
+resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding2" {
+    name = citrixadc_sslprofile.tf_sslprofile.name
+    ciphername = "LOW"
+    cipherpriority = 20
+    remove_existing_sslcipher_binding = false
+}
+
+`
+
+const testAccSslprofile_sslcipher_binding_basic_step2 = `
+
+resource "citrixadc_sslprofile" "tf_sslprofile" {
+  name = "tf_sslprofile"
+
+  ecccurvebindings = []
+
+}
+
+resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
+    name = citrixadc_sslprofile.tf_sslprofile.name
+    ciphername = "HIGH"
+    cipherpriority = 10
+    remove_existing_sslcipher_binding = false
+}
+
+resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding2" {
+    name = citrixadc_sslprofile.tf_sslprofile.name
+    ciphername = "LOW"
+    cipherpriority = 30
+    remove_existing_sslcipher_binding = false
+}
+
+`
+
+const testAccSslprofile_sslcipher_binding_basic_step3 = `
+
+resource "citrixadc_sslprofile" "tf_sslprofile" {
+  name = "tf_sslprofile"
+
+  ecccurvebindings = []
+
+}
+
+resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
+    name = citrixadc_sslprofile.tf_sslprofile.name
+    ciphername = "HIGH"
+    cipherpriority = 10
+    remove_existing_sslcipher_binding = false
+}
+`
+
 func TestAccSslprofile_sslcipher_binding_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
@@ -165,67 +232,95 @@ func testAccCheckSslprofile_sslcipher_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccSslprofile_sslcipher_binding_basic_step1 = `
+const testAccSslprofile_sslcipher_binding_remove_existing_step1 = `
 
-resource "citrixadc_sslprofile" "tf_sslprofile" {
-  name = "tf_sslprofile"
-
-  ecccurvebindings = []
-
-}
-
-resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
-    name = citrixadc_sslprofile.tf_sslprofile.name
-    ciphername = "HIGH"
-    cipherpriority = 10
-}
-
-resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding2" {
-    name = citrixadc_sslprofile.tf_sslprofile.name
-    ciphername = "LOW"
-    cipherpriority = 20
-}
-
-`
-
-const testAccSslprofile_sslcipher_binding_basic_step2 = `
-
-resource "citrixadc_sslprofile" "tf_sslprofile" {
-  name = "tf_sslprofile"
+resource "citrixadc_sslprofile" "tf_sslprofile_remove" {
+  name = "tf_sslprofile_remove"
 
   ecccurvebindings = []
 
 }
 
-resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
-    name = citrixadc_sslprofile.tf_sslprofile.name
+resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding_remove" {
+    name = citrixadc_sslprofile.tf_sslprofile_remove.name
     ciphername = "HIGH"
     cipherpriority = 10
-}
-
-resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding2" {
-    name = citrixadc_sslprofile.tf_sslprofile.name
-    ciphername = "LOW"
-    cipherpriority = 30
+    remove_existing_sslcipher_binding = true
 }
 
 `
 
-const testAccSslprofile_sslcipher_binding_basic_step3 = `
+const testAccSslprofile_sslcipher_binding_remove_existing_step2 = `
 
-resource "citrixadc_sslprofile" "tf_sslprofile" {
-  name = "tf_sslprofile"
+resource "citrixadc_sslprofile" "tf_sslprofile_remove" {
+  name = "tf_sslprofile_remove"
 
   ecccurvebindings = []
 
 }
-
-resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
-    name = citrixadc_sslprofile.tf_sslprofile.name
-    ciphername = "HIGH"
-    cipherpriority = 10
-}
 `
+
+func TestAccSslprofile_sslcipher_binding_remove_existing(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofile_sslcipher_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_sslcipher_binding_remove_existing_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_sslcipher_bindingExist("citrixadc_sslprofile_sslcipher_binding.tf_binding_remove", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_sslcipher_binding.tf_binding_remove", "remove_existing_sslcipher_binding", "true"),
+				),
+			},
+			{
+				Config: testAccSslprofile_sslcipher_binding_remove_existing_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_sslcipher_bindingNotExist("citrixadc_sslprofile_sslcipher_binding.tf_binding_remove", "tf_sslprofile_remove,HIGH"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckSslprofile_sslcipher_bindingNotExist(n string, id string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		}
+		idSlice := strings.SplitN(id, ",", 2)
+
+		profileName := idSlice[0]
+		cipherName := idSlice[1]
+
+		findParams := service.FindParams{
+			ResourceType:             "sslprofile_sslcipher_binding",
+			ResourceName:             profileName,
+			ResourceMissingErrorCode: 3248,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		if err != nil {
+			if strings.Contains(err.Error(), "\"errorcode\": 3248") {
+				return nil
+			}
+			return err
+		}
+
+		for _, v := range dataArr {
+			if v["cipheraliasname"].(string) == cipherName {
+				return fmt.Errorf("sslprofile_sslcipher_binding %s still exists", n)
+			}
+		}
+
+		return nil
+	}
+}
 
 const testAccSslprofile_sslcipher_bindingDataSource_basic = `
 resource "citrixadc_sslprofile" "tf_sslprofile" {
@@ -239,6 +334,7 @@ resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
     name = citrixadc_sslprofile.tf_sslprofile.name
     ciphername = "HIGH"
     cipherpriority = 10
+    remove_existing_sslcipher_binding = false
 }
 
 data "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
