@@ -894,6 +894,10 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if len(data) == 0 {
+		return fmt.Errorf("No cluster nodes found after bootstrap. The CLIP may not be fully ready yet.")
+	}
+
 	fetchedIpaddress := data[0]["ipaddress"]
 	configIpaddress := firstNode["ipaddress"]
 	if fetchedIpaddress != configIpaddress {
@@ -1688,6 +1692,10 @@ func pollNode(d *schema.ResourceData, meta interface{}, timeout time.Duration) e
 		}
 	} else {
 		log.Printf("Status code is %v\n", resp.Status)
+		if resp.StatusCode != 200 {
+			log.Printf("[DEBUG] netscaler-provider: pollNode got non-200 status %d, treating as unreachable", resp.StatusCode)
+			return fmt.Errorf("Timeout")
+		}
 	}
 	// No error
 	return nil
