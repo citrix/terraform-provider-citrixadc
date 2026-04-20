@@ -6,4 +6,5 @@ title = "Gitleaks Configuration"
     '''_test\.go$''',
     '''docs/resources/.*''',
     '''docs/data-sources/.*''',
+    '''docs/index\.md$''',
   ]
