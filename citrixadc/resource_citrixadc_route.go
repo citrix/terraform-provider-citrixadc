@@ -410,12 +410,7 @@ func deleteRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 		argsMap["ownergroup"] = url.QueryEscape(val.(string))
 	}
 
-	err := client.DeleteResourceWithArgsMap(service.Route.Type(), "", argsMap)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	// Restore the original default route if delete_default_route was true
+	// Restore the original default route before deleting the managed route
 	if d.Get("delete_default_route").(bool) {
 		originalGw := d.Get("original_default_gateway").(string)
 		if originalGw != "" {
@@ -431,6 +426,11 @@ func deleteRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 			}
 			log.Printf("[DEBUG] citrixadc-provider: Successfully restored default route with gateway %s", originalGw)
 		}
+	}
+
+	err := client.DeleteResourceWithArgsMap(service.Route.Type(), "", argsMap)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
