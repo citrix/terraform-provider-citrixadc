@@ -18,6 +18,19 @@ resource "citrixadc_route" "tf_route" {
 }
 ```
 
+### Example usage with delete_default_route
+
+```hcl
+resource "citrixadc_route" "tf_route" {
+    network              = "192.168.10.0"
+    netmask              = "255.255.255.0"
+    gateway              = "10.0.1.1"
+    delete_default_route = true
+}
+```
+
+When `delete_default_route` is set to `true`, the default route (`0.0.0.0/0.0.0.0`) is deleted after this route is created. The original default gateway is saved in state so it can be restored when this resource is destroyed. On destroy, the original default route is restored **before** the managed route is deleted.
+
 
 ## Argument Reference
 
@@ -38,6 +51,7 @@ resource "citrixadc_route" "tf_route" {
 * `detail` - (Optional) Display a detailed view.
 * `mgmt` - (Optional) Route in management plane.
 * `protocol` - (Optional) Routing protocol used for advertising this route.
+* `delete_default_route` - (Optional) If true, delete the default static route (`0.0.0.0/0.0.0.0`) after adding this route. The original default gateway is saved in state and restored when this resource is destroyed. Defaults to `false`. Changing this value forces resource recreation.
 
 
 ## Attribute Reference
@@ -45,6 +59,7 @@ resource "citrixadc_route" "tf_route" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the route. It is the conatenation of the `network`, `netmask` and `gateway` attributes.
+* `original_default_gateway` - The gateway of the original default route that was deleted when `delete_default_route` is `true`. This value is used to restore the default route on destroy.
 
 
 ## Import

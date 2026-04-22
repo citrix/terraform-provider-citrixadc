@@ -112,6 +112,19 @@ func resourceCitrixAdcRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"delete_default_route": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "If true, delete the default static route (network 0.0.0.0, netmask 0.0.0.0) after adding this route",
+			},
+			"original_default_gateway": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Stores the gateway of the original default route that was deleted, used to restore it on destroy",
+			},
 		},
 	}
 }
@@ -158,6 +171,45 @@ func createRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	_, err := client.AddResource(service.Route.Type(), route.Network, &route)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Delete default route (0.0.0.0/0.0.0.0) if delete_default_route is set
+	if d.Get("delete_default_route").(bool) {
+		log.Printf("[DEBUG] citrixadc-provider: delete_default_route is true, finding and deleting default route (0.0.0.0/0.0.0.0)")
+		findParams := service.FindParams{
+			ResourceType: service.Route.Type(),
+		}
+		dataArray, findErr := client.FindResourceArrayWithParams(findParams)
+		if findErr != nil {
+			return diag.Errorf("delete_default_route is true but failed to list routes: %s", findErr.Error())
+		}
+
+		defaultRouteFound := false
+		for _, r := range dataArray {
+			routeNetwork, _ := r["network"].(string)
+			routeNetmask, _ := r["netmask"].(string)
+			routeGateway, _ := r["gateway"].(string)
+
+			if routeNetwork == "0.0.0.0" && routeNetmask == "0.0.0.0" {
+				defaultRouteFound = true
+				log.Printf("[DEBUG] citrixadc-provider: Deleting default route with gateway %s", routeGateway)
+				delArgs := map[string]string{
+					"network": url.QueryEscape("0.0.0.0"),
+					"netmask": url.QueryEscape("0.0.0.0"),
+					"gateway": url.QueryEscape(routeGateway),
+				}
+				delErr := client.DeleteResourceWithArgsMap(service.Route.Type(), "", delArgs)
+				if delErr != nil {
+					return diag.Errorf("Error deleting default route (gateway %s): %s", routeGateway, delErr.Error())
+				}
+				log.Printf("[DEBUG] citrixadc-provider: Successfully deleted default route with gateway %s", routeGateway)
+				// Save the original gateway so we can restore it on destroy
+				d.Set("original_default_gateway", routeGateway)
+			}
+		}
+		if !defaultRouteFound {
+			log.Printf("[WARN] citrixadc-provider: delete_default_route is true but no default route (0.0.0.0/0.0.0.0) was found")
+		}
 	}
 
 	d.SetId(routeName)
@@ -356,6 +408,24 @@ func deleteRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	argsMap["gateway"] = url.QueryEscape(d.Get("gateway").(string))
 	if val, ok := d.GetOk("ownergroup"); ok {
 		argsMap["ownergroup"] = url.QueryEscape(val.(string))
+	}
+
+	// Restore the original default route before deleting the managed route
+	if d.Get("delete_default_route").(bool) {
+		originalGw := d.Get("original_default_gateway").(string)
+		if originalGw != "" {
+			log.Printf("[DEBUG] citrixadc-provider: Restoring default route (0.0.0.0/0.0.0.0) with gateway %s", originalGw)
+			defaultRoute := network.Route{
+				Network: "0.0.0.0",
+				Netmask: "0.0.0.0",
+				Gateway: originalGw,
+			}
+			_, restoreErr := client.AddResource(service.Route.Type(), "0.0.0.0", &defaultRoute)
+			if restoreErr != nil {
+				return diag.Errorf("Error restoring default route (0.0.0.0/0.0.0.0) with gateway %s: %s", originalGw, restoreErr.Error())
+			}
+			log.Printf("[DEBUG] citrixadc-provider: Successfully restored default route with gateway %s", originalGw)
+		}
 	}
 
 	err := client.DeleteResourceWithArgsMap(service.Route.Type(), "", argsMap)
