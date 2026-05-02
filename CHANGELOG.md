@@ -1,3 +1,21 @@
+## 2.2.0 (May 01, 2026)
+
+FEATURES
+* **provider**: Added datasoucres for all the resources supported by the provider.
+* **provider**: Added ephemeral support for authenticationldapaction, authenticationradiusaction, authenticationtacacsaction, lbparameter, nsrpcnode, snmpuser and systemuser.
+
+ENHANCEMENTS
+* **citrixadc_route**: Added `delete_default_route` attribute to support deleting the default route after adding a valid route, with automatic restoration on destroy.
+* **citrixadc_lbvserver**: Added unset capabilities for lbvserver attributes. [#1183]
+
+BUG FIXES
+* **citrixadc_cluster**: Fixed panic caused by index out of range when creating a multi-node cluster with a 503 response being treated as reachable.
+* **citrixadc_hanode**: Included read-only attributes for hanode datasource. [#1392]
+
+[#1183] https://github.com/citrix/terraform-provider-citrixadc/issues/1183
+[#1392] https://github.com/citrix/terraform-provider-citrixadc/issues/1392
+
+
 ## 2.1.4 (Mar 26, 2026)
 
 ENHANCEMENTS
