@@ -175,6 +175,120 @@ func testAccCheckAppfwsettingsExist(n string, id *string) resource.TestCheckFunc
 	}
 }
 
+// Test backward-compatible path: using proxypassword (Sensitive attribute)
+const testAccAppfwsettings_proxypassword_step1 = `
+
+	variable "appfwsettings_proxypassword" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_appfwsettings" "tf_appfwsettings" {
+		proxyusername = "testuser"
+		proxypassword = var.appfwsettings_proxypassword
+		proxyport     = 9090
+	}
+`
+
+// Update backward-compatible path: change proxypassword value
+const testAccAppfwsettings_proxypassword_step2 = `
+
+	 variable "appfwsettings_proxypassword_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	 resource "citrixadc_appfwsettings" "tf_appfwsettings" {
+		proxyusername = "testuser"
+		proxypassword = var.appfwsettings_proxypassword_2
+		proxyport     = 9090
+	}
+`
+
+func TestAccAppfwsettings_proxypassword_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_appfwsettings_proxypassword", "oldpassword123")
+	t.Setenv("TF_VAR_appfwsettings_proxypassword_2", "newpassword456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwsettings_proxypassword_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwsettingsExist("citrixadc_appfwsettings.tf_appfwsettings", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_appfwsettings", "proxyport", "9090"),
+				),
+			},
+			{
+				Config: testAccAppfwsettings_proxypassword_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwsettingsExist("citrixadc_appfwsettings.tf_appfwsettings", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_appfwsettings", "proxyport", "9090"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using proxypassword_wo (WriteOnly attribute) with version tracker
+const testAccAppfwsettings_proxypassword_wo_step1 = `
+
+	variable "appfwsettings_proxypassword_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_appfwsettings" "tf_appfwsettings" {
+		proxyusername            = "testuser"
+		proxypassword_wo         = var.appfwsettings_proxypassword_wo
+		proxypassword_wo_version = 1
+		proxyport                = 9090
+	}
+`
+
+// Update ephemeral path: bump version to trigger update with new password
+const testAccAppfwsettings_proxypassword_wo_step2 = `
+
+	 variable "appfwsettings_proxypassword_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	 resource "citrixadc_appfwsettings" "tf_appfwsettings" {
+		proxyusername            = "testuser"
+		proxypassword_wo         = var.appfwsettings_proxypassword_wo_2
+		proxypassword_wo_version = 2
+		proxyport                = 9090
+	}
+`
+
+func TestAccAppfwsettings_proxypassword_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_appfwsettings_proxypassword_wo", "ephemeral_pass1")
+	t.Setenv("TF_VAR_appfwsettings_proxypassword_wo_2", "ephemeral_pass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwsettings_proxypassword_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwsettingsExist("citrixadc_appfwsettings.tf_appfwsettings", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_appfwsettings", "proxypassword_wo_version", "1"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_appfwsettings", "proxyport", "9090"),
+				),
+			},
+			{
+				Config: testAccAppfwsettings_proxypassword_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwsettingsExist("citrixadc_appfwsettings.tf_appfwsettings", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_appfwsettings", "proxypassword_wo_version", "2"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_appfwsettings", "proxyport", "9090"),
+				),
+			},
+		},
+	})
+}
+
 const testAccAppfwsettingsDataSource_basic = `
 
 resource "citrixadc_appfwsettings" "tf_appfwsettings" {

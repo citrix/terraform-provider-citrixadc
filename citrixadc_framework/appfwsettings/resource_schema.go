@@ -8,7 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,6 +32,8 @@ type AppfwsettingsResourceModel struct {
 	Logmalformedreq          types.String `tfsdk:"logmalformedreq"`
 	Malformedreqaction       types.List   `tfsdk:"malformedreqaction"`
 	Proxypassword            types.String `tfsdk:"proxypassword"`
+	ProxypasswordWo          types.String `tfsdk:"proxypassword_wo"`
+	ProxypasswordWoVersion   types.Int64  `tfsdk:"proxypassword_wo_version"`
 	Proxyport                types.Int64  `tfsdk:"proxyport"`
 	Proxyserver              types.String `tfsdk:"proxyserver"`
 	Proxyusername            types.String `tfsdk:"proxyusername"`
@@ -69,7 +72,7 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"cookieflags": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("none"),
+				Computed:    true,
 				Description: "Add the specified flags to AppFW cookies. Available setttings function as follows:\n* None - Do not add flags to AppFW cookies.\n* HTTP Only - Add the HTTP Only flag to AppFW cookies, which prevent scripts from accessing them.\n* Secure - Add Secure flag to AppFW cookies.\n* All - Add both HTTPOnly and Secure flag to AppFW cookies.",
 			},
 			"cookiepostencryptprefix": schema.StringAttribute{
@@ -79,7 +82,7 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"defaultprofile": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("APPFW_BYPASS"),
+				Computed:    true,
 				Description: "Profile to use when a connection does not match any policy. Default setting is APPFW_BYPASS, which sends unmatched connections back to the Citrix ADC without attempting to filter them further.",
 			},
 			"entitydecoding": schema.StringAttribute{
@@ -94,17 +97,20 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"importsizelimit": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(134217728),
+				Computed:    true,
 				Description: "Maximum cumulative size in bytes of all objects imported to Netscaler. The user is not allowed to import an object if the operation exceeds the currently configured limit.",
 			},
 			"learnratelimit": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(400),
+				Computed:    true,
 				Description: "Maximum number of connections per second that the application firewall learning engine examines to generate new relaxations for learning-enabled security checks. The application firewall drops any connections above this limit from the list of connections used by the learning engine.",
 			},
 			"logmalformedreq": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Log requests that are so malformed that application firewall parsing doesn't occur.",
 			},
 			"malformedreqaction": schema.ListAttribute{
@@ -115,12 +121,24 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"proxypassword": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Password with which proxy user logs on.",
+			},
+			"proxypassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password with which proxy user logs on.",
+			},
+			"proxypassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a proxypassword_wo update.",
 			},
 			"proxyport": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(8080),
+				Computed:    true,
 				Description: "Proxy Server Port to get updated signatures from AWS.",
 			},
 			"proxyserver": schema.StringAttribute{
@@ -145,12 +163,12 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"sessionlimit": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(100000),
+				Computed:    true,
 				Description: "Maximum number of sessions that the application firewall allows to be active, regardless of user activity. After the max_limit reaches, No more user session will be created .",
 			},
 			"sessiontimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(900),
+				Computed:    true,
 				Description: "Timeout, in seconds, after which a user session is terminated. Before continuing to use the protected web site, the user must establish a new session by opening a designated start URL.",
 			},
 			"signatureautoupdate": schema.StringAttribute{
@@ -160,12 +178,12 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"signatureurl": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("https://s3.amazonaws.com/NSAppFwSignatures/SignaturesMapping.xml"),
+				Computed:    true,
 				Description: "URL to download the mapping file from server",
 			},
 			"undefaction": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("APPFW_BLOCK"),
+				Computed:    true,
 				Description: "Profile to use when an application firewall policy evaluates to undefined (UNDEF).\nAn UNDEF event indicates an internal error condition. The APPFW_BLOCK built-in profile is the default setting. You can specify a different built-in or user-created profile as the UNDEF profile.",
 			},
 			"useconfigurablesecretkey": schema.StringAttribute{
@@ -177,8 +195,8 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func appfwsettingsGetThePayloadFromtheConfig(ctx context.Context, data *AppfwsettingsResourceModel) appfw.Appfwsettings {
-	tflog.Debug(ctx, "In appfwsettingsGetThePayloadFromtheConfig Function")
+func appfwsettingsGetThePayloadFromthePlan(ctx context.Context, data *AppfwsettingsResourceModel) appfw.Appfwsettings {
+	tflog.Debug(ctx, "In appfwsettingsGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwsettings := appfw.Appfwsettings{}
@@ -215,9 +233,16 @@ func appfwsettingsGetThePayloadFromtheConfig(ctx context.Context, data *Appfwset
 	if !data.Logmalformedreq.IsNull() {
 		appfwsettings.Logmalformedreq = data.Logmalformedreq.ValueString()
 	}
+	if !data.Malformedreqaction.IsNull() {
+		var malformedreqactionList []string
+		data.Malformedreqaction.ElementsAs(ctx, &malformedreqactionList, false)
+		appfwsettings.Malformedreqaction = malformedreqactionList
+	}
 	if !data.Proxypassword.IsNull() {
 		appfwsettings.Proxypassword = data.Proxypassword.ValueString()
 	}
+	// Skip write-only attribute: proxypassword_wo
+	// Skip version tracker attribute: proxypassword_wo_version
 	if !data.Proxyport.IsNull() {
 		appfwsettings.Proxyport = utils.IntPtr(int(data.Proxyport.ValueInt64()))
 	}
@@ -253,6 +278,19 @@ func appfwsettingsGetThePayloadFromtheConfig(ctx context.Context, data *Appfwset
 	}
 
 	return appfwsettings
+}
+
+func appfwsettingsGetThePayloadFromtheConfig(ctx context.Context, data *AppfwsettingsResourceModel, payload *appfw.Appfwsettings) {
+	tflog.Debug(ctx, "In appfwsettingsGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: proxypassword_wo -> proxypassword
+	if !data.ProxypasswordWo.IsNull() {
+		proxypasswordWo := data.ProxypasswordWo.ValueString()
+		if proxypasswordWo != "" {
+			payload.Proxypassword = proxypasswordWo
+		}
+	}
 }
 
 func appfwsettingsSetAttrFromGet(ctx context.Context, data *AppfwsettingsResourceModel, getResponseData map[string]interface{}) *AppfwsettingsResourceModel {
@@ -318,11 +356,20 @@ func appfwsettingsSetAttrFromGet(ctx context.Context, data *AppfwsettingsResourc
 	} else {
 		data.Logmalformedreq = types.StringNull()
 	}
-	if val, ok := getResponseData["proxypassword"]; ok && val != nil {
-		data.Proxypassword = types.StringValue(val.(string))
+	if val, ok := getResponseData["malformedreqaction"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Malformedreqaction = listValue
+		} else {
+			data.Malformedreqaction = types.ListNull(types.StringType)
+		}
 	} else {
-		data.Proxypassword = types.StringNull()
+		data.Malformedreqaction = types.ListNull(types.StringType)
 	}
+	// proxypassword is not returned by NITRO API (secret/ephemeral) - retain from config
+	// proxypassword_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// proxypassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["proxyport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Proxyport = types.Int64Value(intVal)

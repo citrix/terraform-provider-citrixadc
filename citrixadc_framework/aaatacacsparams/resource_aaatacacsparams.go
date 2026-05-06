@@ -44,30 +44,35 @@ func (r *AaatacacsparamsResource) Configure(ctx context.Context, req resource.Co
 }
 
 func (r *AaatacacsparamsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data AaatacacsparamsResourceModel
+	var data, config AaatacacsparamsResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating aaatacacsparams resource")
-
-	// aaatacacsparams := aaatacacsparamsGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	aaatacacsparams := aaatacacsparamsGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	aaatacacsparamsGetThePayloadFromtheConfig(ctx, &config, &aaatacacsparams)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaatacacsparams.Type(), &aaatacacsparams)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaatacacsparams, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("aaatacacsparams-config")
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Aaatacacsparams.Type(), &aaatacacsparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaatacacsparams, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created aaatacacsparams resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue("aaatacacsparams-config")
 
 	// Read the updated state back
 	r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,28 +100,85 @@ func (r *AaatacacsparamsResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *AaatacacsparamsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AaatacacsparamsResourceModel
+	var data, config, state AaatacacsparamsResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating aaatacacsparams resource")
 
-	// Create API request body from the model
-	// aaatacacsparams := aaatacacsparamsGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Accounting.Equal(state.Accounting) {
+		tflog.Debug(ctx, fmt.Sprintf("accounting has changed for aaatacacsparams"))
+		hasChange = true
+	}
+	if !data.Auditfailedcmds.Equal(state.Auditfailedcmds) {
+		tflog.Debug(ctx, fmt.Sprintf("auditfailedcmds has changed for aaatacacsparams"))
+		hasChange = true
+	}
+	if !data.Authorization.Equal(state.Authorization) {
+		tflog.Debug(ctx, fmt.Sprintf("authorization has changed for aaatacacsparams"))
+		hasChange = true
+	}
+	if !data.Authtimeout.Equal(state.Authtimeout) {
+		tflog.Debug(ctx, fmt.Sprintf("authtimeout has changed for aaatacacsparams"))
+		hasChange = true
+	}
+	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
+		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for aaatacacsparams"))
+		hasChange = true
+	}
+	if !data.Groupattrname.Equal(state.Groupattrname) {
+		tflog.Debug(ctx, fmt.Sprintf("groupattrname has changed for aaatacacsparams"))
+		hasChange = true
+	}
+	if !data.Serverip.Equal(state.Serverip) {
+		tflog.Debug(ctx, fmt.Sprintf("serverip has changed for aaatacacsparams"))
+		hasChange = true
+	}
+	if !data.Serverport.Equal(state.Serverport) {
+		tflog.Debug(ctx, fmt.Sprintf("serverport has changed for aaatacacsparams"))
+		hasChange = true
+	}
+	// Check secret attribute tacacssecret or its version tracker
+	if !data.Tacacssecret.Equal(state.Tacacssecret) {
+		tflog.Debug(ctx, fmt.Sprintf("tacacssecret has changed for aaatacacsparams"))
+		hasChange = true
+	} else if !data.TacacssecretWoVersion.Equal(state.TacacssecretWoVersion) {
+		tflog.Debug(ctx, fmt.Sprintf("tacacssecret_wo_version has changed for aaatacacsparams"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaatacacsparams.Type(), &aaatacacsparams)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaatacacsparams, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		// Get payload from plan (regular attributes)
+		aaatacacsparams := aaatacacsparamsGetThePayloadFromthePlan(ctx, &data)
+		// Add write-only attributes from config to the payload
+		aaatacacsparamsGetThePayloadFromtheConfig(ctx, &config, &aaatacacsparams)
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Aaatacacsparams.Type(), &aaatacacsparams)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaatacacsparams, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated aaatacacsparams resource")
+		tflog.Trace(ctx, "Updated aaatacacsparams resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for aaatacacsparams resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +198,18 @@ func (r *AaatacacsparamsResource) Delete(ctx context.Context, req resource.Delet
 	}
 
 	tflog.Debug(ctx, "Deleting aaatacacsparams resource")
-
-	// For aaatacacsparams, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted aaatacacsparams resource from state")
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed aaatacacsparams from Terraform state")
 }
 
 // Helper function to read aaatacacsparams data from API
 func (r *AaatacacsparamsResource) readAaatacacsparamsFromApi(ctx context.Context, data *AaatacacsparamsResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Aaatacacsparams.Type(), "")
+
+	// Case 1: Simple find without ID
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Aaatacacsparams.Type(), "")
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaatacacsparams, got error: %s", err))
 		return

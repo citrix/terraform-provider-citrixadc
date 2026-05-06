@@ -56,6 +56,15 @@ func AuditsyslogactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorization header is required to be of the form - Splunk <auth-token>.",
 			},
+			"httpauthtoken_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorization header is required to be of the form - Splunk <auth-token>.",
+			},
+			"httpauthtoken_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a httpauthtoken_wo update.",
+			},
 			"httpendpointurl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -20,6 +19,8 @@ type AppflowparamResourceModel struct {
 	Id                                  types.String `tfsdk:"id"`
 	Aaausername                         types.String `tfsdk:"aaausername"`
 	Analyticsauthtoken                  types.String `tfsdk:"analyticsauthtoken"`
+	AnalyticsauthtokenWo                types.String `tfsdk:"analyticsauthtoken_wo"`
+	AnalyticsauthtokenWoVersion         types.Int64  `tfsdk:"analyticsauthtoken_wo_version"`
 	Appnamerefresh                      types.Int64  `tfsdk:"appnamerefresh"`
 	Auditlogs                           types.String `tfsdk:"auditlogs"`
 	Cacheinsight                        types.String `tfsdk:"cacheinsight"`
@@ -81,27 +82,39 @@ func (r *AppflowparamResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"aaausername": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable AppFlow AAA Username logging.",
 			},
 			"analyticsauthtoken": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Authentication token to be set by the agent.",
+			},
+			"analyticsauthtoken_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Authentication token to be set by the agent.",
+			},
+			"analyticsauthtoken_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a analyticsauthtoken_wo update.",
 			},
 			"appnamerefresh": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(600),
+				Computed:    true,
 				Description: "Interval, in seconds, at which to send Appnames to the configured collectors. Appname refers to the name of an entity (virtual server, service, or service group) in the Citrix ADC.",
 			},
 			"auditlogs": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable Auditlogs to be sent to the Telemetry Agent",
 			},
 			"cacheinsight": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Flag to determine whether cache records need to be exported or not. If this flag is true and IC is enabled, cache records are exported instead of L7 HTTP records",
 			},
 			"clienttrafficonly": schema.StringAttribute{
@@ -111,17 +124,17 @@ func (r *AppflowparamResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"connectionchaining": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable connection chaining so that the client server flows of a connection are linked. Also the connection chain ID is propagated across Citrix ADCs, so that in a multi-hop environment the flows belonging to the same logical connection are linked. This id is also logged as part of appflow record",
 			},
 			"cqareporting": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "TCP CQA reporting enable/disable knob.",
 			},
 			"distributedtracing": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable generation of the distributed tracing templates in the Appflow records",
 			},
 			"disttracingsamplingrate": schema.Int64Attribute{
@@ -131,122 +144,122 @@ func (r *AppflowparamResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"emailaddress": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable AppFlow user email-id logging.",
 			},
 			"events": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable Events to be sent to the Telemetry Agent",
 			},
 			"flowrecordinterval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(60),
+				Computed:    true,
 				Description: "Interval, in seconds, at which to send flow records to the configured collectors.",
 			},
 			"gxsessionreporting": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable this option for Gx session reporting",
 			},
 			"httpauthorization": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the HTTP Authorization header information.",
 			},
 			"httpcontenttype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the HTTP Content-Type header sent from the server to the client to determine the type of the content sent.",
 			},
 			"httpcookie": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the cookie that was in the HTTP request the appliance received from the client.",
 			},
 			"httpdomain": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the http domain request to be exported.",
 			},
 			"httphost": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the host identified in the HTTP request that the appliance received from the client.",
 			},
 			"httplocation": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the HTTP location headers returned from the HTTP responses.",
 			},
 			"httpmethod": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the method that was specified in the HTTP request that the appliance received from the client.",
 			},
 			"httpquerywithurl": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the HTTP query segment along with the URL that the Citrix ADC received from the client.",
 			},
 			"httpreferer": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the web page that was last visited by the client.",
 			},
 			"httpsetcookie": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the Set-cookie header sent from the server to the client in response to a HTTP request.",
 			},
 			"httpsetcookie2": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the Set-cookie header sent from the server to the client in response to a HTTP request.",
 			},
 			"httpurl": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the http URL that the Citrix ADC received from the client.",
 			},
 			"httpuseragent": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the client application through which the HTTP request was received by the Citrix ADC.",
 			},
 			"httpvia": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the httpVia header which contains the IP address of proxy server through which the client accessed the server.",
 			},
 			"httpxforwardedfor": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the httpXForwardedFor header, which contains the original IP Address of the client using a proxy server to access the server.",
 			},
 			"identifiername": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the stream identifier name to be exported.",
 			},
 			"identifiersessionname": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the stream identifier session name to be exported.",
 			},
 			"logstreamovernsip": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "To use the Citrix ADC IP to send Logstream records instead of the SNIP",
 			},
 			"lsnlogging": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will send the Large Scale Nat(LSN) records to the configured collectors.",
 			},
 			"metrics": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable Citrix ADC Stats to be sent to the Telemetry Agent",
 			},
 			"observationdomainid": schema.Int64Attribute{
@@ -266,32 +279,32 @@ func (r *AppflowparamResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"securityinsightrecordinterval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(600),
+				Computed:    true,
 				Description: "Interval, in seconds, at which to send security insight flow records to the configured collectors.",
 			},
 			"securityinsighttraffic": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable/disable the feature individually on appflow action.",
 			},
 			"skipcacheredirectionhttptransaction": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Skip Cache http transaction. This HTTP transaction is specific to Cache Redirection module. In Case of Cache Miss there will be another HTTP transaction initiated by the cache server.",
 			},
 			"subscriberawareness": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable this option for logging end user MSISDN in L4/L7 appflow records",
 			},
 			"subscriberidobfuscation": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable this option for obfuscating MSISDN in L4/L7 appflow records",
 			},
 			"subscriberidobfuscationalgo": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("MD5"),
+				Computed:    true,
 				Description: "Algorithm(MD5 or SHA256) to be used for obfuscating MSISDN",
 			},
 			"tcpattackcounterinterval": schema.Int64Attribute{
@@ -301,22 +314,22 @@ func (r *AppflowparamResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"templaterefresh": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(600),
+				Computed:    true,
 				Description: "Refresh interval, in seconds, at which to export the template data. Because data transmission is in UDP, the templates must be resent at regular intervals.",
 			},
 			"timeseriesovernsip": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "To use the Citrix ADC IP to send Time series data such as metrics and events, instead of the SNIP",
 			},
 			"udppmtu": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1472),
+				Computed:    true,
 				Description: "MTU, in bytes, for IPFIX UDP packets.",
 			},
 			"urlcategory": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Include the URL category record.",
 			},
 			"usagerecordinterval": schema.Int64Attribute{
@@ -326,20 +339,20 @@ func (r *AppflowparamResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"videoinsight": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable/disable the feature individually on appflow action.",
 			},
 			"websaasappusagereporting": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, NGS will send data used by Web/saas app at the end of every HTTP transaction to configured collectors.",
 			},
 		},
 	}
 }
 
-func appflowparamGetThePayloadFromtheConfig(ctx context.Context, data *AppflowparamResourceModel) appflow.Appflowparam {
-	tflog.Debug(ctx, "In appflowparamGetThePayloadFromtheConfig Function")
+func appflowparamGetThePayloadFromthePlan(ctx context.Context, data *AppflowparamResourceModel) appflow.Appflowparam {
+	tflog.Debug(ctx, "In appflowparamGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appflowparam := appflow.Appflowparam{}
@@ -349,6 +362,8 @@ func appflowparamGetThePayloadFromtheConfig(ctx context.Context, data *Appflowpa
 	if !data.Analyticsauthtoken.IsNull() {
 		appflowparam.Analyticsauthtoken = data.Analyticsauthtoken.ValueString()
 	}
+	// Skip write-only attribute: analyticsauthtoken_wo
+	// Skip version tracker attribute: analyticsauthtoken_wo_version
 	if !data.Appnamerefresh.IsNull() {
 		appflowparam.Appnamerefresh = utils.IntPtr(int(data.Appnamerefresh.ValueInt64()))
 	}
@@ -500,6 +515,19 @@ func appflowparamGetThePayloadFromtheConfig(ctx context.Context, data *Appflowpa
 	return appflowparam
 }
 
+func appflowparamGetThePayloadFromtheConfig(ctx context.Context, data *AppflowparamResourceModel, payload *appflow.Appflowparam) {
+	tflog.Debug(ctx, "In appflowparamGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: analyticsauthtoken_wo -> analyticsauthtoken
+	if !data.AnalyticsauthtokenWo.IsNull() {
+		analyticsauthtokenWo := data.AnalyticsauthtokenWo.ValueString()
+		if analyticsauthtokenWo != "" {
+			payload.Analyticsauthtoken = analyticsauthtokenWo
+		}
+	}
+}
+
 func appflowparamSetAttrFromGet(ctx context.Context, data *AppflowparamResourceModel, getResponseData map[string]interface{}) *AppflowparamResourceModel {
 	tflog.Debug(ctx, "In appflowparamSetAttrFromGet Function")
 
@@ -509,11 +537,9 @@ func appflowparamSetAttrFromGet(ctx context.Context, data *AppflowparamResourceM
 	} else {
 		data.Aaausername = types.StringNull()
 	}
-	if val, ok := getResponseData["analyticsauthtoken"]; ok && val != nil {
-		data.Analyticsauthtoken = types.StringValue(val.(string))
-	} else {
-		data.Analyticsauthtoken = types.StringNull()
-	}
+	// analyticsauthtoken is not returned by NITRO API (secret/ephemeral) - retain from config
+	// analyticsauthtoken_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// analyticsauthtoken_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["appnamerefresh"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Appnamerefresh = types.Int64Value(intVal)

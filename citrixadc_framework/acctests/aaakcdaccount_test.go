@@ -167,3 +167,117 @@ func TestAccAaakcdaccountDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccAaakcdaccount_kcdpassword_step1 = `
+	variable "aaakcdaccount_kcdpassword" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaakcdaccount" "tf_aaakcdaccount" {
+		kcdaccount    = "my_kcdaccount"
+		delegateduser = "john"
+		kcdpassword   = var.aaakcdaccount_kcdpassword
+		realmstr      = "my_realm"
+	}
+`
+
+const testAccAaakcdaccount_kcdpassword_step2 = `
+	variable "aaakcdaccount_kcdpassword_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaakcdaccount" "tf_aaakcdaccount" {
+		kcdaccount    = "my_kcdaccount"
+		delegateduser = "john"
+		kcdpassword   = var.aaakcdaccount_kcdpassword_2
+		realmstr      = "my_realm"
+	}
+`
+
+func TestAccAaakcdaccount_kcdpassword_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_aaakcdaccount_kcdpassword", "value1")
+	t.Setenv("TF_VAR_aaakcdaccount_kcdpassword_2", "value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaakcdaccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaakcdaccount_kcdpassword_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaakcdaccountExist("citrixadc_aaakcdaccount.tf_aaakcdaccount", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaakcdaccount.tf_aaakcdaccount", "delegateduser", "john"),
+					resource.TestCheckResourceAttr("citrixadc_aaakcdaccount.tf_aaakcdaccount", "realmstr", "my_realm"),
+				),
+			},
+			{
+				Config: testAccAaakcdaccount_kcdpassword_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaakcdaccountExist("citrixadc_aaakcdaccount.tf_aaakcdaccount", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaakcdaccount.tf_aaakcdaccount", "delegateduser", "john"),
+					resource.TestCheckResourceAttr("citrixadc_aaakcdaccount.tf_aaakcdaccount", "realmstr", "my_realm"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAaakcdaccount_kcdpassword_wo_step1 = `
+	variable "aaakcdaccount_kcdpassword_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaakcdaccount" "tf_aaakcdaccount" {
+		kcdaccount             = "my_kcdaccount"
+		delegateduser          = "john"
+		kcdpassword_wo         = var.aaakcdaccount_kcdpassword_wo
+		kcdpassword_wo_version = 1
+		realmstr               = "my_realm"
+	}
+`
+
+const testAccAaakcdaccount_kcdpassword_wo_step2 = `
+	variable "aaakcdaccount_kcdpassword_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaakcdaccount" "tf_aaakcdaccount" {
+		kcdaccount             = "my_kcdaccount"
+		delegateduser          = "john"
+		kcdpassword_wo         = var.aaakcdaccount_kcdpassword_wo_2
+		kcdpassword_wo_version = 2
+		realmstr               = "my_realm"
+	}
+`
+
+func TestAccAaakcdaccount_kcdpassword_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_aaakcdaccount_kcdpassword_wo", "ephemeral_value1")
+	t.Setenv("TF_VAR_aaakcdaccount_kcdpassword_wo_2", "ephemeral_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaakcdaccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaakcdaccount_kcdpassword_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaakcdaccountExist("citrixadc_aaakcdaccount.tf_aaakcdaccount", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaakcdaccount.tf_aaakcdaccount", "kcdpassword_wo_version", "1"),
+					resource.TestCheckResourceAttr("citrixadc_aaakcdaccount.tf_aaakcdaccount", "delegateduser", "john"),
+				),
+			},
+			{
+				Config: testAccAaakcdaccount_kcdpassword_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaakcdaccountExist("citrixadc_aaakcdaccount.tf_aaakcdaccount", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaakcdaccount.tf_aaakcdaccount", "kcdpassword_wo_version", "2"),
+					resource.TestCheckResourceAttr("citrixadc_aaakcdaccount.tf_aaakcdaccount", "delegateduser", "john"),
+				),
+			},
+		},
+	})
+}

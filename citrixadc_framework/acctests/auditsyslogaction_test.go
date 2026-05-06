@@ -226,3 +226,121 @@ data "citrixadc_auditsyslogaction" "tf_auditsyslogaction_ds" {
 }
 
 `
+
+// ── Ephemeral / write-only tests for httpauthtoken ──────────────────────────
+
+const testAccAuditsyslogaction_httpauthtoken_step1 = `
+variable "auditsyslogaction_httpauthtoken" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_auditsyslogaction" "tf_syslogaction_secret" {
+    name          = "tf_syslogaction_secret"
+    serverip      = "10.78.60.33"
+    serverport    = 514
+    loglevel      = ["ERROR", "NOTICE"]
+    transport     = "HTTP"
+    httpauthtoken = var.auditsyslogaction_httpauthtoken
+}
+`
+
+const testAccAuditsyslogaction_httpauthtoken_step2 = `
+variable "auditsyslogaction_httpauthtoken_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_auditsyslogaction" "tf_syslogaction_secret" {
+    name          = "tf_syslogaction_secret"
+    serverip      = "10.78.60.33"
+    serverport    = 514
+    loglevel      = ["ERROR", "NOTICE"]
+    transport     = "HTTP"
+    httpauthtoken = var.auditsyslogaction_httpauthtoken_2
+}
+`
+
+func TestAccAuditsyslogaction_httpauthtoken_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_auditsyslogaction_httpauthtoken", "token_value1")
+	t.Setenv("TF_VAR_auditsyslogaction_httpauthtoken_2", "token_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogaction_httpauthtoken_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_secret", nil, map[string]interface{}{"name": "tf_syslogaction_secret", "serverip": "10.78.60.33", "serverport": 514, "transport": "HTTP"}),
+				),
+			},
+			{
+				Config: testAccAuditsyslogaction_httpauthtoken_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_secret", nil, map[string]interface{}{"name": "tf_syslogaction_secret", "serverip": "10.78.60.33", "serverport": 514, "transport": "HTTP"}),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuditsyslogaction_httpauthtoken_wo_step1 = `
+variable "auditsyslogaction_httpauthtoken_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_auditsyslogaction" "tf_syslogaction_wo" {
+    name                    = "tf_syslogaction_wo"
+    serverip                = "10.78.60.33"
+    serverport              = 514
+    loglevel                = ["ERROR", "NOTICE"]
+    transport               = "HTTP"
+    httpauthtoken_wo        = var.auditsyslogaction_httpauthtoken_wo
+    httpauthtoken_wo_version = 1
+}
+`
+
+const testAccAuditsyslogaction_httpauthtoken_wo_step2 = `
+variable "auditsyslogaction_httpauthtoken_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_auditsyslogaction" "tf_syslogaction_wo" {
+    name                    = "tf_syslogaction_wo"
+    serverip                = "10.78.60.33"
+    serverport              = 514
+    loglevel                = ["ERROR", "NOTICE"]
+    transport               = "HTTP"
+    httpauthtoken_wo        = var.auditsyslogaction_httpauthtoken_wo_2
+    httpauthtoken_wo_version = 2
+}
+`
+
+func TestAccAuditsyslogaction_httpauthtoken_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_auditsyslogaction_httpauthtoken_wo", "ephemeral_value1")
+	t.Setenv("TF_VAR_auditsyslogaction_httpauthtoken_wo_2", "ephemeral_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogaction_httpauthtoken_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_wo", nil, map[string]interface{}{"name": "tf_syslogaction_wo", "serverip": "10.78.60.33", "serverport": 514, "transport": "HTTP"}),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogaction.tf_syslogaction_wo", "httpauthtoken_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuditsyslogaction_httpauthtoken_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_wo", nil, map[string]interface{}{"name": "tf_syslogaction_wo", "serverip": "10.78.60.33", "serverport": 514, "transport": "HTTP"}),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogaction.tf_syslogaction_wo", "httpauthtoken_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

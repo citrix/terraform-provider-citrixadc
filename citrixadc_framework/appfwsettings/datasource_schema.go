@@ -77,6 +77,15 @@ func AppfwsettingsDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password with which proxy user logs on.",
 			},
+			"proxypassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Password with which proxy user logs on.",
+			},
+			"proxypassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a proxypassword_wo update.",
+			},
 			"proxyport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,

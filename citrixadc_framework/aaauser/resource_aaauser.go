@@ -44,30 +44,36 @@ func (r *AaauserResource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *AaauserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data AaauserResourceModel
+	var data, config AaauserResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating aaauser resource")
-
-	// aaauser := aaauserGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	aaauser := aaauserGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	aaauserGetThePayloadFromtheConfig(ctx, &config, &aaauser)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaauser.Type(), &aaauser)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaauser, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("aaauser-config")
+	// Named resource - use AddResource
+	username_value := data.Username.ValueString()
+	_, err := r.client.AddResource(service.Aaauser.Type(), username_value, &aaauser)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaauser, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created aaauser resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Username.ValueString()))
 
 	// Read the updated state back
 	r.readAaauserFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,28 +101,54 @@ func (r *AaauserResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *AaauserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AaauserResourceModel
+	var data, config, state AaauserResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating aaauser resource")
 
-	// Create API request body from the model
-	// aaauser := aaauserGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	// Check secret attribute password or its version tracker
+	if !data.Password.Equal(state.Password) {
+		tflog.Debug(ctx, fmt.Sprintf("password has changed for aaauser"))
+		hasChange = true
+	} else if !data.PasswordWoVersion.Equal(state.PasswordWoVersion) {
+		tflog.Debug(ctx, fmt.Sprintf("password_wo_version has changed for aaauser"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaauser.Type(), &aaauser)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaauser, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		// Get payload from plan (regular attributes)
+		aaauser := aaauserGetThePayloadFromthePlan(ctx, &data)
+		// Add write-only attributes from config to the payload
+		aaauserGetThePayloadFromtheConfig(ctx, &config, &aaauser)
+		// Make API call
+		// Named resource - use UpdateResource
+		username_value := data.Username.ValueString()
+		_, err := r.client.UpdateResource(service.Aaauser.Type(), username_value, &aaauser)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaauser, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated aaauser resource")
+		tflog.Trace(ctx, "Updated aaauser resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for aaauser resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAaauserFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +168,27 @@ func (r *AaauserResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	tflog.Debug(ctx, "Deleting aaauser resource")
+	// Named resource - delete using DeleteResource
+	username_value := data.Username.ValueString()
+	err := r.client.DeleteResource(service.Aaauser.Type(), username_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete aaauser, got error: %s", err))
+		return
+	}
 
-	// For aaauser, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted aaauser resource from state")
+	tflog.Trace(ctx, "Deleted aaauser resource")
 }
 
 // Helper function to read aaauser data from API
 func (r *AaauserResource) readAaauserFromApi(ctx context.Context, data *AaauserResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Aaauser.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	username_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Aaauser.Type(), username_Name)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaauser, got error: %s", err))
 		return

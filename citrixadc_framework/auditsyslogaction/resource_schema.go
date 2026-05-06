@@ -2,6 +2,7 @@ package auditsyslogaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 
@@ -18,40 +19,42 @@ import (
 
 // AuditsyslogactionResourceModel describes the resource data model.
 type AuditsyslogactionResourceModel struct {
-	Id                   types.String `tfsdk:"id"`
-	Acl                  types.String `tfsdk:"acl"`
-	Alg                  types.String `tfsdk:"alg"`
-	Appflowexport        types.String `tfsdk:"appflowexport"`
-	Contentinspectionlog types.String `tfsdk:"contentinspectionlog"`
-	Dateformat           types.String `tfsdk:"dateformat"`
-	Dns                  types.String `tfsdk:"dns"`
-	Domainresolvenow     types.Bool   `tfsdk:"domainresolvenow"`
-	Domainresolveretry   types.Int64  `tfsdk:"domainresolveretry"`
-	Httpauthtoken        types.String `tfsdk:"httpauthtoken"`
-	Httpendpointurl      types.String `tfsdk:"httpendpointurl"`
-	Lbvservername        types.String `tfsdk:"lbvservername"`
-	Logfacility          types.String `tfsdk:"logfacility"`
-	Loglevel             types.List   `tfsdk:"loglevel"`
-	Lsn                  types.String `tfsdk:"lsn"`
-	Managementlog        types.List   `tfsdk:"managementlog"`
-	Maxlogdatasizetohold types.Int64  `tfsdk:"maxlogdatasizetohold"`
-	Mgmtloglevel         types.List   `tfsdk:"mgmtloglevel"`
-	Name                 types.String `tfsdk:"name"`
-	Netprofile           types.String `tfsdk:"netprofile"`
-	Protocolviolations   types.String `tfsdk:"protocolviolations"`
-	Serverdomainname     types.String `tfsdk:"serverdomainname"`
-	Serverip             types.String `tfsdk:"serverip"`
-	Serverport           types.Int64  `tfsdk:"serverport"`
-	Sslinterception      types.String `tfsdk:"sslinterception"`
-	Streamanalytics      types.String `tfsdk:"streamanalytics"`
-	Subscriberlog        types.String `tfsdk:"subscriberlog"`
-	Syslogcompliance     types.String `tfsdk:"syslogcompliance"`
-	Tcp                  types.String `tfsdk:"tcp"`
-	Tcpprofilename       types.String `tfsdk:"tcpprofilename"`
-	Timezone             types.String `tfsdk:"timezone"`
-	Transport            types.String `tfsdk:"transport"`
-	Urlfiltering         types.String `tfsdk:"urlfiltering"`
-	Userdefinedauditlog  types.String `tfsdk:"userdefinedauditlog"`
+	Id                     types.String `tfsdk:"id"`
+	Acl                    types.String `tfsdk:"acl"`
+	Alg                    types.String `tfsdk:"alg"`
+	Appflowexport          types.String `tfsdk:"appflowexport"`
+	Contentinspectionlog   types.String `tfsdk:"contentinspectionlog"`
+	Dateformat             types.String `tfsdk:"dateformat"`
+	Dns                    types.String `tfsdk:"dns"`
+	Domainresolvenow       types.Bool   `tfsdk:"domainresolvenow"`
+	Domainresolveretry     types.Int64  `tfsdk:"domainresolveretry"`
+	Httpauthtoken          types.String `tfsdk:"httpauthtoken"`
+	HttpauthtokenWo        types.String `tfsdk:"httpauthtoken_wo"`
+	HttpauthtokenWoVersion types.Int64  `tfsdk:"httpauthtoken_wo_version"`
+	Httpendpointurl        types.String `tfsdk:"httpendpointurl"`
+	Lbvservername          types.String `tfsdk:"lbvservername"`
+	Logfacility            types.String `tfsdk:"logfacility"`
+	Loglevel               types.List   `tfsdk:"loglevel"`
+	Lsn                    types.String `tfsdk:"lsn"`
+	Managementlog          types.List   `tfsdk:"managementlog"`
+	Maxlogdatasizetohold   types.Int64  `tfsdk:"maxlogdatasizetohold"`
+	Mgmtloglevel           types.List   `tfsdk:"mgmtloglevel"`
+	Name                   types.String `tfsdk:"name"`
+	Netprofile             types.String `tfsdk:"netprofile"`
+	Protocolviolations     types.String `tfsdk:"protocolviolations"`
+	Serverdomainname       types.String `tfsdk:"serverdomainname"`
+	Serverip               types.String `tfsdk:"serverip"`
+	Serverport             types.Int64  `tfsdk:"serverport"`
+	Sslinterception        types.String `tfsdk:"sslinterception"`
+	Streamanalytics        types.String `tfsdk:"streamanalytics"`
+	Subscriberlog          types.String `tfsdk:"subscriberlog"`
+	Syslogcompliance       types.String `tfsdk:"syslogcompliance"`
+	Tcp                    types.String `tfsdk:"tcp"`
+	Tcpprofilename         types.String `tfsdk:"tcpprofilename"`
+	Timezone               types.String `tfsdk:"timezone"`
+	Transport              types.String `tfsdk:"transport"`
+	Urlfiltering           types.String `tfsdk:"urlfiltering"`
+	Userdefinedauditlog    types.String `tfsdk:"userdefinedauditlog"`
 }
 
 func (r *AuditsyslogactionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -99,13 +102,25 @@ func (r *AuditsyslogactionResource) Schema(ctx context.Context, req resource.Sch
 			},
 			"domainresolveretry": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(5),
+				Computed:    true,
 				Description: "Time, in seconds, for which the Citrix ADC waits before sending another DNS query to resolve the host name of the syslog server if the last query failed.",
 			},
 			"httpauthtoken": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorization header is required to be of the form - Splunk <auth-token>.",
+			},
+			"httpauthtoken_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorization header is required to be of the form - Splunk <auth-token>.",
+			},
+			"httpauthtoken_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a httpauthtoken_wo update.",
 			},
 			"httpendpointurl": schema.StringAttribute{
 				Optional:    true,
@@ -140,7 +155,7 @@ func (r *AuditsyslogactionResource) Schema(ctx context.Context, req resource.Sch
 			},
 			"maxlogdatasizetohold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(500),
+				Computed:    true,
 				Description: "Max size of log data that can be held in NSB chain of server info.",
 			},
 			"mgmtloglevel": schema.ListAttribute{
@@ -150,7 +165,10 @@ func (r *AuditsyslogactionResource) Schema(ctx context.Context, req resource.Sch
 				Description: "Management log level, which specifies the types of events to log.\nAvailable values function as follows:\n* ALL - All events.\n* EMERGENCY - Events that indicate an immediate crisis on the server.\n* ALERT - Events that might require action.\n* CRITICAL - Events that indicate an imminent server crisis.\n* ERROR - Events that indicate some type of error.\n* WARNING - Events that require action in the near future.\n* NOTICE - Events that the administrator should know about.\n* INFORMATIONAL - All but low-level events.\n* DEBUG - All events, in extreme detail.\n* NONE - No events.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the syslog action. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the syslog action is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my syslog action\" or 'my syslog action').",
 			},
 			"netprofile": schema.StringAttribute{
@@ -235,8 +253,8 @@ func (r *AuditsyslogactionResource) Schema(ctx context.Context, req resource.Sch
 	}
 }
 
-func auditsyslogactionGetThePayloadFromtheConfig(ctx context.Context, data *AuditsyslogactionResourceModel) audit.Auditsyslogaction {
-	tflog.Debug(ctx, "In auditsyslogactionGetThePayloadFromtheConfig Function")
+func auditsyslogactionGetThePayloadFromthePlan(ctx context.Context, data *AuditsyslogactionResourceModel) audit.Auditsyslogaction {
+	tflog.Debug(ctx, "In auditsyslogactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	auditsyslogaction := audit.Auditsyslogaction{}
@@ -267,6 +285,8 @@ func auditsyslogactionGetThePayloadFromtheConfig(ctx context.Context, data *Audi
 	if !data.Httpauthtoken.IsNull() {
 		auditsyslogaction.Httpauthtoken = data.Httpauthtoken.ValueString()
 	}
+	// Skip write-only attribute: httpauthtoken_wo
+	// Skip version tracker attribute: httpauthtoken_wo_version
 	if !data.Httpendpointurl.IsNull() {
 		auditsyslogaction.Httpendpointurl = data.Httpendpointurl.ValueString()
 	}
@@ -276,11 +296,26 @@ func auditsyslogactionGetThePayloadFromtheConfig(ctx context.Context, data *Audi
 	if !data.Logfacility.IsNull() {
 		auditsyslogaction.Logfacility = data.Logfacility.ValueString()
 	}
+	if !data.Loglevel.IsNull() {
+		var loglevelList []string
+		data.Loglevel.ElementsAs(ctx, &loglevelList, false)
+		auditsyslogaction.Loglevel = loglevelList
+	}
 	if !data.Lsn.IsNull() {
 		auditsyslogaction.Lsn = data.Lsn.ValueString()
 	}
+	if !data.Managementlog.IsNull() {
+		var managementlogList []string
+		data.Managementlog.ElementsAs(ctx, &managementlogList, false)
+		auditsyslogaction.Managementlog = managementlogList
+	}
 	if !data.Maxlogdatasizetohold.IsNull() {
 		auditsyslogaction.Maxlogdatasizetohold = utils.IntPtr(int(data.Maxlogdatasizetohold.ValueInt64()))
+	}
+	if !data.Mgmtloglevel.IsNull() {
+		var mgmtloglevelList []string
+		data.Mgmtloglevel.ElementsAs(ctx, &mgmtloglevelList, false)
+		auditsyslogaction.Mgmtloglevel = mgmtloglevelList
 	}
 	if !data.Name.IsNull() {
 		auditsyslogaction.Name = data.Name.ValueString()
@@ -334,6 +369,19 @@ func auditsyslogactionGetThePayloadFromtheConfig(ctx context.Context, data *Audi
 	return auditsyslogaction
 }
 
+func auditsyslogactionGetThePayloadFromtheConfig(ctx context.Context, data *AuditsyslogactionResourceModel, payload *audit.Auditsyslogaction) {
+	tflog.Debug(ctx, "In auditsyslogactionGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: httpauthtoken_wo -> httpauthtoken
+	if !data.HttpauthtokenWo.IsNull() {
+		httpauthtokenWo := data.HttpauthtokenWo.ValueString()
+		if httpauthtokenWo != "" {
+			payload.Httpauthtoken = httpauthtokenWo
+		}
+	}
+}
+
 func auditsyslogactionSetAttrFromGet(ctx context.Context, data *AuditsyslogactionResourceModel, getResponseData map[string]interface{}) *AuditsyslogactionResourceModel {
 	tflog.Debug(ctx, "In auditsyslogactionSetAttrFromGet Function")
 
@@ -380,11 +428,9 @@ func auditsyslogactionSetAttrFromGet(ctx context.Context, data *Auditsyslogactio
 	} else {
 		data.Domainresolveretry = types.Int64Null()
 	}
-	if val, ok := getResponseData["httpauthtoken"]; ok && val != nil {
-		data.Httpauthtoken = types.StringValue(val.(string))
-	} else {
-		data.Httpauthtoken = types.StringNull()
-	}
+	// httpauthtoken is not returned by NITRO API (secret/ephemeral) - retain from config
+	// httpauthtoken_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// httpauthtoken_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["httpendpointurl"]; ok && val != nil {
 		data.Httpendpointurl = types.StringValue(val.(string))
 	} else {
@@ -400,10 +446,32 @@ func auditsyslogactionSetAttrFromGet(ctx context.Context, data *Auditsyslogactio
 	} else {
 		data.Logfacility = types.StringNull()
 	}
+	if val, ok := getResponseData["loglevel"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Loglevel = listValue
+		} else {
+			data.Loglevel = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Loglevel = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["lsn"]; ok && val != nil {
 		data.Lsn = types.StringValue(val.(string))
 	} else {
 		data.Lsn = types.StringNull()
+	}
+	if val, ok := getResponseData["managementlog"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Managementlog = listValue
+		} else {
+			data.Managementlog = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Managementlog = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["maxlogdatasizetohold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -411,6 +479,17 @@ func auditsyslogactionSetAttrFromGet(ctx context.Context, data *Auditsyslogactio
 		}
 	} else {
 		data.Maxlogdatasizetohold = types.Int64Null()
+	}
+	if val, ok := getResponseData["mgmtloglevel"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Mgmtloglevel = listValue
+		} else {
+			data.Mgmtloglevel = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Mgmtloglevel = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
@@ -496,8 +575,8 @@ func auditsyslogactionSetAttrFromGet(ctx context.Context, data *Auditsyslogactio
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

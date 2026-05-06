@@ -976,6 +976,16 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		nsrpcnode.NewNsrpcnodeResource,
 		snmpuser.NewSnmpuserResource,
 		systemuser.NewSystemuserResource,
+		aaakcdaccount.NewAaakcdaccountResource,
+		aaaldapparams.NewAaaldapparamsResource,
+		aaaradiusparams.NewAaaradiusparamsResource,
+		aaassoprofile.NewAaassoprofileResource,
+		aaatacacsparams.NewAaatacacsparamsResource,
+		aaauser.NewAaauserResource,
+		analyticsprofile.NewAnalyticsprofileResource,
+		appflowparam.NewAppflowparamResource,
+		appfwsettings.NewAppfwsettingsResource,
+		auditsyslogaction.NewAuditsyslogactionResource,
 	}
 }
 

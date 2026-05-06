@@ -2,28 +2,35 @@ package aaakcdaccount
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // AaakcdaccountResourceModel describes the resource data model.
 type AaakcdaccountResourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	Cacert          types.String `tfsdk:"cacert"`
-	Delegateduser   types.String `tfsdk:"delegateduser"`
-	Enterpriserealm types.String `tfsdk:"enterpriserealm"`
-	Kcdaccount      types.String `tfsdk:"kcdaccount"`
-	Kcdpassword     types.String `tfsdk:"kcdpassword"`
-	Keytab          types.String `tfsdk:"keytab"`
-	Realmstr        types.String `tfsdk:"realmstr"`
-	Servicespn      types.String `tfsdk:"servicespn"`
-	Usercert        types.String `tfsdk:"usercert"`
-	Userrealm       types.String `tfsdk:"userrealm"`
+	Id                   types.String `tfsdk:"id"`
+	Cacert               types.String `tfsdk:"cacert"`
+	Delegateduser        types.String `tfsdk:"delegateduser"`
+	Enterpriserealm      types.String `tfsdk:"enterpriserealm"`
+	Kcdaccount           types.String `tfsdk:"kcdaccount"`
+	Kcdpassword          types.String `tfsdk:"kcdpassword"`
+	KcdpasswordWo        types.String `tfsdk:"kcdpassword_wo"`
+	KcdpasswordWoVersion types.Int64  `tfsdk:"kcdpassword_wo_version"`
+	Keytab               types.String `tfsdk:"keytab"`
+	Realmstr             types.String `tfsdk:"realmstr"`
+	Servicespn           types.String `tfsdk:"servicespn"`
+	Usercert             types.String `tfsdk:"usercert"`
+	Userrealm            types.String `tfsdk:"userrealm"`
 }
 
 func (r *AaakcdaccountResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -50,13 +57,28 @@ func (r *AaakcdaccountResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Enterprise Realm of the user. This should be given only in certain KDC deployments where KDC expects Enterprise username instead of Principal Name",
 			},
 			"kcdaccount": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the KCD account.",
 			},
 			"kcdpassword": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Password for Delegated User.",
+			},
+			"kcdpassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password for Delegated User.",
+			},
+			"kcdpassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a kcdpassword_wo update.",
 			},
 			"keytab": schema.StringAttribute{
 				Optional:    true,
@@ -87,8 +109,8 @@ func (r *AaakcdaccountResource) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func aaakcdaccountGetThePayloadFromtheConfig(ctx context.Context, data *AaakcdaccountResourceModel) aaa.Aaakcdaccount {
-	tflog.Debug(ctx, "In aaakcdaccountGetThePayloadFromtheConfig Function")
+func aaakcdaccountGetThePayloadFromthePlan(ctx context.Context, data *AaakcdaccountResourceModel) aaa.Aaakcdaccount {
+	tflog.Debug(ctx, "In aaakcdaccountGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaakcdaccount := aaa.Aaakcdaccount{}
@@ -107,6 +129,8 @@ func aaakcdaccountGetThePayloadFromtheConfig(ctx context.Context, data *Aaakcdac
 	if !data.Kcdpassword.IsNull() {
 		aaakcdaccount.Kcdpassword = data.Kcdpassword.ValueString()
 	}
+	// Skip write-only attribute: kcdpassword_wo
+	// Skip version tracker attribute: kcdpassword_wo_version
 	if !data.Keytab.IsNull() {
 		aaakcdaccount.Keytab = data.Keytab.ValueString()
 	}
@@ -124,6 +148,19 @@ func aaakcdaccountGetThePayloadFromtheConfig(ctx context.Context, data *Aaakcdac
 	}
 
 	return aaakcdaccount
+}
+
+func aaakcdaccountGetThePayloadFromtheConfig(ctx context.Context, data *AaakcdaccountResourceModel, payload *aaa.Aaakcdaccount) {
+	tflog.Debug(ctx, "In aaakcdaccountGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: kcdpassword_wo -> kcdpassword
+	if !data.KcdpasswordWo.IsNull() {
+		kcdpasswordWo := data.KcdpasswordWo.ValueString()
+		if kcdpasswordWo != "" {
+			payload.Kcdpassword = kcdpasswordWo
+		}
+	}
 }
 
 func aaakcdaccountSetAttrFromGet(ctx context.Context, data *AaakcdaccountResourceModel, getResponseData map[string]interface{}) *AaakcdaccountResourceModel {
@@ -150,18 +187,16 @@ func aaakcdaccountSetAttrFromGet(ctx context.Context, data *AaakcdaccountResourc
 	} else {
 		data.Kcdaccount = types.StringNull()
 	}
-	if val, ok := getResponseData["kcdpassword"]; ok && val != nil {
-		data.Kcdpassword = types.StringValue(val.(string))
-	} else {
-		data.Kcdpassword = types.StringNull()
-	}
+	// kcdpassword is not returned by NITRO API (secret/ephemeral) - retain from config
+	// kcdpassword_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// kcdpassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["keytab"]; ok && val != nil {
 		data.Keytab = types.StringValue(val.(string))
 	} else {
 		data.Keytab = types.StringNull()
 	}
 	if val, ok := getResponseData["realmstr"]; ok && val != nil {
-		data.Realmstr = types.StringValue(val.(string))
+		data.Realmstr = types.StringValue(strings.ToLower(val.(string)))
 	} else {
 		data.Realmstr = types.StringNull()
 	}
@@ -182,8 +217,8 @@ func aaakcdaccountSetAttrFromGet(ctx context.Context, data *AaakcdaccountResourc
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Kcdaccount.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Kcdaccount.ValueString()))
 
 	return data
 }

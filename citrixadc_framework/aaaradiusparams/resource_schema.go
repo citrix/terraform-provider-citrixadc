@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -34,6 +33,8 @@ type AaaradiusparamsResourceModel struct {
 	Radgroupseparator          types.String `tfsdk:"radgroupseparator"`
 	Radgroupsprefix            types.String `tfsdk:"radgroupsprefix"`
 	Radkey                     types.String `tfsdk:"radkey"`
+	RadkeyWo                   types.String `tfsdk:"radkey_wo"`
+	RadkeyWoVersion            types.Int64  `tfsdk:"radkey_wo_version"`
 	Radnasid                   types.String `tfsdk:"radnasid"`
 	Radnasip                   types.String `tfsdk:"radnasip"`
 	Radvendorid                types.Int64  `tfsdk:"radvendorid"`
@@ -57,22 +58,22 @@ func (r *AaaradiusparamsResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"authentication": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Configure the RADIUS server state to accept or refuse authentication messages.",
 			},
 			"authservretry": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Number of retry by the Citrix ADC before getting response from the RADIUS server.",
 			},
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Maximum number of seconds that the Citrix ADC waits for a response from the RADIUS server.",
 			},
 			"callingstationid": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Send Calling-Station-ID of the client to the RADIUS server. IP Address of the client is sent as its Calling-Station-ID.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -92,12 +93,12 @@ func (r *AaaradiusparamsResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"messageauthenticator": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Control whether the Message-Authenticator attribute is included in a RADIUS Access-Request packet.",
 			},
 			"passencoding": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("mschapv2"),
+				Computed:    true,
 				Description: "Enable password encoding in RADIUS packets that the Citrix ADC sends to the RADIUS server.",
 			},
 			"pwdattributetype": schema.Int64Attribute{
@@ -126,8 +127,21 @@ func (r *AaaradiusparamsResource) Schema(ctx context.Context, req resource.Schem
 				Description: "Prefix string that precedes group names within a RADIUS attribute for RADIUS group extraction.",
 			},
 			"radkey": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "The key shared between the RADIUS server and clients.\nRequired for allowing the Citrix ADC to communicate with the RADIUS server.",
+			},
+			"radkey_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "The key shared between the RADIUS server and clients.\nRequired for allowing the Citrix ADC to communicate with the RADIUS server.",
+			},
+			"radkey_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a radkey_wo update.",
 			},
 			"radnasid": schema.StringAttribute{
 				Optional:    true,
@@ -151,20 +165,20 @@ func (r *AaaradiusparamsResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1812),
+				Computed:    true,
 				Description: "Port number on which the RADIUS server listens for connections.",
 			},
 			"tunnelendpointclientip": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Send Tunnel Endpoint Client IP address to the RADIUS server.",
 			},
 		},
 	}
 }
 
-func aaaradiusparamsGetThePayloadFromtheConfig(ctx context.Context, data *AaaradiusparamsResourceModel) aaa.Aaaradiusparams {
-	tflog.Debug(ctx, "In aaaradiusparamsGetThePayloadFromtheConfig Function")
+func aaaradiusparamsGetThePayloadFromthePlan(ctx context.Context, data *AaaradiusparamsResourceModel) aaa.Aaaradiusparams {
+	tflog.Debug(ctx, "In aaaradiusparamsGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaaradiusparams := aaa.Aaaradiusparams{}
@@ -216,6 +230,8 @@ func aaaradiusparamsGetThePayloadFromtheConfig(ctx context.Context, data *Aaarad
 	if !data.Radkey.IsNull() {
 		aaaradiusparams.Radkey = data.Radkey.ValueString()
 	}
+	// Skip write-only attribute: radkey_wo
+	// Skip version tracker attribute: radkey_wo_version
 	if !data.Radnasid.IsNull() {
 		aaaradiusparams.Radnasid = data.Radnasid.ValueString()
 	}
@@ -236,6 +252,19 @@ func aaaradiusparamsGetThePayloadFromtheConfig(ctx context.Context, data *Aaarad
 	}
 
 	return aaaradiusparams
+}
+
+func aaaradiusparamsGetThePayloadFromtheConfig(ctx context.Context, data *AaaradiusparamsResourceModel, payload *aaa.Aaaradiusparams) {
+	tflog.Debug(ctx, "In aaaradiusparamsGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: radkey_wo -> radkey
+	if !data.RadkeyWo.IsNull() {
+		radkeyWo := data.RadkeyWo.ValueString()
+		if radkeyWo != "" {
+			payload.Radkey = radkeyWo
+		}
+	}
 }
 
 func aaaradiusparamsSetAttrFromGet(ctx context.Context, data *AaaradiusparamsResourceModel, getResponseData map[string]interface{}) *AaaradiusparamsResourceModel {
@@ -331,11 +360,9 @@ func aaaradiusparamsSetAttrFromGet(ctx context.Context, data *AaaradiusparamsRes
 	} else {
 		data.Radgroupsprefix = types.StringNull()
 	}
-	if val, ok := getResponseData["radkey"]; ok && val != nil {
-		data.Radkey = types.StringValue(val.(string))
-	} else {
-		data.Radkey = types.StringNull()
-	}
+	// radkey is not returned by NITRO API (secret/ephemeral) - retain from config
+	// radkey_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// radkey_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["radnasid"]; ok && val != nil {
 		data.Radnasid = types.StringValue(val.(string))
 	} else {

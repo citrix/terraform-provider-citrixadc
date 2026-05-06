@@ -9,21 +9,68 @@ The appflowparam resource is used to create appflowparam.
 
 ## Example usage
 
+### Basic usage
+
 ```hcl
 resource "citrixadc_appflowparam" "tf_appflowparam" {
-  templaterefresh     = 200
-  flowrecordinterval  = 100
-  httpcookie          = "ENABLED"
-  httplocation        = "ENABLED"
+  templaterefresh    = 200
+  flowrecordinterval = 100
+  httpcookie         = "ENABLED"
+  httplocation       = "ENABLED"
+}
+```
+
+### Using analyticsauthtoken (sensitive attribute - persisted in state)
+
+```hcl
+variable "appflowparam_analyticsauthtoken" {
+  type      = string
+  sensitive = true
 }
 
+resource "citrixadc_appflowparam" "tf_appflowparam" {
+  analyticsauthtoken = var.appflowparam_analyticsauthtoken
+  templaterefresh    = 200
+  flowrecordinterval = 100
+}
+```
+
+### Using analyticsauthtoken_wo (write-only/ephemeral - NOT persisted in state)
+
+The `analyticsauthtoken_wo` attribute provides an ephemeral path for the analytics authentication token. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `analyticsauthtoken_wo_version`.
+
+```hcl
+variable "appflowparam_analyticsauthtoken" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_appflowparam" "tf_appflowparam" {
+  analyticsauthtoken_wo         = var.appflowparam_analyticsauthtoken
+  analyticsauthtoken_wo_version = 1
+  templaterefresh               = 200
+  flowrecordinterval            = 100
+}
+```
+
+To rotate the secret, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_appflowparam" "tf_appflowparam" {
+  analyticsauthtoken_wo         = var.appflowparam_analyticsauthtoken
+  analyticsauthtoken_wo_version = 2  # Bumped to trigger update
+  templaterefresh               = 200
+  flowrecordinterval            = 100
+}
 ```
 
 
 ## Argument Reference
 
 * `aaausername` - (Optional) Enable AppFlow AAA Username logging.
-* `analyticsauthtoken` - (Optional) Authentication token to be set by the agent.
+* `analyticsauthtoken` - (Optional, Sensitive) Authentication token to be set by the agent. The value is persisted in Terraform state (encrypted). See also `analyticsauthtoken_wo` for an ephemeral alternative.
+* `analyticsauthtoken_wo` - (Optional, Sensitive, WriteOnly) Same as `analyticsauthtoken`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `analyticsauthtoken_wo_version`. If both `analyticsauthtoken` and `analyticsauthtoken_wo` are set, `analyticsauthtoken_wo` takes precedence.
+* `analyticsauthtoken_wo_version` - (Optional) An integer version tracker for `analyticsauthtoken_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `appnamerefresh` - (Optional) Interval, in seconds, at which to send Appnames to the configured collectors. Appname refers to the name of an entity (virtual server, service, or service group) in the Citrix ADC.
 * `auditlogs` - (Optional) Enable Auditlogs to be sent to the Telemetry Agent
 * `cacheinsight` - (Optional) Flag to determine whether cache records need to be exported or not. If this flag is true and IC is enabled, cache records are exported instead of L7 HTTP records
@@ -79,4 +126,4 @@ resource "citrixadc_appflowparam" "tf_appflowparam" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appflowparam is a unique string prefixed with "tf-appflowparam-"
+* `id` - The id of the appflowparam resource. It is a unique string prefixed with `"appflowparam-config"`.

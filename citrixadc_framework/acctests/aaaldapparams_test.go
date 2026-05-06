@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAaaldapparams_basic = `
@@ -136,6 +137,118 @@ data "citrixadc_aaaldapparams" "tf_aaaldapparams" {
 	depends_on = [citrixadc_aaaldapparams.tf_aaaldapparams]
 }
 `
+
+// --- Ephemeral / Write-Only Tests for ldapbinddnpassword ---
+
+const testAccAaaldapparams_ldapbinddnpassword_step1 = `
+	variable "aaaldapparams_ldapbinddnpassword" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaaldapparams" "tf_aaaldapparams" {
+		serverip            = "10.222.74.158"
+		authtimeout         = 4
+		passwdchange        = "DISABLED"
+		ldapbinddnpassword  = var.aaaldapparams_ldapbinddnpassword
+	}
+`
+
+const testAccAaaldapparams_ldapbinddnpassword_step2 = `
+	variable "aaaldapparams_ldapbinddnpassword_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaaldapparams" "tf_aaaldapparams" {
+		serverip            = "10.222.74.158"
+		authtimeout         = 4
+		passwdchange        = "DISABLED"
+		ldapbinddnpassword  = var.aaaldapparams_ldapbinddnpassword_2
+	}
+`
+
+func TestAccAaaldapparams_ldapbinddnpassword_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_aaaldapparams_ldapbinddnpassword", "value1")
+	t.Setenv("TF_VAR_aaaldapparams_ldapbinddnpassword_2", "value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaldapparams_ldapbinddnpassword_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaldapparamsExist("citrixadc_aaaldapparams.tf_aaaldapparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_aaaldapparams", "serverip", "10.222.74.158"),
+				),
+			},
+			{
+				Config: testAccAaaldapparams_ldapbinddnpassword_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaldapparamsExist("citrixadc_aaaldapparams.tf_aaaldapparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_aaaldapparams", "serverip", "10.222.74.158"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAaaldapparams_ldapbinddnpassword_wo_step1 = `
+	variable "aaaldapparams_ldapbinddnpassword_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaaldapparams" "tf_aaaldapparams" {
+		serverip                     = "10.222.74.158"
+		authtimeout                  = 4
+		passwdchange                 = "DISABLED"
+		ldapbinddnpassword_wo        = var.aaaldapparams_ldapbinddnpassword_wo
+		ldapbinddnpassword_wo_version = 1
+	}
+`
+
+const testAccAaaldapparams_ldapbinddnpassword_wo_step2 = `
+	variable "aaaldapparams_ldapbinddnpassword_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaaldapparams" "tf_aaaldapparams" {
+		serverip                     = "10.222.74.158"
+		authtimeout                  = 4
+		passwdchange                 = "DISABLED"
+		ldapbinddnpassword_wo        = var.aaaldapparams_ldapbinddnpassword_wo_2
+		ldapbinddnpassword_wo_version = 2
+	}
+`
+
+func TestAccAaaldapparams_ldapbinddnpassword_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_aaaldapparams_ldapbinddnpassword_wo", "ephemeral_value1")
+	t.Setenv("TF_VAR_aaaldapparams_ldapbinddnpassword_wo_2", "ephemeral_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaldapparams_ldapbinddnpassword_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaldapparamsExist("citrixadc_aaaldapparams.tf_aaaldapparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_aaaldapparams", "ldapbinddnpassword_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAaaldapparams_ldapbinddnpassword_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaldapparamsExist("citrixadc_aaaldapparams.tf_aaaldapparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_aaaldapparams", "ldapbinddnpassword_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccAaaldapparamsDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

@@ -141,6 +141,110 @@ const testAccAaauserDataSource_basic = `
 	}
 `
 
+const testAccAaauser_password_step1 = `
+	variable "aaauser_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaauser" "tf_aaauser_bc" {
+		username = "tf_aaauser_bc"
+		password = var.aaauser_password
+	}
+`
+
+const testAccAaauser_password_step2 = `
+	variable "aaauser_password_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaauser" "tf_aaauser_bc" {
+		username = "tf_aaauser_bc"
+		password = var.aaauser_password_2
+	}
+`
+
+func TestAccAaauser_password_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_aaauser_password", "backcompat_pass1")
+	t.Setenv("TF_VAR_aaauser_password_2", "backcompat_pass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauserExist("citrixadc_aaauser.tf_aaauser_bc", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser.tf_aaauser_bc", "username", "tf_aaauser_bc"),
+				),
+			},
+			{
+				Config: testAccAaauser_password_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauserExist("citrixadc_aaauser.tf_aaauser_bc", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser.tf_aaauser_bc", "username", "tf_aaauser_bc"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAaauser_wo_step1 = `
+	variable "aaauser_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaauser" "tf_aaauser_wo" {
+		username           = "tf_aaauser_wo"
+		password_wo        = var.aaauser_password_wo
+		password_wo_version = 1
+	}
+`
+
+const testAccAaauser_wo_step2 = `
+	variable "aaauser_password_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaauser" "tf_aaauser_wo" {
+		username           = "tf_aaauser_wo"
+		password_wo        = var.aaauser_password_wo_2
+		password_wo_version = 2
+	}
+`
+
+func TestAccAaauser_password_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_aaauser_password_wo", "ephemeral_pass1")
+	t.Setenv("TF_VAR_aaauser_password_wo_2", "ephemeral_pass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauserExist("citrixadc_aaauser.tf_aaauser_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser.tf_aaauser_wo", "username", "tf_aaauser_wo"),
+					resource.TestCheckResourceAttr("citrixadc_aaauser.tf_aaauser_wo", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAaauser_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauserExist("citrixadc_aaauser.tf_aaauser_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser.tf_aaauser_wo", "username", "tf_aaauser_wo"),
+					resource.TestCheckResourceAttr("citrixadc_aaauser.tf_aaauser_wo", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAaauserDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
