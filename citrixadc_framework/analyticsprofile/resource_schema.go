@@ -2,13 +2,15 @@ package analyticsprofile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/analytics"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -20,6 +22,8 @@ type AnalyticsprofileResourceModel struct {
 	Id                           types.String `tfsdk:"id"`
 	Allhttpheaders               types.String `tfsdk:"allhttpheaders"`
 	Analyticsauthtoken           types.String `tfsdk:"analyticsauthtoken"`
+	AnalyticsauthtokenWo         types.String `tfsdk:"analyticsauthtoken_wo"`
+	AnalyticsauthtokenWoVersion  types.Int64  `tfsdk:"analyticsauthtoken_wo_version"`
 	Analyticsendpointcontenttype types.String `tfsdk:"analyticsendpointcontenttype"`
 	Analyticsendpointmetadata    types.String `tfsdk:"analyticsendpointmetadata"`
 	Analyticsendpointurl         types.String `tfsdk:"analyticsendpointurl"`
@@ -71,13 +75,25 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"allhttpheaders": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log all the request and response headers.",
 			},
 			"analyticsauthtoken": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.",
+			},
+			"analyticsauthtoken_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.",
+			},
+			"analyticsauthtoken_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a analyticsauthtoken_wo update.",
 			},
 			"analyticsendpointcontenttype": schema.StringAttribute{
 				Optional:    true,
@@ -96,7 +112,7 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"auditlogs": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "This option indicates the whether auditlog should be sent to the REST collector.",
 			},
 			"collectors": schema.StringAttribute{
@@ -106,7 +122,7 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"cqareporting": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log TCP CQA parameters.",
 			},
 			"dataformatfile": schema.StringAttribute{
@@ -116,32 +132,32 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"events": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "This option indicates the whether events should be sent to the REST collector.",
 			},
 			"grpcstatus": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log the gRPC status headers",
 			},
 			"httpauthentication": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log Authentication header.",
 			},
 			"httpclientsidemeasurements": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will insert a javascript into the HTTP response to collect the client side page-timings and will send the same to the configured collectors.",
 			},
 			"httpcontenttype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log content-length header.",
 			},
 			"httpcookie": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log cookie header.",
 			},
 			"httpcustomheaders": schema.ListAttribute{
@@ -152,96 +168,100 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"httpdomainname": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log domain name.",
 			},
 			"httphost": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log the Host header in appflow records",
 			},
 			"httplocation": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log location header.",
 			},
 			"httpmethod": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log the method header in appflow records",
 			},
 			"httppagetracking": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will link the embedded objects of a page together.",
 			},
 			"httpreferer": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log the referer header in appflow records",
 			},
 			"httpsetcookie": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log set-cookie header.",
 			},
 			"httpsetcookie2": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log set-cookie2 header.",
 			},
 			"httpurl": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log the URL in appflow records",
 			},
 			"httpurlquery": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log URL Query.",
 			},
 			"httpuseragent": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log User-Agent header.",
 			},
 			"httpvia": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will Via header.",
 			},
 			"httpxforwardedforheader": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log X-Forwarded-For header.",
 			},
 			"integratedcache": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log the Integrated Caching appflow records",
 			},
 			"managementlog": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "This option indicates the whether managementlog should be sent to the REST collector.",
 			},
 			"metrics": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "This option indicates the whether metrics should be sent to the REST collector.",
 			},
 			"metricsexportfrequency": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(30),
+				Computed:    true,
 				Description: "This option is for configuring the metrics export frequency in seconds, frequency value must be in [30,300] seconds range",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the analytics profile. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at\n(@), equals (=), and hyphen (-) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my appflow profile\" or 'my appflow profile').",
 			},
 			"outputmode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("avro"),
+				Computed:    true,
 				Description: "This option indicates the format of REST API POST body. It depends on the consumer of the analytics data.",
 			},
 			"schemafile": schema.StringAttribute{
@@ -251,17 +271,17 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"servemode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("Push"),
+				Computed:    true,
 				Description: "This option is for setting the mode of how data is provided",
 			},
 			"tcpburstreporting": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will log TCP burst parameters.",
 			},
 			"topn": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this topn support, the topn information of the stream identifier this profile is bound to will be exported to the analytics endpoint.",
 			},
 			"type": schema.StringAttribute{
@@ -270,15 +290,15 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"urlcategory": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will send the URL category record.",
 			},
 		},
 	}
 }
 
-func analyticsprofileGetThePayloadFromtheConfig(ctx context.Context, data *AnalyticsprofileResourceModel) analytics.Analyticsprofile {
-	tflog.Debug(ctx, "In analyticsprofileGetThePayloadFromtheConfig Function")
+func analyticsprofileGetThePayloadFromthePlan(ctx context.Context, data *AnalyticsprofileResourceModel) analytics.Analyticsprofile {
+	tflog.Debug(ctx, "In analyticsprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	analyticsprofile := analytics.Analyticsprofile{}
@@ -288,6 +308,8 @@ func analyticsprofileGetThePayloadFromtheConfig(ctx context.Context, data *Analy
 	if !data.Analyticsauthtoken.IsNull() {
 		analyticsprofile.Analyticsauthtoken = data.Analyticsauthtoken.ValueString()
 	}
+	// Skip write-only attribute: analyticsauthtoken_wo
+	// Skip version tracker attribute: analyticsauthtoken_wo_version
 	if !data.Analyticsendpointcontenttype.IsNull() {
 		analyticsprofile.Analyticsendpointcontenttype = data.Analyticsendpointcontenttype.ValueString()
 	}
@@ -326,6 +348,11 @@ func analyticsprofileGetThePayloadFromtheConfig(ctx context.Context, data *Analy
 	}
 	if !data.Httpcookie.IsNull() {
 		analyticsprofile.Httpcookie = data.Httpcookie.ValueString()
+	}
+	if !data.Httpcustomheaders.IsNull() {
+		var httpcustomheadersList []string
+		data.Httpcustomheaders.ElementsAs(ctx, &httpcustomheadersList, false)
+		analyticsprofile.Httpcustomheaders = httpcustomheadersList
 	}
 	if !data.Httpdomainname.IsNull() {
 		analyticsprofile.Httpdomainname = data.Httpdomainname.ValueString()
@@ -369,6 +396,11 @@ func analyticsprofileGetThePayloadFromtheConfig(ctx context.Context, data *Analy
 	if !data.Integratedcache.IsNull() {
 		analyticsprofile.Integratedcache = data.Integratedcache.ValueString()
 	}
+	if !data.Managementlog.IsNull() {
+		var managementlogList []string
+		data.Managementlog.ElementsAs(ctx, &managementlogList, false)
+		analyticsprofile.Managementlog = managementlogList
+	}
 	if !data.Metrics.IsNull() {
 		analyticsprofile.Metrics = data.Metrics.ValueString()
 	}
@@ -403,6 +435,19 @@ func analyticsprofileGetThePayloadFromtheConfig(ctx context.Context, data *Analy
 	return analyticsprofile
 }
 
+func analyticsprofileGetThePayloadFromtheConfig(ctx context.Context, data *AnalyticsprofileResourceModel, payload *analytics.Analyticsprofile) {
+	tflog.Debug(ctx, "In analyticsprofileGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: analyticsauthtoken_wo -> analyticsauthtoken
+	if !data.AnalyticsauthtokenWo.IsNull() {
+		analyticsauthtokenWo := data.AnalyticsauthtokenWo.ValueString()
+		if analyticsauthtokenWo != "" {
+			payload.Analyticsauthtoken = analyticsauthtokenWo
+		}
+	}
+}
+
 func analyticsprofileSetAttrFromGet(ctx context.Context, data *AnalyticsprofileResourceModel, getResponseData map[string]interface{}) *AnalyticsprofileResourceModel {
 	tflog.Debug(ctx, "In analyticsprofileSetAttrFromGet Function")
 
@@ -412,11 +457,9 @@ func analyticsprofileSetAttrFromGet(ctx context.Context, data *AnalyticsprofileR
 	} else {
 		data.Allhttpheaders = types.StringNull()
 	}
-	if val, ok := getResponseData["analyticsauthtoken"]; ok && val != nil {
-		data.Analyticsauthtoken = types.StringValue(val.(string))
-	} else {
-		data.Analyticsauthtoken = types.StringNull()
-	}
+	// analyticsauthtoken is not returned by NITRO API (secret/ephemeral) - retain from config
+	// analyticsauthtoken_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// analyticsauthtoken_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["analyticsendpointcontenttype"]; ok && val != nil {
 		data.Analyticsendpointcontenttype = types.StringValue(val.(string))
 	} else {
@@ -481,6 +524,17 @@ func analyticsprofileSetAttrFromGet(ctx context.Context, data *AnalyticsprofileR
 		data.Httpcookie = types.StringValue(val.(string))
 	} else {
 		data.Httpcookie = types.StringNull()
+	}
+	if val, ok := getResponseData["httpcustomheaders"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Httpcustomheaders = listValue
+		} else {
+			data.Httpcustomheaders = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Httpcustomheaders = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["httpdomainname"]; ok && val != nil {
 		data.Httpdomainname = types.StringValue(val.(string))
@@ -552,6 +606,17 @@ func analyticsprofileSetAttrFromGet(ctx context.Context, data *AnalyticsprofileR
 	} else {
 		data.Integratedcache = types.StringNull()
 	}
+	if val, ok := getResponseData["managementlog"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Managementlog = listValue
+		} else {
+			data.Managementlog = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Managementlog = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["metrics"]; ok && val != nil {
 		data.Metrics = types.StringValue(val.(string))
 	} else {
@@ -606,8 +671,8 @@ func analyticsprofileSetAttrFromGet(ctx context.Context, data *AnalyticsprofileR
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

@@ -168,3 +168,123 @@ func TestAccAnalyticsprofileDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccAnalyticsprofile_analyticsauthtoken_step1 = `
+	variable "analyticsprofile_analyticsauthtoken" {
+		type      = string
+		sensitive = true
+	}
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name                = "my_analyticsprofile"
+		type                = "webinsight"
+		httppagetracking    = "DISABLED"
+		httpurl             = "DISABLED"
+		analyticsauthtoken  = var.analyticsprofile_analyticsauthtoken
+	}
+`
+
+const testAccAnalyticsprofile_analyticsauthtoken_step2 = `
+	variable "analyticsprofile_analyticsauthtoken_2" {
+		type      = string
+		sensitive = true
+	}
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name                = "my_analyticsprofile"
+		type                = "webinsight"
+		httppagetracking    = "DISABLED"
+		httpurl             = "DISABLED"
+		analyticsauthtoken  = var.analyticsprofile_analyticsauthtoken_2
+	}
+`
+
+func TestAccAnalyticsprofile_analyticsauthtoken_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_analyticsprofile_analyticsauthtoken", "value1")
+	t.Setenv("TF_VAR_analyticsprofile_analyticsauthtoken_2", "value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyticsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyticsprofile_analyticsauthtoken_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyticsprofileExist("citrixadc_analyticsprofile.tf_analyticsprofile", nil),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_analyticsprofile", "name", "my_analyticsprofile"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_analyticsprofile", "type", "webinsight"),
+				),
+			},
+			{
+				Config: testAccAnalyticsprofile_analyticsauthtoken_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyticsprofileExist("citrixadc_analyticsprofile.tf_analyticsprofile", nil),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_analyticsprofile", "name", "my_analyticsprofile"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_analyticsprofile", "type", "webinsight"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAnalyticsprofile_analyticsauthtoken_wo_step1 = `
+	variable "analyticsprofile_analyticsauthtoken_wo" {
+		type      = string
+		sensitive = true
+	}
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name                          = "my_analyticsprofile"
+		type                          = "webinsight"
+		httppagetracking              = "DISABLED"
+		httpurl                       = "DISABLED"
+		analyticsauthtoken_wo         = var.analyticsprofile_analyticsauthtoken_wo
+		analyticsauthtoken_wo_version = 1
+	}
+`
+
+const testAccAnalyticsprofile_analyticsauthtoken_wo_step2 = `
+	variable "analyticsprofile_analyticsauthtoken_wo_2" {
+		type      = string
+		sensitive = true
+	}
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name                          = "my_analyticsprofile"
+		type                          = "webinsight"
+		httppagetracking              = "DISABLED"
+		httpurl                       = "DISABLED"
+		analyticsauthtoken_wo         = var.analyticsprofile_analyticsauthtoken_wo_2
+		analyticsauthtoken_wo_version = 2
+	}
+`
+
+func TestAccAnalyticsprofile_analyticsauthtoken_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_analyticsprofile_analyticsauthtoken_wo", "ephemeral_value1")
+	t.Setenv("TF_VAR_analyticsprofile_analyticsauthtoken_wo_2", "ephemeral_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyticsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyticsprofile_analyticsauthtoken_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyticsprofileExist("citrixadc_analyticsprofile.tf_analyticsprofile", nil),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_analyticsprofile", "name", "my_analyticsprofile"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_analyticsprofile", "type", "webinsight"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_analyticsprofile", "analyticsauthtoken_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAnalyticsprofile_analyticsauthtoken_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyticsprofileExist("citrixadc_analyticsprofile.tf_analyticsprofile", nil),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_analyticsprofile", "name", "my_analyticsprofile"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_analyticsprofile", "type", "webinsight"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_analyticsprofile", "analyticsauthtoken_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

@@ -145,6 +145,116 @@ const testAccAaassoprofileDataSource_basic = `
 	}
 `
 
+const testAccAaassoprofile_password_step1 = `
+	variable "aaassoprofile_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaassoprofile" "tf_aaassoprofile" {
+		name     = "myssoprofile"
+		username = "john"
+		password = var.aaassoprofile_password
+	}
+`
+
+const testAccAaassoprofile_password_step2 = `
+	variable "aaassoprofile_password_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaassoprofile" "tf_aaassoprofile" {
+		name     = "myssoprofile"
+		username = "john"
+		password = var.aaassoprofile_password_2
+	}
+`
+
+func TestAccAaassoprofile_password_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_aaassoprofile_password", "my_password1")
+	t.Setenv("TF_VAR_aaassoprofile_password_2", "my_password2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaassoprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaassoprofile_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaassoprofileExist("citrixadc_aaassoprofile.tf_aaassoprofile", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaassoprofile.tf_aaassoprofile", "name", "myssoprofile"),
+					resource.TestCheckResourceAttr("citrixadc_aaassoprofile.tf_aaassoprofile", "username", "john"),
+				),
+			},
+			{
+				Config: testAccAaassoprofile_password_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaassoprofileExist("citrixadc_aaassoprofile.tf_aaassoprofile", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaassoprofile.tf_aaassoprofile", "name", "myssoprofile"),
+					resource.TestCheckResourceAttr("citrixadc_aaassoprofile.tf_aaassoprofile", "username", "john"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAaassoprofile_wo_step1 = `
+	variable "aaassoprofile_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaassoprofile" "tf_aaassoprofile" {
+		name                 = "myssoprofile"
+		username             = "john"
+		password_wo          = var.aaassoprofile_password_wo
+		password_wo_version  = 1
+	}
+`
+
+const testAccAaassoprofile_wo_step2 = `
+	variable "aaassoprofile_password_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaassoprofile" "tf_aaassoprofile" {
+		name                 = "myssoprofile"
+		username             = "john"
+		password_wo          = var.aaassoprofile_password_wo_2
+		password_wo_version  = 2
+	}
+`
+
+func TestAccAaassoprofile_password_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_aaassoprofile_password_wo", "ephemeral_value1")
+	t.Setenv("TF_VAR_aaassoprofile_password_wo_2", "ephemeral_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaassoprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaassoprofile_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaassoprofileExist("citrixadc_aaassoprofile.tf_aaassoprofile", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaassoprofile.tf_aaassoprofile", "name", "myssoprofile"),
+					resource.TestCheckResourceAttr("citrixadc_aaassoprofile.tf_aaassoprofile", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAaassoprofile_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaassoprofileExist("citrixadc_aaassoprofile.tf_aaassoprofile", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaassoprofile.tf_aaassoprofile", "name", "myssoprofile"),
+					resource.TestCheckResourceAttr("citrixadc_aaassoprofile.tf_aaassoprofile", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAaassoprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -152,3 +152,131 @@ func TestAccAaaradiusparamsDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccAaaradiusparams_radkey_step1 = `
+	variable "aaaradiusparams_radkey" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaaradiusparams" "tf_aaaradiusparams" {
+		radkey               = var.aaaradiusparams_radkey
+		radnasip             = "ENABLED"
+		serverip             = "10.222.74.158"
+		authtimeout          = 8
+		messageauthenticator = "OFF"
+	}
+`
+
+const testAccAaaradiusparams_radkey_step2 = `
+	variable "aaaradiusparams_radkey_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaaradiusparams" "tf_aaaradiusparams" {
+		radkey               = var.aaaradiusparams_radkey_2
+		radnasip             = "DISABLED"
+		serverip             = "10.222.74.159"
+		authtimeout          = 10
+		messageauthenticator = "ON"
+	}
+`
+
+func TestAccAaaradiusparams_radkey_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_aaaradiusparams_radkey", "sslvpn")
+	t.Setenv("TF_VAR_aaaradiusparams_radkey_2", "sslvpn2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaradiusparams_radkey_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaradiusparamsExist("citrixadc_aaaradiusparams.tf_aaaradiusparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.158"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "8"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "messageauthenticator", "OFF"),
+				),
+			},
+			{
+				Config: testAccAaaradiusparams_radkey_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaradiusparamsExist("citrixadc_aaaradiusparams.tf_aaaradiusparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.159"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "messageauthenticator", "ON"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAaaradiusparams_radkey_wo_step1 = `
+	variable "aaaradiusparams_radkey_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaaradiusparams" "tf_aaaradiusparams" {
+		radkey_wo            = var.aaaradiusparams_radkey_wo
+		radkey_wo_version    = 1
+		radnasip             = "ENABLED"
+		serverip             = "10.222.74.158"
+		authtimeout          = 8
+		messageauthenticator = "OFF"
+	}
+`
+
+const testAccAaaradiusparams_radkey_wo_step2 = `
+	variable "aaaradiusparams_radkey_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_aaaradiusparams" "tf_aaaradiusparams" {
+		radkey_wo            = var.aaaradiusparams_radkey_wo_2
+		radkey_wo_version    = 2
+		radnasip             = "DISABLED"
+		serverip             = "10.222.74.159"
+		authtimeout          = 10
+		messageauthenticator = "ON"
+	}
+`
+
+func TestAccAaaradiusparams_radkey_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_aaaradiusparams_radkey_wo", "sslvpn")
+	t.Setenv("TF_VAR_aaaradiusparams_radkey_wo_2", "sslvpn2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaradiusparams_radkey_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaradiusparamsExist("citrixadc_aaaradiusparams.tf_aaaradiusparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "radkey_wo_version", "1"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.158"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "8"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "messageauthenticator", "OFF"),
+				),
+			},
+			{
+				Config: testAccAaaradiusparams_radkey_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaradiusparamsExist("citrixadc_aaaradiusparams.tf_aaaradiusparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "radkey_wo_version", "2"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.159"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "messageauthenticator", "ON"),
+				),
+			},
+		},
+	})
+}

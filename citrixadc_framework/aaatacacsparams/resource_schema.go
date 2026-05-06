@@ -26,6 +26,8 @@ type AaatacacsparamsResourceModel struct {
 	Serverip                   types.String `tfsdk:"serverip"`
 	Serverport                 types.Int64  `tfsdk:"serverport"`
 	Tacacssecret               types.String `tfsdk:"tacacssecret"`
+	TacacssecretWo             types.String `tfsdk:"tacacssecret_wo"`
+	TacacssecretWoVersion      types.Int64  `tfsdk:"tacacssecret_wo_version"`
 }
 
 func (r *AaatacacsparamsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -53,7 +55,7 @@ func (r *AaatacacsparamsResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Maximum number of seconds that the Citrix ADC waits for a response from the TACACS+ server.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -73,20 +75,32 @@ func (r *AaatacacsparamsResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(49),
+				Computed:    true,
 				Description: "Port number on which the TACACS+ server listens for connections.",
 			},
 			"tacacssecret": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Key shared between the TACACS+ server and clients. Required for allowing the Citrix ADC to communicate with the TACACS+ server.",
+			},
+			"tacacssecret_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Key shared between the TACACS+ server and clients. Required for allowing the Citrix ADC to communicate with the TACACS+ server.",
+			},
+			"tacacssecret_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a tacacssecret_wo update.",
 			},
 		},
 	}
 }
 
-func aaatacacsparamsGetThePayloadFromtheConfig(ctx context.Context, data *AaatacacsparamsResourceModel) aaa.Aaatacacsparams {
-	tflog.Debug(ctx, "In aaatacacsparamsGetThePayloadFromtheConfig Function")
+func aaatacacsparamsGetThePayloadFromthePlan(ctx context.Context, data *AaatacacsparamsResourceModel) aaa.Aaatacacsparams {
+	tflog.Debug(ctx, "In aaatacacsparamsGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaatacacsparams := aaa.Aaatacacsparams{}
@@ -117,8 +131,23 @@ func aaatacacsparamsGetThePayloadFromtheConfig(ctx context.Context, data *Aaatac
 	if !data.Tacacssecret.IsNull() {
 		aaatacacsparams.Tacacssecret = data.Tacacssecret.ValueString()
 	}
+	// Skip write-only attribute: tacacssecret_wo
+	// Skip version tracker attribute: tacacssecret_wo_version
 
 	return aaatacacsparams
+}
+
+func aaatacacsparamsGetThePayloadFromtheConfig(ctx context.Context, data *AaatacacsparamsResourceModel, payload *aaa.Aaatacacsparams) {
+	tflog.Debug(ctx, "In aaatacacsparamsGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: tacacssecret_wo -> tacacssecret
+	if !data.TacacssecretWo.IsNull() {
+		tacacssecretWo := data.TacacssecretWo.ValueString()
+		if tacacssecretWo != "" {
+			payload.Tacacssecret = tacacssecretWo
+		}
+	}
 }
 
 func aaatacacsparamsSetAttrFromGet(ctx context.Context, data *AaatacacsparamsResourceModel, getResponseData map[string]interface{}) *AaatacacsparamsResourceModel {
@@ -169,11 +198,9 @@ func aaatacacsparamsSetAttrFromGet(ctx context.Context, data *AaatacacsparamsRes
 	} else {
 		data.Serverport = types.Int64Null()
 	}
-	if val, ok := getResponseData["tacacssecret"]; ok && val != nil {
-		data.Tacacssecret = types.StringValue(val.(string))
-	} else {
-		data.Tacacssecret = types.StringNull()
-	}
+	// tacacssecret is not returned by NITRO API (secret/ephemeral) - retain from config
+	// tacacssecret_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// tacacssecret_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 
 	// Set ID for the resource
 	// Case 1: No unique attributes - static ID

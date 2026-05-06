@@ -21,6 +21,15 @@ func AnalyticsprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.",
 			},
+			"analyticsauthtoken_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.",
+			},
+			"analyticsauthtoken_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a analyticsauthtoken_wo update.",
+			},
 			"analyticsendpointcontenttype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

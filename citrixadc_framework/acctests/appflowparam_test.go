@@ -142,3 +142,139 @@ func TestAccAppflowparamDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Test backward-compatible path: using analyticsauthtoken (Sensitive attribute)
+const testAccAppflowparam_analyticsauthtoken_step1 = `
+
+	variable "appflowparam_analyticsauthtoken" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_appflowparam" "tf_appflowparam" {
+		templaterefresh    = 200
+		flowrecordinterval = 200
+		httpcookie         = "ENABLED"
+		httplocation       = "ENABLED"
+		analyticsauthtoken = var.appflowparam_analyticsauthtoken
+	}
+`
+
+// Update backward-compatible path: change analyticsauthtoken value
+const testAccAppflowparam_analyticsauthtoken_step2 = `
+
+	variable "appflowparam_analyticsauthtoken_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_appflowparam" "tf_appflowparam" {
+		templaterefresh    = 200
+		flowrecordinterval = 200
+		httpcookie         = "ENABLED"
+		httplocation       = "ENABLED"
+		analyticsauthtoken = var.appflowparam_analyticsauthtoken_2
+	}
+`
+
+func TestAccAppflowparam_analyticsauthtoken_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_appflowparam_analyticsauthtoken", "authtoken_value1")
+	t.Setenv("TF_VAR_appflowparam_analyticsauthtoken_2", "authtoken_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowparam_analyticsauthtoken_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowparamExist("citrixadc_appflowparam.tf_appflowparam", nil),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "templaterefresh", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "flowrecordinterval", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "httpcookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "httplocation", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccAppflowparam_analyticsauthtoken_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowparamExist("citrixadc_appflowparam.tf_appflowparam", nil),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "templaterefresh", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "flowrecordinterval", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "httpcookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "httplocation", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using analyticsauthtoken_wo (WriteOnly attribute) with version tracker
+const testAccAppflowparam_analyticsauthtoken_wo_step1 = `
+
+	variable "appflowparam_analyticsauthtoken_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_appflowparam" "tf_appflowparam" {
+		templaterefresh              = 200
+		flowrecordinterval           = 200
+		httpcookie                   = "ENABLED"
+		httplocation                 = "ENABLED"
+		analyticsauthtoken_wo        = var.appflowparam_analyticsauthtoken_wo
+		analyticsauthtoken_wo_version = 1
+	}
+`
+
+// Update ephemeral path: bump version to trigger update with new token
+const testAccAppflowparam_analyticsauthtoken_wo_step2 = `
+
+	variable "appflowparam_analyticsauthtoken_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_appflowparam" "tf_appflowparam" {
+		templaterefresh              = 200
+		flowrecordinterval           = 200
+		httpcookie                   = "ENABLED"
+		httplocation                 = "ENABLED"
+		analyticsauthtoken_wo        = var.appflowparam_analyticsauthtoken_wo_2
+		analyticsauthtoken_wo_version = 2
+	}
+`
+
+func TestAccAppflowparam_analyticsauthtoken_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_appflowparam_analyticsauthtoken_wo", "ephemeral_token1")
+	t.Setenv("TF_VAR_appflowparam_analyticsauthtoken_wo_2", "ephemeral_token2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowparam_analyticsauthtoken_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowparamExist("citrixadc_appflowparam.tf_appflowparam", nil),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "templaterefresh", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "flowrecordinterval", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "httpcookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "httplocation", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "analyticsauthtoken_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAppflowparam_analyticsauthtoken_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowparamExist("citrixadc_appflowparam.tf_appflowparam", nil),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "templaterefresh", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "flowrecordinterval", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "httpcookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "httplocation", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowparam.tf_appflowparam", "analyticsauthtoken_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

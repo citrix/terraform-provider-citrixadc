@@ -20,6 +20,15 @@ func AppflowparamDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Authentication token to be set by the agent.",
 			},
+			"analyticsauthtoken_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Authentication token to be set by the agent.",
+			},
+			"analyticsauthtoken_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a analyticsauthtoken_wo update.",
+			},
 			"appnamerefresh": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,

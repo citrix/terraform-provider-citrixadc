@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -17,28 +16,30 @@ import (
 
 // AaaldapparamsResourceModel describes the resource data model.
 type AaaldapparamsResourceModel struct {
-	Id                         types.String `tfsdk:"id"`
-	Authtimeout                types.Int64  `tfsdk:"authtimeout"`
-	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
-	Groupattrname              types.String `tfsdk:"groupattrname"`
-	Groupnameidentifier        types.String `tfsdk:"groupnameidentifier"`
-	Groupsearchattribute       types.String `tfsdk:"groupsearchattribute"`
-	Groupsearchfilter          types.String `tfsdk:"groupsearchfilter"`
-	Groupsearchsubattribute    types.String `tfsdk:"groupsearchsubattribute"`
-	Ldapbase                   types.String `tfsdk:"ldapbase"`
-	Ldapbinddn                 types.String `tfsdk:"ldapbinddn"`
-	Ldapbinddnpassword         types.String `tfsdk:"ldapbinddnpassword"`
-	Ldaploginname              types.String `tfsdk:"ldaploginname"`
-	Maxnestinglevel            types.Int64  `tfsdk:"maxnestinglevel"`
-	Nestedgroupextraction      types.String `tfsdk:"nestedgroupextraction"`
-	Passwdchange               types.String `tfsdk:"passwdchange"`
-	Searchfilter               types.String `tfsdk:"searchfilter"`
-	Sectype                    types.String `tfsdk:"sectype"`
-	Serverip                   types.String `tfsdk:"serverip"`
-	Serverport                 types.Int64  `tfsdk:"serverport"`
-	Ssonameattribute           types.String `tfsdk:"ssonameattribute"`
-	Subattributename           types.String `tfsdk:"subattributename"`
-	Svrtype                    types.String `tfsdk:"svrtype"`
+	Id                          types.String `tfsdk:"id"`
+	Authtimeout                 types.Int64  `tfsdk:"authtimeout"`
+	Defaultauthenticationgroup  types.String `tfsdk:"defaultauthenticationgroup"`
+	Groupattrname               types.String `tfsdk:"groupattrname"`
+	Groupnameidentifier         types.String `tfsdk:"groupnameidentifier"`
+	Groupsearchattribute        types.String `tfsdk:"groupsearchattribute"`
+	Groupsearchfilter           types.String `tfsdk:"groupsearchfilter"`
+	Groupsearchsubattribute     types.String `tfsdk:"groupsearchsubattribute"`
+	Ldapbase                    types.String `tfsdk:"ldapbase"`
+	Ldapbinddn                  types.String `tfsdk:"ldapbinddn"`
+	Ldapbinddnpassword          types.String `tfsdk:"ldapbinddnpassword"`
+	LdapbinddnpasswordWo        types.String `tfsdk:"ldapbinddnpassword_wo"`
+	LdapbinddnpasswordWoVersion types.Int64  `tfsdk:"ldapbinddnpassword_wo_version"`
+	Ldaploginname               types.String `tfsdk:"ldaploginname"`
+	Maxnestinglevel             types.Int64  `tfsdk:"maxnestinglevel"`
+	Nestedgroupextraction       types.String `tfsdk:"nestedgroupextraction"`
+	Passwdchange                types.String `tfsdk:"passwdchange"`
+	Searchfilter                types.String `tfsdk:"searchfilter"`
+	Sectype                     types.String `tfsdk:"sectype"`
+	Serverip                    types.String `tfsdk:"serverip"`
+	Serverport                  types.Int64  `tfsdk:"serverport"`
+	Ssonameattribute            types.String `tfsdk:"ssonameattribute"`
+	Subattributename            types.String `tfsdk:"subattributename"`
+	Svrtype                     types.String `tfsdk:"svrtype"`
 }
 
 func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -51,7 +52,7 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Maximum number of seconds that the Citrix ADC waits for a response from the LDAP server.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -96,8 +97,20 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"ldapbinddnpassword": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Password for binding to the LDAP server.",
+			},
+			"ldapbinddnpassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password for binding to the LDAP server.",
+			},
+			"ldapbinddnpassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a ldapbinddnpassword_wo update.",
 			},
 			"ldaploginname": schema.StringAttribute{
 				Optional:    true,
@@ -106,7 +119,7 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"maxnestinglevel": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2),
+				Computed:    true,
 				Description: "Number of levels up to which the system can query nested LDAP groups.",
 			},
 			"nestedgroupextraction": schema.StringAttribute{
@@ -116,7 +129,7 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"passwdchange": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Accept password change requests.",
 			},
 			"searchfilter": schema.StringAttribute{
@@ -126,7 +139,7 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"sectype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("TLS"),
+				Computed:    true,
 				Description: "Type of security used for communications between the Citrix ADC and the LDAP server. For the PLAINTEXT setting, no encryption is required.",
 			},
 			"serverip": schema.StringAttribute{
@@ -136,7 +149,7 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(389),
+				Computed:    true,
 				Description: "Port number on which the LDAP server listens for connections.",
 			},
 			"ssonameattribute": schema.StringAttribute{
@@ -151,15 +164,15 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"svrtype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("AAA_LDAP_SERVER_TYPE_DEFAULT"),
+				Computed:    true,
 				Description: "The type of LDAP server.",
 			},
 		},
 	}
 }
 
-func aaaldapparamsGetThePayloadFromtheConfig(ctx context.Context, data *AaaldapparamsResourceModel) aaa.Aaaldapparams {
-	tflog.Debug(ctx, "In aaaldapparamsGetThePayloadFromtheConfig Function")
+func aaaldapparamsGetThePayloadFromthePlan(ctx context.Context, data *AaaldapparamsResourceModel) aaa.Aaaldapparams {
+	tflog.Debug(ctx, "In aaaldapparamsGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaaldapparams := aaa.Aaaldapparams{}
@@ -193,6 +206,8 @@ func aaaldapparamsGetThePayloadFromtheConfig(ctx context.Context, data *Aaaldapp
 	if !data.Ldapbinddnpassword.IsNull() {
 		aaaldapparams.Ldapbinddnpassword = data.Ldapbinddnpassword.ValueString()
 	}
+	// Skip write-only attribute: ldapbinddnpassword_wo
+	// Skip version tracker attribute: ldapbinddnpassword_wo_version
 	if !data.Ldaploginname.IsNull() {
 		aaaldapparams.Ldaploginname = data.Ldaploginname.ValueString()
 	}
@@ -228,6 +243,19 @@ func aaaldapparamsGetThePayloadFromtheConfig(ctx context.Context, data *Aaaldapp
 	}
 
 	return aaaldapparams
+}
+
+func aaaldapparamsGetThePayloadFromtheConfig(ctx context.Context, data *AaaldapparamsResourceModel, payload *aaa.Aaaldapparams) {
+	tflog.Debug(ctx, "In aaaldapparamsGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: ldapbinddnpassword_wo -> ldapbinddnpassword
+	if !data.LdapbinddnpasswordWo.IsNull() {
+		ldapbinddnpasswordWo := data.LdapbinddnpasswordWo.ValueString()
+		if ldapbinddnpasswordWo != "" {
+			payload.Ldapbinddnpassword = ldapbinddnpasswordWo
+		}
+	}
 }
 
 func aaaldapparamsSetAttrFromGet(ctx context.Context, data *AaaldapparamsResourceModel, getResponseData map[string]interface{}) *AaaldapparamsResourceModel {
@@ -281,11 +309,9 @@ func aaaldapparamsSetAttrFromGet(ctx context.Context, data *AaaldapparamsResourc
 	} else {
 		data.Ldapbinddn = types.StringNull()
 	}
-	if val, ok := getResponseData["ldapbinddnpassword"]; ok && val != nil {
-		data.Ldapbinddnpassword = types.StringValue(val.(string))
-	} else {
-		data.Ldapbinddnpassword = types.StringNull()
-	}
+	// ldapbinddnpassword is not returned by NITRO API (secret/ephemeral) - retain from config
+	// ldapbinddnpassword_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// ldapbinddnpassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["ldaploginname"]; ok && val != nil {
 		data.Ldaploginname = types.StringValue(val.(string))
 	} else {

@@ -34,6 +34,15 @@ func AaakcdaccountDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password for Delegated User.",
 			},
+			"kcdpassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Password for Delegated User.",
+			},
+			"kcdpassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a kcdpassword_wo update.",
+			},
 			"keytab": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

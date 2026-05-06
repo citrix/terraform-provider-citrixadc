@@ -19,6 +19,15 @@ func AaassoprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password with which the user logs on. Required for Single sign on to  external server.",
 			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Password with which the user logs on. Required for Single sign on to  external server.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a password_wo update.",
+			},
 			"username": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

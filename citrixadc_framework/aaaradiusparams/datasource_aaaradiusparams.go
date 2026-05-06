@@ -38,7 +38,6 @@ func (d *AaaradiusparamsDataSource) Read(ctx context.Context, req datasource.Rea
 	var data AaaradiusparamsResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

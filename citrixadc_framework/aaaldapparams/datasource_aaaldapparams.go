@@ -38,7 +38,6 @@ func (d *AaaldapparamsDataSource) Read(ctx context.Context, req datasource.ReadR
 	var data AaaldapparamsResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
