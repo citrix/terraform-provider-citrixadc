@@ -152,6 +152,126 @@ const testAccAuthenticationnegotiateactionDataSource_basic = `
 	}
 `
 
+const testAccAuthenticationnegotiateaction_domainuserpasswd_step1 = `
+	variable "authenticationnegotiateaction_domainuserpasswd" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction_bc" {
+		name                       = "tf_negotiateaction_bc"
+		domain                     = "DomainName"
+		domainuser                 = "username"
+		domainuserpasswd           = var.authenticationnegotiateaction_domainuserpasswd
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "grpname"
+	}
+`
+
+const testAccAuthenticationnegotiateaction_domainuserpasswd_step2 = `
+	variable "authenticationnegotiateaction_domainuserpasswd_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction_bc" {
+		name                       = "tf_negotiateaction_bc"
+		domain                     = "DomainName"
+		domainuser                 = "username"
+		domainuserpasswd           = var.authenticationnegotiateaction_domainuserpasswd_2
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "grpname"
+	}
+`
+
+func TestAccAuthenticationnegotiateaction_domainuserpasswd_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationnegotiateaction_domainuserpasswd", "password1")
+	t.Setenv("TF_VAR_authenticationnegotiateaction_domainuserpasswd_2", "password2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationnegotiateactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationnegotiateaction_domainuserpasswd_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationnegotiateactionExist("citrixadc_authenticationnegotiateaction.tf_negotiateaction_bc", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationnegotiateaction.tf_negotiateaction_bc", "name", "tf_negotiateaction_bc"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationnegotiateaction.tf_negotiateaction_bc", "domainuser", "username"),
+				),
+			},
+			{
+				Config: testAccAuthenticationnegotiateaction_domainuserpasswd_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationnegotiateactionExist("citrixadc_authenticationnegotiateaction.tf_negotiateaction_bc", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationnegotiateaction.tf_negotiateaction_bc", "name", "tf_negotiateaction_bc"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationnegotiateaction.tf_negotiateaction_bc", "domainuser", "username"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuthenticationnegotiateaction_domainuserpasswd_wo_step1 = `
+	variable "authenticationnegotiateaction_domainuserpasswd_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction_wo" {
+		name                       = "tf_negotiateaction_wo"
+		domain                     = "DomainName"
+		domainuser                 = "username"
+		domainuserpasswd_wo        = var.authenticationnegotiateaction_domainuserpasswd_wo
+		domainuserpasswd_wo_version = 1
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "grpname"
+	}
+`
+
+const testAccAuthenticationnegotiateaction_domainuserpasswd_wo_step2 = `
+	variable "authenticationnegotiateaction_domainuserpasswd_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction_wo" {
+		name                       = "tf_negotiateaction_wo"
+		domain                     = "DomainName"
+		domainuser                 = "username"
+		domainuserpasswd_wo        = var.authenticationnegotiateaction_domainuserpasswd_wo_2
+		domainuserpasswd_wo_version = 2
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "grpname"
+	}
+`
+
+func TestAccAuthenticationnegotiateaction_domainuserpasswd_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationnegotiateaction_domainuserpasswd_wo", "ephemeral_value1")
+	t.Setenv("TF_VAR_authenticationnegotiateaction_domainuserpasswd_wo_2", "ephemeral_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationnegotiateactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationnegotiateaction_domainuserpasswd_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationnegotiateactionExist("citrixadc_authenticationnegotiateaction.tf_negotiateaction_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationnegotiateaction.tf_negotiateaction_wo", "domainuserpasswd_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationnegotiateaction_domainuserpasswd_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationnegotiateactionExist("citrixadc_authenticationnegotiateaction.tf_negotiateaction_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationnegotiateaction.tf_negotiateaction_wo", "domainuserpasswd_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationnegotiateactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -164,3 +164,115 @@ data "citrixadc_authenticationdfaaction" "tf_dfaaction_ds" {
 }
 
 `
+
+const testAccAuthenticationdfaaction_passphrase_step1 = `
+    variable "authenticationdfaaction_passphrase" {
+      type      = string
+      sensitive = true
+    }
+
+    resource "citrixadc_authenticationdfaaction" "tf_dfaaction_bc" {
+        name       = "tf_dfaaction_bc"
+        serverurl  = "https://example.com/"
+        clientid   = "cliId"
+        passphrase = var.authenticationdfaaction_passphrase
+    }
+`
+
+const testAccAuthenticationdfaaction_passphrase_step2 = `
+    variable "authenticationdfaaction_passphrase_2" {
+      type      = string
+      sensitive = true
+    }
+
+    resource "citrixadc_authenticationdfaaction" "tf_dfaaction_bc" {
+        name       = "tf_dfaaction_bc"
+        serverurl  = "https://example.com/"
+        clientid   = "cliId"
+        passphrase = var.authenticationdfaaction_passphrase_2
+    }
+`
+
+func TestAccAuthenticationdfaaction_passphrase_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationdfaaction_passphrase", "secret1")
+	t.Setenv("TF_VAR_authenticationdfaaction_passphrase_2", "secret2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationdfaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationdfaaction_passphrase_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationdfaactionExist("citrixadc_authenticationdfaaction.tf_dfaaction_bc", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationdfaaction.tf_dfaaction_bc", "name", "tf_dfaaction_bc"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationdfaaction.tf_dfaaction_bc", "clientid", "cliId"),
+				),
+			},
+			{
+				Config: testAccAuthenticationdfaaction_passphrase_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationdfaactionExist("citrixadc_authenticationdfaaction.tf_dfaaction_bc", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationdfaaction.tf_dfaaction_bc", "name", "tf_dfaaction_bc"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationdfaaction.tf_dfaaction_bc", "clientid", "cliId"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuthenticationdfaaction_wo_step1 = `
+    variable "authenticationdfaaction_passphrase_wo" {
+      type      = string
+      sensitive = true
+    }
+
+    resource "citrixadc_authenticationdfaaction" "tf_dfaaction_wo" {
+        name                 = "tf_dfaaction_wo"
+        serverurl            = "https://example.com/"
+        clientid             = "cliId"
+        passphrase_wo        = var.authenticationdfaaction_passphrase_wo
+        passphrase_wo_version = 1
+    }
+`
+
+const testAccAuthenticationdfaaction_wo_step2 = `
+    variable "authenticationdfaaction_passphrase_wo_2" {
+      type      = string
+      sensitive = true
+    }
+
+    resource "citrixadc_authenticationdfaaction" "tf_dfaaction_wo" {
+        name                 = "tf_dfaaction_wo"
+        serverurl            = "https://example.com/"
+        clientid             = "cliId"
+        passphrase_wo        = var.authenticationdfaaction_passphrase_wo_2
+        passphrase_wo_version = 2
+    }
+`
+
+func TestAccAuthenticationdfaaction_passphrase_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationdfaaction_passphrase_wo", "ephemeral_value1")
+	t.Setenv("TF_VAR_authenticationdfaaction_passphrase_wo_2", "ephemeral_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationdfaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationdfaaction_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationdfaactionExist("citrixadc_authenticationdfaaction.tf_dfaaction_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationdfaaction.tf_dfaaction_wo", "passphrase_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationdfaaction_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationdfaactionExist("citrixadc_authenticationdfaaction.tf_dfaaction_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationdfaaction.tf_dfaaction_wo", "passphrase_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

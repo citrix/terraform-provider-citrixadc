@@ -25,6 +25,15 @@ func NsencryptionkeyDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The hex-encoded key value. The length is determined by the cipher method:\n   RC4    - 16 bytes\n   DES    -  8 bytes (all modes)\n   DES3   - 24 bytes (all modes)\n   AES128 - 16 bytes (all modes)\n   AES192 - 24 bytes (all modes)\n   AES256 - 32 bytes (all modes)\nNote that the keyValue will be encrypted when it it is saved.\n\nThere is a special key value AUTO which generates a new random key for the specified method. This kind of key is\nintended for use cases where the NetScaler both encrypts and decrypts the same data, such an HTTP header.",
 			},
+			"keyvalue_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "The hex-encoded key value. The length is determined by the cipher method:\n   RC4    - 16 bytes\n   DES    -  8 bytes (all modes)\n   DES3   - 24 bytes (all modes)\n   AES128 - 16 bytes (all modes)\n   AES192 - 24 bytes (all modes)\n   AES256 - 32 bytes (all modes)\nNote that the keyValue will be encrypted when it it is saved.\n\nThere is a special key value AUTO which generates a new random key for the specified method. This kind of key is\nintended for use cases where the NetScaler both encrypts and decrypts the same data, such an HTTP header.",
+			},
+			"keyvalue_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a keyvalue_wo update.",
+			},
 			"method": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

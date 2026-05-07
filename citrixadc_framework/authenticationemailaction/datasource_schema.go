@@ -34,6 +34,15 @@ func AuthenticationemailactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password/Clientsecret to use when authenticating to the server.",
 			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Password/Clientsecret to use when authenticating to the server.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a password_wo update.",
+			},
 			"serverurl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

@@ -986,6 +986,19 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		appflowparam.NewAppflowparamResource,
 		appfwsettings.NewAppfwsettingsResource,
 		auditsyslogaction.NewAuditsyslogactionResource,
+		authenticationcaptchaaction.NewAuthenticationcaptchaactionResource,
+		authenticationdfaaction.NewAuthenticationdfaactionResource,
+		authenticationemailaction.NewAuthenticationemailactionResource,
+		authenticationnegotiateaction.NewAuthenticationnegotiateactionResource,
+		authenticationoauthaction.NewAuthenticationoauthactionResource,
+		authenticationoauthidpprofile.NewAuthenticationoauthidpprofileResource,
+		authenticationpushservice.NewAuthenticationpushserviceResource,
+		autoscaleprofile.NewAutoscaleprofileResource,
+		botsettings.NewBotsettingsResource,
+		gslbsite.NewGslbsiteResource,
+		lbprofile.NewLbprofileResource,
+		nsencryptionkey.NewNsencryptionkeyResource,
+		nshmackey.NewNshmackeyResource,
 	}
 }
 

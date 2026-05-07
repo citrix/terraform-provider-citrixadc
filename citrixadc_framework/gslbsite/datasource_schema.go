@@ -76,6 +76,15 @@ func GslbsiteDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password to be used for mep communication between gslb site nodes.",
 			},
+			"sitepassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Password to be used for mep communication between gslb site nodes.",
+			},
+			"sitepassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a sitepassword_wo update.",
+			},
 			"sitetype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

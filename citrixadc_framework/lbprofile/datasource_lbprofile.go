@@ -38,7 +38,6 @@ func (d *LbprofileDataSource) Read(ctx context.Context, req datasource.ReadReque
 	var data LbprofileResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -2,11 +2,15 @@ package authenticationnegotiateaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -18,6 +22,8 @@ type AuthenticationnegotiateactionResourceModel struct {
 	Domain                     types.String `tfsdk:"domain"`
 	Domainuser                 types.String `tfsdk:"domainuser"`
 	Domainuserpasswd           types.String `tfsdk:"domainuserpasswd"`
+	DomainuserpasswdWo         types.String `tfsdk:"domainuserpasswd_wo"`
+	DomainuserpasswdWoVersion  types.Int64  `tfsdk:"domainuserpasswd_wo_version"`
 	Keytab                     types.String `tfsdk:"keytab"`
 	Name                       types.String `tfsdk:"name"`
 	Ntlmpath                   types.String `tfsdk:"ntlmpath"`
@@ -49,8 +55,20 @@ func (r *AuthenticationnegotiateactionResource) Schema(ctx context.Context, req 
 			},
 			"domainuserpasswd": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Password of the account that is mapped to the Citrix ADC principal.",
+			},
+			"domainuserpasswd_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password of the account that is mapped to the Citrix ADC principal.",
+			},
+			"domainuserpasswd_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a domainuserpasswd_wo update.",
 			},
 			"keytab": schema.StringAttribute{
 				Optional:    true,
@@ -58,7 +76,10 @@ func (r *AuthenticationnegotiateactionResource) Schema(ctx context.Context, req 
 				Description: "The path to the keytab file that is used to decrypt kerberos tickets presented to Citrix ADC. If keytab is not available, domain/username/password can be specified in the negotiate action configuration",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the AD KDC server profile (negotiate action).\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after AD KDC server profile is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication action\" or 'my authentication action').",
 			},
 			"ntlmpath": schema.StringAttribute{
@@ -75,37 +96,52 @@ func (r *AuthenticationnegotiateactionResource) Schema(ctx context.Context, req 
 	}
 }
 
-func authenticationnegotiateactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationnegotiateactionResourceModel) authentication.Authenticationnegotiateaction {
-	tflog.Debug(ctx, "In authenticationnegotiateactionGetThePayloadFromtheConfig Function")
+func authenticationnegotiateactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationnegotiateactionResourceModel) authentication.Authenticationnegotiateaction {
+	tflog.Debug(ctx, "In authenticationnegotiateactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationnegotiateaction := authentication.Authenticationnegotiateaction{}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationnegotiateaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Domain.IsNull() {
+	if !data.Domain.IsNull() && !data.Domain.IsUnknown() {
 		authenticationnegotiateaction.Domain = data.Domain.ValueString()
 	}
-	if !data.Domainuser.IsNull() {
+	if !data.Domainuser.IsNull() && !data.Domainuser.IsUnknown() {
 		authenticationnegotiateaction.Domainuser = data.Domainuser.ValueString()
 	}
-	if !data.Domainuserpasswd.IsNull() {
+	if !data.Domainuserpasswd.IsNull() && !data.Domainuserpasswd.IsUnknown() {
 		authenticationnegotiateaction.Domainuserpasswd = data.Domainuserpasswd.ValueString()
 	}
-	if !data.Keytab.IsNull() {
+	// Skip write-only attribute: domainuserpasswd_wo
+	// Skip version tracker attribute: domainuserpasswd_wo_version
+	if !data.Keytab.IsNull() && !data.Keytab.IsUnknown() {
 		authenticationnegotiateaction.Keytab = data.Keytab.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationnegotiateaction.Name = data.Name.ValueString()
 	}
-	if !data.Ntlmpath.IsNull() {
+	if !data.Ntlmpath.IsNull() && !data.Ntlmpath.IsUnknown() {
 		authenticationnegotiateaction.Ntlmpath = data.Ntlmpath.ValueString()
 	}
-	if !data.Ou.IsNull() {
+	if !data.Ou.IsNull() && !data.Ou.IsUnknown() {
 		authenticationnegotiateaction.Ou = data.Ou.ValueString()
 	}
 
 	return authenticationnegotiateaction
+}
+
+func authenticationnegotiateactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationnegotiateactionResourceModel, payload *authentication.Authenticationnegotiateaction) {
+	tflog.Debug(ctx, "In authenticationnegotiateactionGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: domainuserpasswd_wo -> domainuserpasswd
+	if !data.DomainuserpasswdWo.IsNull() {
+		domainuserpasswdWo := data.DomainuserpasswdWo.ValueString()
+		if domainuserpasswdWo != "" {
+			payload.Domainuserpasswd = domainuserpasswdWo
+		}
+	}
 }
 
 func authenticationnegotiateactionSetAttrFromGet(ctx context.Context, data *AuthenticationnegotiateactionResourceModel, getResponseData map[string]interface{}) *AuthenticationnegotiateactionResourceModel {
@@ -127,11 +163,9 @@ func authenticationnegotiateactionSetAttrFromGet(ctx context.Context, data *Auth
 	} else {
 		data.Domainuser = types.StringNull()
 	}
-	if val, ok := getResponseData["domainuserpasswd"]; ok && val != nil {
-		data.Domainuserpasswd = types.StringValue(val.(string))
-	} else {
-		data.Domainuserpasswd = types.StringNull()
-	}
+	// domainuserpasswd is not returned by NITRO API (secret/ephemeral) - retain from config
+	// domainuserpasswd_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// domainuserpasswd_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["keytab"]; ok && val != nil {
 		data.Keytab = types.StringValue(val.(string))
 	} else {
@@ -154,8 +188,8 @@ func authenticationnegotiateactionSetAttrFromGet(ctx context.Context, data *Auth
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

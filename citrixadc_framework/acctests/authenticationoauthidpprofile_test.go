@@ -162,3 +162,127 @@ func TestAccAuthenticationoauthidpprofileDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Test backward-compatible path: using clientsecret (Sensitive attribute)
+const testAccAuthenticationoauthidpprofile_clientsecret_step1 = `
+
+	variable "authenticationoauthidpprofile_clientsecret" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationoauthidpprofile" "test" {
+		name         = "tf_idpprofile_compat"
+		clientid     = "cliId_compat"
+		clientsecret = var.authenticationoauthidpprofile_clientsecret
+		redirecturl  = "http://www.example.com/compat/"
+	}
+`
+
+// Update backward-compatible path: change clientsecret value
+const testAccAuthenticationoauthidpprofile_clientsecret_step2 = `
+
+	variable "authenticationoauthidpprofile_clientsecret_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationoauthidpprofile" "test" {
+		name         = "tf_idpprofile_compat"
+		clientid     = "cliId_compat"
+		clientsecret = var.authenticationoauthidpprofile_clientsecret_2
+		redirecturl  = "http://www.example.com/compat/"
+	}
+`
+
+func TestAccAuthenticationoauthidpprofile_clientsecret_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationoauthidpprofile_clientsecret", "secret_value1")
+	t.Setenv("TF_VAR_authenticationoauthidpprofile_clientsecret_2", "secret_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthidpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationoauthidpprofile_clientsecret_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthidpprofileExist("citrixadc_authenticationoauthidpprofile.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.test", "name", "tf_idpprofile_compat"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.test", "clientid", "cliId_compat"),
+				),
+			},
+			{
+				Config: testAccAuthenticationoauthidpprofile_clientsecret_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthidpprofileExist("citrixadc_authenticationoauthidpprofile.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.test", "name", "tf_idpprofile_compat"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.test", "clientid", "cliId_compat"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using clientsecret_wo (WriteOnly attribute) with version tracker
+const testAccAuthenticationoauthidpprofile_clientsecret_wo_step1 = `
+
+	variable "authenticationoauthidpprofile_clientsecret_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationoauthidpprofile" "test" {
+		name                    = "tf_idpprofile_wo"
+		clientid                = "cliId_wo"
+		clientsecret_wo         = var.authenticationoauthidpprofile_clientsecret_wo
+		clientsecret_wo_version = 1
+		redirecturl             = "http://www.example.com/wo/"
+	}
+`
+
+// Update ephemeral path: bump version to trigger update with new secret
+const testAccAuthenticationoauthidpprofile_clientsecret_wo_step2 = `
+
+	variable "authenticationoauthidpprofile_clientsecret_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationoauthidpprofile" "test" {
+		name                    = "tf_idpprofile_wo"
+		clientid                = "cliId_wo"
+		clientsecret_wo         = var.authenticationoauthidpprofile_clientsecret_wo_2
+		clientsecret_wo_version = 2
+		redirecturl             = "http://www.example.com/wo/"
+	}
+`
+
+func TestAccAuthenticationoauthidpprofile_clientsecret_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationoauthidpprofile_clientsecret_wo", "ephemeral_secret1")
+	t.Setenv("TF_VAR_authenticationoauthidpprofile_clientsecret_wo_2", "ephemeral_secret2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthidpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationoauthidpprofile_clientsecret_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthidpprofileExist("citrixadc_authenticationoauthidpprofile.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.test", "name", "tf_idpprofile_wo"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.test", "clientid", "cliId_wo"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.test", "clientsecret_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationoauthidpprofile_clientsecret_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthidpprofileExist("citrixadc_authenticationoauthidpprofile.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.test", "name", "tf_idpprofile_wo"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.test", "clientid", "cliId_wo"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.test", "clientsecret_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

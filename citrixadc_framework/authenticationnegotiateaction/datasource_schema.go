@@ -30,6 +30,15 @@ func AuthenticationnegotiateactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password of the account that is mapped to the Citrix ADC principal.",
 			},
+			"domainuserpasswd_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Password of the account that is mapped to the Citrix ADC principal.",
+			},
+			"domainuserpasswd_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a domainuserpasswd_wo update.",
+			},
 			"keytab": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

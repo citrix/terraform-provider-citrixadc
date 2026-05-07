@@ -2,13 +2,15 @@ package authenticationoauthaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -43,6 +45,8 @@ type AuthenticationoauthactionResourceModel struct {
 	Certfilepath               types.String `tfsdk:"certfilepath"`
 	Clientid                   types.String `tfsdk:"clientid"`
 	Clientsecret               types.String `tfsdk:"clientsecret"`
+	ClientsecretWo             types.String `tfsdk:"clientsecret_wo"`
+	ClientsecretWoVersion      types.Int64  `tfsdk:"clientsecret_wo_version"`
 	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
 	Granttype                  types.String `tfsdk:"granttype"`
 	Graphendpoint              types.String `tfsdk:"graphendpoint"`
@@ -77,6 +81,7 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			"allowedalgorithms": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Multivalued option to specify allowed token verification algorithms.",
 			},
 			"attribute1": schema.StringAttribute{
@@ -171,7 +176,7 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			},
 			"authentication": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "If authentication is disabled, password is not sent in the request.",
 			},
 			"authorizationendpoint": schema.StringAttribute{
@@ -196,8 +201,20 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			},
 			"clientsecret": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Secret string established by user and authorization server",
+			},
+			"clientsecret_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Secret string established by user and authorization server",
+			},
+			"clientsecret_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a clientsecret_wo update.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
 				Optional:    true,
@@ -206,7 +223,7 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			},
 			"granttype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("CODE"),
+				Computed:    true,
 				Description: "Grant type support. value can be code or password",
 			},
 			"graphendpoint": schema.StringAttribute{
@@ -240,7 +257,10 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 				Description: "Well-known configuration endpoint of the Authorization Server. Citrix ADC fetches server details from this endpoint.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the OAuth Authentication action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the profile is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication action\" or 'my authentication action').",
 			},
 			"oauthmiscflags": schema.ListAttribute{
@@ -251,17 +271,17 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			},
 			"oauthtype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("GENERIC"),
+				Computed:    true,
 				Description: "Type of the OAuth implementation. Default value is generic implementation that is applicable for most deployments.",
 			},
 			"pkce": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Option to enable/disable PKCE flow during authentication.",
 			},
 			"refreshinterval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1440),
+				Computed:    true,
 				Description: "Interval at which services are monitored for necessary configuration.",
 			},
 			"requestattribute": schema.StringAttribute{
@@ -276,7 +296,7 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			},
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(5),
+				Computed:    true,
 				Description: "This option specifies the allowed clock skew in number of minutes that Citrix ADC allows on an incoming token. For example, if skewTime is 10, then token would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.",
 			},
 			"tenantid": schema.StringAttribute{
@@ -291,7 +311,7 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			},
 			"tokenendpointauthmethod": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("client_secret_post"),
+				Computed:    true,
 				Description: "Option to select the variant of token authentication method. This method is used while exchanging code with IdP.",
 			},
 			"userinfourl": schema.StringAttribute{
@@ -308,151 +328,187 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 	}
 }
 
-func authenticationoauthactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationoauthactionResourceModel) authentication.Authenticationoauthaction {
-	tflog.Debug(ctx, "In authenticationoauthactionGetThePayloadFromtheConfig Function")
+func authenticationoauthactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationoauthactionResourceModel) authentication.Authenticationoauthaction {
+	tflog.Debug(ctx, "In authenticationoauthactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationoauthaction := authentication.Authenticationoauthaction{}
-	if !data.Attribute1.IsNull() {
+	if !data.Allowedalgorithms.IsNull() && !data.Allowedalgorithms.IsUnknown() {
+		var allowedalgorithmsList []string
+		data.Allowedalgorithms.ElementsAs(ctx, &allowedalgorithmsList, false)
+		authenticationoauthaction.Allowedalgorithms = allowedalgorithmsList
+	}
+	if !data.Attribute1.IsNull() && !data.Attribute1.IsUnknown() {
 		authenticationoauthaction.Attribute1 = data.Attribute1.ValueString()
 	}
-	if !data.Attribute10.IsNull() {
+	if !data.Attribute10.IsNull() && !data.Attribute10.IsUnknown() {
 		authenticationoauthaction.Attribute10 = data.Attribute10.ValueString()
 	}
-	if !data.Attribute11.IsNull() {
+	if !data.Attribute11.IsNull() && !data.Attribute11.IsUnknown() {
 		authenticationoauthaction.Attribute11 = data.Attribute11.ValueString()
 	}
-	if !data.Attribute12.IsNull() {
+	if !data.Attribute12.IsNull() && !data.Attribute12.IsUnknown() {
 		authenticationoauthaction.Attribute12 = data.Attribute12.ValueString()
 	}
-	if !data.Attribute13.IsNull() {
+	if !data.Attribute13.IsNull() && !data.Attribute13.IsUnknown() {
 		authenticationoauthaction.Attribute13 = data.Attribute13.ValueString()
 	}
-	if !data.Attribute14.IsNull() {
+	if !data.Attribute14.IsNull() && !data.Attribute14.IsUnknown() {
 		authenticationoauthaction.Attribute14 = data.Attribute14.ValueString()
 	}
-	if !data.Attribute15.IsNull() {
+	if !data.Attribute15.IsNull() && !data.Attribute15.IsUnknown() {
 		authenticationoauthaction.Attribute15 = data.Attribute15.ValueString()
 	}
-	if !data.Attribute16.IsNull() {
+	if !data.Attribute16.IsNull() && !data.Attribute16.IsUnknown() {
 		authenticationoauthaction.Attribute16 = data.Attribute16.ValueString()
 	}
-	if !data.Attribute2.IsNull() {
+	if !data.Attribute2.IsNull() && !data.Attribute2.IsUnknown() {
 		authenticationoauthaction.Attribute2 = data.Attribute2.ValueString()
 	}
-	if !data.Attribute3.IsNull() {
+	if !data.Attribute3.IsNull() && !data.Attribute3.IsUnknown() {
 		authenticationoauthaction.Attribute3 = data.Attribute3.ValueString()
 	}
-	if !data.Attribute4.IsNull() {
+	if !data.Attribute4.IsNull() && !data.Attribute4.IsUnknown() {
 		authenticationoauthaction.Attribute4 = data.Attribute4.ValueString()
 	}
-	if !data.Attribute5.IsNull() {
+	if !data.Attribute5.IsNull() && !data.Attribute5.IsUnknown() {
 		authenticationoauthaction.Attribute5 = data.Attribute5.ValueString()
 	}
-	if !data.Attribute6.IsNull() {
+	if !data.Attribute6.IsNull() && !data.Attribute6.IsUnknown() {
 		authenticationoauthaction.Attribute6 = data.Attribute6.ValueString()
 	}
-	if !data.Attribute7.IsNull() {
+	if !data.Attribute7.IsNull() && !data.Attribute7.IsUnknown() {
 		authenticationoauthaction.Attribute7 = data.Attribute7.ValueString()
 	}
-	if !data.Attribute8.IsNull() {
+	if !data.Attribute8.IsNull() && !data.Attribute8.IsUnknown() {
 		authenticationoauthaction.Attribute8 = data.Attribute8.ValueString()
 	}
-	if !data.Attribute9.IsNull() {
+	if !data.Attribute9.IsNull() && !data.Attribute9.IsUnknown() {
 		authenticationoauthaction.Attribute9 = data.Attribute9.ValueString()
 	}
-	if !data.Attributes.IsNull() {
+	if !data.Attributes.IsNull() && !data.Attributes.IsUnknown() {
 		authenticationoauthaction.Attributes = data.Attributes.ValueString()
 	}
-	if !data.Audience.IsNull() {
+	if !data.Audience.IsNull() && !data.Audience.IsUnknown() {
 		authenticationoauthaction.Audience = data.Audience.ValueString()
 	}
-	if !data.Authentication.IsNull() {
+	if !data.Authentication.IsNull() && !data.Authentication.IsUnknown() {
 		authenticationoauthaction.Authentication = data.Authentication.ValueString()
 	}
-	if !data.Authorizationendpoint.IsNull() {
+	if !data.Authorizationendpoint.IsNull() && !data.Authorizationendpoint.IsUnknown() {
 		authenticationoauthaction.Authorizationendpoint = data.Authorizationendpoint.ValueString()
 	}
-	if !data.Certendpoint.IsNull() {
+	if !data.Certendpoint.IsNull() && !data.Certendpoint.IsUnknown() {
 		authenticationoauthaction.Certendpoint = data.Certendpoint.ValueString()
 	}
-	if !data.Certfilepath.IsNull() {
+	if !data.Certfilepath.IsNull() && !data.Certfilepath.IsUnknown() {
 		authenticationoauthaction.Certfilepath = data.Certfilepath.ValueString()
 	}
-	if !data.Clientid.IsNull() {
+	if !data.Clientid.IsNull() && !data.Clientid.IsUnknown() {
 		authenticationoauthaction.Clientid = data.Clientid.ValueString()
 	}
-	if !data.Clientsecret.IsNull() {
+	if !data.Clientsecret.IsNull() && !data.Clientsecret.IsUnknown() {
 		authenticationoauthaction.Clientsecret = data.Clientsecret.ValueString()
 	}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	// Skip write-only attribute: clientsecret_wo
+	// Skip version tracker attribute: clientsecret_wo_version
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationoauthaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Granttype.IsNull() {
+	if !data.Granttype.IsNull() && !data.Granttype.IsUnknown() {
 		authenticationoauthaction.Granttype = data.Granttype.ValueString()
 	}
-	if !data.Graphendpoint.IsNull() {
+	if !data.Graphendpoint.IsNull() && !data.Graphendpoint.IsUnknown() {
 		authenticationoauthaction.Graphendpoint = data.Graphendpoint.ValueString()
 	}
-	if !data.Idtokendecryptendpoint.IsNull() {
+	if !data.Idtokendecryptendpoint.IsNull() && !data.Idtokendecryptendpoint.IsUnknown() {
 		authenticationoauthaction.Idtokendecryptendpoint = data.Idtokendecryptendpoint.ValueString()
 	}
-	if !data.Introspecturl.IsNull() {
+	if !data.Introspecturl.IsNull() && !data.Introspecturl.IsUnknown() {
 		authenticationoauthaction.Introspecturl = data.Introspecturl.ValueString()
 	}
-	if !data.Intunedeviceidexpression.IsNull() {
+	if !data.Intunedeviceidexpression.IsNull() && !data.Intunedeviceidexpression.IsUnknown() {
 		authenticationoauthaction.Intunedeviceidexpression = data.Intunedeviceidexpression.ValueString()
 	}
-	if !data.Issuer.IsNull() {
+	if !data.Issuer.IsNull() && !data.Issuer.IsUnknown() {
 		authenticationoauthaction.Issuer = data.Issuer.ValueString()
 	}
-	if !data.Metadataurl.IsNull() {
+	if !data.Metadataurl.IsNull() && !data.Metadataurl.IsUnknown() {
 		authenticationoauthaction.Metadataurl = data.Metadataurl.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationoauthaction.Name = data.Name.ValueString()
 	}
-	if !data.Oauthtype.IsNull() {
+	if !data.Oauthmiscflags.IsNull() && !data.Oauthmiscflags.IsUnknown() {
+		var oauthmiscflagsList []string
+		data.Oauthmiscflags.ElementsAs(ctx, &oauthmiscflagsList, false)
+		authenticationoauthaction.Oauthmiscflags = oauthmiscflagsList
+	}
+	if !data.Oauthtype.IsNull() && !data.Oauthtype.IsUnknown() {
 		authenticationoauthaction.Oauthtype = data.Oauthtype.ValueString()
 	}
-	if !data.Pkce.IsNull() {
+	if !data.Pkce.IsNull() && !data.Pkce.IsUnknown() {
 		authenticationoauthaction.Pkce = data.Pkce.ValueString()
 	}
-	if !data.Refreshinterval.IsNull() {
+	if !data.Refreshinterval.IsNull() && !data.Refreshinterval.IsUnknown() {
 		authenticationoauthaction.Refreshinterval = utils.IntPtr(int(data.Refreshinterval.ValueInt64()))
 	}
-	if !data.Requestattribute.IsNull() {
+	if !data.Requestattribute.IsNull() && !data.Requestattribute.IsUnknown() {
 		authenticationoauthaction.Requestattribute = data.Requestattribute.ValueString()
 	}
-	if !data.Resourceuri.IsNull() {
+	if !data.Resourceuri.IsNull() && !data.Resourceuri.IsUnknown() {
 		authenticationoauthaction.Resourceuri = data.Resourceuri.ValueString()
 	}
-	if !data.Skewtime.IsNull() {
+	if !data.Skewtime.IsNull() && !data.Skewtime.IsUnknown() {
 		authenticationoauthaction.Skewtime = utils.IntPtr(int(data.Skewtime.ValueInt64()))
 	}
-	if !data.Tenantid.IsNull() {
+	if !data.Tenantid.IsNull() && !data.Tenantid.IsUnknown() {
 		authenticationoauthaction.Tenantid = data.Tenantid.ValueString()
 	}
-	if !data.Tokenendpoint.IsNull() {
+	if !data.Tokenendpoint.IsNull() && !data.Tokenendpoint.IsUnknown() {
 		authenticationoauthaction.Tokenendpoint = data.Tokenendpoint.ValueString()
 	}
-	if !data.Tokenendpointauthmethod.IsNull() {
+	if !data.Tokenendpointauthmethod.IsNull() && !data.Tokenendpointauthmethod.IsUnknown() {
 		authenticationoauthaction.Tokenendpointauthmethod = data.Tokenendpointauthmethod.ValueString()
 	}
-	if !data.Userinfourl.IsNull() {
+	if !data.Userinfourl.IsNull() && !data.Userinfourl.IsUnknown() {
 		authenticationoauthaction.Userinfourl = data.Userinfourl.ValueString()
 	}
-	if !data.Usernamefield.IsNull() {
+	if !data.Usernamefield.IsNull() && !data.Usernamefield.IsUnknown() {
 		authenticationoauthaction.Usernamefield = data.Usernamefield.ValueString()
 	}
 
 	return authenticationoauthaction
 }
 
+func authenticationoauthactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationoauthactionResourceModel, payload *authentication.Authenticationoauthaction) {
+	tflog.Debug(ctx, "In authenticationoauthactionGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: clientsecret_wo -> clientsecret
+	if !data.ClientsecretWo.IsNull() {
+		clientsecretWo := data.ClientsecretWo.ValueString()
+		if clientsecretWo != "" {
+			payload.Clientsecret = clientsecretWo
+		}
+	}
+}
+
 func authenticationoauthactionSetAttrFromGet(ctx context.Context, data *AuthenticationoauthactionResourceModel, getResponseData map[string]interface{}) *AuthenticationoauthactionResourceModel {
 	tflog.Debug(ctx, "In authenticationoauthactionSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["allowedalgorithms"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Allowedalgorithms = listValue
+		} else {
+			data.Allowedalgorithms = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Allowedalgorithms = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["attribute1"]; ok && val != nil {
 		data.Attribute1 = types.StringValue(val.(string))
 	} else {
@@ -568,11 +624,9 @@ func authenticationoauthactionSetAttrFromGet(ctx context.Context, data *Authenti
 	} else {
 		data.Clientid = types.StringNull()
 	}
-	if val, ok := getResponseData["clientsecret"]; ok && val != nil {
-		data.Clientsecret = types.StringValue(val.(string))
-	} else {
-		data.Clientsecret = types.StringNull()
-	}
+	// clientsecret is not returned by NITRO API (secret/ephemeral) - retain from config
+	// clientsecret_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// clientsecret_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
 	} else {
@@ -617,6 +671,17 @@ func authenticationoauthactionSetAttrFromGet(ctx context.Context, data *Authenti
 		data.Name = types.StringValue(val.(string))
 	} else {
 		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["oauthmiscflags"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Oauthmiscflags = listValue
+		} else {
+			data.Oauthmiscflags = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Oauthmiscflags = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["oauthtype"]; ok && val != nil {
 		data.Oauthtype = types.StringValue(val.(string))
@@ -679,8 +744,8 @@ func authenticationoauthactionSetAttrFromGet(ctx context.Context, data *Authenti
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

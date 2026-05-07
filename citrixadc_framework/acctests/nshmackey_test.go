@@ -166,3 +166,117 @@ data "citrixadc_nshmackey" "tf_hmackey_ds" {
 	depends_on = [citrixadc_nshmackey.tf_hmackey_ds]
 }
 `
+
+// --- Ephemeral / Write-Only Tests for keyvalue ---
+
+const testAccNshmackey_keyvalue_step1 = `
+	variable "nshmackey_keyvalue" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nshmackey" "tf_nshmackey" {
+		name     = "tf_nshmackey"
+		digest   = "MD4"
+		keyvalue = var.nshmackey_keyvalue
+		comment  = "Backward compat test step1"
+	}
+`
+
+const testAccNshmackey_keyvalue_step2 = `
+	variable "nshmackey_keyvalue_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nshmackey" "tf_nshmackey" {
+		name     = "tf_nshmackey"
+		digest   = "MD4"
+		keyvalue = var.nshmackey_keyvalue_2
+		comment  = "Backward compat test step2"
+	}
+`
+
+func TestAccNshmackey_keyvalue_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_nshmackey_keyvalue", "0102030405060708090a0b0c0d0e0f10")
+	t.Setenv("TF_VAR_nshmackey_keyvalue_2", "1112131415161718191a1b1c1d1e1f20")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNshmackeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNshmackey_keyvalue_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshmackeyExist("citrixadc_nshmackey.tf_nshmackey", nil),
+					resource.TestCheckResourceAttr("citrixadc_nshmackey.tf_nshmackey", "name", "tf_nshmackey"),
+					resource.TestCheckResourceAttr("citrixadc_nshmackey.tf_nshmackey", "digest", "MD4"),
+				),
+			},
+			{
+				Config: testAccNshmackey_keyvalue_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshmackeyExist("citrixadc_nshmackey.tf_nshmackey", nil),
+					resource.TestCheckResourceAttr("citrixadc_nshmackey.tf_nshmackey", "name", "tf_nshmackey"),
+					resource.TestCheckResourceAttr("citrixadc_nshmackey.tf_nshmackey", "digest", "MD4"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNshmackey_keyvalue_wo_step1 = `
+	variable "nshmackey_keyvalue_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nshmackey" "tf_nshmackey" {
+		name                = "tf_nshmackey"
+		digest              = "MD4"
+		keyvalue_wo         = var.nshmackey_keyvalue_wo
+		keyvalue_wo_version = 1
+		comment             = "Write-only ephemeral test step1"
+	}
+`
+
+const testAccNshmackey_keyvalue_wo_step2 = `
+	variable "nshmackey_keyvalue_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nshmackey" "tf_nshmackey" {
+		name                = "tf_nshmackey"
+		digest              = "MD4"
+		keyvalue_wo         = var.nshmackey_keyvalue_wo_2
+		keyvalue_wo_version = 2
+		comment             = "Write-only ephemeral test step2"
+	}
+`
+
+func TestAccNshmackey_keyvalue_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_nshmackey_keyvalue_wo", "0102030405060708090a0b0c0d0e0f10")
+	t.Setenv("TF_VAR_nshmackey_keyvalue_wo_2", "1112131415161718191a1b1c1d1e1f20")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNshmackeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNshmackey_keyvalue_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshmackeyExist("citrixadc_nshmackey.tf_nshmackey", nil),
+					resource.TestCheckResourceAttr("citrixadc_nshmackey.tf_nshmackey", "keyvalue_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccNshmackey_keyvalue_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshmackeyExist("citrixadc_nshmackey.tf_nshmackey", nil),
+					resource.TestCheckResourceAttr("citrixadc_nshmackey.tf_nshmackey", "keyvalue_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

@@ -170,3 +170,129 @@ func TestAccAuthenticationemailactionDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Backward-compatible test: uses the sensitive `password` attribute path
+const testAccAuthenticationemailaction_password_step1 = `
+	variable "authenticationemailaction_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationemailaction" "tf_emailaction" {
+		name      = "tf_emailaction"
+		username  = "username@abc.com"
+		password  = var.authenticationemailaction_password
+		serverurl = "www.example.com"
+		timeout   = 100
+		type      = "SMTP"
+	}
+`
+
+const testAccAuthenticationemailaction_password_step2 = `
+	variable "authenticationemailaction_password_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationemailaction" "tf_emailaction" {
+		name      = "tf_emailaction"
+		username  = "username@abc.com"
+		password  = var.authenticationemailaction_password_2
+		serverurl = "www.example.com"
+		timeout   = 100
+		type      = "SMTP"
+	}
+`
+
+func TestAccAuthenticationemailaction_password_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationemailaction_password", "secret1")
+	t.Setenv("TF_VAR_authenticationemailaction_password_2", "secret2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationemailactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationemailaction_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_emailaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "name", "tf_emailaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "username", "username@abc.com"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "serverurl", "www.example.com"),
+				),
+			},
+			{
+				Config: testAccAuthenticationemailaction_password_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_emailaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "name", "tf_emailaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "username", "username@abc.com"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "serverurl", "www.example.com"),
+				),
+			},
+		},
+	})
+}
+
+// Ephemeral write-only test: uses the `password_wo` + `password_wo_version` path
+const testAccAuthenticationemailaction_wo_step1 = `
+	variable "authenticationemailaction_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationemailaction" "tf_emailaction" {
+		name               = "tf_emailaction"
+		username           = "username@abc.com"
+		password_wo        = var.authenticationemailaction_password_wo
+		password_wo_version = 1
+		serverurl          = "www.example.com"
+		timeout            = 100
+		type               = "SMTP"
+	}
+`
+
+const testAccAuthenticationemailaction_wo_step2 = `
+	variable "authenticationemailaction_password_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationemailaction" "tf_emailaction" {
+		name               = "tf_emailaction"
+		username           = "username@abc.com"
+		password_wo        = var.authenticationemailaction_password_wo_2
+		password_wo_version = 2
+		serverurl          = "www.example.com"
+		timeout            = 100
+		type               = "SMTP"
+	}
+`
+
+func TestAccAuthenticationemailaction_password_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationemailaction_password_wo", "ephemeral_secret1")
+	t.Setenv("TF_VAR_authenticationemailaction_password_wo_2", "ephemeral_secret2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationemailactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationemailaction_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_emailaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "name", "tf_emailaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationemailaction_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_emailaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "name", "tf_emailaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

@@ -16,6 +16,7 @@ import (
 var _ resource.Resource = &AuthenticationdfaactionResource{}
 var _ resource.ResourceWithConfigure = (*AuthenticationdfaactionResource)(nil)
 var _ resource.ResourceWithImportState = (*AuthenticationdfaactionResource)(nil)
+var _ resource.ResourceWithValidateConfig = (*AuthenticationdfaactionResource)(nil)
 
 func NewAuthenticationdfaactionResource() resource.Resource {
 	return &AuthenticationdfaactionResource{}
@@ -43,31 +44,54 @@ func (r *AuthenticationdfaactionResource) Configure(ctx context.Context, req res
 	r.client = *req.ProviderData.(**service.NitroClient)
 }
 
-func (r *AuthenticationdfaactionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *AuthenticationdfaactionResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var data AuthenticationdfaactionResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate that either passphrase or passphrase_wo is specified
+	if data.Passphrase.IsNull() && data.PassphraseWo.IsNull() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("passphrase"),
+			"Missing Required Attribute",
+			"Either \"passphrase\" or \"passphrase_wo\" must be specified.",
+		)
+	}
+}
+
+func (r *AuthenticationdfaactionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data, config AuthenticationdfaactionResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating authenticationdfaaction resource")
-
-	// authenticationdfaaction := authenticationdfaactionGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	authenticationdfaaction := authenticationdfaactionGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	authenticationdfaactionGetThePayloadFromtheConfig(ctx, &config, &authenticationdfaaction)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationdfaaction.Type(), &authenticationdfaaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationdfaaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationdfaaction-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Authenticationdfaaction.Type(), name_value, &authenticationdfaaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationdfaaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationdfaaction resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
 	r.readAuthenticationdfaactionFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,28 +119,66 @@ func (r *AuthenticationdfaactionResource) Read(ctx context.Context, req resource
 }
 
 func (r *AuthenticationdfaactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationdfaactionResourceModel
+	var data, config, state AuthenticationdfaactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationdfaaction resource")
 
-	// Create API request body from the model
-	// authenticationdfaaction := authenticationdfaactionGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Clientid.Equal(state.Clientid) {
+		tflog.Debug(ctx, fmt.Sprintf("clientid has changed for authenticationdfaaction"))
+		hasChange = true
+	}
+	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
+		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for authenticationdfaaction"))
+		hasChange = true
+	}
+	// Check secret attribute passphrase or its version tracker
+	if !data.Passphrase.Equal(state.Passphrase) {
+		tflog.Debug(ctx, fmt.Sprintf("passphrase has changed for authenticationdfaaction"))
+		hasChange = true
+	} else if !data.PassphraseWoVersion.Equal(state.PassphraseWoVersion) {
+		tflog.Debug(ctx, fmt.Sprintf("passphrase_wo_version has changed for authenticationdfaaction"))
+		hasChange = true
+	}
+	if !data.Serverurl.Equal(state.Serverurl) {
+		tflog.Debug(ctx, fmt.Sprintf("serverurl has changed for authenticationdfaaction"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationdfaaction.Type(), &authenticationdfaaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationdfaaction, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		// Get payload from plan (regular attributes)
+		authenticationdfaaction := authenticationdfaactionGetThePayloadFromthePlan(ctx, &data)
+		// Add write-only attributes from config to the payload
+		authenticationdfaactionGetThePayloadFromtheConfig(ctx, &config, &authenticationdfaaction)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Authenticationdfaaction.Type(), name_value, &authenticationdfaaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationdfaaction, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationdfaaction resource")
+		tflog.Trace(ctx, "Updated authenticationdfaaction resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for authenticationdfaaction resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAuthenticationdfaactionFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +198,27 @@ func (r *AuthenticationdfaactionResource) Delete(ctx context.Context, req resour
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationdfaaction resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Authenticationdfaaction.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationdfaaction, got error: %s", err))
+		return
+	}
 
-	// For authenticationdfaaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationdfaaction resource from state")
+	tflog.Trace(ctx, "Deleted authenticationdfaaction resource")
 }
 
 // Helper function to read authenticationdfaaction data from API
 func (r *AuthenticationdfaactionResource) readAuthenticationdfaactionFromApi(ctx context.Context, data *AuthenticationdfaactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationdfaaction.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	name_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Authenticationdfaaction.Type(), name_Name)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationdfaaction, got error: %s", err))
 		return

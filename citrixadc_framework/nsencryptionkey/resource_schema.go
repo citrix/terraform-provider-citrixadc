@@ -2,25 +2,30 @@ package nsencryptionkey
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // NsencryptionkeyResourceModel describes the resource data model.
 type NsencryptionkeyResourceModel struct {
-	Id       types.String `tfsdk:"id"`
-	Comment  types.String `tfsdk:"comment"`
-	Iv       types.String `tfsdk:"iv"`
-	Keyvalue types.String `tfsdk:"keyvalue"`
-	Method   types.String `tfsdk:"method"`
-	Name     types.String `tfsdk:"name"`
-	Padding  types.String `tfsdk:"padding"`
+	Id                types.String `tfsdk:"id"`
+	Comment           types.String `tfsdk:"comment"`
+	Iv                types.String `tfsdk:"iv"`
+	Keyvalue          types.String `tfsdk:"keyvalue"`
+	KeyvalueWo        types.String `tfsdk:"keyvalue_wo"`
+	KeyvalueWoVersion types.Int64  `tfsdk:"keyvalue_wo_version"`
+	Method            types.String `tfsdk:"method"`
+	Name              types.String `tfsdk:"name"`
+	Padding           types.String `tfsdk:"padding"`
 }
 
 func (r *NsencryptionkeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -43,51 +48,81 @@ func (r *NsencryptionkeyResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"keyvalue": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "The hex-encoded key value. The length is determined by the cipher method:\n   RC4    - 16 bytes\n   DES    -  8 bytes (all modes)\n   DES3   - 24 bytes (all modes)\n   AES128 - 16 bytes (all modes)\n   AES192 - 24 bytes (all modes)\n   AES256 - 32 bytes (all modes)\nNote that the keyValue will be encrypted when it it is saved.\n\nThere is a special key value AUTO which generates a new random key for the specified method. This kind of key is\nintended for use cases where the NetScaler both encrypts and decrypts the same data, such an HTTP header.",
+			},
+			"keyvalue_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "The hex-encoded key value. The length is determined by the cipher method:\n   RC4    - 16 bytes\n   DES    -  8 bytes (all modes)\n   DES3   - 24 bytes (all modes)\n   AES128 - 16 bytes (all modes)\n   AES192 - 24 bytes (all modes)\n   AES256 - 32 bytes (all modes)\nNote that the keyValue will be encrypted when it it is saved.\n\nThere is a special key value AUTO which generates a new random key for the specified method. This kind of key is\nintended for use cases where the NetScaler both encrypts and decrypts the same data, such an HTTP header.",
+			},
+			"keyvalue_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a keyvalue_wo update.",
 			},
 			"method": schema.StringAttribute{
 				Required:    true,
 				Description: "Cipher method to be used to encrypt and decrypt content.\n   NONE - no encryption or decryption is performed The output of ENCRYPT() and DECRYPT() is the same as the input.\n   RC4  - the RC4 stream cipher with a 128 bit (16 byte) key; RC4 is now considered insecure and should only be used if required by existing applciations.\n   DES[-<mode>] - the Data Encryption Standard (DES) block cipher with a 64-bit (8 byte) key, with 56 data bits and 8 parity bits. DES is considered less secure than DES3 or AES so it should only be used if required by an existing applicastion. The optional mode is described below; DES without a mode is equivalent to DES-CBC.\n   DES3[-<mode>] - the Triple Data Encryption Standard (DES) block cipher with a 192-bit (24 byte) key. The optional mode is described below; DES3 without a mode is equivalent to DES3-CBC.\n   AES<keysize>[-<mode>] - the Advanced Encryption Standard block cipher, available with 128 bit (16 byte), 192 bit (24 byte), and 256 bit (32 byte) keys. The optional mode is described below; AES<keysize> without a mode is equivalent to AES<keysize>-CBC.\n\nFor a block cipher, the <mode> specifies how multiple blocks of plaintext are encrypted and how the Initialization Vector (IV) is used. Choices are\n   CBC (Cipher Block Chaining) - Each block of plaintext is XORed with the previous ciphertext block, or IV for the first block, before being encrypted. Padding is required if the plaintext is not a multiple of the cipher block size.\n   CFB (Cipher Feedback) - The previous ciphertext block, or the IV for the first block, is encrypted and the output is XORed with the current plaintext block to create the current ciphertext block. The 128-bit version of CFB is provided. Padding is not required.\n   OFB (Output Feedback) - A keystream is generated by applying the cipher successfully to the IV and XORing the keystream blocks with the plaintext. Padding is not required.\n   ECB (Electronic Codebook) - Each block of plaintext is independently encrypted. An IV is not used. Padding is required. This mode is considered less secure than the other modes because the same plaintext always produces the same encrypted text and should only be used if required by an existing application.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Key name.  This follows the same syntax rules as other expression entity names:\n   It must begin with an alpha character (A-Z or a-z) or an underscore (_).\n   The rest of the characters must be alpha, numeric (0-9) or underscores.\n   It cannot be re or xp (reserved for regular and XPath expressions).\n   It cannot be an expression reserved word (e.g. SYS or HTTP).\n   It cannot be used for an existing expression object (HTTP callout, patset, dataset, stringmap, or named expression).",
 			},
 			"padding": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DEFAULT"),
+				Computed:    true,
 				Description: "Enables or disables the padding of plaintext to meet the block size requirements of block ciphers:\n   ON - For encryption, PKCS5/7 padding is used, which appends n bytes of value n on the end of the plaintext to bring it to the cipher block lnegth. If the plaintext length is alraady a multiple of the block length, an additional block with bytes of value block_length will be added. For decryption, ISO 10126 padding is accepted, which expects the last byte of the block to be the number of added pad bytes. Note that this accepts PKCS5/7 padding, as well as ANSI_X923 padding. Padding ON is the default for the ECB and CBD modes.\n   OFF - No padding. An Undef error will occur with the ECB or CBC modes if the plaintext length is not a multitple of the cipher block size. This can be used with the CFB and OFB modes, and with the ECB and CBC modes if the plaintext will always be an integral number of blocks, or if custom padding is implemented using a policy extension function. Padding OFf is the default for CFB and OFB modes.",
 			},
 		},
 	}
 }
 
-func nsencryptionkeyGetThePayloadFromtheConfig(ctx context.Context, data *NsencryptionkeyResourceModel) ns.Nsencryptionkey {
-	tflog.Debug(ctx, "In nsencryptionkeyGetThePayloadFromtheConfig Function")
+func nsencryptionkeyGetThePayloadFromthePlan(ctx context.Context, data *NsencryptionkeyResourceModel) ns.Nsencryptionkey {
+	tflog.Debug(ctx, "In nsencryptionkeyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	nsencryptionkey := ns.Nsencryptionkey{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		nsencryptionkey.Comment = data.Comment.ValueString()
 	}
-	if !data.Iv.IsNull() {
+	if !data.Iv.IsNull() && !data.Iv.IsUnknown() {
 		nsencryptionkey.Iv = data.Iv.ValueString()
 	}
-	if !data.Keyvalue.IsNull() {
+	if !data.Keyvalue.IsNull() && !data.Keyvalue.IsUnknown() {
 		nsencryptionkey.Keyvalue = data.Keyvalue.ValueString()
 	}
-	if !data.Method.IsNull() {
+	// Skip write-only attribute: keyvalue_wo
+	// Skip version tracker attribute: keyvalue_wo_version
+	if !data.Method.IsNull() && !data.Method.IsUnknown() {
 		nsencryptionkey.Method = data.Method.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		nsencryptionkey.Name = data.Name.ValueString()
 	}
-	if !data.Padding.IsNull() {
+	if !data.Padding.IsNull() && !data.Padding.IsUnknown() {
 		nsencryptionkey.Padding = data.Padding.ValueString()
 	}
 
 	return nsencryptionkey
+}
+
+func nsencryptionkeyGetThePayloadFromtheConfig(ctx context.Context, data *NsencryptionkeyResourceModel, payload *ns.Nsencryptionkey) {
+	tflog.Debug(ctx, "In nsencryptionkeyGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: keyvalue_wo -> keyvalue
+	if !data.KeyvalueWo.IsNull() {
+		keyvalueWo := data.KeyvalueWo.ValueString()
+		if keyvalueWo != "" {
+			payload.Keyvalue = keyvalueWo
+		}
+	}
 }
 
 func nsencryptionkeySetAttrFromGet(ctx context.Context, data *NsencryptionkeyResourceModel, getResponseData map[string]interface{}) *NsencryptionkeyResourceModel {
@@ -104,11 +139,9 @@ func nsencryptionkeySetAttrFromGet(ctx context.Context, data *NsencryptionkeyRes
 	} else {
 		data.Iv = types.StringNull()
 	}
-	if val, ok := getResponseData["keyvalue"]; ok && val != nil {
-		data.Keyvalue = types.StringValue(val.(string))
-	} else {
-		data.Keyvalue = types.StringNull()
-	}
+	// keyvalue is not returned by NITRO API (secret/ephemeral) - retain from config
+	// keyvalue_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// keyvalue_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["method"]; ok && val != nil {
 		data.Method = types.StringValue(val.(string))
 	} else {
@@ -126,8 +159,8 @@ func nsencryptionkeySetAttrFromGet(ctx context.Context, data *NsencryptionkeyRes
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

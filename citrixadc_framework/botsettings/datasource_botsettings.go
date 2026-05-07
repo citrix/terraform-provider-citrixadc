@@ -38,7 +38,6 @@ func (d *BotsettingsDataSource) Read(ctx context.Context, req datasource.ReadReq
 	var data BotsettingsResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -163,3 +163,131 @@ func TestAccAuthenticationpushserviceDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Test backward-compatible path: using clientsecret (Sensitive attribute)
+const testAccAuthenticationpushservice_clientsecret_step1 = `
+
+	variable "authenticationpushservice_clientsecret" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationpushservice" "test" {
+		name            = "tf_pushservice_compat"
+		clientid        = "cliId_compat"
+		clientsecret    = var.authenticationpushservice_clientsecret
+		customerid      = "cusID_compat"
+		refreshinterval = 50
+	}
+`
+
+// Update backward-compatible path: change clientsecret value
+const testAccAuthenticationpushservice_clientsecret_step2 = `
+
+	variable "authenticationpushservice_clientsecret_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationpushservice" "test" {
+		name            = "tf_pushservice_compat"
+		clientid        = "cliId_compat"
+		clientsecret    = var.authenticationpushservice_clientsecret_2
+		customerid      = "cusID_compat"
+		refreshinterval = 80
+	}
+`
+
+func TestAccAuthenticationpushservice_clientsecret_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationpushservice_clientsecret", "secret_value1")
+	t.Setenv("TF_VAR_authenticationpushservice_clientsecret_2", "secret_value2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpushserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpushservice_clientsecret_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationpushserviceExist("citrixadc_authenticationpushservice.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpushservice.test", "name", "tf_pushservice_compat"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpushservice.test", "clientid", "cliId_compat"),
+				),
+			},
+			{
+				Config: testAccAuthenticationpushservice_clientsecret_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationpushserviceExist("citrixadc_authenticationpushservice.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpushservice.test", "name", "tf_pushservice_compat"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpushservice.test", "clientid", "cliId_compat"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using clientsecret_wo (WriteOnly attribute) with version tracker
+const testAccAuthenticationpushservice_clientsecret_wo_step1 = `
+
+	variable "authenticationpushservice_clientsecret_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationpushservice" "test" {
+		name                    = "tf_pushservice_wo"
+		clientid                = "cliId_wo"
+		clientsecret_wo         = var.authenticationpushservice_clientsecret_wo
+		clientsecret_wo_version = 1
+		customerid              = "cusID_wo"
+		refreshinterval         = 50
+	}
+`
+
+// Update ephemeral path: bump version to trigger update with new secret
+const testAccAuthenticationpushservice_clientsecret_wo_step2 = `
+
+	variable "authenticationpushservice_clientsecret_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationpushservice" "test" {
+		name                    = "tf_pushservice_wo"
+		clientid                = "cliId_wo"
+		clientsecret_wo         = var.authenticationpushservice_clientsecret_wo_2
+		clientsecret_wo_version = 2
+		customerid              = "cusID_wo"
+		refreshinterval         = 80
+	}
+`
+
+func TestAccAuthenticationpushservice_clientsecret_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationpushservice_clientsecret_wo", "ephemeral_secret1")
+	t.Setenv("TF_VAR_authenticationpushservice_clientsecret_wo_2", "ephemeral_secret2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpushserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpushservice_clientsecret_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationpushserviceExist("citrixadc_authenticationpushservice.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpushservice.test", "name", "tf_pushservice_wo"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpushservice.test", "clientid", "cliId_wo"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpushservice.test", "clientsecret_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationpushservice_clientsecret_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationpushserviceExist("citrixadc_authenticationpushservice.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpushservice.test", "name", "tf_pushservice_wo"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpushservice.test", "clientid", "cliId_wo"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpushservice.test", "clientsecret_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

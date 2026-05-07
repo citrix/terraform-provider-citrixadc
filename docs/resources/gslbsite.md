@@ -17,6 +17,50 @@ resource "citrixadc_gslbsite" "tf_site_local" {
 }
 ```
 
+### Using sitepassword (sensitive attribute - persisted in state)
+
+```hcl
+variable "gslbsite_sitepassword" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_gslbsite" "example" {
+  sitename      = "tf_site_local"
+  siteipaddress = "172.31.96.234"
+  sitepassword  = var.gslbsite_sitepassword
+}
+```
+
+### Using sitepassword_wo (write-only/ephemeral - NOT persisted in state)
+
+The `sitepassword_wo` attribute provides an ephemeral path for the MEP communication password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `sitepassword_wo_version`.
+
+```hcl
+variable "gslbsite_sitepassword" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_gslbsite" "example" {
+  sitename             = "tf_site_local"
+  siteipaddress        = "172.31.96.234"
+  sitepassword_wo      = var.gslbsite_sitepassword
+  sitepassword_wo_version = 1
+}
+```
+
+To rotate the secret, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_gslbsite" "example" {
+  sitename             = "tf_site_local"
+  siteipaddress        = "172.31.96.234"
+  sitepassword_wo      = var.gslbsite_sitepassword
+  sitepassword_wo_version = 2  # Bumped to trigger update
+}
+```
+
 
 ## Argument Reference
 
@@ -45,7 +89,9 @@ resource "citrixadc_gslbsite" "tf_site_local" {
 * `publicclip` - (Optional) IP address to be used to globally access the remote cluster when it is deployed behind a NAT. It can be same as the normal cluster IP address.
 * `naptrreplacementsuffix` - (Optional) The naptr replacement suffix configured here will be used to construct the naptr replacement field in NAPTR record.
 * `backupparentlist` - (Optional) The list of backup gslb sites configured in preferred order. Need to be parent gsb sites.
-* `sitepassword` - (Optional) Password to be used for mep communication between gslb site nodes.
+* `sitepassword` - (Optional, Sensitive) Password to be used for mep communication between gslb site nodes. The value is persisted in Terraform state (encrypted). See also `sitepassword_wo` for an ephemeral alternative.
+* `sitepassword_wo` - (Optional, Sensitive, WriteOnly) Same as `sitepassword`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `sitepassword_wo_version`. If both `sitepassword` and `sitepassword_wo` are set, `sitepassword_wo` takes precedence.
+* `sitepassword_wo_version` - (Optional) An integer version tracker for `sitepassword_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `newname` - (Optional) New name for the GSLB site.
   
 ## Attribute Reference

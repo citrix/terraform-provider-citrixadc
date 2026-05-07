@@ -197,3 +197,115 @@ func TestAccLbprofileDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Backward-compatible path: sensitive cookiepassphrase attribute
+const testAccLbprofile_cookiepassphrase_step1 = `
+
+	variable "lbprofile_cookiepassphrase" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_lbprofile" "tf_lbprofile_cp" {
+		lbprofilename    = "tf_lbprofile_cp"
+		cookiepassphrase = var.lbprofile_cookiepassphrase
+	}
+`
+
+// Update backward-compatible path: change cookiepassphrase value
+const testAccLbprofile_cookiepassphrase_step2 = `
+
+	variable "lbprofile_cookiepassphrase_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_lbprofile" "tf_lbprofile_cp" {
+		lbprofilename    = "tf_lbprofile_cp"
+		cookiepassphrase = var.lbprofile_cookiepassphrase_2
+	}
+`
+
+func TestAccLbprofile_cookiepassphrase_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_lbprofile_cookiepassphrase", "oldpassphrase123")
+	t.Setenv("TF_VAR_lbprofile_cookiepassphrase_2", "newpassphrase456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbprofile_cookiepassphrase_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbprofileExist("citrixadc_lbprofile.tf_lbprofile_cp", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile_cp", "lbprofilename", "tf_lbprofile_cp"),
+				),
+			},
+			{
+				Config: testAccLbprofile_cookiepassphrase_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbprofileExist("citrixadc_lbprofile.tf_lbprofile_cp", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile_cp", "lbprofilename", "tf_lbprofile_cp"),
+				),
+			},
+		},
+	})
+}
+
+// Ephemeral path: using cookiepassphrase_wo (WriteOnly attribute) with version tracker
+const testAccLbprofile_cookiepassphrase_wo_step1 = `
+
+	variable "lbprofile_cookiepassphrase_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_lbprofile" "tf_lbprofile_cp_wo" {
+		lbprofilename               = "tf_lbprofile_cp_wo"
+		cookiepassphrase_wo         = var.lbprofile_cookiepassphrase_wo
+		cookiepassphrase_wo_version = 1
+	}
+`
+
+// Update ephemeral path: bump version to trigger update with new passphrase
+const testAccLbprofile_cookiepassphrase_wo_step2 = `
+
+	variable "lbprofile_cookiepassphrase_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_lbprofile" "tf_lbprofile_cp_wo" {
+		lbprofilename               = "tf_lbprofile_cp_wo"
+		cookiepassphrase_wo         = var.lbprofile_cookiepassphrase_wo_2
+		cookiepassphrase_wo_version = 2
+	}
+`
+
+func TestAccLbprofile_cookiepassphrase_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_lbprofile_cookiepassphrase_wo", "ephemeral_pass1")
+	t.Setenv("TF_VAR_lbprofile_cookiepassphrase_wo_2", "ephemeral_pass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbprofile_cookiepassphrase_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbprofileExist("citrixadc_lbprofile.tf_lbprofile_cp_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile_cp_wo", "lbprofilename", "tf_lbprofile_cp_wo"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile_cp_wo", "cookiepassphrase_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccLbprofile_cookiepassphrase_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbprofileExist("citrixadc_lbprofile.tf_lbprofile_cp_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile_cp_wo", "lbprofilename", "tf_lbprofile_cp_wo"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile_cp_wo", "cookiepassphrase_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

@@ -2,11 +2,13 @@ package autoscaleprofile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/autoscale"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -15,12 +17,16 @@ import (
 
 // AutoscaleprofileResourceModel describes the resource data model.
 type AutoscaleprofileResourceModel struct {
-	Id           types.String `tfsdk:"id"`
-	Apikey       types.String `tfsdk:"apikey"`
-	Name         types.String `tfsdk:"name"`
-	Sharedsecret types.String `tfsdk:"sharedsecret"`
-	Type         types.String `tfsdk:"type"`
-	Url          types.String `tfsdk:"url"`
+	Id                    types.String `tfsdk:"id"`
+	Apikey                types.String `tfsdk:"apikey"`
+	ApikeyWo              types.String `tfsdk:"apikey_wo"`
+	ApikeyWoVersion       types.Int64  `tfsdk:"apikey_wo_version"`
+	Name                  types.String `tfsdk:"name"`
+	Sharedsecret          types.String `tfsdk:"sharedsecret"`
+	SharedsecretWo        types.String `tfsdk:"sharedsecret_wo"`
+	SharedsecretWoVersion types.Int64  `tfsdk:"sharedsecret_wo_version"`
+	Type                  types.String `tfsdk:"type"`
+	Url                   types.String `tfsdk:"url"`
 }
 
 func (r *AutoscaleprofileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -32,16 +38,45 @@ func (r *AutoscaleprofileResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The ID of the autoscaleprofile resource.",
 			},
 			"apikey": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "api key for authentication with service",
 			},
+			"apikey_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "api key for authentication with service",
+			},
+			"apikey_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a apikey_wo update.",
+			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "AutoScale profile name.",
 			},
 			"sharedsecret": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "shared secret for authentication with service",
+			},
+			"sharedsecret_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "shared secret for authentication with service",
+			},
+			"sharedsecret_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a sharedsecret_wo update.",
 			},
 			"type": schema.StringAttribute{
 				Required: true,
@@ -58,49 +93,69 @@ func (r *AutoscaleprofileResource) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func autoscaleprofileGetThePayloadFromtheConfig(ctx context.Context, data *AutoscaleprofileResourceModel) autoscale.Autoscaleprofile {
-	tflog.Debug(ctx, "In autoscaleprofileGetThePayloadFromtheConfig Function")
+func autoscaleprofileGetThePayloadFromthePlan(ctx context.Context, data *AutoscaleprofileResourceModel) autoscale.Autoscaleprofile {
+	tflog.Debug(ctx, "In autoscaleprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	autoscaleprofile := autoscale.Autoscaleprofile{}
-	if !data.Apikey.IsNull() {
+	if !data.Apikey.IsNull() && !data.Apikey.IsUnknown() {
 		autoscaleprofile.Apikey = data.Apikey.ValueString()
 	}
-	if !data.Name.IsNull() {
+	// Skip write-only attribute: apikey_wo
+	// Skip version tracker attribute: apikey_wo_version
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		autoscaleprofile.Name = data.Name.ValueString()
 	}
-	if !data.Sharedsecret.IsNull() {
+	if !data.Sharedsecret.IsNull() && !data.Sharedsecret.IsUnknown() {
 		autoscaleprofile.Sharedsecret = data.Sharedsecret.ValueString()
 	}
-	if !data.Type.IsNull() {
+	// Skip write-only attribute: sharedsecret_wo
+	// Skip version tracker attribute: sharedsecret_wo_version
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		autoscaleprofile.Type = data.Type.ValueString()
 	}
-	if !data.Url.IsNull() {
+	if !data.Url.IsNull() && !data.Url.IsUnknown() {
 		autoscaleprofile.Url = data.Url.ValueString()
 	}
 
 	return autoscaleprofile
 }
 
+func autoscaleprofileGetThePayloadFromtheConfig(ctx context.Context, data *AutoscaleprofileResourceModel, payload *autoscale.Autoscaleprofile) {
+	tflog.Debug(ctx, "In autoscaleprofileGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: apikey_wo -> apikey
+	if !data.ApikeyWo.IsNull() {
+		apikeyWo := data.ApikeyWo.ValueString()
+		if apikeyWo != "" {
+			payload.Apikey = apikeyWo
+		}
+	}
+	// Handle write-only secret attribute: sharedsecret_wo -> sharedsecret
+	if !data.SharedsecretWo.IsNull() {
+		sharedsecretWo := data.SharedsecretWo.ValueString()
+		if sharedsecretWo != "" {
+			payload.Sharedsecret = sharedsecretWo
+		}
+	}
+}
+
 func autoscaleprofileSetAttrFromGet(ctx context.Context, data *AutoscaleprofileResourceModel, getResponseData map[string]interface{}) *AutoscaleprofileResourceModel {
 	tflog.Debug(ctx, "In autoscaleprofileSetAttrFromGet Function")
 
 	// Convert API response to model
-	if val, ok := getResponseData["apikey"]; ok && val != nil {
-		data.Apikey = types.StringValue(val.(string))
-	} else {
-		data.Apikey = types.StringNull()
-	}
+	// apikey is not returned by NITRO API (secret/ephemeral) - retain from config
+	// apikey_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// apikey_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
 	} else {
 		data.Name = types.StringNull()
 	}
-	if val, ok := getResponseData["sharedsecret"]; ok && val != nil {
-		data.Sharedsecret = types.StringValue(val.(string))
-	} else {
-		data.Sharedsecret = types.StringNull()
-	}
+	// sharedsecret is not returned by NITRO API (secret/ephemeral) - retain from config
+	// sharedsecret_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// sharedsecret_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
 	} else {
@@ -113,8 +168,8 @@ func autoscaleprofileSetAttrFromGet(ctx context.Context, data *AutoscaleprofileR
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

@@ -30,6 +30,15 @@ func AuthenticationoauthidpprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Unique secret string to authorize relying party at authorization server.",
 			},
+			"clientsecret_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Unique secret string to authorize relying party at authorization server.",
+			},
+			"clientsecret_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a clientsecret_wo update.",
+			},
 			"configservice": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

@@ -2,16 +2,19 @@ package gslbsite
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // GslbsiteResourceModel describes the resource data model.
@@ -30,6 +33,8 @@ type GslbsiteResourceModel struct {
 	Siteipaddress          types.String `tfsdk:"siteipaddress"`
 	Sitename               types.String `tfsdk:"sitename"`
 	Sitepassword           types.String `tfsdk:"sitepassword"`
+	SitepasswordWo         types.String `tfsdk:"sitepassword_wo"`
+	SitepasswordWoVersion  types.Int64  `tfsdk:"sitepassword_wo_version"`
 	Sitetype               types.String `tfsdk:"sitetype"`
 	Triggermonitor         types.String `tfsdk:"triggermonitor"`
 }
@@ -45,6 +50,7 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			"backupparentlist": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "The list of backup gslb sites configured in preferred order. Need to be parent gsb sites.",
 			},
 			"clip": schema.StringAttribute{
@@ -57,7 +63,7 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"metricexchange": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Exchange metrics with other sites. Metrics are exchanged by using Metric Exchange Protocol (MEP). The appliances in the GSLB setup exchange health information once every second.\n\nIf you disable metrics exchange, you can use only static load balancing methods (such as round robin, static proximity, or the hash-based methods), and if you disable metrics exchange when a dynamic load balancing method (such as least connection) is in operation, the appliance falls back to round robin. Also, if you disable metrics exchange, you must use a monitor to determine the state of GSLB services. Otherwise, the service is marked as DOWN.",
 			},
 			"naptrreplacementsuffix": schema.StringAttribute{
@@ -75,7 +81,7 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"nwmetricexchange": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Exchange, with other GSLB sites, network metrics such as round-trip time (RTT), learned from communications with various local DNS (LDNS) servers used by clients. RTT information is used in the dynamic RTT load balancing method, and is exchanged every 5 seconds.",
 			},
 			"parentsite": schema.StringAttribute{
@@ -98,7 +104,7 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"sessionexchange": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Exchange persistent session entries with other GSLB sites every five seconds.",
 			},
 			"siteipaddress": schema.StringAttribute{
@@ -106,89 +112,138 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description: "IP address for the GSLB site. The GSLB site uses this IP address to communicate with other GSLB sites. For a local site, use any IP address that is owned by the appliance (for example, a SNIP or MIP address, or the IP address of the ADNS service).",
 			},
 			"sitename": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the GSLB site. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the virtual server is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my gslbsite\" or 'my gslbsite').",
 			},
 			"sitepassword": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:  true,
+				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Password to be used for mep communication between gslb site nodes.",
 			},
-			"sitetype": schema.StringAttribute{
-				Optional: true,
+			"sitepassword_wo": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("NONE"),
+				Description: "Password to be used for mep communication between gslb site nodes.",
+			},
+			"sitepassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a sitepassword_wo update.",
+			},
+			"sitetype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of site to create. If the type is not specified, the appliance automatically detects and sets the type on the basis of the IP address being assigned to the site. If the specified site IP address is owned by the appliance (for example, a MIP address or SNIP address), the site is a local site. Otherwise, it is a remote site.",
 			},
 			"triggermonitor": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ALWAYS"),
+				Computed:    true,
 				Description: "Specify the conditions under which the GSLB service must be monitored by a monitor, if one is bound. Available settings function as follows:\n* ALWAYS - Monitor the GSLB service at all times.\n* MEPDOWN - Monitor the GSLB service only when the exchange of metrics through the Metrics Exchange Protocol (MEP) is disabled.\nMEPDOWN_SVCDOWN - Monitor the service in either of the following situations:\n* The exchange of metrics through MEP is disabled.\n* The exchange of metrics through MEP is enabled but the status of the service, learned through metrics exchange, is DOWN.",
 			},
 		},
 	}
 }
 
-func gslbsiteGetThePayloadFromtheConfig(ctx context.Context, data *GslbsiteResourceModel) gslb.Gslbsite {
-	tflog.Debug(ctx, "In gslbsiteGetThePayloadFromtheConfig Function")
+func gslbsiteGetThePayloadFromthePlan(ctx context.Context, data *GslbsiteResourceModel) gslb.Gslbsite {
+	tflog.Debug(ctx, "In gslbsiteGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	gslbsite := gslb.Gslbsite{}
-	if !data.Clip.IsNull() {
+	if !data.Backupparentlist.IsNull() && !data.Backupparentlist.IsUnknown() {
+		var backupparentlistList []string
+		data.Backupparentlist.ElementsAs(ctx, &backupparentlistList, false)
+		gslbsite.Backupparentlist = backupparentlistList
+	}
+	if !data.Clip.IsNull() && !data.Clip.IsUnknown() {
 		gslbsite.Clip = data.Clip.ValueString()
 	}
-	if !data.Metricexchange.IsNull() {
+	if !data.Metricexchange.IsNull() && !data.Metricexchange.IsUnknown() {
 		gslbsite.Metricexchange = data.Metricexchange.ValueString()
 	}
-	if !data.Naptrreplacementsuffix.IsNull() {
+	if !data.Naptrreplacementsuffix.IsNull() && !data.Naptrreplacementsuffix.IsUnknown() {
 		gslbsite.Naptrreplacementsuffix = data.Naptrreplacementsuffix.ValueString()
 	}
-	if !data.Newname.IsNull() {
+	if !data.Newname.IsNull() && !data.Newname.IsUnknown() {
 		gslbsite.Newname = data.Newname.ValueString()
 	}
-	if !data.Nwmetricexchange.IsNull() {
+	if !data.Nwmetricexchange.IsNull() && !data.Nwmetricexchange.IsUnknown() {
 		gslbsite.Nwmetricexchange = data.Nwmetricexchange.ValueString()
 	}
-	if !data.Parentsite.IsNull() {
+	if !data.Parentsite.IsNull() && !data.Parentsite.IsUnknown() {
 		gslbsite.Parentsite = data.Parentsite.ValueString()
 	}
-	if !data.Publicclip.IsNull() {
+	if !data.Publicclip.IsNull() && !data.Publicclip.IsUnknown() {
 		gslbsite.Publicclip = data.Publicclip.ValueString()
 	}
-	if !data.Publicip.IsNull() {
+	if !data.Publicip.IsNull() && !data.Publicip.IsUnknown() {
 		gslbsite.Publicip = data.Publicip.ValueString()
 	}
-	if !data.Sessionexchange.IsNull() {
+	if !data.Sessionexchange.IsNull() && !data.Sessionexchange.IsUnknown() {
 		gslbsite.Sessionexchange = data.Sessionexchange.ValueString()
 	}
-	if !data.Siteipaddress.IsNull() {
+	if !data.Siteipaddress.IsNull() && !data.Siteipaddress.IsUnknown() {
 		gslbsite.Siteipaddress = data.Siteipaddress.ValueString()
 	}
-	if !data.Sitename.IsNull() {
+	if !data.Sitename.IsNull() && !data.Sitename.IsUnknown() {
 		gslbsite.Sitename = data.Sitename.ValueString()
 	}
-	if !data.Sitepassword.IsNull() {
+	if !data.Sitepassword.IsNull() && !data.Sitepassword.IsUnknown() {
 		gslbsite.Sitepassword = data.Sitepassword.ValueString()
 	}
-	if !data.Sitetype.IsNull() {
+	// Skip write-only attribute: sitepassword_wo
+	// Skip version tracker attribute: sitepassword_wo_version
+	if !data.Sitetype.IsNull() && !data.Sitetype.IsUnknown() {
 		gslbsite.Sitetype = data.Sitetype.ValueString()
 	}
-	if !data.Triggermonitor.IsNull() {
+	if !data.Triggermonitor.IsNull() && !data.Triggermonitor.IsUnknown() {
 		gslbsite.Triggermonitor = data.Triggermonitor.ValueString()
 	}
 
 	return gslbsite
 }
 
+func gslbsiteGetThePayloadFromtheConfig(ctx context.Context, data *GslbsiteResourceModel, payload *gslb.Gslbsite) {
+	tflog.Debug(ctx, "In gslbsiteGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: sitepassword_wo -> sitepassword
+	if !data.SitepasswordWo.IsNull() {
+		sitepasswordWo := data.SitepasswordWo.ValueString()
+		if sitepasswordWo != "" {
+			payload.Sitepassword = sitepasswordWo
+		}
+	}
+}
+
 func gslbsiteSetAttrFromGet(ctx context.Context, data *GslbsiteResourceModel, getResponseData map[string]interface{}) *GslbsiteResourceModel {
 	tflog.Debug(ctx, "In gslbsiteSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["backupparentlist"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Backupparentlist = listValue
+		} else {
+			data.Backupparentlist = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Backupparentlist = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["clip"]; ok && val != nil {
 		data.Clip = types.StringValue(val.(string))
 	} else {
@@ -244,11 +299,9 @@ func gslbsiteSetAttrFromGet(ctx context.Context, data *GslbsiteResourceModel, ge
 	} else {
 		data.Sitename = types.StringNull()
 	}
-	if val, ok := getResponseData["sitepassword"]; ok && val != nil {
-		data.Sitepassword = types.StringValue(val.(string))
-	} else {
-		data.Sitepassword = types.StringNull()
-	}
+	// sitepassword is not returned by NITRO API (secret/ephemeral) - retain from config
+	// sitepassword_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// sitepassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["sitetype"]; ok && val != nil {
 		data.Sitetype = types.StringValue(val.(string))
 	} else {
@@ -261,8 +314,8 @@ func gslbsiteSetAttrFromGet(ctx context.Context, data *GslbsiteResourceModel, ge
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Sitename.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Sitename.ValueString()))
 
 	return data
 }
