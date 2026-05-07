@@ -2,11 +2,15 @@ package authenticationdfaaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -18,6 +22,8 @@ type AuthenticationdfaactionResourceModel struct {
 	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
 	Name                       types.String `tfsdk:"name"`
 	Passphrase                 types.String `tfsdk:"passphrase"`
+	PassphraseWo               types.String `tfsdk:"passphrase_wo"`
+	PassphraseWoVersion        types.Int64  `tfsdk:"passphrase_wo_version"`
 	Serverurl                  types.String `tfsdk:"serverurl"`
 }
 
@@ -39,12 +45,28 @@ func (r *AuthenticationdfaactionResource) Schema(ctx context.Context, req resour
 				Description: "This is the default group that is chosen when the authentication succeeds in addition to extracted groups.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the DFA action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the DFA action is added.",
 			},
 			"passphrase": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "Key shared between the DFA server and the Citrix ADC.\nRequired to allow the Citrix ADC to communicate with the DFA server.",
+			},
+			"passphrase_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Key shared between the DFA server and the Citrix ADC.\nRequired to allow the Citrix ADC to communicate with the DFA server.",
+			},
+			"passphrase_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a passphrase_wo update.",
 			},
 			"serverurl": schema.StringAttribute{
 				Required:    true,
@@ -54,28 +76,43 @@ func (r *AuthenticationdfaactionResource) Schema(ctx context.Context, req resour
 	}
 }
 
-func authenticationdfaactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationdfaactionResourceModel) authentication.Authenticationdfaaction {
-	tflog.Debug(ctx, "In authenticationdfaactionGetThePayloadFromtheConfig Function")
+func authenticationdfaactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationdfaactionResourceModel) authentication.Authenticationdfaaction {
+	tflog.Debug(ctx, "In authenticationdfaactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationdfaaction := authentication.Authenticationdfaaction{}
-	if !data.Clientid.IsNull() {
+	if !data.Clientid.IsNull() && !data.Clientid.IsUnknown() {
 		authenticationdfaaction.Clientid = data.Clientid.ValueString()
 	}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationdfaaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationdfaaction.Name = data.Name.ValueString()
 	}
-	if !data.Passphrase.IsNull() {
+	if !data.Passphrase.IsNull() && !data.Passphrase.IsUnknown() {
 		authenticationdfaaction.Passphrase = data.Passphrase.ValueString()
 	}
-	if !data.Serverurl.IsNull() {
+	// Skip write-only attribute: passphrase_wo
+	// Skip version tracker attribute: passphrase_wo_version
+	if !data.Serverurl.IsNull() && !data.Serverurl.IsUnknown() {
 		authenticationdfaaction.Serverurl = data.Serverurl.ValueString()
 	}
 
 	return authenticationdfaaction
+}
+
+func authenticationdfaactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationdfaactionResourceModel, payload *authentication.Authenticationdfaaction) {
+	tflog.Debug(ctx, "In authenticationdfaactionGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: passphrase_wo -> passphrase
+	if !data.PassphraseWo.IsNull() {
+		passphraseWo := data.PassphraseWo.ValueString()
+		if passphraseWo != "" {
+			payload.Passphrase = passphraseWo
+		}
+	}
 }
 
 func authenticationdfaactionSetAttrFromGet(ctx context.Context, data *AuthenticationdfaactionResourceModel, getResponseData map[string]interface{}) *AuthenticationdfaactionResourceModel {
@@ -97,11 +134,9 @@ func authenticationdfaactionSetAttrFromGet(ctx context.Context, data *Authentica
 	} else {
 		data.Name = types.StringNull()
 	}
-	if val, ok := getResponseData["passphrase"]; ok && val != nil {
-		data.Passphrase = types.StringValue(val.(string))
-	} else {
-		data.Passphrase = types.StringNull()
-	}
+	// passphrase is not returned by NITRO API (secret/ephemeral) - retain from config
+	// passphrase_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// passphrase_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["serverurl"]; ok && val != nil {
 		data.Serverurl = types.StringValue(val.(string))
 	} else {
@@ -109,8 +144,8 @@ func authenticationdfaactionSetAttrFromGet(ctx context.Context, data *Authentica
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

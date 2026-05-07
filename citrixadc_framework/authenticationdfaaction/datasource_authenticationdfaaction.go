@@ -38,7 +38,6 @@ func (d *AuthenticationdfaactionDataSource) Read(ctx context.Context, req dataso
 	var data AuthenticationdfaactionResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

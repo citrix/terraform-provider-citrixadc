@@ -21,6 +21,47 @@ resource "citrixadc_lbprofile" "tf_lbprofile" {
 }
 ```
 
+### Using cookiepassphrase (sensitive attribute - persisted in state)
+
+```hcl
+variable "lbprofile_cookiepassphrase" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbprofile" "tf_lbprofile" {
+  lbprofilename    = "tf_lbprofile"
+  cookiepassphrase = var.lbprofile_cookiepassphrase
+}
+```
+
+### Using cookiepassphrase_wo (write-only/ephemeral - NOT persisted in state)
+
+The `cookiepassphrase_wo` attribute provides an ephemeral path for the cookie passphrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `cookiepassphrase_wo_version`.
+
+```hcl
+variable "lbprofile_cookiepassphrase" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbprofile" "tf_lbprofile" {
+  lbprofilename             = "tf_lbprofile"
+  cookiepassphrase_wo         = var.lbprofile_cookiepassphrase
+  cookiepassphrase_wo_version = 1
+}
+```
+
+To rotate the secret, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_lbprofile" "tf_lbprofile" {
+  lbprofilename             = "tf_lbprofile"
+  cookiepassphrase_wo         = var.lbprofile_cookiepassphrase
+  cookiepassphrase_wo_version = 2  # Bumped to trigger update
+}
+```
+
 
 ## Argument Reference
 
@@ -28,7 +69,9 @@ resource "citrixadc_lbprofile" "tf_lbprofile" {
 * `dbslb` - (Optional) Enable database specific load balancing for MySQL and MSSQL service types. Possible values: [ ENABLED, DISABLED ]
 * `processlocal` - (Optional) By turning on this option packets destined to a vserver in a cluster will not under go any steering. Turn this option for single pa cket request response mode or when the upstream device is performing a proper RSS for connection based distribution. Possible values: [ ENABLED, DISABLED ]
 * `httponlycookieflag` - (Optional) Include the HttpOnly attribute in persistence cookies. The HttpOnly attribute limits the scope of a cookie to HTTP requests and helps mitigate the risk of cross-site scripting attacks. Possible values: [ ENABLED, DISABLED ]
-* `cookiepassphrase` - (Optional) Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.
+* `cookiepassphrase` - (Optional, Sensitive) Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters. The value is persisted in Terraform state (encrypted). See also `cookiepassphrase_wo` for an ephemeral alternative.
+* `cookiepassphrase_wo` - (Optional, Sensitive, WriteOnly) Same as `cookiepassphrase`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `cookiepassphrase_wo_version`. If both `cookiepassphrase` and `cookiepassphrase_wo` are set, `cookiepassphrase_wo` takes precedence.
+* `cookiepassphrase_wo_version` - (Optional) An integer version tracker for `cookiepassphrase_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `usesecuredpersistencecookie` - (Optional) Encode persistence cookie values using SHA2 hash. Possible values: [ ENABLED, DISABLED ]
 * `useencryptedpersistencecookie` - (Optional) Encode persistence cookie values using SHA2 hash. Possible values: [ ENABLED, DISABLED ]
 * `literaladccookieattribute` - (Optional) String configured as LiteralADCCookieAttribute will be appended as attribute for Citrix ADC cookie (for example: LB cookie persistence , GSLB site persistence, CS cookie persistence, LB group cookie persistence). Sample usage - add lb profile lbprof -LiteralADCCookieAttribute ";SameSite=None".

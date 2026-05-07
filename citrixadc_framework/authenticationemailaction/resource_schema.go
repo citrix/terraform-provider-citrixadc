@@ -2,13 +2,15 @@ package authenticationemailaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -23,6 +25,8 @@ type AuthenticationemailactionResourceModel struct {
 	Emailaddress               types.String `tfsdk:"emailaddress"`
 	Name                       types.String `tfsdk:"name"`
 	Password                   types.String `tfsdk:"password"`
+	PasswordWo                 types.String `tfsdk:"password_wo"`
+	PasswordWoVersion          types.Int64  `tfsdk:"password_wo_version"`
 	Serverurl                  types.String `tfsdk:"serverurl"`
 	Timeout                    types.Int64  `tfsdk:"timeout"`
 	Type                       types.String `tfsdk:"type"`
@@ -53,12 +57,28 @@ func (r *AuthenticationemailactionResource) Schema(ctx context.Context, req reso
 				Description: "An optional expression that yields user's email. When not configured, user's default mail address would be used. When configured, result of this expression is used as destination email address.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new email action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"password": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "Password/Clientsecret to use when authenticating to the server.",
+			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password/Clientsecret to use when authenticating to the server.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a password_wo update.",
 			},
 			"serverurl": schema.StringAttribute{
 				Required:    true,
@@ -66,12 +86,12 @@ func (r *AuthenticationemailactionResource) Schema(ctx context.Context, req reso
 			},
 			"timeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(180),
+				Computed:    true,
 				Description: "Time after which the code expires.",
 			},
 			"type": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("SMTP"),
+				Computed:    true,
 				Description: "Type of the email action. Default type is SMTP.",
 			},
 			"username": schema.StringAttribute{
@@ -82,40 +102,55 @@ func (r *AuthenticationemailactionResource) Schema(ctx context.Context, req reso
 	}
 }
 
-func authenticationemailactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationemailactionResourceModel) authentication.Authenticationemailaction {
-	tflog.Debug(ctx, "In authenticationemailactionGetThePayloadFromtheConfig Function")
+func authenticationemailactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationemailactionResourceModel) authentication.Authenticationemailaction {
+	tflog.Debug(ctx, "In authenticationemailactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationemailaction := authentication.Authenticationemailaction{}
-	if !data.Content.IsNull() {
+	if !data.Content.IsNull() && !data.Content.IsUnknown() {
 		authenticationemailaction.Content = data.Content.ValueString()
 	}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationemailaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Emailaddress.IsNull() {
+	if !data.Emailaddress.IsNull() && !data.Emailaddress.IsUnknown() {
 		authenticationemailaction.Emailaddress = data.Emailaddress.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationemailaction.Name = data.Name.ValueString()
 	}
-	if !data.Password.IsNull() {
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
 		authenticationemailaction.Password = data.Password.ValueString()
 	}
-	if !data.Serverurl.IsNull() {
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Serverurl.IsNull() && !data.Serverurl.IsUnknown() {
 		authenticationemailaction.Serverurl = data.Serverurl.ValueString()
 	}
-	if !data.Timeout.IsNull() {
+	if !data.Timeout.IsNull() && !data.Timeout.IsUnknown() {
 		authenticationemailaction.Timeout = utils.IntPtr(int(data.Timeout.ValueInt64()))
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		authenticationemailaction.Type = data.Type.ValueString()
 	}
-	if !data.Username.IsNull() {
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
 		authenticationemailaction.Username = data.Username.ValueString()
 	}
 
 	return authenticationemailaction
+}
+
+func authenticationemailactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationemailactionResourceModel, payload *authentication.Authenticationemailaction) {
+	tflog.Debug(ctx, "In authenticationemailactionGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: password_wo -> password
+	if !data.PasswordWo.IsNull() {
+		passwordWo := data.PasswordWo.ValueString()
+		if passwordWo != "" {
+			payload.Password = passwordWo
+		}
+	}
 }
 
 func authenticationemailactionSetAttrFromGet(ctx context.Context, data *AuthenticationemailactionResourceModel, getResponseData map[string]interface{}) *AuthenticationemailactionResourceModel {
@@ -142,11 +177,9 @@ func authenticationemailactionSetAttrFromGet(ctx context.Context, data *Authenti
 	} else {
 		data.Name = types.StringNull()
 	}
-	if val, ok := getResponseData["password"]; ok && val != nil {
-		data.Password = types.StringValue(val.(string))
-	} else {
-		data.Password = types.StringNull()
-	}
+	// password is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["serverurl"]; ok && val != nil {
 		data.Serverurl = types.StringValue(val.(string))
 	} else {
@@ -156,8 +189,6 @@ func authenticationemailactionSetAttrFromGet(ctx context.Context, data *Authenti
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeout = types.Int64Value(intVal)
 		}
-	} else {
-		data.Timeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
@@ -171,8 +202,8 @@ func authenticationemailactionSetAttrFromGet(ctx context.Context, data *Authenti
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

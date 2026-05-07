@@ -38,7 +38,6 @@ func (d *AuthenticationoauthidpprofileDataSource) Read(ctx context.Context, req 
 	var data AuthenticationoauthidpprofileResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

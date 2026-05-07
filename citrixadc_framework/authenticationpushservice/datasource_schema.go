@@ -20,6 +20,15 @@ func AuthenticationpushserviceDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Unique secret for communicating with Citrix Push server in cloud.",
 			},
+			"clientsecret_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Unique secret for communicating with Citrix Push server in cloud.",
+			},
+			"clientsecret_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a clientsecret_wo update.",
+			},
 			"customerid": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

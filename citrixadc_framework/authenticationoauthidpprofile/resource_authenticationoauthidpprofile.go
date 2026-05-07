@@ -44,30 +44,36 @@ func (r *AuthenticationoauthidpprofileResource) Configure(ctx context.Context, r
 }
 
 func (r *AuthenticationoauthidpprofileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data AuthenticationoauthidpprofileResourceModel
+	var data, config AuthenticationoauthidpprofileResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating authenticationoauthidpprofile resource")
-
-	// authenticationoauthidpprofile := authenticationoauthidpprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	authenticationoauthidpprofile := authenticationoauthidpprofileGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	authenticationoauthidpprofileGetThePayloadFromtheConfig(ctx, &config, &authenticationoauthidpprofile)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationoauthidpprofile.Type(), &authenticationoauthidpprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationoauthidpprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationoauthidpprofile-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Authenticationoauthidpprofile.Type(), name_value, &authenticationoauthidpprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationoauthidpprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationoauthidpprofile resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
 	r.readAuthenticationoauthidpprofileFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,28 +101,110 @@ func (r *AuthenticationoauthidpprofileResource) Read(ctx context.Context, req re
 }
 
 func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationoauthidpprofileResourceModel
+	var data, config, state AuthenticationoauthidpprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationoauthidpprofile resource")
 
-	// Create API request body from the model
-	// authenticationoauthidpprofile := authenticationoauthidpprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Attributes.Equal(state.Attributes) {
+		tflog.Debug(ctx, fmt.Sprintf("attributes has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Audience.Equal(state.Audience) {
+		tflog.Debug(ctx, fmt.Sprintf("audience has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Clientid.Equal(state.Clientid) {
+		tflog.Debug(ctx, fmt.Sprintf("clientid has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	// Check secret attribute clientsecret or its version tracker
+	if !data.Clientsecret.Equal(state.Clientsecret) {
+		tflog.Debug(ctx, fmt.Sprintf("clientsecret has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	} else if !data.ClientsecretWoVersion.Equal(state.ClientsecretWoVersion) {
+		tflog.Debug(ctx, fmt.Sprintf("clientsecret_wo_version has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Configservice.Equal(state.Configservice) {
+		tflog.Debug(ctx, fmt.Sprintf("configservice has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
+		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Encrypttoken.Equal(state.Encrypttoken) {
+		tflog.Debug(ctx, fmt.Sprintf("encrypttoken has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Issuer.Equal(state.Issuer) {
+		tflog.Debug(ctx, fmt.Sprintf("issuer has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Redirecturl.Equal(state.Redirecturl) {
+		tflog.Debug(ctx, fmt.Sprintf("redirecturl has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Refreshinterval.Equal(state.Refreshinterval) {
+		tflog.Debug(ctx, fmt.Sprintf("refreshinterval has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Relyingpartymetadataurl.Equal(state.Relyingpartymetadataurl) {
+		tflog.Debug(ctx, fmt.Sprintf("relyingpartymetadataurl has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Sendpassword.Equal(state.Sendpassword) {
+		tflog.Debug(ctx, fmt.Sprintf("sendpassword has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Signaturealg.Equal(state.Signaturealg) {
+		tflog.Debug(ctx, fmt.Sprintf("signaturealg has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Signatureservice.Equal(state.Signatureservice) {
+		tflog.Debug(ctx, fmt.Sprintf("signatureservice has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
+	if !data.Skewtime.Equal(state.Skewtime) {
+		tflog.Debug(ctx, fmt.Sprintf("skewtime has changed for authenticationoauthidpprofile"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationoauthidpprofile.Type(), &authenticationoauthidpprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationoauthidpprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		// Get payload from plan (regular attributes)
+		authenticationoauthidpprofile := authenticationoauthidpprofileGetThePayloadFromthePlan(ctx, &data)
+		// Add write-only attributes from config to the payload
+		authenticationoauthidpprofileGetThePayloadFromtheConfig(ctx, &config, &authenticationoauthidpprofile)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Authenticationoauthidpprofile.Type(), name_value, &authenticationoauthidpprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationoauthidpprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationoauthidpprofile resource")
+		tflog.Trace(ctx, "Updated authenticationoauthidpprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for authenticationoauthidpprofile resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAuthenticationoauthidpprofileFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +224,27 @@ func (r *AuthenticationoauthidpprofileResource) Delete(ctx context.Context, req 
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationoauthidpprofile resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Authenticationoauthidpprofile.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationoauthidpprofile, got error: %s", err))
+		return
+	}
 
-	// For authenticationoauthidpprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationoauthidpprofile resource from state")
+	tflog.Trace(ctx, "Deleted authenticationoauthidpprofile resource")
 }
 
 // Helper function to read authenticationoauthidpprofile data from API
 func (r *AuthenticationoauthidpprofileResource) readAuthenticationoauthidpprofileFromApi(ctx context.Context, data *AuthenticationoauthidpprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationoauthidpprofile.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	name_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Authenticationoauthidpprofile.Type(), name_Name)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationoauthidpprofile, got error: %s", err))
 		return

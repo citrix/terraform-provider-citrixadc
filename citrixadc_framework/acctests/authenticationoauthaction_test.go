@@ -176,3 +176,123 @@ func TestAccAuthenticationoauthactionDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Ephemeral / Write-Only tests for clientsecret
+
+const testAccAuthenticationoauthaction_clientsecret_step1 = `
+	variable "authenticationoauthaction_clientsecret" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationoauthaction" "test" {
+		name                  = "tf_oauthaction_compat"
+		authorizationendpoint = "https://example.com/"
+		tokenendpoint         = "https://example.com/"
+		clientid              = "id"
+		clientsecret          = var.authenticationoauthaction_clientsecret
+		resourceuri           = "http://www.example.com"
+	}
+`
+
+const testAccAuthenticationoauthaction_clientsecret_step2 = `
+	variable "authenticationoauthaction_clientsecret_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationoauthaction" "test" {
+		name                  = "tf_oauthaction_compat"
+		authorizationendpoint = "https://example.com/"
+		tokenendpoint         = "https://example.com/"
+		clientid              = "id"
+		clientsecret          = var.authenticationoauthaction_clientsecret_2
+		resourceuri           = "http://www.example.com"
+	}
+`
+
+func TestAccAuthenticationoauthaction_clientsecret_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationoauthaction_clientsecret", "secret1")
+	t.Setenv("TF_VAR_authenticationoauthaction_clientsecret_2", "secret2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationoauthaction_clientsecret_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthactionExist("citrixadc_authenticationoauthaction.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.test", "name", "tf_oauthaction_compat"),
+				),
+			},
+			{
+				Config: testAccAuthenticationoauthaction_clientsecret_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthactionExist("citrixadc_authenticationoauthaction.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.test", "name", "tf_oauthaction_compat"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuthenticationoauthaction_wo_step1 = `
+	variable "authenticationoauthaction_clientsecret_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationoauthaction" "test" {
+		name                      = "tf_oauthaction_wo"
+		authorizationendpoint     = "https://example.com/"
+		tokenendpoint             = "https://example.com/"
+		clientid                  = "id"
+		clientsecret_wo           = var.authenticationoauthaction_clientsecret_wo
+		clientsecret_wo_version   = 1
+		resourceuri               = "http://www.example.com"
+	}
+`
+
+const testAccAuthenticationoauthaction_wo_step2 = `
+	variable "authenticationoauthaction_clientsecret_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationoauthaction" "test" {
+		name                      = "tf_oauthaction_wo"
+		authorizationendpoint     = "https://example.com/"
+		tokenendpoint             = "https://example.com/"
+		clientid                  = "id"
+		clientsecret_wo           = var.authenticationoauthaction_clientsecret_wo_2
+		clientsecret_wo_version   = 2
+		resourceuri               = "http://www.example.com"
+	}
+`
+
+func TestAccAuthenticationoauthaction_clientsecret_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationoauthaction_clientsecret_wo", "ephemeral_secret1")
+	t.Setenv("TF_VAR_authenticationoauthaction_clientsecret_wo_2", "ephemeral_secret2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationoauthaction_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthactionExist("citrixadc_authenticationoauthaction.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.test", "clientsecret_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationoauthaction_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthactionExist("citrixadc_authenticationoauthaction.test", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.test", "clientsecret_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

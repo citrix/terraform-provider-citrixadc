@@ -29,6 +29,15 @@ func AuthenticationdfaactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Key shared between the DFA server and the Citrix ADC.\nRequired to allow the Citrix ADC to communicate with the DFA server.",
 			},
+			"passphrase_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Key shared between the DFA server and the Citrix ADC.\nRequired to allow the Citrix ADC to communicate with the DFA server.",
+			},
+			"passphrase_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a passphrase_wo update.",
+			},
 			"serverurl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

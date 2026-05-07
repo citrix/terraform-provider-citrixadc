@@ -137,6 +137,15 @@ func AuthenticationoauthactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Secret string established by user and authorization server",
 			},
+			"clientsecret_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Secret string established by user and authorization server",
+			},
+			"clientsecret_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a clientsecret_wo update.",
+			},
 			"defaultauthenticationgroup": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

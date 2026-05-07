@@ -29,6 +29,15 @@ func AuthenticationcaptchaactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Secret of gateway as established at the captcha source.",
 			},
+			"secretkey_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Secret of gateway as established at the captcha source.",
+			},
+			"secretkey_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a secretkey_wo update.",
+			},
 			"serverurl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -38,6 +47,15 @@ func AuthenticationcaptchaactionDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Sitekey to identify gateway fqdn while loading captcha.",
+			},
+			"sitekey_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Sitekey to identify gateway fqdn while loading captcha.",
+			},
+			"sitekey_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a sitekey_wo update.",
 			},
 		},
 	}

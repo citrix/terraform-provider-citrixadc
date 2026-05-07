@@ -9,14 +9,56 @@ The authenticationoauthaction resource is used to create OAuth authentication ac
 
 ## Example usage
 
+### Using clientsecret (sensitive attribute - persisted in state)
+
 ```hcl
+variable "authenticationoauthaction_clientsecret" {
+  type      = string
+  sensitive = true
+}
+
 resource "citrixadc_authenticationoauthaction" "tf_authenticationoauthaction" {
   name                  = "tf_authenticationoauthaction"
   authorizationendpoint = "https://example.com/"
   tokenendpoint         = "https://ssexample.com/"
   clientid              = "cliId"
-  clientsecret          = "secret"
+  clientsecret          = var.authenticationoauthaction_clientsecret
   resourceuri           = "http://www.sd.com"
+}
+```
+
+### Using clientsecret_wo (write-only/ephemeral - NOT persisted in state)
+
+The `clientsecret_wo` attribute provides an ephemeral path for the client secret. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `clientsecret_wo_version`.
+
+```hcl
+variable "authenticationoauthaction_clientsecret" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_authenticationoauthaction" "tf_authenticationoauthaction" {
+  name                     = "tf_authenticationoauthaction"
+  authorizationendpoint    = "https://example.com/"
+  tokenendpoint            = "https://ssexample.com/"
+  clientid                 = "cliId"
+  clientsecret_wo          = var.authenticationoauthaction_clientsecret
+  clientsecret_wo_version  = 1
+  resourceuri              = "http://www.sd.com"
+}
+```
+
+To rotate the secret, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_authenticationoauthaction" "tf_authenticationoauthaction" {
+  name                     = "tf_authenticationoauthaction"
+  authorizationendpoint    = "https://example.com/"
+  tokenendpoint            = "https://ssexample.com/"
+  clientid                 = "cliId"
+  clientsecret_wo          = var.authenticationoauthaction_clientsecret
+  clientsecret_wo_version  = 2  # Bumped to trigger update
+  resourceuri              = "http://www.sd.com"
 }
 ```
 
@@ -27,7 +69,9 @@ resource "citrixadc_authenticationoauthaction" "tf_authenticationoauthaction" {
 * `tokenendpoint` - (Required) URL to which OAuth token will be posted to verify its authenticity. User obtains this token from Authorization server upon successful authentication. Citrix ADC will validate presented token by posting it to the URL configured.
 * `authorizationendpoint` - (Required) Authorization endpoint/url to which unauthenticated user will be redirected. Citrix ADC redirects user to this endpoint by adding query parameters including clientid. If this parameter not specified then as default value we take Token Endpoint/URL value. Please note that Authorization Endpoint or Token Endpoint is mandatory for oauthAction
 * `clientid` - (Required) Unique identity of the client/user who is getting authenticated. Authorization server infers client configuration using this ID
-* `clientsecret` - (Required) Secret string established by user and authorization server
+* `clientsecret` - (Optional, Sensitive) Secret string established by user and authorization server. The value is persisted in Terraform state (encrypted). See also `clientsecret_wo` for an ephemeral alternative.
+* `clientsecret_wo` - (Optional, Sensitive, WriteOnly) Same as `clientsecret`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `clientsecret_wo_version`. If both `clientsecret` and `clientsecret_wo` are set, `clientsecret_wo` takes precedence.
+* `clientsecret_wo_version` - (Optional) An integer version tracker for `clientsecret_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `allowedalgorithms` - (Optional) Multivalued option to specify allowed token verification algorithms.
 * `attribute1` - (Optional) Name of the attribute to be extracted from OAuth Token and to be stored in the attribute1
 * `attribute10` - (Optional) Name of the attribute to be extracted from OAuth Token and to be stored in the attribute10

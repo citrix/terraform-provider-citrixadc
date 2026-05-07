@@ -2,13 +2,15 @@ package authenticationoauthidpprofile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -22,6 +24,8 @@ type AuthenticationoauthidpprofileResourceModel struct {
 	Audience                   types.String `tfsdk:"audience"`
 	Clientid                   types.String `tfsdk:"clientid"`
 	Clientsecret               types.String `tfsdk:"clientsecret"`
+	ClientsecretWo             types.String `tfsdk:"clientsecret_wo"`
+	ClientsecretWoVersion      types.Int64  `tfsdk:"clientsecret_wo_version"`
 	Configservice              types.String `tfsdk:"configservice"`
 	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
 	Encrypttoken               types.String `tfsdk:"encrypttoken"`
@@ -61,8 +65,20 @@ func (r *AuthenticationoauthidpprofileResource) Schema(ctx context.Context, req 
 			},
 			"clientsecret": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Unique secret string to authorize relying party at authorization server.",
+			},
+			"clientsecret_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Unique secret string to authorize relying party at authorization server.",
+			},
+			"clientsecret_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a clientsecret_wo update.",
 			},
 			"configservice": schema.StringAttribute{
 				Optional:    true,
@@ -85,7 +101,10 @@ func (r *AuthenticationoauthidpprofileResource) Schema(ctx context.Context, req 
 				Description: "The name to be used in requests sent from	Citrix ADC to IdP to uniquely identify Citrix ADC.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new OAuth Identity Provider (IdP) single sign-on profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"redirecturl": schema.StringAttribute{
@@ -95,7 +114,7 @@ func (r *AuthenticationoauthidpprofileResource) Schema(ctx context.Context, req 
 			},
 			"refreshinterval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(50),
+				Computed:    true,
 				Description: "Interval at which Relying Party metadata is refreshed.",
 			},
 			"relyingpartymetadataurl": schema.StringAttribute{
@@ -110,7 +129,7 @@ func (r *AuthenticationoauthidpprofileResource) Schema(ctx context.Context, req 
 			},
 			"signaturealg": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("RS256"),
+				Computed:    true,
 				Description: "Algorithm to be used to sign OpenID tokens.",
 			},
 			"signatureservice": schema.StringAttribute{
@@ -120,68 +139,83 @@ func (r *AuthenticationoauthidpprofileResource) Schema(ctx context.Context, req 
 			},
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(5),
+				Computed:    true,
 				Description: "This option specifies the duration for which the token sent by Citrix ADC IdP is valid. For example, if skewTime is 10, then token would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.",
 			},
 		},
 	}
 }
 
-func authenticationoauthidpprofileGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationoauthidpprofileResourceModel) authentication.Authenticationoauthidpprofile {
-	tflog.Debug(ctx, "In authenticationoauthidpprofileGetThePayloadFromtheConfig Function")
+func authenticationoauthidpprofileGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationoauthidpprofileResourceModel) authentication.Authenticationoauthidpprofile {
+	tflog.Debug(ctx, "In authenticationoauthidpprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationoauthidpprofile := authentication.Authenticationoauthidpprofile{}
-	if !data.Attributes.IsNull() {
+	if !data.Attributes.IsNull() && !data.Attributes.IsUnknown() {
 		authenticationoauthidpprofile.Attributes = data.Attributes.ValueString()
 	}
-	if !data.Audience.IsNull() {
+	if !data.Audience.IsNull() && !data.Audience.IsUnknown() {
 		authenticationoauthidpprofile.Audience = data.Audience.ValueString()
 	}
-	if !data.Clientid.IsNull() {
+	if !data.Clientid.IsNull() && !data.Clientid.IsUnknown() {
 		authenticationoauthidpprofile.Clientid = data.Clientid.ValueString()
 	}
-	if !data.Clientsecret.IsNull() {
+	if !data.Clientsecret.IsNull() && !data.Clientsecret.IsUnknown() {
 		authenticationoauthidpprofile.Clientsecret = data.Clientsecret.ValueString()
 	}
-	if !data.Configservice.IsNull() {
+	// Skip write-only attribute: clientsecret_wo
+	// Skip version tracker attribute: clientsecret_wo_version
+	if !data.Configservice.IsNull() && !data.Configservice.IsUnknown() {
 		authenticationoauthidpprofile.Configservice = data.Configservice.ValueString()
 	}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationoauthidpprofile.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Encrypttoken.IsNull() {
+	if !data.Encrypttoken.IsNull() && !data.Encrypttoken.IsUnknown() {
 		authenticationoauthidpprofile.Encrypttoken = data.Encrypttoken.ValueString()
 	}
-	if !data.Issuer.IsNull() {
+	if !data.Issuer.IsNull() && !data.Issuer.IsUnknown() {
 		authenticationoauthidpprofile.Issuer = data.Issuer.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationoauthidpprofile.Name = data.Name.ValueString()
 	}
-	if !data.Redirecturl.IsNull() {
+	if !data.Redirecturl.IsNull() && !data.Redirecturl.IsUnknown() {
 		authenticationoauthidpprofile.Redirecturl = data.Redirecturl.ValueString()
 	}
-	if !data.Refreshinterval.IsNull() {
+	if !data.Refreshinterval.IsNull() && !data.Refreshinterval.IsUnknown() {
 		authenticationoauthidpprofile.Refreshinterval = utils.IntPtr(int(data.Refreshinterval.ValueInt64()))
 	}
-	if !data.Relyingpartymetadataurl.IsNull() {
+	if !data.Relyingpartymetadataurl.IsNull() && !data.Relyingpartymetadataurl.IsUnknown() {
 		authenticationoauthidpprofile.Relyingpartymetadataurl = data.Relyingpartymetadataurl.ValueString()
 	}
-	if !data.Sendpassword.IsNull() {
+	if !data.Sendpassword.IsNull() && !data.Sendpassword.IsUnknown() {
 		authenticationoauthidpprofile.Sendpassword = data.Sendpassword.ValueString()
 	}
-	if !data.Signaturealg.IsNull() {
+	if !data.Signaturealg.IsNull() && !data.Signaturealg.IsUnknown() {
 		authenticationoauthidpprofile.Signaturealg = data.Signaturealg.ValueString()
 	}
-	if !data.Signatureservice.IsNull() {
+	if !data.Signatureservice.IsNull() && !data.Signatureservice.IsUnknown() {
 		authenticationoauthidpprofile.Signatureservice = data.Signatureservice.ValueString()
 	}
-	if !data.Skewtime.IsNull() {
+	if !data.Skewtime.IsNull() && !data.Skewtime.IsUnknown() {
 		authenticationoauthidpprofile.Skewtime = utils.IntPtr(int(data.Skewtime.ValueInt64()))
 	}
 
 	return authenticationoauthidpprofile
+}
+
+func authenticationoauthidpprofileGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationoauthidpprofileResourceModel, payload *authentication.Authenticationoauthidpprofile) {
+	tflog.Debug(ctx, "In authenticationoauthidpprofileGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: clientsecret_wo -> clientsecret
+	if !data.ClientsecretWo.IsNull() {
+		clientsecretWo := data.ClientsecretWo.ValueString()
+		if clientsecretWo != "" {
+			payload.Clientsecret = clientsecretWo
+		}
+	}
 }
 
 func authenticationoauthidpprofileSetAttrFromGet(ctx context.Context, data *AuthenticationoauthidpprofileResourceModel, getResponseData map[string]interface{}) *AuthenticationoauthidpprofileResourceModel {
@@ -203,11 +237,9 @@ func authenticationoauthidpprofileSetAttrFromGet(ctx context.Context, data *Auth
 	} else {
 		data.Clientid = types.StringNull()
 	}
-	if val, ok := getResponseData["clientsecret"]; ok && val != nil {
-		data.Clientsecret = types.StringValue(val.(string))
-	} else {
-		data.Clientsecret = types.StringNull()
-	}
+	// clientsecret is not returned by NITRO API (secret/ephemeral) - retain from config
+	// clientsecret_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// clientsecret_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["configservice"]; ok && val != nil {
 		data.Configservice = types.StringValue(val.(string))
 	} else {
@@ -274,8 +306,8 @@ func authenticationoauthidpprofileSetAttrFromGet(ctx context.Context, data *Auth
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

@@ -158,6 +158,246 @@ func testAccCheckAutoscaleprofileDestroy(s *terraform.State) error {
 	return nil
 }
 
+// --- apikey backward-compatible (sensitive attribute) tests ---
+
+const testAccAutoscaleprofile_apikey_step1 = `
+variable "autoscaleprofile_apikey" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_autoscaleprofile" "test_apikey" {
+  name         = "tf_autoscaleprofile_apikey"
+  type         = "CLOUDSTACK"
+  apikey       = var.autoscaleprofile_apikey
+  url          = "www.service.example.com"
+  sharedsecret = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
+}
+`
+
+const testAccAutoscaleprofile_apikey_step2 = `
+variable "autoscaleprofile_apikey_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_autoscaleprofile" "test_apikey" {
+  name         = "tf_autoscaleprofile_apikey"
+  type         = "CLOUDSTACK"
+  apikey       = var.autoscaleprofile_apikey_2
+  url          = "www.service.example.com"
+  sharedsecret = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
+}
+`
+
+func TestAccAutoscaleprofile_apikey_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_autoscaleprofile_apikey", "7c177611-4a18-42b0-a7c5-bfd811fd590f")
+	t.Setenv("TF_VAR_autoscaleprofile_apikey_2", "88e0ae91-4cd0-4dd5-8fa1-dcd38165f4a2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAutoscaleprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscaleprofile_apikey_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutoscaleprofileExist("citrixadc_autoscaleprofile.test_apikey", nil),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_apikey", "name", "tf_autoscaleprofile_apikey"),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_apikey", "type", "CLOUDSTACK"),
+				),
+			},
+			{
+				Config: testAccAutoscaleprofile_apikey_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutoscaleprofileExist("citrixadc_autoscaleprofile.test_apikey", nil),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_apikey", "name", "tf_autoscaleprofile_apikey"),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_apikey", "type", "CLOUDSTACK"),
+				),
+			},
+		},
+	})
+}
+
+// --- apikey write-only (ephemeral) tests ---
+
+const testAccAutoscaleprofile_apikey_wo_step1 = `
+variable "autoscaleprofile_apikey_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_autoscaleprofile" "test_apikey_wo" {
+  name             = "tf_autoscaleprofile_apikey_wo"
+  type             = "CLOUDSTACK"
+  apikey_wo        = var.autoscaleprofile_apikey_wo
+  apikey_wo_version = 1
+  url              = "www.service.example.com"
+  sharedsecret     = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
+}
+`
+
+const testAccAutoscaleprofile_apikey_wo_step2 = `
+variable "autoscaleprofile_apikey_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_autoscaleprofile" "test_apikey_wo" {
+  name             = "tf_autoscaleprofile_apikey_wo"
+  type             = "CLOUDSTACK"
+  apikey_wo        = var.autoscaleprofile_apikey_wo_2
+  apikey_wo_version = 2
+  url              = "www.service.example.com"
+  sharedsecret     = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
+}
+`
+
+func TestAccAutoscaleprofile_apikey_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_autoscaleprofile_apikey_wo", "7c177611-4a18-42b0-a7c5-bfd811fd590f")
+	t.Setenv("TF_VAR_autoscaleprofile_apikey_wo_2", "88e0ae91-4cd0-4dd5-8fa1-dcd38165f4a2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAutoscaleprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscaleprofile_apikey_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutoscaleprofileExist("citrixadc_autoscaleprofile.test_apikey_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_apikey_wo", "apikey_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAutoscaleprofile_apikey_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutoscaleprofileExist("citrixadc_autoscaleprofile.test_apikey_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_apikey_wo", "apikey_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+// --- sharedsecret backward-compatible (sensitive attribute) tests ---
+
+const testAccAutoscaleprofile_sharedsecret_step1 = `
+variable "autoscaleprofile_sharedsecret" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_autoscaleprofile" "test_sharedsecret" {
+  name         = "tf_autoscaleprofile_ss"
+  type         = "CLOUDSTACK"
+  apikey       = "7c177611-4a18-42b0-a7c5-bfd811fd590f"
+  url          = "www.service.example.com"
+  sharedsecret = var.autoscaleprofile_sharedsecret
+}
+`
+
+const testAccAutoscaleprofile_sharedsecret_step2 = `
+variable "autoscaleprofile_sharedsecret_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_autoscaleprofile" "test_sharedsecret" {
+  name         = "tf_autoscaleprofile_ss"
+  type         = "CLOUDSTACK"
+  apikey       = "7c177611-4a18-42b0-a7c5-bfd811fd590f"
+  url          = "www.service.example.com"
+  sharedsecret = var.autoscaleprofile_sharedsecret_2
+}
+`
+
+func TestAccAutoscaleprofile_sharedsecret_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_autoscaleprofile_sharedsecret", "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT")
+	t.Setenv("TF_VAR_autoscaleprofile_sharedsecret_2", "vruE8whIW8qnAvUGtT3EpmeIFp690nGo")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAutoscaleprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscaleprofile_sharedsecret_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutoscaleprofileExist("citrixadc_autoscaleprofile.test_sharedsecret", nil),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_sharedsecret", "name", "tf_autoscaleprofile_ss"),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_sharedsecret", "type", "CLOUDSTACK"),
+				),
+			},
+			{
+				Config: testAccAutoscaleprofile_sharedsecret_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutoscaleprofileExist("citrixadc_autoscaleprofile.test_sharedsecret", nil),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_sharedsecret", "name", "tf_autoscaleprofile_ss"),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_sharedsecret", "type", "CLOUDSTACK"),
+				),
+			},
+		},
+	})
+}
+
+// --- sharedsecret write-only (ephemeral) tests ---
+
+const testAccAutoscaleprofile_sharedsecret_wo_step1 = `
+variable "autoscaleprofile_sharedsecret_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_autoscaleprofile" "test_sharedsecret_wo" {
+  name                    = "tf_autoscaleprofile_ss_wo"
+  type                    = "CLOUDSTACK"
+  apikey                  = "7c177611-4a18-42b0-a7c5-bfd811fd590f"
+  url                     = "www.service.example.com"
+  sharedsecret_wo         = var.autoscaleprofile_sharedsecret_wo
+  sharedsecret_wo_version = 1
+}
+`
+
+const testAccAutoscaleprofile_sharedsecret_wo_step2 = `
+variable "autoscaleprofile_sharedsecret_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_autoscaleprofile" "test_sharedsecret_wo" {
+  name                    = "tf_autoscaleprofile_ss_wo"
+  type                    = "CLOUDSTACK"
+  apikey                  = "7c177611-4a18-42b0-a7c5-bfd811fd590f"
+  url                     = "www.service.example.com"
+  sharedsecret_wo         = var.autoscaleprofile_sharedsecret_wo_2
+  sharedsecret_wo_version = 2
+}
+`
+
+func TestAccAutoscaleprofile_sharedsecret_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_autoscaleprofile_sharedsecret_wo", "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT")
+	t.Setenv("TF_VAR_autoscaleprofile_sharedsecret_wo_2", "vruE8whIW8qnAvUGtT3EpmeIFp690nGo")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAutoscaleprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscaleprofile_sharedsecret_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutoscaleprofileExist("citrixadc_autoscaleprofile.test_sharedsecret_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_sharedsecret_wo", "sharedsecret_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAutoscaleprofile_sharedsecret_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutoscaleprofileExist("citrixadc_autoscaleprofile.test_sharedsecret_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_autoscaleprofile.test_sharedsecret_wo", "sharedsecret_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAutoscaleprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

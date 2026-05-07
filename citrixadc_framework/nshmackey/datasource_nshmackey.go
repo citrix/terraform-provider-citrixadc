@@ -38,7 +38,6 @@ func (d *NshmackeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 	var data NshmackeyResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

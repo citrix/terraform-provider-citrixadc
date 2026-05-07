@@ -20,6 +20,15 @@ func LbprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.",
 			},
+			"cookiepassphrase_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.",
+			},
+			"cookiepassphrase_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a cookiepassphrase_wo update.",
+			},
 			"dbslb": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

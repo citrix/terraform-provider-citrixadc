@@ -169,3 +169,119 @@ func TestAccBotsettingsDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Test backward-compatible path: using proxypassword (Sensitive attribute)
+const testAccBotsettings_proxypassword_step1 = `
+
+	variable "botsettings_proxypassword" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_botsettings" "default" {
+		proxyusername = "testuser"
+		proxypassword = var.botsettings_proxypassword
+		proxyport     = 8080
+	}
+`
+
+// Update backward-compatible path: change proxypassword value
+const testAccBotsettings_proxypassword_step2 = `
+
+	variable "botsettings_proxypassword_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_botsettings" "default" {
+		proxyusername = "testuser"
+		proxypassword = var.botsettings_proxypassword_2
+		proxyport     = 8080
+	}
+`
+
+func TestAccBotsettings_proxypassword_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_botsettings_proxypassword", "oldpassword123")
+	t.Setenv("TF_VAR_botsettings_proxypassword_2", "newpassword456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotsettings_proxypassword_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotsettingsExist("citrixadc_botsettings.default", nil),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyport", "8080"),
+				),
+			},
+			{
+				Config: testAccBotsettings_proxypassword_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotsettingsExist("citrixadc_botsettings.default", nil),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyport", "8080"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using proxypassword_wo (WriteOnly attribute) with version tracker
+const testAccBotsettings_proxypassword_wo_step1 = `
+
+	variable "botsettings_proxypassword_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_botsettings" "default" {
+		proxyusername            = "testuser"
+		proxypassword_wo         = var.botsettings_proxypassword_wo
+		proxypassword_wo_version = 1
+		proxyport                = 8080
+	}
+`
+
+// Update ephemeral path: bump version to trigger update with new password
+const testAccBotsettings_proxypassword_wo_step2 = `
+
+	variable "botsettings_proxypassword_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_botsettings" "default" {
+		proxyusername            = "testuser"
+		proxypassword_wo         = var.botsettings_proxypassword_wo_2
+		proxypassword_wo_version = 2
+		proxyport                = 8080
+	}
+`
+
+func TestAccBotsettings_proxypassword_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_botsettings_proxypassword_wo", "ephemeral_pass1")
+	t.Setenv("TF_VAR_botsettings_proxypassword_wo_2", "ephemeral_pass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotsettings_proxypassword_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotsettingsExist("citrixadc_botsettings.default", nil),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxypassword_wo_version", "1"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyport", "8080"),
+				),
+			},
+			{
+				Config: testAccBotsettings_proxypassword_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotsettingsExist("citrixadc_botsettings.default", nil),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxypassword_wo_version", "2"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyport", "8080"),
+				),
+			},
+		},
+	})
+}

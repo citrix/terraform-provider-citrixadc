@@ -172,3 +172,255 @@ func TestAccAuthenticationcaptchaactionDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// ---- secretkey backward-compat tests ----
+
+const testAccAuthenticationcaptchaaction_secretkey_step1 = `
+	variable "authenticationcaptchaaction_secretkey" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
+		name                       = "tf_captchaaction"
+		secretkey                  = var.authenticationcaptchaaction_secretkey
+		sitekey                    = "key"
+		serverurl                  = "http://www.example.com/"
+		defaultauthenticationgroup = "old_group"
+		scorethreshold             = 3
+	}
+`
+
+const testAccAuthenticationcaptchaaction_secretkey_step2 = `
+	variable "authenticationcaptchaaction_secretkey_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
+		name                       = "tf_captchaaction"
+		secretkey                  = var.authenticationcaptchaaction_secretkey_2
+		sitekey                    = "key"
+		serverurl                  = "http://www.example.com/"
+		defaultauthenticationgroup = "new_group"
+		scorethreshold             = 6
+	}
+`
+
+func TestAccAuthenticationcaptchaaction_secretkey_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationcaptchaaction_secretkey", "secret1")
+	t.Setenv("TF_VAR_authenticationcaptchaaction_secretkey_2", "secret2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcaptchaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcaptchaaction_secretkey_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcaptchaactionExist("citrixadc_authenticationcaptchaaction.tf_captchaaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "name", "tf_captchaaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "defaultauthenticationgroup", "old_group"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "scorethreshold", "3"),
+				),
+			},
+			{
+				Config: testAccAuthenticationcaptchaaction_secretkey_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcaptchaactionExist("citrixadc_authenticationcaptchaaction.tf_captchaaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "name", "tf_captchaaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "defaultauthenticationgroup", "new_group"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "scorethreshold", "6"),
+				),
+			},
+		},
+	})
+}
+
+// ---- secretkey write-only (ephemeral) tests ----
+
+const testAccAuthenticationcaptchaaction_secretkey_wo_step1 = `
+	variable "authenticationcaptchaaction_secretkey_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
+		name                       = "tf_captchaaction"
+		secretkey_wo               = var.authenticationcaptchaaction_secretkey_wo
+		secretkey_wo_version       = 1
+		sitekey                    = "key"
+		serverurl                  = "http://www.example.com/"
+		defaultauthenticationgroup = "old_group"
+		scorethreshold             = 3
+	}
+`
+
+const testAccAuthenticationcaptchaaction_secretkey_wo_step2 = `
+	variable "authenticationcaptchaaction_secretkey_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
+		name                       = "tf_captchaaction"
+		secretkey_wo               = var.authenticationcaptchaaction_secretkey_wo_2
+		secretkey_wo_version       = 2
+		sitekey                    = "key"
+		serverurl                  = "http://www.example.com/"
+		defaultauthenticationgroup = "new_group"
+		scorethreshold             = 6
+	}
+`
+
+func TestAccAuthenticationcaptchaaction_secretkey_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationcaptchaaction_secretkey_wo", "ephemeral_secret1")
+	t.Setenv("TF_VAR_authenticationcaptchaaction_secretkey_wo_2", "ephemeral_secret2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcaptchaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcaptchaaction_secretkey_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcaptchaactionExist("citrixadc_authenticationcaptchaaction.tf_captchaaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "secretkey_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationcaptchaaction_secretkey_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcaptchaactionExist("citrixadc_authenticationcaptchaaction.tf_captchaaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "secretkey_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+// ---- sitekey backward-compat tests ----
+
+const testAccAuthenticationcaptchaaction_sitekey_step1 = `
+	variable "authenticationcaptchaaction_sitekey" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
+		name                       = "tf_captchaaction"
+		secretkey                  = "secret"
+		sitekey                    = var.authenticationcaptchaaction_sitekey
+		serverurl                  = "http://www.example.com/"
+		defaultauthenticationgroup = "old_group"
+		scorethreshold             = 3
+	}
+`
+
+const testAccAuthenticationcaptchaaction_sitekey_step2 = `
+	variable "authenticationcaptchaaction_sitekey_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
+		name                       = "tf_captchaaction"
+		secretkey                  = "secret"
+		sitekey                    = var.authenticationcaptchaaction_sitekey_2
+		serverurl                  = "http://www.example.com/"
+		defaultauthenticationgroup = "new_group"
+		scorethreshold             = 6
+	}
+`
+
+func TestAccAuthenticationcaptchaaction_sitekey_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationcaptchaaction_sitekey", "sitekey1")
+	t.Setenv("TF_VAR_authenticationcaptchaaction_sitekey_2", "sitekey2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcaptchaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcaptchaaction_sitekey_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcaptchaactionExist("citrixadc_authenticationcaptchaaction.tf_captchaaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "name", "tf_captchaaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "defaultauthenticationgroup", "old_group"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "scorethreshold", "3"),
+				),
+			},
+			{
+				Config: testAccAuthenticationcaptchaaction_sitekey_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcaptchaactionExist("citrixadc_authenticationcaptchaaction.tf_captchaaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "name", "tf_captchaaction"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "defaultauthenticationgroup", "new_group"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "scorethreshold", "6"),
+				),
+			},
+		},
+	})
+}
+
+// ---- sitekey write-only (ephemeral) tests ----
+
+const testAccAuthenticationcaptchaaction_sitekey_wo_step1 = `
+	variable "authenticationcaptchaaction_sitekey_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
+		name                       = "tf_captchaaction"
+		secretkey                  = "secret"
+		sitekey_wo                 = var.authenticationcaptchaaction_sitekey_wo
+		sitekey_wo_version         = 1
+		serverurl                  = "http://www.example.com/"
+		defaultauthenticationgroup = "old_group"
+		scorethreshold             = 3
+	}
+`
+
+const testAccAuthenticationcaptchaaction_sitekey_wo_step2 = `
+	variable "authenticationcaptchaaction_sitekey_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_authenticationcaptchaaction" "tf_captchaaction" {
+		name                       = "tf_captchaaction"
+		secretkey                  = "secret"
+		sitekey_wo                 = var.authenticationcaptchaaction_sitekey_wo_2
+		sitekey_wo_version         = 2
+		serverurl                  = "http://www.example.com/"
+		defaultauthenticationgroup = "new_group"
+		scorethreshold             = 6
+	}
+`
+
+func TestAccAuthenticationcaptchaaction_sitekey_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_authenticationcaptchaaction_sitekey_wo", "ephemeral_sitekey1")
+	t.Setenv("TF_VAR_authenticationcaptchaaction_sitekey_wo_2", "ephemeral_sitekey2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcaptchaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcaptchaaction_sitekey_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcaptchaactionExist("citrixadc_authenticationcaptchaaction.tf_captchaaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "sitekey_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccAuthenticationcaptchaaction_sitekey_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcaptchaactionExist("citrixadc_authenticationcaptchaaction.tf_captchaaction", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "sitekey_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

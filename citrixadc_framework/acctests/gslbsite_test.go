@@ -216,3 +216,111 @@ data "citrixadc_gslbsite" "tf_gslbsite_ds" {
 }
 
 `
+
+// --- Ephemeral / Write-Only Tests for `sitepassword` ---
+
+const testAccGslbsite_sitepassword_step1 = `
+variable "gslbsite_sitepassword" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_gslbsite" "test_bc" {
+  sitename      = "tf-acc-gslbsite-bc"
+  siteipaddress = "172.31.11.30"
+  sitepassword  = var.gslbsite_sitepassword
+}
+`
+
+const testAccGslbsite_sitepassword_step2 = `
+variable "gslbsite_sitepassword_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_gslbsite" "test_bc" {
+  sitename      = "tf-acc-gslbsite-bc"
+  siteipaddress = "172.31.11.30"
+  sitepassword  = var.gslbsite_sitepassword_2
+}
+`
+
+func TestAccGslbsite_sitepassword_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_gslbsite_sitepassword", "Password123!")
+	t.Setenv("TF_VAR_gslbsite_sitepassword_2", "Password456!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbsiteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbsite_sitepassword_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbsiteExist("citrixadc_gslbsite.test_bc", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.test_bc", "sitename", "tf-acc-gslbsite-bc"),
+				),
+			},
+			{
+				Config: testAccGslbsite_sitepassword_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbsiteExist("citrixadc_gslbsite.test_bc", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.test_bc", "sitename", "tf-acc-gslbsite-bc"),
+				),
+			},
+		},
+	})
+}
+
+const testAccGslbsite_sitepassword_wo_step1 = `
+variable "gslbsite_sitepassword_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_gslbsite" "test_wo" {
+  sitename                = "tf-acc-gslbsite-wo"
+  siteipaddress           = "172.31.11.31"
+  sitepassword_wo         = var.gslbsite_sitepassword_wo
+  sitepassword_wo_version = 1
+}
+`
+
+const testAccGslbsite_sitepassword_wo_step2 = `
+variable "gslbsite_sitepassword_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_gslbsite" "test_wo" {
+  sitename                = "tf-acc-gslbsite-wo"
+  siteipaddress           = "172.31.11.31"
+  sitepassword_wo         = var.gslbsite_sitepassword_wo_2
+  sitepassword_wo_version = 2
+}
+`
+
+func TestAccGslbsite_sitepassword_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_gslbsite_sitepassword_wo", "Ephemeral123!")
+	t.Setenv("TF_VAR_gslbsite_sitepassword_wo_2", "Ephemeral456!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbsiteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbsite_sitepassword_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbsiteExist("citrixadc_gslbsite.test_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.test_wo", "sitepassword_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccGslbsite_sitepassword_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbsiteExist("citrixadc_gslbsite.test_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.test_wo", "sitepassword_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

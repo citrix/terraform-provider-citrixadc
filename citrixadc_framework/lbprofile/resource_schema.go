@@ -2,13 +2,15 @@ package lbprofile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -20,6 +22,8 @@ type LbprofileResourceModel struct {
 	Id                            types.String `tfsdk:"id"`
 	Computedadccookieattribute    types.String `tfsdk:"computedadccookieattribute"`
 	Cookiepassphrase              types.String `tfsdk:"cookiepassphrase"`
+	CookiepassphraseWo            types.String `tfsdk:"cookiepassphrase_wo"`
+	CookiepassphraseWoVersion     types.Int64  `tfsdk:"cookiepassphrase_wo_version"`
 	Dbslb                         types.String `tfsdk:"dbslb"`
 	Httponlycookieflag            types.String `tfsdk:"httponlycookieflag"`
 	Lbhashalgorithm               types.String `tfsdk:"lbhashalgorithm"`
@@ -48,31 +52,46 @@ func (r *LbprofileResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"cookiepassphrase": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.",
+			},
+			"cookiepassphrase_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.",
+			},
+			"cookiepassphrase_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a cookiepassphrase_wo update.",
 			},
 			"dbslb": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable database specific load balancing for MySQL and MSSQL service types.",
 			},
 			"httponlycookieflag": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Include the HttpOnly attribute in persistence cookies. The HttpOnly attribute limits the scope of a cookie to HTTP requests and helps mitigate the risk of cross-site scripting attacks.",
 			},
 			"lbhashalgorithm": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DEFAULT"),
+				Computed:    true,
 				Description: "This option dictates the hashing algorithm used for hash based LB methods (URLHASH, DOMAINHASH, SOURCEIPHASH, DESTINATIONIPHASH, SRCIPDESTIPHASH, SRCIPSRCPORTHASH, TOKEN, USER_TOKEN, CALLIDHASH).",
 			},
 			"lbhashfingers": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(256),
+				Computed:    true,
 				Description: "This option is used to specify the number of fingers to be used in PRAC and JARH algorithms for hash based LB methods. Increasing the number of fingers might give better distribution of traffic at the expense of additional memory.",
 			},
 			"lbprofilename": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the LB profile.",
 			},
 			"literaladccookieattribute": schema.StringAttribute{
@@ -82,7 +101,7 @@ func (r *LbprofileResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"processlocal": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "By turning on this option packets destined to a vserver in a cluster will not under go any steering. Turn this option for single pa\ncket request response mode or when the upstream device is performing a proper RSS for connection based distribution.",
 			},
 			"proximityfromself": schema.StringAttribute{
@@ -97,64 +116,79 @@ func (r *LbprofileResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"useencryptedpersistencecookie": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Encode persistence cookie values using SHA2 hash.",
 			},
 			"usesecuredpersistencecookie": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Encode persistence cookie values using SHA2 hash.",
 			},
 		},
 	}
 }
 
-func lbprofileGetThePayloadFromtheConfig(ctx context.Context, data *LbprofileResourceModel) lb.Lbprofile {
-	tflog.Debug(ctx, "In lbprofileGetThePayloadFromtheConfig Function")
+func lbprofileGetThePayloadFromthePlan(ctx context.Context, data *LbprofileResourceModel) lb.Lbprofile {
+	tflog.Debug(ctx, "In lbprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lbprofile := lb.Lbprofile{}
-	if !data.Computedadccookieattribute.IsNull() {
+	if !data.Computedadccookieattribute.IsNull() && !data.Computedadccookieattribute.IsUnknown() {
 		lbprofile.Computedadccookieattribute = data.Computedadccookieattribute.ValueString()
 	}
-	if !data.Cookiepassphrase.IsNull() {
+	if !data.Cookiepassphrase.IsNull() && !data.Cookiepassphrase.IsUnknown() {
 		lbprofile.Cookiepassphrase = data.Cookiepassphrase.ValueString()
 	}
-	if !data.Dbslb.IsNull() {
+	// Skip write-only attribute: cookiepassphrase_wo
+	// Skip version tracker attribute: cookiepassphrase_wo_version
+	if !data.Dbslb.IsNull() && !data.Dbslb.IsUnknown() {
 		lbprofile.Dbslb = data.Dbslb.ValueString()
 	}
-	if !data.Httponlycookieflag.IsNull() {
+	if !data.Httponlycookieflag.IsNull() && !data.Httponlycookieflag.IsUnknown() {
 		lbprofile.Httponlycookieflag = data.Httponlycookieflag.ValueString()
 	}
-	if !data.Lbhashalgorithm.IsNull() {
+	if !data.Lbhashalgorithm.IsNull() && !data.Lbhashalgorithm.IsUnknown() {
 		lbprofile.Lbhashalgorithm = data.Lbhashalgorithm.ValueString()
 	}
-	if !data.Lbhashfingers.IsNull() {
+	if !data.Lbhashfingers.IsNull() && !data.Lbhashfingers.IsUnknown() {
 		lbprofile.Lbhashfingers = utils.IntPtr(int(data.Lbhashfingers.ValueInt64()))
 	}
-	if !data.Lbprofilename.IsNull() {
+	if !data.Lbprofilename.IsNull() && !data.Lbprofilename.IsUnknown() {
 		lbprofile.Lbprofilename = data.Lbprofilename.ValueString()
 	}
-	if !data.Literaladccookieattribute.IsNull() {
+	if !data.Literaladccookieattribute.IsNull() && !data.Literaladccookieattribute.IsUnknown() {
 		lbprofile.Literaladccookieattribute = data.Literaladccookieattribute.ValueString()
 	}
-	if !data.Processlocal.IsNull() {
+	if !data.Processlocal.IsNull() && !data.Processlocal.IsUnknown() {
 		lbprofile.Processlocal = data.Processlocal.ValueString()
 	}
-	if !data.Proximityfromself.IsNull() {
+	if !data.Proximityfromself.IsNull() && !data.Proximityfromself.IsUnknown() {
 		lbprofile.Proximityfromself = data.Proximityfromself.ValueString()
 	}
-	if !data.Storemqttclientidandusername.IsNull() {
+	if !data.Storemqttclientidandusername.IsNull() && !data.Storemqttclientidandusername.IsUnknown() {
 		lbprofile.Storemqttclientidandusername = data.Storemqttclientidandusername.ValueString()
 	}
-	if !data.Useencryptedpersistencecookie.IsNull() {
+	if !data.Useencryptedpersistencecookie.IsNull() && !data.Useencryptedpersistencecookie.IsUnknown() {
 		lbprofile.Useencryptedpersistencecookie = data.Useencryptedpersistencecookie.ValueString()
 	}
-	if !data.Usesecuredpersistencecookie.IsNull() {
+	if !data.Usesecuredpersistencecookie.IsNull() && !data.Usesecuredpersistencecookie.IsUnknown() {
 		lbprofile.Usesecuredpersistencecookie = data.Usesecuredpersistencecookie.ValueString()
 	}
 
 	return lbprofile
+}
+
+func lbprofileGetThePayloadFromtheConfig(ctx context.Context, data *LbprofileResourceModel, payload *lb.Lbprofile) {
+	tflog.Debug(ctx, "In lbprofileGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: cookiepassphrase_wo -> cookiepassphrase
+	if !data.CookiepassphraseWo.IsNull() {
+		cookiepassphraseWo := data.CookiepassphraseWo.ValueString()
+		if cookiepassphraseWo != "" {
+			payload.Cookiepassphrase = cookiepassphraseWo
+		}
+	}
 }
 
 func lbprofileSetAttrFromGet(ctx context.Context, data *LbprofileResourceModel, getResponseData map[string]interface{}) *LbprofileResourceModel {
@@ -166,11 +200,9 @@ func lbprofileSetAttrFromGet(ctx context.Context, data *LbprofileResourceModel, 
 	} else {
 		data.Computedadccookieattribute = types.StringNull()
 	}
-	if val, ok := getResponseData["cookiepassphrase"]; ok && val != nil {
-		data.Cookiepassphrase = types.StringValue(val.(string))
-	} else {
-		data.Cookiepassphrase = types.StringNull()
-	}
+	// cookiepassphrase is not returned by NITRO API (secret/ephemeral) - retain from config
+	// cookiepassphrase_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// cookiepassphrase_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["dbslb"]; ok && val != nil {
 		data.Dbslb = types.StringValue(val.(string))
 	} else {
@@ -230,8 +262,8 @@ func lbprofileSetAttrFromGet(ctx context.Context, data *LbprofileResourceModel, 
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Lbprofilename.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Lbprofilename.ValueString()))
 
 	return data
 }
