@@ -200,80 +200,80 @@ func appfwsettingsGetThePayloadFromthePlan(ctx context.Context, data *Appfwsetti
 
 	// Create API request body from the model
 	appfwsettings := appfw.Appfwsettings{}
-	if !data.Ceflogging.IsNull() {
+	if !data.Ceflogging.IsNull() && !data.Ceflogging.IsUnknown() {
 		appfwsettings.Ceflogging = data.Ceflogging.ValueString()
 	}
-	if !data.Centralizedlearning.IsNull() {
+	if !data.Centralizedlearning.IsNull() && !data.Centralizedlearning.IsUnknown() {
 		appfwsettings.Centralizedlearning = data.Centralizedlearning.ValueString()
 	}
-	if !data.Clientiploggingheader.IsNull() {
+	if !data.Clientiploggingheader.IsNull() && !data.Clientiploggingheader.IsUnknown() {
 		appfwsettings.Clientiploggingheader = data.Clientiploggingheader.ValueString()
 	}
-	if !data.Cookieflags.IsNull() {
+	if !data.Cookieflags.IsNull() && !data.Cookieflags.IsUnknown() {
 		appfwsettings.Cookieflags = data.Cookieflags.ValueString()
 	}
-	if !data.Cookiepostencryptprefix.IsNull() {
+	if !data.Cookiepostencryptprefix.IsNull() && !data.Cookiepostencryptprefix.IsUnknown() {
 		appfwsettings.Cookiepostencryptprefix = data.Cookiepostencryptprefix.ValueString()
 	}
-	if !data.Defaultprofile.IsNull() {
+	if !data.Defaultprofile.IsNull() && !data.Defaultprofile.IsUnknown() {
 		appfwsettings.Defaultprofile = data.Defaultprofile.ValueString()
 	}
-	if !data.Entitydecoding.IsNull() {
+	if !data.Entitydecoding.IsNull() && !data.Entitydecoding.IsUnknown() {
 		appfwsettings.Entitydecoding = data.Entitydecoding.ValueString()
 	}
-	if !data.Geolocationlogging.IsNull() {
+	if !data.Geolocationlogging.IsNull() && !data.Geolocationlogging.IsUnknown() {
 		appfwsettings.Geolocationlogging = data.Geolocationlogging.ValueString()
 	}
-	if !data.Importsizelimit.IsNull() {
+	if !data.Importsizelimit.IsNull() && !data.Importsizelimit.IsUnknown() {
 		appfwsettings.Importsizelimit = utils.IntPtr(int(data.Importsizelimit.ValueInt64()))
 	}
-	if !data.Learnratelimit.IsNull() {
+	if !data.Learnratelimit.IsNull() && !data.Learnratelimit.IsUnknown() {
 		appfwsettings.Learnratelimit = utils.IntPtr(int(data.Learnratelimit.ValueInt64()))
 	}
-	if !data.Logmalformedreq.IsNull() {
+	if !data.Logmalformedreq.IsNull() && !data.Logmalformedreq.IsUnknown() {
 		appfwsettings.Logmalformedreq = data.Logmalformedreq.ValueString()
 	}
-	if !data.Malformedreqaction.IsNull() {
+	if !data.Malformedreqaction.IsNull() && !data.Malformedreqaction.IsUnknown() {
 		var malformedreqactionList []string
 		data.Malformedreqaction.ElementsAs(ctx, &malformedreqactionList, false)
 		appfwsettings.Malformedreqaction = malformedreqactionList
 	}
-	if !data.Proxypassword.IsNull() {
+	if !data.Proxypassword.IsNull() && !data.Proxypassword.IsUnknown() {
 		appfwsettings.Proxypassword = data.Proxypassword.ValueString()
 	}
 	// Skip write-only attribute: proxypassword_wo
 	// Skip version tracker attribute: proxypassword_wo_version
-	if !data.Proxyport.IsNull() {
+	if !data.Proxyport.IsNull() && !data.Proxyport.IsUnknown() {
 		appfwsettings.Proxyport = utils.IntPtr(int(data.Proxyport.ValueInt64()))
 	}
-	if !data.Proxyserver.IsNull() {
+	if !data.Proxyserver.IsNull() && !data.Proxyserver.IsUnknown() {
 		appfwsettings.Proxyserver = data.Proxyserver.ValueString()
 	}
-	if !data.Proxyusername.IsNull() {
+	if !data.Proxyusername.IsNull() && !data.Proxyusername.IsUnknown() {
 		appfwsettings.Proxyusername = data.Proxyusername.ValueString()
 	}
-	if !data.Sessioncookiename.IsNull() {
+	if !data.Sessioncookiename.IsNull() && !data.Sessioncookiename.IsUnknown() {
 		appfwsettings.Sessioncookiename = data.Sessioncookiename.ValueString()
 	}
-	if !data.Sessionlifetime.IsNull() {
+	if !data.Sessionlifetime.IsNull() && !data.Sessionlifetime.IsUnknown() {
 		appfwsettings.Sessionlifetime = utils.IntPtr(int(data.Sessionlifetime.ValueInt64()))
 	}
-	if !data.Sessionlimit.IsNull() {
+	if !data.Sessionlimit.IsNull() && !data.Sessionlimit.IsUnknown() {
 		appfwsettings.Sessionlimit = utils.IntPtr(int(data.Sessionlimit.ValueInt64()))
 	}
-	if !data.Sessiontimeout.IsNull() {
+	if !data.Sessiontimeout.IsNull() && !data.Sessiontimeout.IsUnknown() {
 		appfwsettings.Sessiontimeout = utils.IntPtr(int(data.Sessiontimeout.ValueInt64()))
 	}
-	if !data.Signatureautoupdate.IsNull() {
+	if !data.Signatureautoupdate.IsNull() && !data.Signatureautoupdate.IsUnknown() {
 		appfwsettings.Signatureautoupdate = data.Signatureautoupdate.ValueString()
 	}
-	if !data.Signatureurl.IsNull() {
+	if !data.Signatureurl.IsNull() && !data.Signatureurl.IsUnknown() {
 		appfwsettings.Signatureurl = data.Signatureurl.ValueString()
 	}
-	if !data.Undefaction.IsNull() {
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
 		appfwsettings.Undefaction = data.Undefaction.ValueString()
 	}
-	if !data.Useconfigurablesecretkey.IsNull() {
+	if !data.Useconfigurablesecretkey.IsNull() && !data.Useconfigurablesecretkey.IsUnknown() {
 		appfwsettings.Useconfigurablesecretkey = data.Useconfigurablesecretkey.ValueString()
 	}
 

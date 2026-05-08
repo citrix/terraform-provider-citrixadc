@@ -356,159 +356,159 @@ func appflowparamGetThePayloadFromthePlan(ctx context.Context, data *Appflowpara
 
 	// Create API request body from the model
 	appflowparam := appflow.Appflowparam{}
-	if !data.Aaausername.IsNull() {
+	if !data.Aaausername.IsNull() && !data.Aaausername.IsUnknown() {
 		appflowparam.Aaausername = data.Aaausername.ValueString()
 	}
-	if !data.Analyticsauthtoken.IsNull() {
+	if !data.Analyticsauthtoken.IsNull() && !data.Analyticsauthtoken.IsUnknown() {
 		appflowparam.Analyticsauthtoken = data.Analyticsauthtoken.ValueString()
 	}
 	// Skip write-only attribute: analyticsauthtoken_wo
 	// Skip version tracker attribute: analyticsauthtoken_wo_version
-	if !data.Appnamerefresh.IsNull() {
+	if !data.Appnamerefresh.IsNull() && !data.Appnamerefresh.IsUnknown() {
 		appflowparam.Appnamerefresh = utils.IntPtr(int(data.Appnamerefresh.ValueInt64()))
 	}
-	if !data.Auditlogs.IsNull() {
+	if !data.Auditlogs.IsNull() && !data.Auditlogs.IsUnknown() {
 		appflowparam.Auditlogs = data.Auditlogs.ValueString()
 	}
-	if !data.Cacheinsight.IsNull() {
+	if !data.Cacheinsight.IsNull() && !data.Cacheinsight.IsUnknown() {
 		appflowparam.Cacheinsight = data.Cacheinsight.ValueString()
 	}
-	if !data.Clienttrafficonly.IsNull() {
+	if !data.Clienttrafficonly.IsNull() && !data.Clienttrafficonly.IsUnknown() {
 		appflowparam.Clienttrafficonly = data.Clienttrafficonly.ValueString()
 	}
-	if !data.Connectionchaining.IsNull() {
+	if !data.Connectionchaining.IsNull() && !data.Connectionchaining.IsUnknown() {
 		appflowparam.Connectionchaining = data.Connectionchaining.ValueString()
 	}
-	if !data.Cqareporting.IsNull() {
+	if !data.Cqareporting.IsNull() && !data.Cqareporting.IsUnknown() {
 		appflowparam.Cqareporting = data.Cqareporting.ValueString()
 	}
-	if !data.Distributedtracing.IsNull() {
+	if !data.Distributedtracing.IsNull() && !data.Distributedtracing.IsUnknown() {
 		appflowparam.Distributedtracing = data.Distributedtracing.ValueString()
 	}
-	if !data.Disttracingsamplingrate.IsNull() {
+	if !data.Disttracingsamplingrate.IsNull() && !data.Disttracingsamplingrate.IsUnknown() {
 		appflowparam.Disttracingsamplingrate = utils.IntPtr(int(data.Disttracingsamplingrate.ValueInt64()))
 	}
-	if !data.Emailaddress.IsNull() {
+	if !data.Emailaddress.IsNull() && !data.Emailaddress.IsUnknown() {
 		appflowparam.Emailaddress = data.Emailaddress.ValueString()
 	}
-	if !data.Events.IsNull() {
+	if !data.Events.IsNull() && !data.Events.IsUnknown() {
 		appflowparam.Events = data.Events.ValueString()
 	}
-	if !data.Flowrecordinterval.IsNull() {
+	if !data.Flowrecordinterval.IsNull() && !data.Flowrecordinterval.IsUnknown() {
 		appflowparam.Flowrecordinterval = utils.IntPtr(int(data.Flowrecordinterval.ValueInt64()))
 	}
-	if !data.Gxsessionreporting.IsNull() {
+	if !data.Gxsessionreporting.IsNull() && !data.Gxsessionreporting.IsUnknown() {
 		appflowparam.Gxsessionreporting = data.Gxsessionreporting.ValueString()
 	}
-	if !data.Httpauthorization.IsNull() {
+	if !data.Httpauthorization.IsNull() && !data.Httpauthorization.IsUnknown() {
 		appflowparam.Httpauthorization = data.Httpauthorization.ValueString()
 	}
-	if !data.Httpcontenttype.IsNull() {
+	if !data.Httpcontenttype.IsNull() && !data.Httpcontenttype.IsUnknown() {
 		appflowparam.Httpcontenttype = data.Httpcontenttype.ValueString()
 	}
-	if !data.Httpcookie.IsNull() {
+	if !data.Httpcookie.IsNull() && !data.Httpcookie.IsUnknown() {
 		appflowparam.Httpcookie = data.Httpcookie.ValueString()
 	}
-	if !data.Httpdomain.IsNull() {
+	if !data.Httpdomain.IsNull() && !data.Httpdomain.IsUnknown() {
 		appflowparam.Httpdomain = data.Httpdomain.ValueString()
 	}
-	if !data.Httphost.IsNull() {
+	if !data.Httphost.IsNull() && !data.Httphost.IsUnknown() {
 		appflowparam.Httphost = data.Httphost.ValueString()
 	}
-	if !data.Httplocation.IsNull() {
+	if !data.Httplocation.IsNull() && !data.Httplocation.IsUnknown() {
 		appflowparam.Httplocation = data.Httplocation.ValueString()
 	}
-	if !data.Httpmethod.IsNull() {
+	if !data.Httpmethod.IsNull() && !data.Httpmethod.IsUnknown() {
 		appflowparam.Httpmethod = data.Httpmethod.ValueString()
 	}
-	if !data.Httpquerywithurl.IsNull() {
+	if !data.Httpquerywithurl.IsNull() && !data.Httpquerywithurl.IsUnknown() {
 		appflowparam.Httpquerywithurl = data.Httpquerywithurl.ValueString()
 	}
-	if !data.Httpreferer.IsNull() {
+	if !data.Httpreferer.IsNull() && !data.Httpreferer.IsUnknown() {
 		appflowparam.Httpreferer = data.Httpreferer.ValueString()
 	}
-	if !data.Httpsetcookie.IsNull() {
+	if !data.Httpsetcookie.IsNull() && !data.Httpsetcookie.IsUnknown() {
 		appflowparam.Httpsetcookie = data.Httpsetcookie.ValueString()
 	}
-	if !data.Httpsetcookie2.IsNull() {
+	if !data.Httpsetcookie2.IsNull() && !data.Httpsetcookie2.IsUnknown() {
 		appflowparam.Httpsetcookie2 = data.Httpsetcookie2.ValueString()
 	}
-	if !data.Httpurl.IsNull() {
+	if !data.Httpurl.IsNull() && !data.Httpurl.IsUnknown() {
 		appflowparam.Httpurl = data.Httpurl.ValueString()
 	}
-	if !data.Httpuseragent.IsNull() {
+	if !data.Httpuseragent.IsNull() && !data.Httpuseragent.IsUnknown() {
 		appflowparam.Httpuseragent = data.Httpuseragent.ValueString()
 	}
-	if !data.Httpvia.IsNull() {
+	if !data.Httpvia.IsNull() && !data.Httpvia.IsUnknown() {
 		appflowparam.Httpvia = data.Httpvia.ValueString()
 	}
-	if !data.Httpxforwardedfor.IsNull() {
+	if !data.Httpxforwardedfor.IsNull() && !data.Httpxforwardedfor.IsUnknown() {
 		appflowparam.Httpxforwardedfor = data.Httpxforwardedfor.ValueString()
 	}
-	if !data.Identifiername.IsNull() {
+	if !data.Identifiername.IsNull() && !data.Identifiername.IsUnknown() {
 		appflowparam.Identifiername = data.Identifiername.ValueString()
 	}
-	if !data.Identifiersessionname.IsNull() {
+	if !data.Identifiersessionname.IsNull() && !data.Identifiersessionname.IsUnknown() {
 		appflowparam.Identifiersessionname = data.Identifiersessionname.ValueString()
 	}
-	if !data.Logstreamovernsip.IsNull() {
+	if !data.Logstreamovernsip.IsNull() && !data.Logstreamovernsip.IsUnknown() {
 		appflowparam.Logstreamovernsip = data.Logstreamovernsip.ValueString()
 	}
-	if !data.Lsnlogging.IsNull() {
+	if !data.Lsnlogging.IsNull() && !data.Lsnlogging.IsUnknown() {
 		appflowparam.Lsnlogging = data.Lsnlogging.ValueString()
 	}
-	if !data.Metrics.IsNull() {
+	if !data.Metrics.IsNull() && !data.Metrics.IsUnknown() {
 		appflowparam.Metrics = data.Metrics.ValueString()
 	}
-	if !data.Observationdomainid.IsNull() {
+	if !data.Observationdomainid.IsNull() && !data.Observationdomainid.IsUnknown() {
 		appflowparam.Observationdomainid = utils.IntPtr(int(data.Observationdomainid.ValueInt64()))
 	}
-	if !data.Observationdomainname.IsNull() {
+	if !data.Observationdomainname.IsNull() && !data.Observationdomainname.IsUnknown() {
 		appflowparam.Observationdomainname = data.Observationdomainname.ValueString()
 	}
-	if !data.Observationpointid.IsNull() {
+	if !data.Observationpointid.IsNull() && !data.Observationpointid.IsUnknown() {
 		appflowparam.Observationpointid = utils.IntPtr(int(data.Observationpointid.ValueInt64()))
 	}
-	if !data.Securityinsightrecordinterval.IsNull() {
+	if !data.Securityinsightrecordinterval.IsNull() && !data.Securityinsightrecordinterval.IsUnknown() {
 		appflowparam.Securityinsightrecordinterval = utils.IntPtr(int(data.Securityinsightrecordinterval.ValueInt64()))
 	}
-	if !data.Securityinsighttraffic.IsNull() {
+	if !data.Securityinsighttraffic.IsNull() && !data.Securityinsighttraffic.IsUnknown() {
 		appflowparam.Securityinsighttraffic = data.Securityinsighttraffic.ValueString()
 	}
-	if !data.Skipcacheredirectionhttptransaction.IsNull() {
+	if !data.Skipcacheredirectionhttptransaction.IsNull() && !data.Skipcacheredirectionhttptransaction.IsUnknown() {
 		appflowparam.Skipcacheredirectionhttptransaction = data.Skipcacheredirectionhttptransaction.ValueString()
 	}
-	if !data.Subscriberawareness.IsNull() {
+	if !data.Subscriberawareness.IsNull() && !data.Subscriberawareness.IsUnknown() {
 		appflowparam.Subscriberawareness = data.Subscriberawareness.ValueString()
 	}
-	if !data.Subscriberidobfuscation.IsNull() {
+	if !data.Subscriberidobfuscation.IsNull() && !data.Subscriberidobfuscation.IsUnknown() {
 		appflowparam.Subscriberidobfuscation = data.Subscriberidobfuscation.ValueString()
 	}
-	if !data.Subscriberidobfuscationalgo.IsNull() {
+	if !data.Subscriberidobfuscationalgo.IsNull() && !data.Subscriberidobfuscationalgo.IsUnknown() {
 		appflowparam.Subscriberidobfuscationalgo = data.Subscriberidobfuscationalgo.ValueString()
 	}
-	if !data.Tcpattackcounterinterval.IsNull() {
+	if !data.Tcpattackcounterinterval.IsNull() && !data.Tcpattackcounterinterval.IsUnknown() {
 		appflowparam.Tcpattackcounterinterval = utils.IntPtr(int(data.Tcpattackcounterinterval.ValueInt64()))
 	}
-	if !data.Templaterefresh.IsNull() {
+	if !data.Templaterefresh.IsNull() && !data.Templaterefresh.IsUnknown() {
 		appflowparam.Templaterefresh = utils.IntPtr(int(data.Templaterefresh.ValueInt64()))
 	}
-	if !data.Timeseriesovernsip.IsNull() {
+	if !data.Timeseriesovernsip.IsNull() && !data.Timeseriesovernsip.IsUnknown() {
 		appflowparam.Timeseriesovernsip = data.Timeseriesovernsip.ValueString()
 	}
-	if !data.Udppmtu.IsNull() {
+	if !data.Udppmtu.IsNull() && !data.Udppmtu.IsUnknown() {
 		appflowparam.Udppmtu = utils.IntPtr(int(data.Udppmtu.ValueInt64()))
 	}
-	if !data.Urlcategory.IsNull() {
+	if !data.Urlcategory.IsNull() && !data.Urlcategory.IsUnknown() {
 		appflowparam.Urlcategory = data.Urlcategory.ValueString()
 	}
-	if !data.Usagerecordinterval.IsNull() {
+	if !data.Usagerecordinterval.IsNull() && !data.Usagerecordinterval.IsUnknown() {
 		appflowparam.Usagerecordinterval = utils.IntPtr(int(data.Usagerecordinterval.ValueInt64()))
 	}
-	if !data.Videoinsight.IsNull() {
+	if !data.Videoinsight.IsNull() && !data.Videoinsight.IsUnknown() {
 		appflowparam.Videoinsight = data.Videoinsight.ValueString()
 	}
-	if !data.Websaasappusagereporting.IsNull() {
+	if !data.Websaasappusagereporting.IsNull() && !data.Websaasappusagereporting.IsUnknown() {
 		appflowparam.Websaasappusagereporting = data.Websaasappusagereporting.ValueString()
 	}
 

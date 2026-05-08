@@ -75,15 +75,15 @@ func aaauserGetThePayloadFromthePlan(ctx context.Context, data *AaauserResourceM
 
 	// Create API request body from the model
 	aaauser := aaa.Aaauser{}
-	if !data.Loggedin.IsNull() {
+	if !data.Loggedin.IsNull() && !data.Loggedin.IsUnknown() {
 		aaauser.Loggedin = data.Loggedin.ValueBool()
 	}
-	if !data.Password.IsNull() {
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
 		aaauser.Password = data.Password.ValueString()
 	}
 	// Skip write-only attribute: password_wo
 	// Skip version tracker attribute: password_wo_version
-	if !data.Username.IsNull() {
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
 		aaauser.Username = data.Username.ValueString()
 	}
 

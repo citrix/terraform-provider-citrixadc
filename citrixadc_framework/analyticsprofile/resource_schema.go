@@ -302,133 +302,133 @@ func analyticsprofileGetThePayloadFromthePlan(ctx context.Context, data *Analyti
 
 	// Create API request body from the model
 	analyticsprofile := analytics.Analyticsprofile{}
-	if !data.Allhttpheaders.IsNull() {
+	if !data.Allhttpheaders.IsNull() && !data.Allhttpheaders.IsUnknown() {
 		analyticsprofile.Allhttpheaders = data.Allhttpheaders.ValueString()
 	}
-	if !data.Analyticsauthtoken.IsNull() {
+	if !data.Analyticsauthtoken.IsNull() && !data.Analyticsauthtoken.IsUnknown() {
 		analyticsprofile.Analyticsauthtoken = data.Analyticsauthtoken.ValueString()
 	}
 	// Skip write-only attribute: analyticsauthtoken_wo
 	// Skip version tracker attribute: analyticsauthtoken_wo_version
-	if !data.Analyticsendpointcontenttype.IsNull() {
+	if !data.Analyticsendpointcontenttype.IsNull() && !data.Analyticsendpointcontenttype.IsUnknown() {
 		analyticsprofile.Analyticsendpointcontenttype = data.Analyticsendpointcontenttype.ValueString()
 	}
-	if !data.Analyticsendpointmetadata.IsNull() {
+	if !data.Analyticsendpointmetadata.IsNull() && !data.Analyticsendpointmetadata.IsUnknown() {
 		analyticsprofile.Analyticsendpointmetadata = data.Analyticsendpointmetadata.ValueString()
 	}
-	if !data.Analyticsendpointurl.IsNull() {
+	if !data.Analyticsendpointurl.IsNull() && !data.Analyticsendpointurl.IsUnknown() {
 		analyticsprofile.Analyticsendpointurl = data.Analyticsendpointurl.ValueString()
 	}
-	if !data.Auditlogs.IsNull() {
+	if !data.Auditlogs.IsNull() && !data.Auditlogs.IsUnknown() {
 		analyticsprofile.Auditlogs = data.Auditlogs.ValueString()
 	}
-	if !data.Collectors.IsNull() {
+	if !data.Collectors.IsNull() && !data.Collectors.IsUnknown() {
 		analyticsprofile.Collectors = data.Collectors.ValueString()
 	}
-	if !data.Cqareporting.IsNull() {
+	if !data.Cqareporting.IsNull() && !data.Cqareporting.IsUnknown() {
 		analyticsprofile.Cqareporting = data.Cqareporting.ValueString()
 	}
-	if !data.Dataformatfile.IsNull() {
+	if !data.Dataformatfile.IsNull() && !data.Dataformatfile.IsUnknown() {
 		analyticsprofile.Dataformatfile = data.Dataformatfile.ValueString()
 	}
-	if !data.Events.IsNull() {
+	if !data.Events.IsNull() && !data.Events.IsUnknown() {
 		analyticsprofile.Events = data.Events.ValueString()
 	}
-	if !data.Grpcstatus.IsNull() {
+	if !data.Grpcstatus.IsNull() && !data.Grpcstatus.IsUnknown() {
 		analyticsprofile.Grpcstatus = data.Grpcstatus.ValueString()
 	}
-	if !data.Httpauthentication.IsNull() {
+	if !data.Httpauthentication.IsNull() && !data.Httpauthentication.IsUnknown() {
 		analyticsprofile.Httpauthentication = data.Httpauthentication.ValueString()
 	}
-	if !data.Httpclientsidemeasurements.IsNull() {
+	if !data.Httpclientsidemeasurements.IsNull() && !data.Httpclientsidemeasurements.IsUnknown() {
 		analyticsprofile.Httpclientsidemeasurements = data.Httpclientsidemeasurements.ValueString()
 	}
-	if !data.Httpcontenttype.IsNull() {
+	if !data.Httpcontenttype.IsNull() && !data.Httpcontenttype.IsUnknown() {
 		analyticsprofile.Httpcontenttype = data.Httpcontenttype.ValueString()
 	}
-	if !data.Httpcookie.IsNull() {
+	if !data.Httpcookie.IsNull() && !data.Httpcookie.IsUnknown() {
 		analyticsprofile.Httpcookie = data.Httpcookie.ValueString()
 	}
-	if !data.Httpcustomheaders.IsNull() {
+	if !data.Httpcustomheaders.IsNull() && !data.Httpcustomheaders.IsUnknown() {
 		var httpcustomheadersList []string
 		data.Httpcustomheaders.ElementsAs(ctx, &httpcustomheadersList, false)
 		analyticsprofile.Httpcustomheaders = httpcustomheadersList
 	}
-	if !data.Httpdomainname.IsNull() {
+	if !data.Httpdomainname.IsNull() && !data.Httpdomainname.IsUnknown() {
 		analyticsprofile.Httpdomainname = data.Httpdomainname.ValueString()
 	}
-	if !data.Httphost.IsNull() {
+	if !data.Httphost.IsNull() && !data.Httphost.IsUnknown() {
 		analyticsprofile.Httphost = data.Httphost.ValueString()
 	}
-	if !data.Httplocation.IsNull() {
+	if !data.Httplocation.IsNull() && !data.Httplocation.IsUnknown() {
 		analyticsprofile.Httplocation = data.Httplocation.ValueString()
 	}
-	if !data.Httpmethod.IsNull() {
+	if !data.Httpmethod.IsNull() && !data.Httpmethod.IsUnknown() {
 		analyticsprofile.Httpmethod = data.Httpmethod.ValueString()
 	}
-	if !data.Httppagetracking.IsNull() {
+	if !data.Httppagetracking.IsNull() && !data.Httppagetracking.IsUnknown() {
 		analyticsprofile.Httppagetracking = data.Httppagetracking.ValueString()
 	}
-	if !data.Httpreferer.IsNull() {
+	if !data.Httpreferer.IsNull() && !data.Httpreferer.IsUnknown() {
 		analyticsprofile.Httpreferer = data.Httpreferer.ValueString()
 	}
-	if !data.Httpsetcookie.IsNull() {
+	if !data.Httpsetcookie.IsNull() && !data.Httpsetcookie.IsUnknown() {
 		analyticsprofile.Httpsetcookie = data.Httpsetcookie.ValueString()
 	}
-	if !data.Httpsetcookie2.IsNull() {
+	if !data.Httpsetcookie2.IsNull() && !data.Httpsetcookie2.IsUnknown() {
 		analyticsprofile.Httpsetcookie2 = data.Httpsetcookie2.ValueString()
 	}
-	if !data.Httpurl.IsNull() {
+	if !data.Httpurl.IsNull() && !data.Httpurl.IsUnknown() {
 		analyticsprofile.Httpurl = data.Httpurl.ValueString()
 	}
-	if !data.Httpurlquery.IsNull() {
+	if !data.Httpurlquery.IsNull() && !data.Httpurlquery.IsUnknown() {
 		analyticsprofile.Httpurlquery = data.Httpurlquery.ValueString()
 	}
-	if !data.Httpuseragent.IsNull() {
+	if !data.Httpuseragent.IsNull() && !data.Httpuseragent.IsUnknown() {
 		analyticsprofile.Httpuseragent = data.Httpuseragent.ValueString()
 	}
-	if !data.Httpvia.IsNull() {
+	if !data.Httpvia.IsNull() && !data.Httpvia.IsUnknown() {
 		analyticsprofile.Httpvia = data.Httpvia.ValueString()
 	}
-	if !data.Httpxforwardedforheader.IsNull() {
+	if !data.Httpxforwardedforheader.IsNull() && !data.Httpxforwardedforheader.IsUnknown() {
 		analyticsprofile.Httpxforwardedforheader = data.Httpxforwardedforheader.ValueString()
 	}
-	if !data.Integratedcache.IsNull() {
+	if !data.Integratedcache.IsNull() && !data.Integratedcache.IsUnknown() {
 		analyticsprofile.Integratedcache = data.Integratedcache.ValueString()
 	}
-	if !data.Managementlog.IsNull() {
+	if !data.Managementlog.IsNull() && !data.Managementlog.IsUnknown() {
 		var managementlogList []string
 		data.Managementlog.ElementsAs(ctx, &managementlogList, false)
 		analyticsprofile.Managementlog = managementlogList
 	}
-	if !data.Metrics.IsNull() {
+	if !data.Metrics.IsNull() && !data.Metrics.IsUnknown() {
 		analyticsprofile.Metrics = data.Metrics.ValueString()
 	}
-	if !data.Metricsexportfrequency.IsNull() {
+	if !data.Metricsexportfrequency.IsNull() && !data.Metricsexportfrequency.IsUnknown() {
 		analyticsprofile.Metricsexportfrequency = utils.IntPtr(int(data.Metricsexportfrequency.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		analyticsprofile.Name = data.Name.ValueString()
 	}
-	if !data.Outputmode.IsNull() {
+	if !data.Outputmode.IsNull() && !data.Outputmode.IsUnknown() {
 		analyticsprofile.Outputmode = data.Outputmode.ValueString()
 	}
-	if !data.Schemafile.IsNull() {
+	if !data.Schemafile.IsNull() && !data.Schemafile.IsUnknown() {
 		analyticsprofile.Schemafile = data.Schemafile.ValueString()
 	}
-	if !data.Servemode.IsNull() {
+	if !data.Servemode.IsNull() && !data.Servemode.IsUnknown() {
 		analyticsprofile.Servemode = data.Servemode.ValueString()
 	}
-	if !data.Tcpburstreporting.IsNull() {
+	if !data.Tcpburstreporting.IsNull() && !data.Tcpburstreporting.IsUnknown() {
 		analyticsprofile.Tcpburstreporting = data.Tcpburstreporting.ValueString()
 	}
-	if !data.Topn.IsNull() {
+	if !data.Topn.IsNull() && !data.Topn.IsUnknown() {
 		analyticsprofile.Topn = data.Topn.ValueString()
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		analyticsprofile.Type = data.Type.ValueString()
 	}
-	if !data.Urlcategory.IsNull() {
+	if !data.Urlcategory.IsNull() && !data.Urlcategory.IsUnknown() {
 		analyticsprofile.Urlcategory = data.Urlcategory.ValueString()
 	}
 

@@ -70,15 +70,15 @@ func aaassoprofileGetThePayloadFromthePlan(ctx context.Context, data *Aaassoprof
 
 	// Create API request body from the model
 	aaassoprofile := aaa.Aaassoprofile{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		aaassoprofile.Name = data.Name.ValueString()
 	}
-	if !data.Password.IsNull() {
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
 		aaassoprofile.Password = data.Password.ValueString()
 	}
 	// Skip write-only attribute: password_wo
 	// Skip version tracker attribute: password_wo_version
-	if !data.Username.IsNull() {
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
 		aaassoprofile.Username = data.Username.ValueString()
 	}
 
