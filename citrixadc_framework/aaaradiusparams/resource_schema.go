@@ -182,72 +182,72 @@ func aaaradiusparamsGetThePayloadFromthePlan(ctx context.Context, data *Aaaradiu
 
 	// Create API request body from the model
 	aaaradiusparams := aaa.Aaaradiusparams{}
-	if !data.Accounting.IsNull() {
+	if !data.Accounting.IsNull() && !data.Accounting.IsUnknown() {
 		aaaradiusparams.Accounting = data.Accounting.ValueString()
 	}
-	if !data.Authentication.IsNull() {
+	if !data.Authentication.IsNull() && !data.Authentication.IsUnknown() {
 		aaaradiusparams.Authentication = data.Authentication.ValueString()
 	}
-	if !data.Authservretry.IsNull() {
+	if !data.Authservretry.IsNull() && !data.Authservretry.IsUnknown() {
 		aaaradiusparams.Authservretry = utils.IntPtr(int(data.Authservretry.ValueInt64()))
 	}
-	if !data.Authtimeout.IsNull() {
+	if !data.Authtimeout.IsNull() && !data.Authtimeout.IsUnknown() {
 		aaaradiusparams.Authtimeout = utils.IntPtr(int(data.Authtimeout.ValueInt64()))
 	}
-	if !data.Callingstationid.IsNull() {
+	if !data.Callingstationid.IsNull() && !data.Callingstationid.IsUnknown() {
 		aaaradiusparams.Callingstationid = data.Callingstationid.ValueString()
 	}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		aaaradiusparams.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Ipattributetype.IsNull() {
+	if !data.Ipattributetype.IsNull() && !data.Ipattributetype.IsUnknown() {
 		aaaradiusparams.Ipattributetype = utils.IntPtr(int(data.Ipattributetype.ValueInt64()))
 	}
-	if !data.Ipvendorid.IsNull() {
+	if !data.Ipvendorid.IsNull() && !data.Ipvendorid.IsUnknown() {
 		aaaradiusparams.Ipvendorid = utils.IntPtr(int(data.Ipvendorid.ValueInt64()))
 	}
-	if !data.Messageauthenticator.IsNull() {
+	if !data.Messageauthenticator.IsNull() && !data.Messageauthenticator.IsUnknown() {
 		aaaradiusparams.Messageauthenticator = data.Messageauthenticator.ValueString()
 	}
-	if !data.Passencoding.IsNull() {
+	if !data.Passencoding.IsNull() && !data.Passencoding.IsUnknown() {
 		aaaradiusparams.Passencoding = data.Passencoding.ValueString()
 	}
-	if !data.Pwdattributetype.IsNull() {
+	if !data.Pwdattributetype.IsNull() && !data.Pwdattributetype.IsUnknown() {
 		aaaradiusparams.Pwdattributetype = utils.IntPtr(int(data.Pwdattributetype.ValueInt64()))
 	}
-	if !data.Pwdvendorid.IsNull() {
+	if !data.Pwdvendorid.IsNull() && !data.Pwdvendorid.IsUnknown() {
 		aaaradiusparams.Pwdvendorid = utils.IntPtr(int(data.Pwdvendorid.ValueInt64()))
 	}
-	if !data.Radattributetype.IsNull() {
+	if !data.Radattributetype.IsNull() && !data.Radattributetype.IsUnknown() {
 		aaaradiusparams.Radattributetype = utils.IntPtr(int(data.Radattributetype.ValueInt64()))
 	}
-	if !data.Radgroupseparator.IsNull() {
+	if !data.Radgroupseparator.IsNull() && !data.Radgroupseparator.IsUnknown() {
 		aaaradiusparams.Radgroupseparator = data.Radgroupseparator.ValueString()
 	}
-	if !data.Radgroupsprefix.IsNull() {
+	if !data.Radgroupsprefix.IsNull() && !data.Radgroupsprefix.IsUnknown() {
 		aaaradiusparams.Radgroupsprefix = data.Radgroupsprefix.ValueString()
 	}
-	if !data.Radkey.IsNull() {
+	if !data.Radkey.IsNull() && !data.Radkey.IsUnknown() {
 		aaaradiusparams.Radkey = data.Radkey.ValueString()
 	}
 	// Skip write-only attribute: radkey_wo
 	// Skip version tracker attribute: radkey_wo_version
-	if !data.Radnasid.IsNull() {
+	if !data.Radnasid.IsNull() && !data.Radnasid.IsUnknown() {
 		aaaradiusparams.Radnasid = data.Radnasid.ValueString()
 	}
-	if !data.Radnasip.IsNull() {
+	if !data.Radnasip.IsNull() && !data.Radnasip.IsUnknown() {
 		aaaradiusparams.Radnasip = data.Radnasip.ValueString()
 	}
-	if !data.Radvendorid.IsNull() {
+	if !data.Radvendorid.IsNull() && !data.Radvendorid.IsUnknown() {
 		aaaradiusparams.Radvendorid = utils.IntPtr(int(data.Radvendorid.ValueInt64()))
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		aaaradiusparams.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		aaaradiusparams.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Tunnelendpointclientip.IsNull() {
+	if !data.Tunnelendpointclientip.IsNull() && !data.Tunnelendpointclientip.IsUnknown() {
 		aaaradiusparams.Tunnelendpointclientip = data.Tunnelendpointclientip.ValueString()
 	}
 

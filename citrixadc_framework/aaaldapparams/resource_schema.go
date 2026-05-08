@@ -176,69 +176,69 @@ func aaaldapparamsGetThePayloadFromthePlan(ctx context.Context, data *Aaaldappar
 
 	// Create API request body from the model
 	aaaldapparams := aaa.Aaaldapparams{}
-	if !data.Authtimeout.IsNull() {
+	if !data.Authtimeout.IsNull() && !data.Authtimeout.IsUnknown() {
 		aaaldapparams.Authtimeout = utils.IntPtr(int(data.Authtimeout.ValueInt64()))
 	}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		aaaldapparams.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Groupattrname.IsNull() {
+	if !data.Groupattrname.IsNull() && !data.Groupattrname.IsUnknown() {
 		aaaldapparams.Groupattrname = data.Groupattrname.ValueString()
 	}
-	if !data.Groupnameidentifier.IsNull() {
+	if !data.Groupnameidentifier.IsNull() && !data.Groupnameidentifier.IsUnknown() {
 		aaaldapparams.Groupnameidentifier = data.Groupnameidentifier.ValueString()
 	}
-	if !data.Groupsearchattribute.IsNull() {
+	if !data.Groupsearchattribute.IsNull() && !data.Groupsearchattribute.IsUnknown() {
 		aaaldapparams.Groupsearchattribute = data.Groupsearchattribute.ValueString()
 	}
-	if !data.Groupsearchfilter.IsNull() {
+	if !data.Groupsearchfilter.IsNull() && !data.Groupsearchfilter.IsUnknown() {
 		aaaldapparams.Groupsearchfilter = data.Groupsearchfilter.ValueString()
 	}
-	if !data.Groupsearchsubattribute.IsNull() {
+	if !data.Groupsearchsubattribute.IsNull() && !data.Groupsearchsubattribute.IsUnknown() {
 		aaaldapparams.Groupsearchsubattribute = data.Groupsearchsubattribute.ValueString()
 	}
-	if !data.Ldapbase.IsNull() {
+	if !data.Ldapbase.IsNull() && !data.Ldapbase.IsUnknown() {
 		aaaldapparams.Ldapbase = data.Ldapbase.ValueString()
 	}
-	if !data.Ldapbinddn.IsNull() {
+	if !data.Ldapbinddn.IsNull() && !data.Ldapbinddn.IsUnknown() {
 		aaaldapparams.Ldapbinddn = data.Ldapbinddn.ValueString()
 	}
-	if !data.Ldapbinddnpassword.IsNull() {
+	if !data.Ldapbinddnpassword.IsNull() && !data.Ldapbinddnpassword.IsUnknown() {
 		aaaldapparams.Ldapbinddnpassword = data.Ldapbinddnpassword.ValueString()
 	}
 	// Skip write-only attribute: ldapbinddnpassword_wo
 	// Skip version tracker attribute: ldapbinddnpassword_wo_version
-	if !data.Ldaploginname.IsNull() {
+	if !data.Ldaploginname.IsNull() && !data.Ldaploginname.IsUnknown() {
 		aaaldapparams.Ldaploginname = data.Ldaploginname.ValueString()
 	}
-	if !data.Maxnestinglevel.IsNull() {
+	if !data.Maxnestinglevel.IsNull() && !data.Maxnestinglevel.IsUnknown() {
 		aaaldapparams.Maxnestinglevel = utils.IntPtr(int(data.Maxnestinglevel.ValueInt64()))
 	}
-	if !data.Nestedgroupextraction.IsNull() {
+	if !data.Nestedgroupextraction.IsNull() && !data.Nestedgroupextraction.IsUnknown() {
 		aaaldapparams.Nestedgroupextraction = data.Nestedgroupextraction.ValueString()
 	}
-	if !data.Passwdchange.IsNull() {
+	if !data.Passwdchange.IsNull() && !data.Passwdchange.IsUnknown() {
 		aaaldapparams.Passwdchange = data.Passwdchange.ValueString()
 	}
-	if !data.Searchfilter.IsNull() {
+	if !data.Searchfilter.IsNull() && !data.Searchfilter.IsUnknown() {
 		aaaldapparams.Searchfilter = data.Searchfilter.ValueString()
 	}
-	if !data.Sectype.IsNull() {
+	if !data.Sectype.IsNull() && !data.Sectype.IsUnknown() {
 		aaaldapparams.Sectype = data.Sectype.ValueString()
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		aaaldapparams.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		aaaldapparams.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Ssonameattribute.IsNull() {
+	if !data.Ssonameattribute.IsNull() && !data.Ssonameattribute.IsUnknown() {
 		aaaldapparams.Ssonameattribute = data.Ssonameattribute.ValueString()
 	}
-	if !data.Subattributename.IsNull() {
+	if !data.Subattributename.IsNull() && !data.Subattributename.IsUnknown() {
 		aaaldapparams.Subattributename = data.Subattributename.ValueString()
 	}
-	if !data.Svrtype.IsNull() {
+	if !data.Svrtype.IsNull() && !data.Svrtype.IsUnknown() {
 		aaaldapparams.Svrtype = data.Svrtype.ValueString()
 	}
 

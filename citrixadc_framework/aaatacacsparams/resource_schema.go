@@ -104,31 +104,31 @@ func aaatacacsparamsGetThePayloadFromthePlan(ctx context.Context, data *Aaatacac
 
 	// Create API request body from the model
 	aaatacacsparams := aaa.Aaatacacsparams{}
-	if !data.Accounting.IsNull() {
+	if !data.Accounting.IsNull() && !data.Accounting.IsUnknown() {
 		aaatacacsparams.Accounting = data.Accounting.ValueString()
 	}
-	if !data.Auditfailedcmds.IsNull() {
+	if !data.Auditfailedcmds.IsNull() && !data.Auditfailedcmds.IsUnknown() {
 		aaatacacsparams.Auditfailedcmds = data.Auditfailedcmds.ValueString()
 	}
-	if !data.Authorization.IsNull() {
+	if !data.Authorization.IsNull() && !data.Authorization.IsUnknown() {
 		aaatacacsparams.Authorization = data.Authorization.ValueString()
 	}
-	if !data.Authtimeout.IsNull() {
+	if !data.Authtimeout.IsNull() && !data.Authtimeout.IsUnknown() {
 		aaatacacsparams.Authtimeout = utils.IntPtr(int(data.Authtimeout.ValueInt64()))
 	}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		aaatacacsparams.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Groupattrname.IsNull() {
+	if !data.Groupattrname.IsNull() && !data.Groupattrname.IsUnknown() {
 		aaatacacsparams.Groupattrname = data.Groupattrname.ValueString()
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		aaatacacsparams.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		aaatacacsparams.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Tacacssecret.IsNull() {
+	if !data.Tacacssecret.IsNull() && !data.Tacacssecret.IsUnknown() {
 		aaatacacsparams.Tacacssecret = data.Tacacssecret.ValueString()
 	}
 	// Skip write-only attribute: tacacssecret_wo

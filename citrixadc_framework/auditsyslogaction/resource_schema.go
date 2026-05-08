@@ -258,111 +258,111 @@ func auditsyslogactionGetThePayloadFromthePlan(ctx context.Context, data *Audits
 
 	// Create API request body from the model
 	auditsyslogaction := audit.Auditsyslogaction{}
-	if !data.Acl.IsNull() {
+	if !data.Acl.IsNull() && !data.Acl.IsUnknown() {
 		auditsyslogaction.Acl = data.Acl.ValueString()
 	}
-	if !data.Alg.IsNull() {
+	if !data.Alg.IsNull() && !data.Alg.IsUnknown() {
 		auditsyslogaction.Alg = data.Alg.ValueString()
 	}
-	if !data.Appflowexport.IsNull() {
+	if !data.Appflowexport.IsNull() && !data.Appflowexport.IsUnknown() {
 		auditsyslogaction.Appflowexport = data.Appflowexport.ValueString()
 	}
-	if !data.Contentinspectionlog.IsNull() {
+	if !data.Contentinspectionlog.IsNull() && !data.Contentinspectionlog.IsUnknown() {
 		auditsyslogaction.Contentinspectionlog = data.Contentinspectionlog.ValueString()
 	}
-	if !data.Dateformat.IsNull() {
+	if !data.Dateformat.IsNull() && !data.Dateformat.IsUnknown() {
 		auditsyslogaction.Dateformat = data.Dateformat.ValueString()
 	}
-	if !data.Dns.IsNull() {
+	if !data.Dns.IsNull() && !data.Dns.IsUnknown() {
 		auditsyslogaction.Dns = data.Dns.ValueString()
 	}
-	if !data.Domainresolvenow.IsNull() {
+	if !data.Domainresolvenow.IsNull() && !data.Domainresolvenow.IsUnknown() {
 		auditsyslogaction.Domainresolvenow = data.Domainresolvenow.ValueBool()
 	}
-	if !data.Domainresolveretry.IsNull() {
+	if !data.Domainresolveretry.IsNull() && !data.Domainresolveretry.IsUnknown() {
 		auditsyslogaction.Domainresolveretry = utils.IntPtr(int(data.Domainresolveretry.ValueInt64()))
 	}
-	if !data.Httpauthtoken.IsNull() {
+	if !data.Httpauthtoken.IsNull() && !data.Httpauthtoken.IsUnknown() {
 		auditsyslogaction.Httpauthtoken = data.Httpauthtoken.ValueString()
 	}
 	// Skip write-only attribute: httpauthtoken_wo
 	// Skip version tracker attribute: httpauthtoken_wo_version
-	if !data.Httpendpointurl.IsNull() {
+	if !data.Httpendpointurl.IsNull() && !data.Httpendpointurl.IsUnknown() {
 		auditsyslogaction.Httpendpointurl = data.Httpendpointurl.ValueString()
 	}
-	if !data.Lbvservername.IsNull() {
+	if !data.Lbvservername.IsNull() && !data.Lbvservername.IsUnknown() {
 		auditsyslogaction.Lbvservername = data.Lbvservername.ValueString()
 	}
-	if !data.Logfacility.IsNull() {
+	if !data.Logfacility.IsNull() && !data.Logfacility.IsUnknown() {
 		auditsyslogaction.Logfacility = data.Logfacility.ValueString()
 	}
-	if !data.Loglevel.IsNull() {
+	if !data.Loglevel.IsNull() && !data.Loglevel.IsUnknown() {
 		var loglevelList []string
 		data.Loglevel.ElementsAs(ctx, &loglevelList, false)
 		auditsyslogaction.Loglevel = loglevelList
 	}
-	if !data.Lsn.IsNull() {
+	if !data.Lsn.IsNull() && !data.Lsn.IsUnknown() {
 		auditsyslogaction.Lsn = data.Lsn.ValueString()
 	}
-	if !data.Managementlog.IsNull() {
+	if !data.Managementlog.IsNull() && !data.Managementlog.IsUnknown() {
 		var managementlogList []string
 		data.Managementlog.ElementsAs(ctx, &managementlogList, false)
 		auditsyslogaction.Managementlog = managementlogList
 	}
-	if !data.Maxlogdatasizetohold.IsNull() {
+	if !data.Maxlogdatasizetohold.IsNull() && !data.Maxlogdatasizetohold.IsUnknown() {
 		auditsyslogaction.Maxlogdatasizetohold = utils.IntPtr(int(data.Maxlogdatasizetohold.ValueInt64()))
 	}
-	if !data.Mgmtloglevel.IsNull() {
+	if !data.Mgmtloglevel.IsNull() && !data.Mgmtloglevel.IsUnknown() {
 		var mgmtloglevelList []string
 		data.Mgmtloglevel.ElementsAs(ctx, &mgmtloglevelList, false)
 		auditsyslogaction.Mgmtloglevel = mgmtloglevelList
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		auditsyslogaction.Name = data.Name.ValueString()
 	}
-	if !data.Netprofile.IsNull() {
+	if !data.Netprofile.IsNull() && !data.Netprofile.IsUnknown() {
 		auditsyslogaction.Netprofile = data.Netprofile.ValueString()
 	}
-	if !data.Protocolviolations.IsNull() {
+	if !data.Protocolviolations.IsNull() && !data.Protocolviolations.IsUnknown() {
 		auditsyslogaction.Protocolviolations = data.Protocolviolations.ValueString()
 	}
-	if !data.Serverdomainname.IsNull() {
+	if !data.Serverdomainname.IsNull() && !data.Serverdomainname.IsUnknown() {
 		auditsyslogaction.Serverdomainname = data.Serverdomainname.ValueString()
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		auditsyslogaction.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		auditsyslogaction.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Sslinterception.IsNull() {
+	if !data.Sslinterception.IsNull() && !data.Sslinterception.IsUnknown() {
 		auditsyslogaction.Sslinterception = data.Sslinterception.ValueString()
 	}
-	if !data.Streamanalytics.IsNull() {
+	if !data.Streamanalytics.IsNull() && !data.Streamanalytics.IsUnknown() {
 		auditsyslogaction.Streamanalytics = data.Streamanalytics.ValueString()
 	}
-	if !data.Subscriberlog.IsNull() {
+	if !data.Subscriberlog.IsNull() && !data.Subscriberlog.IsUnknown() {
 		auditsyslogaction.Subscriberlog = data.Subscriberlog.ValueString()
 	}
-	if !data.Syslogcompliance.IsNull() {
+	if !data.Syslogcompliance.IsNull() && !data.Syslogcompliance.IsUnknown() {
 		auditsyslogaction.Syslogcompliance = data.Syslogcompliance.ValueString()
 	}
-	if !data.Tcp.IsNull() {
+	if !data.Tcp.IsNull() && !data.Tcp.IsUnknown() {
 		auditsyslogaction.Tcp = data.Tcp.ValueString()
 	}
-	if !data.Tcpprofilename.IsNull() {
+	if !data.Tcpprofilename.IsNull() && !data.Tcpprofilename.IsUnknown() {
 		auditsyslogaction.Tcpprofilename = data.Tcpprofilename.ValueString()
 	}
-	if !data.Timezone.IsNull() {
+	if !data.Timezone.IsNull() && !data.Timezone.IsUnknown() {
 		auditsyslogaction.Timezone = data.Timezone.ValueString()
 	}
-	if !data.Transport.IsNull() {
+	if !data.Transport.IsNull() && !data.Transport.IsUnknown() {
 		auditsyslogaction.Transport = data.Transport.ValueString()
 	}
-	if !data.Urlfiltering.IsNull() {
+	if !data.Urlfiltering.IsNull() && !data.Urlfiltering.IsUnknown() {
 		auditsyslogaction.Urlfiltering = data.Urlfiltering.ValueString()
 	}
-	if !data.Userdefinedauditlog.IsNull() {
+	if !data.Userdefinedauditlog.IsNull() && !data.Userdefinedauditlog.IsUnknown() {
 		auditsyslogaction.Userdefinedauditlog = data.Userdefinedauditlog.ValueString()
 	}
 
