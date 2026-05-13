@@ -141,3 +141,120 @@ func TestAccSslcrlDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Test backward-compatible path: using password (Sensitive attribute)
+// password is the LDAP password used when refreshing CRL from an LDAP server
+const testAccSslcrl_password_step1 = `
+	variable "sslcrl_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslcrl" "tf_sslcrl_ephem" {
+		crlname  = "tf_sslcrl_ephem"
+		crlpath  = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+		cacert   = "rootrsa_cert1"
+		password = var.sslcrl_password
+	}
+`
+
+const testAccSslcrl_password_step2 = `
+	variable "sslcrl_password_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslcrl" "tf_sslcrl_ephem" {
+		crlname  = "tf_sslcrl_ephem"
+		crlpath  = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+		cacert   = "rootrsa_cert1"
+		password = var.sslcrl_password_2
+	}
+`
+
+func TestAccSslcrl_password_backward_compat(t *testing.T) {
+	t.Skipf("Need a valid CRL file on the ADC instance before running this test")
+	t.Setenv("TF_VAR_sslcrl_password", "crlldappass1")
+	t.Setenv("TF_VAR_sslcrl_password_2", "crlldappass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcrlDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcrl_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "crlname", "tf_sslcrl_ephem"),
+				),
+			},
+			{
+				Config: testAccSslcrl_password_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "crlname", "tf_sslcrl_ephem"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
+const testAccSslcrl_password_wo_step1 = `
+	variable "sslcrl_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslcrl" "tf_sslcrl_ephem" {
+		crlname             = "tf_sslcrl_ephem"
+		crlpath             = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+		cacert              = "rootrsa_cert1"
+		password_wo         = var.sslcrl_password_wo
+		password_wo_version = 1
+	}
+`
+
+const testAccSslcrl_password_wo_step2 = `
+	variable "sslcrl_password_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslcrl" "tf_sslcrl_ephem" {
+		crlname             = "tf_sslcrl_ephem"
+		crlpath             = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+		cacert              = "rootrsa_cert1"
+		password_wo         = var.sslcrl_password_wo_2
+		password_wo_version = 2
+	}
+`
+
+func TestAccSslcrl_password_wo_ephemeral(t *testing.T) {
+	t.Skipf("Need a valid CRL file on the ADC instance before running this test")
+	t.Setenv("TF_VAR_sslcrl_password_wo", "ephem_crlpass1")
+	t.Setenv("TF_VAR_sslcrl_password_wo_2", "ephem_crlpass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcrlDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcrl_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "crlname", "tf_sslcrl_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccSslcrl_password_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "crlname", "tf_sslcrl_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

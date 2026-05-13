@@ -2,13 +2,14 @@ package sslcrl
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -18,29 +19,31 @@ import (
 
 // SslcrlResourceModel describes the resource data model.
 type SslcrlResourceModel struct {
-	Id         types.String `tfsdk:"id"`
-	Basedn     types.String `tfsdk:"basedn"`
-	Binary     types.String `tfsdk:"binary"`
-	Binddn     types.String `tfsdk:"binddn"`
-	Cacert     types.String `tfsdk:"cacert"`
-	Cacertfile types.String `tfsdk:"cacertfile"`
-	Cakeyfile  types.String `tfsdk:"cakeyfile"`
-	Crlname    types.String `tfsdk:"crlname"`
-	Crlpath    types.String `tfsdk:"crlpath"`
-	Day        types.Int64  `tfsdk:"day"`
-	Gencrl     types.String `tfsdk:"gencrl"`
-	Indexfile  types.String `tfsdk:"indexfile"`
-	Inform     types.String `tfsdk:"inform"`
-	Interval   types.String `tfsdk:"interval"`
-	Method     types.String `tfsdk:"method"`
-	Password   types.String `tfsdk:"password"`
-	Port       types.Int64  `tfsdk:"port"`
-	Refresh    types.String `tfsdk:"refresh"`
-	Revoke     types.String `tfsdk:"revoke"`
-	Scope      types.String `tfsdk:"scope"`
-	Server     types.String `tfsdk:"server"`
-	Time       types.String `tfsdk:"time"`
-	Url        types.String `tfsdk:"url"`
+	Id                types.String `tfsdk:"id"`
+	Basedn            types.String `tfsdk:"basedn"`
+	Binary            types.String `tfsdk:"binary"`
+	Binddn            types.String `tfsdk:"binddn"`
+	Cacert            types.String `tfsdk:"cacert"`
+	Cacertfile        types.String `tfsdk:"cacertfile"`
+	Cakeyfile         types.String `tfsdk:"cakeyfile"`
+	Crlname           types.String `tfsdk:"crlname"`
+	Crlpath           types.String `tfsdk:"crlpath"`
+	Day               types.Int64  `tfsdk:"day"`
+	Gencrl            types.String `tfsdk:"gencrl"`
+	Indexfile         types.String `tfsdk:"indexfile"`
+	Inform            types.String `tfsdk:"inform"`
+	Interval          types.String `tfsdk:"interval"`
+	Method            types.String `tfsdk:"method"`
+	Password          types.String `tfsdk:"password"`
+	PasswordWo        types.String `tfsdk:"password_wo"`
+	PasswordWoVersion types.Int64  `tfsdk:"password_wo_version"`
+	Port              types.Int64  `tfsdk:"port"`
+	Refresh           types.String `tfsdk:"refresh"`
+	Revoke            types.String `tfsdk:"revoke"`
+	Scope             types.String `tfsdk:"scope"`
+	Server            types.String `tfsdk:"server"`
+	Time              types.String `tfsdk:"time"`
+	Url               types.String `tfsdk:"url"`
 }
 
 func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -88,7 +91,10 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "Name of and, optionally, path to the CA key file. /nsconfig/ssl/ is the default path",
 			},
 			"crlname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the Certificate Revocation List (CRL). Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the CRL is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my crl\" or 'my crl').",
 			},
 			"crlpath": schema.StringAttribute{
@@ -121,10 +127,10 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"inform": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("PEM"),
 				Description: "Input format of the CRL file. The two formats supported on the appliance are:\nPEM - Privacy Enhanced Mail.\nDER - Distinguished Encoding Rule.",
 			},
 			"interval": schema.StringAttribute{
@@ -139,8 +145,20 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"password": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Password to access the CRL in the LDAP repository if access to the LDAP repository is restricted or anonymous access is not allowed.",
+			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password to access the CRL in the LDAP repository if access to the LDAP repository is restricted or anonymous access is not allowed.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a password_wo update.",
 			},
 			"port": schema.Int64Attribute{
 				Optional:    true,
@@ -162,7 +180,7 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"scope": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("One"),
+				Computed:    true,
 				Description: "Extent of the search operation on the LDAP server. Available settings function as follows:\nOne - One level below Base DN.\nBase - Exactly the same level as Base DN.",
 			},
 			"server": schema.StringAttribute{
@@ -184,79 +202,94 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func sslcrlGetThePayloadFromtheConfig(ctx context.Context, data *SslcrlResourceModel) ssl.Sslcrl {
-	tflog.Debug(ctx, "In sslcrlGetThePayloadFromtheConfig Function")
+func sslcrlGetThePayloadFromthePlan(ctx context.Context, data *SslcrlResourceModel) ssl.Sslcrl {
+	tflog.Debug(ctx, "In sslcrlGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslcrl := ssl.Sslcrl{}
-	if !data.Basedn.IsNull() {
+	if !data.Basedn.IsNull() && !data.Basedn.IsUnknown() {
 		sslcrl.Basedn = data.Basedn.ValueString()
 	}
-	if !data.Binary.IsNull() {
+	if !data.Binary.IsNull() && !data.Binary.IsUnknown() {
 		sslcrl.Binary = data.Binary.ValueString()
 	}
-	if !data.Binddn.IsNull() {
+	if !data.Binddn.IsNull() && !data.Binddn.IsUnknown() {
 		sslcrl.Binddn = data.Binddn.ValueString()
 	}
-	if !data.Cacert.IsNull() {
+	if !data.Cacert.IsNull() && !data.Cacert.IsUnknown() {
 		sslcrl.Cacert = data.Cacert.ValueString()
 	}
-	if !data.Cacertfile.IsNull() {
+	if !data.Cacertfile.IsNull() && !data.Cacertfile.IsUnknown() {
 		sslcrl.Cacertfile = data.Cacertfile.ValueString()
 	}
-	if !data.Cakeyfile.IsNull() {
+	if !data.Cakeyfile.IsNull() && !data.Cakeyfile.IsUnknown() {
 		sslcrl.Cakeyfile = data.Cakeyfile.ValueString()
 	}
-	if !data.Crlname.IsNull() {
+	if !data.Crlname.IsNull() && !data.Crlname.IsUnknown() {
 		sslcrl.Crlname = data.Crlname.ValueString()
 	}
-	if !data.Crlpath.IsNull() {
+	if !data.Crlpath.IsNull() && !data.Crlpath.IsUnknown() {
 		sslcrl.Crlpath = data.Crlpath.ValueString()
 	}
-	if !data.Day.IsNull() {
+	if !data.Day.IsNull() && !data.Day.IsUnknown() {
 		sslcrl.Day = utils.IntPtr(int(data.Day.ValueInt64()))
 	}
-	if !data.Gencrl.IsNull() {
+	if !data.Gencrl.IsNull() && !data.Gencrl.IsUnknown() {
 		sslcrl.Gencrl = data.Gencrl.ValueString()
 	}
-	if !data.Indexfile.IsNull() {
+	if !data.Indexfile.IsNull() && !data.Indexfile.IsUnknown() {
 		sslcrl.Indexfile = data.Indexfile.ValueString()
 	}
-	if !data.Inform.IsNull() {
+	if !data.Inform.IsNull() && !data.Inform.IsUnknown() {
 		sslcrl.Inform = data.Inform.ValueString()
 	}
-	if !data.Interval.IsNull() {
+	if !data.Interval.IsNull() && !data.Interval.IsUnknown() {
 		sslcrl.Interval = data.Interval.ValueString()
 	}
-	if !data.Method.IsNull() {
+	if !data.Method.IsNull() && !data.Method.IsUnknown() {
 		sslcrl.Method = data.Method.ValueString()
 	}
-	if !data.Password.IsNull() {
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
 		sslcrl.Password = data.Password.ValueString()
 	}
-	if !data.Port.IsNull() {
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		sslcrl.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Refresh.IsNull() {
+	if !data.Refresh.IsNull() && !data.Refresh.IsUnknown() {
 		sslcrl.Refresh = data.Refresh.ValueString()
 	}
-	if !data.Revoke.IsNull() {
+	if !data.Revoke.IsNull() && !data.Revoke.IsUnknown() {
 		sslcrl.Revoke = data.Revoke.ValueString()
 	}
-	if !data.Scope.IsNull() {
+	if !data.Scope.IsNull() && !data.Scope.IsUnknown() {
 		sslcrl.Scope = data.Scope.ValueString()
 	}
-	if !data.Server.IsNull() {
+	if !data.Server.IsNull() && !data.Server.IsUnknown() {
 		sslcrl.Server = data.Server.ValueString()
 	}
-	if !data.Time.IsNull() {
+	if !data.Time.IsNull() && !data.Time.IsUnknown() {
 		sslcrl.Time = data.Time.ValueString()
 	}
-	if !data.Url.IsNull() {
+	if !data.Url.IsNull() && !data.Url.IsUnknown() {
 		sslcrl.Url = data.Url.ValueString()
 	}
 
 	return sslcrl
+}
+
+func sslcrlGetThePayloadFromtheConfig(ctx context.Context, data *SslcrlResourceModel, payload *ssl.Sslcrl) {
+	tflog.Debug(ctx, "In sslcrlGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: password_wo -> password
+	if !data.PasswordWo.IsNull() {
+		passwordWo := data.PasswordWo.ValueString()
+		if passwordWo != "" {
+			payload.Password = passwordWo
+		}
+	}
 }
 
 func sslcrlSetAttrFromGet(ctx context.Context, data *SslcrlResourceModel, getResponseData map[string]interface{}) *SslcrlResourceModel {
@@ -335,11 +368,9 @@ func sslcrlSetAttrFromGet(ctx context.Context, data *SslcrlResourceModel, getRes
 	} else {
 		data.Method = types.StringNull()
 	}
-	if val, ok := getResponseData["password"]; ok && val != nil {
-		data.Password = types.StringValue(val.(string))
-	} else {
-		data.Password = types.StringNull()
-	}
+	// password is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
@@ -379,8 +410,8 @@ func sslcrlSetAttrFromGet(ctx context.Context, data *SslcrlResourceModel, getRes
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Crlname.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Crlname.ValueString()))
 
 	return data
 }

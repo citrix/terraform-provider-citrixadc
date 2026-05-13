@@ -15,6 +15,37 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 }
 ```
 
+### Using sessionticketkeydata (sensitive attribute - persisted in state)
+
+```hcl
+variable "sslprofile_sessionticketkeydata" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_sslprofile" "tf_sslprofile" {
+  name                  = "tf_sslprofile"
+  sessionticketkeydata  = var.sslprofile_sessionticketkeydata
+}
+```
+
+### Using sessionticketkeydata_wo (write-only/ephemeral - NOT persisted in state)
+
+The `sessionticketkeydata_wo` attribute provides an ephemeral path for the session ticket encryption key. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `sessionticketkeydata_wo_version`.
+
+```hcl
+variable "sslprofile_sessionticketkeydata" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_sslprofile" "tf_sslprofile" {
+  name                             = "tf_sslprofile"
+  sessionticketkeydata_wo          = var.sslprofile_sessionticketkeydata
+  sessionticketkeydata_wo_version  = 1
+}
+```
+
 ~> **Note:** The following attributes are available for configuration and can be used to control the default bindings of ECC curve and cipher bindings. Detailed descriptions can be found in the `Argument Reference` section below:
 `nodefaultecccurvebindings`, `nodefaultcipherbindings`, `nodefaultbindings`
 
@@ -67,7 +98,9 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 * `sessionticket` - (Optional) This option enables the use of session tickets, as per the RFC 5077. Possible values: [ ENABLED, DISABLED ]
 * `sessionticketlifetime` - (Optional) This option sets the life time of session tickets issued by NS in secs.
 * `sessionticketkeyrefresh` - (Optional) This option enables the use of session tickets, as per the RFC 5077. Possible values: [ ENABLED, DISABLED ]
-* `sessionticketkeydata` - (Optional) Session ticket enc/dec key , admin can set it.
+* `sessionticketkeydata` - (Optional, Sensitive) Session ticket enc/dec key, admin can set it. The value is persisted in Terraform state (encrypted). See also `sessionticketkeydata_wo` for an ephemeral alternative.
+* `sessionticketkeydata_wo` - (Optional, Sensitive, WriteOnly) Same as `sessionticketkeydata`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `sessionticketkeydata_wo_version`. If both `sessionticketkeydata` and `sessionticketkeydata_wo` are set, `sessionticketkeydata_wo` takes precedence.
+* `sessionticketkeydata_wo_version` - (Optional) An integer version tracker for `sessionticketkeydata_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `sessionkeylifetime` - (Optional) This option sets the life time of symm key used to generate session tickets issued by NS in secs.
 * `prevsessionkeylifetime` - (Optional) This option sets the life time of symm key used to generate session tickets issued by NS in secs.
 * `hsts` - (Optional) State of HSTS protocol support for the SSL profile. Using HSTS, a server can enforce the use of an HTTPS connection for all communication with a client. Possible values: [ ENABLED, DISABLED ]

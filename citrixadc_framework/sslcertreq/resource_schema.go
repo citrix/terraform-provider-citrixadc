@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -16,23 +16,27 @@ import (
 
 // SslcertreqResourceModel describes the resource data model.
 type SslcertreqResourceModel struct {
-	Id                   types.String `tfsdk:"id"`
-	Challengepassword    types.String `tfsdk:"challengepassword"`
-	Commonname           types.String `tfsdk:"commonname"`
-	Companyname          types.String `tfsdk:"companyname"`
-	Countryname          types.String `tfsdk:"countryname"`
-	Digestmethod         types.String `tfsdk:"digestmethod"`
-	Emailaddress         types.String `tfsdk:"emailaddress"`
-	Fipskeyname          types.String `tfsdk:"fipskeyname"`
-	Keyfile              types.String `tfsdk:"keyfile"`
-	Keyform              types.String `tfsdk:"keyform"`
-	Localityname         types.String `tfsdk:"localityname"`
-	Organizationname     types.String `tfsdk:"organizationname"`
-	Organizationunitname types.String `tfsdk:"organizationunitname"`
-	Pempassphrase        types.String `tfsdk:"pempassphrase"`
-	Reqfile              types.String `tfsdk:"reqfile"`
-	Statename            types.String `tfsdk:"statename"`
-	Subjectaltname       types.String `tfsdk:"subjectaltname"`
+	Id                         types.String `tfsdk:"id"`
+	Challengepassword          types.String `tfsdk:"challengepassword"`
+	ChallengepasswordWo        types.String `tfsdk:"challengepassword_wo"`
+	ChallengepasswordWoVersion types.Int64  `tfsdk:"challengepassword_wo_version"`
+	Commonname                 types.String `tfsdk:"commonname"`
+	Companyname                types.String `tfsdk:"companyname"`
+	Countryname                types.String `tfsdk:"countryname"`
+	Digestmethod               types.String `tfsdk:"digestmethod"`
+	Emailaddress               types.String `tfsdk:"emailaddress"`
+	Fipskeyname                types.String `tfsdk:"fipskeyname"`
+	Keyfile                    types.String `tfsdk:"keyfile"`
+	Keyform                    types.String `tfsdk:"keyform"`
+	Localityname               types.String `tfsdk:"localityname"`
+	Organizationname           types.String `tfsdk:"organizationname"`
+	Organizationunitname       types.String `tfsdk:"organizationunitname"`
+	Pempassphrase              types.String `tfsdk:"pempassphrase"`
+	PempassphraseWo            types.String `tfsdk:"pempassphrase_wo"`
+	PempassphraseWoVersion     types.Int64  `tfsdk:"pempassphrase_wo_version"`
+	Reqfile                    types.String `tfsdk:"reqfile"`
+	Statename                  types.String `tfsdk:"statename"`
+	Subjectaltname             types.String `tfsdk:"subjectaltname"`
 }
 
 func (r *SslcertreqResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -44,12 +48,27 @@ func (r *SslcertreqResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "The ID of the sslcertreq resource.",
 			},
 			"challengepassword": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:  true,
+				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Pass phrase, embedded in the certificate signing request that is shared only between the client or server requesting the certificate and the SSL certificate issuer (typically the certificate authority). This pass phrase can be used to authenticate a client or server that is requesting a certificate from the certificate authority.",
+			},
+			"challengepassword_wo": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Pass phrase, embedded in the certificate signing request that is shared only between the client or server requesting the certificate and the SSL certificate issuer (typically the certificate authority). This pass phrase can be used to authenticate a client or server that is requesting a certificate from the certificate authority.",
+			},
+			"challengepassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a challengepassword_wo update.",
 			},
 			"commonname": schema.StringAttribute{
 				Optional: true,
@@ -68,7 +87,8 @@ func (r *SslcertreqResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Additional name for the company or web site.",
 			},
 			"countryname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -108,10 +128,10 @@ func (r *SslcertreqResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"keyform": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("PEM"),
 				Description: "Format in which the key is stored on the appliance.",
 			},
 			"localityname": schema.StringAttribute{
@@ -123,7 +143,8 @@ func (r *SslcertreqResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Name of the city or town in which your organization's head office is located.",
 			},
 			"organizationname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -138,22 +159,39 @@ func (r *SslcertreqResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Name of the division or section in the organization that will use the certificate.",
 			},
 			"pempassphrase": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:  true,
+				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "0",
 			},
+			"pempassphrase_wo": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "0",
+			},
+			"pempassphrase_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a pempassphrase_wo update.",
+			},
 			"reqfile": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name for and, optionally, path to the certificate signing request (CSR). /nsconfig/ssl/ is the default path.",
 			},
 			"statename": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -171,72 +209,94 @@ func (r *SslcertreqResource) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func sslcertreqGetThePayloadFromtheConfig(ctx context.Context, data *SslcertreqResourceModel) ssl.Sslcertreq {
-	tflog.Debug(ctx, "In sslcertreqGetThePayloadFromtheConfig Function")
+func sslcertreqGetThePayloadFromthePlan(ctx context.Context, data *SslcertreqResourceModel) ssl.Sslcertreq {
+	tflog.Debug(ctx, "In sslcertreqGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslcertreq := ssl.Sslcertreq{}
-	if !data.Challengepassword.IsNull() {
+	if !data.Challengepassword.IsNull() && !data.Challengepassword.IsUnknown() {
 		sslcertreq.Challengepassword = data.Challengepassword.ValueString()
 	}
-	if !data.Commonname.IsNull() {
+	// Skip write-only attribute: challengepassword_wo
+	// Skip version tracker attribute: challengepassword_wo_version
+	if !data.Commonname.IsNull() && !data.Commonname.IsUnknown() {
 		sslcertreq.Commonname = data.Commonname.ValueString()
 	}
-	if !data.Companyname.IsNull() {
+	if !data.Companyname.IsNull() && !data.Companyname.IsUnknown() {
 		sslcertreq.Companyname = data.Companyname.ValueString()
 	}
-	if !data.Countryname.IsNull() {
+	if !data.Countryname.IsNull() && !data.Countryname.IsUnknown() {
 		sslcertreq.Countryname = data.Countryname.ValueString()
 	}
-	if !data.Digestmethod.IsNull() {
+	if !data.Digestmethod.IsNull() && !data.Digestmethod.IsUnknown() {
 		sslcertreq.Digestmethod = data.Digestmethod.ValueString()
 	}
-	if !data.Emailaddress.IsNull() {
+	if !data.Emailaddress.IsNull() && !data.Emailaddress.IsUnknown() {
 		sslcertreq.Emailaddress = data.Emailaddress.ValueString()
 	}
-	if !data.Fipskeyname.IsNull() {
+	if !data.Fipskeyname.IsNull() && !data.Fipskeyname.IsUnknown() {
 		sslcertreq.Fipskeyname = data.Fipskeyname.ValueString()
 	}
-	if !data.Keyfile.IsNull() {
+	if !data.Keyfile.IsNull() && !data.Keyfile.IsUnknown() {
 		sslcertreq.Keyfile = data.Keyfile.ValueString()
 	}
-	if !data.Keyform.IsNull() {
+	if !data.Keyform.IsNull() && !data.Keyform.IsUnknown() {
 		sslcertreq.Keyform = data.Keyform.ValueString()
 	}
-	if !data.Localityname.IsNull() {
+	if !data.Localityname.IsNull() && !data.Localityname.IsUnknown() {
 		sslcertreq.Localityname = data.Localityname.ValueString()
 	}
-	if !data.Organizationname.IsNull() {
+	if !data.Organizationname.IsNull() && !data.Organizationname.IsUnknown() {
 		sslcertreq.Organizationname = data.Organizationname.ValueString()
 	}
-	if !data.Organizationunitname.IsNull() {
+	if !data.Organizationunitname.IsNull() && !data.Organizationunitname.IsUnknown() {
 		sslcertreq.Organizationunitname = data.Organizationunitname.ValueString()
 	}
-	if !data.Pempassphrase.IsNull() {
+	if !data.Pempassphrase.IsNull() && !data.Pempassphrase.IsUnknown() {
 		sslcertreq.Pempassphrase = data.Pempassphrase.ValueString()
 	}
-	if !data.Reqfile.IsNull() {
+	// Skip write-only attribute: pempassphrase_wo
+	// Skip version tracker attribute: pempassphrase_wo_version
+	if !data.Reqfile.IsNull() && !data.Reqfile.IsUnknown() {
 		sslcertreq.Reqfile = data.Reqfile.ValueString()
 	}
-	if !data.Statename.IsNull() {
+	if !data.Statename.IsNull() && !data.Statename.IsUnknown() {
 		sslcertreq.Statename = data.Statename.ValueString()
 	}
-	if !data.Subjectaltname.IsNull() {
+	if !data.Subjectaltname.IsNull() && !data.Subjectaltname.IsUnknown() {
 		sslcertreq.Subjectaltname = data.Subjectaltname.ValueString()
 	}
 
 	return sslcertreq
 }
 
+func sslcertreqGetThePayloadFromtheConfig(ctx context.Context, data *SslcertreqResourceModel, payload *ssl.Sslcertreq) {
+	tflog.Debug(ctx, "In sslcertreqGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: challengepassword_wo -> challengepassword
+	if !data.ChallengepasswordWo.IsNull() {
+		challengepasswordWo := data.ChallengepasswordWo.ValueString()
+		if challengepasswordWo != "" {
+			payload.Challengepassword = challengepasswordWo
+		}
+	}
+	// Handle write-only secret attribute: pempassphrase_wo -> pempassphrase
+	if !data.PempassphraseWo.IsNull() {
+		pempassphraseWo := data.PempassphraseWo.ValueString()
+		if pempassphraseWo != "" {
+			payload.Pempassphrase = pempassphraseWo
+		}
+	}
+}
+
 func sslcertreqSetAttrFromGet(ctx context.Context, data *SslcertreqResourceModel, getResponseData map[string]interface{}) *SslcertreqResourceModel {
 	tflog.Debug(ctx, "In sslcertreqSetAttrFromGet Function")
 
 	// Convert API response to model
-	if val, ok := getResponseData["challengepassword"]; ok && val != nil {
-		data.Challengepassword = types.StringValue(val.(string))
-	} else {
-		data.Challengepassword = types.StringNull()
-	}
+	// challengepassword is not returned by NITRO API (secret/ephemeral) - retain from config
+	// challengepassword_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// challengepassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["commonname"]; ok && val != nil {
 		data.Commonname = types.StringValue(val.(string))
 	} else {
@@ -292,11 +352,9 @@ func sslcertreqSetAttrFromGet(ctx context.Context, data *SslcertreqResourceModel
 	} else {
 		data.Organizationunitname = types.StringNull()
 	}
-	if val, ok := getResponseData["pempassphrase"]; ok && val != nil {
-		data.Pempassphrase = types.StringValue(val.(string))
-	} else {
-		data.Pempassphrase = types.StringNull()
-	}
+	// pempassphrase is not returned by NITRO API (secret/ephemeral) - retain from config
+	// pempassphrase_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// pempassphrase_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["reqfile"]; ok && val != nil {
 		data.Reqfile = types.StringValue(val.(string))
 	} else {

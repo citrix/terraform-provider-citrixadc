@@ -38,7 +38,6 @@ func (d *SslcrlDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	var data SslcrlResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -257,3 +257,115 @@ func TestAccSslprofileDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Test backward-compatible path: using sessionticketkeydata (Sensitive attribute)
+const testAccSslprofile_sessionticketkeydata_step1 = `
+	variable "sslprofile_sessionticketkeydata" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslprofile" "tf_sslprofile_ephem" {
+		name                   = "tf_sslprofile_ephem"
+		sessionticket          = "ENABLED"
+		sessionticketkeydata   = var.sslprofile_sessionticketkeydata
+	}
+`
+
+const testAccSslprofile_sessionticketkeydata_step2 = `
+	variable "sslprofile_sessionticketkeydata_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslprofile" "tf_sslprofile_ephem" {
+		name                   = "tf_sslprofile_ephem"
+		sessionticket          = "ENABLED"
+		sessionticketkeydata   = var.sslprofile_sessionticketkeydata_2
+	}
+`
+
+func TestAccSslprofile_sessionticketkeydata_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_sslprofile_sessionticketkeydata", "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20")
+	t.Setenv("TF_VAR_sslprofile_sessionticketkeydata_2", "2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f40")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_sessionticketkeydata_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofileExist("citrixadc_sslprofile.tf_sslprofile_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_sslprofile_ephem", "name", "tf_sslprofile_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_sslprofile_ephem", "sessionticket", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccSslprofile_sessionticketkeydata_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofileExist("citrixadc_sslprofile.tf_sslprofile_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_sslprofile_ephem", "name", "tf_sslprofile_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_sslprofile_ephem", "sessionticket", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using sessionticketkeydata_wo (WriteOnly attribute) with version tracker
+const testAccSslprofile_sessionticketkeydata_wo_step1 = `
+	variable "sslprofile_sessionticketkeydata_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslprofile" "tf_sslprofile_ephem" {
+		name                              = "tf_sslprofile_ephem"
+		sessionticket                     = "ENABLED"
+		sessionticketkeydata_wo           = var.sslprofile_sessionticketkeydata_wo
+		sessionticketkeydata_wo_version   = 1
+	}
+`
+
+const testAccSslprofile_sessionticketkeydata_wo_step2 = `
+	variable "sslprofile_sessionticketkeydata_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslprofile" "tf_sslprofile_ephem" {
+		name                              = "tf_sslprofile_ephem"
+		sessionticket                     = "ENABLED"
+		sessionticketkeydata_wo           = var.sslprofile_sessionticketkeydata_wo_2
+		sessionticketkeydata_wo_version   = 2
+	}
+`
+
+func TestAccSslprofile_sessionticketkeydata_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_sslprofile_sessionticketkeydata_wo", "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20")
+	t.Setenv("TF_VAR_sslprofile_sessionticketkeydata_wo_2", "2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f40")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_sessionticketkeydata_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofileExist("citrixadc_sslprofile.tf_sslprofile_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_sslprofile_ephem", "name", "tf_sslprofile_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_sslprofile_ephem", "sessionticketkeydata_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccSslprofile_sessionticketkeydata_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofileExist("citrixadc_sslprofile.tf_sslprofile_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_sslprofile_ephem", "name", "tf_sslprofile_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_sslprofile_ephem", "sessionticketkeydata_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

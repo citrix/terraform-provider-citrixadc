@@ -2,13 +2,15 @@ package rdpserverprofile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/rdp"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -20,6 +22,8 @@ type RdpserverprofileResourceModel struct {
 	Id             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
 	Psk            types.String `tfsdk:"psk"`
+	PskWo          types.String `tfsdk:"psk_wo"`
+	PskWoVersion   types.Int64  `tfsdk:"psk_wo_version"`
 	Rdpip          types.String `tfsdk:"rdpip"`
 	Rdpport        types.Int64  `tfsdk:"rdpport"`
 	Rdpredirection types.String `tfsdk:"rdpredirection"`
@@ -34,12 +38,28 @@ func (r *RdpserverprofileResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The ID of the rdpserverprofile resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the rdp server profile",
 			},
 			"psk": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "Pre shared key value",
+			},
+			"psk_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Pre shared key value",
+			},
+			"psk_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a psk_wo update.",
 			},
 			"rdpip": schema.StringAttribute{
 				Optional:    true,
@@ -48,40 +68,55 @@ func (r *RdpserverprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"rdpport": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3389),
+				Computed:    true,
 				Description: "TCP port on which the RDP connection is established.",
 			},
 			"rdpredirection": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLE"),
+				Computed:    true,
 				Description: "Enable/Disable RDP redirection support. This needs to be enabled in presence of connection broker or session directory with IP cookie(msts cookie) based redirection support",
 			},
 		},
 	}
 }
 
-func rdpserverprofileGetThePayloadFromtheConfig(ctx context.Context, data *RdpserverprofileResourceModel) rdp.Rdpserverprofile {
-	tflog.Debug(ctx, "In rdpserverprofileGetThePayloadFromtheConfig Function")
+func rdpserverprofileGetThePayloadFromthePlan(ctx context.Context, data *RdpserverprofileResourceModel) rdp.Rdpserverprofile {
+	tflog.Debug(ctx, "In rdpserverprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	rdpserverprofile := rdp.Rdpserverprofile{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		rdpserverprofile.Name = data.Name.ValueString()
 	}
-	if !data.Psk.IsNull() {
+	if !data.Psk.IsNull() && !data.Psk.IsUnknown() {
 		rdpserverprofile.Psk = data.Psk.ValueString()
 	}
-	if !data.Rdpip.IsNull() {
+	// Skip write-only attribute: psk_wo
+	// Skip version tracker attribute: psk_wo_version
+	if !data.Rdpip.IsNull() && !data.Rdpip.IsUnknown() {
 		rdpserverprofile.Rdpip = data.Rdpip.ValueString()
 	}
-	if !data.Rdpport.IsNull() {
+	if !data.Rdpport.IsNull() && !data.Rdpport.IsUnknown() {
 		rdpserverprofile.Rdpport = utils.IntPtr(int(data.Rdpport.ValueInt64()))
 	}
-	if !data.Rdpredirection.IsNull() {
+	if !data.Rdpredirection.IsNull() && !data.Rdpredirection.IsUnknown() {
 		rdpserverprofile.Rdpredirection = data.Rdpredirection.ValueString()
 	}
 
 	return rdpserverprofile
+}
+
+func rdpserverprofileGetThePayloadFromtheConfig(ctx context.Context, data *RdpserverprofileResourceModel, payload *rdp.Rdpserverprofile) {
+	tflog.Debug(ctx, "In rdpserverprofileGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: psk_wo -> psk
+	if !data.PskWo.IsNull() {
+		pskWo := data.PskWo.ValueString()
+		if pskWo != "" {
+			payload.Psk = pskWo
+		}
+	}
 }
 
 func rdpserverprofileSetAttrFromGet(ctx context.Context, data *RdpserverprofileResourceModel, getResponseData map[string]interface{}) *RdpserverprofileResourceModel {
@@ -93,11 +128,9 @@ func rdpserverprofileSetAttrFromGet(ctx context.Context, data *RdpserverprofileR
 	} else {
 		data.Name = types.StringNull()
 	}
-	if val, ok := getResponseData["psk"]; ok && val != nil {
-		data.Psk = types.StringValue(val.(string))
-	} else {
-		data.Psk = types.StringNull()
-	}
+	// psk is not returned by NITRO API (secret/ephemeral) - retain from config
+	// psk_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// psk_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["rdpip"]; ok && val != nil {
 		data.Rdpip = types.StringValue(val.(string))
 	} else {
@@ -117,8 +150,8 @@ func rdpserverprofileSetAttrFromGet(ctx context.Context, data *RdpserverprofileR
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

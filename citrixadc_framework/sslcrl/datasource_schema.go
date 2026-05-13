@@ -84,6 +84,15 @@ func SslcrlDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password to access the CRL in the LDAP repository if access to the LDAP repository is restricted or anonymous access is not allowed.",
 			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Password to access the CRL in the LDAP repository if access to the LDAP repository is restricted or anonymous access is not allowed.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a password_wo update.",
+			},
 			"port": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,

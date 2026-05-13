@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -17,15 +17,17 @@ import (
 
 // SslecdsakeyResourceModel describes the resource data model.
 type SslecdsakeyResourceModel struct {
-	Id       types.String `tfsdk:"id"`
-	Aes256   types.Bool   `tfsdk:"aes256"`
-	Curve    types.String `tfsdk:"curve"`
-	Des      types.Bool   `tfsdk:"des"`
-	Des3     types.Bool   `tfsdk:"des3"`
-	Keyfile  types.String `tfsdk:"keyfile"`
-	Keyform  types.String `tfsdk:"keyform"`
-	Password types.String `tfsdk:"password"`
-	Pkcs8    types.Bool   `tfsdk:"pkcs8"`
+	Id                types.String `tfsdk:"id"`
+	Aes256            types.Bool   `tfsdk:"aes256"`
+	Curve             types.String `tfsdk:"curve"`
+	Des               types.Bool   `tfsdk:"des"`
+	Des3              types.Bool   `tfsdk:"des3"`
+	Keyfile           types.String `tfsdk:"keyfile"`
+	Keyform           types.String `tfsdk:"keyform"`
+	Password          types.String `tfsdk:"password"`
+	PasswordWo        types.String `tfsdk:"password_wo"`
+	PasswordWoVersion types.Int64  `tfsdk:"password_wo_version"`
+	Pkcs8             types.Bool   `tfsdk:"pkcs8"`
 }
 
 func (r *SslecdsakeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -45,11 +47,11 @@ func (r *SslecdsakeyResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "Encrypt the generated ECDSA key by using the AES algorithm.",
 			},
 			"curve": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("FIPSEXP_F4"),
 				Description: "Curve id to generate ECDSA key. Only P_256 and P_384 are supported",
 			},
 			"des": schema.BoolAttribute{
@@ -69,7 +71,8 @@ func (r *SslecdsakeyResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "Encrypt the generated ECDSA key by using the Triple-DES algorithm. On the command line, you are prompted to enter the pass phrase (password) that is used to encrypt the key.",
 			},
 			"keyfile": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -77,19 +80,34 @@ func (r *SslecdsakeyResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"keyform": schema.StringAttribute{
 				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("PEM"),
-				Description: "Format in which the ECDSA key file is stored on the appliance.",
-			},
-			"password": schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Format in which the ECDSA key file is stored on the appliance.",
+			},
+			"password": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Pass phrase to use for encryption if DES or DES3 option is selected.",
+			},
+			"password_wo": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Pass phrase to use for encryption if DES or DES3 option is selected.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a password_wo update.",
 			},
 			"pkcs8": schema.BoolAttribute{
 				Optional: true,
@@ -103,37 +121,52 @@ func (r *SslecdsakeyResource) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func sslecdsakeyGetThePayloadFromtheConfig(ctx context.Context, data *SslecdsakeyResourceModel) ssl.Sslecdsakey {
-	tflog.Debug(ctx, "In sslecdsakeyGetThePayloadFromtheConfig Function")
+func sslecdsakeyGetThePayloadFromthePlan(ctx context.Context, data *SslecdsakeyResourceModel) ssl.Sslecdsakey {
+	tflog.Debug(ctx, "In sslecdsakeyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslecdsakey := ssl.Sslecdsakey{}
-	if !data.Aes256.IsNull() {
+	if !data.Aes256.IsNull() && !data.Aes256.IsUnknown() {
 		sslecdsakey.Aes256 = data.Aes256.ValueBool()
 	}
-	if !data.Curve.IsNull() {
+	if !data.Curve.IsNull() && !data.Curve.IsUnknown() {
 		sslecdsakey.Curve = data.Curve.ValueString()
 	}
-	if !data.Des.IsNull() {
+	if !data.Des.IsNull() && !data.Des.IsUnknown() {
 		sslecdsakey.Des = data.Des.ValueBool()
 	}
-	if !data.Des3.IsNull() {
+	if !data.Des3.IsNull() && !data.Des3.IsUnknown() {
 		sslecdsakey.Des3 = data.Des3.ValueBool()
 	}
-	if !data.Keyfile.IsNull() {
+	if !data.Keyfile.IsNull() && !data.Keyfile.IsUnknown() {
 		sslecdsakey.Keyfile = data.Keyfile.ValueString()
 	}
-	if !data.Keyform.IsNull() {
+	if !data.Keyform.IsNull() && !data.Keyform.IsUnknown() {
 		sslecdsakey.Keyform = data.Keyform.ValueString()
 	}
-	if !data.Password.IsNull() {
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
 		sslecdsakey.Password = data.Password.ValueString()
 	}
-	if !data.Pkcs8.IsNull() {
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Pkcs8.IsNull() && !data.Pkcs8.IsUnknown() {
 		sslecdsakey.Pkcs8 = data.Pkcs8.ValueBool()
 	}
 
 	return sslecdsakey
+}
+
+func sslecdsakeyGetThePayloadFromtheConfig(ctx context.Context, data *SslecdsakeyResourceModel, payload *ssl.Sslecdsakey) {
+	tflog.Debug(ctx, "In sslecdsakeyGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: password_wo -> password
+	if !data.PasswordWo.IsNull() {
+		passwordWo := data.PasswordWo.ValueString()
+		if passwordWo != "" {
+			payload.Password = passwordWo
+		}
+	}
 }
 
 func sslecdsakeySetAttrFromGet(ctx context.Context, data *SslecdsakeyResourceModel, getResponseData map[string]interface{}) *SslecdsakeyResourceModel {
@@ -170,11 +203,9 @@ func sslecdsakeySetAttrFromGet(ctx context.Context, data *SslecdsakeyResourceMod
 	} else {
 		data.Keyform = types.StringNull()
 	}
-	if val, ok := getResponseData["password"]; ok && val != nil {
-		data.Password = types.StringValue(val.(string))
-	} else {
-		data.Password = types.StringNull()
-	}
+	// password is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["pkcs8"]; ok && val != nil {
 		data.Pkcs8 = types.BoolValue(val.(bool))
 	} else {

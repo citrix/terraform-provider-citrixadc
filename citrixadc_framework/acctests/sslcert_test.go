@@ -17,31 +17,33 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccSslcert_basic = `
 
-	resource "citrixadc_sslcert" "foo" {
-		certfile = "/nsconfig/ssl/certificate1.crt"
-		reqfile  = "/nsconfig/ssl/test-ca.csr"
+	resource "citrixadc_sslcert" "tf_sslcert_ephem" {
+		certfile = "/nsconfig/ssl/rootcert21.cert"
+		reqfile  = "/nsconfig/ssl/rootcert2.req"
 		certtype = "ROOT_CERT"
-		keyfile  = "/nsconfig/ssl/key1.pem"
+		keyfile  = "/nsconfig/ssl/rootcert2.key"
+		keyform = "PEM"
 	}
 `
 
 func TestAccSslcert_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
+	t.Skip("TODO: Requires cleanup of certfile at ADC!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslcert_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslcertExist("citrixadc_sslcert.foo", nil),
+					testAccCheckSslcertExist("citrixadc_sslcert.tf_sslcert_ephem", nil),
 				),
 			},
 		},
@@ -68,4 +70,74 @@ func testAccCheckSslcertExist(n string, id *string) resource.TestCheckFunc {
 		}
 		return nil
 	}
+}
+
+// Test backward-compatible path: using pempassphrase (Sensitive attribute)
+const testAccSslcert_pempassphrase_step1 = `
+	variable "sslcert_pempassphrase" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslcert" "tf_sslcert_ephem" {
+		certfile = "/nsconfig/ssl/rootcert31.cert"
+		reqfile  = "/nsconfig/ssl/rootcert3.req"
+		certtype = "ROOT_CERT"
+		keyfile  = "/nsconfig/ssl/rootcert3.key"
+		keyform = "PEM"
+		pempassphrase = var.sslcert_pempassphrase
+	}
+`
+
+func TestAccSslcert_pempassphrase_backward_compat(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of certfile at ADC!")
+	t.Setenv("TF_VAR_sslcert_pempassphrase", "1234567")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcert_pempassphrase_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertExist("citrixadc_sslcert.tf_sslcert_ephem", nil),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using pempassphrase_wo (WriteOnly attribute) with version tracker
+const testAccSslcert_pempassphrase_wo_step1 = `
+	variable "sslcert_pempassphrase_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslcert" "tf_sslcert_ephem" {
+		certfile = "/nsconfig/ssl/rootcert311.cert"
+		reqfile  = "/nsconfig/ssl/rootcert3.req"
+		certtype = "ROOT_CERT"
+		keyfile  = "/nsconfig/ssl/rootcert3.key"
+		keyform = "PEM"
+		pempassphrase_wo       = var.sslcert_pempassphrase_wo
+		pempassphrase_wo_version = 1
+	}
+`
+
+func TestAccSslcert_pempassphrase_wo_ephemeral(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of certfile at ADC!")
+	t.Setenv("TF_VAR_sslcert_pempassphrase_wo", "1234567")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcert_pempassphrase_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertExist("citrixadc_sslcert.tf_sslcert_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcert.tf_sslcert_ephem", "pempassphrase_wo_version", "1"),
+				),
+			},
+		},
+	})
 }

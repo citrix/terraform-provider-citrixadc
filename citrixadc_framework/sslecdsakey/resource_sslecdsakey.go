@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -44,33 +43,59 @@ func (r *SslecdsakeyResource) Configure(ctx context.Context, req resource.Config
 }
 
 func (r *SslecdsakeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data SslecdsakeyResourceModel
+	var data, config SslecdsakeyResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating sslecdsakey resource")
-
-	// sslecdsakey := sslecdsakeyGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	sslecdsakey := sslecdsakeyGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	sslecdsakeyGetThePayloadFromtheConfig(ctx, &config, &sslecdsakey)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslecdsakey.Type(), &sslecdsakey)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslecdsakey, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslecdsakey-config")
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.ActOnResource(service.Sslecdsakey.Type(), &sslecdsakey, "create")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslecdsakey, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created sslecdsakey resource")
 
-	// Read the updated state back
-	r.readSslecdsakeyFromApi(ctx, &data, &resp.Diagnostics)
+	// Set ID for the resource
+	data.Id = types.StringValue("sslecdsakey-config")
+
+	// Resolve unknown Optional+Computed attributes to null since Read is a noop
+	// (no server-side state to read back for this action-only resource)
+	if data.Aes256.IsUnknown() {
+		data.Aes256 = types.BoolNull()
+	}
+	if data.Curve.IsUnknown() {
+		data.Curve = types.StringNull()
+	}
+	if data.Des.IsUnknown() {
+		data.Des = types.BoolNull()
+	}
+	if data.Des3.IsUnknown() {
+		data.Des3 = types.BoolNull()
+	}
+	if data.Keyfile.IsUnknown() {
+		data.Keyfile = types.StringNull()
+	}
+	if data.Keyform.IsUnknown() {
+		data.Keyform = types.StringNull()
+	}
+	if data.Pkcs8.IsUnknown() {
+		data.Pkcs8 = types.BoolNull()
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +113,28 @@ func (r *SslecdsakeyResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading sslecdsakey resource")
 
-	r.readSslecdsakeyFromApi(ctx, &data, &resp.Diagnostics)
-
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslecdsakeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslecdsakeyResourceModel
+	var data, config, state SslecdsakeyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslecdsakey resource")
-
-	// Create API request body from the model
-	// sslecdsakey := sslecdsakeyGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslecdsakey.Type(), &sslecdsakey)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslecdsakey, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated sslecdsakey resource")
-
-	// Read the updated state back
-	r.readSslecdsakeyFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +151,7 @@ func (r *SslecdsakeyResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	tflog.Debug(ctx, "Deleting sslecdsakey resource")
-
-	// For sslecdsakey, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslecdsakey resource from state")
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed sslecdsakey from Terraform state")
 }
 
-// Helper function to read sslecdsakey data from API
-func (r *SslecdsakeyResource) readSslecdsakeyFromApi(ctx context.Context, data *SslecdsakeyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslecdsakey.Type(), "")
-	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslecdsakey, got error: %s", err))
-		return
-	}
-
-	sslecdsakeySetAttrFromGet(ctx, data, getResponseData)
-
-}

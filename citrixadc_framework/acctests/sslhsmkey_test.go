@@ -148,3 +148,123 @@ func TestAccSslhsmkeyDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Test backward-compatible path: using password (Sensitive attribute)
+const testAccSslhsmkey_password_step1 = `
+	variable "sslhsmkey_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslhsmkey" "tf_hsmkey_ephem" {
+		hsmkeyname = "hsmkey_ephem"
+		hsmtype    = "Fillme"
+		serialnum  = "Fillme"
+		password   = var.sslhsmkey_password
+	}
+`
+
+const testAccSslhsmkey_password_step2 = `
+	variable "sslhsmkey_password_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslhsmkey" "tf_hsmkey_ephem" {
+		hsmkeyname = "hsmkey_ephem"
+		hsmtype    = "Fillme"
+		serialnum  = "Fillme"
+		password   = var.sslhsmkey_password_2
+	}
+`
+
+func TestAccSslhsmkey_password_backward_compat(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	t.Setenv("TF_VAR_sslhsmkey_password", "hsmpass1")
+	t.Setenv("TF_VAR_sslhsmkey_password_2", "hsmpass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslhsmkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslhsmkey_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslhsmkeyExist("citrixadc_sslhsmkey.tf_hsmkey_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslhsmkey.tf_hsmkey_ephem", "hsmkeyname", "hsmkey_ephem"),
+				),
+			},
+			{
+				Config: testAccSslhsmkey_password_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslhsmkeyExist("citrixadc_sslhsmkey.tf_hsmkey_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslhsmkey.tf_hsmkey_ephem", "hsmkeyname", "hsmkey_ephem"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
+const testAccSslhsmkey_password_wo_step1 = `
+	variable "sslhsmkey_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslhsmkey" "tf_hsmkey_ephem" {
+		hsmkeyname          = "hsmkey_ephem"
+		hsmtype             = "Fillme"
+		serialnum           = "Fillme"
+		password_wo         = var.sslhsmkey_password_wo
+		password_wo_version = 1
+	}
+`
+
+const testAccSslhsmkey_password_wo_step2 = `
+	variable "sslhsmkey_password_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslhsmkey" "tf_hsmkey_ephem" {
+		hsmkeyname          = "hsmkey_ephem"
+		hsmtype             = "Fillme"
+		serialnum           = "Fillme"
+		password_wo         = var.sslhsmkey_password_wo_2
+		password_wo_version = 2
+	}
+`
+
+func TestAccSslhsmkey_password_wo_ephemeral(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	t.Setenv("TF_VAR_sslhsmkey_password_wo", "ephem_hsmpass1")
+	t.Setenv("TF_VAR_sslhsmkey_password_wo_2", "ephem_hsmpass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslhsmkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslhsmkey_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslhsmkeyExist("citrixadc_sslhsmkey.tf_hsmkey_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslhsmkey.tf_hsmkey_ephem", "hsmkeyname", "hsmkey_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_sslhsmkey.tf_hsmkey_ephem", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccSslhsmkey_password_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslhsmkeyExist("citrixadc_sslhsmkey.tf_hsmkey_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslhsmkey.tf_hsmkey_ephem", "hsmkeyname", "hsmkey_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_sslhsmkey.tf_hsmkey_ephem", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

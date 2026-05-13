@@ -34,6 +34,15 @@ func SslhsmkeyDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password for a partition. Applies only to SafeNet HSM.",
 			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Password for a partition. Applies only to SafeNet HSM.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a password_wo update.",
+			},
 			"serialnum": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -15,11 +16,13 @@ import (
 
 // ReputationsettingsResourceModel describes the resource data model.
 type ReputationsettingsResourceModel struct {
-	Id            types.String `tfsdk:"id"`
-	Proxypassword types.String `tfsdk:"proxypassword"`
-	Proxyport     types.Int64  `tfsdk:"proxyport"`
-	Proxyserver   types.String `tfsdk:"proxyserver"`
-	Proxyusername types.String `tfsdk:"proxyusername"`
+	Id                     types.String `tfsdk:"id"`
+	Proxypassword          types.String `tfsdk:"proxypassword"`
+	ProxypasswordWo        types.String `tfsdk:"proxypassword_wo"`
+	ProxypasswordWoVersion types.Int64  `tfsdk:"proxypassword_wo_version"`
+	Proxyport              types.Int64  `tfsdk:"proxyport"`
+	Proxyserver            types.String `tfsdk:"proxyserver"`
+	Proxyusername          types.String `tfsdk:"proxyusername"`
 }
 
 func (r *ReputationsettingsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -32,8 +35,20 @@ func (r *ReputationsettingsResource) Schema(ctx context.Context, req resource.Sc
 			},
 			"proxypassword": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Password with which user logs on.",
+			},
+			"proxypassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password with which user logs on.",
+			},
+			"proxypassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a proxypassword_wo update.",
 			},
 			"proxyport": schema.Int64Attribute{
 				Optional:    true,
@@ -54,36 +69,49 @@ func (r *ReputationsettingsResource) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func reputationsettingsGetThePayloadFromtheConfig(ctx context.Context, data *ReputationsettingsResourceModel) reputation.Reputationsettings {
-	tflog.Debug(ctx, "In reputationsettingsGetThePayloadFromtheConfig Function")
+func reputationsettingsGetThePayloadFromthePlan(ctx context.Context, data *ReputationsettingsResourceModel) reputation.Reputationsettings {
+	tflog.Debug(ctx, "In reputationsettingsGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	reputationsettings := reputation.Reputationsettings{}
-	if !data.Proxypassword.IsNull() {
+	if !data.Proxypassword.IsNull() && !data.Proxypassword.IsUnknown() {
 		reputationsettings.Proxypassword = data.Proxypassword.ValueString()
 	}
-	if !data.Proxyport.IsNull() {
+	// Skip write-only attribute: proxypassword_wo
+	// Skip version tracker attribute: proxypassword_wo_version
+	if !data.Proxyport.IsNull() && !data.Proxyport.IsUnknown() {
 		reputationsettings.Proxyport = utils.IntPtr(int(data.Proxyport.ValueInt64()))
 	}
-	if !data.Proxyserver.IsNull() {
+	if !data.Proxyserver.IsNull() && !data.Proxyserver.IsUnknown() {
 		reputationsettings.Proxyserver = data.Proxyserver.ValueString()
 	}
-	if !data.Proxyusername.IsNull() {
+	if !data.Proxyusername.IsNull() && !data.Proxyusername.IsUnknown() {
 		reputationsettings.Proxyusername = data.Proxyusername.ValueString()
 	}
 
 	return reputationsettings
 }
 
+func reputationsettingsGetThePayloadFromtheConfig(ctx context.Context, data *ReputationsettingsResourceModel, payload *reputation.Reputationsettings) {
+	tflog.Debug(ctx, "In reputationsettingsGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: proxypassword_wo -> proxypassword
+	if !data.ProxypasswordWo.IsNull() {
+		proxypasswordWo := data.ProxypasswordWo.ValueString()
+		if proxypasswordWo != "" {
+			payload.Proxypassword = proxypasswordWo
+		}
+	}
+}
+
 func reputationsettingsSetAttrFromGet(ctx context.Context, data *ReputationsettingsResourceModel, getResponseData map[string]interface{}) *ReputationsettingsResourceModel {
 	tflog.Debug(ctx, "In reputationsettingsSetAttrFromGet Function")
 
 	// Convert API response to model
-	if val, ok := getResponseData["proxypassword"]; ok && val != nil {
-		data.Proxypassword = types.StringValue(val.(string))
-	} else {
-		data.Proxypassword = types.StringNull()
-	}
+	// proxypassword is not returned by NITRO API (secret/ephemeral) - retain from config
+	// proxypassword_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// proxypassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["proxyport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Proxyport = types.Int64Value(intVal)

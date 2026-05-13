@@ -25,7 +25,7 @@ import (
 
 const testAccSslrsakey_basic = `
 
-	resource "citrixadc_sslrsakey" "tf_sslecdsakey" {
+	resource "citrixadc_sslrsakey" "tf_sslrsakey" {
 		keyfile  = "/nsconfig/ssl/demo.pem"
 		bits     = 2048
 		aes256   = true
@@ -34,7 +34,7 @@ const testAccSslrsakey_basic = `
 `
 
 func TestAccSslrsakey_basic(t *testing.T) {
-	// t.Skip("TODO: Need to find a way to test this resource!")
+	t.Skip("TODO: Requires cleanup of keyfile at ADC!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -69,4 +69,70 @@ func testAccCheckSslrsakeyExist(n string, id *string) resource.TestCheckFunc {
 		}
 		return nil
 	}
+}
+
+// Test backward-compatible path: using password (Sensitive attribute)
+const testAccSslrsakey_password_step1 = `
+	variable "sslrsakey_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslrsakey" "tf_sslrsakey_ephem" {
+		keyfile  = "/nsconfig/ssl/demorsaephem.pem"
+		bits     = 2048
+		aes256   = true
+		password = var.sslrsakey_password
+	}
+`
+
+func TestAccSslrsakey_password_backward_compat(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of keyfile at ADC!")
+	t.Setenv("TF_VAR_sslrsakey_password", "RsaPass1!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslrsakey_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslrsakeyExist("citrixadc_sslrsakey.tf_sslrsakey_ephem", nil),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
+const testAccSslrsakey_password_wo_step1 = `
+	variable "sslrsakey_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslrsakey" "tf_sslrsakey_ephem" {
+		keyfile             = "/nsconfig/ssl/demorsaephem_wo.pem"
+		bits                = 2048
+		aes256              = true
+		password_wo         = var.sslrsakey_password_wo
+		password_wo_version = 1
+	}
+`
+
+func TestAccSslrsakey_password_wo_ephemeral(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of keyfile at ADC!")
+	t.Setenv("TF_VAR_sslrsakey_password_wo", "EpheRsaPass1!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslrsakey_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslrsakeyExist("citrixadc_sslrsakey.tf_sslrsakey_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslrsakey.tf_sslrsakey_ephem", "password_wo_version", "1"),
+				),
+			},
+		},
+	})
 }
