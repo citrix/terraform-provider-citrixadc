@@ -16,6 +16,7 @@ import (
 var _ resource.Resource = &RadiusnodeResource{}
 var _ resource.ResourceWithConfigure = (*RadiusnodeResource)(nil)
 var _ resource.ResourceWithImportState = (*RadiusnodeResource)(nil)
+var _ resource.ResourceWithValidateConfig = (*RadiusnodeResource)(nil)
 
 func NewRadiusnodeResource() resource.Resource {
 	return &RadiusnodeResource{}
@@ -43,31 +44,54 @@ func (r *RadiusnodeResource) Configure(ctx context.Context, req resource.Configu
 	r.client = *req.ProviderData.(**service.NitroClient)
 }
 
-func (r *RadiusnodeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *RadiusnodeResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var data RadiusnodeResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate that either radkey or radkey_wo is specified
+	if data.Radkey.IsNull() && data.RadkeyWo.IsNull() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("radkey"),
+			"Missing Required Attribute",
+			"Either \"radkey\" or \"radkey_wo\" must be specified.",
+		)
+	}
+}
+
+func (r *RadiusnodeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data, config RadiusnodeResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating radiusnode resource")
-
-	// radiusnode := radiusnodeGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	radiusnode := radiusnodeGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	radiusnodeGetThePayloadFromtheConfig(ctx, &config, &radiusnode)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Radiusnode.Type(), &radiusnode)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create radiusnode, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("radiusnode-config")
+	// Named resource - use AddResource
+	nodeprefix_value := data.Nodeprefix.ValueString()
+	_, err := r.client.AddResource(service.Radiusnode.Type(), nodeprefix_value, &radiusnode)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create radiusnode, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created radiusnode resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Nodeprefix.ValueString()))
 
 	// Read the updated state back
 	r.readRadiusnodeFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,28 +119,54 @@ func (r *RadiusnodeResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *RadiusnodeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data RadiusnodeResourceModel
+	var data, config, state RadiusnodeResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating radiusnode resource")
 
-	// Create API request body from the model
-	// radiusnode := radiusnodeGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	// Check secret attribute radkey or its version tracker
+	if !data.Radkey.Equal(state.Radkey) {
+		tflog.Debug(ctx, fmt.Sprintf("radkey has changed for radiusnode"))
+		hasChange = true
+	} else if !data.RadkeyWoVersion.Equal(state.RadkeyWoVersion) {
+		tflog.Debug(ctx, fmt.Sprintf("radkey_wo_version has changed for radiusnode"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Radiusnode.Type(), &radiusnode)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update radiusnode, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		// Get payload from plan (regular attributes)
+		radiusnode := radiusnodeGetThePayloadFromthePlan(ctx, &data)
+		// Add write-only attributes from config to the payload
+		radiusnodeGetThePayloadFromtheConfig(ctx, &config, &radiusnode)
+		// Make API call
+		// Named resource - use UpdateResource
+		nodeprefix_value := data.Nodeprefix.ValueString()
+		_, err := r.client.UpdateResource(service.Radiusnode.Type(), nodeprefix_value, &radiusnode)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update radiusnode, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated radiusnode resource")
+		tflog.Trace(ctx, "Updated radiusnode resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for radiusnode resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readRadiusnodeFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +186,27 @@ func (r *RadiusnodeResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	tflog.Debug(ctx, "Deleting radiusnode resource")
+	// Named resource - delete using DeleteResource
+	nodeprefix_value := data.Nodeprefix.ValueString()
+	err := r.client.DeleteResource(service.Radiusnode.Type(), nodeprefix_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete radiusnode, got error: %s", err))
+		return
+	}
 
-	// For radiusnode, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted radiusnode resource from state")
+	tflog.Trace(ctx, "Deleted radiusnode resource")
 }
 
 // Helper function to read radiusnode data from API
 func (r *RadiusnodeResource) readRadiusnodeFromApi(ctx context.Context, data *RadiusnodeResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Radiusnode.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	nodeprefix_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Radiusnode.Type(), nodeprefix_Name)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read radiusnode, got error: %s", err))
 		return

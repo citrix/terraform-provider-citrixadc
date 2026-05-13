@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -20,16 +20,18 @@ import (
 
 // SslrsakeyResourceModel describes the resource data model.
 type SslrsakeyResourceModel struct {
-	Id       types.String `tfsdk:"id"`
-	Aes256   types.Bool   `tfsdk:"aes256"`
-	Bits     types.Int64  `tfsdk:"bits"`
-	Des      types.Bool   `tfsdk:"des"`
-	Des3     types.Bool   `tfsdk:"des3"`
-	Exponent types.String `tfsdk:"exponent"`
-	Keyfile  types.String `tfsdk:"keyfile"`
-	Keyform  types.String `tfsdk:"keyform"`
-	Password types.String `tfsdk:"password"`
-	Pkcs8    types.Bool   `tfsdk:"pkcs8"`
+	Id                types.String `tfsdk:"id"`
+	Aes256            types.Bool   `tfsdk:"aes256"`
+	Bits              types.Int64  `tfsdk:"bits"`
+	Des               types.Bool   `tfsdk:"des"`
+	Des3              types.Bool   `tfsdk:"des3"`
+	Exponent          types.String `tfsdk:"exponent"`
+	Keyfile           types.String `tfsdk:"keyfile"`
+	Keyform           types.String `tfsdk:"keyform"`
+	Password          types.String `tfsdk:"password"`
+	PasswordWo        types.String `tfsdk:"password_wo"`
+	PasswordWoVersion types.Int64  `tfsdk:"password_wo_version"`
+	Pkcs8             types.Bool   `tfsdk:"pkcs8"`
 }
 
 func (r *SslrsakeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -49,7 +51,8 @@ func (r *SslrsakeyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Encrypt the generated RSA key by using the AES algorithm.",
 			},
 			"bits": schema.Int64Attribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -73,14 +76,15 @@ func (r *SslrsakeyResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"exponent": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("F4"),
 				Description: "Public exponent for the RSA key. The exponent is part of the cipher algorithm and is required for creating the RSA key.",
 			},
 			"keyfile": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -88,19 +92,34 @@ func (r *SslrsakeyResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"keyform": schema.StringAttribute{
 				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("PEM"),
-				Description: "Format in which the RSA key file is stored on the appliance.",
-			},
-			"password": schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Format in which the RSA key file is stored on the appliance.",
+			},
+			"password": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Pass phrase to use for encryption if DES or DES3 option is selected.",
+			},
+			"password_wo": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Pass phrase to use for encryption if DES or DES3 option is selected.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a password_wo update.",
 			},
 			"pkcs8": schema.BoolAttribute{
 				Optional: true,
@@ -114,40 +133,55 @@ func (r *SslrsakeyResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func sslrsakeyGetThePayloadFromtheConfig(ctx context.Context, data *SslrsakeyResourceModel) ssl.Sslrsakey {
-	tflog.Debug(ctx, "In sslrsakeyGetThePayloadFromtheConfig Function")
+func sslrsakeyGetThePayloadFromthePlan(ctx context.Context, data *SslrsakeyResourceModel) ssl.Sslrsakey {
+	tflog.Debug(ctx, "In sslrsakeyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslrsakey := ssl.Sslrsakey{}
-	if !data.Aes256.IsNull() {
+	if !data.Aes256.IsNull() && !data.Aes256.IsUnknown() {
 		sslrsakey.Aes256 = data.Aes256.ValueBool()
 	}
-	if !data.Bits.IsNull() {
+	if !data.Bits.IsNull() && !data.Bits.IsUnknown() {
 		sslrsakey.Bits = utils.IntPtr(int(data.Bits.ValueInt64()))
 	}
-	if !data.Des.IsNull() {
+	if !data.Des.IsNull() && !data.Des.IsUnknown() {
 		sslrsakey.Des = data.Des.ValueBool()
 	}
-	if !data.Des3.IsNull() {
+	if !data.Des3.IsNull() && !data.Des3.IsUnknown() {
 		sslrsakey.Des3 = data.Des3.ValueBool()
 	}
-	if !data.Exponent.IsNull() {
+	if !data.Exponent.IsNull() && !data.Exponent.IsUnknown() {
 		sslrsakey.Exponent = data.Exponent.ValueString()
 	}
-	if !data.Keyfile.IsNull() {
+	if !data.Keyfile.IsNull() && !data.Keyfile.IsUnknown() {
 		sslrsakey.Keyfile = data.Keyfile.ValueString()
 	}
-	if !data.Keyform.IsNull() {
+	if !data.Keyform.IsNull() && !data.Keyform.IsUnknown() {
 		sslrsakey.Keyform = data.Keyform.ValueString()
 	}
-	if !data.Password.IsNull() {
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
 		sslrsakey.Password = data.Password.ValueString()
 	}
-	if !data.Pkcs8.IsNull() {
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Pkcs8.IsNull() && !data.Pkcs8.IsUnknown() {
 		sslrsakey.Pkcs8 = data.Pkcs8.ValueBool()
 	}
 
 	return sslrsakey
+}
+
+func sslrsakeyGetThePayloadFromtheConfig(ctx context.Context, data *SslrsakeyResourceModel, payload *ssl.Sslrsakey) {
+	tflog.Debug(ctx, "In sslrsakeyGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: password_wo -> password
+	if !data.PasswordWo.IsNull() {
+		passwordWo := data.PasswordWo.ValueString()
+		if passwordWo != "" {
+			payload.Password = passwordWo
+		}
+	}
 }
 
 func sslrsakeySetAttrFromGet(ctx context.Context, data *SslrsakeyResourceModel, getResponseData map[string]interface{}) *SslrsakeyResourceModel {
@@ -191,11 +225,9 @@ func sslrsakeySetAttrFromGet(ctx context.Context, data *SslrsakeyResourceModel, 
 	} else {
 		data.Keyform = types.StringNull()
 	}
-	if val, ok := getResponseData["password"]; ok && val != nil {
-		data.Password = types.StringValue(val.(string))
-	} else {
-		data.Password = types.StringNull()
-	}
+	// password is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["pkcs8"]; ok && val != nil {
 		data.Pkcs8 = types.BoolValue(val.(bool))
 	} else {

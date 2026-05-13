@@ -136,3 +136,119 @@ func TestAccDataSourceReputationsettings(t *testing.T) {
 		},
 	})
 }
+
+// Test backward-compatible path: using proxypassword (Sensitive attribute)
+const testAccReputationsettings_proxypassword_step1 = `
+	variable "reputationsettings_proxypassword" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_reputationsettings" "tf_reputationsettings" {
+		proxyserver   = "my_proxyserver"
+		proxyport     = 3500
+		proxyusername = "my_proxyuser"
+		proxypassword = var.reputationsettings_proxypassword
+	}
+`
+
+const testAccReputationsettings_proxypassword_step2 = `
+	variable "reputationsettings_proxypassword_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_reputationsettings" "tf_reputationsettings" {
+		proxyserver   = "my_proxyserver"
+		proxyport     = 3500
+		proxyusername = "my_proxyuser"
+		proxypassword = var.reputationsettings_proxypassword_2
+	}
+`
+
+func TestAccReputationsettings_proxypassword_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_reputationsettings_proxypassword", "proxypass1")
+	t.Setenv("TF_VAR_reputationsettings_proxypassword_2", "proxypass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReputationsettings_proxypassword_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
+					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyserver", "my_proxyserver"),
+					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyusername", "my_proxyuser"),
+				),
+			},
+			{
+				Config: testAccReputationsettings_proxypassword_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
+					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyserver", "my_proxyserver"),
+					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyusername", "my_proxyuser"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using proxypassword_wo (WriteOnly attribute) with version tracker
+const testAccReputationsettings_proxypassword_wo_step1 = `
+	variable "reputationsettings_proxypassword_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_reputationsettings" "tf_reputationsettings" {
+		proxyserver              = "my_proxyserver"
+		proxyport                = 3500
+		proxyusername            = "my_proxyuser"
+		proxypassword_wo         = var.reputationsettings_proxypassword_wo
+		proxypassword_wo_version = 1
+	}
+`
+
+const testAccReputationsettings_proxypassword_wo_step2 = `
+	variable "reputationsettings_proxypassword_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_reputationsettings" "tf_reputationsettings" {
+		proxyserver              = "my_proxyserver"
+		proxyport                = 3500
+		proxyusername            = "my_proxyuser"
+		proxypassword_wo         = var.reputationsettings_proxypassword_wo_2
+		proxypassword_wo_version = 2
+	}
+`
+
+func TestAccReputationsettings_proxypassword_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_reputationsettings_proxypassword_wo", "ephem_pass1")
+	t.Setenv("TF_VAR_reputationsettings_proxypassword_wo_2", "ephem_pass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReputationsettings_proxypassword_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
+					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyserver", "my_proxyserver"),
+					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxypassword_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccReputationsettings_proxypassword_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
+					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyserver", "my_proxyserver"),
+					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxypassword_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

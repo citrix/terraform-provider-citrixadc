@@ -38,7 +38,6 @@ func (d *RadiusnodeDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	var data RadiusnodeResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

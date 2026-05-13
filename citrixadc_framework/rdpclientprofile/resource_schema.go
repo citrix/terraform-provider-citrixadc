@@ -2,13 +2,15 @@ package rdpclientprofile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/rdp"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -24,6 +26,8 @@ type RdpclientprofileResourceModel struct {
 	Multimonitorsupport  types.String `tfsdk:"multimonitorsupport"`
 	Name                 types.String `tfsdk:"name"`
 	Psk                  types.String `tfsdk:"psk"`
+	PskWo                types.String `tfsdk:"psk_wo"`
+	PskWoVersion         types.Int64  `tfsdk:"psk_wo_version"`
 	Randomizerdpfilename types.String `tfsdk:"randomizerdpfilename"`
 	Rdpcookievalidity    types.Int64  `tfsdk:"rdpcookievalidity"`
 	Rdpcustomparams      types.String `tfsdk:"rdpcustomparams"`
@@ -56,27 +60,42 @@ func (r *RdpclientprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"audiocapturemode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLE"),
+				Computed:    true,
 				Description: "This setting corresponds to the selections in the Remote audio area on the Local Resources tab under Options in RDC.",
 			},
 			"keyboardhook": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("InFullScreenMode"),
+				Computed:    true,
 				Description: "This setting corresponds to the selection in the Keyboard drop-down list on the Local Resources tab under Options in RDC.",
 			},
 			"multimonitorsupport": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLE"),
+				Computed:    true,
 				Description: "Enable/Disable Multiple Monitor Support for Remote Desktop Connection (RDC).",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the rdp profile",
 			},
 			"psk": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Pre shared key value",
+			},
+			"psk_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Pre shared key value",
+			},
+			"psk_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a psk_wo update.",
 			},
 			"randomizerdpfilename": schema.StringAttribute{
 				Optional:    true,
@@ -85,7 +104,7 @@ func (r *RdpclientprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"rdpcookievalidity": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(60),
+				Computed:    true,
 				Description: "RDP cookie validity period. RDP cookie validity time is applicable for new connection and also for any re-connection that might happen, mostly due to network disruption or during fail-over.",
 			},
 			"rdpcustomparams": schema.StringAttribute{
@@ -115,118 +134,133 @@ func (r *RdpclientprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"rdpurloverride": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLE"),
+				Computed:    true,
 				Description: "This setting determines whether the RDP parameters supplied in the vpn url override those specified in the RDP profile.",
 			},
 			"rdpvalidateclientip": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLE"),
+				Computed:    true,
 				Description: "This setting determines whether RDC launch is initiated by the valid client IP",
 			},
 			"redirectclipboard": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLE"),
+				Computed:    true,
 				Description: "This setting corresponds to the Clipboard check box on the Local Resources tab under Options in RDC.",
 			},
 			"redirectcomports": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLE"),
+				Computed:    true,
 				Description: "This setting corresponds to the selections for comports under More on the Local Resources tab under Options in RDC.",
 			},
 			"redirectdrives": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLE"),
+				Computed:    true,
 				Description: "This setting corresponds to the selections for Drives under More on the Local Resources tab under Options in RDC.",
 			},
 			"redirectpnpdevices": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLE"),
+				Computed:    true,
 				Description: "This setting corresponds to the selections for pnpdevices under More on the Local Resources tab under Options in RDC.",
 			},
 			"redirectprinters": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLE"),
+				Computed:    true,
 				Description: "This setting corresponds to the selection in the Printers check box on the Local Resources tab under Options in RDC.",
 			},
 			"videoplaybackmode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLE"),
+				Computed:    true,
 				Description: "This setting determines if Remote Desktop Connection (RDC) will use RDP efficient multimedia streaming for video playback.",
 			},
 		},
 	}
 }
 
-func rdpclientprofileGetThePayloadFromtheConfig(ctx context.Context, data *RdpclientprofileResourceModel) rdp.Rdpclientprofile {
-	tflog.Debug(ctx, "In rdpclientprofileGetThePayloadFromtheConfig Function")
+func rdpclientprofileGetThePayloadFromthePlan(ctx context.Context, data *RdpclientprofileResourceModel) rdp.Rdpclientprofile {
+	tflog.Debug(ctx, "In rdpclientprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	rdpclientprofile := rdp.Rdpclientprofile{}
-	if !data.Addusernameinrdpfile.IsNull() {
+	if !data.Addusernameinrdpfile.IsNull() && !data.Addusernameinrdpfile.IsUnknown() {
 		rdpclientprofile.Addusernameinrdpfile = data.Addusernameinrdpfile.ValueString()
 	}
-	if !data.Audiocapturemode.IsNull() {
+	if !data.Audiocapturemode.IsNull() && !data.Audiocapturemode.IsUnknown() {
 		rdpclientprofile.Audiocapturemode = data.Audiocapturemode.ValueString()
 	}
-	if !data.Keyboardhook.IsNull() {
+	if !data.Keyboardhook.IsNull() && !data.Keyboardhook.IsUnknown() {
 		rdpclientprofile.Keyboardhook = data.Keyboardhook.ValueString()
 	}
-	if !data.Multimonitorsupport.IsNull() {
+	if !data.Multimonitorsupport.IsNull() && !data.Multimonitorsupport.IsUnknown() {
 		rdpclientprofile.Multimonitorsupport = data.Multimonitorsupport.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		rdpclientprofile.Name = data.Name.ValueString()
 	}
-	if !data.Psk.IsNull() {
+	if !data.Psk.IsNull() && !data.Psk.IsUnknown() {
 		rdpclientprofile.Psk = data.Psk.ValueString()
 	}
-	if !data.Randomizerdpfilename.IsNull() {
+	// Skip write-only attribute: psk_wo
+	// Skip version tracker attribute: psk_wo_version
+	if !data.Randomizerdpfilename.IsNull() && !data.Randomizerdpfilename.IsUnknown() {
 		rdpclientprofile.Randomizerdpfilename = data.Randomizerdpfilename.ValueString()
 	}
-	if !data.Rdpcookievalidity.IsNull() {
+	if !data.Rdpcookievalidity.IsNull() && !data.Rdpcookievalidity.IsUnknown() {
 		rdpclientprofile.Rdpcookievalidity = utils.IntPtr(int(data.Rdpcookievalidity.ValueInt64()))
 	}
-	if !data.Rdpcustomparams.IsNull() {
+	if !data.Rdpcustomparams.IsNull() && !data.Rdpcustomparams.IsUnknown() {
 		rdpclientprofile.Rdpcustomparams = data.Rdpcustomparams.ValueString()
 	}
-	if !data.Rdpfilename.IsNull() {
+	if !data.Rdpfilename.IsNull() && !data.Rdpfilename.IsUnknown() {
 		rdpclientprofile.Rdpfilename = data.Rdpfilename.ValueString()
 	}
-	if !data.Rdphost.IsNull() {
+	if !data.Rdphost.IsNull() && !data.Rdphost.IsUnknown() {
 		rdpclientprofile.Rdphost = data.Rdphost.ValueString()
 	}
-	if !data.Rdplinkattribute.IsNull() {
+	if !data.Rdplinkattribute.IsNull() && !data.Rdplinkattribute.IsUnknown() {
 		rdpclientprofile.Rdplinkattribute = data.Rdplinkattribute.ValueString()
 	}
-	if !data.Rdplistener.IsNull() {
+	if !data.Rdplistener.IsNull() && !data.Rdplistener.IsUnknown() {
 		rdpclientprofile.Rdplistener = data.Rdplistener.ValueString()
 	}
-	if !data.Rdpurloverride.IsNull() {
+	if !data.Rdpurloverride.IsNull() && !data.Rdpurloverride.IsUnknown() {
 		rdpclientprofile.Rdpurloverride = data.Rdpurloverride.ValueString()
 	}
-	if !data.Rdpvalidateclientip.IsNull() {
+	if !data.Rdpvalidateclientip.IsNull() && !data.Rdpvalidateclientip.IsUnknown() {
 		rdpclientprofile.Rdpvalidateclientip = data.Rdpvalidateclientip.ValueString()
 	}
-	if !data.Redirectclipboard.IsNull() {
+	if !data.Redirectclipboard.IsNull() && !data.Redirectclipboard.IsUnknown() {
 		rdpclientprofile.Redirectclipboard = data.Redirectclipboard.ValueString()
 	}
-	if !data.Redirectcomports.IsNull() {
+	if !data.Redirectcomports.IsNull() && !data.Redirectcomports.IsUnknown() {
 		rdpclientprofile.Redirectcomports = data.Redirectcomports.ValueString()
 	}
-	if !data.Redirectdrives.IsNull() {
+	if !data.Redirectdrives.IsNull() && !data.Redirectdrives.IsUnknown() {
 		rdpclientprofile.Redirectdrives = data.Redirectdrives.ValueString()
 	}
-	if !data.Redirectpnpdevices.IsNull() {
+	if !data.Redirectpnpdevices.IsNull() && !data.Redirectpnpdevices.IsUnknown() {
 		rdpclientprofile.Redirectpnpdevices = data.Redirectpnpdevices.ValueString()
 	}
-	if !data.Redirectprinters.IsNull() {
+	if !data.Redirectprinters.IsNull() && !data.Redirectprinters.IsUnknown() {
 		rdpclientprofile.Redirectprinters = data.Redirectprinters.ValueString()
 	}
-	if !data.Videoplaybackmode.IsNull() {
+	if !data.Videoplaybackmode.IsNull() && !data.Videoplaybackmode.IsUnknown() {
 		rdpclientprofile.Videoplaybackmode = data.Videoplaybackmode.ValueString()
 	}
 
 	return rdpclientprofile
+}
+
+func rdpclientprofileGetThePayloadFromtheConfig(ctx context.Context, data *RdpclientprofileResourceModel, payload *rdp.Rdpclientprofile) {
+	tflog.Debug(ctx, "In rdpclientprofileGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: psk_wo -> psk
+	if !data.PskWo.IsNull() {
+		pskWo := data.PskWo.ValueString()
+		if pskWo != "" {
+			payload.Psk = pskWo
+		}
+	}
 }
 
 func rdpclientprofileSetAttrFromGet(ctx context.Context, data *RdpclientprofileResourceModel, getResponseData map[string]interface{}) *RdpclientprofileResourceModel {
@@ -258,11 +292,9 @@ func rdpclientprofileSetAttrFromGet(ctx context.Context, data *RdpclientprofileR
 	} else {
 		data.Name = types.StringNull()
 	}
-	if val, ok := getResponseData["psk"]; ok && val != nil {
-		data.Psk = types.StringValue(val.(string))
-	} else {
-		data.Psk = types.StringNull()
-	}
+	// psk is not returned by NITRO API (secret/ephemeral) - retain from config
+	// psk_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// psk_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["randomizerdpfilename"]; ok && val != nil {
 		data.Randomizerdpfilename = types.StringValue(val.(string))
 	} else {
@@ -342,8 +374,8 @@ func rdpclientprofileSetAttrFromGet(ctx context.Context, data *RdpclientprofileR
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

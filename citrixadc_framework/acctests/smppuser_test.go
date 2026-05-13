@@ -158,3 +158,109 @@ data "citrixadc_smppuser" "tf_smppuser_ds" {
 	depends_on = [citrixadc_smppuser.tf_smppuser_ds]
 }
 `
+
+// Test backward-compatible path: using password (Sensitive attribute)
+const testAccSmppuser_password_step1 = `
+	variable "smppuser_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_smppuser" "tf_smppuser_ephem" {
+		username = "tf_smppuser_ephem"
+		password = var.smppuser_password
+	}
+`
+
+const testAccSmppuser_password_step2 = `
+	variable "smppuser_password_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_smppuser" "tf_smppuser_ephem" {
+		username = "tf_smppuser_ephem"
+		password = var.smppuser_password_2
+	}
+`
+
+func TestAccSmppuser_password_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_smppuser_password", "smpppass1")
+	t.Setenv("TF_VAR_smppuser_password_2", "smpppass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSmppuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmppuser_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmppuserExist("citrixadc_smppuser.tf_smppuser_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_smppuser.tf_smppuser_ephem", "username", "tf_smppuser_ephem"),
+				),
+			},
+			{
+				Config: testAccSmppuser_password_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmppuserExist("citrixadc_smppuser.tf_smppuser_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_smppuser.tf_smppuser_ephem", "username", "tf_smppuser_ephem"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
+const testAccSmppuser_password_wo_step1 = `
+	variable "smppuser_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_smppuser" "tf_smppuser_ephem" {
+		username          = "tf_smppuser_ephem"
+		password_wo       = var.smppuser_password_wo
+		password_wo_version = 1
+	}
+`
+
+const testAccSmppuser_password_wo_step2 = `
+	variable "smppuser_password_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_smppuser" "tf_smppuser_ephem" {
+		username          = "tf_smppuser_ephem"
+		password_wo       = var.smppuser_password_wo_2
+		password_wo_version = 2
+	}
+`
+
+func TestAccSmppuser_password_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_smppuser_password_wo", "ephem_smpppass1")
+	t.Setenv("TF_VAR_smppuser_password_wo_2", "ephem_smpppass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSmppuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmppuser_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmppuserExist("citrixadc_smppuser.tf_smppuser_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_smppuser.tf_smppuser_ephem", "username", "tf_smppuser_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_smppuser.tf_smppuser_ephem", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccSmppuser_password_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmppuserExist("citrixadc_smppuser.tf_smppuser_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_smppuser.tf_smppuser_ephem", "username", "tf_smppuser_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_smppuser.tf_smppuser_ephem", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

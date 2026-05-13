@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -44,33 +43,80 @@ func (r *SslcertreqResource) Configure(ctx context.Context, req resource.Configu
 }
 
 func (r *SslcertreqResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data SslcertreqResourceModel
+	var data, config SslcertreqResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating sslcertreq resource")
-
-	// sslcertreq := sslcertreqGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	sslcertreq := sslcertreqGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	sslcertreqGetThePayloadFromtheConfig(ctx, &config, &sslcertreq)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslcertreq.Type(), &sslcertreq)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslcertreq, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslcertreq-config")
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.ActOnResource(service.Sslcertreq.Type(), &sslcertreq, "create")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslcertreq, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created sslcertreq resource")
 
-	// Read the updated state back
-	r.readSslcertreqFromApi(ctx, &data, &resp.Diagnostics)
+	// Set ID for the resource
+	data.Id = types.StringValue("sslcertreq-config")
+
+	// Resolve unknown Optional+Computed attributes to null since Read is a noop
+	// (no server-side state to read back for this action-only resource)
+	if data.Commonname.IsUnknown() {
+		data.Commonname = types.StringNull()
+	}
+	if data.Companyname.IsUnknown() {
+		data.Companyname = types.StringNull()
+	}
+	if data.Countryname.IsUnknown() {
+		data.Countryname = types.StringNull()
+	}
+	if data.Digestmethod.IsUnknown() {
+		data.Digestmethod = types.StringNull()
+	}
+	if data.Emailaddress.IsUnknown() {
+		data.Emailaddress = types.StringNull()
+	}
+	if data.Fipskeyname.IsUnknown() {
+		data.Fipskeyname = types.StringNull()
+	}
+	if data.Keyfile.IsUnknown() {
+		data.Keyfile = types.StringNull()
+	}
+	if data.Keyform.IsUnknown() {
+		data.Keyform = types.StringNull()
+	}
+	if data.Localityname.IsUnknown() {
+		data.Localityname = types.StringNull()
+	}
+	if data.Organizationname.IsUnknown() {
+		data.Organizationname = types.StringNull()
+	}
+	if data.Organizationunitname.IsUnknown() {
+		data.Organizationunitname = types.StringNull()
+	}
+	if data.Reqfile.IsUnknown() {
+		data.Reqfile = types.StringNull()
+	}
+	if data.Statename.IsUnknown() {
+		data.Statename = types.StringNull()
+	}
+	if data.Subjectaltname.IsUnknown() {
+		data.Subjectaltname = types.StringNull()
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +134,28 @@ func (r *SslcertreqResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading sslcertreq resource")
 
-	r.readSslcertreqFromApi(ctx, &data, &resp.Diagnostics)
-
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslcertreqResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslcertreqResourceModel
+	var data, config, state SslcertreqResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslcertreq resource")
-
-	// Create API request body from the model
-	// sslcertreq := sslcertreqGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslcertreq.Type(), &sslcertreq)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslcertreq, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated sslcertreq resource")
-
-	// Read the updated state back
-	r.readSslcertreqFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +172,6 @@ func (r *SslcertreqResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	tflog.Debug(ctx, "Deleting sslcertreq resource")
-
-	// For sslcertreq, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslcertreq resource from state")
-}
-
-// Helper function to read sslcertreq data from API
-func (r *SslcertreqResource) readSslcertreqFromApi(ctx context.Context, data *SslcertreqResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslcertreq.Type(), "")
-	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslcertreq, got error: %s", err))
-		return
-	}
-
-	sslcertreqSetAttrFromGet(ctx, data, getResponseData)
-
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed sslcertreq from Terraform state")
 }

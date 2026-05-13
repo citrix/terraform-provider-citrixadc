@@ -38,7 +38,6 @@ func (d *SmppuserDataSource) Read(ctx context.Context, req datasource.ReadReques
 	var data SmppuserResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

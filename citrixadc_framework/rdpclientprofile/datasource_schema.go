@@ -39,6 +39,15 @@ func RdpclientprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Pre shared key value",
 			},
+			"psk_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Pre shared key value",
+			},
+			"psk_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a psk_wo update.",
+			},
 			"randomizerdpfilename": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

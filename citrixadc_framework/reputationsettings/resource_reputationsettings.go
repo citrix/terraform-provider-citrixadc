@@ -44,30 +44,35 @@ func (r *ReputationsettingsResource) Configure(ctx context.Context, req resource
 }
 
 func (r *ReputationsettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data ReputationsettingsResourceModel
+	var data, config ReputationsettingsResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating reputationsettings resource")
-
-	// reputationsettings := reputationsettingsGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	reputationsettings := reputationsettingsGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	reputationsettingsGetThePayloadFromtheConfig(ctx, &config, &reputationsettings)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Reputationsettings.Type(), &reputationsettings)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create reputationsettings, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("reputationsettings-config")
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Reputationsettings.Type(), &reputationsettings)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create reputationsettings, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created reputationsettings resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue("reputationsettings-config")
 
 	// Read the updated state back
 	r.readReputationsettingsFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,28 +100,65 @@ func (r *ReputationsettingsResource) Read(ctx context.Context, req resource.Read
 }
 
 func (r *ReputationsettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ReputationsettingsResourceModel
+	var data, config, state ReputationsettingsResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating reputationsettings resource")
 
-	// Create API request body from the model
-	// reputationsettings := reputationsettingsGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	// Check secret attribute proxypassword or its version tracker
+	if !data.Proxypassword.Equal(state.Proxypassword) {
+		tflog.Debug(ctx, fmt.Sprintf("proxypassword has changed for reputationsettings"))
+		hasChange = true
+	} else if !data.ProxypasswordWoVersion.Equal(state.ProxypasswordWoVersion) {
+		tflog.Debug(ctx, fmt.Sprintf("proxypassword_wo_version has changed for reputationsettings"))
+		hasChange = true
+	}
+	if !data.Proxyport.Equal(state.Proxyport) {
+		tflog.Debug(ctx, fmt.Sprintf("proxyport has changed for reputationsettings"))
+		hasChange = true
+	}
+	if !data.Proxyserver.Equal(state.Proxyserver) {
+		tflog.Debug(ctx, fmt.Sprintf("proxyserver has changed for reputationsettings"))
+		hasChange = true
+	}
+	if !data.Proxyusername.Equal(state.Proxyusername) {
+		tflog.Debug(ctx, fmt.Sprintf("proxyusername has changed for reputationsettings"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Reputationsettings.Type(), &reputationsettings)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update reputationsettings, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		// Get payload from plan (regular attributes)
+		reputationsettings := reputationsettingsGetThePayloadFromthePlan(ctx, &data)
+		// Add write-only attributes from config to the payload
+		reputationsettingsGetThePayloadFromtheConfig(ctx, &config, &reputationsettings)
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Reputationsettings.Type(), &reputationsettings)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update reputationsettings, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated reputationsettings resource")
+		tflog.Trace(ctx, "Updated reputationsettings resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for reputationsettings resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readReputationsettingsFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +178,18 @@ func (r *ReputationsettingsResource) Delete(ctx context.Context, req resource.De
 	}
 
 	tflog.Debug(ctx, "Deleting reputationsettings resource")
-
-	// For reputationsettings, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted reputationsettings resource from state")
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed reputationsettings from Terraform state")
 }
 
 // Helper function to read reputationsettings data from API
 func (r *ReputationsettingsResource) readReputationsettingsFromApi(ctx context.Context, data *ReputationsettingsResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Reputationsettings.Type(), "")
+
+	// Case 1: Simple find without ID
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Reputationsettings.Type(), "")
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read reputationsettings, got error: %s", err))
 		return

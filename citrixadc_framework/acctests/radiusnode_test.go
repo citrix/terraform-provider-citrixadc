@@ -137,3 +137,109 @@ data "citrixadc_radiusnode" "test" {
 	nodeprefix = citrixadc_radiusnode.tf_radiusnode.nodeprefix
 }
 `
+
+// Test backward-compatible path: using radkey (Sensitive attribute)
+const testAccRadiusnode_radkey_step1 = `
+	variable "radiusnode_radkey" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_radiusnode" "tf_radiusnode_ephem" {
+		nodeprefix = "10.20.30.0/24"
+		radkey     = var.radiusnode_radkey
+	}
+`
+
+const testAccRadiusnode_radkey_step2 = `
+	variable "radiusnode_radkey_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_radiusnode" "tf_radiusnode_ephem" {
+		nodeprefix = "10.20.30.0/24"
+		radkey     = var.radiusnode_radkey_2
+	}
+`
+
+func TestAccRadiusnode_radkey_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_radiusnode_radkey", "secretkey1")
+	t.Setenv("TF_VAR_radiusnode_radkey_2", "secretkey2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRadiusnodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRadiusnode_radkey_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRadiusnodeExist("citrixadc_radiusnode.tf_radiusnode_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_radiusnode.tf_radiusnode_ephem", "nodeprefix", "10.20.30.0/24"),
+				),
+			},
+			{
+				Config: testAccRadiusnode_radkey_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRadiusnodeExist("citrixadc_radiusnode.tf_radiusnode_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_radiusnode.tf_radiusnode_ephem", "nodeprefix", "10.20.30.0/24"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using radkey_wo (WriteOnly attribute) with version tracker
+const testAccRadiusnode_radkey_wo_step1 = `
+	variable "radiusnode_radkey_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_radiusnode" "tf_radiusnode_ephem" {
+		nodeprefix        = "10.20.30.0/24"
+		radkey_wo         = var.radiusnode_radkey_wo
+		radkey_wo_version = 1
+	}
+`
+
+const testAccRadiusnode_radkey_wo_step2 = `
+	variable "radiusnode_radkey_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_radiusnode" "tf_radiusnode_ephem" {
+		nodeprefix        = "10.20.30.0/24"
+		radkey_wo         = var.radiusnode_radkey_wo_2
+		radkey_wo_version = 2
+	}
+`
+
+func TestAccRadiusnode_radkey_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_radiusnode_radkey_wo", "ephemeral_key1")
+	t.Setenv("TF_VAR_radiusnode_radkey_wo_2", "ephemeral_key2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRadiusnodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRadiusnode_radkey_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRadiusnodeExist("citrixadc_radiusnode.tf_radiusnode_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_radiusnode.tf_radiusnode_ephem", "nodeprefix", "10.20.30.0/24"),
+					resource.TestCheckResourceAttr("citrixadc_radiusnode.tf_radiusnode_ephem", "radkey_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccRadiusnode_radkey_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRadiusnodeExist("citrixadc_radiusnode.tf_radiusnode_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_radiusnode.tf_radiusnode_ephem", "nodeprefix", "10.20.30.0/24"),
+					resource.TestCheckResourceAttr("citrixadc_radiusnode.tf_radiusnode_ephem", "radkey_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

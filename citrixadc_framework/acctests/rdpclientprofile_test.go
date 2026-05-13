@@ -173,3 +173,115 @@ data "citrixadc_rdpclientprofile" "test" {
 	name = citrixadc_rdpclientprofile.tf_rdpclientprofile.name
 }
 `
+
+// Test backward-compatible path: using psk (Sensitive attribute)
+const testAccRdpclientprofile_psk_step1 = `
+	variable "rdpclientprofile_psk" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile_ephem" {
+		name           = "tf_rdpclientprofile_ephem"
+		rdpurloverride = "ENABLE"
+		psk            = var.rdpclientprofile_psk
+	}
+`
+
+const testAccRdpclientprofile_psk_step2 = `
+	variable "rdpclientprofile_psk_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile_ephem" {
+		name           = "tf_rdpclientprofile_ephem"
+		rdpurloverride = "ENABLE"
+		psk            = var.rdpclientprofile_psk_2
+	}
+`
+
+func TestAccRdpclientprofile_psk_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_rdpclientprofile_psk", "presharedkey1")
+	t.Setenv("TF_VAR_rdpclientprofile_psk_2", "presharedkey2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRdpclientprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRdpclientprofile_psk_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpclientprofileExist("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", "name", "tf_rdpclientprofile_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", "rdpurloverride", "ENABLE"),
+				),
+			},
+			{
+				Config: testAccRdpclientprofile_psk_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpclientprofileExist("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", "name", "tf_rdpclientprofile_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", "rdpurloverride", "ENABLE"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using psk_wo (WriteOnly attribute) with version tracker
+const testAccRdpclientprofile_psk_wo_step1 = `
+	variable "rdpclientprofile_psk_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile_ephem" {
+		name           = "tf_rdpclientprofile_ephem"
+		rdpurloverride = "ENABLE"
+		psk_wo         = var.rdpclientprofile_psk_wo
+		psk_wo_version = 1
+	}
+`
+
+const testAccRdpclientprofile_psk_wo_step2 = `
+	variable "rdpclientprofile_psk_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile_ephem" {
+		name           = "tf_rdpclientprofile_ephem"
+		rdpurloverride = "ENABLE"
+		psk_wo         = var.rdpclientprofile_psk_wo_2
+		psk_wo_version = 2
+	}
+`
+
+func TestAccRdpclientprofile_psk_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_rdpclientprofile_psk_wo", "ephem_psk1")
+	t.Setenv("TF_VAR_rdpclientprofile_psk_wo_2", "ephem_psk2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRdpclientprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRdpclientprofile_psk_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpclientprofileExist("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", "name", "tf_rdpclientprofile_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", "psk_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccRdpclientprofile_psk_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpclientprofileExist("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", "name", "tf_rdpclientprofile_ephem"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile_ephem", "psk_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

@@ -17,6 +17,43 @@ resource "citrixadc_sslcrl" "tf_sslcrl" {
 }
 ```
 
+### Using password (sensitive attribute - persisted in state)
+
+```hcl
+variable "sslcrl_password" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_sslcrl" "tf_sslcrl" {
+  crlname  = "tf_sslcrl"
+  crlpath  = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+  cacert   = "rootrsa_cert1"
+  server   = "192.0.2.1"
+  password = var.sslcrl_password
+}
+```
+
+### Using password_wo (write-only/ephemeral - NOT persisted in state)
+
+The `password_wo` attribute provides an ephemeral path for the LDAP repository password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `password_wo_version`.
+
+```hcl
+variable "sslcrl_password" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_sslcrl" "tf_sslcrl" {
+  crlname             = "tf_sslcrl"
+  crlpath             = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+  cacert              = "rootrsa_cert1"
+  server              = "192.0.2.1"
+  password_wo         = var.sslcrl_password
+  password_wo_version = 1
+}
+```
+
 
 ## Argument Reference
 
@@ -35,7 +72,9 @@ resource "citrixadc_sslcrl" "tf_sslcrl" {
 * `day` - (Optional) Day on which to refresh the CRL, or, if the Interval parameter is not set, the number of days after which to refresh the CRL. If Interval is set to MONTHLY, specify the date. If Interval is set to WEEKLY, specify the day of the week (for example, Sun=0 and Sat=6). This parameter is not applicable if the Interval is set to DAILY. Minimum value =  0 Maximum value =  31
 * `time` - (Optional) Time, in hours (1-24) and minutes (1-60), at which to refresh the CRL.
 * `binddn` - (Optional) Bind distinguished name (DN) to be used to access the CRL object in the LDAP repository if access to the LDAP repository is restricted or anonymous access is not allowed. Minimum length =  1
-* `password` - (Optional) Password to access the CRL in the LDAP repository if access to the LDAP repository is restricted or anonymous access is not allowed. Minimum length =  1
+* `password` - (Optional, Sensitive) Password to access the CRL in the LDAP repository if access to the LDAP repository is restricted or anonymous access is not allowed. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative. Minimum length =  1
+* `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence.
+* `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `binary` - (Optional) Set the LDAP-based CRL retrieval mode to binary. Possible values: [ YES, NO ]
 * `cacertfile` - (Optional) Name of and, optionally, path to the CA certificate file. /nsconfig/ssl/ is the default path. Maximum length =  63
 * `cakeyfile` - (Optional) Name of and, optionally, path to the CA key file. /nsconfig/ssl/ is the default path. Maximum length =  63

@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -20,21 +19,23 @@ import (
 
 // SslcertResourceModel describes the resource data model.
 type SslcertResourceModel struct {
-	Id             types.String `tfsdk:"id"`
-	Cacert         types.String `tfsdk:"cacert"`
-	Cacertform     types.String `tfsdk:"cacertform"`
-	Cakey          types.String `tfsdk:"cakey"`
-	Cakeyform      types.String `tfsdk:"cakeyform"`
-	Caserial       types.String `tfsdk:"caserial"`
-	Certfile       types.String `tfsdk:"certfile"`
-	Certform       types.String `tfsdk:"certform"`
-	Certtype       types.String `tfsdk:"certtype"`
-	Days           types.Int64  `tfsdk:"days"`
-	Keyfile        types.String `tfsdk:"keyfile"`
-	Keyform        types.String `tfsdk:"keyform"`
-	Pempassphrase  types.String `tfsdk:"pempassphrase"`
-	Reqfile        types.String `tfsdk:"reqfile"`
-	Subjectaltname types.String `tfsdk:"subjectaltname"`
+	Id                     types.String `tfsdk:"id"`
+	Cacert                 types.String `tfsdk:"cacert"`
+	Cacertform             types.String `tfsdk:"cacertform"`
+	Cakey                  types.String `tfsdk:"cakey"`
+	Cakeyform              types.String `tfsdk:"cakeyform"`
+	Caserial               types.String `tfsdk:"caserial"`
+	Certfile               types.String `tfsdk:"certfile"`
+	Certform               types.String `tfsdk:"certform"`
+	Certtype               types.String `tfsdk:"certtype"`
+	Days                   types.Int64  `tfsdk:"days"`
+	Keyfile                types.String `tfsdk:"keyfile"`
+	Keyform                types.String `tfsdk:"keyform"`
+	Pempassphrase          types.String `tfsdk:"pempassphrase"`
+	PempassphraseWo        types.String `tfsdk:"pempassphrase_wo"`
+	PempassphraseWoVersion types.Int64  `tfsdk:"pempassphrase_wo_version"`
+	Reqfile                types.String `tfsdk:"reqfile"`
+	Subjectaltname         types.String `tfsdk:"subjectaltname"`
 }
 
 func (r *SslcertResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -55,10 +56,10 @@ func (r *SslcertResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"cacertform": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("PEM"),
 				Description: "Format of the CA certificate.",
 			},
 			"cakey": schema.StringAttribute{
@@ -71,10 +72,10 @@ func (r *SslcertResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"cakeyform": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("PEM"),
 				Description: "Format for the CA certificate.",
 			},
 			"caserial": schema.StringAttribute{
@@ -86,7 +87,8 @@ func (r *SslcertResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Description: "Serial number file maintained for the CA certificate. This file contains the serial number of the next certificate to be issued or signed by the CA. If the specified file does not exist, a new file is created, with /nsconfig/ssl/ as the default path. If you do not specify a proper path for the existing serial file, a new serial file is created. This might change the certificate serial numbers assigned by the CA certificate to each of the certificates it signs.",
 			},
 			"certfile": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -94,14 +96,15 @@ func (r *SslcertResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"certform": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("PEM"),
 				Description: "Format in which the certificate is stored on the appliance.",
 			},
 			"certtype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,10 +112,10 @@ func (r *SslcertResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"days": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
-				Default:     int64default.StaticInt64(365),
 				Description: "Number of days for which the certificate will be valid, beginning with the time and day (system time) of creation.",
 			},
 			"keyfile": schema.StringAttribute{
@@ -125,22 +128,38 @@ func (r *SslcertResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"keyform": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("PEM"),
 				Description: "Format in which the key is stored on the appliance.",
 			},
 			"pempassphrase": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:  true,
+				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "0",
 			},
+			"pempassphrase_wo": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "0",
+			},
+			"pempassphrase_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a pempassphrase_wo update.",
+			},
 			"reqfile": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -158,55 +177,70 @@ func (r *SslcertResource) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func sslcertGetThePayloadFromtheConfig(ctx context.Context, data *SslcertResourceModel) ssl.Sslcert {
-	tflog.Debug(ctx, "In sslcertGetThePayloadFromtheConfig Function")
+func sslcertGetThePayloadFromthePlan(ctx context.Context, data *SslcertResourceModel) ssl.Sslcert {
+	tflog.Debug(ctx, "In sslcertGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslcert := ssl.Sslcert{}
-	if !data.Cacert.IsNull() {
+	if !data.Cacert.IsNull() && !data.Cacert.IsUnknown() {
 		sslcert.Cacert = data.Cacert.ValueString()
 	}
-	if !data.Cacertform.IsNull() {
+	if !data.Cacertform.IsNull() && !data.Cacertform.IsUnknown() {
 		sslcert.Cacertform = data.Cacertform.ValueString()
 	}
-	if !data.Cakey.IsNull() {
+	if !data.Cakey.IsNull() && !data.Cakey.IsUnknown() {
 		sslcert.Cakey = data.Cakey.ValueString()
 	}
-	if !data.Cakeyform.IsNull() {
+	if !data.Cakeyform.IsNull() && !data.Cakeyform.IsUnknown() {
 		sslcert.Cakeyform = data.Cakeyform.ValueString()
 	}
-	if !data.Caserial.IsNull() {
+	if !data.Caserial.IsNull() && !data.Caserial.IsUnknown() {
 		sslcert.Caserial = data.Caserial.ValueString()
 	}
-	if !data.Certfile.IsNull() {
+	if !data.Certfile.IsNull() && !data.Certfile.IsUnknown() {
 		sslcert.Certfile = data.Certfile.ValueString()
 	}
-	if !data.Certform.IsNull() {
+	if !data.Certform.IsNull() && !data.Certform.IsUnknown() {
 		sslcert.Certform = data.Certform.ValueString()
 	}
-	if !data.Certtype.IsNull() {
+	if !data.Certtype.IsNull() && !data.Certtype.IsUnknown() {
 		sslcert.Certtype = data.Certtype.ValueString()
 	}
-	if !data.Days.IsNull() {
+	if !data.Days.IsNull() && !data.Days.IsUnknown() {
 		sslcert.Days = utils.IntPtr(int(data.Days.ValueInt64()))
 	}
-	if !data.Keyfile.IsNull() {
+	if !data.Keyfile.IsNull() && !data.Keyfile.IsUnknown() {
 		sslcert.Keyfile = data.Keyfile.ValueString()
 	}
-	if !data.Keyform.IsNull() {
+	if !data.Keyform.IsNull() && !data.Keyform.IsUnknown() {
 		sslcert.Keyform = data.Keyform.ValueString()
 	}
-	if !data.Pempassphrase.IsNull() {
+	if !data.Pempassphrase.IsNull() && !data.Pempassphrase.IsUnknown() {
 		sslcert.Pempassphrase = data.Pempassphrase.ValueString()
 	}
-	if !data.Reqfile.IsNull() {
+	// Skip write-only attribute: pempassphrase_wo
+	// Skip version tracker attribute: pempassphrase_wo_version
+	if !data.Reqfile.IsNull() && !data.Reqfile.IsUnknown() {
 		sslcert.Reqfile = data.Reqfile.ValueString()
 	}
-	if !data.Subjectaltname.IsNull() {
+	if !data.Subjectaltname.IsNull() && !data.Subjectaltname.IsUnknown() {
 		sslcert.Subjectaltname = data.Subjectaltname.ValueString()
 	}
 
 	return sslcert
+}
+
+func sslcertGetThePayloadFromtheConfig(ctx context.Context, data *SslcertResourceModel, payload *ssl.Sslcert) {
+	tflog.Debug(ctx, "In sslcertGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: pempassphrase_wo -> pempassphrase
+	if !data.PempassphraseWo.IsNull() {
+		pempassphraseWo := data.PempassphraseWo.ValueString()
+		if pempassphraseWo != "" {
+			payload.Pempassphrase = pempassphraseWo
+		}
+	}
 }
 
 func sslcertSetAttrFromGet(ctx context.Context, data *SslcertResourceModel, getResponseData map[string]interface{}) *SslcertResourceModel {
@@ -270,11 +304,9 @@ func sslcertSetAttrFromGet(ctx context.Context, data *SslcertResourceModel, getR
 	} else {
 		data.Keyform = types.StringNull()
 	}
-	if val, ok := getResponseData["pempassphrase"]; ok && val != nil {
-		data.Pempassphrase = types.StringValue(val.(string))
-	} else {
-		data.Pempassphrase = types.StringNull()
-	}
+	// pempassphrase is not returned by NITRO API (secret/ephemeral) - retain from config
+	// pempassphrase_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// pempassphrase_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["reqfile"]; ok && val != nil {
 		data.Reqfile = types.StringValue(val.(string))
 	} else {

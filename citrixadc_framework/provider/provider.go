@@ -585,13 +585,16 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcacertgroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcacertgroup_sslcertkey_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcert"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertfile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertkey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertkey_sslocspresponder_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertreq"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcipher"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcipher_sslciphersuite_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcrl"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ssldtlsprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslecdsakey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslfipskey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslhsmkey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ssllogprofile"
@@ -604,6 +607,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslprofile_ecccurve_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslprofile_sslcertkey_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslprofile_sslcipher_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslrsakey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservice"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservice_ecccurve_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservice_sslcertkey_binding"
@@ -999,6 +1003,18 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		lbprofile.NewLbprofileResource,
 		nsencryptionkey.NewNsencryptionkeyResource,
 		nshmackey.NewNshmackeyResource,
+		radiusnode.NewRadiusnodeResource,
+		rdpclientprofile.NewRdpclientprofileResource,
+		rdpserverprofile.NewRdpserverprofileResource,
+		reputationsettings.NewReputationsettingsResource,
+		smppuser.NewSmppuserResource,
+		sslcert.NewSslcertResource,
+		sslcertreq.NewSslcertreqResource,
+		sslcrl.NewSslcrlResource,
+		sslecdsakey.NewSslecdsakeyResource,
+		sslhsmkey.NewSslhsmkeyResource,
+		sslprofile.NewSslprofileResource,
+		sslrsakey.NewSslrsakeyResource,
 	}
 }
 

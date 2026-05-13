@@ -18,6 +18,41 @@ resource "citrixadc_sslecdsakey" "tf_sslecdsakey" {
 }
 ```
 
+### Using password (sensitive attribute - persisted in state)
+
+```hcl
+variable "sslecdsakey_password" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_sslecdsakey" "tf_sslecdsakey" {
+  keyfile  = "/nsconfig/ssl/demoecdsa.pem"
+  curve    = "P_256"
+  aes256   = true
+  password = var.sslecdsakey_password
+}
+```
+
+### Using password_wo (write-only/ephemeral - NOT persisted in state)
+
+The `password_wo` attribute provides an ephemeral path for the key encryption pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `password_wo_version`.
+
+```hcl
+variable "sslecdsakey_password" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_sslecdsakey" "tf_sslecdsakey" {
+  keyfile             = "/nsconfig/ssl/demoecdsa.pem"
+  curve               = "P_256"
+  aes256              = true
+  password_wo         = var.sslecdsakey_password
+  password_wo_version = 1
+}
+```
+
 ## Argument Reference
 
 * `keyfile` - (Required) Name for and, optionally, path to the RSA key. /nsconfig/ssl/ is the default path. Maximum length =  63
@@ -26,7 +61,9 @@ resource "citrixadc_sslecdsakey" "tf_sslecdsakey" {
 * `aes256` - (Optional) Encrypt the generated RSA key by using the AES algorithm.
 * `des` - (Optional) Encrypt the generated RSA key by using the DES algorithm.
 * `des3` - (Optional) Encrypt the generated RSA key by using the Triple-DES algorithm.
-* `password` - (Optional) Pass phrase to use for encryption if AES256, DES or DES3 option is selected. Maximum value: 31
+* `password` - (Optional, Sensitive) Pass phrase to use for encryption if DES or DES3 option is selected. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative.
+* `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence.
+* `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `pkcs8` - (Optional) Create the private key in PKCS#8 format.
 
 ## Attribute Reference

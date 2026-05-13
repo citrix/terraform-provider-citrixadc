@@ -34,7 +34,7 @@ resource "citrixadc_sslecdsakey" "tf_sslecdsakey" {
 `
 
 func TestAccSslecdsakey_basic(t *testing.T) {
-	// t.Skip("TODO: Need to find a way to test this resource!")
+	t.Skip("TODO: Requires cleanup of keyfile at ADC!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -69,4 +69,70 @@ func testAccCheckSslecdsakeyExist(n string, id *string) resource.TestCheckFunc {
 		}
 		return nil
 	}
+}
+
+// Test backward-compatible path: using password (Sensitive attribute)
+const testAccSslecdsakey_password_step1 = `
+	variable "sslecdsakey_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslecdsakey" "tf_sslecdsakey_ephem" {
+		keyfile  = "/nsconfig/ssl/demoecdsa_ephem.pem"
+		curve    = "P_256"
+		des   = true
+		password = var.sslecdsakey_password
+	}
+`
+
+func TestAccSslecdsakey_password_backward_compat(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of keyfile at ADC!")
+	t.Setenv("TF_VAR_sslecdsakey_password", "EcdsaPass1!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslecdsakey_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslecdsakeyExist("citrixadc_sslecdsakey.tf_sslecdsakey_ephem", nil),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
+const testAccSslecdsakey_password_wo_step1 = `
+	variable "sslecdsakey_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslecdsakey" "tf_sslecdsakey_ephem" {
+		keyfile             = "/nsconfig/ssl/demoecdsa_ephem_wo.pem"
+		curve               = "P_256"
+		des              = true
+		password_wo         = var.sslecdsakey_password_wo
+		password_wo_version = 1
+	}
+`
+
+func TestAccSslecdsakey_password_wo_ephemeral(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of keyfile at ADC!")
+	t.Setenv("TF_VAR_sslecdsakey_password_wo", "EpheEcdsaPass1!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslecdsakey_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslecdsakeyExist("citrixadc_sslecdsakey.tf_sslecdsakey_ephem", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslecdsakey.tf_sslecdsakey_ephem", "password_wo_version", "1"),
+				),
+			},
+		},
+	})
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -44,33 +43,61 @@ func (r *SslrsakeyResource) Configure(ctx context.Context, req resource.Configur
 }
 
 func (r *SslrsakeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data SslrsakeyResourceModel
+	var data, config SslrsakeyResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating sslrsakey resource")
-
-	// sslrsakey := sslrsakeyGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	sslrsakey := sslrsakeyGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	sslrsakeyGetThePayloadFromtheConfig(ctx, &config, &sslrsakey)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslrsakey.Type(), &sslrsakey)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslrsakey, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslrsakey-config")
+	// Singleton resource - use ActOnResource
+	err := r.client.ActOnResource(service.Sslrsakey.Type(), &sslrsakey, "create")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslrsakey, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created sslrsakey resource")
 
-	// Read the updated state back
-	r.readSslrsakeyFromApi(ctx, &data, &resp.Diagnostics)
+	// Set ID for the resource
+	data.Id = types.StringValue("sslrsakey-config")
+
+	// Resolve unknown Optional+Computed attributes to null since Read is a noop
+	if data.Aes256.IsUnknown() {
+		data.Aes256 = types.BoolNull()
+	}
+	if data.Bits.IsUnknown() {
+		data.Bits = types.Int64Null()
+	}
+	if data.Des.IsUnknown() {
+		data.Des = types.BoolNull()
+	}
+	if data.Des3.IsUnknown() {
+		data.Des3 = types.BoolNull()
+	}
+	if data.Exponent.IsUnknown() {
+		data.Exponent = types.StringNull()
+	}
+	if data.Keyfile.IsUnknown() {
+		data.Keyfile = types.StringNull()
+	}
+	if data.Keyform.IsUnknown() {
+		data.Keyform = types.StringNull()
+	}
+	if data.Pkcs8.IsUnknown() {
+		data.Pkcs8 = types.BoolNull()
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +115,28 @@ func (r *SslrsakeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading sslrsakey resource")
 
-	r.readSslrsakeyFromApi(ctx, &data, &resp.Diagnostics)
-
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslrsakeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslrsakeyResourceModel
+	var data, config, state SslrsakeyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslrsakey resource")
-
-	// Create API request body from the model
-	// sslrsakey := sslrsakeyGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslrsakey.Type(), &sslrsakey)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslrsakey, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated sslrsakey resource")
-
-	// Read the updated state back
-	r.readSslrsakeyFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +153,7 @@ func (r *SslrsakeyResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	tflog.Debug(ctx, "Deleting sslrsakey resource")
-
-	// For sslrsakey, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslrsakey resource from state")
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed sslrsakey from Terraform state")
 }
 
-// Helper function to read sslrsakey data from API
-func (r *SslrsakeyResource) readSslrsakeyFromApi(ctx context.Context, data *SslrsakeyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslrsakey.Type(), "")
-	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslrsakey, got error: %s", err))
-		return
-	}
-
-	sslrsakeySetAttrFromGet(ctx, data, getResponseData)
-
-}

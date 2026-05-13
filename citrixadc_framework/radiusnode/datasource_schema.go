@@ -19,6 +19,15 @@ func RadiusnodeDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The key shared between the RADIUS server and clients.\n      Required for NetScaler to communicate with the RADIUS nodes.",
 			},
+			"radkey_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "The key shared between the RADIUS server and clients.\n      Required for NetScaler to communicate with the RADIUS nodes.",
+			},
+			"radkey_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a radkey_wo update.",
+			},
 		},
 	}
 }

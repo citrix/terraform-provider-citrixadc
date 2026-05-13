@@ -224,6 +224,15 @@ func SslprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Session ticket enc/dec key , admin can set it",
 			},
+			"sessionticketkeydata_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Session ticket enc/dec key , admin can set it",
+			},
+			"sessionticketkeydata_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a sessionticketkeydata_wo update.",
+			},
 			"sessionticketkeyrefresh": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
