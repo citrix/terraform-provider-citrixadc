@@ -99,8 +99,8 @@ const testAccLbmonitor_sslcertkey_binding_ca = `
 
 	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 		certkey = "tf_sslcertkey_ca"
-		cert = "/var/tmp/ca_certificate.crt"
-		key = "/var/tmp/ca_key.pem"
+		cert = "/nsconfig/ssl/rootcert2.cert"
+		key = "/nsconfig/ssl/rootcert2.key"
 	}
 `
 
@@ -113,8 +113,8 @@ const testAccLbmonitor_sslcertkey_binding_ca_step2 = `
 
 	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 		certkey = "tf_sslcertkey_ca"
-		cert = "/var/tmp/ca_certificate.crt"
-		key = "/var/tmp/ca_key.pem"
+		cert = "/nsconfig/ssl/rootcert2.cert"
+		key = "/nsconfig/ssl/rootcert2.key"
 	}
 `
 

@@ -17,6 +17,12 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
+// CipherbindingModel describes a single cipher binding entry.
+type CipherbindingModel struct {
+	Ciphername     types.String `tfsdk:"ciphername"`
+	Cipherpriority types.Int64  `tfsdk:"cipherpriority"`
+}
+
 // SslprofileResourceModel describes the resource data model.
 type SslprofileResourceModel struct {
 	Id                                types.String `tfsdk:"id"`
@@ -40,6 +46,7 @@ type SslprofileResourceModel struct {
 	Dhfile                            types.String `tfsdk:"dhfile"`
 	Dhkeyexpsizelimit                 types.String `tfsdk:"dhkeyexpsizelimit"`
 	Dropreqwithnohostheader           types.String `tfsdk:"dropreqwithnohostheader"`
+	Ecccurvebindings                  types.Set    `tfsdk:"ecccurvebindings"`
 	Encryptedclienthello              types.String `tfsdk:"encryptedclienthello"`
 	Encrypttriggerpktcount            types.Int64  `tfsdk:"encrypttriggerpktcount"`
 	Ersa                              types.String `tfsdk:"ersa"`
@@ -50,6 +57,9 @@ type SslprofileResourceModel struct {
 	Maxage                            types.Int64  `tfsdk:"maxage"`
 	Maxrenegrate                      types.Int64  `tfsdk:"maxrenegrate"`
 	Name                              types.String `tfsdk:"name"`
+	Nodefaultbindings                 types.String `tfsdk:"nodefaultbindings"`
+	Nodefaultcipherbindings           types.Bool   `tfsdk:"nodefaultcipherbindings"`
+	Nodefaultecccurvebindings         types.Bool   `tfsdk:"nodefaultecccurvebindings"`
 	Ocspstapling                      types.String `tfsdk:"ocspstapling"`
 	Preload                           types.String `tfsdk:"preload"`
 	Prevsessionkeylifetime            types.Int64  `tfsdk:"prevsessionkeylifetime"`
@@ -90,6 +100,7 @@ type SslprofileResourceModel struct {
 	Tls13                             types.String `tfsdk:"tls13"`
 	Tls13sessionticketsperauthcontext types.Int64  `tfsdk:"tls13sessionticketsperauthcontext"`
 	Zerorttearlydata                  types.String `tfsdk:"zerorttearlydata"`
+	Cipherbindings                    types.Set    `tfsdk:"cipherbindings"`
 }
 
 func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -200,6 +211,11 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed:    true,
 				Description: "Host header check for SNI enabled sessions. If this check is enabled and the HTTP request does not contain the host header for SNI enabled sessions(i.e vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension), the request is dropped.",
 			},
+			"ecccurvebindings": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Named ECC curves bound to the SSL profile.",
+			},
 			"encryptedclienthello": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -251,6 +267,18 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name for the SSL profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the profile is created.",
+			},
+			"nodefaultbindings": schema.StringAttribute{
+				Optional:    true,
+				Description: "Control default bindings for the SSL profile.",
+			},
+			"nodefaultcipherbindings": schema.BoolAttribute{
+				Optional:    true,
+				Description: "When set to true, removes the default cipher bindings from the SSL profile.",
+			},
+			"nodefaultecccurvebindings": schema.BoolAttribute{
+				Optional:    true,
+				Description: "When set to true, removes the default ECC curve bindings from the SSL profile.",
 			},
 			"ocspstapling": schema.StringAttribute{
 				Optional:    true,
@@ -458,6 +486,23 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "State of TLS 1.3 0-RTT early data support for the SSL Virtual Server. This setting only has an effect if resumption is enabled, as early data cannot be sent along with an initial handshake.\nEarly application data has significantly different security properties - in particular there is no guarantee that the data cannot be replayed.",
 			},
 		},
+		Blocks: map[string]schema.Block{
+			"cipherbindings": schema.SetNestedBlock{
+				Description: "Cipher bindings for the SSL profile.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"ciphername": schema.StringAttribute{
+							Optional:    true,
+							Description: "The cipher group/alias/individual cipher configuration.",
+						},
+						"cipherpriority": schema.Int64Attribute{
+							Optional:    true,
+							Description: "Cipher priority.",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -555,6 +600,9 @@ func sslprofileGetThePayloadFromthePlan(ctx context.Context, data *SslprofileRes
 	}
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		sslprofile.Name = data.Name.ValueString()
+	}
+	if !data.Nodefaultbindings.IsNull() && !data.Nodefaultbindings.IsUnknown() {
+		sslprofile.Nodefaultbindings = data.Nodefaultbindings.ValueString()
 	}
 	if !data.Ocspstapling.IsNull() && !data.Ocspstapling.IsUnknown() {
 		sslprofile.Ocspstapling = data.Ocspstapling.ValueString()
@@ -857,6 +905,7 @@ func sslprofileSetAttrFromGet(ctx context.Context, data *SslprofileResourceModel
 	} else {
 		data.Name = types.StringNull()
 	}
+	// nodefaultbindings, nodefaultecccurvebindings, nodefaultcipherbindings are not returned by NITRO API - retain from config
 	if val, ok := getResponseData["ocspstapling"]; ok && val != nil {
 		data.Ocspstapling = types.StringValue(val.(string))
 	} else {

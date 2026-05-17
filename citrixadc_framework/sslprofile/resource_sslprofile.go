@@ -3,8 +3,11 @@ package sslprofile
 import (
 	"context"
 	"fmt"
+	"strconv"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -74,6 +77,36 @@ func (r *SslprofileResource) Create(ctx context.Context, req resource.CreateRequ
 
 	// Set ID for the resource before reading state
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
+	// Handle default binding deletions
+	if !data.Nodefaultecccurvebindings.IsNull() && data.Nodefaultecccurvebindings.ValueBool() {
+		if err := r.deleteDefaultEcccurveBindings(ctx, data.Name.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete default ECC curve bindings: %s", err))
+			return
+		}
+	}
+	if !data.Nodefaultcipherbindings.IsNull() && data.Nodefaultcipherbindings.ValueBool() {
+		if err := r.deleteDefaultCipherBindings(ctx, data.Name.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete default cipher bindings: %s", err))
+			return
+		}
+	}
+
+	// Handle ECC curve bindings
+	if !data.Ecccurvebindings.IsNull() {
+		if err := r.createEcccurveBindings(ctx, &data); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ECC curve bindings: %s", err))
+			return
+		}
+	}
+
+	// Handle cipher bindings
+	if !data.Cipherbindings.IsNull() {
+		if err := r.createCipherBindings(ctx, &data); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cipher bindings: %s", err))
+			return
+		}
+	}
 
 	// Read the updated state back
 	r.readSslprofileFromApi(ctx, &data, &resp.Diagnostics)
@@ -235,6 +268,10 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Maxrenegrate.Equal(state.Maxrenegrate) {
 		tflog.Debug(ctx, fmt.Sprintf("maxrenegrate has changed for sslprofile"))
+		hasChange = true
+	}
+	if !data.Nodefaultbindings.Equal(state.Nodefaultbindings) {
+		tflog.Debug(ctx, fmt.Sprintf("nodefaultbindings has changed for sslprofile"))
 		hasChange = true
 	}
 	if !data.Ocspstapling.Equal(state.Ocspstapling) {
@@ -410,6 +447,22 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Debug(ctx, "No changes detected for sslprofile resource, skipping update")
 	}
 
+	// Handle ECC curve binding changes
+	if !data.Ecccurvebindings.Equal(state.Ecccurvebindings) {
+		if err := r.updateEcccurveBindings(ctx, &state, &data); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ECC curve bindings: %s", err))
+			return
+		}
+	}
+
+	// Handle cipher binding changes
+	if !data.Cipherbindings.Equal(state.Cipherbindings) {
+		if err := r.updateCipherBindings(ctx, &state, &data); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cipher bindings: %s", err))
+			return
+		}
+	}
+
 	// Read the updated state back
 	r.readSslprofileFromApi(ctx, &data, &resp.Diagnostics)
 
@@ -456,4 +509,269 @@ func (r *SslprofileResource) readSslprofileFromApi(ctx context.Context, data *Ss
 
 	sslprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	// Read ECC curve bindings only if configured
+	if !data.Ecccurvebindings.IsNull() {
+		r.readEcccurveBindings(ctx, data, diags)
+	}
+
+	// Read cipher bindings only if configured
+	if !data.Cipherbindings.IsNull() {
+		r.readCipherBindings(ctx, data, diags)
+	}
+
+}
+
+// ECC curve binding helpers
+
+func (r *SslprofileResource) deleteDefaultEcccurveBindings(ctx context.Context, profileName string) error {
+	tflog.Debug(ctx, "Deleting default ECC curve bindings")
+	bindings, _ := r.client.FindResourceArray(service.Sslprofile_ecccurve_binding.Type(), profileName)
+	for _, binding := range bindings {
+		ecccurvename, ok := binding["ecccurvename"].(string)
+		if !ok {
+			continue
+		}
+		args := []string{fmt.Sprintf("ecccurvename:%s", ecccurvename)}
+		if err := r.client.DeleteResourceWithArgs(service.Sslprofile_ecccurve_binding.Type(), profileName, args); err != nil {
+			tflog.Warn(ctx, fmt.Sprintf("Error deleting default ECC curve binding %s: %s", ecccurvename, err))
+		}
+	}
+	return nil
+}
+
+func (r *SslprofileResource) createEcccurveBindings(ctx context.Context, data *SslprofileResourceModel) error {
+	tflog.Debug(ctx, "Creating ECC curve bindings")
+	profileName := data.Name.ValueString()
+
+	// Delete default ECC curve bindings first
+	defaultBindings, _ := r.client.FindResourceArray(service.Sslprofile_ecccurve_binding.Type(), profileName)
+	for _, binding := range defaultBindings {
+		ecccurvename, ok := binding["ecccurvename"].(string)
+		if !ok {
+			continue
+		}
+		args := []string{fmt.Sprintf("ecccurvename:%s", ecccurvename)}
+		r.client.DeleteResourceWithArgs(service.Sslprofile_ecccurve_binding.Type(), profileName, args)
+	}
+
+	// Add configured bindings
+	var ecccurves []string
+	data.Ecccurvebindings.ElementsAs(context.Background(), &ecccurves, false)
+	for _, ecccurvename := range ecccurves {
+		bindingStruct := ssl.Sslprofileecccurvebinding{
+			Name:         profileName,
+			Ecccurvename: ecccurvename,
+		}
+		if _, err := r.client.UpdateResource(service.Sslprofile_ecccurve_binding.Type(), profileName, bindingStruct); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *SslprofileResource) updateEcccurveBindings(ctx context.Context, state *SslprofileResourceModel, plan *SslprofileResourceModel) error {
+	tflog.Debug(ctx, "Updating ECC curve bindings")
+	profileName := plan.Name.ValueString()
+
+	var oldCurves, newCurves []string
+	if !state.Ecccurvebindings.IsNull() {
+		state.Ecccurvebindings.ElementsAs(context.Background(), &oldCurves, false)
+	}
+	if !plan.Ecccurvebindings.IsNull() {
+		plan.Ecccurvebindings.ElementsAs(context.Background(), &newCurves, false)
+	}
+
+	oldSet := make(map[string]bool)
+	for _, v := range oldCurves {
+		oldSet[v] = true
+	}
+	newSet := make(map[string]bool)
+	for _, v := range newCurves {
+		newSet[v] = true
+	}
+
+	// Remove curves no longer in the set
+	for _, v := range oldCurves {
+		if !newSet[v] {
+			args := []string{fmt.Sprintf("ecccurvename:%s", v)}
+			if err := r.client.DeleteResourceWithArgs(service.Sslprofile_ecccurve_binding.Type(), profileName, args); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Add new curves
+	for _, v := range newCurves {
+		if !oldSet[v] {
+			bindingStruct := ssl.Sslprofileecccurvebinding{
+				Name:         profileName,
+				Ecccurvename: v,
+			}
+			if _, err := r.client.UpdateResource(service.Sslprofile_ecccurve_binding.Type(), profileName, bindingStruct); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (r *SslprofileResource) readEcccurveBindings(ctx context.Context, data *SslprofileResourceModel, diags *diag.Diagnostics) {
+	tflog.Debug(ctx, "Reading ECC curve bindings")
+	profileName := data.Name.ValueString()
+
+	bindings, _ := r.client.FindResourceArray(service.Sslprofile_ecccurve_binding.Type(), profileName)
+
+	ecccurves := make([]attr.Value, 0, len(bindings))
+	for _, binding := range bindings {
+		if ecccurvename, ok := binding["ecccurvename"].(string); ok {
+			ecccurves = append(ecccurves, types.StringValue(ecccurvename))
+		}
+	}
+	setValue, d := types.SetValue(types.StringType, ecccurves)
+	diags.Append(d...)
+	data.Ecccurvebindings = setValue
+}
+
+// Cipher binding helpers
+
+func (r *SslprofileResource) deleteDefaultCipherBindings(ctx context.Context, profileName string) error {
+	tflog.Debug(ctx, "Deleting default cipher bindings")
+	bindings, _ := r.client.FindResourceArray(service.Sslprofile_sslcipher_binding.Type(), profileName)
+	for _, binding := range bindings {
+		ciphername, ok := binding["cipheraliasname"].(string)
+		if !ok {
+			continue
+		}
+		args := []string{fmt.Sprintf("ciphername:%s", ciphername)}
+		if err := r.client.DeleteResourceWithArgs(service.Sslprofile_sslcipher_binding.Type(), profileName, args); err != nil {
+			tflog.Warn(ctx, fmt.Sprintf("Error deleting default cipher binding %s: %s", ciphername, err))
+		}
+	}
+	return nil
+}
+
+func (r *SslprofileResource) createCipherBindings(ctx context.Context, data *SslprofileResourceModel) error {
+	tflog.Debug(ctx, "Creating cipher bindings")
+	profileName := data.Name.ValueString()
+
+	// Delete default cipher bindings first
+	defaultBindings, _ := r.client.FindResourceArray(service.Sslprofile_sslcipher_binding.Type(), profileName)
+	for _, binding := range defaultBindings {
+		ciphername, ok := binding["cipheraliasname"].(string)
+		if !ok {
+			continue
+		}
+		args := []string{fmt.Sprintf("ciphername:%s", ciphername)}
+		r.client.DeleteResourceWithArgs(service.Sslprofile_sslcipher_binding.Type(), profileName, args)
+	}
+
+	// Add configured bindings
+	var cipherBindings []CipherbindingModel
+	data.Cipherbindings.ElementsAs(context.Background(), &cipherBindings, false)
+	for _, cb := range cipherBindings {
+		bindingStruct := ssl.Sslprofilecipherbinding{
+			Name:       profileName,
+			Ciphername: cb.Ciphername.ValueString(),
+		}
+		if !cb.Cipherpriority.IsNull() && !cb.Cipherpriority.IsUnknown() {
+			bindingStruct.Cipherpriority = uint32(cb.Cipherpriority.ValueInt64())
+		}
+		if _, err := r.client.UpdateResource(service.Sslprofile_sslcipher_binding.Type(), profileName, bindingStruct); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *SslprofileResource) updateCipherBindings(ctx context.Context, state *SslprofileResourceModel, plan *SslprofileResourceModel) error {
+	tflog.Debug(ctx, "Updating cipher bindings")
+	profileName := plan.Name.ValueString()
+
+	var oldBindings, newBindings []CipherbindingModel
+	if !state.Cipherbindings.IsNull() {
+		state.Cipherbindings.ElementsAs(context.Background(), &oldBindings, false)
+	}
+	if !plan.Cipherbindings.IsNull() {
+		plan.Cipherbindings.ElementsAs(context.Background(), &newBindings, false)
+	}
+
+	type cipherKey struct {
+		name     string
+		priority int64
+	}
+
+	oldSet := make(map[cipherKey]bool)
+	for _, b := range oldBindings {
+		key := cipherKey{name: b.Ciphername.ValueString(), priority: b.Cipherpriority.ValueInt64()}
+		oldSet[key] = true
+	}
+	newSet := make(map[cipherKey]bool)
+	for _, b := range newBindings {
+		key := cipherKey{name: b.Ciphername.ValueString(), priority: b.Cipherpriority.ValueInt64()}
+		newSet[key] = true
+	}
+
+	// Remove old bindings not in new set
+	for _, b := range oldBindings {
+		key := cipherKey{name: b.Ciphername.ValueString(), priority: b.Cipherpriority.ValueInt64()}
+		if !newSet[key] {
+			args := []string{fmt.Sprintf("ciphername:%s", b.Ciphername.ValueString())}
+			if err := r.client.DeleteResourceWithArgs(service.Sslprofile_sslcipher_binding.Type(), profileName, args); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Add new bindings not in old set
+	for _, b := range newBindings {
+		key := cipherKey{name: b.Ciphername.ValueString(), priority: b.Cipherpriority.ValueInt64()}
+		if !oldSet[key] {
+			bindingStruct := ssl.Sslprofilecipherbinding{
+				Name:       profileName,
+				Ciphername: b.Ciphername.ValueString(),
+			}
+			if !b.Cipherpriority.IsNull() && !b.Cipherpriority.IsUnknown() {
+				bindingStruct.Cipherpriority = uint32(b.Cipherpriority.ValueInt64())
+			}
+			if _, err := r.client.UpdateResource(service.Sslprofile_sslcipher_binding.Type(), profileName, bindingStruct); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (r *SslprofileResource) readCipherBindings(ctx context.Context, data *SslprofileResourceModel, diags *diag.Diagnostics) {
+	tflog.Debug(ctx, "Reading cipher bindings")
+	profileName := data.Name.ValueString()
+
+	bindings, _ := r.client.FindResourceArray(service.Sslprofile_sslcipher_binding.Type(), profileName)
+
+	cipherBindingAttrTypes := map[string]attr.Type{
+		"ciphername":     types.StringType,
+		"cipherpriority": types.Int64Type,
+	}
+
+	cipherBindings := make([]attr.Value, 0, len(bindings))
+	for _, binding := range bindings {
+		ciphername, _ := binding["cipheraliasname"].(string)
+		var cipherpriority int64
+		if cpStr, ok := binding["cipherpriority"].(string); ok {
+			cp, err := strconv.Atoi(cpStr)
+			if err == nil {
+				cipherpriority = int64(cp)
+			}
+		}
+
+		bindingObj, d := types.ObjectValue(cipherBindingAttrTypes, map[string]attr.Value{
+			"ciphername":     types.StringValue(ciphername),
+			"cipherpriority": types.Int64Value(cipherpriority),
+		})
+		diags.Append(d...)
+		cipherBindings = append(cipherBindings, bindingObj)
+	}
+
+	setValue, d := types.SetValue(types.ObjectType{AttrTypes: cipherBindingAttrTypes}, cipherBindings)
+	diags.Append(d...)
+	data.Cipherbindings = setValue
 }

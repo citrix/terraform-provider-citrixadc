@@ -191,6 +191,7 @@ const testAccLbmonitorDataSource_basic = `
 	
 	data "citrixadc_lbmonitor" "tf_lbmonitor" {
 		monitorname = citrixadc_lbmonitor.tf_lbmonitor.monitorname
+		type        = citrixadc_lbmonitor.tf_lbmonitor.type
 	}
 `
 
