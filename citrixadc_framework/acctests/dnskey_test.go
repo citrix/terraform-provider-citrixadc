@@ -28,8 +28,8 @@ const testAccDnskey_add = `
 
 resource "citrixadc_dnskey" "dnskey" {
 	keyname            = "adckey_1"
-	publickey          = "/nsconfig/dns/demo.key"
-	privatekey         = "/nsconfig/dns/demo.private"
+	publickey           = "/nsconfig/dns/dnskey_test.key"
+	privatekey          = "/nsconfig/dns/dnskey_test.private"
 	expires            = 120
 	units1             = "DAYS"
 	notificationperiod = 7
@@ -43,8 +43,8 @@ const testAccDnskey_update = `
 
 resource "citrixadc_dnskey" "dnskey" {
 	keyname            = "adckey_1"
-	publickey          = "/nsconfig/dns/demo.key"
-	privatekey         = "/nsconfig/dns/demo.private"
+	publickey           = "/nsconfig/dns/dnskey_test.key"
+	privatekey          = "/nsconfig/dns/dnskey_test.private"
 	expires            = 121
 	units1             = "HOURS"
 	notificationperiod = 12
@@ -59,8 +59,8 @@ const testAccDnskeyDataSource_basic = `
 
 resource "citrixadc_dnskey" "dnskey" {
 	keyname            = "adckey_ds_test"
-	publickey          = "/nsconfig/dns/demo.key"
-	privatekey         = "/nsconfig/dns/demo.private"
+	publickey  = "/nsconfig/dns/dnskey_test.key"
+	privatekey = "/nsconfig/dns/dnskey_test.private"
 	expires            = 120
 	units1             = "DAYS"
 	notificationperiod = 7
@@ -74,9 +74,8 @@ data "citrixadc_dnskey" "dnskey" {
 `
 
 func TestAccDnskey_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doDnskeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckDnskeyDestroy,
 		Steps: []resource.TestStep{
@@ -297,9 +296,8 @@ func TestAccDnskey_password_wo_ephemeral(t *testing.T) {
 }
 
 func TestAccDnskeyDataSource_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doDnskeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
