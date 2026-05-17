@@ -38,12 +38,11 @@ func (d *DbuserDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	var data DbuserResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Case 2: Find with single ID attribute
 	username_Name := data.Username.ValueString()
 
 	var getResponseData map[string]interface{}

@@ -1015,6 +1015,11 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		sslhsmkey.NewSslhsmkeyResource,
 		sslprofile.NewSslprofileResource,
 		sslrsakey.NewSslrsakeyResource,
+		dbuser.NewDbuserResource,
+		dnskey.NewDnskeyResource,
+		ipsecprofile.NewIpsecprofileResource,
+		lbmonitor.NewLbmonitorResource,
+		nsencryptionparams.NewNsencryptionparamsResource,
 	}
 }
 

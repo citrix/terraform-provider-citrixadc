@@ -829,6 +829,8 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_systemgroup_systemuser_binding":                                resourceCitrixAdcSystemgroup_systemuser_binding(),
 		"citrixadc_sslprofile_ecccurve_binding":                                   resourceCitrixAdcSslprofile_ecccurve_binding(),
 		"citrixadc_systemuser_systemcmdpolicy_binding":                            resourceCitrixAdcSystemuser_systemcmdpolicy_binding(),
+		"citricadc_nscapacity":                                                    resourceCitrixAdcNscapacity(),
+		"citrixadc_nslicenseserver":                                               resourceCitrixAdcNslicenseserver(),
 	}
 }
 

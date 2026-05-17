@@ -3,6 +3,7 @@ package lbmonitor
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -73,6 +73,8 @@ type LbmonitorResourceModel struct {
 	Originhost                       types.String `tfsdk:"originhost"`
 	Originrealm                      types.String `tfsdk:"originrealm"`
 	Password                         types.String `tfsdk:"password"`
+	PasswordWo                       types.String `tfsdk:"password_wo"`
+	PasswordWoVersion                types.Int64  `tfsdk:"password_wo_version"`
 	Productname                      types.String `tfsdk:"productname"`
 	Query                            types.String `tfsdk:"query"`
 	Querytype                        types.String `tfsdk:"querytype"`
@@ -81,6 +83,8 @@ type LbmonitorResourceModel struct {
 	Radapn                           types.String `tfsdk:"radapn"`
 	Radframedip                      types.String `tfsdk:"radframedip"`
 	Radkey                           types.String `tfsdk:"radkey"`
+	RadkeyWo                         types.String `tfsdk:"radkey_wo"`
+	RadkeyWoVersion                  types.Int64  `tfsdk:"radkey_wo_version"`
 	Radmsisdn                        types.String `tfsdk:"radmsisdn"`
 	Radnasid                         types.String `tfsdk:"radnasid"`
 	Radnasip                         types.String `tfsdk:"radnasip"`
@@ -94,8 +98,12 @@ type LbmonitorResourceModel struct {
 	Scriptargs                       types.String `tfsdk:"scriptargs"`
 	Scriptname                       types.String `tfsdk:"scriptname"`
 	Secondarypassword                types.String `tfsdk:"secondarypassword"`
+	SecondarypasswordWo              types.String `tfsdk:"secondarypassword_wo"`
+	SecondarypasswordWoVersion       types.Int64  `tfsdk:"secondarypassword_wo_version"`
 	Secure                           types.String `tfsdk:"secure"`
 	Secureargs                       types.String `tfsdk:"secureargs"`
+	SecureargsWo                     types.String `tfsdk:"secureargs_wo"`
+	SecureargsWoVersion              types.Int64  `tfsdk:"secureargs_wo_version"`
 	Send                             types.String `tfsdk:"send"`
 	Servicegroupname                 types.String `tfsdk:"servicegroupname"`
 	Servicename                      types.String `tfsdk:"servicename"`
@@ -142,8 +150,11 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The ID of the lbmonitor resource.",
 			},
 			"snmpoid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "SNMP OID for SNMP monitors.",
 			},
 			"acctapplicationid": schema.ListAttribute{
@@ -154,7 +165,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"action": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DOWN"),
+				Computed:    true,
 				Description: "Action to perform when the response to an inline monitor (a monitor of type HTTP-INLINE) indicates that the service is down. A service monitored by an inline monitor is considered DOWN if the response code is not one of the codes that have been specified for the Response Code parameter.\nAvailable settings function as follows:\n* NONE - Do not take any action. However, the show service command and the show lb monitor command indicate the total number of responses that were checked and the number of consecutive error responses received after the last successful probe.\n* LOG - Log the event in NSLOG or SYSLOG.\n* DOWN - Mark the service as being down, and then do not direct any traffic to the service until the configured down time has expired. Persistent connections to the service are terminated as soon as the service is marked as DOWN. Also, log the event in NSLOG or SYSLOG.",
 			},
 			"alertretries": schema.Int64Attribute{
@@ -230,7 +241,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"downtime": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(30),
+				Computed:    true,
 				Description: "Time duration for which to wait before probing a service that has been marked as DOWN. Expressed in milliseconds, seconds, or minutes.",
 			},
 			"evalrule": schema.StringAttribute{
@@ -285,8 +296,11 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Host-IP-Address value for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers. If Host-IP-Address is not specified, the appliance inserts the mapped IP (MIP) address or subnet IP (SNIP) address from which the CER request (the monitoring probe) is sent.",
 			},
 			"hostname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Hostname in the FQDN format (Example: porche.cars.org). Applicable to STOREFRONT monitors.",
 			},
 			"httprequest": schema.StringAttribute{
@@ -301,7 +315,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"interval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(5),
+				Computed:    true,
 				Description: "Time interval between two successive probes. Must be greater than the value of Response Time-out.",
 			},
 			"ipaddress": schema.ListAttribute{
@@ -337,7 +351,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"maxforwards": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Maximum number of hops that the SIP request used for monitoring can traverse to reach the server. Applicable only to monitors of type SIP-UDP.",
 			},
 			"metric": schema.StringAttribute{
@@ -361,7 +375,10 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The weight for the specified service metric with respect to others.",
 			},
 			"monitorname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the monitor. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.\n\nCLI Users:  If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my monitor\" or 'my monitor').",
 			},
 			"mqttclientidentifier": schema.StringAttribute{
@@ -371,12 +388,12 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"mqttversion": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(4),
+				Computed:    true,
 				Description: "Version of MQTT protocol used in connect message, default is version 3.1.1 [4]",
 			},
 			"mssqlprotocolversion": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("70"),
+				Computed:    true,
 				Description: "Version of MSSQL server that is to be monitored.",
 			},
 			"netprofile": schema.StringAttribute{
@@ -401,8 +418,20 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"password": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Password that is required for logging on to the RADIUS, NNTP, FTP, FTP-EXTENDED, MYSQL, MSSQL, POP3, CITRIX-AG, CITRIX-XD-DDC, CITRIX-WI-EXTENDED, CITRIX-XNC-ECV or CITRIX-XDM server. Used in conjunction with the user name specified for the User Name parameter.",
+			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password that is required for logging on to the RADIUS, NNTP, FTP, FTP-EXTENDED, MYSQL, MSSQL, POP3, CITRIX-AG, CITRIX-XD-DDC, CITRIX-WI-EXTENDED, CITRIX-XNC-ECV or CITRIX-XDM server. Used in conjunction with the user name specified for the User Name parameter.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a password_wo update.",
 			},
 			"productname": schema.StringAttribute{
 				Optional:    true,
@@ -426,7 +455,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"radaccounttype": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Account Type to be used in Account Request Packet. Applicable to monitors of type RADIUS_ACCOUNTING.",
 			},
 			"radapn": schema.StringAttribute{
@@ -441,8 +470,20 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"radkey": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Authentication key (shared secret text string) for RADIUS clients and servers to exchange. Applicable to monitors of type RADIUS and RADIUS_ACCOUNTING.",
+			},
+			"radkey_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Authentication key (shared secret text string) for RADIUS clients and servers to exchange. Applicable to monitors of type RADIUS and RADIUS_ACCOUNTING.",
+			},
+			"radkey_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a radkey_wo update.",
 			},
 			"radmsisdn": schema.StringAttribute{
 				Optional:    true,
@@ -472,7 +513,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"resptimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2),
+				Computed:    true,
 				Description: "Amount of time for which the appliance must wait before it marks a probe as FAILED.  Must be less than the value specified for the Interval parameter.\n\nNote: For UDP-ECV monitors for which a receive string is not configured, response timeout does not apply. For UDP-ECV monitors with no receive string, probe failure is indicated by an ICMP port unreachable error received from the service.",
 			},
 			"resptimeoutthresh": schema.Int64Attribute{
@@ -482,7 +523,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"retries": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Maximum number of probes to send to establish the state of a service for which a monitoring probe failed.",
 			},
 			"reverse": schema.StringAttribute{
@@ -507,8 +548,20 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"secondarypassword": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "Secondary password that users might have to provide to log on to the Access Gateway server. Applicable to CITRIX-AG monitors.",
+			},
+			"secondarypassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Secondary password that users might have to provide to log on to the Access Gateway server. Applicable to CITRIX-AG monitors.",
+			},
+			"secondarypassword_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a secondarypassword_wo update.",
 			},
 			"secure": schema.StringAttribute{
 				Optional:    true,
@@ -517,8 +570,20 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"secureargs": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
+				Sensitive:   true,
 				Description: "List of arguments for the script which should be secure",
+			},
+			"secureargs_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "List of arguments for the script which should be secure",
+			},
+			"secureargs_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a secureargs_wo update.",
 			},
 			"send": schema.StringAttribute{
 				Optional:    true,
@@ -588,17 +653,17 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"state": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "State of the monitor. The DISABLED setting disables not only the monitor being configured, but all monitors of the same type, until the parameter is set to ENABLED. If the monitor is bound to a service, the state of the monitor is not taken into account when the state of the service is determined.",
 			},
 			"storedb": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Store the database list populated with the responses to monitor probes. Used in database specific load balancing if MSSQL-ECV/MYSQL-ECV  monitor is configured.",
 			},
 			"storefrontacctservice": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Enable/Disable probing for Account Service. Applicable only to Store Front monitors. For multi-tenancy configuration users my skip account service",
 			},
 			"storefrontcheckbackendservices": schema.StringAttribute{
@@ -613,7 +678,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"successretries": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Number of consecutive successful probes required to transition a service's state from DOWN to UP.",
 			},
 			"supportedvendorids": schema.ListAttribute{
@@ -653,22 +718,22 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"units1": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("SEC"),
+				Computed:    true,
 				Description: "Unit of measurement for the Deviation parameter. Cannot be changed after the monitor is created.",
 			},
 			"units2": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("SEC"),
+				Computed:    true,
 				Description: "Unit of measurement for the Down Time parameter. Cannot be changed after the monitor is created.",
 			},
 			"units3": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("SEC"),
+				Computed:    true,
 				Description: "monitor interval units",
 			},
 			"units4": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("SEC"),
+				Computed:    true,
 				Description: "monitor response timeout units",
 			},
 			"username": schema.StringAttribute{
@@ -707,329 +772,422 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func lbmonitorGetThePayloadFromtheConfig(ctx context.Context, data *LbmonitorResourceModel) lb.Lbmonitor {
-	tflog.Debug(ctx, "In lbmonitorGetThePayloadFromtheConfig Function")
+func lbmonitorGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorResourceModel) lb.Lbmonitor {
+	tflog.Debug(ctx, "In lbmonitorGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lbmonitor := lb.Lbmonitor{}
-	if !data.Snmpoid.IsNull() {
+	if !data.Snmpoid.IsNull() && !data.Snmpoid.IsUnknown() {
 		lbmonitor.Snmpoid = data.Snmpoid.ValueString()
 	}
-	if !data.Action.IsNull() {
+	if !data.Acctapplicationid.IsNull() && !data.Acctapplicationid.IsUnknown() {
+		var acctapplicationidList []int
+		data.Acctapplicationid.ElementsAs(ctx, &acctapplicationidList, false)
+		lbmonitor.Acctapplicationid = acctapplicationidList
+	}
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		lbmonitor.Action = data.Action.ValueString()
 	}
-	if !data.Alertretries.IsNull() {
+	if !data.Alertretries.IsNull() && !data.Alertretries.IsUnknown() {
 		lbmonitor.Alertretries = utils.IntPtr(int(data.Alertretries.ValueInt64()))
 	}
-	if !data.Application.IsNull() {
+	if !data.Application.IsNull() && !data.Application.IsUnknown() {
 		lbmonitor.Application = data.Application.ValueString()
 	}
-	if !data.Attribute.IsNull() {
+	if !data.Attribute.IsNull() && !data.Attribute.IsUnknown() {
 		lbmonitor.Attribute = data.Attribute.ValueString()
 	}
-	if !data.Basedn.IsNull() {
+	if !data.Authapplicationid.IsNull() && !data.Authapplicationid.IsUnknown() {
+		var authapplicationidList []int
+		data.Authapplicationid.ElementsAs(ctx, &authapplicationidList, false)
+		lbmonitor.Authapplicationid = authapplicationidList
+	}
+	if !data.Basedn.IsNull() && !data.Basedn.IsUnknown() {
 		lbmonitor.Basedn = data.Basedn.ValueString()
 	}
-	if !data.Binddn.IsNull() {
+	if !data.Binddn.IsNull() && !data.Binddn.IsUnknown() {
 		lbmonitor.Binddn = data.Binddn.ValueString()
 	}
-	if !data.Customheaders.IsNull() {
+	if !data.Customheaders.IsNull() && !data.Customheaders.IsUnknown() {
 		lbmonitor.Customheaders = data.Customheaders.ValueString()
 	}
-	if !data.Database.IsNull() {
+	if !data.Database.IsNull() && !data.Database.IsUnknown() {
 		lbmonitor.Database = data.Database.ValueString()
 	}
-	if !data.Destip.IsNull() {
+	if !data.Destip.IsNull() && !data.Destip.IsUnknown() {
 		lbmonitor.Destip = data.Destip.ValueString()
 	}
-	if !data.Destport.IsNull() {
+	if !data.Destport.IsNull() && !data.Destport.IsUnknown() {
 		lbmonitor.Destport = utils.IntPtr(int(data.Destport.ValueInt64()))
 	}
-	if !data.Deviation.IsNull() {
+	if !data.Deviation.IsNull() && !data.Deviation.IsUnknown() {
 		lbmonitor.Deviation = utils.IntPtr(int(data.Deviation.ValueInt64()))
 	}
-	if !data.Dispatcherip.IsNull() {
+	if !data.Dispatcherip.IsNull() && !data.Dispatcherip.IsUnknown() {
 		lbmonitor.Dispatcherip = data.Dispatcherip.ValueString()
 	}
-	if !data.Dispatcherport.IsNull() {
+	if !data.Dispatcherport.IsNull() && !data.Dispatcherport.IsUnknown() {
 		lbmonitor.Dispatcherport = utils.IntPtr(int(data.Dispatcherport.ValueInt64()))
 	}
-	if !data.Domain.IsNull() {
+	if !data.Domain.IsNull() && !data.Domain.IsUnknown() {
 		lbmonitor.Domain = data.Domain.ValueString()
 	}
-	if !data.Downtime.IsNull() {
+	if !data.Downtime.IsNull() && !data.Downtime.IsUnknown() {
 		lbmonitor.Downtime = utils.IntPtr(int(data.Downtime.ValueInt64()))
 	}
-	if !data.Evalrule.IsNull() {
+	if !data.Evalrule.IsNull() && !data.Evalrule.IsUnknown() {
 		lbmonitor.Evalrule = data.Evalrule.ValueString()
 	}
-	if !data.Failureretries.IsNull() {
+	if !data.Failureretries.IsNull() && !data.Failureretries.IsUnknown() {
 		lbmonitor.Failureretries = utils.IntPtr(int(data.Failureretries.ValueInt64()))
 	}
-	if !data.Filename.IsNull() {
+	if !data.Filename.IsNull() && !data.Filename.IsUnknown() {
 		lbmonitor.Filename = data.Filename.ValueString()
 	}
-	if !data.Filter.IsNull() {
+	if !data.Filter.IsNull() && !data.Filter.IsUnknown() {
 		lbmonitor.Filter = data.Filter.ValueString()
 	}
-	if !data.Firmwarerevision.IsNull() {
+	if !data.Firmwarerevision.IsNull() && !data.Firmwarerevision.IsUnknown() {
 		lbmonitor.Firmwarerevision = utils.IntPtr(int(data.Firmwarerevision.ValueInt64()))
 	}
-	if !data.Group.IsNull() {
+	if !data.Group.IsNull() && !data.Group.IsUnknown() {
 		lbmonitor.Group = data.Group.ValueString()
 	}
-	if !data.Grpchealthcheck.IsNull() {
+	if !data.Grpchealthcheck.IsNull() && !data.Grpchealthcheck.IsUnknown() {
 		lbmonitor.Grpchealthcheck = data.Grpchealthcheck.ValueString()
 	}
-	if !data.Grpcservicename.IsNull() {
+	if !data.Grpcservicename.IsNull() && !data.Grpcservicename.IsUnknown() {
 		lbmonitor.Grpcservicename = data.Grpcservicename.ValueString()
 	}
-	if !data.Hostipaddress.IsNull() {
+	if !data.Grpcstatuscode.IsNull() && !data.Grpcstatuscode.IsUnknown() {
+		var grpcstatuscodeList []int
+		data.Grpcstatuscode.ElementsAs(ctx, &grpcstatuscodeList, false)
+		lbmonitor.Grpcstatuscode = grpcstatuscodeList
+	}
+	if !data.Hostipaddress.IsNull() && !data.Hostipaddress.IsUnknown() {
 		lbmonitor.Hostipaddress = data.Hostipaddress.ValueString()
 	}
-	if !data.Hostname.IsNull() {
+	if !data.Hostname.IsNull() && !data.Hostname.IsUnknown() {
 		lbmonitor.Hostname = data.Hostname.ValueString()
 	}
-	if !data.Httprequest.IsNull() {
+	if !data.Httprequest.IsNull() && !data.Httprequest.IsUnknown() {
 		lbmonitor.Httprequest = data.Httprequest.ValueString()
 	}
-	if !data.Inbandsecurityid.IsNull() {
+	if !data.Inbandsecurityid.IsNull() && !data.Inbandsecurityid.IsUnknown() {
 		lbmonitor.Inbandsecurityid = data.Inbandsecurityid.ValueString()
 	}
-	if !data.Interval.IsNull() {
+	if !data.Interval.IsNull() && !data.Interval.IsUnknown() {
 		lbmonitor.Interval = utils.IntPtr(int(data.Interval.ValueInt64()))
 	}
-	if !data.Iptunnel.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
+		var ipaddressList []string
+		data.Ipaddress.ElementsAs(ctx, &ipaddressList, false)
+		lbmonitor.Ipaddress = ipaddressList
+	}
+	if !data.Iptunnel.IsNull() && !data.Iptunnel.IsUnknown() {
 		lbmonitor.Iptunnel = data.Iptunnel.ValueString()
 	}
-	if !data.Kcdaccount.IsNull() {
+	if !data.Kcdaccount.IsNull() && !data.Kcdaccount.IsUnknown() {
 		lbmonitor.Kcdaccount = data.Kcdaccount.ValueString()
 	}
-	if !data.Lasversion.IsNull() {
+	if !data.Lasversion.IsNull() && !data.Lasversion.IsUnknown() {
 		lbmonitor.Lasversion = data.Lasversion.ValueString()
 	}
-	if !data.Logonpointname.IsNull() {
+	if !data.Logonpointname.IsNull() && !data.Logonpointname.IsUnknown() {
 		lbmonitor.Logonpointname = data.Logonpointname.ValueString()
 	}
-	if !data.Lrtm.IsNull() {
+	if !data.Lrtm.IsNull() && !data.Lrtm.IsUnknown() {
 		lbmonitor.Lrtm = data.Lrtm.ValueString()
 	}
-	if !data.Maxforwards.IsNull() {
+	if !data.Maxforwards.IsNull() && !data.Maxforwards.IsUnknown() {
 		lbmonitor.Maxforwards = utils.IntPtr(int(data.Maxforwards.ValueInt64()))
 	}
-	if !data.Metric.IsNull() {
+	if !data.Metric.IsNull() && !data.Metric.IsUnknown() {
 		lbmonitor.Metric = data.Metric.ValueString()
 	}
-	if !data.Metrictable.IsNull() {
+	if !data.Metrictable.IsNull() && !data.Metrictable.IsUnknown() {
 		lbmonitor.Metrictable = data.Metrictable.ValueString()
 	}
-	if !data.Metricthreshold.IsNull() {
+	if !data.Metricthreshold.IsNull() && !data.Metricthreshold.IsUnknown() {
 		lbmonitor.Metricthreshold = utils.IntPtr(int(data.Metricthreshold.ValueInt64()))
 	}
-	if !data.Metricweight.IsNull() {
+	if !data.Metricweight.IsNull() && !data.Metricweight.IsUnknown() {
 		lbmonitor.Metricweight = utils.IntPtr(int(data.Metricweight.ValueInt64()))
 	}
-	if !data.Monitorname.IsNull() {
+	if !data.Monitorname.IsNull() && !data.Monitorname.IsUnknown() {
 		lbmonitor.Monitorname = data.Monitorname.ValueString()
 	}
-	if !data.Mqttclientidentifier.IsNull() {
+	if !data.Mqttclientidentifier.IsNull() && !data.Mqttclientidentifier.IsUnknown() {
 		lbmonitor.Mqttclientidentifier = data.Mqttclientidentifier.ValueString()
 	}
-	if !data.Mqttversion.IsNull() {
+	if !data.Mqttversion.IsNull() && !data.Mqttversion.IsUnknown() {
 		lbmonitor.Mqttversion = utils.IntPtr(int(data.Mqttversion.ValueInt64()))
 	}
-	if !data.Mssqlprotocolversion.IsNull() {
+	if !data.Mssqlprotocolversion.IsNull() && !data.Mssqlprotocolversion.IsUnknown() {
 		lbmonitor.Mssqlprotocolversion = data.Mssqlprotocolversion.ValueString()
 	}
-	if !data.Netprofile.IsNull() {
+	if !data.Netprofile.IsNull() && !data.Netprofile.IsUnknown() {
 		lbmonitor.Netprofile = data.Netprofile.ValueString()
 	}
-	if !data.Oraclesid.IsNull() {
+	if !data.Oraclesid.IsNull() && !data.Oraclesid.IsUnknown() {
 		lbmonitor.Oraclesid = data.Oraclesid.ValueString()
 	}
-	if !data.Originhost.IsNull() {
+	if !data.Originhost.IsNull() && !data.Originhost.IsUnknown() {
 		lbmonitor.Originhost = data.Originhost.ValueString()
 	}
-	if !data.Originrealm.IsNull() {
+	if !data.Originrealm.IsNull() && !data.Originrealm.IsUnknown() {
 		lbmonitor.Originrealm = data.Originrealm.ValueString()
 	}
-	if !data.Password.IsNull() {
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
 		lbmonitor.Password = data.Password.ValueString()
 	}
-	if !data.Productname.IsNull() {
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Productname.IsNull() && !data.Productname.IsUnknown() {
 		lbmonitor.Productname = data.Productname.ValueString()
 	}
-	if !data.Query.IsNull() {
+	if !data.Query.IsNull() && !data.Query.IsUnknown() {
 		lbmonitor.Query = data.Query.ValueString()
 	}
-	if !data.Querytype.IsNull() {
+	if !data.Querytype.IsNull() && !data.Querytype.IsUnknown() {
 		lbmonitor.Querytype = data.Querytype.ValueString()
 	}
-	if !data.Radaccountsession.IsNull() {
+	if !data.Radaccountsession.IsNull() && !data.Radaccountsession.IsUnknown() {
 		lbmonitor.Radaccountsession = data.Radaccountsession.ValueString()
 	}
-	if !data.Radaccounttype.IsNull() {
+	if !data.Radaccounttype.IsNull() && !data.Radaccounttype.IsUnknown() {
 		lbmonitor.Radaccounttype = utils.IntPtr(int(data.Radaccounttype.ValueInt64()))
 	}
-	if !data.Radapn.IsNull() {
+	if !data.Radapn.IsNull() && !data.Radapn.IsUnknown() {
 		lbmonitor.Radapn = data.Radapn.ValueString()
 	}
-	if !data.Radframedip.IsNull() {
+	if !data.Radframedip.IsNull() && !data.Radframedip.IsUnknown() {
 		lbmonitor.Radframedip = data.Radframedip.ValueString()
 	}
-	if !data.Radkey.IsNull() {
+	if !data.Radkey.IsNull() && !data.Radkey.IsUnknown() {
 		lbmonitor.Radkey = data.Radkey.ValueString()
 	}
-	if !data.Radmsisdn.IsNull() {
+	// Skip write-only attribute: radkey_wo
+	// Skip version tracker attribute: radkey_wo_version
+	if !data.Radmsisdn.IsNull() && !data.Radmsisdn.IsUnknown() {
 		lbmonitor.Radmsisdn = data.Radmsisdn.ValueString()
 	}
-	if !data.Radnasid.IsNull() {
+	if !data.Radnasid.IsNull() && !data.Radnasid.IsUnknown() {
 		lbmonitor.Radnasid = data.Radnasid.ValueString()
 	}
-	if !data.Radnasip.IsNull() {
+	if !data.Radnasip.IsNull() && !data.Radnasip.IsUnknown() {
 		lbmonitor.Radnasip = data.Radnasip.ValueString()
 	}
-	if !data.Recv.IsNull() {
+	if !data.Recv.IsNull() && !data.Recv.IsUnknown() {
 		lbmonitor.Recv = data.Recv.ValueString()
 	}
-	if !data.Resptimeout.IsNull() {
+	if !data.Respcode.IsNull() && !data.Respcode.IsUnknown() {
+		var respcodeList []string
+		data.Respcode.ElementsAs(ctx, &respcodeList, false)
+		lbmonitor.Respcode = respcodeList
+	}
+	if !data.Resptimeout.IsNull() && !data.Resptimeout.IsUnknown() {
 		lbmonitor.Resptimeout = utils.IntPtr(int(data.Resptimeout.ValueInt64()))
 	}
-	if !data.Resptimeoutthresh.IsNull() {
+	if !data.Resptimeoutthresh.IsNull() && !data.Resptimeoutthresh.IsUnknown() {
 		lbmonitor.Resptimeoutthresh = utils.IntPtr(int(data.Resptimeoutthresh.ValueInt64()))
 	}
-	if !data.Retries.IsNull() {
+	if !data.Retries.IsNull() && !data.Retries.IsUnknown() {
 		lbmonitor.Retries = utils.IntPtr(int(data.Retries.ValueInt64()))
 	}
-	if !data.Reverse.IsNull() {
+	if !data.Reverse.IsNull() && !data.Reverse.IsUnknown() {
 		lbmonitor.Reverse = data.Reverse.ValueString()
 	}
-	if !data.Rtsprequest.IsNull() {
+	if !data.Rtsprequest.IsNull() && !data.Rtsprequest.IsUnknown() {
 		lbmonitor.Rtsprequest = data.Rtsprequest.ValueString()
 	}
-	if !data.Scriptargs.IsNull() {
+	if !data.Scriptargs.IsNull() && !data.Scriptargs.IsUnknown() {
 		lbmonitor.Scriptargs = data.Scriptargs.ValueString()
 	}
-	if !data.Scriptname.IsNull() {
+	if !data.Scriptname.IsNull() && !data.Scriptname.IsUnknown() {
 		lbmonitor.Scriptname = data.Scriptname.ValueString()
 	}
-	if !data.Secondarypassword.IsNull() {
+	if !data.Secondarypassword.IsNull() && !data.Secondarypassword.IsUnknown() {
 		lbmonitor.Secondarypassword = data.Secondarypassword.ValueString()
 	}
-	if !data.Secure.IsNull() {
+	// Skip write-only attribute: secondarypassword_wo
+	// Skip version tracker attribute: secondarypassword_wo_version
+	if !data.Secure.IsNull() && !data.Secure.IsUnknown() {
 		lbmonitor.Secure = data.Secure.ValueString()
 	}
-	if !data.Secureargs.IsNull() {
+	if !data.Secureargs.IsNull() && !data.Secureargs.IsUnknown() {
 		lbmonitor.Secureargs = data.Secureargs.ValueString()
 	}
-	if !data.Send.IsNull() {
+	// Skip write-only attribute: secureargs_wo
+	// Skip version tracker attribute: secureargs_wo_version
+	if !data.Send.IsNull() && !data.Send.IsUnknown() {
 		lbmonitor.Send = data.Send.ValueString()
 	}
-	if !data.Servicegroupname.IsNull() {
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
 		lbmonitor.Servicegroupname = data.Servicegroupname.ValueString()
 	}
-	if !data.Servicename.IsNull() {
+	if !data.Servicename.IsNull() && !data.Servicename.IsUnknown() {
 		lbmonitor.Servicename = data.Servicename.ValueString()
 	}
-	if !data.Sipmethod.IsNull() {
+	if !data.Sipmethod.IsNull() && !data.Sipmethod.IsUnknown() {
 		lbmonitor.Sipmethod = data.Sipmethod.ValueString()
 	}
-	if !data.Sipreguri.IsNull() {
+	if !data.Sipreguri.IsNull() && !data.Sipreguri.IsUnknown() {
 		lbmonitor.Sipreguri = data.Sipreguri.ValueString()
 	}
-	if !data.Sipuri.IsNull() {
+	if !data.Sipuri.IsNull() && !data.Sipuri.IsUnknown() {
 		lbmonitor.Sipuri = data.Sipuri.ValueString()
 	}
-	if !data.Sitepath.IsNull() {
+	if !data.Sitepath.IsNull() && !data.Sitepath.IsUnknown() {
 		lbmonitor.Sitepath = data.Sitepath.ValueString()
 	}
-	if !data.Snmpcommunity.IsNull() {
+	if !data.Snmpcommunity.IsNull() && !data.Snmpcommunity.IsUnknown() {
 		lbmonitor.Snmpcommunity = data.Snmpcommunity.ValueString()
 	}
-	if !data.Snmpthreshold.IsNull() {
+	if !data.Snmpthreshold.IsNull() && !data.Snmpthreshold.IsUnknown() {
 		lbmonitor.Snmpthreshold = data.Snmpthreshold.ValueString()
 	}
-	if !data.Snmpversion.IsNull() {
+	if !data.Snmpversion.IsNull() && !data.Snmpversion.IsUnknown() {
 		lbmonitor.Snmpversion = data.Snmpversion.ValueString()
 	}
-	if !data.Sqlquery.IsNull() {
+	if !data.Sqlquery.IsNull() && !data.Sqlquery.IsUnknown() {
 		lbmonitor.Sqlquery = data.Sqlquery.ValueString()
 	}
-	if !data.Sslprofile.IsNull() {
+	if !data.Sslprofile.IsNull() && !data.Sslprofile.IsUnknown() {
 		lbmonitor.Sslprofile = data.Sslprofile.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		lbmonitor.State = data.State.ValueString()
 	}
-	if !data.Storedb.IsNull() {
+	if !data.Storedb.IsNull() && !data.Storedb.IsUnknown() {
 		lbmonitor.Storedb = data.Storedb.ValueString()
 	}
-	if !data.Storefrontacctservice.IsNull() {
+	if !data.Storefrontacctservice.IsNull() && !data.Storefrontacctservice.IsUnknown() {
 		lbmonitor.Storefrontacctservice = data.Storefrontacctservice.ValueString()
 	}
-	if !data.Storefrontcheckbackendservices.IsNull() {
+	if !data.Storefrontcheckbackendservices.IsNull() && !data.Storefrontcheckbackendservices.IsUnknown() {
 		lbmonitor.Storefrontcheckbackendservices = data.Storefrontcheckbackendservices.ValueString()
 	}
-	if !data.Storename.IsNull() {
+	if !data.Storename.IsNull() && !data.Storename.IsUnknown() {
 		lbmonitor.Storename = data.Storename.ValueString()
 	}
-	if !data.Successretries.IsNull() {
+	if !data.Successretries.IsNull() && !data.Successretries.IsUnknown() {
 		lbmonitor.Successretries = utils.IntPtr(int(data.Successretries.ValueInt64()))
 	}
-	if !data.Tos.IsNull() {
+	if !data.Supportedvendorids.IsNull() && !data.Supportedvendorids.IsUnknown() {
+		var supportedvendoridsList []int
+		data.Supportedvendorids.ElementsAs(ctx, &supportedvendoridsList, false)
+		lbmonitor.Supportedvendorids = supportedvendoridsList
+	}
+	if !data.Tos.IsNull() && !data.Tos.IsUnknown() {
 		lbmonitor.Tos = data.Tos.ValueString()
 	}
-	if !data.Tosid.IsNull() {
+	if !data.Tosid.IsNull() && !data.Tosid.IsUnknown() {
 		lbmonitor.Tosid = utils.IntPtr(int(data.Tosid.ValueInt64()))
 	}
-	if !data.Transparent.IsNull() {
+	if !data.Transparent.IsNull() && !data.Transparent.IsUnknown() {
 		lbmonitor.Transparent = data.Transparent.ValueString()
 	}
-	if !data.Trofscode.IsNull() {
+	if !data.Trofscode.IsNull() && !data.Trofscode.IsUnknown() {
 		lbmonitor.Trofscode = utils.IntPtr(int(data.Trofscode.ValueInt64()))
 	}
-	if !data.Trofsstring.IsNull() {
+	if !data.Trofsstring.IsNull() && !data.Trofsstring.IsUnknown() {
 		lbmonitor.Trofsstring = data.Trofsstring.ValueString()
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		lbmonitor.Type = data.Type.ValueString()
 	}
-	if !data.Units1.IsNull() {
+	if !data.Units1.IsNull() && !data.Units1.IsUnknown() {
 		lbmonitor.Units1 = data.Units1.ValueString()
 	}
-	if !data.Units2.IsNull() {
+	if !data.Units2.IsNull() && !data.Units2.IsUnknown() {
 		lbmonitor.Units2 = data.Units2.ValueString()
 	}
-	if !data.Units3.IsNull() {
+	if !data.Units3.IsNull() && !data.Units3.IsUnknown() {
 		lbmonitor.Units3 = data.Units3.ValueString()
 	}
-	if !data.Units4.IsNull() {
+	if !data.Units4.IsNull() && !data.Units4.IsUnknown() {
 		lbmonitor.Units4 = data.Units4.ValueString()
 	}
-	if !data.Username.IsNull() {
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
 		lbmonitor.Username = data.Username.ValueString()
 	}
-	if !data.Validatecred.IsNull() {
+	if !data.Validatecred.IsNull() && !data.Validatecred.IsUnknown() {
 		lbmonitor.Validatecred = data.Validatecred.ValueString()
 	}
-	if !data.Vendorid.IsNull() {
+	if !data.Vendorid.IsNull() && !data.Vendorid.IsUnknown() {
 		lbmonitor.Vendorid = utils.IntPtr(int(data.Vendorid.ValueInt64()))
 	}
-	if !data.Vendorspecificvendorid.IsNull() {
+	if !data.Vendorspecificacctapplicationids.IsNull() && !data.Vendorspecificacctapplicationids.IsUnknown() {
+		var vendorspecificacctapplicationidsList []int
+		data.Vendorspecificacctapplicationids.ElementsAs(ctx, &vendorspecificacctapplicationidsList, false)
+		lbmonitor.Vendorspecificacctapplicationids = vendorspecificacctapplicationidsList
+	}
+	if !data.Vendorspecificauthapplicationids.IsNull() && !data.Vendorspecificauthapplicationids.IsUnknown() {
+		var vendorspecificauthapplicationidsList []int
+		data.Vendorspecificauthapplicationids.ElementsAs(ctx, &vendorspecificauthapplicationidsList, false)
+		lbmonitor.Vendorspecificauthapplicationids = vendorspecificauthapplicationidsList
+	}
+	if !data.Vendorspecificvendorid.IsNull() && !data.Vendorspecificvendorid.IsUnknown() {
 		lbmonitor.Vendorspecificvendorid = utils.IntPtr(int(data.Vendorspecificvendorid.ValueInt64()))
 	}
 
 	return lbmonitor
 }
 
+func lbmonitorGetThePayloadFromtheConfig(ctx context.Context, data *LbmonitorResourceModel, payload *lb.Lbmonitor) {
+	tflog.Debug(ctx, "In lbmonitorGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: password_wo -> password
+	if !data.PasswordWo.IsNull() {
+		passwordWo := data.PasswordWo.ValueString()
+		if passwordWo != "" {
+			payload.Password = passwordWo
+		}
+	}
+	// Handle write-only secret attribute: radkey_wo -> radkey
+	if !data.RadkeyWo.IsNull() {
+		radkeyWo := data.RadkeyWo.ValueString()
+		if radkeyWo != "" {
+			payload.Radkey = radkeyWo
+		}
+	}
+	// Handle write-only secret attribute: secondarypassword_wo -> secondarypassword
+	if !data.SecondarypasswordWo.IsNull() {
+		secondarypasswordWo := data.SecondarypasswordWo.ValueString()
+		if secondarypasswordWo != "" {
+			payload.Secondarypassword = secondarypasswordWo
+		}
+	}
+	// Handle write-only secret attribute: secureargs_wo -> secureargs
+	if !data.SecureargsWo.IsNull() {
+		secureargsWo := data.SecureargsWo.ValueString()
+		if secureargsWo != "" {
+			payload.Secureargs = secureargsWo
+		}
+	}
+}
+
 func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, getResponseData map[string]interface{}) *LbmonitorResourceModel {
 	tflog.Debug(ctx, "In lbmonitorSetAttrFromGet Function")
 
 	// Convert API response to model
-	if val, ok := getResponseData["Snmpoid"]; ok && val != nil {
+	if val, ok := getResponseData["snmpoid"]; ok && val != nil {
 		data.Snmpoid = types.StringValue(val.(string))
 	} else {
 		data.Snmpoid = types.StringNull()
+	}
+	if val, ok := getResponseData["acctapplicationid"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			intList := utils.StringListToIntList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.Int64Type, intList)
+			data.Acctapplicationid = listValue
+		} else {
+			data.Acctapplicationid = types.ListNull(types.Int64Type)
+		}
+	} else {
+		data.Acctapplicationid = types.ListNull(types.Int64Type)
 	}
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
@@ -1052,6 +1210,17 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 		data.Attribute = types.StringValue(val.(string))
 	} else {
 		data.Attribute = types.StringNull()
+	}
+	if val, ok := getResponseData["authapplicationid"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			intList := utils.StringListToIntList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.Int64Type, intList)
+			data.Authapplicationid = listValue
+		} else {
+			data.Authapplicationid = types.ListNull(types.Int64Type)
+		}
+	} else {
+		data.Authapplicationid = types.ListNull(types.Int64Type)
 	}
 	if val, ok := getResponseData["basedn"]; ok && val != nil {
 		data.Basedn = types.StringValue(val.(string))
@@ -1160,6 +1329,17 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	} else {
 		data.Grpcservicename = types.StringNull()
 	}
+	if val, ok := getResponseData["grpcstatuscode"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			intList := utils.StringListToIntList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.Int64Type, intList)
+			data.Grpcstatuscode = listValue
+		} else {
+			data.Grpcstatuscode = types.ListNull(types.Int64Type)
+		}
+	} else {
+		data.Grpcstatuscode = types.ListNull(types.Int64Type)
+	}
 	if val, ok := getResponseData["hostipaddress"]; ok && val != nil {
 		data.Hostipaddress = types.StringValue(val.(string))
 	} else {
@@ -1186,6 +1366,17 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 		}
 	} else {
 		data.Interval = types.Int64Null()
+	}
+	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Ipaddress = listValue
+		} else {
+			data.Ipaddress = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Ipaddress = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["iptunnel"]; ok && val != nil {
 		data.Iptunnel = types.StringValue(val.(string))
@@ -1285,11 +1476,9 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	} else {
 		data.Originrealm = types.StringNull()
 	}
-	if val, ok := getResponseData["password"]; ok && val != nil {
-		data.Password = types.StringValue(val.(string))
-	} else {
-		data.Password = types.StringNull()
-	}
+	// password is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["productname"]; ok && val != nil {
 		data.Productname = types.StringValue(val.(string))
 	} else {
@@ -1327,11 +1516,9 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	} else {
 		data.Radframedip = types.StringNull()
 	}
-	if val, ok := getResponseData["radkey"]; ok && val != nil {
-		data.Radkey = types.StringValue(val.(string))
-	} else {
-		data.Radkey = types.StringNull()
-	}
+	// radkey is not returned by NITRO API (secret/ephemeral) - retain from config
+	// radkey_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// radkey_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["radmsisdn"]; ok && val != nil {
 		data.Radmsisdn = types.StringValue(val.(string))
 	} else {
@@ -1351,6 +1538,17 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 		data.Recv = types.StringValue(val.(string))
 	} else {
 		data.Recv = types.StringNull()
+	}
+	if val, ok := getResponseData["respcode"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Respcode = listValue
+		} else {
+			data.Respcode = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Respcode = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["resptimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -1393,21 +1591,17 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	} else {
 		data.Scriptname = types.StringNull()
 	}
-	if val, ok := getResponseData["secondarypassword"]; ok && val != nil {
-		data.Secondarypassword = types.StringValue(val.(string))
-	} else {
-		data.Secondarypassword = types.StringNull()
-	}
+	// secondarypassword is not returned by NITRO API (secret/ephemeral) - retain from config
+	// secondarypassword_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// secondarypassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["secure"]; ok && val != nil {
 		data.Secure = types.StringValue(val.(string))
 	} else {
 		data.Secure = types.StringNull()
 	}
-	if val, ok := getResponseData["secureargs"]; ok && val != nil {
-		data.Secureargs = types.StringValue(val.(string))
-	} else {
-		data.Secureargs = types.StringNull()
-	}
+	// secureargs is not returned by NITRO API (secret/ephemeral) - retain from config
+	// secureargs_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// secureargs_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["send"]; ok && val != nil {
 		data.Send = types.StringValue(val.(string))
 	} else {
@@ -1500,6 +1694,17 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	} else {
 		data.Successretries = types.Int64Null()
 	}
+	if val, ok := getResponseData["supportedvendorids"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			intList := utils.StringListToIntList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.Int64Type, intList)
+			data.Supportedvendorids = listValue
+		} else {
+			data.Supportedvendorids = types.ListNull(types.Int64Type)
+		}
+	} else {
+		data.Supportedvendorids = types.ListNull(types.Int64Type)
+	}
 	if val, ok := getResponseData["tos"]; ok && val != nil {
 		data.Tos = types.StringValue(val.(string))
 	} else {
@@ -1571,6 +1776,28 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	} else {
 		data.Vendorid = types.Int64Null()
 	}
+	if val, ok := getResponseData["vendorspecificacctapplicationids"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			intList := utils.StringListToIntList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.Int64Type, intList)
+			data.Vendorspecificacctapplicationids = listValue
+		} else {
+			data.Vendorspecificacctapplicationids = types.ListNull(types.Int64Type)
+		}
+	} else {
+		data.Vendorspecificacctapplicationids = types.ListNull(types.Int64Type)
+	}
+	if val, ok := getResponseData["vendorspecificauthapplicationids"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			intList := utils.StringListToIntList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.Int64Type, intList)
+			data.Vendorspecificauthapplicationids = listValue
+		} else {
+			data.Vendorspecificauthapplicationids = types.ListNull(types.Int64Type)
+		}
+	} else {
+		data.Vendorspecificauthapplicationids = types.ListNull(types.Int64Type)
+	}
 	if val, ok := getResponseData["vendorspecificvendorid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vendorspecificvendorid = types.Int64Value(intVal)
@@ -1580,8 +1807,11 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s", data.Monitorname.ValueString()))
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("monitorname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Monitorname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

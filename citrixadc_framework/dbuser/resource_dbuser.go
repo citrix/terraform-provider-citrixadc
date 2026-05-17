@@ -44,30 +44,36 @@ func (r *DbuserResource) Configure(ctx context.Context, req resource.ConfigureRe
 }
 
 func (r *DbuserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data DbuserResourceModel
+	var data, config DbuserResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating dbuser resource")
-
-	// dbuser := dbuserGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	dbuser := dbuserGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	dbuserGetThePayloadFromtheConfig(ctx, &config, &dbuser)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dbuser.Type(), &dbuser)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dbuser, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dbuser-config")
+	// Named resource - use AddResource
+	username_value := data.Username.ValueString()
+	_, err := r.client.AddResource(service.Dbuser.Type(), username_value, &dbuser)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dbuser, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dbuser resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Username.ValueString()))
 
 	// Read the updated state back
 	r.readDbuserFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,28 +101,54 @@ func (r *DbuserResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *DbuserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DbuserResourceModel
+	var data, config, state DbuserResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dbuser resource")
 
-	// Create API request body from the model
-	// dbuser := dbuserGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	// Check secret attribute password or its version tracker
+	if !data.Password.Equal(state.Password) {
+		tflog.Debug(ctx, fmt.Sprintf("password has changed for dbuser"))
+		hasChange = true
+	} else if !data.PasswordWoVersion.Equal(state.PasswordWoVersion) {
+		tflog.Debug(ctx, fmt.Sprintf("password_wo_version has changed for dbuser"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dbuser.Type(), &dbuser)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dbuser, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		// Get payload from plan (regular attributes)
+		dbuser := dbuserGetThePayloadFromthePlan(ctx, &data)
+		// Add write-only attributes from config to the payload
+		dbuserGetThePayloadFromtheConfig(ctx, &config, &dbuser)
+		// Make API call
+		// Named resource - use UpdateResource
+		username_value := data.Username.ValueString()
+		_, err := r.client.UpdateResource(service.Dbuser.Type(), username_value, &dbuser)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dbuser, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated dbuser resource")
+		tflog.Trace(ctx, "Updated dbuser resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for dbuser resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readDbuserFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +168,27 @@ func (r *DbuserResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	tflog.Debug(ctx, "Deleting dbuser resource")
+	// Named resource - delete using DeleteResource
+	username_value := data.Username.ValueString()
+	err := r.client.DeleteResource(service.Dbuser.Type(), username_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dbuser, got error: %s", err))
+		return
+	}
 
-	// For dbuser, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dbuser resource from state")
+	tflog.Trace(ctx, "Deleted dbuser resource")
 }
 
 // Helper function to read dbuser data from API
 func (r *DbuserResource) readDbuserFromApi(ctx context.Context, data *DbuserResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dbuser.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	username_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Dbuser.Type(), username_Name)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dbuser, got error: %s", err))
 		return

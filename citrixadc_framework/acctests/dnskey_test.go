@@ -176,6 +176,126 @@ func testAccCheckDnskeyDestroy(s *terraform.State) error {
 	return nil
 }
 
+// Test backward-compatible path: using password (Sensitive attribute)
+const testAccDnskey_password_step1 = `
+
+	variable "dnskey_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_dnskey" "tf_dnskey" {
+		keyname    = "tf_dnskey_test"
+		publickey  = "/nsconfig/dns/dnskey_test.key"
+		privatekey = "/nsconfig/dns/dnskey_test.private"
+		password   = var.dnskey_password
+	}
+`
+
+// Update backward-compatible path: change password value
+const testAccDnskey_password_step2 = `
+
+	variable "dnskey_password_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_dnskey" "tf_dnskey" {
+		keyname    = "tf_dnskey_test"
+		publickey  = "/nsconfig/dns/dnskey_test.key"
+		privatekey = "/nsconfig/dns/dnskey_test.private"
+		password   = var.dnskey_password_2
+	}
+`
+
+func TestAccDnskey_password_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_dnskey_password", "oldpassword123")
+	t.Setenv("TF_VAR_dnskey_password_2", "newpassword456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doDnskeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnskey_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnskeyExist("citrixadc_dnskey.tf_dnskey", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_dnskey", "keyname", "tf_dnskey_test"),
+				),
+			},
+			{
+				Config: testAccDnskey_password_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnskeyExist("citrixadc_dnskey.tf_dnskey", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_dnskey", "keyname", "tf_dnskey_test"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
+const testAccDnskey_password_wo_step1 = `
+
+	variable "dnskey_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_dnskey" "tf_dnskey" {
+		keyname             = "tf_dnskey_test"
+		publickey           = "/nsconfig/dns/dnskey_test.key"
+		privatekey          = "/nsconfig/dns/dnskey_test.private"
+		password_wo         = var.dnskey_password_wo
+		password_wo_version = 1
+	}
+`
+
+// Update ephemeral path: bump version to trigger update with new password
+const testAccDnskey_password_wo_step2 = `
+
+	variable "dnskey_password_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_dnskey" "tf_dnskey" {
+		keyname             = "tf_dnskey_test"
+		publickey           = "/nsconfig/dns/dnskey_test.key"
+		privatekey          = "/nsconfig/dns/dnskey_test.private"
+		password_wo         = var.dnskey_password_wo_2
+		password_wo_version = 2
+	}
+`
+
+func TestAccDnskey_password_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_dnskey_password_wo", "ephemeral_pass1")
+	t.Setenv("TF_VAR_dnskey_password_wo_2", "ephemeral_pass2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doDnskeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnskey_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnskeyExist("citrixadc_dnskey.tf_dnskey", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_dnskey", "keyname", "tf_dnskey_test"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_dnskey", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccDnskey_password_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnskeyExist("citrixadc_dnskey.tf_dnskey", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_dnskey", "keyname", "tf_dnskey_test"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_dnskey", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDnskeyDataSource_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{

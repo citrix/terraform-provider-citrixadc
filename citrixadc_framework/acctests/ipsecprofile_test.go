@@ -181,3 +181,135 @@ data "citrixadc_ipsecprofile" "tf_ipsecprofile_ds" {
 }
 
 `
+
+const testAccIpsecprofile_psk_step1 = `
+
+variable "ipsecprofile_psk" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_ipsecprofile" "tf_ipsecprofile_psk" {
+	name                  = "my_ipsecprofile_psk"
+	ikeversion            = "V2"
+	encalgo               = ["AES", "AES256"]
+	hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
+	livenesscheckinterval = 50
+	psk                   = var.ipsecprofile_psk
+}
+
+`
+
+const testAccIpsecprofile_psk_step2 = `
+
+variable "ipsecprofile_psk_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_ipsecprofile" "tf_ipsecprofile_psk" {
+	name                  = "my_ipsecprofile_psk"
+	ikeversion            = "V2"
+	encalgo               = ["AES", "AES256"]
+	hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
+	livenesscheckinterval = 50
+	psk                   = var.ipsecprofile_psk_2
+}
+
+`
+
+func TestAccIpsecprofile_psk_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_ipsecprofile_psk", "GCC5VcY0TQ+0TfjGwCrR+cQthm5UnBPB")
+	t.Setenv("TF_VAR_ipsecprofile_psk_2", "XzuIoPthvSrBl/pD9OS+eiGyTJ6y5wuf")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpsecprofile_psk_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecprofileExist("citrixadc_ipsecprofile.tf_ipsecprofile_psk", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk", "name", "my_ipsecprofile_psk"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk", "ikeversion", "V2"),
+				),
+			},
+			{
+				Config: testAccIpsecprofile_psk_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecprofileExist("citrixadc_ipsecprofile.tf_ipsecprofile_psk", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk", "name", "my_ipsecprofile_psk"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk", "ikeversion", "V2"),
+				),
+			},
+		},
+	})
+}
+
+const testAccIpsecprofile_psk_wo_step1 = `
+
+variable "ipsecprofile_psk_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_ipsecprofile" "tf_ipsecprofile_psk_wo" {
+	name                  = "my_ipsecprofile_psk_wo"
+	ikeversion            = "V2"
+	encalgo               = ["AES", "AES256"]
+	hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
+	livenesscheckinterval = 50
+	psk_wo                = var.ipsecprofile_psk_wo
+	psk_wo_version        = 1
+}
+
+`
+
+const testAccIpsecprofile_psk_wo_step2 = `
+
+variable "ipsecprofile_psk_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_ipsecprofile" "tf_ipsecprofile_psk_wo" {
+	name                  = "my_ipsecprofile_psk_wo"
+	ikeversion            = "V2"
+	encalgo               = ["AES", "AES256"]
+	hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
+	livenesscheckinterval = 50
+	psk_wo                = var.ipsecprofile_psk_wo_2
+	psk_wo_version        = 2
+}
+
+`
+
+func TestAccIpsecprofile_psk_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_ipsecprofile_psk_wo", "GCC5VcY0TQ+0TfjGwCrR+cQthm5UnBPB")
+	t.Setenv("TF_VAR_ipsecprofile_psk_wo_2", "XzuIoPthvSrBl/pD9OS+eiGyTJ6y5wuf")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpsecprofile_psk_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecprofileExist("citrixadc_ipsecprofile.tf_ipsecprofile_psk_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk_wo", "name", "my_ipsecprofile_psk_wo"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk_wo", "ikeversion", "V2"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk_wo", "psk_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccIpsecprofile_psk_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecprofileExist("citrixadc_ipsecprofile.tf_ipsecprofile_psk_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk_wo", "name", "my_ipsecprofile_psk_wo"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk_wo", "ikeversion", "V2"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk_wo", "psk_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

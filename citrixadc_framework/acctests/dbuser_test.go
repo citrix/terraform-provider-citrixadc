@@ -153,3 +153,115 @@ func testAccCheckDbuserDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+// ============================================================
+// Ephemeral / Write-Only tests for secret attribute: password
+// ============================================================
+
+const testAccDbuser_password_step1 = `
+
+variable "dbuser_password" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_dbuser" "tf_dbuser_password" {
+  username = "tf_test_dbuser_password"
+  password = var.dbuser_password
+}
+`
+
+const testAccDbuser_password_step2 = `
+
+variable "dbuser_password_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_dbuser" "tf_dbuser_password" {
+  username = "tf_test_dbuser_password"
+  password = var.dbuser_password_2
+}
+`
+
+func TestAccDbuser_password_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_dbuser_password", "Password1!")
+	t.Setenv("TF_VAR_dbuser_password_2", "Password2!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDbuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbuser_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser_password", nil),
+					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser_password", "username", "tf_test_dbuser_password"),
+				),
+			},
+			{
+				Config: testAccDbuser_password_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser_password", nil),
+					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser_password", "username", "tf_test_dbuser_password"),
+				),
+			},
+		},
+	})
+}
+
+const testAccDbuser_password_wo_step1 = `
+
+variable "dbuser_password_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_dbuser" "tf_dbuser_password_wo" {
+  username            = "tf_test_dbuser_password_wo"
+  password_wo         = var.dbuser_password_wo
+  password_wo_version = 1
+}
+`
+
+const testAccDbuser_password_wo_step2 = `
+
+variable "dbuser_password_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_dbuser" "tf_dbuser_password_wo" {
+  username            = "tf_test_dbuser_password_wo"
+  password_wo         = var.dbuser_password_wo_2
+  password_wo_version = 2
+}
+`
+
+func TestAccDbuser_password_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_dbuser_password_wo", "Password1!")
+	t.Setenv("TF_VAR_dbuser_password_wo_2", "Password2!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDbuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbuser_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser_password_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser_password_wo", "username", "tf_test_dbuser_password_wo"),
+					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser_password_wo", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccDbuser_password_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser_password_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser_password_wo", "username", "tf_test_dbuser_password_wo"),
+					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser_password_wo", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
