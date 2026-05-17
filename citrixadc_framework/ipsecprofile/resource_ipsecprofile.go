@@ -44,30 +44,36 @@ func (r *IpsecprofileResource) Configure(ctx context.Context, req resource.Confi
 }
 
 func (r *IpsecprofileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data IpsecprofileResourceModel
+	var data, config IpsecprofileResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating ipsecprofile resource")
-
-	// ipsecprofile := ipsecprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	ipsecprofile := ipsecprofileGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	ipsecprofileGetThePayloadFromtheConfig(ctx, &config, &ipsecprofile)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ipsecprofile.Type(), &ipsecprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ipsecprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("ipsecprofile-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Ipsecprofile.Type(), name_value, &ipsecprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ipsecprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created ipsecprofile resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
 	r.readIpsecprofileFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,28 +101,54 @@ func (r *IpsecprofileResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *IpsecprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data IpsecprofileResourceModel
+	var data, config, state IpsecprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating ipsecprofile resource")
 
-	// Create API request body from the model
-	// ipsecprofile := ipsecprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	// Check secret attribute psk or its version tracker
+	if !data.Psk.Equal(state.Psk) {
+		tflog.Debug(ctx, fmt.Sprintf("psk has changed for ipsecprofile"))
+		hasChange = true
+	} else if !data.PskWoVersion.Equal(state.PskWoVersion) {
+		tflog.Debug(ctx, fmt.Sprintf("psk_wo_version has changed for ipsecprofile"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ipsecprofile.Type(), &ipsecprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ipsecprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		// Get payload from plan (regular attributes)
+		ipsecprofile := ipsecprofileGetThePayloadFromthePlan(ctx, &data)
+		// Add write-only attributes from config to the payload
+		ipsecprofileGetThePayloadFromtheConfig(ctx, &config, &ipsecprofile)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Ipsecprofile.Type(), name_value, &ipsecprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ipsecprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated ipsecprofile resource")
+		tflog.Trace(ctx, "Updated ipsecprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for ipsecprofile resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readIpsecprofileFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +168,27 @@ func (r *IpsecprofileResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	tflog.Debug(ctx, "Deleting ipsecprofile resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Ipsecprofile.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete ipsecprofile, got error: %s", err))
+		return
+	}
 
-	// For ipsecprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted ipsecprofile resource from state")
+	tflog.Trace(ctx, "Deleted ipsecprofile resource")
 }
 
 // Helper function to read ipsecprofile data from API
 func (r *IpsecprofileResource) readIpsecprofileFromApi(ctx context.Context, data *IpsecprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Ipsecprofile.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	name_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Ipsecprofile.Type(), name_Name)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read ipsecprofile, got error: %s", err))
 		return

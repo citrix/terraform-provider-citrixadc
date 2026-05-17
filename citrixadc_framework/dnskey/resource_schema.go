@@ -2,6 +2,7 @@ package dnskey
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -30,6 +30,8 @@ type DnskeyResourceModel struct {
 	Keytype            types.String `tfsdk:"keytype"`
 	Notificationperiod types.Int64  `tfsdk:"notificationperiod"`
 	Password           types.String `tfsdk:"password"`
+	PasswordWo         types.String `tfsdk:"password_wo"`
+	PasswordWoVersion  types.Int64  `tfsdk:"password_wo_version"`
 	Privatekey         types.String `tfsdk:"privatekey"`
 	Publickey          types.String `tfsdk:"publickey"`
 	Revoke             types.Bool   `tfsdk:"revoke"`
@@ -51,20 +53,20 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"algorithm": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("RSASHA1"),
 				Description: "Algorithm to generate the key.",
 			},
 			"autorollover": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Flag to enable/disable key rollover automatically.\nNote:\n* Key name will be appended with _AR1 for successor key. For e.g. current key=k1, successor key=k1_AR1.\n* Key name can be truncated if current name length is more than 58 bytes to accomodate the suffix.",
 			},
 			"expires": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(120),
+				Computed:    true,
 				Description: "Time period for which to consider the key valid, after the key is used to sign a zone.",
 			},
 			"filenameprefix": schema.StringAttribute{
@@ -76,37 +78,55 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "Common prefix for the names of the generated public and private key files and the Delegation Signer (DS) resource record. During key generation, the .key, .private, and .ds suffixes are appended automatically to the file name prefix to produce the names of the public key, the private key, and the DS record, respectively.",
 			},
 			"keyname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the public-private key pair to publish in the zone.",
 			},
 			"keysize": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
-				Default:     int64default.StaticInt64(512),
 				Description: "Size of the key, in bits.",
 			},
 			"keytype": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("ZSK"),
-				Description: "Type of key to create.",
-			},
-			"notificationperiod": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(7),
-				Description: "Time at which to generate notification of key expiration, specified as number of days, hours, or minutes before expiry. Must be less than the expiry period. The notification is an SNMP trap sent to an SNMP manager. To enable the appliance to send the trap, enable the DNSKEY-EXPIRY SNMP alarm. \nIn case autorollover option is enabled, rollover for successor key will be intiated at this time. No notification trap will be sent.",
-			},
-			"password": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Type of key to create.",
+			},
+			"notificationperiod": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Time at which to generate notification of key expiration, specified as number of days, hours, or minutes before expiry. Must be less than the expiry period. The notification is an SNMP trap sent to an SNMP manager. To enable the appliance to send the trap, enable the DNSKEY-EXPIRY SNMP alarm. \nIn case autorollover option is enabled, rollover for successor key will be intiated at this time. No notification trap will be sent.",
+			},
+			"password": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Passphrase for reading the encrypted public/private DNS keys",
+			},
+			"password_wo": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Passphrase for reading the encrypted public/private DNS keys",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a password_wo update.",
 			},
 			"privatekey": schema.StringAttribute{
 				Required: true,
@@ -142,17 +162,17 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"ttl": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3600),
+				Computed:    true,
 				Description: "Time to Live (TTL), in seconds, for the DNSKEY resource record created in the zone. TTL is the time for which the record must be cached by the DNS proxies. If the TTL is not specified, either the DNS zone's minimum TTL or the default value of 3600 is used.",
 			},
 			"units1": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DAYS"),
+				Computed:    true,
 				Description: "Units for the expiry period.",
 			},
 			"units2": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DAYS"),
+				Computed:    true,
 				Description: "Units for the notification period.",
 			},
 			"zonename": schema.StringAttribute{
@@ -167,67 +187,82 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func dnskeyGetThePayloadFromtheConfig(ctx context.Context, data *DnskeyResourceModel) dns.Dnskey {
-	tflog.Debug(ctx, "In dnskeyGetThePayloadFromtheConfig Function")
+func dnskeyGetThePayloadFromthePlan(ctx context.Context, data *DnskeyResourceModel) dns.Dnskey {
+	tflog.Debug(ctx, "In dnskeyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	dnskey := dns.Dnskey{}
-	if !data.Algorithm.IsNull() {
+	if !data.Algorithm.IsNull() && !data.Algorithm.IsUnknown() {
 		dnskey.Algorithm = data.Algorithm.ValueString()
 	}
-	if !data.Autorollover.IsNull() {
+	if !data.Autorollover.IsNull() && !data.Autorollover.IsUnknown() {
 		dnskey.Autorollover = data.Autorollover.ValueString()
 	}
-	if !data.Expires.IsNull() {
+	if !data.Expires.IsNull() && !data.Expires.IsUnknown() {
 		dnskey.Expires = utils.IntPtr(int(data.Expires.ValueInt64()))
 	}
-	if !data.Filenameprefix.IsNull() {
+	if !data.Filenameprefix.IsNull() && !data.Filenameprefix.IsUnknown() {
 		dnskey.Filenameprefix = data.Filenameprefix.ValueString()
 	}
-	if !data.Keyname.IsNull() {
+	if !data.Keyname.IsNull() && !data.Keyname.IsUnknown() {
 		dnskey.Keyname = data.Keyname.ValueString()
 	}
-	if !data.Keysize.IsNull() {
+	if !data.Keysize.IsNull() && !data.Keysize.IsUnknown() {
 		dnskey.Keysize = utils.IntPtr(int(data.Keysize.ValueInt64()))
 	}
-	if !data.Keytype.IsNull() {
+	if !data.Keytype.IsNull() && !data.Keytype.IsUnknown() {
 		dnskey.Keytype = data.Keytype.ValueString()
 	}
-	if !data.Notificationperiod.IsNull() {
+	if !data.Notificationperiod.IsNull() && !data.Notificationperiod.IsUnknown() {
 		dnskey.Notificationperiod = utils.IntPtr(int(data.Notificationperiod.ValueInt64()))
 	}
-	if !data.Password.IsNull() {
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
 		dnskey.Password = data.Password.ValueString()
 	}
-	if !data.Privatekey.IsNull() {
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Privatekey.IsNull() && !data.Privatekey.IsUnknown() {
 		dnskey.Privatekey = data.Privatekey.ValueString()
 	}
-	if !data.Publickey.IsNull() {
+	if !data.Publickey.IsNull() && !data.Publickey.IsUnknown() {
 		dnskey.Publickey = data.Publickey.ValueString()
 	}
-	if !data.Revoke.IsNull() {
+	if !data.Revoke.IsNull() && !data.Revoke.IsUnknown() {
 		dnskey.Revoke = data.Revoke.ValueBool()
 	}
-	if !data.Rollovermethod.IsNull() {
+	if !data.Rollovermethod.IsNull() && !data.Rollovermethod.IsUnknown() {
 		dnskey.Rollovermethod = data.Rollovermethod.ValueString()
 	}
-	if !data.Src.IsNull() {
+	if !data.Src.IsNull() && !data.Src.IsUnknown() {
 		dnskey.Src = data.Src.ValueString()
 	}
-	if !data.Ttl.IsNull() {
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		dnskey.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
-	if !data.Units1.IsNull() {
+	if !data.Units1.IsNull() && !data.Units1.IsUnknown() {
 		dnskey.Units1 = data.Units1.ValueString()
 	}
-	if !data.Units2.IsNull() {
+	if !data.Units2.IsNull() && !data.Units2.IsUnknown() {
 		dnskey.Units2 = data.Units2.ValueString()
 	}
-	if !data.Zonename.IsNull() {
+	if !data.Zonename.IsNull() && !data.Zonename.IsUnknown() {
 		dnskey.Zonename = data.Zonename.ValueString()
 	}
 
 	return dnskey
+}
+
+func dnskeyGetThePayloadFromtheConfig(ctx context.Context, data *DnskeyResourceModel, payload *dns.Dnskey) {
+	tflog.Debug(ctx, "In dnskeyGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: password_wo -> password
+	if !data.PasswordWo.IsNull() {
+		passwordWo := data.PasswordWo.ValueString()
+		if passwordWo != "" {
+			payload.Password = passwordWo
+		}
+	}
 }
 
 func dnskeySetAttrFromGet(ctx context.Context, data *DnskeyResourceModel, getResponseData map[string]interface{}) *DnskeyResourceModel {
@@ -280,11 +315,9 @@ func dnskeySetAttrFromGet(ctx context.Context, data *DnskeyResourceModel, getRes
 	} else {
 		data.Notificationperiod = types.Int64Null()
 	}
-	if val, ok := getResponseData["password"]; ok && val != nil {
-		data.Password = types.StringValue(val.(string))
-	} else {
-		data.Password = types.StringNull()
-	}
+	// password is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["privatekey"]; ok && val != nil {
 		data.Privatekey = types.StringValue(val.(string))
 	} else {
@@ -334,8 +367,8 @@ func dnskeySetAttrFromGet(ctx context.Context, data *DnskeyResourceModel, getRes
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Keyname.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Keyname.ValueString()))
 
 	return data
 }

@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
@@ -66,12 +67,21 @@ func testAccCheckLbmonitorExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
+		// Parse compound ID (e.g. "monitorname:foo,type:HTTP") to extract the monitorname
+		monitorName := rs.Primary.ID
+		for _, part := range strings.Split(rs.Primary.ID, ",") {
+			if kv := strings.SplitN(part, ":", 2); len(kv) == 2 && kv[0] == "monitorname" {
+				monitorName = kv[1]
+				break
+			}
+		}
+
 		// Use the shared utility function to get a configured client
 		client, err := testAccGetFrameworkClient()
 		if err != nil {
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
-		data, err := client.FindResource(service.Lbmonitor.Type(), rs.Primary.ID)
+		data, err := client.FindResource(service.Lbmonitor.Type(), monitorName)
 
 		if err != nil {
 			return err
@@ -101,7 +111,16 @@ func testAccCheckLbmonitorDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Lbmonitor.Type(), rs.Primary.ID)
+		// Parse compound ID (e.g. "monitorname:foo,type:HTTP") to extract the monitorname
+		monitorName := rs.Primary.ID
+		for _, part := range strings.Split(rs.Primary.ID, ",") {
+			if kv := strings.SplitN(part, ":", 2); len(kv) == 2 && kv[0] == "monitorname" {
+				monitorName = kv[1]
+				break
+			}
+		}
+
+		_, err := client.FindResource(service.Lbmonitor.Type(), monitorName)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -350,6 +369,502 @@ func TestAccLbmonitor_dns_empty(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_dns_empty", "type", "DNS"),
 					// NetScaler returns nil for respcode on DNS monitors
 					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_dns_empty", "respcode.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+// ============================================================
+// Ephemeral / Write-Only tests for secret attribute: password
+// ============================================================
+
+const testAccLbmonitor_password_step1 = `
+
+variable "lbmonitor_password" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_password" {
+  monitorname = "tf_test_lbmonitor_password"
+  type        = "FTP"
+  username    = "testuser"
+  password    = var.lbmonitor_password
+}
+`
+
+const testAccLbmonitor_password_step2 = `
+
+variable "lbmonitor_password_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_password" {
+  monitorname = "tf_test_lbmonitor_password"
+  type        = "FTP"
+  username    = "testuser"
+  password    = var.lbmonitor_password_2
+}
+`
+
+func TestAccLbmonitor_password_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_lbmonitor_password", "Password1!")
+	t.Setenv("TF_VAR_lbmonitor_password_2", "Password2!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_password_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_password", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_password", "monitorname", "tf_test_lbmonitor_password"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_password", "type", "FTP"),
+				),
+			},
+			{
+				Config: testAccLbmonitor_password_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_password", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_password", "monitorname", "tf_test_lbmonitor_password"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_password", "type", "FTP"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbmonitor_password_wo_step1 = `
+
+variable "lbmonitor_password_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_password_wo" {
+  monitorname        = "tf_test_lbmonitor_password_wo"
+  type               = "FTP"
+  username           = "testuser"
+  password_wo        = var.lbmonitor_password_wo
+  password_wo_version = 1
+}
+`
+
+const testAccLbmonitor_password_wo_step2 = `
+
+variable "lbmonitor_password_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_password_wo" {
+  monitorname        = "tf_test_lbmonitor_password_wo"
+  type               = "FTP"
+  username           = "testuser"
+  password_wo        = var.lbmonitor_password_wo_2
+  password_wo_version = 2
+}
+`
+
+func TestAccLbmonitor_password_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_lbmonitor_password_wo", "Password1!")
+	t.Setenv("TF_VAR_lbmonitor_password_wo_2", "Password2!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_password_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_password_wo", "monitorname", "tf_test_lbmonitor_password_wo"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_password_wo", "type", "FTP"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_password_wo", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccLbmonitor_password_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_password_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_password_wo", "monitorname", "tf_test_lbmonitor_password_wo"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_password_wo", "type", "FTP"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_password_wo", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+// ============================================================
+// Ephemeral / Write-Only tests for secret attribute: radkey
+// ============================================================
+
+const testAccLbmonitor_radkey_step1 = `
+
+variable "lbmonitor_radkey" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_radkey" {
+  monitorname = "tf_test_lbmonitor_radkey"
+  type        = "RADIUS"
+  username    = "raduser"
+  password    = "RadPass1!"
+  radkey      = var.lbmonitor_radkey
+}
+`
+
+const testAccLbmonitor_radkey_step2 = `
+
+variable "lbmonitor_radkey_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_radkey" {
+  monitorname = "tf_test_lbmonitor_radkey"
+  type        = "RADIUS"
+  username    = "raduser"
+  password    = "RadPass1!"
+  radkey      = var.lbmonitor_radkey_2
+}
+`
+
+func TestAccLbmonitor_radkey_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_lbmonitor_radkey", "secret1key")
+	t.Setenv("TF_VAR_lbmonitor_radkey_2", "secret2key")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_radkey_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_radkey", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_radkey", "monitorname", "tf_test_lbmonitor_radkey"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_radkey", "type", "RADIUS"),
+				),
+			},
+			{
+				Config: testAccLbmonitor_radkey_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_radkey", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_radkey", "monitorname", "tf_test_lbmonitor_radkey"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_radkey", "type", "RADIUS"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbmonitor_radkey_wo_step1 = `
+
+variable "lbmonitor_radkey_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_radkey_wo" {
+  monitorname      = "tf_test_lbmonitor_radkey_wo"
+  type             = "RADIUS"
+  username         = "raduser"
+  password         = "RadPass1!"
+  radkey_wo        = var.lbmonitor_radkey_wo
+  radkey_wo_version = 1
+}
+`
+
+const testAccLbmonitor_radkey_wo_step2 = `
+
+variable "lbmonitor_radkey_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_radkey_wo" {
+  monitorname      = "tf_test_lbmonitor_radkey_wo"
+  type             = "RADIUS"
+  username         = "raduser"
+  password         = "RadPass1!"
+  radkey_wo        = var.lbmonitor_radkey_wo_2
+  radkey_wo_version = 2
+}
+`
+
+func TestAccLbmonitor_radkey_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_lbmonitor_radkey_wo", "secret1key")
+	t.Setenv("TF_VAR_lbmonitor_radkey_wo_2", "secret2key")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_radkey_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_radkey_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_radkey_wo", "monitorname", "tf_test_lbmonitor_radkey_wo"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_radkey_wo", "type", "RADIUS"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_radkey_wo", "radkey_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccLbmonitor_radkey_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_radkey_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_radkey_wo", "monitorname", "tf_test_lbmonitor_radkey_wo"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_radkey_wo", "type", "RADIUS"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_radkey_wo", "radkey_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+// ==================================================================
+// Ephemeral / Write-Only tests for secret attribute: secondarypassword
+// ==================================================================
+
+const testAccLbmonitor_secondarypassword_step1 = `
+
+variable "lbmonitor_secondarypassword" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_secondarypassword" {
+  monitorname       = "tf_test_lbmonitor_secpwd"
+  type              = "CITRIX-AG"
+  secondarypassword = var.lbmonitor_secondarypassword
+}
+`
+
+const testAccLbmonitor_secondarypassword_step2 = `
+
+variable "lbmonitor_secondarypassword_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_secondarypassword" {
+  monitorname       = "tf_test_lbmonitor_secpwd"
+  type              = "CITRIX-AG"
+  secondarypassword = var.lbmonitor_secondarypassword_2
+}
+`
+
+func TestAccLbmonitor_secondarypassword_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_lbmonitor_secondarypassword", "SecPwd1!")
+	t.Setenv("TF_VAR_lbmonitor_secondarypassword_2", "SecPwd2!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_secondarypassword_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword", "monitorname", "tf_test_lbmonitor_secpwd"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword", "type", "CITRIX-AG"),
+				),
+			},
+			{
+				Config: testAccLbmonitor_secondarypassword_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword", "monitorname", "tf_test_lbmonitor_secpwd"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword", "type", "CITRIX-AG"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbmonitor_secondarypassword_wo_step1 = `
+
+variable "lbmonitor_secondarypassword_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_secondarypassword_wo" {
+  monitorname                  = "tf_test_lbmonitor_secpwd_wo"
+  type                         = "CITRIX-AG"
+  secondarypassword_wo         = var.lbmonitor_secondarypassword_wo
+  secondarypassword_wo_version = 1
+}
+`
+
+const testAccLbmonitor_secondarypassword_wo_step2 = `
+
+variable "lbmonitor_secondarypassword_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_secondarypassword_wo" {
+  monitorname                  = "tf_test_lbmonitor_secpwd_wo"
+  type                         = "CITRIX-AG"
+  secondarypassword_wo         = var.lbmonitor_secondarypassword_wo_2
+  secondarypassword_wo_version = 2
+}
+`
+
+func TestAccLbmonitor_secondarypassword_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_lbmonitor_secondarypassword_wo", "SecPwd1!")
+	t.Setenv("TF_VAR_lbmonitor_secondarypassword_wo_2", "SecPwd2!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_secondarypassword_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword_wo", "monitorname", "tf_test_lbmonitor_secpwd_wo"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword_wo", "type", "CITRIX-AG"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword_wo", "secondarypassword_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccLbmonitor_secondarypassword_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword_wo", "monitorname", "tf_test_lbmonitor_secpwd_wo"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword_wo", "type", "CITRIX-AG"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secondarypassword_wo", "secondarypassword_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+// ============================================================
+// Ephemeral / Write-Only tests for secret attribute: secureargs
+// ============================================================
+
+const testAccLbmonitor_secureargs_step1 = `
+
+variable "lbmonitor_secureargs" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_secureargs" {
+  monitorname = "tf_test_lbmonitor_secureargs"
+  type        = "USER"
+  scriptname  = "nssimpleauth.pl"
+  secureargs  = var.lbmonitor_secureargs
+}
+`
+
+const testAccLbmonitor_secureargs_step2 = `
+
+variable "lbmonitor_secureargs_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_secureargs" {
+  monitorname = "tf_test_lbmonitor_secureargs"
+  type        = "USER"
+  scriptname  = "nssimpleauth.pl"
+  secureargs  = var.lbmonitor_secureargs_2
+}
+`
+
+func TestAccLbmonitor_secureargs_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_lbmonitor_secureargs", "secret1=val1")
+	t.Setenv("TF_VAR_lbmonitor_secureargs_2", "secret2=val2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_secureargs_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_secureargs", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secureargs", "monitorname", "tf_test_lbmonitor_secureargs"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secureargs", "type", "USER"),
+				),
+			},
+			{
+				Config: testAccLbmonitor_secureargs_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_secureargs", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secureargs", "monitorname", "tf_test_lbmonitor_secureargs"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secureargs", "type", "USER"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbmonitor_secureargs_wo_step1 = `
+
+variable "lbmonitor_secureargs_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_secureargs_wo" {
+  monitorname           = "tf_test_lbmonitor_secureargs_wo"
+  type                  = "USER"
+  scriptname            = "nssimpleauth.pl"
+  secureargs_wo         = var.lbmonitor_secureargs_wo
+  secureargs_wo_version = 1
+}
+`
+
+const testAccLbmonitor_secureargs_wo_step2 = `
+
+variable "lbmonitor_secureargs_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_secureargs_wo" {
+  monitorname           = "tf_test_lbmonitor_secureargs_wo"
+  type                  = "USER"
+  scriptname            = "nssimpleauth.pl"
+  secureargs_wo         = var.lbmonitor_secureargs_wo_2
+  secureargs_wo_version = 2
+}
+`
+
+func TestAccLbmonitor_secureargs_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_lbmonitor_secureargs_wo", "secret1=val1")
+	t.Setenv("TF_VAR_lbmonitor_secureargs_wo_2", "secret2=val2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_secureargs_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_secureargs_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secureargs_wo", "monitorname", "tf_test_lbmonitor_secureargs_wo"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secureargs_wo", "type", "USER"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secureargs_wo", "secureargs_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccLbmonitor_secureargs_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_lbmonitor_secureargs_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secureargs_wo", "monitorname", "tf_test_lbmonitor_secureargs_wo"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secureargs_wo", "type", "USER"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_lbmonitor_secureargs_wo", "secureargs_wo_version", "2"),
 				),
 			},
 		},

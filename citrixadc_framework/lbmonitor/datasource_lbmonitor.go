@@ -38,25 +38,59 @@ func (d *LbmonitorDataSource) Read(ctx context.Context, req datasource.ReadReque
 	var data LbmonitorResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Case 4: Array filter with parent ID
 	monitorname_Name := data.Monitorname.ValueString()
+	type_Name := data.Type
 
-	var getResponseData map[string]interface{}
+	var dataArr []map[string]interface{}
 	var err error
 
-	getResponseData, err = d.client.FindResource(service.Lbmonitor.Type(), monitorname_Name)
+	findParams := service.FindParams{
+		ResourceType:             service.Lbmonitor.Type(),
+		ResourceName:             monitorname_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read lbmonitor, got error: %s", err))
 		return
 	}
 
-	lbmonitorSetAttrFromGet(ctx, &data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		resp.Diagnostics.AddError("Client Error", "lbmonitor returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+		// Check type_Name
+		if !type_Name.IsNull() && type_Name.ValueString() != "" {
+			if v, ok := v["type"]; ok {
+				if v.(string) != type_Name.ValueString() {
+					match = false
+				}
+			}
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("lbmonitor with type %s not found", type_Name))
+		return
+	}
+
+	lbmonitorSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -123,3 +123,109 @@ func TestAccNsencryptionparamsDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Test backward-compatible path: using keyvalue (Sensitive attribute)
+const testAccNsencryptionparams_keyvalue_step1 = `
+	variable "nsencryptionparams_keyvalue" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nsencryptionparams" "tf_nsencryptionparams" {
+		method   = "AES256"
+		keyvalue = var.nsencryptionparams_keyvalue
+	}
+`
+
+const testAccNsencryptionparams_keyvalue_step2 = `
+	variable "nsencryptionparams_keyvalue_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nsencryptionparams" "tf_nsencryptionparams" {
+		method   = "AES256"
+		keyvalue = var.nsencryptionparams_keyvalue_2
+	}
+`
+
+func TestAccNsencryptionparams_keyvalue_backward_compat(t *testing.T) {
+	t.Setenv("TF_VAR_nsencryptionparams_keyvalue", "")
+	t.Setenv("TF_VAR_nsencryptionparams_keyvalue_2", "")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsencryptionparams_keyvalue_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "method", "AES256"),
+				),
+			},
+			{
+				Config: testAccNsencryptionparams_keyvalue_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "method", "AES256"),
+				),
+			},
+		},
+	})
+}
+
+// Test ephemeral path: using keyvalue_wo (WriteOnly attribute) with version tracker
+const testAccNsencryptionparams_wo_step1 = `
+	variable "nsencryptionparams_keyvalue_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nsencryptionparams" "tf_nsencryptionparams" {
+		method              = "AES256"
+		keyvalue_wo         = var.nsencryptionparams_keyvalue_wo
+		keyvalue_wo_version = 1
+	}
+`
+
+const testAccNsencryptionparams_wo_step2 = `
+	variable "nsencryptionparams_keyvalue_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nsencryptionparams" "tf_nsencryptionparams" {
+		method              = "AES256"
+		keyvalue_wo         = var.nsencryptionparams_keyvalue_wo_2
+		keyvalue_wo_version = 2
+	}
+`
+
+func TestAccNsencryptionparams_keyvalue_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_nsencryptionparams_keyvalue_wo", "")
+	t.Setenv("TF_VAR_nsencryptionparams_keyvalue_wo_2", "")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsencryptionparams_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "method", "AES256"),
+					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "keyvalue_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccNsencryptionparams_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "method", "AES256"),
+					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "keyvalue_wo_version", "2"),
+				),
+			},
+		},
+	})
+}

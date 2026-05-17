@@ -2,12 +2,15 @@ package ipsecprofile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ipsec"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -30,6 +33,8 @@ type IpsecprofileResourceModel struct {
 	Perfectforwardsecrecy types.String `tfsdk:"perfectforwardsecrecy"`
 	Privatekey            types.String `tfsdk:"privatekey"`
 	Psk                   types.String `tfsdk:"psk"`
+	PskWo                 types.String `tfsdk:"psk_wo"`
+	PskWoVersion          types.Int64  `tfsdk:"psk_wo_version"`
 	Publickey             types.String `tfsdk:"publickey"`
 	Replaywindowsize      types.Int64  `tfsdk:"replaywindowsize"`
 	Retransmissiontime    types.Int64  `tfsdk:"retransmissiontime"`
@@ -47,12 +52,18 @@ func (r *IpsecprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of encryption algorithm (Note: Selection of AES enables AES128)",
 			},
 			"hashalgo": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of hashing algorithm",
 			},
 			"ikeretryinterval": schema.Int64Attribute{
@@ -119,12 +130,27 @@ func (r *IpsecprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Private key file path",
 			},
 			"psk": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:  true,
+				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Pre shared key value",
+			},
+			"psk_wo": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Pre shared key value",
+			},
+			"psk_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a psk_wo update.",
 			},
 			"publickey": schema.StringAttribute{
 				Optional: true,
@@ -154,55 +180,102 @@ func (r *IpsecprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func ipsecprofileGetThePayloadFromtheConfig(ctx context.Context, data *IpsecprofileResourceModel) ipsec.Ipsecprofile {
-	tflog.Debug(ctx, "In ipsecprofileGetThePayloadFromtheConfig Function")
+func ipsecprofileGetThePayloadFromthePlan(ctx context.Context, data *IpsecprofileResourceModel) ipsec.Ipsecprofile {
+	tflog.Debug(ctx, "In ipsecprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	ipsecprofile := ipsec.Ipsecprofile{}
-	if !data.Ikeretryinterval.IsNull() {
+	if !data.Encalgo.IsNull() && !data.Encalgo.IsUnknown() {
+		var encalgoList []string
+		data.Encalgo.ElementsAs(ctx, &encalgoList, false)
+		ipsecprofile.Encalgo = encalgoList
+	}
+	if !data.Hashalgo.IsNull() && !data.Hashalgo.IsUnknown() {
+		var hashalgoList []string
+		data.Hashalgo.ElementsAs(ctx, &hashalgoList, false)
+		ipsecprofile.Hashalgo = hashalgoList
+	}
+	if !data.Ikeretryinterval.IsNull() && !data.Ikeretryinterval.IsUnknown() {
 		ipsecprofile.Ikeretryinterval = utils.IntPtr(int(data.Ikeretryinterval.ValueInt64()))
 	}
-	if !data.Ikeversion.IsNull() {
+	if !data.Ikeversion.IsNull() && !data.Ikeversion.IsUnknown() {
 		ipsecprofile.Ikeversion = data.Ikeversion.ValueString()
 	}
-	if !data.Lifetime.IsNull() {
+	if !data.Lifetime.IsNull() && !data.Lifetime.IsUnknown() {
 		ipsecprofile.Lifetime = utils.IntPtr(int(data.Lifetime.ValueInt64()))
 	}
-	if !data.Livenesscheckinterval.IsNull() {
+	if !data.Livenesscheckinterval.IsNull() && !data.Livenesscheckinterval.IsUnknown() {
 		ipsecprofile.Livenesscheckinterval = utils.IntPtr(int(data.Livenesscheckinterval.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		ipsecprofile.Name = data.Name.ValueString()
 	}
-	if !data.Peerpublickey.IsNull() {
+	if !data.Peerpublickey.IsNull() && !data.Peerpublickey.IsUnknown() {
 		ipsecprofile.Peerpublickey = data.Peerpublickey.ValueString()
 	}
-	if !data.Perfectforwardsecrecy.IsNull() {
+	if !data.Perfectforwardsecrecy.IsNull() && !data.Perfectforwardsecrecy.IsUnknown() {
 		ipsecprofile.Perfectforwardsecrecy = data.Perfectforwardsecrecy.ValueString()
 	}
-	if !data.Privatekey.IsNull() {
+	if !data.Privatekey.IsNull() && !data.Privatekey.IsUnknown() {
 		ipsecprofile.Privatekey = data.Privatekey.ValueString()
 	}
-	if !data.Psk.IsNull() {
+	if !data.Psk.IsNull() && !data.Psk.IsUnknown() {
 		ipsecprofile.Psk = data.Psk.ValueString()
 	}
-	if !data.Publickey.IsNull() {
+	// Skip write-only attribute: psk_wo
+	// Skip version tracker attribute: psk_wo_version
+	if !data.Publickey.IsNull() && !data.Publickey.IsUnknown() {
 		ipsecprofile.Publickey = data.Publickey.ValueString()
 	}
-	if !data.Replaywindowsize.IsNull() {
+	if !data.Replaywindowsize.IsNull() && !data.Replaywindowsize.IsUnknown() {
 		ipsecprofile.Replaywindowsize = utils.IntPtr(int(data.Replaywindowsize.ValueInt64()))
 	}
-	if !data.Retransmissiontime.IsNull() {
+	if !data.Retransmissiontime.IsNull() && !data.Retransmissiontime.IsUnknown() {
 		ipsecprofile.Retransmissiontime = utils.IntPtr(int(data.Retransmissiontime.ValueInt64()))
 	}
 
 	return ipsecprofile
 }
 
+func ipsecprofileGetThePayloadFromtheConfig(ctx context.Context, data *IpsecprofileResourceModel, payload *ipsec.Ipsecprofile) {
+	tflog.Debug(ctx, "In ipsecprofileGetThePayloadFromtheConfig Function")
+
+	// Add write-only attributes from config to the provided payload
+	// Handle write-only secret attribute: psk_wo -> psk
+	if !data.PskWo.IsNull() {
+		pskWo := data.PskWo.ValueString()
+		if pskWo != "" {
+			payload.Psk = pskWo
+		}
+	}
+}
+
 func ipsecprofileSetAttrFromGet(ctx context.Context, data *IpsecprofileResourceModel, getResponseData map[string]interface{}) *IpsecprofileResourceModel {
 	tflog.Debug(ctx, "In ipsecprofileSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["encalgo"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Encalgo = listValue
+		} else {
+			data.Encalgo = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Encalgo = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["hashalgo"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Hashalgo = listValue
+		} else {
+			data.Hashalgo = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Hashalgo = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["ikeretryinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ikeretryinterval = types.Int64Value(intVal)
@@ -249,11 +322,9 @@ func ipsecprofileSetAttrFromGet(ctx context.Context, data *IpsecprofileResourceM
 	} else {
 		data.Privatekey = types.StringNull()
 	}
-	if val, ok := getResponseData["psk"]; ok && val != nil {
-		data.Psk = types.StringValue(val.(string))
-	} else {
-		data.Psk = types.StringNull()
-	}
+	// psk is not returned by NITRO API (secret/ephemeral) - retain from config
+	// psk_wo is not returned by NITRO API (secret/ephemeral) - retain from config
+	// psk_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["publickey"]; ok && val != nil {
 		data.Publickey = types.StringValue(val.(string))
 	} else {
@@ -275,8 +346,8 @@ func ipsecprofileSetAttrFromGet(ctx context.Context, data *IpsecprofileResourceM
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

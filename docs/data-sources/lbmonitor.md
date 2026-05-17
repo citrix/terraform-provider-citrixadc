@@ -64,6 +64,7 @@ In addition to the arguments, the following attributes are available:
 * `inbandsecurityid` - Inband-Security-Id for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers.
 * `interval` - Time interval between two successive probes. Must be greater than the value of Response Time-out.
 * `ipaddress` - Set of IP addresses expected in the monitoring response from the DNS server, if the record type is A or AAAA. Applicable to DNS monitors.
+
 * `iptunnel` - Send the monitoring probe to the service through an IP tunnel. A destination IP address must be specified.
 * `kcdaccount` - KCD Account used by MSSQL monitor
 * `lasversion` - Version number of the Citrix Advanced Access Control Logon Agent. Required by the CITRIX-AAC-LAS monitor.

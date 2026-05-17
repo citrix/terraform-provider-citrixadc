@@ -1,13 +1,15 @@
 ---
-subcategory: "IPsec"
+subcategory: "IPSec"
 ---
 
 # Resource: ipsecprofile
 
-The ipsecprofile resource is used to create ipsecprofile.
+The ipsecprofile resource is used to create IPSec profiles on Citrix ADC.
 
 
 ## Example usage
+
+### Basic usage
 
 ```hcl
 resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
@@ -16,7 +18,50 @@ resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
   encalgo               = ["AES", "3DES"]
   hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
   livenesscheckinterval = 50
-  psk                   = "GCC5VcY0TQ+0TfjGwCrR+cQthm5UnBPB"
+}
+```
+
+### Using psk (sensitive attribute - persisted in state)
+
+```hcl
+variable "ipsecprofile_psk" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
+  name       = "my_ipsecprofile"
+  ikeversion = "V2"
+  psk        = var.ipsecprofile_psk
+}
+```
+
+### Using psk_wo (write-only/ephemeral - NOT persisted in state)
+
+The `psk_wo` attribute provides an ephemeral path for the pre-shared key. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the key changes, increment `psk_wo_version`.
+
+```hcl
+variable "ipsecprofile_psk" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
+  name           = "my_ipsecprofile"
+  ikeversion     = "V2"
+  psk_wo         = var.ipsecprofile_psk
+  psk_wo_version = 1
+}
+```
+
+To rotate the key, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
+  name           = "my_ipsecprofile"
+  ikeversion     = "V2"
+  psk_wo         = var.ipsecprofile_psk
+  psk_wo_version = 2  # Bumped to trigger update
 }
 ```
 
@@ -28,7 +73,9 @@ resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
 * `encalgo` - (Optional) Type of encryption algorithm (Note: Selection of AES enables AES128). Possible values: [ AES, 3DES, AES192, AES256 ]
 * `hashalgo` - (Optional) Type of hashing algorithm. Possible values: [ HMAC_SHA1, HMAC_SHA256, HMAC_SHA384, HMAC_SHA512, HMAC_MD5 ]
 * `lifetime` - (Optional) Lifetime of IKE SA in seconds. Lifetime of IPSec SA will be (lifetime of IKE SA/8). Minimum value =  480 Maximum value =  31536000
-* `psk` - (Optional) Pre shared key value.
+* `psk` - (Optional, Sensitive) Pre shared key value. The value is persisted in Terraform state (encrypted). See also `psk_wo` for an ephemeral alternative.
+* `psk_wo` - (Optional, Sensitive, WriteOnly) Same as `psk`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `psk_wo_version`. If both `psk` and `psk_wo` are set, `psk_wo` takes precedence.
+* `psk_wo_version` - (Optional) An integer version tracker for `psk_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `publickey` - (Optional) Public key file path.
 * `privatekey` - (Optional) Private key file path.
 * `peerpublickey` - (Optional) Peer public key file path.

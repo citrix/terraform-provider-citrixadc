@@ -45,6 +45,8 @@ In addition to the arguments, the following attributes are available:
 * `keytype` - Type of key to create.
 * `notificationperiod` - Time at which to generate notification of key expiration, specified as number of days, hours, or minutes before expiry. Must be less than the expiry period. The notification is an SNMP trap sent to an SNMP manager. To enable the appliance to send the trap, enable the DNSKEY-EXPIRY SNMP alarm. In case autorollover option is enabled, rollover for successor key will be intiated at this time. No notification trap will be sent.
 * `password` - Passphrase for reading the encrypted public/private DNS keys.
+* `password_wo` - Passphrase for reading the encrypted public/private DNS keys (write-only; not persisted in state).
+* `password_wo_version` - Version tracker for `password_wo`.
 * `privatekey` - File name of the private key.
 * `publickey` - File name of the public key.
 * `revoke` - Revoke the key. Note: This operation is non-reversible.

@@ -44,30 +44,35 @@ func (r *NsencryptionparamsResource) Configure(ctx context.Context, req resource
 }
 
 func (r *NsencryptionparamsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data NsencryptionparamsResourceModel
+	var data, config NsencryptionparamsResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating nsencryptionparams resource")
-
-	// nsencryptionparams := nsencryptionparamsGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan (regular attributes)
+	nsencryptionparams := nsencryptionparamsGetThePayloadFromthePlan(ctx, &data)
+	// Add write-only attributes from config to the payload
+	nsencryptionparamsGetThePayloadFromtheConfig(ctx, &config, &nsencryptionparams)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsencryptionparams.Type(), &nsencryptionparams)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsencryptionparams, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nsencryptionparams-config")
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nsencryptionparams.Type(), &nsencryptionparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsencryptionparams, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nsencryptionparams resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue("nsencryptionparams-config")
 
 	// Read the updated state back
 	r.readNsencryptionparamsFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,28 +100,57 @@ func (r *NsencryptionparamsResource) Read(ctx context.Context, req resource.Read
 }
 
 func (r *NsencryptionparamsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NsencryptionparamsResourceModel
+	var data, config, state NsencryptionparamsResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nsencryptionparams resource")
 
-	// Create API request body from the model
-	// nsencryptionparams := nsencryptionparamsGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	// Check secret attribute keyvalue or its version tracker
+	if !data.Keyvalue.Equal(state.Keyvalue) {
+		tflog.Debug(ctx, fmt.Sprintf("keyvalue has changed for nsencryptionparams"))
+		hasChange = true
+	} else if !data.KeyvalueWoVersion.Equal(state.KeyvalueWoVersion) {
+		tflog.Debug(ctx, fmt.Sprintf("keyvalue_wo_version has changed for nsencryptionparams"))
+		hasChange = true
+	}
+	if !data.Method.Equal(state.Method) {
+		tflog.Debug(ctx, fmt.Sprintf("method has changed for nsencryptionparams"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsencryptionparams.Type(), &nsencryptionparams)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsencryptionparams, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		// Get payload from plan (regular attributes)
+		nsencryptionparams := nsencryptionparamsGetThePayloadFromthePlan(ctx, &data)
+		// Add write-only attributes from config to the payload
+		nsencryptionparamsGetThePayloadFromtheConfig(ctx, &config, &nsencryptionparams)
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Nsencryptionparams.Type(), &nsencryptionparams)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsencryptionparams, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated nsencryptionparams resource")
+		tflog.Trace(ctx, "Updated nsencryptionparams resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nsencryptionparams resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readNsencryptionparamsFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +170,18 @@ func (r *NsencryptionparamsResource) Delete(ctx context.Context, req resource.De
 	}
 
 	tflog.Debug(ctx, "Deleting nsencryptionparams resource")
-
-	// For nsencryptionparams, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nsencryptionparams resource from state")
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed nsencryptionparams from Terraform state")
 }
 
 // Helper function to read nsencryptionparams data from API
 func (r *NsencryptionparamsResource) readNsencryptionparamsFromApi(ctx context.Context, data *NsencryptionparamsResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nsencryptionparams.Type(), "")
+
+	// Case 1: Simple find without ID
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Nsencryptionparams.Type(), "")
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nsencryptionparams, got error: %s", err))
 		return

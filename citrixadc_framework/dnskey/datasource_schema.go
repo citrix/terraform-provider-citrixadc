@@ -54,6 +54,15 @@ func DnskeyDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Passphrase for reading the encrypted public/private DNS keys",
 			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "Passphrase for reading the encrypted public/private DNS keys",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a password_wo update.",
+			},
 			"privatekey": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

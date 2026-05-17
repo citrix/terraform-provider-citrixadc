@@ -51,6 +51,27 @@ func doAppfwPreChecks(t *testing.T) {
 	}
 }
 
+func doDnskeyPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"dnskey_test.key",
+		"dnskey_test.private",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/nsconfig/dns")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
 func doSslcertkeyPreChecks(t *testing.T) {
 	testAccPreCheck(t)
 

@@ -15,6 +15,15 @@ func NsencryptionparamsDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The base64-encoded key generation number, method, and key value.\nNote:\n* Do not include this argument if you are changing the encryption method.\n* To generate a new key value for the current encryption method, specify an empty string \\(\"\"\\) as the value of this parameter. The parameter is passed implicitly, with its automatically generated value, to the Citrix ADC packet engines even when it is not included in the command. Passing the parameter to the packet engines enables the appliance to save the key value to the configuration file and to propagate the key value to the secondary appliance in a high availability setup.",
 			},
+			"keyvalue_wo": schema.StringAttribute{
+				Optional:    true,
+				Description: "The base64-encoded key generation number, method, and key value.\nNote:\n* Do not include this argument if you are changing the encryption method.\n* To generate a new key value for the current encryption method, specify an empty string \\(\"\"\\) as the value of this parameter. The parameter is passed implicitly, with its automatically generated value, to the Citrix ADC packet engines even when it is not included in the command. Passing the parameter to the packet engines enables the appliance to save the key value to the configuration file and to propagate the key value to the secondary appliance in a high availability setup.",
+			},
+			"keyvalue_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Increment this version to signal a keyvalue_wo update.",
+			},
 			"method": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
