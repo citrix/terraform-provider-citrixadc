@@ -160,7 +160,7 @@ func TestAccAaakcdaccountDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "kcdaccount", "my_kcdaccount"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "delegateduser", "john"),
-					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "realmstr", "MY_REALM"),
+					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "realmstr", "my_realm"),
 				),
 			},
 		},

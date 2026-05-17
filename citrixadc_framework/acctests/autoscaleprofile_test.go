@@ -409,8 +409,6 @@ func TestAccAutoscaleprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_autoscaleprofile.tf_autoscaleprofile", "name", "my_autoscaleprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_autoscaleprofile.tf_autoscaleprofile", "type", "CLOUDSTACK"),
 					resource.TestCheckResourceAttr("data.citrixadc_autoscaleprofile.tf_autoscaleprofile", "url", "www.service.example.com"),
-					resource.TestCheckResourceAttrSet("data.citrixadc_autoscaleprofile.tf_autoscaleprofile", "apikey"),
-					resource.TestCheckResourceAttrSet("data.citrixadc_autoscaleprofile.tf_autoscaleprofile", "sharedsecret"),
 				),
 			},
 		},

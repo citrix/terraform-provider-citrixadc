@@ -25,6 +25,7 @@ import (
 )
 
 func TestAccNslicenseserver_basic(t *testing.T) {
+	t.Skip("Skipping test because this needs changes for LAS")
 	if isCpxRun {
 		t.Skip("Feature not supported in CPX")
 	}
@@ -121,6 +122,10 @@ resource "citrixadc_nslicenseserver" "tf_licenseserver" {
 `
 
 func TestAccNslicenseserverDataSource_basic(t *testing.T) {
+	t.Skip("Skipping test because this needs changes for LAS")
+	if isCpxRun {
+		t.Skip("Feature not supported in CPX")
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

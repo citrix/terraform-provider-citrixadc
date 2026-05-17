@@ -2,6 +2,7 @@ package sslprofile
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func SslprofileDataSourceSchema() schema.Schema {
@@ -158,6 +159,23 @@ func SslprofileDataSourceSchema() schema.Schema {
 			"name": schema.StringAttribute{
 				Required:    true,
 				Description: "Name for the SSL profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the profile is created.",
+			},
+			"nodefaultbindings": schema.StringAttribute{
+				Computed:    true,
+				Description: "Control default bindings for the SSL profile.",
+			},
+			"nodefaultcipherbindings": schema.BoolAttribute{
+				Computed:    true,
+				Description: "When set to true, removes the default cipher bindings from the SSL profile.",
+			},
+			"nodefaultecccurvebindings": schema.BoolAttribute{
+				Computed:    true,
+				Description: "When set to true, removes the default ECC curve bindings from the SSL profile.",
+			},
+			"ecccurvebindings": schema.SetAttribute{
+				Computed:    true,
+				Description: "Set of ECC curve names bound to the SSL profile.",
+				ElementType: types.StringType,
 			},
 			"ocspstapling": schema.StringAttribute{
 				Optional:    true,
@@ -357,6 +375,23 @@ func SslprofileDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "State of TLS 1.3 0-RTT early data support for the SSL Virtual Server. This setting only has an effect if resumption is enabled, as early data cannot be sent along with an initial handshake.\nEarly application data has significantly different security properties - in particular there is no guarantee that the data cannot be replayed.",
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"cipherbindings": schema.SetNestedBlock{
+				Description: "Set of cipher bindings bound to the SSL profile.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"ciphername": schema.StringAttribute{
+							Computed:    true,
+							Description: "Name of the cipher.",
+						},
+						"cipherpriority": schema.Int64Attribute{
+							Computed:    true,
+							Description: "Priority of the cipher binding.",
+						},
+					},
+				},
 			},
 		},
 	}
