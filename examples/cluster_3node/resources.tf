@@ -60,6 +60,7 @@ resource "citrixadc_cluster" "this" {
       priority   = clusternode.value.priority
       state      = "ACTIVE"
       tunnelmode = "NONE"
+      nodegroup  = "DEFAULT_NG"
     }
   }
 }

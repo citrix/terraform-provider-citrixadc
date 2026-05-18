@@ -13,10 +13,6 @@ netscaler_attributes = {
     node_id   = 1
     backplane = "1/1/1"
   }
-  "node3" = {
-    node_id   = 2
-    backplane = "2/1/1"
-  }
 }
 
 nsips = {
