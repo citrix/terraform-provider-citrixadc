@@ -54,6 +54,12 @@ func resourceCitrixAdcSystemfile() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"is_base64_encoded": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -88,7 +94,7 @@ func createSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Filename:     filename,
 	}
 
-	_, err = client.AddResource(service.Systemfile.Type(), "", &systemfile)
+	_, err := client.AddResource(service.Systemfile.Type(), "", &systemfile)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -104,15 +110,8 @@ func readSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	systemfileName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading systemfile state %s", systemfileName)
 	argsMap := make(map[string]string)
-	var err error
 	argsMap["filelocation"] = url.QueryEscape(d.Get("filelocation").(string))
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	argsMap["filename"] = url.QueryEscape(d.Get("filename").(string))
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	findParams := service.FindParams{
 		ResourceType: "systemfile",
 		ArgsMap:      argsMap,
