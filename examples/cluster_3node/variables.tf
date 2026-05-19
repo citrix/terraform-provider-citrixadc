@@ -38,10 +38,11 @@ variable "netscaler_attributes" {
       node_id   = 1
       backplane = "1/1/1"
     }
-    "node3" = {
+    "node2" = {
       node_id   = 2
       backplane = "2/1/1"
     }
+   
   }
 }
 
@@ -51,7 +52,7 @@ variable "nsips" {
   default = {
     "node1" = "10.102.201.213"
     "node2" = "10.102.201.42"
-    "node3" = "10.102.201.222"
+    "node3" = "10.102.201.22"
   }
 }
  

@@ -2,7 +2,7 @@ cluster_id = 1
 clip       = "10.102.201.228"
 
 adc_admin_username = "nsroot"
-adc_admin_password = "###"
+adc_admin_password = "ConfigADC#123"
 
 netscaler_attributes = {
   "node1" = {
@@ -12,6 +12,10 @@ netscaler_attributes = {
   "node2" = {
     node_id   = 1
     backplane = "1/1/1"
+  }
+  "node3" = {
+    node_id   = 2
+    backplane = "2/1/1"
   }
 }
 
