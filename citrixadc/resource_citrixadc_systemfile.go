@@ -54,6 +54,12 @@ func resourceCitrixAdcSystemfile() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"is_base64_encoded": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -74,13 +80,12 @@ func createSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	var b64filecontent string
-	_, err := base64.StdEncoding.DecodeString(filecontent)
-	if err != nil {
-		log.Printf("[DEBUG] citrixadc-provider: Content is not base64-encoded, encoding it")
-		b64filecontent = base64.StdEncoding.EncodeToString([]byte(filecontent))
-	} else {
-		log.Printf("[DEBUG] citrixadc-provider: Content is already base64-encoded")
+	if d.Get("is_base64_encoded").(bool) {
+		log.Printf("[DEBUG] citrixadc-provider: Content is marked as already base64-encoded, passing through")
 		b64filecontent = filecontent
+	} else {
+		log.Printf("[DEBUG] citrixadc-provider: Encoding content to base64")
+		b64filecontent = base64.StdEncoding.EncodeToString([]byte(filecontent))
 	}
 	systemfile := system.Systemfile{
 		Filecontent:  b64filecontent,
@@ -89,7 +94,7 @@ func createSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Filename:     filename,
 	}
 
-	_, err = client.AddResource(service.Systemfile.Type(), "", &systemfile)
+	_, err := client.AddResource(service.Systemfile.Type(), "", &systemfile)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -105,15 +110,8 @@ func readSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	systemfileName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading systemfile state %s", systemfileName)
 	argsMap := make(map[string]string)
-	var err error
 	argsMap["filelocation"] = url.QueryEscape(d.Get("filelocation").(string))
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	argsMap["filename"] = url.QueryEscape(d.Get("filename").(string))
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	findParams := service.FindParams{
 		ResourceType: "systemfile",
 		ArgsMap:      argsMap,
@@ -140,16 +138,12 @@ func readSystemfileFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(err)
 	}
 
-	// Check if the original filecontent in config was base64-encoded
-	originalContent := d.Get("filecontent").(string)
-	_, decodeErr := base64.StdEncoding.DecodeString(originalContent)
-
-	if decodeErr != nil {
-		// Original was plain text, store decoded value
-		d.Set("filecontent", string(bytes))
-	} else {
+	if d.Get("is_base64_encoded").(bool) {
 		// Original was base64, keep it base64 in state
 		d.Set("filecontent", data["filecontent"].(string))
+	} else {
+		// Original was plain text, store decoded value
+		d.Set("filecontent", string(bytes))
 	}
 
 	d.Set("fileencoding", data["fileencoding"])
