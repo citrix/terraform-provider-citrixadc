@@ -87,6 +87,9 @@ const (
 	Acctests
 	Analyticsglobal_analyticsprofile_binding
 	Analyticsprofile
+	Apiprofile
+	Apispec
+	Apispecfile
 	Appalgparam
 	Appflowaction
 	Appflowaction_analyticsprofile_binding
@@ -112,6 +115,9 @@ const (
 	Appfwglobal_auditnslogpolicy_binding
 	Appfwglobal_auditsyslogpolicy_binding
 	Appfwglobal_binding
+	Appfwgrpccontenttype
+	Appfwgrpcwebjsoncontenttype
+	Appfwgrpcwebtextcontenttype
 	Appfwhtmlerrorpage
 	Appfwjsoncontenttype
 	Appfwjsonerrorpage
@@ -156,6 +162,7 @@ const (
 	Appfwprofile_xmlvalidationurl_binding
 	Appfwprofile_xmlwsiurl_binding
 	Appfwprofile_xmlxss_binding
+	Appfwprotofile
 	Appfwsettings
 	Appfwsignatures
 	Appfwtransactionrecords
@@ -205,7 +212,9 @@ const (
 	Auditsyslogpolicy_tmglobal_binding
 	Auditsyslogpolicy_vpnglobal_binding
 	Auditsyslogpolicy_vpnvserver_binding
+	Authenticationadfsproxyprofile
 	Authenticationauthnprofile
+	Authenticationazurekeyvault
 	Authenticationcaptchaaction
 	Authenticationcertaction
 	Authenticationcertpolicy
@@ -254,6 +263,7 @@ const (
 	Authenticationpolicylabel
 	Authenticationpolicylabel_authenticationpolicy_binding
 	Authenticationpolicylabel_binding
+	Authenticationprotecteduseraction
 	Authenticationpushservice
 	Authenticationradiusaction
 	Authenticationradiuspolicy
@@ -273,6 +283,8 @@ const (
 	Authenticationsamlpolicy_binding
 	Authenticationsamlpolicy_vpnglobal_binding
 	Authenticationsamlpolicy_vpnvserver_binding
+	Authenticationsmartaccesspolicy
+	Authenticationsmartaccessprofile
 	Authenticationstorefrontauthaction
 	Authenticationtacacsaction
 	Authenticationtacacspolicy
@@ -326,6 +338,8 @@ const (
 	Autoscalepolicy_binding
 	Autoscalepolicy_nstimer_binding
 	Autoscaleprofile
+	Azureapplication
+	Azurekeyvault
 	Botglobal_botpolicy_binding
 	Botpolicy
 	Botpolicylabel
@@ -1294,6 +1308,9 @@ var resources = []string{
 	"acctests",
 	"analyticsglobal_analyticsprofile_binding",
 	"analyticsprofile",
+	"apiprofile",
+	"apispec",
+	"apispecfile",
 	"appalgparam",
 	"appflowaction",
 	"appflowaction_analyticsprofile_binding",
@@ -1319,6 +1336,9 @@ var resources = []string{
 	"appfwglobal_auditnslogpolicy_binding",
 	"appfwglobal_auditsyslogpolicy_binding",
 	"appfwglobal_binding",
+	"appfwgrpccontenttype",
+	"appfwgrpcwebjsoncontenttype",
+	"appfwgrpcwebtextcontenttype",
 	"appfwhtmlerrorpage",
 	"appfwjsoncontenttype",
 	"appfwjsonerrorpage",
@@ -1363,6 +1383,7 @@ var resources = []string{
 	"appfwprofile_xmlvalidationurl_binding",
 	"appfwprofile_xmlwsiurl_binding",
 	"appfwprofile_xmlxss_binding",
+	"appfwprotofile",
 	"appfwsettings",
 	"appfwsignatures",
 	"appfwtransactionrecords",
@@ -1412,7 +1433,9 @@ var resources = []string{
 	"auditsyslogpolicy_tmglobal_binding",
 	"auditsyslogpolicy_vpnglobal_binding",
 	"auditsyslogpolicy_vpnvserver_binding",
+	"authenticationadfsproxyprofile",
 	"authenticationauthnprofile",
+	"authenticationazurekeyvault",
 	"authenticationcaptchaaction",
 	"authenticationcertaction",
 	"authenticationcertpolicy",
@@ -1461,6 +1484,7 @@ var resources = []string{
 	"authenticationpolicylabel",
 	"authenticationpolicylabel_authenticationpolicy_binding",
 	"authenticationpolicylabel_binding",
+	"authenticationprotecteduseraction",
 	"authenticationpushservice",
 	"authenticationradiusaction",
 	"authenticationradiuspolicy",
@@ -1480,6 +1504,8 @@ var resources = []string{
 	"authenticationsamlpolicy_binding",
 	"authenticationsamlpolicy_vpnglobal_binding",
 	"authenticationsamlpolicy_vpnvserver_binding",
+	"authenticationsmartaccesspolicy",
+	"authenticationsmartaccessprofile",
 	"authenticationstorefrontauthaction",
 	"authenticationtacacsaction",
 	"authenticationtacacspolicy",
@@ -1533,6 +1559,8 @@ var resources = []string{
 	"autoscalepolicy_binding",
 	"autoscalepolicy_nstimer_binding",
 	"autoscaleprofile",
+	"azureapplication",
+	"azurekeyvault",
 	"botglobal_botpolicy_binding",
 	"botpolicy",
 	"botpolicylabel",

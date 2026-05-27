@@ -379,10 +379,12 @@ func (c *NitroClient) ChangeResource(resourceType string, name string, resourceS
 func (c *NitroClient) DeleteResource(resourceType string, resourceName string) error {
 
 	var err error
-	if resourceType == "appqoecustomresp" {
-		_, err = c.listResource(resourceType, "")
-	} else {
-		_, err = c.listResource(resourceType, resourceName)
+	if resourceType != "appfwarchive" {
+		if resourceType == "appqoecustomresp" {
+			_, err = c.listResource(resourceType, "")
+		} else {
+			_, err = c.listResource(resourceType, resourceName)
+		}
 	}
 	if err == nil { // resource exists
 		c.logger.Trace("DeleteResource Found resource ", "resourceType", resourceType, "resourceName", resourceName)

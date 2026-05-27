@@ -67,6 +67,9 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaauser_vpnurlpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/analyticsglobal_analyticsprofile_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/analyticsprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/apiprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/apispec"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/apispecfile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appalgparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appflowaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appflowaction_analyticsprofile_binding"
@@ -76,11 +79,16 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appflowpolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appflowpolicylabel"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appflowpolicylabel_appflowpolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwarchive"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwarchive_export"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwconfidfield"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwfieldtype"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwglobal_appfwpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwglobal_auditnslogpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwglobal_auditsyslogpolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwgrpccontenttype"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwgrpcwebjsoncontenttype"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwgrpcwebtextcontenttype"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwhtmlerrorpage"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwjsoncontenttype"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwjsonerrorpage"
@@ -116,6 +124,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_xmlvalidationurl_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_xmlwsiurl_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_xmlxss_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprotofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwsettings"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwsignatures"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwurlencodedformcontenttype"
@@ -138,7 +147,9 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/auditsyslogglobal_auditsyslogpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/auditsyslogparams"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/auditsyslogpolicy"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationadfsproxyprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationauthnprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationazurekeyvault"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationcaptchaaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationcertaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationcertpolicy"
@@ -161,6 +172,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationpolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationpolicylabel"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationpolicylabel_authenticationpolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationprotecteduseraction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationpushservice"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationradiusaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationradiuspolicy"
@@ -168,6 +180,8 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationsamlidppolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationsamlidpprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationsamlpolicy"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationsmartaccesspolicy"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationsmartaccessprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationstorefrontauthaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationtacacsaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationtacacspolicy"
@@ -200,6 +214,8 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/autoscaleaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/autoscalepolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/autoscaleprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/azureapplication"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/azurekeyvault"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botglobal_botpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botpolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botpolicylabel"
@@ -1020,6 +1036,22 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		ipsecprofile.NewIpsecprofileResource,
 		lbmonitor.NewLbmonitorResource,
 		nsencryptionparams.NewNsencryptionparamsResource,
+		apiprofile.NewApiprofileResource,
+		apispec.NewApispecResource,
+		apispecfile.NewApispecfileResource,
+		appfwarchive.NewAppfwarchiveResource,
+		appfwarchive_export.NewAppfwarchiveExportResource,
+		appfwgrpccontenttype.NewAppfwgrpccontenttypeResource,
+		appfwgrpcwebjsoncontenttype.NewAppfwgrpcwebjsoncontenttypeResource,
+		appfwgrpcwebtextcontenttype.NewAppfwgrpcwebtextcontenttypeResource,
+		appfwprotofile.NewAppfwprotofileResource,
+		authenticationadfsproxyprofile.NewAuthenticationadfsproxyprofileResource,
+		authenticationazurekeyvault.NewAuthenticationazurekeyvaultResource,
+		authenticationprotecteduseraction.NewAuthenticationprotecteduseractionResource,
+		authenticationsmartaccesspolicy.NewAuthenticationsmartaccesspolicyResource,
+		authenticationsmartaccessprofile.NewAuthenticationsmartaccessprofileResource,
+		azureapplication.NewAzureapplicationResource,
+		azurekeyvault.NewAzurekeyvaultResource,
 	}
 }
 
@@ -1756,6 +1788,21 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		vpnvserver_appfwpolicy_binding.VpnvserverAppfwpolicyBindingDataSource,
 		csvserver_lbvserver_binding.CSvserverLbvserverBindingDataSource,
 		lbparameter.LBparameterDataSource,
+		apiprofile.APiprofileDataSource,
+		apispec.APispecDataSource,
+		apispecfile.APispecfileDataSource,
+		appfwarchive.APpfwarchiveDataSource,
+		appfwgrpccontenttype.APpfwgrpccontenttypeDataSource,
+		appfwgrpcwebjsoncontenttype.APpfwgrpcwebjsoncontenttypeDataSource,
+		appfwgrpcwebtextcontenttype.APpfwgrpcwebtextcontenttypeDataSource,
+		appfwprotofile.APpfwprotofileDataSource,
+		authenticationadfsproxyprofile.AUthenticationadfsproxyprofileDataSource,
+		authenticationazurekeyvault.AUthenticationazurekeyvaultDataSource,
+		authenticationprotecteduseraction.AUthenticationprotecteduseractionDataSource,
+		authenticationsmartaccesspolicy.AUthenticationsmartaccesspolicyDataSource,
+		authenticationsmartaccessprofile.AUthenticationsmartaccessprofileDataSource,
+		azureapplication.AZureapplicationDataSource,
+		azurekeyvault.AZurekeyvaultDataSource,
 	}
 }
 

@@ -60,6 +60,10 @@ var idempotentInvalidResources = []string{
 	"systemuser",
 	"dnsaddrec",
 	"dnsnameserver",
+	"apispecfile",
+	"appfwgrpccontenttype",
+	"appfwgrpcwebjsoncontenttype",
+	"appfwgrpcwebtextcontenttype",
 }
 
 // HTTP Headers to be masked and not shown in logs

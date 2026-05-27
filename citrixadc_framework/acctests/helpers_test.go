@@ -51,6 +51,28 @@ func doAppfwPreChecks(t *testing.T) {
 	}
 }
 
+func doApiSpecPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"sample_apispec.yaml",
+		"sample_apispec2.yaml",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	//c := testAccProvider.Meta().(*NetScalerNitroClient)
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
 func doDnskeyPreChecks(t *testing.T) {
 	testAccPreCheck(t)
 
