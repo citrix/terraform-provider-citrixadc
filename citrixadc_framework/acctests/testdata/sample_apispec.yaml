@@ -1,0 +1,86 @@
+openapi: 3.0.3
+info:
+  title: Bookstore API
+  description: A simple sample API to manage a collection of books.
+  version: 1.0.0
+servers:
+  - url: https://api.bookstore.com/v1
+    description: Production server
+
+paths:
+  /books:
+    get:
+      summary: List all books
+      description: Returns a list of all books available in the store.
+      responses:
+        '200':
+          description: A successful response matching the list of books.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+        '500':
+          description: Internal server error.
+
+    post:
+      summary: Add a new book
+      description: Adds a new book to the store's inventory.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '201':
+          description: Book created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          description: Invalid input data.
+
+  /books/{bookId}:
+    get:
+      summary: Get a book by ID
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          description: The unique identifier of the book.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Book details found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          description: Book not found.
+
+components:
+  schemas:
+    Book:
+      type: object
+      required:
+        - id
+        - title
+        - author
+      properties:
+        id:
+          type: string
+          example: "b123"
+        title:
+          type: string
+          example: "The Hitchhiker's Guide to the Galaxy"
+        author:
+          type: string
+          example: "Douglas Adams"
+        publishedYear:
+          type: integer
+          example: 1979

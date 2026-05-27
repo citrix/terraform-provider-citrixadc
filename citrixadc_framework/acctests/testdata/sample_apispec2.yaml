@@ -1,0 +1,135 @@
+openapi: 3.0.3
+info:
+  title: User Management API
+  description: An API for managing user profiles, featuring query filtering and JWT security.
+  version: 1.1.0
+servers:
+  - url: https://api.myplatform.com/v1
+    description: Staging Environment
+
+paths:
+  /users:
+    get:
+      summary: Retrieve a list of users
+      description: Fetches active users. You can optionally filter results by role.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role
+          in: query
+          required: false
+          description: Filter users by their system role.
+          schema:
+            type: string
+            enum: [admin, editor, viewer]
+      responses:
+        '200':
+          description: Successfully retrieved user list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      summary: Register a new user
+      description: Creates a new user profile. No authentication required for signup.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: User created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Invalid request body or email already exists.
+
+  /users/{id}:
+    delete:
+      summary: Delete a user by ID
+      description: Permanently deletes a user from the system. Restricted to administrators.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the user.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: User deleted successfully. No content returned.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: User not found.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    UnauthorizedError:
+      description: Missing or invalid HTTP Authorization header token.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Unauthorized access"
+
+  schemas:
+    UserCreate:
+      type: object
+      required:
+        - email
+        - password
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: "jane.doe@example.com"
+        password:
+          type: string
+          format: password
+          example: "StrongP@ss123"
+        role:
+          type: string
+          default: viewer
+          example: "editor"
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-4956-a5db-211a4d74308b"
+        email:
+          type: string
+          format: email
+          example: "jane.doe@example.com"
+        role:
+          type: string
+          example: "editor"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-05-19T18:30:00Z"
