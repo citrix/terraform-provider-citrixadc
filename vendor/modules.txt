@@ -31,11 +31,12 @@ github.com/apparentlymart/go-textseg/v15/textseg
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 ## explicit
 github.com/bgentry/go-netrc/netrc
-# github.com/citrix/adc-nitro-go v0.0.0-20260317185310-4ba2168fe460
+# github.com/citrix/adc-nitro-go v0.0.0-20260529004210-6ae43bc048bf
 ## explicit; go 1.14
 github.com/citrix/adc-nitro-go/resource/config/aaa
 github.com/citrix/adc-nitro-go/resource/config/adm
 github.com/citrix/adc-nitro-go/resource/config/analytics
+github.com/citrix/adc-nitro-go/resource/config/api
 github.com/citrix/adc-nitro-go/resource/config/appflow
 github.com/citrix/adc-nitro-go/resource/config/appfw
 github.com/citrix/adc-nitro-go/resource/config/appqoe
@@ -43,6 +44,7 @@ github.com/citrix/adc-nitro-go/resource/config/audit
 github.com/citrix/adc-nitro-go/resource/config/authentication
 github.com/citrix/adc-nitro-go/resource/config/authorization
 github.com/citrix/adc-nitro-go/resource/config/autoscale
+github.com/citrix/adc-nitro-go/resource/config/azure
 github.com/citrix/adc-nitro-go/resource/config/basic
 github.com/citrix/adc-nitro-go/resource/config/bot
 github.com/citrix/adc-nitro-go/resource/config/cache
