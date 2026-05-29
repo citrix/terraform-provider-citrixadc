@@ -82,8 +82,8 @@ resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
 ## Argument Reference
 
 * `name` - (Required) Name for the RADIUS action.  Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the RADIUS action is added.
-* `radkey` - (Optional, Sensitive) Key shared between the RADIUS server and the Citrix ADC. Required to allow the Citrix ADC to communicate with the RADIUS server. The value is persisted in Terraform state (encrypted). See also `radkey_wo` for an ephemeral alternative.
-* `radkey_wo` - (Optional, Sensitive, WriteOnly) Same as `radkey`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `radkey_wo_version`. If both `radkey` and `radkey_wo` are set, `radkey_wo` takes precedence.
+* `radkey` - (Optional, Sensitive) Key shared between the RADIUS server and the Citrix ADC. Required to allow the Citrix ADC to communicate with the RADIUS server. The value is persisted in Terraform state (encrypted). See also `radkey_wo` for an ephemeral alternative. At least one of `radkey` or `radkey_wo` must be set.
+* `radkey_wo` - (Optional, Sensitive, WriteOnly) Same as `radkey`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `radkey_wo_version`. If both `radkey` and `radkey_wo` are set, `radkey_wo` takes precedence. At least one of `radkey` or `radkey_wo` must be set.
 * `radkey_wo_version` - (Optional) An integer version tracker for `radkey_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the key has changed and trigger an update. Defaults to `1`.
 * `accounting` - (Optional) Whether the RADIUS server is currently accepting accounting messages.
 * `authentication` - (Optional) Configure the RADIUS server state to accept or refuse authentication messages.

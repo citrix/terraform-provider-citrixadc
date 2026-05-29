@@ -123,9 +123,12 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "Passphrase for reading the encrypted public/private DNS keys",
 			},
 			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(1),
+				Optional: true,
+				Computed: true,
+				Default:  int64default.StaticInt64(1),
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Increment this version to signal a password_wo update.",
 			},
 			"privatekey": schema.StringAttribute{

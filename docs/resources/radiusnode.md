@@ -54,8 +54,8 @@ resource "citrixadc_radiusnode" "tf_radiusnode" {
 ## Argument Reference
 
 * `nodeprefix` - (Required) IP address/IP prefix of radius node in CIDR format
-* `radkey` - (Optional, Sensitive) The key shared between the RADIUS server and clients. Required for Citrix ADC to communicate with the RADIUS nodes. The value is persisted in Terraform state (encrypted). See also `radkey_wo` for an ephemeral alternative.
-* `radkey_wo` - (Optional, Sensitive, WriteOnly) Same as `radkey`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `radkey_wo_version`. If both `radkey` and `radkey_wo` are set, `radkey_wo` takes precedence.
+* `radkey` - (Optional, Sensitive) The key shared between the RADIUS server and clients. Required for Citrix ADC to communicate with the RADIUS nodes. The value is persisted in Terraform state (encrypted). See also `radkey_wo` for an ephemeral alternative. At least one of `radkey` or `radkey_wo` must be set.
+* `radkey_wo` - (Optional, Sensitive, WriteOnly) Same as `radkey`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `radkey_wo_version`. If both `radkey` and `radkey_wo` are set, `radkey_wo` takes precedence. At least one of `radkey` or `radkey_wo` must be set.
 * `radkey_wo_version` - (Optional) An integer version tracker for `radkey_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 
 

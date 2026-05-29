@@ -66,8 +66,8 @@ resource "citrixadc_authenticationadfsproxyprofile" "tf_adfsproxyprofile" {
 * `certkeyname` - (Required) SSL certificate of the proxy that is registered at the ADFS server for trust.
 * `serverurl` - (Required) Fully qualified URL of the ADFS server.
 * `username` - (Required) Name of an account in the directory that is used to authenticate the trust request from the Citrix ADC acting as a proxy.
-* `password` - (Optional, Sensitive) Password of an account in the directory that is used to authenticate the trust request from the Citrix ADC acting as a proxy. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative. Either `password` or `password_wo` must be specified.
-* `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence.
+* `password` - (Optional, Sensitive) Password of an account in the directory that is used to authenticate the trust request from the Citrix ADC acting as a proxy. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative. At least one of `password` or `password_wo` must be set. Either `password` or `password_wo` must be specified.
+* `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence. At least one of `password` or `password_wo` must be set.
 * `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 
 
