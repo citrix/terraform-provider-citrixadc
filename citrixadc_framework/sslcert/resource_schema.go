@@ -152,9 +152,12 @@ func (r *SslcertResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Description: "0",
 			},
 			"pempassphrase_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(1),
+				Optional: true,
+				Computed: true,
+				Default:  int64default.StaticInt64(1),
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Increment this version to signal a pempassphrase_wo update.",
 			},
 			"reqfile": schema.StringAttribute{

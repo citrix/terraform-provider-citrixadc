@@ -147,9 +147,12 @@ func (r *IpsecprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Pre shared key value",
 			},
 			"psk_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(1),
+				Optional: true,
+				Computed: true,
+				Default:  int64default.StaticInt64(1),
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Increment this version to signal a psk_wo update.",
 			},
 			"publickey": schema.StringAttribute{

@@ -74,8 +74,8 @@ resource "citrixadc_autoscaleprofile" "tf_autoscaleprofile" {
 
 ## Argument Reference
 
-* `apikey` - (Optional, Sensitive) Api key for authentication with service. The value is persisted in Terraform state (encrypted). See also `apikey_wo` for an ephemeral alternative.
-* `apikey_wo` - (Optional, Sensitive, WriteOnly) Same as `apikey`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `apikey_wo_version`. If both `apikey` and `apikey_wo` are set, `apikey_wo` takes precedence.
+* `apikey` - (Optional, Sensitive) Api key for authentication with service. The value is persisted in Terraform state (encrypted). See also `apikey_wo` for an ephemeral alternative. At least one of `apikey` or `apikey_wo` must be set.
+* `apikey_wo` - (Optional, Sensitive, WriteOnly) Same as `apikey`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `apikey_wo_version`. If both `apikey` and `apikey_wo` are set, `apikey_wo` takes precedence. At least one of `apikey` or `apikey_wo` must be set.
 * `apikey_wo_version` - (Optional) An integer version tracker for `apikey_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `name` - (Required) AutoScale profile name.
 * `sharedsecret` - (Optional, Sensitive) Shared secret for authentication with service. The value is persisted in Terraform state (encrypted). See also `sharedsecret_wo` for an ephemeral alternative.

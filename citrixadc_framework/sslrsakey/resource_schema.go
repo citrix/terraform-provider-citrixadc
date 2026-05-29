@@ -116,9 +116,12 @@ func (r *SslrsakeyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Pass phrase to use for encryption if DES or DES3 option is selected.",
 			},
 			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(1),
+				Optional: true,
+				Computed: true,
+				Default:  int64default.StaticInt64(1),
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Increment this version to signal a password_wo update.",
 			},
 			"pkcs8": schema.BoolAttribute{
