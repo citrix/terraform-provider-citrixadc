@@ -15,8 +15,8 @@ github.com/bufbuild/protocompile v0.14.1 h1:iA73zAf/fyljNjQKwYzUHD6AD4R8KMasmwa/
 github.com/bufbuild/protocompile v0.14.1/go.mod h1:ppVdAIhbr2H8asPk6k4pY7t9zB1OU5DoEw9xY/FUi1c=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
-github.com/citrix/adc-nitro-go v0.0.0-20260317185310-4ba2168fe460 h1:ev63eD/cgk776bATL1+h5Y5SKHraK+5NzV/SR1jy5ws=
-github.com/citrix/adc-nitro-go v0.0.0-20260317185310-4ba2168fe460/go.mod h1:1SPLFfIOtWnKiNWEuLhRqGrEi6VxGkXt4gpWa+mhaCg=
+github.com/citrix/adc-nitro-go v0.0.0-20260529004210-6ae43bc048bf h1:RtE4EdaojLQhkmp3d279A/d0+Vozr84dRlV2W0aLaiI=
+github.com/citrix/adc-nitro-go v0.0.0-20260529004210-6ae43bc048bf/go.mod h1:1SPLFfIOtWnKiNWEuLhRqGrEi6VxGkXt4gpWa+mhaCg=
 github.com/cloudflare/circl v1.6.3 h1:9GPOhQGF9MCYUeXyMYlqTR6a5gTrgR/fBLXvUgtVcg8=
 github.com/cloudflare/circl v1.6.3/go.mod h1:2eXP6Qfat4O/Yhh8BznvKnJ+uzEoTQ6jVKJRn81BiS4=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
