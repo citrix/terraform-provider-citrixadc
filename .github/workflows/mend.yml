@@ -1,0 +1,83 @@
+---
+name: Mend SCA Security Scan
+on:
+  workflow_dispatch:
+  pull_request:
+    paths-ignore:
+      - .github/**
+      - docs/**
+      - examples/**
+      - .goreleaser.yml
+      - .gitleaks.toml
+      - "*.md"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - .github/**
+      - docs/**
+      - examples/**
+      - .goreleaser.yml
+      - .gitleaks.toml
+      - "*.md"
+permissions: read-all
+jobs:
+  mend-sca:
+    name: Mend dependency scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      MEND_EMAIL: ${{ secrets.MEND_EMAIL }}
+      MEND_USER_KEY: ${{ secrets.MEND_USER_KEY }}
+      MEND_URL: ${{ secrets.MEND_URL }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5  # v5.5.0
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Download and install Mend CLI
+        run: |
+          curl -fsSL https://downloads.mend.io/cli/linux_amd64/mend -o /usr/local/bin/mend
+          chmod +x /usr/local/bin/mend
+          mend version
+
+      - name: Run Mend dependency scan
+        id: mend_scan
+        continue-on-error: true
+        run: |
+          mend dep --dir . --scope "terraform-provider-citrixadc" --non-interactive --export-results mend-results.json
+
+      - name: Convert results to SARIF
+        if: always() && steps.mend_scan.outcome != 'skipped'
+        continue-on-error: true
+        run: |
+          mend dep --dir . --scope "terraform-provider-citrixadc" --non-interactive --format sarif --filename mend-output.sarif || true
+
+      - name: Upload Mend SARIF to GitHub Security tab
+        if: always() && hashFiles('mend-output.sarif') != ''
+        uses: github/codeql-action/upload-sarif@256d634097be96e792d6764f9edaefc4320557b1  # v4
+        with:
+          sarif_file: mend-output.sarif
+
+      - name: Upload scan results as artifact
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        with:
+          name: mend-scan-results
+          path: |
+            mend-results.json
+            mend-output.sarif
+          retention-days: 30
+
+      - name: Fail on scan errors
+        if: steps.mend_scan.outcome == 'failure'
+        run: |
+          echo "::error::Mend dependency scan found vulnerabilities or encountered errors."
+          exit 1
