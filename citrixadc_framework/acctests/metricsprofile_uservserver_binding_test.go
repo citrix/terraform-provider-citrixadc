@@ -112,7 +112,7 @@ const testAccMetricsprofile_uservserver_binding_basic_step2 = `
 `
 
 func TestAccMetricsprofile_uservserver_binding_basic(t *testing.T) {
-	// t.Skip("TODO: Requires adding new ns extension for the uservserver participating entity. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
+	t.Skip("TODO: Requires adding new ns extension for the uservserver participating entity. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -330,7 +330,7 @@ const testAccMetricsprofile_uservserver_bindingDataSource_basic = `
 `
 
 func TestAccMetricsprofile_uservserver_bindingDataSource_basic(t *testing.T) {
-	// t.Skip("TODO: Requires adding new ns extension for the uservserver participating entity. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
+	t.Skip("TODO: Requires adding new ns extension for the uservserver participating entity. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

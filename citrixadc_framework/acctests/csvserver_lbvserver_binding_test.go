@@ -256,7 +256,7 @@ const testAccCsvserver_lbvserver_bindingDataSource_basic = `
 	}
 `
 
-func TestAcccsvserver_lbvserver_bindingDataSource_basic(t *testing.T) {
+func TestAccCsvserver_lbvserver_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

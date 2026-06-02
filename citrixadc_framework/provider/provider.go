@@ -30,6 +30,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cspolicylabel_cspolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_domain_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_authenticationvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_crvserver_binding"
@@ -1072,6 +1074,8 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		metricsprofile_servicegroup_binding.NewMetricsprofileServicegroupBindingResource,
 		metricsprofile_uservserver_binding.NewMetricsprofileUservserverBindingResource,
 		metricsprofile_vpnvserver_binding.NewMetricsprofileVpnvserverBindingResource,
+		cspolicylabel_cspolicy_binding.NewCspolicylabelCspolicyBindingResource,
+		csvserver_domain_binding.NewCsvserverDomainBindingResource,
 	}
 }
 
@@ -1833,6 +1837,8 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		metricsprofile_servicegroup_binding.MEtricsprofileServicegroupBindingDataSource,
 		metricsprofile_uservserver_binding.MEtricsprofileUservserverBindingDataSource,
 		metricsprofile_vpnvserver_binding.MEtricsprofileVpnvserverBindingDataSource,
+		cspolicylabel_cspolicy_binding.CSpolicylabelCspolicyBindingDataSource,
+		csvserver_domain_binding.CSvserverDomainBindingDataSource,
 	}
 }
 
