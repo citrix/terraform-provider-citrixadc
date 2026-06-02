@@ -108,6 +108,7 @@ const (
 	Appflowpolicylabel_appflowpolicy_binding
 	Appflowpolicylabel_binding
 	Appfwarchive
+	Appfwarchive_export
 	Appfwconfidfield
 	Appfwcustomsettings
 	Appfwfieldtype
@@ -721,6 +722,16 @@ const (
 	Mapdmr
 	Mapdomain
 	Mapdomain_mapbmr_binding
+	Metricsprofile
+	Metricsprofile_authenticationvserver_binding
+	Metricsprofile_crvserver_binding
+	Metricsprofile_csvserver_binding
+	Metricsprofile_gslbvserver_binding
+	Metricsprofile_lbvserver_binding
+	Metricsprofile_service_binding
+	Metricsprofile_servicegroup_binding
+	Metricsprofile_uservserver_binding
+	Metricsprofile_vpnvserver_binding
 	Nat64
 	Nat64param
 	Nd6
@@ -768,6 +779,7 @@ const (
 	Nsicapprofile
 	Nsip
 	Nsip6
+	Nslaslicense_offline
 	Nslicense
 	Nslicenseparameters
 	Nslicenseproxyserver
@@ -1329,6 +1341,7 @@ var resources = []string{
 	"appflowpolicylabel_appflowpolicy_binding",
 	"appflowpolicylabel_binding",
 	"appfwarchive",
+	"appfwarchive_export",
 	"appfwconfidfield",
 	"appfwcustomsettings",
 	"appfwfieldtype",
@@ -1942,6 +1955,16 @@ var resources = []string{
 	"mapdmr",
 	"mapdomain",
 	"mapdomain_mapbmr_binding",
+	"metricsprofile",
+	"metricsprofile_authenticationvserver_binding",
+	"metricsprofile_crvserver_binding",
+	"metricsprofile_csvserver_binding",
+	"metricsprofile_gslbvserver_binding",
+	"metricsprofile_lbvserver_binding",
+	"metricsprofile_service_binding",
+	"metricsprofile_servicegroup_binding",
+	"metricsprofile_uservserver_binding",
+	"metricsprofile_vpnvserver_binding",
 	"nat64",
 	"nat64param",
 	"nd6",
@@ -1989,6 +2012,7 @@ var resources = []string{
 	"nsicapprofile",
 	"nsip",
 	"nsip6",
+	"nslaslicense_offline",
 	"nslicense",
 	"nslicenseparameters",
 	"nslicenseproxyserver",

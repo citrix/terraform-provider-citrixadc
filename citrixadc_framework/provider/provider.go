@@ -30,6 +30,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_authenticationvserver_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_crvserver_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_csvserver_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_gslbvserver_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_lbvserver_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_service_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_servicegroup_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_uservserver_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/metricsprofile_vpnvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_aaapreauthenticationpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaagroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaagroup_aaauser_binding"
@@ -1052,6 +1062,16 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		authenticationsmartaccessprofile.NewAuthenticationsmartaccessprofileResource,
 		azureapplication.NewAzureapplicationResource,
 		azurekeyvault.NewAzurekeyvaultResource,
+		metricsprofile.NewMetricsprofileResource,
+		metricsprofile_authenticationvserver_binding.NewMetricsprofileAuthenticationvserverBindingResource,
+		metricsprofile_crvserver_binding.NewMetricsprofileCrvserverBindingResource,
+		metricsprofile_csvserver_binding.NewMetricsprofileCsvserverBindingResource,
+		metricsprofile_gslbvserver_binding.NewMetricsprofileGslbvserverBindingResource,
+		metricsprofile_lbvserver_binding.NewMetricsprofileLbvserverBindingResource,
+		metricsprofile_service_binding.NewMetricsprofileServiceBindingResource,
+		metricsprofile_servicegroup_binding.NewMetricsprofileServicegroupBindingResource,
+		metricsprofile_uservserver_binding.NewMetricsprofileUservserverBindingResource,
+		metricsprofile_vpnvserver_binding.NewMetricsprofileVpnvserverBindingResource,
 	}
 }
 
@@ -1803,6 +1823,16 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		authenticationsmartaccessprofile.AUthenticationsmartaccessprofileDataSource,
 		azureapplication.AZureapplicationDataSource,
 		azurekeyvault.AZurekeyvaultDataSource,
+		metricsprofile.MEtricsprofileDataSource,
+		metricsprofile_authenticationvserver_binding.MEtricsprofileAuthenticationvserverBindingDataSource,
+		metricsprofile_crvserver_binding.MEtricsprofileCrvserverBindingDataSource,
+		metricsprofile_csvserver_binding.MEtricsprofileCsvserverBindingDataSource,
+		metricsprofile_gslbvserver_binding.MEtricsprofileGslbvserverBindingDataSource,
+		metricsprofile_lbvserver_binding.MEtricsprofileLbvserverBindingDataSource,
+		metricsprofile_service_binding.MEtricsprofileServiceBindingDataSource,
+		metricsprofile_servicegroup_binding.MEtricsprofileServicegroupBindingDataSource,
+		metricsprofile_uservserver_binding.MEtricsprofileUservserverBindingDataSource,
+		metricsprofile_vpnvserver_binding.MEtricsprofileVpnvserverBindingDataSource,
 	}
 }
 
