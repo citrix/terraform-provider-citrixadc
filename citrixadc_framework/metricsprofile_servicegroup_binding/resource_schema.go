@@ -2,8 +2,8 @@ package metricsprofile_servicegroup_binding
 
 import (
 	"context"
-	"strings"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -17,10 +17,10 @@ import (
 
 // MetricsprofileServicegroupBindingResourceModel describes the resource data model.
 type MetricsprofileServicegroupBindingResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id         types.String `tfsdk:"id"`
 	Entityname types.String `tfsdk:"entityname"`
 	Entitytype types.String `tfsdk:"entitytype"`
-	Name types.String `tfsdk:"name"`
+	Name       types.String `tfsdk:"name"`
 }
 
 func (r *MetricsprofileServicegroupBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -32,21 +32,21 @@ func (r *MetricsprofileServicegroupBindingResource) Schema(ctx context.Context, 
 				Description: "The ID of the metricsprofile_servicegroup_binding resource.",
 			},
 			"entityname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the entity bound to the metrics profile.",
 			},
 			"entitytype": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Type of the entity bound to the metrics profile.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

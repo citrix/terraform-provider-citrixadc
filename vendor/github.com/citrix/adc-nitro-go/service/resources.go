@@ -1148,6 +1148,7 @@ const (
 	Vpneula
 	Vpnformssoaction
 	Vpnglobal_appcontroller_binding
+	Vpnglobal_appfwpolicy_binding
 	Vpnglobal_auditnslogpolicy_binding
 	Vpnglobal_auditsyslogpolicy_binding
 	Vpnglobal_authenticationcertpolicy_binding
@@ -1162,6 +1163,7 @@ const (
 	Vpnglobal_domain_binding
 	Vpnglobal_intranetip6_binding
 	Vpnglobal_intranetip_binding
+	Vpnglobal_secureprivateaccessurl_binding
 	Vpnglobal_sharefileserver_binding
 	Vpnglobal_sslcertkey_binding
 	Vpnglobal_staserver_binding
@@ -1179,6 +1181,7 @@ const (
 	Vpnintranetapplication
 	Vpnnexthopserver
 	Vpnparameter
+	Vpnpcoipconnection
 	Vpnpcoipprofile
 	Vpnpcoipvserverprofile
 	Vpnportaltheme
@@ -1230,6 +1233,7 @@ const (
 	Vpnvserver_intranetip_binding
 	Vpnvserver_responderpolicy_binding
 	Vpnvserver_rewritepolicy_binding
+	Vpnvserver_secureprivateaccessurl_binding
 	Vpnvserver_sharefileserver_binding
 	Vpnvserver_staserver_binding
 	Vpnvserver_vpnclientlessaccesspolicy_binding
@@ -2381,6 +2385,7 @@ var resources = []string{
 	"vpneula",
 	"vpnformssoaction",
 	"vpnglobal_appcontroller_binding",
+	"vpnglobal_appfwpolicy_binding",
 	"vpnglobal_auditnslogpolicy_binding",
 	"vpnglobal_auditsyslogpolicy_binding",
 	"vpnglobal_authenticationcertpolicy_binding",
@@ -2395,6 +2400,7 @@ var resources = []string{
 	"vpnglobal_domain_binding",
 	"vpnglobal_intranetip6_binding",
 	"vpnglobal_intranetip_binding",
+	"vpnglobal_secureprivateaccessurl_binding",
 	"vpnglobal_sharefileserver_binding",
 	"vpnglobal_sslcertkey_binding",
 	"vpnglobal_staserver_binding",
@@ -2412,6 +2418,7 @@ var resources = []string{
 	"vpnintranetapplication",
 	"vpnnexthopserver",
 	"vpnparameter",
+	"vpnpcoipconnection",
 	"vpnpcoipprofile",
 	"vpnpcoipvserverprofile",
 	"vpnportaltheme",
@@ -2463,6 +2470,7 @@ var resources = []string{
 	"vpnvserver_intranetip_binding",
 	"vpnvserver_responderpolicy_binding",
 	"vpnvserver_rewritepolicy_binding",
+	"vpnvserver_secureprivateaccessurl_binding",
 	"vpnvserver_sharefileserver_binding",
 	"vpnvserver_staserver_binding",
 	"vpnvserver_vpnclientlessaccesspolicy_binding",

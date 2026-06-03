@@ -2,17 +2,17 @@ package cspolicylabel_cspolicy_binding
 
 import (
 	"context"
-	"strings"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -21,15 +21,15 @@ import (
 
 // CspolicylabelCspolicyBindingResourceModel describes the resource data model.
 type CspolicylabelCspolicyBindingResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id                     types.String `tfsdk:"id"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
-	Invoke types.Bool `tfsdk:"invoke"`
-	InvokeLabelname types.String `tfsdk:"invoke_labelname"`
-	Labelname types.String `tfsdk:"labelname"`
-	Labeltype types.String `tfsdk:"labeltype"`
-	Policyname types.String `tfsdk:"policyname"`
-	Priority types.Int64 `tfsdk:"priority"`
-	Targetvserver types.String `tfsdk:"targetvserver"`
+	Invoke                 types.Bool   `tfsdk:"invoke"`
+	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+	Labelname              types.String `tfsdk:"labelname"`
+	Labeltype              types.String `tfsdk:"labeltype"`
+	Policyname             types.String `tfsdk:"policyname"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	Targetvserver          types.String `tfsdk:"targetvserver"`
 }
 
 func (r *CspolicylabelCspolicyBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -41,61 +41,61 @@ func (r *CspolicylabelCspolicyBindingResource) Schema(ctx context.Context, req r
 				Description: "The ID of the cspolicylabel_cspolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "0",
 			},
 			"invoke_labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label to invoke if the current policy rule evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the policy label to which to bind a content switching policy.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Type of policy label invocation.",
 			},
 			"policyname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the content switching policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Specifies the priority of the policy.",
 			},
 			"targetvserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
