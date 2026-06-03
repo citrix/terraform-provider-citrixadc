@@ -1127,8 +1127,15 @@ const (
 	Uservserver
 	Videooptimizationdetectionaction
 	Videooptimizationdetectionpolicy
+	Videooptimizationdetectionpolicylabel
+	Videooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_binding
+	Videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding
+	Videooptimizationglobalpacing_videooptimizationpacingpolicy_binding
 	Videooptimizationpacingaction
 	Videooptimizationpacingpolicy
+	Videooptimizationpacingpolicylabel
+	Videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding
+	Videooptimizationparameter
 	Vlan
 	Vlan_binding
 	Vlan_channel_binding
@@ -2364,8 +2371,15 @@ var resources = []string{
 	"uservserver",
 	"videooptimizationdetectionaction",
 	"videooptimizationdetectionpolicy",
+	"videooptimizationdetectionpolicylabel",
+	"videooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_binding",
+	"videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding",
+	"videooptimizationglobalpacing_videooptimizationpacingpolicy_binding",
 	"videooptimizationpacingaction",
 	"videooptimizationpacingpolicy",
+	"videooptimizationpacingpolicylabel",
+	"videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding",
+	"videooptimizationparameter",
 	"vlan",
 	"vlan_binding",
 	"vlan_channel_binding",
