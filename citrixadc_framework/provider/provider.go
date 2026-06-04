@@ -30,6 +30,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_authenticationnegotiateaction_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaagroup_intranetip6_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaasession"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/authenticationvserver_authenticationsmartaccesspolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwcustomsettings"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_appfwconfidfield_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_blockkeyword_binding"
@@ -1124,6 +1128,10 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		appfwprofile_grpcvalidation_binding.NewAppfwprofileGrpcvalidationBindingResource,
 		appfwprofile_jsonblockkeyword_binding.NewAppfwprofileJsonblockkeywordBindingResource,
 		appfwprofile_restvalidation_binding.NewAppfwprofileRestvalidationBindingResource,
+		aaaglobal_authenticationnegotiateaction_binding.NewAaaglobalAuthenticationnegotiateactionBindingResource,
+		aaagroup_intranetip6_binding.NewAaagroupIntranetip6BindingResource,
+		aaasession.NewAaasessionResource,
+		authenticationvserver_authenticationsmartaccesspolicy_binding.NewAuthenticationvserverAuthenticationsmartaccesspolicyBindingResource,
 	}
 }
 
@@ -1908,6 +1916,10 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		appfwprofile_grpcvalidation_binding.APpfwprofileGrpcvalidationBindingDataSource,
 		appfwprofile_jsonblockkeyword_binding.APpfwprofileJsonblockkeywordBindingDataSource,
 		appfwprofile_restvalidation_binding.APpfwprofileRestvalidationBindingDataSource,
+		aaaglobal_authenticationnegotiateaction_binding.AAaglobalAuthenticationnegotiateactionBindingDataSource,
+		aaagroup_intranetip6_binding.AAagroupIntranetip6BindingDataSource,
+		aaasession.AAasessionDataSource,
+		authenticationvserver_authenticationsmartaccesspolicy_binding.AUthenticationvserverAuthenticationsmartaccesspolicyBindingDataSource,
 	}
 }
 

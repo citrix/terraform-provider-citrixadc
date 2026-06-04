@@ -315,6 +315,7 @@ const (
 	Authenticationvserver_authenticationradiuspolicy_binding
 	Authenticationvserver_authenticationsamlidppolicy_binding
 	Authenticationvserver_authenticationsamlpolicy_binding
+	Authenticationvserver_authenticationsmartaccesspolicy_binding
 	Authenticationvserver_authenticationtacacspolicy_binding
 	Authenticationvserver_authenticationwebauthpolicy_binding
 	Authenticationvserver_binding
@@ -1567,6 +1568,7 @@ var resources = []string{
 	"authenticationvserver_authenticationradiuspolicy_binding",
 	"authenticationvserver_authenticationsamlidppolicy_binding",
 	"authenticationvserver_authenticationsamlpolicy_binding",
+	"authenticationvserver_authenticationsmartaccesspolicy_binding",
 	"authenticationvserver_authenticationtacacspolicy_binding",
 	"authenticationvserver_authenticationwebauthpolicy_binding",
 	"authenticationvserver_binding",
