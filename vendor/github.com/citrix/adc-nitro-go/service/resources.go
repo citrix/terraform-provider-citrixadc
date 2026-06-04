@@ -136,23 +136,31 @@ const (
 	Appfwpolicylabel_binding
 	Appfwpolicylabel_policybinding_binding
 	Appfwprofile
+	Appfwprofile_appfwconfidfield_binding
 	Appfwprofile_binding
+	Appfwprofile_blockkeyword_binding
+	Appfwprofile_bypasslist_binding
 	Appfwprofile_cmdinjection_binding
 	Appfwprofile_contenttype_binding
 	Appfwprofile_cookieconsistency_binding
 	Appfwprofile_creditcardnumber_binding
 	Appfwprofile_crosssitescripting_binding
 	Appfwprofile_csrftag_binding
+	Appfwprofile_denylist_binding
 	Appfwprofile_denyurl_binding
 	Appfwprofile_excluderescontenttype_binding
+	Appfwprofile_fakeaccount_binding
 	Appfwprofile_fieldconsistency_binding
 	Appfwprofile_fieldformat_binding
 	Appfwprofile_fileuploadtype_binding
+	Appfwprofile_grpcvalidation_binding
+	Appfwprofile_jsonblockkeyword_binding
 	Appfwprofile_jsoncmdurl_binding
 	Appfwprofile_jsondosurl_binding
 	Appfwprofile_jsonsqlurl_binding
 	Appfwprofile_jsonxssurl_binding
 	Appfwprofile_logexpression_binding
+	Appfwprofile_restvalidation_binding
 	Appfwprofile_safeobject_binding
 	Appfwprofile_sqlinjection_binding
 	Appfwprofile_starturl_binding
@@ -1380,23 +1388,31 @@ var resources = []string{
 	"appfwpolicylabel_binding",
 	"appfwpolicylabel_policybinding_binding",
 	"appfwprofile",
+	"appfwprofile_appfwconfidfield_binding",
 	"appfwprofile_binding",
+	"appfwprofile_blockkeyword_binding",
+	"appfwprofile_bypasslist_binding",
 	"appfwprofile_cmdinjection_binding",
 	"appfwprofile_contenttype_binding",
 	"appfwprofile_cookieconsistency_binding",
 	"appfwprofile_creditcardnumber_binding",
 	"appfwprofile_crosssitescripting_binding",
 	"appfwprofile_csrftag_binding",
+	"appfwprofile_denylist_binding",
 	"appfwprofile_denyurl_binding",
 	"appfwprofile_excluderescontenttype_binding",
+	"appfwprofile_fakeaccount_binding",
 	"appfwprofile_fieldconsistency_binding",
 	"appfwprofile_fieldformat_binding",
 	"appfwprofile_fileuploadtype_binding",
+	"appfwprofile_grpcvalidation_binding",
+	"appfwprofile_jsonblockkeyword_binding",
 	"appfwprofile_jsoncmdurl_binding",
 	"appfwprofile_jsondosurl_binding",
 	"appfwprofile_jsonsqlurl_binding",
 	"appfwprofile_jsonxssurl_binding",
 	"appfwprofile_logexpression_binding",
+	"appfwprofile_restvalidation_binding",
 	"appfwprofile_safeobject_binding",
 	"appfwprofile_sqlinjection_binding",
 	"appfwprofile_starturl_binding",

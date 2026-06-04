@@ -30,6 +30,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwcustomsettings"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_appfwconfidfield_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_blockkeyword_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_bypasslist_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_denylist_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_fakeaccount_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_grpcvalidation_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_jsonblockkeyword_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwprofile_restvalidation_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/videooptimizationdetectionpolicylabel"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/videooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding"
@@ -1106,6 +1115,15 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		videooptimizationpacingpolicylabel.NewVideooptimizationpacingpolicylabelResource,
 		videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding.NewVideooptimizationpacingpolicylabelVideooptimizationpacingpolicyBindingResource,
 		videooptimizationparameter.NewVideooptimizationparameterResource,
+		appfwcustomsettings.NewAppfwcustomsettingsResource,
+		appfwprofile_appfwconfidfield_binding.NewAppfwprofileAppfwconfidfieldBindingResource,
+		appfwprofile_blockkeyword_binding.NewAppfwprofileBlockkeywordBindingResource,
+		appfwprofile_bypasslist_binding.NewAppfwprofileBypasslistBindingResource,
+		appfwprofile_denylist_binding.NewAppfwprofileDenylistBindingResource,
+		appfwprofile_fakeaccount_binding.NewAppfwprofileFakeaccountBindingResource,
+		appfwprofile_grpcvalidation_binding.NewAppfwprofileGrpcvalidationBindingResource,
+		appfwprofile_jsonblockkeyword_binding.NewAppfwprofileJsonblockkeywordBindingResource,
+		appfwprofile_restvalidation_binding.NewAppfwprofileRestvalidationBindingResource,
 	}
 }
 
@@ -1882,6 +1900,14 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		videooptimizationpacingpolicylabel.VIdeooptimizationpacingpolicylabelDataSource,
 		videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding.VIdeooptimizationpacingpolicylabelVideooptimizationpacingpolicyBindingDataSource,
 		videooptimizationparameter.VIdeooptimizationparameterDataSource,
+		appfwprofile_appfwconfidfield_binding.APpfwprofileAppfwconfidfieldBindingDataSource,
+		appfwprofile_blockkeyword_binding.APpfwprofileBlockkeywordBindingDataSource,
+		appfwprofile_bypasslist_binding.APpfwprofileBypasslistBindingDataSource,
+		appfwprofile_denylist_binding.APpfwprofileDenylistBindingDataSource,
+		appfwprofile_fakeaccount_binding.APpfwprofileFakeaccountBindingDataSource,
+		appfwprofile_grpcvalidation_binding.APpfwprofileGrpcvalidationBindingDataSource,
+		appfwprofile_jsonblockkeyword_binding.APpfwprofileJsonblockkeywordBindingDataSource,
+		appfwprofile_restvalidation_binding.APpfwprofileRestvalidationBindingDataSource,
 	}
 }
 
