@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/apiprofile_apispec_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_authenticationnegotiateaction_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaagroup_intranetip6_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaasession"
@@ -1132,6 +1133,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		aaagroup_intranetip6_binding.NewAaagroupIntranetip6BindingResource,
 		aaasession.NewAaasessionResource,
 		authenticationvserver_authenticationsmartaccesspolicy_binding.NewAuthenticationvserverAuthenticationsmartaccesspolicyBindingResource,
+		apiprofile_apispec_binding.NewApiprofileApispecBindingResource,
 	}
 }
 
@@ -1920,6 +1922,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		aaagroup_intranetip6_binding.AAagroupIntranetip6BindingDataSource,
 		aaasession.AAasessionDataSource,
 		authenticationvserver_authenticationsmartaccesspolicy_binding.AUthenticationvserverAuthenticationsmartaccesspolicyBindingDataSource,
+		apiprofile_apispec_binding.APiprofileApispecBindingDataSource,
 	}
 }
 

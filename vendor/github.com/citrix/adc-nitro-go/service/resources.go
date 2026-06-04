@@ -88,6 +88,7 @@ const (
 	Analyticsglobal_analyticsprofile_binding
 	Analyticsprofile
 	Apiprofile
+	Apiprofile_apispec_binding
 	Apispec
 	Apispecfile
 	Appalgparam
@@ -1341,6 +1342,7 @@ var resources = []string{
 	"analyticsglobal_analyticsprofile_binding",
 	"analyticsprofile",
 	"apiprofile",
+	"apiprofile_apispec_binding",
 	"apispec",
 	"apispecfile",
 	"appalgparam",
