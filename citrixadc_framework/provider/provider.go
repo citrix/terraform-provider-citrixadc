@@ -30,6 +30,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hafiles"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hasync"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_aaapreauthenticationpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_authenticationnegotiateaction_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaagroup"
@@ -1150,6 +1152,8 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		clusternodegroup_streamidentifier_binding.NewClusternodegroupStreamidentifierBindingResource,
 		clusternodegroup_vpnvserver_binding.NewClusternodegroupVpnvserverBindingResource,
 		clusterpropstatus.NewClusterpropstatusResource,
+		hafiles.NewHafilesResource,
+		hasync.NewHasyncResource,
 	}
 }
 
