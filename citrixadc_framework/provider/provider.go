@@ -30,9 +30,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/servicegroup_servicegroupmemberlist_binding"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hafiles"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hasync"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_aaapreauthenticationpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_authenticationnegotiateaction_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaagroup"
@@ -385,9 +382,11 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbvserver_gslbservicegroup_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbvserver_lbpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbvserver_spilloverpolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hafiles"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hanode"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hanode_routemonitor6_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hanode_routemonitor_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hasync"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/icaaccessprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/icaaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/icaglobal_icapolicy_binding"
@@ -414,15 +413,21 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/l4param"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lacp"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbaction"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbglobal_lbpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbgroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbgroup_lbvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmetrictable"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmetrictable_metric_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor_metric_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor_service_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor_servicegroup_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor_sslcertkey_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbparameter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbpersistentsessions"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbpolicy"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbpolicylabel"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbpolicylabel_lbpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbroute"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbroute6"
@@ -432,6 +437,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_appflowpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_appfwpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_appqoepolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_auditnslogpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_auditsyslogpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_authorizationpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_botpolicy_binding"
@@ -450,6 +456,8 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_transformpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_videooptimizationdetectionpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_videooptimizationpacingpolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbwlm"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbwlm_lbvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/linkset"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/linkset_channel_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lldpparam"
@@ -614,6 +622,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/servicegroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/servicegroup_lbmonitor_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/servicegroup_servicegroupmember_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/servicegroup_servicegroupmemberlist_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/smppparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/smppuser"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/snmpalarm"
@@ -1156,6 +1165,15 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		hafiles.NewHafilesResource,
 		hasync.NewHasyncResource,
 		servicegroup_servicegroupmemberlist_binding.NewServicegroupServicegroupmemberlistBindingResource,
+		lbglobal_lbpolicy_binding.NewLbglobalLbpolicyBindingResource,
+		lbmonitor_service_binding.NewLbmonitorServiceBindingResource,
+		lbmonitor_servicegroup_binding.NewLbmonitorServicegroupBindingResource,
+		lbpersistentsessions.NewLbpersistentsessionsResource,
+		lbpolicylabel.NewLbpolicylabelResource,
+		lbpolicylabel_lbpolicy_binding.NewLbpolicylabelLbpolicyBindingResource,
+		lbvserver_auditnslogpolicy_binding.NewLbvserverAuditnslogpolicyBindingResource,
+		lbwlm.NewLbwlmResource,
+		lbwlm_lbvserver_binding.NewLbwlmLbvserverBindingResource,
 	}
 }
 
@@ -1945,6 +1963,13 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		aaasession.AAasessionDataSource,
 		authenticationvserver_authenticationsmartaccesspolicy_binding.AUthenticationvserverAuthenticationsmartaccesspolicyBindingDataSource,
 		apiprofile_apispec_binding.APiprofileApispecBindingDataSource,
+		lbglobal_lbpolicy_binding.LBglobalLbpolicyBindingDataSource,
+		lbpersistentsessions.LBpersistentsessionsDataSource,
+		lbpolicylabel.LBpolicylabelDataSource,
+		lbpolicylabel_lbpolicy_binding.LBpolicylabelLbpolicyBindingDataSource,
+		lbvserver_auditnslogpolicy_binding.LBvserverAuditnslogpolicyBindingDataSource,
+		lbwlm.LBwlmDataSource,
+		lbwlm_lbvserver_binding.LBwlmLbvserverBindingDataSource,
 	}
 }
 

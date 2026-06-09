@@ -632,6 +632,7 @@ const (
 	L4param
 	Lacp
 	Lbaction
+	Lbglobal_lbpolicy_binding
 	Lbgroup
 	Lbgroup_binding
 	Lbgroup_lbvserver_binding
@@ -651,6 +652,8 @@ const (
 	Lbparameter
 	Lbpersistentsessions
 	Lbpolicy
+	Lbpolicylabel
+	Lbpolicylabel_lbpolicy_binding
 	Lbprofile
 	Lbroute
 	Lbroute6
@@ -1887,6 +1890,7 @@ var resources = []string{
 	"l4param",
 	"lacp",
 	"lbaction",
+	"lbglobal_lbpolicy_binding",
 	"lbgroup",
 	"lbgroup_binding",
 	"lbgroup_lbvserver_binding",
@@ -1906,6 +1910,8 @@ var resources = []string{
 	"lbparameter",
 	"lbpersistentsessions",
 	"lbpolicy",
+	"lbpolicylabel",
+	"lbpolicylabel_lbpolicy_binding",
 	"lbprofile",
 	"lbroute",
 	"lbroute6",
