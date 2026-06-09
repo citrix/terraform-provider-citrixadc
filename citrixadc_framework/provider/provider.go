@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/servicegroup_servicegroupmemberlist_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hafiles"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hasync"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_aaapreauthenticationpolicy_binding"
@@ -1154,6 +1155,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		clusterpropstatus.NewClusterpropstatusResource,
 		hafiles.NewHafilesResource,
 		hasync.NewHasyncResource,
+		servicegroup_servicegroupmemberlist_binding.NewServicegroupServicegroupmemberlistBindingResource,
 	}
 }
 
