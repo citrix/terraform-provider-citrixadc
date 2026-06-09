@@ -12,15 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 )
 
 // VideooptimizationpacingpolicylabelResourceModel describes the resource data model.
 type VideooptimizationpacingpolicylabelResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	Comment types.String `tfsdk:"comment"`
-	Labelname types.String `tfsdk:"labelname"`
-	Newname types.String `tfsdk:"newname"`
+	Id              types.String `tfsdk:"id"`
+	Comment         types.String `tfsdk:"comment"`
+	Labelname       types.String `tfsdk:"labelname"`
+	Newname         types.String `tfsdk:"newname"`
 	Policylabeltype types.String `tfsdk:"policylabeltype"`
 }
 
@@ -33,30 +32,30 @@ func (r *VideooptimizationpacingpolicylabelResource) Schema(ctx context.Context,
 				Description: "The ID of the videooptimizationpacingpolicylabel resource.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Any comments to preserve information about this videooptimization pacing policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name for the Video optimization pacing policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (\n.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the videooptimization pacing policy label is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my videooptimization pacing policy label\" or my videooptimization pacing policy label').",
 			},
 			"newname": schema.StringAttribute{
-				Optional:    true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "New name for the videooptimization pacing policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (\n-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.",
 			},
 			"policylabeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

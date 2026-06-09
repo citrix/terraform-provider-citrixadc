@@ -2,8 +2,8 @@ package apiprofile_apispec_binding
 
 import (
 	"context"
-	"strings"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/api"
 
@@ -19,9 +19,9 @@ import (
 
 // ApiprofileApispecBindingResourceModel describes the resource data model.
 type ApiprofileApispecBindingResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id      types.String `tfsdk:"id"`
 	Apispec types.String `tfsdk:"apispec"`
-	Name types.String `tfsdk:"name"`
+	Name    types.String `tfsdk:"name"`
 }
 
 func (r *ApiprofileApispecBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -33,14 +33,14 @@ func (r *ApiprofileApispecBindingResource) Schema(ctx context.Context, req resou
 				Description: "The ID of the apiprofile_apispec_binding resource.",
 			},
 			"apispec": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name for the API spec which will be binded to the profile.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

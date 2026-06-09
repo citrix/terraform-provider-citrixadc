@@ -43,7 +43,8 @@ func (d *ClusternodegroupNslimitidentifierBindingDataSource) Read(ctx context.Co
 	}
 
 	// Case 4: Array filter with parent ID
-	name_Name := data.Name.ValueString()
+	// name is the URL PATH key (parent); identifiername filters within the parent's bindings.
+	name_Name := data.Name
 	identifiername_Name := data.Identifiername
 
 	var dataArr []map[string]interface{}
@@ -51,7 +52,7 @@ func (d *ClusternodegroupNslimitidentifierBindingDataSource) Read(ctx context.Co
 
 	findParams := service.FindParams{
 		ResourceType:             service.Clusternodegroup_nslimitidentifier_binding.Type(),
-		ResourceName:             name_Name,
+		ResourceName:             name_Name.ValueString(),
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -71,6 +72,17 @@ func (d *ClusternodegroupNslimitidentifierBindingDataSource) Read(ctx context.Co
 	for i, v := range dataArr {
 		match := true
 
+		// Check name
+		if val, ok := v["name"].(string); ok {
+			if name_Name.IsNull() || val != name_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !name_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check identifiername
 		if val, ok := v["identifiername"].(string); ok {
 			if identifiername_Name.IsNull() || val != identifiername_Name.ValueString() {
@@ -81,6 +93,7 @@ func (d *ClusternodegroupNslimitidentifierBindingDataSource) Read(ctx context.Co
 			match = false
 			continue
 		}
+
 		if match {
 			foundIndex = i
 			break
@@ -89,11 +102,11 @@ func (d *ClusternodegroupNslimitidentifierBindingDataSource) Read(ctx context.Co
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("clusternodegroup_nslimitidentifier_binding with identifiername %s not found", identifiername_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("clusternodegroup_nslimitidentifier_binding with name %s not found", name_Name))
 		return
 	}
 
-	clusternodegroup_nslimitidentifier_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	clusternodegroup_nslimitidentifier_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

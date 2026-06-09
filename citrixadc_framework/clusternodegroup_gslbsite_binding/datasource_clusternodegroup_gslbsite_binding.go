@@ -42,16 +42,16 @@ func (d *ClusternodegroupGslbsiteBindingDataSource) Read(ctx context.Context, re
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	name_Name := data.Name.ValueString()
+	// Case 3: Array filter without parent ID
 	gslbsite_Name := data.Gslbsite
+	name_Name := data.Name
 
 	var dataArr []map[string]interface{}
 	var err error
 
 	findParams := service.FindParams{
 		ResourceType:             service.Clusternodegroup_gslbsite_binding.Type(),
-		ResourceName:             name_Name,
+		ResourceName:             name_Name.ValueString(),
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -62,7 +62,7 @@ func (d *ClusternodegroupGslbsiteBindingDataSource) Read(ctx context.Context, re
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		resp.Diagnostics.AddError("Client Error", "clusternodegroup_gslbsite_binding returned empty array.")
+		resp.Diagnostics.AddError("Client Error", "clusternodegroup_gslbsite_binding returned empty array")
 		return
 	}
 
@@ -81,6 +81,18 @@ func (d *ClusternodegroupGslbsiteBindingDataSource) Read(ctx context.Context, re
 			match = false
 			continue
 		}
+
+		// Check name
+		if val, ok := v["name"].(string); ok {
+			if name_Name.IsNull() || val != name_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !name_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		if match {
 			foundIndex = i
 			break
@@ -93,7 +105,7 @@ func (d *ClusternodegroupGslbsiteBindingDataSource) Read(ctx context.Context, re
 		return
 	}
 
-	clusternodegroup_gslbsite_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	clusternodegroup_gslbsite_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

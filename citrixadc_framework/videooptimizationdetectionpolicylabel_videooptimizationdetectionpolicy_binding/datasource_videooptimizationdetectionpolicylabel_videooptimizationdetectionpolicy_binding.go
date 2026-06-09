@@ -6,8 +6,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
 var _ datasource.DataSource = (*VideooptimizationdetectionpolicylabelVideooptimizationdetectionpolicyBindingDataSource)(nil)

@@ -414,6 +414,7 @@ const (
 	Clusternodegroup_service_binding
 	Clusternodegroup_streamidentifier_binding
 	Clusternodegroup_vpnvserver_binding
+	Clusterpropstatus
 	Clustersync
 	Cmpaction
 	Cmpglobal_binding
@@ -1668,6 +1669,7 @@ var resources = []string{
 	"clusternodegroup_service_binding",
 	"clusternodegroup_streamidentifier_binding",
 	"clusternodegroup_vpnvserver_binding",
+	"clusterpropstatus",
 	"clustersync",
 	"cmpaction",
 	"cmpglobal_binding",

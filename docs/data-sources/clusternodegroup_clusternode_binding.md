@@ -4,29 +4,33 @@ subcategory: "Cluster"
 
 # Data Source: clusternodegroup_clusternode_binding
 
-This data source retrieves information about a specific cluster nodegroup to clusternode binding.
+The clusternodegroup_clusternode_binding data source allows you to retrieve information about a cluster node bound to a cluster nodegroup on the Citrix ADC.
 
-## Example Usage
 
-```hcl
+## Example usage
+
+```terraform
 data "citrixadc_clusternodegroup_clusternode_binding" "example" {
-  name = "my_nodegroup"
+  name = "ng1"
   node = 0
 }
 
-output "binding_state" {
-  value = data.citrixadc_clusternodegroup_clusternode_binding.example.state
+output "bound_node" {
+  value = data.citrixadc_clusternodegroup_clusternode_binding.example.node
 }
 ```
+
 
 ## Argument Reference
 
 * `name` - (Required) Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.
-* `node` - (Required) Nodes in the nodegroup.
+* `node` - (Required) Node id of the cluster node bound to the nodegroup. This is an integer. Minimum value = `0` Maximum value = `31`.
+
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the binding. It is the concatenation of `name` and `node` attributes seperated by comma.
-* `state` - State of the node in the nodegroup.
+* `id` - The id of the clusternodegroup_clusternode_binding. It is a comma-separated set of `key:value` pairs in the form `name:<name>,node:<node>`.
+* `name` - Name of the nodegroup.
+* `node` - Node id of the cluster node bound to the nodegroup.

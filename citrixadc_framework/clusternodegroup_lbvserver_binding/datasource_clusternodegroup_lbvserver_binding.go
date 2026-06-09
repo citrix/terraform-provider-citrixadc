@@ -42,8 +42,8 @@ func (d *ClusternodegroupLbvserverBindingDataSource) Read(ctx context.Context, r
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	name_Name := data.Name.ValueString()
+	// Case 3: Array filter without parent ID
+	name_Name := data.Name
 	vserver_Name := data.Vserver
 
 	var dataArr []map[string]interface{}
@@ -51,7 +51,7 @@ func (d *ClusternodegroupLbvserverBindingDataSource) Read(ctx context.Context, r
 
 	findParams := service.FindParams{
 		ResourceType:             service.Clusternodegroup_lbvserver_binding.Type(),
-		ResourceName:             name_Name,
+		ResourceName:             name_Name.ValueString(),
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -62,7 +62,7 @@ func (d *ClusternodegroupLbvserverBindingDataSource) Read(ctx context.Context, r
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		resp.Diagnostics.AddError("Client Error", "clusternodegroup_lbvserver_binding returned empty array.")
+		resp.Diagnostics.AddError("Client Error", "clusternodegroup_lbvserver_binding returned empty array")
 		return
 	}
 
@@ -70,6 +70,17 @@ func (d *ClusternodegroupLbvserverBindingDataSource) Read(ctx context.Context, r
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
+
+		// Check name
+		if val, ok := v["name"].(string); ok {
+			if name_Name.IsNull() || val != name_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !name_Name.IsNull() {
+			match = false
+			continue
+		}
 
 		// Check vserver
 		if val, ok := v["vserver"].(string); ok {
@@ -81,6 +92,7 @@ func (d *ClusternodegroupLbvserverBindingDataSource) Read(ctx context.Context, r
 			match = false
 			continue
 		}
+
 		if match {
 			foundIndex = i
 			break
@@ -89,11 +101,11 @@ func (d *ClusternodegroupLbvserverBindingDataSource) Read(ctx context.Context, r
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("clusternodegroup_lbvserver_binding with vserver %s not found", vserver_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("clusternodegroup_lbvserver_binding with name %s not found", name_Name))
 		return
 	}
 
-	clusternodegroup_lbvserver_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	clusternodegroup_lbvserver_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

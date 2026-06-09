@@ -17,15 +17,27 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_lbvserver_binding_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_ng_lb" {
+		name   = "tf_ng_lb"
+		strict = "NO"
+		sticky = "YES"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_lb_node" {
+		name = citrixadc_clusternodegroup.tf_ng_lb.name
+		node = 0
+		depends_on = [citrixadc_clusternodegroup.tf_ng_lb]
+	}
 
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		name        = "my_lb_vserver_ds"
@@ -33,13 +45,31 @@ const testAccClusternodegroup_lbvserver_binding_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
-		name = "my_tf_group"
+		name = citrixadc_clusternodegroup.tf_ng_lb.name
 		vserver = citrixadc_lbvserver.tf_lbvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_ng_lb, citrixadc_clusternodegroup_clusternode_binding.tf_ng_lb_node]
 	}
 `
 
 const testAccClusternodegroup_lbvserver_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_clusternodegroup" "tf_ng_lb" {
+		name   = "tf_ng_lb"
+		strict = "NO"
+		sticky = "YES"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_lb_node" {
+		name = citrixadc_clusternodegroup.tf_ng_lb.name
+		node = 0
+		depends_on = [citrixadc_clusternodegroup.tf_ng_lb]
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "my_lb_vserver_ds"
+		servicetype = "HTTP"
+	}
 `
 
 func TestAccClusternodegroup_lbvserver_binding_basic(t *testing.T) {
@@ -60,7 +90,7 @@ func TestAccClusternodegroup_lbvserver_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_lbvserver_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_lbvserver_bindingNotExist("citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "my_test_group,my_lbvserver"),
+					testAccCheckClusternodegroup_lbvserver_bindingNotExist("citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "tf_ng_lb,my_lb_vserver_ds"),
 				),
 			},
 		},
@@ -94,10 +124,12 @@ func testAccCheckClusternodegroup_lbvserver_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		vserver := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		vserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_lbvserver_binding",
@@ -136,13 +168,12 @@ func testAccCheckClusternodegroup_lbvserver_bindingNotExist(n string, id string)
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		vserver := idSlice[1]
+		name := idMap["name"]
+		vserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_lbvserver_binding",
@@ -201,14 +232,27 @@ func testAccCheckClusternodegroup_lbvserver_bindingDestroy(s *terraform.State) e
 
 const testAccClusternodegroup_lbvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_ng_lb_ds" {
+		name   = "tf_ng_lb_ds"
+		strict = "NO"
+		sticky = "YES"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_lb_ds_node" {
+		name = citrixadc_clusternodegroup.tf_ng_lb_ds.name
+		node = 0
+		depends_on = [citrixadc_clusternodegroup.tf_ng_lb_ds]
+	}
+
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		name        = "my_lb_vserver_ds"
 		servicetype = "HTTP"
 	}
 
 	resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
-		name    = "my_tf_group"
+		name    = citrixadc_clusternodegroup.tf_ng_lb_ds.name
 		vserver = citrixadc_lbvserver.tf_lbvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_ng_lb_ds, citrixadc_clusternodegroup_clusternode_binding.tf_ng_lb_ds_node]
 	}
 
 	data "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
@@ -230,7 +274,7 @@ func TestAccclusternodegroup_lbvserver_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_lbvserver_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "name", "tf_ng_lb_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "vserver", "my_lb_vserver_ds"),
 				),
 			},

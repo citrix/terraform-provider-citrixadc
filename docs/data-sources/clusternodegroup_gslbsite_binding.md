@@ -4,28 +4,31 @@ subcategory: "Cluster"
 
 # Data Source: clusternodegroup_gslbsite_binding
 
-This data source retrieves information about a specific cluster nodegroup to GSLB site binding.
+The clusternodegroup_gslbsite_binding data source allows you to retrieve information about a binding between a cluster node group and a GSLB site on the Citrix ADC.
 
-## Example Usage
 
-```hcl
+## Example usage
+
+```terraform
 data "citrixadc_clusternodegroup_gslbsite_binding" "example" {
-  name     = "my_nodegroup"
-  gslbsite = "my_gslb_site"
+  name     = "ng1"
+  gslbsite = "site1"
 }
 
-output "binding_id" {
-  value = data.citrixadc_clusternodegroup_gslbsite_binding.example.id
+output "bound_gslbsite" {
+  value = data.citrixadc_clusternodegroup_gslbsite_binding.example.gslbsite
 }
 ```
 
+
 ## Argument Reference
 
-* `name` - (Required) Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.
-* `gslbsite` - (Required) GSLB site that needs to be bound to this nodegroup.
+* `name` - (Required) Name of the cluster node group. The name uniquely identifies the node group on the cluster.
+* `gslbsite` - (Required) Name of the GSLB site bound to this node group.
+
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the binding. It is the concatenation of `name` and `gslbsite` attributes seperated by comma.
+* `id` - The id of the clusternodegroup_gslbsite_binding. It is a composite key of the form `name:<name>,gslbsite:<gslbsite>`, with each value URL-encoded.

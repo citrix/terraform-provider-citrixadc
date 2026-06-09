@@ -4,36 +4,49 @@ subcategory: "Cluster"
 
 # Resource: clusternodegroup_lbvserver_binding
 
-The clusternodegroup_lbvserver_binding resource is used to create clusternodegroup_lbvserver_binding.
+Binds a load balancing (LB) virtual server to a cluster node group on the Citrix ADC. A node group lets you pin entities to a specific subset of cluster nodes; binding an LB vserver to a node group controls where the vserver is placed (spotted or partially striped) so that its traffic is processed only by the nodes in that group rather than being striped across the entire cluster.
 
 
 ## Example usage
 
 ```hcl
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+  name = "ng1"
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  name        = "lbvs1"
+  servicetype = "HTTP"
+  ipv46       = "10.10.10.10"
+  port        = 80
+}
+
 resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
-  name = "my_test_group"
-  vserver = "my_lbvserver"
+  name    = citrixadc_clusternodegroup.tf_clusternodegroup.name
+  vserver = citrixadc_lbvserver.tf_lbvserver.name
 }
 ```
 
 
 ## Argument Reference
 
-* `vserver` - (Required) vserver that need to be bound to this nodegroup.
-* `name` - (Required) Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster. Minimum length =  1
+* `name` - (Required) Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster. Changing this forces a new resource to be created.
+* `vserver` - (Required) Name of the load balancing virtual server that is bound to this nodegroup. Changing this forces a new resource to be created.
+
+~> **Note** This binding has no NITRO update endpoint and both attributes force replacement. Any change to `name` or `vserver` recreates the binding.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the clusternodegroup_lbvserver_binding. It is the concatenation of `name` and `vserver` attributes separated by a comma.
+* `id` - The id of the clusternodegroup_lbvserver_binding. It is a comma-separated set of `key:value` pairs in the form `name:<name>,vserver:<vserver>`. The values are URL-encoded inside the id so that any reserved characters do not collide with the `key:value` and comma delimiters.
 
 
 ## Import
 
-A clusternodegroup_lbvserver_binding can be imported using its name, e.g.
+A clusternodegroup_lbvserver_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding my_test_group,my_lbvserver
+terraform import citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding "name:ng1,vserver:lbvs1"
 ```

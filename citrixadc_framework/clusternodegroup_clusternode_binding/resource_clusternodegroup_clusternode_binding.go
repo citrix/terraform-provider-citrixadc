@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +55,21 @@ func (r *ClusternodegroupClusternodeBindingResource) Create(ctx context.Context,
 	}
 
 	tflog.Debug(ctx, "Creating clusternodegroup_clusternode_binding resource")
-
-	// clusternodegroup_clusternode_binding := clusternodegroup_clusternode_bindingGetThePayloadFromtheConfig(ctx, &data)
+	clusternodegroup_clusternode_binding := clusternodegroup_clusternode_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Clusternodegroup_clusternode_binding.Type(), &clusternodegroup_clusternode_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusternodegroup_clusternode_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("clusternodegroup_clusternode_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Clusternodegroup_clusternode_binding.Type(), &clusternodegroup_clusternode_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusternodegroup_clusternode_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created clusternodegroup_clusternode_binding resource")
+
+	// Set ID for the resource before reading state.
+	// Composite ID = name,node; name is URL-encoded, node is a plain integer.
+	data.Id = types.StringValue(clusternodegroup_clusternode_bindingComposeId(data.Name.ValueString(), data.Node.ValueInt64()))
 
 	// Read the updated state back
 	r.readClusternodegroupClusternodeBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +97,10 @@ func (r *ClusternodegroupClusternodeBindingResource) Read(ctx context.Context, r
 }
 
 func (r *ClusternodegroupClusternodeBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ClusternodegroupClusternodeBindingResourceModel
+	var data, state ClusternodegroupClusternodeBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +108,12 @@ func (r *ClusternodegroupClusternodeBindingResource) Update(ctx context.Context,
 		return
 	}
 
-	tflog.Debug(ctx, "Updating clusternodegroup_clusternode_binding resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// clusternodegroup_clusternode_binding := clusternodegroup_clusternode_bindingGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Clusternodegroup_clusternode_binding.Type(), &clusternodegroup_clusternode_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update clusternodegroup_clusternode_binding, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated clusternodegroup_clusternode_binding resource")
+	// NITRO has no update endpoint for this binding (only add/delete), and all
+	// schema attributes are RequiresReplace, so Update is a no-op.
+	tflog.Debug(ctx, "Update is a no-op for clusternodegroup_clusternode_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readClusternodegroupClusternodeBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +133,104 @@ func (r *ClusternodegroupClusternodeBindingResource) Delete(ctx context.Context,
 	}
 
 	tflog.Debug(ctx, "Deleting clusternodegroup_clusternode_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs with the parent
+	// (name) as the resource name and the bound node passed as an arg. This matches
+	// the SDK v2 contract. Parse the ID to recover both (handles legacy + new format).
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "node"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For clusternodegroup_clusternode_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted clusternodegroup_clusternode_binding resource from state")
+	name := idMap["name"]
+	args := make([]string, 0)
+	if val, ok := idMap["node"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("node:%s", val))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Clusternodegroup_clusternode_binding.Type(), name, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete clusternodegroup_clusternode_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted clusternodegroup_clusternode_binding binding")
 }
 
 // Helper function to read clusternodegroup_clusternode_binding data from API
 func (r *ClusternodegroupClusternodeBindingResource) readClusternodegroupClusternodeBindingFromApi(ctx context.Context, data *ClusternodegroupClusternodeBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Clusternodegroup_clusternode_binding.Type(), "")
+
+	// Parse the composite ID (handles both legacy comma "name,node" and new
+	// "name:<enc>,node:<int>" formats) to recover the parent name and node filter.
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "node"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	nameFilter := idMap["name"]
+	nodeFilter, _ := utils.ConvertToInt64(idMap["node"])
+
+	var dataArr []map[string]interface{}
+
+	// The NITRO binding GET requires the parent (name) to be supplied as the
+	// resource name. This matches the SDK v2 contract.
+	findParams := service.FindParams{
+		ResourceType:             service.Clusternodegroup_clusternode_binding.Type(),
+		ResourceName:             nameFilter,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read clusternodegroup_clusternode_binding, got error: %s", err))
 		return
 	}
 
-	clusternodegroup_clusternode_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "clusternodegroup_clusternode_binding returned empty array")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check name
+		if val, ok := v["name"].(string); ok {
+			if val != nameFilter {
+				match = false
+				continue
+			}
+		} else {
+			match = false
+			continue
+		}
+
+		// Check node (NITRO may return it as a number or string)
+		if val, ok := v["node"]; ok {
+			nodeVal, _ := utils.ConvertToInt64(val)
+			if nodeVal != nodeFilter {
+				match = false
+				continue
+			}
+		} else {
+			match = false
+			continue
+		}
+
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("clusternodegroup_clusternode_binding not found with the provided ID attributes"))
+		return
+	}
+
+	clusternodegroup_clusternode_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

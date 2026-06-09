@@ -4,28 +4,31 @@ subcategory: "Cluster"
 
 # Data Source: clusternodegroup_csvserver_binding
 
-This data source retrieves information about a specific cluster nodegroup to content switching virtual server binding.
+The clusternodegroup_csvserver_binding data source allows you to retrieve information about a content switching virtual server bound to a cluster node group on the Citrix ADC.
 
-## Example Usage
 
-```hcl
+## Example usage
+
+```terraform
 data "citrixadc_clusternodegroup_csvserver_binding" "example" {
-  name    = "my_nodegroup"
-  vserver = "my_csvserver"
+  name    = "ng1"
+  vserver = "csvs1"
 }
 
-output "binding_id" {
-  value = data.citrixadc_clusternodegroup_csvserver_binding.example.id
+output "bound_vserver" {
+  value = data.citrixadc_clusternodegroup_csvserver_binding.example.vserver
 }
 ```
+
 
 ## Argument Reference
 
 * `name` - (Required) Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.
-* `vserver` - (Required) Content switching virtual server that needs to be bound to this nodegroup.
+* `vserver` - (Required) Name of the content switching virtual server bound to this nodegroup.
+
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the binding. It is the concatenation of `name` and `vserver` attributes seperated by comma.
+* `id` - The id of the clusternodegroup_csvserver_binding. It is a comma-separated set of `key:value` pairs in the form `name:<name>,vserver:<vserver>`, with the values URL-encoded.

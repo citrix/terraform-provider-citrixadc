@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,35 +33,59 @@ func (r *ClusternodegroupGslbsiteBindingResource) Schema(ctx context.Context, re
 				Description: "The ID of the clusternodegroup_gslbsite_binding resource.",
 			},
 			"gslbsite": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "vserver that need to be bound to this nodegroup.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.",
 			},
 		},
 	}
 }
 
-func clusternodegroup_gslbsite_bindingGetThePayloadFromtheConfig(ctx context.Context, data *ClusternodegroupGslbsiteBindingResourceModel) cluster.Clusternodegroupgslbsitebinding {
-	tflog.Debug(ctx, "In clusternodegroup_gslbsite_bindingGetThePayloadFromtheConfig Function")
+func clusternodegroup_gslbsite_bindingGetThePayloadFromthePlan(ctx context.Context, data *ClusternodegroupGslbsiteBindingResourceModel) cluster.Clusternodegroupgslbsitebinding {
+	tflog.Debug(ctx, "In clusternodegroup_gslbsite_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	clusternodegroup_gslbsite_binding := cluster.Clusternodegroupgslbsitebinding{}
-	if !data.Gslbsite.IsNull() {
+	if !data.Gslbsite.IsNull() && !data.Gslbsite.IsUnknown() {
 		clusternodegroup_gslbsite_binding.Gslbsite = data.Gslbsite.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		clusternodegroup_gslbsite_binding.Name = data.Name.ValueString()
 	}
 
 	return clusternodegroup_gslbsite_binding
 }
 
+// clusternodegroup_gslbsite_bindingSetAttrFromGet is used by the resource Read/Create flow.
+// It preserves the plan/state-supplied values (name, gslbsite are both RequiresReplace identity attrs) and
+// does NOT recompute the ID, which is set exactly once in Create.
 func clusternodegroup_gslbsite_bindingSetAttrFromGet(ctx context.Context, data *ClusternodegroupGslbsiteBindingResourceModel, getResponseData map[string]interface{}) *ClusternodegroupGslbsiteBindingResourceModel {
 	tflog.Debug(ctx, "In clusternodegroup_gslbsite_bindingSetAttrFromGet Function")
+
+	// Convert API response to model
+	if val, ok := getResponseData["gslbsite"]; ok && val != nil {
+		data.Gslbsite = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// clusternodegroup_gslbsite_bindingSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response and composes the ID, since the datasource has no Create to seed those values.
+func clusternodegroup_gslbsite_bindingSetAttrFromGetForDatasource(ctx context.Context, data *ClusternodegroupGslbsiteBindingResourceModel, getResponseData map[string]interface{}) *ClusternodegroupGslbsiteBindingResourceModel {
+	tflog.Debug(ctx, "In clusternodegroup_gslbsite_bindingSetAttrFromGetForDatasource Function")
 
 	// Convert API response to model
 	if val, ok := getResponseData["gslbsite"]; ok && val != nil {
@@ -73,11 +99,11 @@ func clusternodegroup_gslbsite_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Name = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("gslbsite:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Gslbsite.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("gslbsite:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Gslbsite.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

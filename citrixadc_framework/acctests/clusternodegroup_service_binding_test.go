@@ -21,17 +21,25 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_service_binding_basic = `
 
-	resource "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
-		name    = "my_tf_group"
-		service = citrixadc_service.tf_service.name
+	resource "citrixadc_clusternodegroup" "tf_ng_svc" {
+		name   = "tf_ng_svc"
+		strict = "NO"
+		sticky = "YES"
 	}
-	
+
+	resource "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
+		name    = citrixadc_clusternodegroup.tf_ng_svc.name
+		service = citrixadc_service.tf_service.name
+		depends_on = [citrixadc_clusternodegroup.tf_ng_svc]
+	}
+
 	resource "citrixadc_service" "tf_service" {
 		name = "tf_service"
 		servicetype = "ADNS"
@@ -41,7 +49,13 @@ const testAccClusternodegroup_service_binding_basic = `
 `
 
 const testAccClusternodegroup_service_binding_basic_step2 = `
-	 
+
+	resource "citrixadc_clusternodegroup" "tf_ng_svc" {
+		name   = "tf_ng_svc"
+		strict = "NO"
+		sticky = "YES"
+	}
+
 	resource "citrixadc_service" "tf_service" {
 		name = "tf_service"
 		servicetype = "ADNS"
@@ -68,7 +82,7 @@ func TestAccClusternodegroup_service_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_service_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_service_bindingNotExist("citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", "my_gslb_group,tf_service"),
+					testAccCheckClusternodegroup_service_bindingNotExist("citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", "tf_ng_svc,tf_service"),
 				),
 			},
 		},
@@ -102,10 +116,13 @@ func testAccCheckClusternodegroup_service_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "service"}, nil)
+		if err != nil {
+			return err
+		}
 
-		name := idSlice[0]
-		serviceName := idSlice[1]
+		name := idMap["name"]
+		serviceName := idMap["service"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_service_binding",
@@ -147,10 +164,13 @@ func testAccCheckClusternodegroup_service_bindingNotExist(n string, id string) r
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "service"}, nil)
+		if err != nil {
+			return err
+		}
 
-		name := idSlice[0]
-		serviceName := idSlice[1]
+		name := idMap["name"]
+		serviceName := idMap["service"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_service_binding",
@@ -216,9 +236,16 @@ const testAccClusternodegroup_service_bindingDataSource_basic = `
 		port        = "53"
 	}
 
+	resource "citrixadc_clusternodegroup" "tf_ng_svc_ds" {
+		name   = "tf_ng_svc_ds"
+		strict = "NO"
+		sticky = "YES"
+	}
+
 	resource "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
-		name    = "my_tf_group"
+		name    = citrixadc_clusternodegroup.tf_ng_svc_ds.name
 		service = citrixadc_service.tf_service.name
+		depends_on = [citrixadc_clusternodegroup.tf_ng_svc_ds]
 	}
 
 	data "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
@@ -240,7 +267,7 @@ func TestAccclusternodegroup_service_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_service_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", "name", "tf_ng_svc_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", "service", "my_service_ds"),
 				),
 			},

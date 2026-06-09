@@ -17,15 +17,27 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_crvserver_binding_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_ng_cr" {
+		name   = "tf_ng_cr"
+		strict = "NO"
+		sticky = "YES"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_cr_node" {
+		name = citrixadc_clusternodegroup.tf_ng_cr.name
+		node = 0
+		depends_on = [citrixadc_clusternodegroup.tf_ng_cr]
+	}
 
 	resource "citrixadc_crvserver" "tf_crvserver" {
 		name        = "my_cache_redirection_server_ds"
@@ -33,13 +45,31 @@ const testAccClusternodegroup_crvserver_binding_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_crvserver_binding" "tf_clusternodegroup_crvserver_binding" {
-		name = "my_tf_group"
+		name = citrixadc_clusternodegroup.tf_ng_cr.name
 		vserver = citrixadc_crvserver.tf_crvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_ng_cr, citrixadc_clusternodegroup_clusternode_binding.tf_ng_cr_node]
 	}
 `
 
 const testAccClusternodegroup_crvserver_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_clusternodegroup" "tf_ng_cr" {
+		name   = "tf_ng_cr"
+		strict = "NO"
+		sticky = "YES"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_cr_node" {
+		name = citrixadc_clusternodegroup.tf_ng_cr.name
+		node = 0
+		depends_on = [citrixadc_clusternodegroup.tf_ng_cr]
+	}
+
+	resource "citrixadc_crvserver" "tf_crvserver" {
+		name        = "my_cache_redirection_server_ds"
+		servicetype = "HTTP"
+	}
 `
 
 func TestAccClusternodegroup_crvserver_binding_basic(t *testing.T) {
@@ -60,7 +90,7 @@ func TestAccClusternodegroup_crvserver_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_crvserver_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_crvserver_bindingNotExist("citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", "my_cr_group,my_crvserver"),
+					testAccCheckClusternodegroup_crvserver_bindingNotExist("citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", "tf_ng_cr,my_cache_redirection_server_ds"),
 				),
 			},
 		},
@@ -94,10 +124,12 @@ func testAccCheckClusternodegroup_crvserver_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		vserver := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		vserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_crvserver_binding",
@@ -136,13 +168,12 @@ func testAccCheckClusternodegroup_crvserver_bindingNotExist(n string, id string)
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		vserver := idSlice[1]
+		name := idMap["name"]
+		vserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_crvserver_binding",
@@ -201,14 +232,27 @@ func testAccCheckClusternodegroup_crvserver_bindingDestroy(s *terraform.State) e
 
 const testAccClusternodegroup_crvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_ng_cr_ds" {
+		name   = "tf_ng_cr_ds"
+		strict = "NO"
+		sticky = "YES"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_cr_ds_node" {
+		name = citrixadc_clusternodegroup.tf_ng_cr_ds.name
+		node = 0
+		depends_on = [citrixadc_clusternodegroup.tf_ng_cr_ds]
+	}
+
 	resource "citrixadc_crvserver" "tf_crvserver" {
 		name        = "my_cache_redirection_server_ds"
 		servicetype = "HTTP"
 	}
 
 	resource "citrixadc_clusternodegroup_crvserver_binding" "tf_clusternodegroup_crvserver_binding" {
-		name    = "my_tf_group"
+		name    = citrixadc_clusternodegroup.tf_ng_cr_ds.name
 		vserver = citrixadc_crvserver.tf_crvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_ng_cr_ds, citrixadc_clusternodegroup_clusternode_binding.tf_ng_cr_ds_node]
 	}
 
 	data "citrixadc_clusternodegroup_crvserver_binding" "tf_clusternodegroup_crvserver_binding" {
@@ -230,7 +274,7 @@ func TestAccclusternodegroup_crvserver_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_crvserver_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", "name", "my_tf_group"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", "name", "tf_ng_cr_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", "vserver", "my_cache_redirection_server_ds"),
 				),
 			},

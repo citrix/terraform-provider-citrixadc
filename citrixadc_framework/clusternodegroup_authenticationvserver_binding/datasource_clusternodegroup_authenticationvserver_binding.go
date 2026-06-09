@@ -42,16 +42,17 @@ func (d *ClusternodegroupAuthenticationvserverBindingDataSource) Read(ctx contex
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	name_Name := data.Name.ValueString()
+	// Case 3: Array filter without parent ID
+	name_Name := data.Name
 	vserver_Name := data.Vserver
 
 	var dataArr []map[string]interface{}
 	var err error
 
+	// The NITRO binding GET requires the parent (name) to be supplied as the resource name.
 	findParams := service.FindParams{
 		ResourceType:             service.Clusternodegroup_authenticationvserver_binding.Type(),
-		ResourceName:             name_Name,
+		ResourceName:             name_Name.ValueString(),
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -62,7 +63,7 @@ func (d *ClusternodegroupAuthenticationvserverBindingDataSource) Read(ctx contex
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		resp.Diagnostics.AddError("Client Error", "clusternodegroup_authenticationvserver_binding returned empty array.")
+		resp.Diagnostics.AddError("Client Error", "clusternodegroup_authenticationvserver_binding returned empty array")
 		return
 	}
 
@@ -70,6 +71,17 @@ func (d *ClusternodegroupAuthenticationvserverBindingDataSource) Read(ctx contex
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
+
+		// Check name
+		if val, ok := v["name"].(string); ok {
+			if name_Name.IsNull() || val != name_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !name_Name.IsNull() {
+			match = false
+			continue
+		}
 
 		// Check vserver
 		if val, ok := v["vserver"].(string); ok {
@@ -81,6 +93,7 @@ func (d *ClusternodegroupAuthenticationvserverBindingDataSource) Read(ctx contex
 			match = false
 			continue
 		}
+
 		if match {
 			foundIndex = i
 			break
@@ -89,11 +102,11 @@ func (d *ClusternodegroupAuthenticationvserverBindingDataSource) Read(ctx contex
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("clusternodegroup_authenticationvserver_binding with vserver %s not found", vserver_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("clusternodegroup_authenticationvserver_binding with name %s not found", name_Name))
 		return
 	}
 
-	clusternodegroup_authenticationvserver_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	clusternodegroup_authenticationvserver_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

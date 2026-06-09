@@ -15,8 +15,8 @@ import (
 
 // VideooptimizationparameterResourceModel describes the resource data model.
 type VideooptimizationparameterResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	Quicpacingrate types.Int64 `tfsdk:"quicpacingrate"`
+	Id                       types.String  `tfsdk:"id"`
+	Quicpacingrate           types.Int64   `tfsdk:"quicpacingrate"`
 	Randomsamplingpercentage types.Float64 `tfsdk:"randomsamplingpercentage"`
 }
 
