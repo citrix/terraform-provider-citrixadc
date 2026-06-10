@@ -30,9 +30,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbconfig"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbldnsentries"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbldnsentry"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_aaapreauthenticationpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_authenticationnegotiateaction_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaagroup"
@@ -371,6 +368,9 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/feopolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/fis"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/forwardingsession"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbconfig"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbldnsentries"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbldnsentry"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbparameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbservice"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbservice_dnsview_binding"
@@ -478,10 +478,13 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnclient_nsacl6_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnclient_nsacl_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsngroup"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsngroup_ipsecalgprofile_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsngroup_lsnappsprofile_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsngroup_lsnhttphdrlogprofile_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsngroup_lsnlogprofile_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsngroup_lsnpool_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsngroup_lsnrtspalgprofile_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsngroup_lsnsipalgprofile_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsngroup_lsntransportprofile_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsngroup_pcpserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnhttphdrlogprofile"
@@ -489,7 +492,11 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnlogprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnparameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnpool"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnpool_lsnip_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnrtspalgprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnrtspalgsession"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnsession"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnsipalgcall"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnsipalgprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsnstatic"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lsntransportprofile"
@@ -1183,6 +1190,13 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		gslbservicegroup.NewGslbservicegroupResource,
 		gslbservicegroup_gslbservicegroupmember_binding.NewGslbservicegroupGslbservicegroupmemberBindingResource,
 		gslbservicegroup_lbmonitor_binding.NewGslbservicegroupLbmonitorBindingResource,
+		lsngroup_ipsecalgprofile_binding.NewLsngroupIpsecalgprofileBindingResource,
+		lsngroup_lsnrtspalgprofile_binding.NewLsngroupLsnrtspalgprofileBindingResource,
+		lsngroup_lsnsipalgprofile_binding.NewLsngroupLsnsipalgprofileBindingResource,
+		lsnpool_lsnip_binding.NewLsnpoolLsnipBindingResource,
+		lsnrtspalgsession.NewLsnrtspalgsessionResource,
+		lsnsession.NewLsnsessionResource,
+		lsnsipalgcall.NewLsnsipalgcallResource,
 	}
 }
 
@@ -1980,6 +1994,12 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		lbwlm.LBwlmDataSource,
 		lbwlm_lbvserver_binding.LBwlmLbvserverBindingDataSource,
 		gslbldnsentries.GSlbldnsentriesDataSource,
+		lsngroup_ipsecalgprofile_binding.LSngroupIpsecalgprofileBindingDataSource,
+		lsngroup_lsnrtspalgprofile_binding.LSngroupLsnrtspalgprofileBindingDataSource,
+		lsngroup_lsnsipalgprofile_binding.LSngroupLsnsipalgprofileBindingDataSource,
+		lsnpool_lsnip_binding.LSnpoolLsnipBindingDataSource,
+		lsnrtspalgsession.LSnrtspalgsessionDataSource,
+		lsnsipalgcall.LSnsipalgcallDataSource,
 	}
 }
 

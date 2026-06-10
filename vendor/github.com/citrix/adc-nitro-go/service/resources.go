@@ -716,10 +716,13 @@ const (
 	Lsnclient_nsacl6_binding
 	Lsnclient_nsacl_binding
 	Lsngroup
+	Lsngroup_ipsecalgprofile_binding
 	Lsngroup_lsnappsprofile_binding
 	Lsngroup_lsnhttphdrlogprofile_binding
 	Lsngroup_lsnlogprofile_binding
 	Lsngroup_lsnpool_binding
+	Lsngroup_lsnrtspalgprofile_binding
+	Lsngroup_lsnsipalgprofile_binding
 	Lsngroup_lsntransportprofile_binding
 	Lsngroup_pcpserver_binding
 	Lsnhttphdrlogprofile
@@ -727,7 +730,11 @@ const (
 	Lsnlogprofile
 	Lsnparameter
 	Lsnpool
+	Lsnpool_lsnip_binding
 	Lsnrtspalgprofile
+	Lsnrtspalgsession
+	Lsnsession
+	Lsnsipalgcall
 	Lsnsipalgprofile
 	Lsnstatic
 	Lsntransportprofile
@@ -1974,10 +1981,13 @@ var resources = []string{
 	"lsnclient_nsacl6_binding",
 	"lsnclient_nsacl_binding",
 	"lsngroup",
+	"lsngroup_ipsecalgprofile_binding",
 	"lsngroup_lsnappsprofile_binding",
 	"lsngroup_lsnhttphdrlogprofile_binding",
 	"lsngroup_lsnlogprofile_binding",
 	"lsngroup_lsnpool_binding",
+	"lsngroup_lsnrtspalgprofile_binding",
+	"lsngroup_lsnsipalgprofile_binding",
 	"lsngroup_lsntransportprofile_binding",
 	"lsngroup_pcpserver_binding",
 	"lsnhttphdrlogprofile",
@@ -1985,7 +1995,11 @@ var resources = []string{
 	"lsnlogprofile",
 	"lsnparameter",
 	"lsnpool",
+	"lsnpool_lsnip_binding",
 	"lsnrtspalgprofile",
+	"lsnrtspalgsession",
+	"lsnsession",
+	"lsnsipalgcall",
 	"lsnsipalgprofile",
 	"lsnstatic",
 	"lsntransportprofile",
