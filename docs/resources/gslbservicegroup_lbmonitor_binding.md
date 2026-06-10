@@ -4,22 +4,20 @@ subcategory: "GSLB"
 
 # Resource: gslbservicegroup_lbmonitor_binding
 
-
-The gslbservicegroup_lbmonitor_binding resource is used to create gslbservicegroup_lbmonitor_binding.
+Binds a load balancing monitor to a GSLB service group so that Citrix ADC can probe the health of the members of the service group. The monitor periodically tests the bound members and marks them UP or DOWN, allowing the GSLB virtual server to direct traffic away from unhealthy members. Each binding can also tune per-binding settings such as weight, port, and the initial state of the bound service.
 
 
 ## Example usage
 
 ```hcl
 resource "citrixadc_gslbservicegroup_lbmonitor_binding" "tf_gslbservicegroup_lbmonitor_binding" {
-  weight           = 20
   servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
-  monitor_name      = citrixadc_lbmonitor.tfmonitor1.monitorname
-
+  monitor_name     = citrixadc_lbmonitor.tf_lbmonitor.monitorname
+  weight           = 20
 }
 
 resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
-  servicegroupname = "test_gslbvservicegroup"
+  servicegroupname = "gslb_sg1"
   servicetype      = "HTTP"
   cip              = "DISABLED"
   healthmonitor    = "NO"
@@ -32,8 +30,8 @@ resource "citrixadc_gslbsite" "site_local" {
   sessionexchange = "DISABLED"
 }
 
-resource "citrixadc_lbmonitor" "tfmonitor1" {
-  monitorname = "test_monitor"
+resource "citrixadc_lbmonitor" "tf_lbmonitor" {
+  monitorname = "http_mon1"
   type        = "HTTP"
 }
 ```
@@ -41,31 +39,31 @@ resource "citrixadc_lbmonitor" "tfmonitor1" {
 
 ## Argument Reference
 
-* `servicegroupname` - (Required) Name of the GSLB service group.
-* `monitor_name` - (Required) Monitor name.
-* `hashid` - (Optional) Unique numerical identifier used by hash based load balancing methods to identify a service.
-* `monstate` - (Optional) Monitor state.
-* `passive` - (Optional) Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached.
-* `port` - (Optional) Port number of the GSLB service. Each service must have a unique port number.
-* `publicip` - (Optional) The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.
-* `publicport` - (Optional) The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.
-* `siteprefix` - (Optional) The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.
-* `state` - (Optional) Initial state of the service after binding.
-* `weight` - (Optional) Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
+* `servicegroupname` - (Required) Name of the GSLB service group. Changing this forces a new resource to be created.
+* `monitor_name` - (Required) Monitor name. Changing this forces a new resource to be created.
+* `hashid` - (Optional, Computed) Unique numerical identifier used by hash based load balancing methods to identify a service. Changing this forces a new resource to be created.
+* `monstate` - (Optional, Computed) Monitor state. Changing this forces a new resource to be created.
+* `order` - (Optional, Computed) Order number to be assigned to the GSLB servicegroup member. Changing this forces a new resource to be created.
+* `passive` - (Optional, Computed) Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached. Changing this forces a new resource to be created.
+* `port` - (Optional, Computed) Port number of the GSLB service. Each service must have a unique port number. Changing this forces a new resource to be created.
+* `publicip` - (Optional, Computed) The public IP address that a NAT device translates to the GSLB service's private IP address. Changing this forces a new resource to be created.
+* `publicport` - (Optional, Computed) The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Changing this forces a new resource to be created.
+* `siteprefix` - (Optional, Computed) The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains. Changing this forces a new resource to be created.
+* `state` - (Optional, Computed) Initial state of the service after binding. Defaults to `"ENABLED"`. Changing this forces a new resource to be created.
+* `weight` - (Optional, Computed) Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service. Changing this forces a new resource to be created.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the gslbservicegroup_lbmonitor_binding is the concatenation of the `servicegroupname` and `monitor_name` attributes separated by a comma.
-
+* `id` - The ID of the gslbservicegroup_lbmonitor_binding. It is the concatenation of the `servicegroupname` and `monitor_name` attributes separated by a comma.
 
 
 ## Import
 
-A gslbservicegroup_lbmonitor_binding can be imported using its name, e.g.
+A gslbservicegroup_lbmonitor_binding can be imported using its id, which is the concatenation of `servicegroupname` and `monitor_name` separated by a comma, e.g.
 
 ```shell
-terraform import citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding test_gslbvservicegroup,test_monitor
+terraform import citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding gslb_sg1,http_mon1
 ```

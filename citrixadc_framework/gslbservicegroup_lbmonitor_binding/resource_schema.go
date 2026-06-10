@@ -9,7 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -42,107 +45,142 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Description: "The ID of the gslbservicegroup_lbmonitor_binding resource.",
 			},
 			"hashid": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Unique numerical identifier used by hash based load balancing methods to identify a service.",
 			},
 			"monitor_name": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Monitor name.",
 			},
 			"monstate": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Monitor state.",
 			},
 			"order": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Order number to be assigned to the gslb servicegroup member",
 			},
 			"passive": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached.",
 			},
 			"port": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Port number of the GSLB service. Each service must have a unique port number.",
 			},
 			"publicip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.",
 			},
 			"publicport": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.",
 			},
 			"servicegroupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the GSLB service group.",
 			},
 			"siteprefix": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.",
 			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Initial state of the service after binding.",
 			},
 			"weight": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.",
 			},
 		},
 	}
 }
 
-func gslbservicegroup_lbmonitor_bindingGetThePayloadFromtheConfig(ctx context.Context, data *GslbservicegroupLbmonitorBindingResourceModel) gslb.Gslbservicegrouplbmonitorbinding {
-	tflog.Debug(ctx, "In gslbservicegroup_lbmonitor_bindingGetThePayloadFromtheConfig Function")
+func gslbservicegroup_lbmonitor_bindingGetThePayloadFromthePlan(ctx context.Context, data *GslbservicegroupLbmonitorBindingResourceModel) gslb.Gslbservicegrouplbmonitorbinding {
+	tflog.Debug(ctx, "In gslbservicegroup_lbmonitor_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	gslbservicegroup_lbmonitor_binding := gslb.Gslbservicegrouplbmonitorbinding{}
-	if !data.Hashid.IsNull() {
+	if !data.Hashid.IsNull() && !data.Hashid.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Hashid = utils.IntPtr(int(data.Hashid.ValueInt64()))
 	}
-	if !data.MonitorName.IsNull() {
+	if !data.MonitorName.IsNull() && !data.MonitorName.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Monitorname = data.MonitorName.ValueString()
 	}
-	if !data.Monstate.IsNull() {
+	if !data.Monstate.IsNull() && !data.Monstate.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Monstate = data.Monstate.ValueString()
 	}
-	if !data.Order.IsNull() {
+	if !data.Order.IsNull() && !data.Order.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
 	}
-	if !data.Passive.IsNull() {
+	if !data.Passive.IsNull() && !data.Passive.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Passive = data.Passive.ValueBool()
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Publicip.IsNull() {
+	if !data.Publicip.IsNull() && !data.Publicip.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Publicip = data.Publicip.ValueString()
 	}
-	if !data.Publicport.IsNull() {
+	if !data.Publicport.IsNull() && !data.Publicport.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Publicport = utils.IntPtr(int(data.Publicport.ValueInt64()))
 	}
-	if !data.Servicegroupname.IsNull() {
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Servicegroupname = data.Servicegroupname.ValueString()
 	}
-	if !data.Siteprefix.IsNull() {
+	if !data.Siteprefix.IsNull() && !data.Siteprefix.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Siteprefix = data.Siteprefix.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.State = data.State.ValueString()
 	}
-	if !data.Weight.IsNull() {
+	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
 
@@ -224,12 +262,91 @@ func gslbservicegroup_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data 
 		data.Weight = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// ID is set once in Create / datasource Read, not here.
+
+	return data
+}
+
+// gslbservicegroup_lbmonitor_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response and sets the composite ID (the datasource has no Create).
+func gslbservicegroup_lbmonitor_bindingSetAttrFromGetForDatasource(ctx context.Context, data *GslbservicegroupLbmonitorBindingResourceModel, getResponseData map[string]interface{}) *GslbservicegroupLbmonitorBindingResourceModel {
+	tflog.Debug(ctx, "In gslbservicegroup_lbmonitor_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["hashid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Hashid = types.Int64Value(intVal)
+		}
+	} else {
+		data.Hashid = types.Int64Null()
+	}
+	if val, ok := getResponseData["monitor_name"]; ok && val != nil {
+		data.MonitorName = types.StringValue(val.(string))
+	} else {
+		data.MonitorName = types.StringNull()
+	}
+	if val, ok := getResponseData["monstate"]; ok && val != nil {
+		data.Monstate = types.StringValue(val.(string))
+	} else {
+		data.Monstate = types.StringNull()
+	}
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	} else {
+		data.Order = types.Int64Null()
+	}
+	if val, ok := getResponseData["passive"]; ok && val != nil {
+		data.Passive = types.BoolValue(val.(bool))
+	} else {
+		data.Passive = types.BoolNull()
+	}
+	if val, ok := getResponseData["port"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Port = types.Int64Value(intVal)
+		}
+	} else {
+		data.Port = types.Int64Null()
+	}
+	if val, ok := getResponseData["publicip"]; ok && val != nil {
+		data.Publicip = types.StringValue(val.(string))
+	} else {
+		data.Publicip = types.StringNull()
+	}
+	if val, ok := getResponseData["publicport"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Publicport = types.Int64Value(intVal)
+		}
+	} else {
+		data.Publicport = types.Int64Null()
+	}
+	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
+		data.Servicegroupname = types.StringValue(val.(string))
+	} else {
+		data.Servicegroupname = types.StringNull()
+	}
+	if val, ok := getResponseData["siteprefix"]; ok && val != nil {
+		data.Siteprefix = types.StringValue(val.(string))
+	} else {
+		data.Siteprefix = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+	if val, ok := getResponseData["weight"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Weight = types.Int64Value(intVal)
+		}
+	} else {
+		data.Weight = types.Int64Null()
+	}
+
+	// Set ID for the datasource: servicegroupname,monitor_name
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("monitor_name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
 	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("monitor_name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

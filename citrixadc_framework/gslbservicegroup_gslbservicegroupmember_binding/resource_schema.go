@@ -9,7 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -41,107 +43,156 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 				Description: "The ID of the gslbservicegroup_gslbservicegroupmember_binding resource.",
 			},
 			"hashid": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.",
 			},
 			"ip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IP Address.",
 			},
 			"order": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Order number to be assigned to the gslb servicegroup member",
 			},
 			"port": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Server port number.",
 			},
 			"publicip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.",
 			},
 			"publicport": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.",
 			},
 			"servername": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the server to which to bind the service group.",
 			},
 			"servicegroupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the GSLB service group.",
 			},
 			"siteprefix": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.",
 			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Initial state of the GSLB service group.",
 			},
 			"weight": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.",
 			},
 		},
 	}
 }
 
-func gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromtheConfig(ctx context.Context, data *GslbservicegroupGslbservicegroupmemberBindingResourceModel) gslb.Gslbservicegroupgslbservicegroupmemberbinding {
-	tflog.Debug(ctx, "In gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromtheConfig Function")
+func gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromthePlan(ctx context.Context, data *GslbservicegroupGslbservicegroupmemberBindingResourceModel) gslb.Gslbservicegroupgslbservicegroupmemberbinding {
+	tflog.Debug(ctx, "In gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	gslbservicegroup_gslbservicegroupmember_binding := gslb.Gslbservicegroupgslbservicegroupmemberbinding{}
-	if !data.Hashid.IsNull() {
+	if !data.Hashid.IsNull() && !data.Hashid.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.Hashid = utils.IntPtr(int(data.Hashid.ValueInt64()))
 	}
-	if !data.Ip.IsNull() {
+	if !data.Ip.IsNull() && !data.Ip.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.Ip = data.Ip.ValueString()
 	}
-	if !data.Order.IsNull() {
+	if !data.Order.IsNull() && !data.Order.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Publicip.IsNull() {
+	if !data.Publicip.IsNull() && !data.Publicip.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.Publicip = data.Publicip.ValueString()
 	}
-	if !data.Publicport.IsNull() {
+	if !data.Publicport.IsNull() && !data.Publicport.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.Publicport = utils.IntPtr(int(data.Publicport.ValueInt64()))
 	}
-	if !data.Servername.IsNull() {
+	if !data.Servername.IsNull() && !data.Servername.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.Servername = data.Servername.ValueString()
 	}
-	if !data.Servicegroupname.IsNull() {
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.Servicegroupname = data.Servicegroupname.ValueString()
 	}
-	if !data.Siteprefix.IsNull() {
+	if !data.Siteprefix.IsNull() && !data.Siteprefix.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.Siteprefix = data.Siteprefix.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.State = data.State.ValueString()
 	}
-	if !data.Weight.IsNull() {
+	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		gslbservicegroup_gslbservicegroupmember_binding.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
 
 	return gslbservicegroup_gslbservicegroupmember_binding
 }
 
+// gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet is used by the resource Read/Create flow.
+// It preserves the plan/state-supplied identity and config values (all RequiresReplace) and only adopts the
+// server-echoed values that have a reliable server default (weight, state). It does NOT recompute the ID,
+// which is set exactly once in Create.
 func gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet(ctx context.Context, data *GslbservicegroupGslbservicegroupmemberBindingResourceModel, getResponseData map[string]interface{}) *GslbservicegroupGslbservicegroupmemberBindingResourceModel {
 	tflog.Debug(ctx, "In gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet Function")
+
+	// Only weight and state are Optional+Computed (reliable server defaults: weight=1, state=ENABLED).
+	// Identity (servicegroupname, ip, servername, port) and the remaining plain-Optional attrs are
+	// preserved from plan/state to avoid clobbering user input or introducing unknown-after-apply churn.
+	if val, ok := getResponseData["weight"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Weight = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response and composes the ID, since the datasource has no Create to seed those values.
+func gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource(ctx context.Context, data *GslbservicegroupGslbservicegroupmemberBindingResourceModel, getResponseData map[string]interface{}) *GslbservicegroupGslbservicegroupmemberBindingResourceModel {
+	tflog.Debug(ctx, "In gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource Function")
 
 	// Convert API response to model
 	if val, ok := getResponseData["hashid"]; ok && val != nil {
@@ -210,7 +261,7 @@ func gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet(ctx context.C
 		data.Weight = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("ip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ip.ValueString()))))

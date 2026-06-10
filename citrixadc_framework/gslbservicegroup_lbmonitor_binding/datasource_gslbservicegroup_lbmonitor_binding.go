@@ -73,27 +73,31 @@ func (d *GslbservicegroupLbmonitorBindingDataSource) Read(ctx context.Context, r
 	for i, v := range dataArr {
 		match := true
 
-		// Check monitor_name
-		if val, ok := v["monitor_name"].(string); ok {
-			if monitorname_Name.IsNull() || val != monitorname_Name.ValueString() {
+		// Check monitor_name (only when supplied in config)
+		if !monitorname_Name.IsNull() {
+			if val, ok := v["monitor_name"].(string); ok {
+				if val != monitorname_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !monitorname_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check port
-		if val, ok := v["port"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if port_Name.IsNull() || val != port_Name.ValueInt64() {
+		// Check port only when supplied in config (port is optional for the lookup)
+		if !port_Name.IsNull() {
+			if val, ok := v["port"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != port_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !port_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
@@ -107,7 +111,7 @@ func (d *GslbservicegroupLbmonitorBindingDataSource) Read(ctx context.Context, r
 		return
 	}
 
-	gslbservicegroup_lbmonitor_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	gslbservicegroup_lbmonitor_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

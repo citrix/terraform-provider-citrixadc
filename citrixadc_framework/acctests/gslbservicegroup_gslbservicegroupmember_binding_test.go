@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -125,14 +126,17 @@ func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(n string, 
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 3)
-		servicegroupname := idSlice[0]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "servername", "ip", "port"}, []string{"servername", "ip", "port"})
+		if err != nil {
+			return err
+		}
+		servicegroupname := idMap["servicegroupname"]
 
-		servername := idSlice[1]
+		servername := idMap["servername"]
 
 		port := 0
-		if len(idSlice) == 3 {
-			if port, err = strconv.Atoi(idSlice[2]); err != nil {
+		if portStr, ok := idMap["port"]; ok && portStr != "" {
+			if port, err = strconv.Atoi(portStr); err != nil {
 				return err
 			}
 		}

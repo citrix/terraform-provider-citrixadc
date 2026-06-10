@@ -30,6 +30,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbconfig"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbldnsentries"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbldnsentry"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_aaapreauthenticationpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_authenticationnegotiateaction_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaagroup"
@@ -1174,6 +1177,12 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		lbvserver_auditnslogpolicy_binding.NewLbvserverAuditnslogpolicyBindingResource,
 		lbwlm.NewLbwlmResource,
 		lbwlm_lbvserver_binding.NewLbwlmLbvserverBindingResource,
+		gslbconfig.NewGslbconfigResource,
+		gslbldnsentries.NewGslbldnsentriesResource,
+		gslbldnsentry.NewGslbldnsentryResource,
+		gslbservicegroup.NewGslbservicegroupResource,
+		gslbservicegroup_gslbservicegroupmember_binding.NewGslbservicegroupGslbservicegroupmemberBindingResource,
+		gslbservicegroup_lbmonitor_binding.NewGslbservicegroupLbmonitorBindingResource,
 	}
 }
 
@@ -1970,6 +1979,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		lbvserver_auditnslogpolicy_binding.LBvserverAuditnslogpolicyBindingDataSource,
 		lbwlm.LBwlmDataSource,
 		lbwlm_lbvserver_binding.LBwlmLbvserverBindingDataSource,
+		gslbldnsentries.GSlbldnsentriesDataSource,
 	}
 }
 
