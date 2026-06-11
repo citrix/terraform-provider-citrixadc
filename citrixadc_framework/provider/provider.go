@@ -259,6 +259,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cachepolicylabel_cachepolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cacheselector"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/channel"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/channel_interface_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusterfiles"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusterinstance"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternode"
@@ -367,6 +368,8 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/feoparameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/feopolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/fis"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/fis_channel_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/fis_interface_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/forwardingsession"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbconfig"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbldnsentries"
@@ -463,6 +466,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbwlm_lbvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/linkset"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/linkset_channel_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/linkset_interface_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lldpparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/location"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/locationfile"
@@ -748,6 +752,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan_channel_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan_interface_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan_linkset_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan_nsip6_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan_nsip_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnalwaysonprofile"
@@ -842,6 +847,12 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnvserver_vpnurlpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vrid"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vrid6"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vrid6_channel_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vrid6_interface_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vrid6_trackinterface_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vrid_channel_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vrid_interface_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vrid_trackinterface_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vridparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlan"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlan_nsip6_binding"
@@ -1203,6 +1214,18 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		policypatsetfile.NewPolicypatsetfileResource,
 		policytracing.NewPolicytracingResource,
 		policyurlset.NewPolicyurlsetResource,
+		channel_interface_binding.NewChannelInterfaceBindingResource,
+		fis_channel_binding.NewFisChannelBindingResource,
+		fis_interface_binding.NewFisInterfaceBindingResource,
+		linkset_interface_binding.NewLinksetInterfaceBindingResource,
+		vlan_linkset_binding.NewVlanLinksetBindingResource,
+		vrid6_channel_binding.NewVrid6ChannelBindingResource,
+		vrid6_interface_binding.NewVrid6InterfaceBindingResource,
+		vrid6_trackinterface_binding.NewVrid6TrackinterfaceBindingResource,
+		vrid_channel_binding.NewVridChannelBindingResource,
+		vrid_interface_binding.NewVridInterfaceBindingResource,
+		vrid_trackinterface_binding.NewVridTrackinterfaceBindingResource,
+		vridparam.NewVridparamResource,
 	}
 }
 
@@ -2009,6 +2032,16 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		policypatsetfile.POlicypatsetfileDataSource,
 		policytracing.POlicytracingDataSource,
 		policyurlset.POlicyurlsetDataSource,
+		channel_interface_binding.CHannelInterfaceBindingDataSource,
+		fis_channel_binding.FIsChannelBindingDataSource,
+		linkset_interface_binding.LInksetInterfaceBindingDataSource,
+		vlan_linkset_binding.VLanLinksetBindingDataSource,
+		vrid6_channel_binding.VRid6ChannelBindingDataSource,
+		vrid6_interface_binding.VRid6InterfaceBindingDataSource,
+		vrid6_trackinterface_binding.VRid6TrackinterfaceBindingDataSource,
+		vrid_channel_binding.VRidChannelBindingDataSource,
+		vrid_interface_binding.VRidInterfaceBindingDataSource,
+		vrid_trackinterface_binding.VRidTrackinterfaceBindingDataSource,
 	}
 }
 

@@ -1,0 +1,49 @@
+---
+subcategory: "Network"
+---
+
+# Resource: vrid_trackinterface_binding
+
+Binds a tracked interface to a Virtual Router ID (VRID) so that VRRP monitors the state of that interface for the virtual router. When a tracked interface goes down, the VRID's effective priority is reduced, which can trigger a VRRP failover to a backup router. This lets the virtual router react to the health of interfaces that are not themselves carrying VRRP traffic.
+
+This resource maps to the NITRO `vrid_trackinterface_binding` bind endpoint. Because a binding cannot be modified in place, the resource has the following lifecycle semantics:
+
+- **Create** binds the tracked interface to the VRID (NITRO PUT/bind).
+- **Update** is a no-op. Every configurable attribute forces replacement, so any change destroys the existing binding and creates a new one.
+- **Delete** removes the binding (stops tracking the interface for the VRID).
+
+
+## Example usage
+
+```hcl
+resource "citrixadc_vrid" "tf_vrid" {
+  id = 60
+}
+
+resource "citrixadc_vrid_trackinterface_binding" "tf_vrid_trackinterface_binding" {
+  vrid_id    = citrixadc_vrid.tf_vrid.id
+  trackifnum = "1/3"
+}
+```
+
+
+## Argument Reference
+
+* `vrid_id` - (Required) Integer that uniquely identifies the VMAC address. The generic VMAC address is in the form of `00:00:5e:00:01:<VRID>`. For example, if you add a VRID with a value of 60 and bind it to an interface, the resulting VMAC address is `00:00:5e:00:01:3c`, where `3c` is the hexadecimal representation of 60. This is the identifier of the parent `citrixadc_vrid` resource (an integer in the range 1-255). Changing this attribute forces a new resource to be created.
+* `trackifnum` - (Required) Interface which needs to be tracked for this VRID, specified in (slot/port) notation (for example, `1/3`). Changing this attribute forces a new resource to be created.
+
+
+## Attribute Reference
+
+In addition to the arguments, the following attributes are available:
+
+* `id` - The id of the vrid_trackinterface_binding. It is the concatenation of the `vrid_id` and `trackifnum` values in the form `id:<vrid_id>,trackifnum:<trackifnum>` (the `trackifnum` value is URL-encoded because interface names contain a `/`).
+
+
+## Import
+
+A vrid_trackinterface_binding can be imported using the composite id in the form `id:<vrid_id>,trackifnum:<trackifnum>`, e.g.
+
+```shell
+terraform import citrixadc_vrid_trackinterface_binding.tf_vrid_trackinterface_binding id:60,trackifnum:1%2F3
+```

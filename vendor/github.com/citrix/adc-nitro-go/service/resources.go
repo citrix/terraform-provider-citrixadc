@@ -1279,13 +1279,17 @@ const (
 	Vrid
 	Vrid6
 	Vrid6_binding
+	Vrid6_channel_binding
 	Vrid6_interface_binding
 	Vrid6_nsip6_binding
 	Vrid6_nsip_binding
+	Vrid6_trackinterface_binding
 	Vrid_binding
+	Vrid_channel_binding
 	Vrid_interface_binding
 	Vrid_nsip6_binding
 	Vrid_nsip_binding
+	Vrid_trackinterface_binding
 	Vridparam
 	Vserver
 	Vxlan
@@ -2546,13 +2550,17 @@ var resources = []string{
 	"vrid",
 	"vrid6",
 	"vrid6_binding",
+	"vrid6_channel_binding",
 	"vrid6_interface_binding",
 	"vrid6_nsip6_binding",
 	"vrid6_nsip_binding",
+	"vrid6_trackinterface_binding",
 	"vrid_binding",
+	"vrid_channel_binding",
 	"vrid_interface_binding",
 	"vrid_nsip6_binding",
 	"vrid_nsip_binding",
+	"vrid_trackinterface_binding",
 	"vridparam",
 	"vserver",
 	"vxlan",

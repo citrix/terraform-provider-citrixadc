@@ -54,20 +54,20 @@ func (r *VridparamResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	tflog.Debug(ctx, "Creating vridparam resource")
-
-	// vridparam := vridparamGetThePayloadFromtheConfig(ctx, &data)
+	vridparam := vridparamGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vridparam.Type(), &vridparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vridparam, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vridparam-config")
+	// Parameter singleton - NITRO has no "add" verb; create is the "set" verb (PUT).
+	_, err := r.client.UpdateResource(service.Vridparam.Type(), "", &vridparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vridparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vridparam resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue("vridparam-config")
 
 	// Read the updated state back
 	r.readVridparamFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +95,10 @@ func (r *VridparamResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *VridparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VridparamResourceModel
+	var data, state VridparamResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +106,41 @@ func (r *VridparamResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vridparam resource")
 
-	// Create API request body from the model
-	// vridparam := vridparamGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Deadinterval.Equal(state.Deadinterval) {
+		tflog.Debug(ctx, fmt.Sprintf("deadinterval has changed for vridparam"))
+		hasChange = true
+	}
+	if !data.Hellointerval.Equal(state.Hellointerval) {
+		tflog.Debug(ctx, fmt.Sprintf("hellointerval has changed for vridparam"))
+		hasChange = true
+	}
+	if !data.Sendtomaster.Equal(state.Sendtomaster) {
+		tflog.Debug(ctx, fmt.Sprintf("sendtomaster has changed for vridparam"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vridparam.Type(), &vridparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vridparam, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		vridparam := vridparamGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Parameter singleton - update uses the same "set" verb (PUT).
+		_, err := r.client.UpdateResource(service.Vridparam.Type(), "", &vridparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vridparam, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vridparam resource")
+		tflog.Trace(ctx, "Updated vridparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vridparam resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readVridparamFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +160,18 @@ func (r *VridparamResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	tflog.Debug(ctx, "Deleting vridparam resource")
-
-	// For vridparam, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vridparam resource from state")
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed vridparam from Terraform state")
 }
 
 // Helper function to read vridparam data from API
 func (r *VridparamResource) readVridparamFromApi(ctx context.Context, data *VridparamResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vridparam.Type(), "")
+
+	// Case 1: Simple find without ID
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Vridparam.Type(), "")
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vridparam, got error: %s", err))
 		return
