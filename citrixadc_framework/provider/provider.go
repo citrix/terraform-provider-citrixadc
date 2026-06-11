@@ -595,8 +595,11 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policyparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policypatset"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policypatset_pattern_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policypatsetfile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policystringmap"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policystringmap_pattern_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policytracing"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policyurlset"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ptp"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/quicbridgeprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/radiusnode"
@@ -1197,6 +1200,9 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		lsnrtspalgsession.NewLsnrtspalgsessionResource,
 		lsnsession.NewLsnsessionResource,
 		lsnsipalgcall.NewLsnsipalgcallResource,
+		policypatsetfile.NewPolicypatsetfileResource,
+		policytracing.NewPolicytracingResource,
+		policyurlset.NewPolicyurlsetResource,
 	}
 }
 
@@ -2000,6 +2006,9 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		lsnpool_lsnip_binding.LSnpoolLsnipBindingDataSource,
 		lsnrtspalgsession.LSnrtspalgsessionDataSource,
 		lsnsipalgcall.LSnsipalgcallDataSource,
+		policypatsetfile.POlicypatsetfileDataSource,
+		policytracing.POlicytracingDataSource,
+		policyurlset.POlicyurlsetDataSource,
 	}
 }
 

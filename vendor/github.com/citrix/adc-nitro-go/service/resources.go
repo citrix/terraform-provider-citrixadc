@@ -874,6 +874,8 @@ const (
 	Policystringmap
 	Policystringmap_binding
 	Policystringmap_pattern_binding
+	Policytracing
+	Policyurlset
 	Pqbinding
 	Pqpolicy
 	Protocolhttpband
@@ -2139,6 +2141,8 @@ var resources = []string{
 	"policystringmap",
 	"policystringmap_binding",
 	"policystringmap_pattern_binding",
+	"policytracing",
+	"policyurlset",
 	"pqbinding",
 	"pqpolicy",
 	"protocolhttpband",

@@ -73,6 +73,50 @@ func doApiSpecPreChecks(t *testing.T) {
 	}
 }
 
+func doPolicyPatSetFilePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"tftest.patset",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the patset file to /var/tmp so the resource's
+	// `src = "local:tftest.patset"` import resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
+func doPolicyUrlSetPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"tftest.urlset",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the urlset file to /var/tmp so the resource's
+	// `url = "local:tftest.urlset"` import resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
 func doDnskeyPreChecks(t *testing.T) {
 	testAccPreCheck(t)
 
