@@ -33,6 +33,6 @@ output "gotopriorityexpression" {
 In addition to the arguments, the following attributes are available:
 
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `id` - The id of the aaagroup_vpnsessionpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the aaagroup_vpnsessionpolicy_binding. It is the concatenation of `groupname` and `policy` attributes separated by a comma.
 * `type` - Bindpoint to which the policy is bound.
 * `priority` - Integer specifying the priority of the policy. A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.

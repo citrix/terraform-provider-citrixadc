@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
@@ -104,10 +105,12 @@ func testAccCheckAaagroup_aaauser_bindingExist(n string, id *string) resource.Te
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		groupname := idSlice[0]
-		username := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"groupname", "username"}, nil)
+		if err != nil {
+			return err
+		}
+		groupname := idMap["groupname"]
+		username := idMap["username"]
 
 		findParams := service.FindParams{
 			ResourceType:             "aaagroup_aaauser_binding",

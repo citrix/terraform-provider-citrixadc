@@ -6,7 +6,7 @@ subcategory: "AAA"
 
 The aaagroup_auditnslogpolicy_binding data source allows you to retrieve information about a specific binding between an AAA group and an audit nslog policy.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_aaagroup_auditnslogpolicy_binding" "example" {

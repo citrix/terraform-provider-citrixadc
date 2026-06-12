@@ -11,17 +11,16 @@ The aaaglobal_aaapreauthenticationpolicy_binding resource is used to create aaag
 
 ```hcl
 resource "citrixadc_aaaglobal_aaapreauthenticationpolicy_binding" "tf_aaaglobal_aaapreauthenticationpolicy_binding" {
-  policy    = "my_preauthentication_policy"
-  priority  = 50
-  }
+  policy   = "my_preauthentication_policy"
+  priority = 50
+}
 ```
 
 
 ## Argument Reference
 
-* `policy` - (Required) Name of the policy to be unbound. Minimum length =  1
-* `priority` - (Required) Priority of the bound policy.
-* `builtin` - (Optional) Indicates that a variable is a built-in (SYSTEM INTERNAL) type. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]
+* `policy` - (Required) Name of the policy to be unbound.
+* `priority` - (Optional) Priority of the bound policy.
 
 
 ## Attribute Reference

@@ -1052,6 +1052,16 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		authenticationsmartaccessprofile.NewAuthenticationsmartaccessprofileResource,
 		azureapplication.NewAzureapplicationResource,
 		azurekeyvault.NewAzurekeyvaultResource,
+		aaaglobal_aaapreauthenticationpolicy_binding.NewAaaglobalAaapreauthenticationpolicyBindingResource,
+		aaagroup_aaauser_binding.NewAaagroupAaauserBindingResource,
+		aaagroup_auditnslogpolicy_binding.NewAaagroupAuditnslogpolicyBindingResource,
+		aaagroup_auditsyslogpolicy_binding.NewAaagroupAuditsyslogpolicyBindingResource,
+		aaagroup_authorizationpolicy_binding.NewAaagroupAuthorizationpolicyBindingResource,
+		aaagroup_intranetip_binding.NewAaagroupIntranetipBindingResource,
+		aaagroup_tmsessionpolicy_binding.NewAaagroupTmsessionpolicyBindingResource,
+		aaagroup_vpnintranetapplication_binding.NewAaagroupVpnintranetapplicationBindingResource,
+		aaagroup_vpnsessionpolicy_binding.NewAaagroupVpnsessionpolicyBindingResource,
+		aaagroup_vpntrafficpolicy_binding.NewAaagroupVpntrafficpolicyBindingResource,
 	}
 }
 

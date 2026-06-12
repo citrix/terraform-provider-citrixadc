@@ -9,7 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,51 +37,63 @@ func (r *AaagroupTmsessionpolicyBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the aaagroup_tmsessionpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the group that you are binding.",
 			},
 			"policy": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The policy name.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer specifying the priority of the policy. A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"type": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("REQUEST"),
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Bindpoint to which the policy is bound.",
 			},
 		},
 	}
 }
 
-func aaagroup_tmsessionpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AaagroupTmsessionpolicyBindingResourceModel) aaa.Aaagrouptmsessionpolicybinding {
-	tflog.Debug(ctx, "In aaagroup_tmsessionpolicy_bindingGetThePayloadFromtheConfig Function")
+func aaagroup_tmsessionpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AaagroupTmsessionpolicyBindingResourceModel) aaa.Aaagrouptmsessionpolicybinding {
+	tflog.Debug(ctx, "In aaagroup_tmsessionpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaagroup_tmsessionpolicy_binding := aaa.Aaagrouptmsessionpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		aaagroup_tmsessionpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Groupname.IsNull() {
+	if !data.Groupname.IsNull() && !data.Groupname.IsUnknown() {
 		aaagroup_tmsessionpolicy_binding.Groupname = data.Groupname.ValueString()
 	}
-	if !data.Policy.IsNull() {
+	if !data.Policy.IsNull() && !data.Policy.IsUnknown() {
 		aaagroup_tmsessionpolicy_binding.Policy = data.Policy.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		aaagroup_tmsessionpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		aaagroup_tmsessionpolicy_binding.Type = data.Type.ValueString()
 	}
 
@@ -112,14 +126,53 @@ func aaagroup_tmsessionpolicy_bindingSetAttrFromGet(ctx context.Context, data *A
 	} else {
 		data.Priority = types.Int64Null()
 	}
+	// NITRO GET does not echo back the "type" (bindpoint) field; preserve the
+	// existing plan/state value rather than nulling it (Pattern 7).
+
+	// Set ID for the resource
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+// aaagroup_tmsessionpolicy_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (the datasource has no prior plan/state to preserve).
+func aaagroup_tmsessionpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AaagroupTmsessionpolicyBindingResourceModel, getResponseData map[string]interface{}) *AaagroupTmsessionpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In aaagroup_tmsessionpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else {
+		data.Gotopriorityexpression = types.StringNull()
+	}
+	if val, ok := getResponseData["groupname"]; ok && val != nil {
+		data.Groupname = types.StringValue(val.(string))
+	} else {
+		data.Groupname = types.StringNull()
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	} else {
+		data.Policy = types.StringNull()
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	} else {
+		data.Priority = types.Int64Null()
+	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
 	} else {
 		data.Type = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
