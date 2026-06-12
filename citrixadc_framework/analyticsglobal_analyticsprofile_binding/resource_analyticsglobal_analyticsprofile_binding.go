@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +55,20 @@ func (r *AnalyticsglobalAnalyticsprofileBindingResource) Create(ctx context.Cont
 	}
 
 	tflog.Debug(ctx, "Creating analyticsglobal_analyticsprofile_binding resource")
-
-	// analyticsglobal_analyticsprofile_binding := analyticsglobal_analyticsprofile_bindingGetThePayloadFromtheConfig(ctx, &data)
+	analyticsglobal_analyticsprofile_binding := analyticsglobal_analyticsprofile_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Analyticsglobal_analyticsprofile_binding.Type(), &analyticsglobal_analyticsprofile_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create analyticsglobal_analyticsprofile_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("analyticsglobal_analyticsprofile_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Analyticsglobal_analyticsprofile_binding.Type(), &analyticsglobal_analyticsprofile_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create analyticsglobal_analyticsprofile_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created analyticsglobal_analyticsprofile_binding resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Analyticsprofile.ValueString()))
 
 	// Read the updated state back
 	r.readAnalyticsglobalAnalyticsprofileBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +96,10 @@ func (r *AnalyticsglobalAnalyticsprofileBindingResource) Read(ctx context.Contex
 }
 
 func (r *AnalyticsglobalAnalyticsprofileBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AnalyticsglobalAnalyticsprofileBindingResourceModel
+	var data, state AnalyticsglobalAnalyticsprofileBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +107,29 @@ func (r *AnalyticsglobalAnalyticsprofileBindingResource) Update(ctx context.Cont
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating analyticsglobal_analyticsprofile_binding resource")
 
-	// Create API request body from the model
-	// analyticsglobal_analyticsprofile_binding := analyticsglobal_analyticsprofile_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Analyticsglobal_analyticsprofile_binding.Type(), &analyticsglobal_analyticsprofile_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update analyticsglobal_analyticsprofile_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		analyticsglobal_analyticsprofile_binding := analyticsglobal_analyticsprofile_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Analyticsglobal_analyticsprofile_binding.Type(), &analyticsglobal_analyticsprofile_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update analyticsglobal_analyticsprofile_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated analyticsglobal_analyticsprofile_binding resource")
+		tflog.Trace(ctx, "Updated analyticsglobal_analyticsprofile_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for analyticsglobal_analyticsprofile_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAnalyticsglobalAnalyticsprofileBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +149,82 @@ func (r *AnalyticsglobalAnalyticsprofileBindingResource) Delete(ctx context.Cont
 	}
 
 	tflog.Debug(ctx, "Deleting analyticsglobal_analyticsprofile_binding resource")
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name
+	// Single unique attribute - ID is the plain value
+	analyticsprofile_value := data.Id.ValueString()
+	args := []string{
+		fmt.Sprintf("analyticsprofile:%s", analyticsprofile_value),
+	}
 
-	// For analyticsglobal_analyticsprofile_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted analyticsglobal_analyticsprofile_binding resource from state")
+	err := r.client.DeleteResourceWithArgs(service.Analyticsglobal_analyticsprofile_binding.Type(), "", args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete analyticsglobal_analyticsprofile_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted analyticsglobal_analyticsprofile_binding binding")
 }
 
 // Helper function to read analyticsglobal_analyticsprofile_binding data from API
 func (r *AnalyticsglobalAnalyticsprofileBindingResource) readAnalyticsglobalAnalyticsprofileBindingFromApi(ctx context.Context, data *AnalyticsglobalAnalyticsprofileBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Analyticsglobal_analyticsprofile_binding.Type(), "")
+
+	// Case 3: Array filter without parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"analyticsprofile"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             "analyticsglobal",
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read analyticsglobal_analyticsprofile_binding, got error: %s", err))
 		return
 	}
 
-	analyticsglobal_analyticsprofile_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "analyticsglobal_analyticsprofile_binding returned empty array")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check analyticsprofile
+		if idVal, ok := idMap["analyticsprofile"]; ok {
+			if val, ok := v["analyticsprofile"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["analyticsprofile"].(string); ok {
+			match = false
+			continue
+		}
+
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("analyticsglobal_analyticsprofile_binding not found with the provided ID attributes"))
+		return
+	}
+
+	analyticsglobal_analyticsprofile_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -20,7 +24,7 @@ type AppfwpolicylabelAppfwpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
-	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+	InvokeLabelname        types.String `tfsdk:"invokelabelname"`
 	Labelname              types.String `tfsdk:"labelname"`
 	Labeltype              types.String `tfsdk:"labeltype"`
 	Policyname             types.String `tfsdk:"policyname"`
@@ -36,65 +40,86 @@ func (r *AppfwpolicylabelAppfwpolicyBindingResource) Schema(ctx context.Context,
 				Description: "The ID of the appfwpolicylabel_appfwpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.",
 			},
-			"invoke_labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+			"invokelabelname": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the policy label to invoke if the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is set to Policy Label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the application firewall policy label.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of policy label to invoke if the current policy evaluates to TRUE and the invoke parameter is set. Available settings function as follows:\n* reqvserver. Invoke the unnamed policy label associated with the specified request virtual server.\n* policylabel. Invoke the specified user-defined policy label.",
 			},
 			"policyname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the application firewall policy to bind to the policy label.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Positive integer specifying the priority of the policy. A lower number specifies a higher priority. Must be unique within a group of policies that are bound to the same bind point or label. Policies are evaluated in the order of their priority numbers.",
 			},
 		},
 	}
 }
 
-func appfwpolicylabel_appfwpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwpolicylabelAppfwpolicyBindingResourceModel) appfw.Appfwpolicylabelappfwpolicybinding {
-	tflog.Debug(ctx, "In appfwpolicylabel_appfwpolicy_bindingGetThePayloadFromtheConfig Function")
+func appfwpolicylabel_appfwpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwpolicylabelAppfwpolicyBindingResourceModel) appfw.Appfwpolicylabelappfwpolicybinding {
+	tflog.Debug(ctx, "In appfwpolicylabel_appfwpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwpolicylabel_appfwpolicy_binding := appfw.Appfwpolicylabelappfwpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		appfwpolicylabel_appfwpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Invoke.IsNull() {
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		appfwpolicylabel_appfwpolicy_binding.Invoke = data.Invoke.ValueBool()
 	}
-	if !data.InvokeLabelname.IsNull() {
+	if !data.InvokeLabelname.IsNull() && !data.InvokeLabelname.IsUnknown() {
 		appfwpolicylabel_appfwpolicy_binding.Invokelabelname = data.InvokeLabelname.ValueString()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		appfwpolicylabel_appfwpolicy_binding.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Labeltype.IsNull() {
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		appfwpolicylabel_appfwpolicy_binding.Labeltype = data.Labeltype.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		appfwpolicylabel_appfwpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		appfwpolicylabel_appfwpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 

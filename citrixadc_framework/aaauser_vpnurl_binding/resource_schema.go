@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +34,43 @@ func (r *AaauserVpnurlBindingResource) Schema(ctx context.Context, req resource.
 				Description: "The ID of the aaauser_vpnurl_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n*  If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a number that is larger than the largest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"urlname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The intranet url.",
 			},
 			"username": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "User account to which to bind the policy.",
 			},
 		},
 	}
 }
 
-func aaauser_vpnurl_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AaauserVpnurlBindingResourceModel) aaa.Aaauservpnurlbinding {
-	tflog.Debug(ctx, "In aaauser_vpnurl_bindingGetThePayloadFromtheConfig Function")
+func aaauser_vpnurl_bindingGetThePayloadFromthePlan(ctx context.Context, data *AaauserVpnurlBindingResourceModel) aaa.Aaauservpnurlbinding {
+	tflog.Debug(ctx, "In aaauser_vpnurl_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaauser_vpnurl_binding := aaa.Aaauservpnurlbinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		aaauser_vpnurl_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Urlname.IsNull() {
+	if !data.Urlname.IsNull() && !data.Urlname.IsUnknown() {
 		aaauser_vpnurl_binding.Urlname = data.Urlname.ValueString()
 	}
-	if !data.Username.IsNull() {
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
 		aaauser_vpnurl_binding.Username = data.Username.ValueString()
 	}
 

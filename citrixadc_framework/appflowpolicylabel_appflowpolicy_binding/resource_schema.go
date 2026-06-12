@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -20,7 +24,7 @@ type AppflowpolicylabelAppflowpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
-	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+	InvokeLabelname        types.String `tfsdk:"invokelabelname"`
 	Labelname              types.String `tfsdk:"labelname"`
 	Labeltype              types.String `tfsdk:"labeltype"`
 	Policyname             types.String `tfsdk:"policyname"`
@@ -36,65 +40,87 @@ func (r *AppflowpolicylabelAppflowpolicyBindingResource) Schema(ctx context.Cont
 				Description: "The ID of the appflowpolicylabel_appflowpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.",
 			},
-			"invoke_labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+			"invokelabelname": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the label to invoke if the current policy evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the policy label to which to bind the policy.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of policy label to be invoked.",
 			},
 			"policyname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the AppFlow policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specifies the priority of the policy.",
 			},
 		},
 	}
 }
 
-func appflowpolicylabel_appflowpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppflowpolicylabelAppflowpolicyBindingResourceModel) appflow.Appflowpolicylabelappflowpolicybinding {
-	tflog.Debug(ctx, "In appflowpolicylabel_appflowpolicy_bindingGetThePayloadFromtheConfig Function")
+func appflowpolicylabel_appflowpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppflowpolicylabelAppflowpolicyBindingResourceModel) appflow.Appflowpolicylabelappflowpolicybinding {
+	tflog.Debug(ctx, "In appflowpolicylabel_appflowpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appflowpolicylabel_appflowpolicy_binding := appflow.Appflowpolicylabelappflowpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		appflowpolicylabel_appflowpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Invoke.IsNull() {
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		appflowpolicylabel_appflowpolicy_binding.Invoke = data.Invoke.ValueBool()
 	}
-	if !data.InvokeLabelname.IsNull() {
+	if !data.InvokeLabelname.IsNull() && !data.InvokeLabelname.IsUnknown() {
 		appflowpolicylabel_appflowpolicy_binding.Invokelabelname = data.InvokeLabelname.ValueString()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		appflowpolicylabel_appflowpolicy_binding.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Labeltype.IsNull() {
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		appflowpolicylabel_appflowpolicy_binding.Labeltype = data.Labeltype.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		appflowpolicylabel_appflowpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		appflowpolicylabel_appflowpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 

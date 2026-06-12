@@ -93,7 +93,7 @@ func (d *AaauserVpnurlpolicyBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	aaauser_vpnurlpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	aaauser_vpnurlpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

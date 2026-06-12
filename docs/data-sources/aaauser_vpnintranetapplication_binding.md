@@ -47,4 +47,4 @@ In addition to the arguments, the following attributes are available:
   * The expression is invalid.
   * The expression evaluates to a priority number that is numerically lower than the current policy's priority.
   * The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.
-* `id` - The id of the aaauser_vpnintranetapplication_binding. It is a system-generated identifier.
+* `id` - The id of the aaauser_vpnintranetapplication_binding. It is the concatenation of `username` and `intranetapplication` attributes separated by a comma.

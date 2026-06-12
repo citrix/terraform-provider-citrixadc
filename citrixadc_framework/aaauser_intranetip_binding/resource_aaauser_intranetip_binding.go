@@ -3,8 +3,10 @@ package aaauser_intranetip_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *AaauserIntranetipBindingResource) Create(ctx context.Context, req resou
 	}
 
 	tflog.Debug(ctx, "Creating aaauser_intranetip_binding resource")
-
-	// aaauser_intranetip_binding := aaauser_intranetip_bindingGetThePayloadFromtheConfig(ctx, &data)
+	aaauser_intranetip_binding := aaauser_intranetip_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaauser_intranetip_binding.Type(), &aaauser_intranetip_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaauser_intranetip_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("aaauser_intranetip_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Aaauser_intranetip_binding.Type(), &aaauser_intranetip_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaauser_intranetip_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created aaauser_intranetip_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("intranetip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("username:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Username.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readAaauserIntranetipBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *AaauserIntranetipBindingResource) Read(ctx context.Context, req resourc
 }
 
 func (r *AaauserIntranetipBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AaauserIntranetipBindingResourceModel
+	var data, state AaauserIntranetipBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *AaauserIntranetipBindingResource) Update(ctx context.Context, req resou
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating aaauser_intranetip_binding resource")
 
-	// Create API request body from the model
-	// aaauser_intranetip_binding := aaauser_intranetip_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaauser_intranetip_binding.Type(), &aaauser_intranetip_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaauser_intranetip_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		aaauser_intranetip_binding := aaauser_intranetip_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Aaauser_intranetip_binding.Type(), &aaauser_intranetip_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaauser_intranetip_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated aaauser_intranetip_binding resource")
+		tflog.Trace(ctx, "Updated aaauser_intranetip_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for aaauser_intranetip_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAaauserIntranetipBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,104 @@ func (r *AaauserIntranetipBindingResource) Delete(ctx context.Context, req resou
 	}
 
 	tflog.Debug(ctx, "Deleting aaauser_intranetip_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"username", "intranetip"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For aaauser_intranetip_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted aaauser_intranetip_binding resource from state")
+	username_value, ok := idMap["username"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'username' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["intranetip"]; ok && val != "" {
+		argsMap["intranetip"] = val
+	}
+	// netmask is a required delete arg per NITRO doc but is NOT part of the ID.
+	// Read it from the resource state (matches SDK v2 behavior). Pattern 16.
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() && data.Netmask.ValueString() != "" {
+		argsMap["netmask"] = data.Netmask.ValueString()
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Aaauser_intranetip_binding.Type(), username_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete aaauser_intranetip_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted aaauser_intranetip_binding binding")
 }
 
 // Helper function to read aaauser_intranetip_binding data from API
 func (r *AaauserIntranetipBindingResource) readAaauserIntranetipBindingFromApi(ctx context.Context, data *AaauserIntranetipBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Aaauser_intranetip_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"username", "intranetip"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	username_Name, ok := idMap["username"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'username' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Aaauser_intranetip_binding.Type(),
+		ResourceName:             username_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaauser_intranetip_binding, got error: %s", err))
 		return
 	}
 
-	aaauser_intranetip_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "aaauser_intranetip_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check intranetip
+		if idVal, ok := idMap["intranetip"]; ok {
+			if val, ok := v["intranetip"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["intranetip"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("aaauser_intranetip_binding not found with the provided ID attributes"))
+		return
+	}
+
+	aaauser_intranetip_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

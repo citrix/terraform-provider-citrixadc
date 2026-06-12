@@ -40,13 +40,13 @@ resource "citrixadc_appflowcollector" "tf_appflowcollector" {
 ## Argument Reference
 
 * `policyname` - (Required) Name of the AppFlow policy.
-* `globalbindtype` - (Optional) 0
+* `globalbindtype` - (Required) Indicates whether the binding is local or global. Defaults to `"SYSTEM_GLOBAL"`.
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - (Optional) Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.
 * `labelname` - (Optional) Name of the label to invoke if the current policy evaluates to TRUE.
 * `labeltype` - (Optional) Type of policy label to invoke. Specify vserver for a policy label associated with a virtual server, or policylabel for a user-defined policy label.
 * `priority` - (Optional) Specifies the priority of the policy.
-* `type` - (Optional) Global bind point for which to show detailed information about the policies bound to the bind point.
+* `type` - (Optional) Global bind point for which to show detailed information about the policies bound to the bind point. Possible values: [ REQ_OVERRIDE, REQ_DEFAULT, OTHERTCP_REQ_OVERRIDE, OTHERTCP_REQ_DEFAULT, ICA_REQ_OVERRIDE, ICA_REQ_DEFAULT, HTTPQUIC_REQ_OVERRIDE, HTTPQUIC_REQ_DEFAULT ]
 
 
 ## Attribute Reference

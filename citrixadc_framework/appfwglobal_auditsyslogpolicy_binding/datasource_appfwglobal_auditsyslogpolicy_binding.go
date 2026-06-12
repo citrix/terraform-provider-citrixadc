@@ -44,14 +44,12 @@ func (d *AppfwglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context
 
 	// Case 3: Array filter without parent ID
 	policyname_Name := data.Policyname
-	type_Name := data.Type
 
 	var dataArr []map[string]interface{}
+	// NOTE: 'type' is intentionally NOT used as a GET filter arg. NITRO rejects any
+	// explicit 'type' value for this binding with errorcode 1097.
 	var argsMap map[string]string = make(map[string]string)
 	var err error
-	if !type_Name.IsNull() && type_Name.ValueString() != "" {
-		argsMap["type"] = type_Name.ValueString()
-	}
 
 	findParams := service.FindParams{
 		ResourceType:             service.Appfwglobal_auditsyslogpolicy_binding.Type(),
@@ -85,13 +83,8 @@ func (d *AppfwglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context
 			match = false
 			continue
 		}
-		if !type_Name.IsNull() && type_Name.ValueString() != "" {
-			if v, ok := v["type"]; ok {
-				if v.(string) != type_Name.ValueString() {
-					match = false
-				}
-			}
-		}
+		// NOTE: 'type' is not matched here — the GET response does not echo it for
+		// this binding (it surfaces 'bindpolicytype' instead).
 
 		if match {
 			foundIndex = i
@@ -105,7 +98,7 @@ func (d *AppfwglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context
 		return
 	}
 
-	appfwglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwglobal_auditsyslogpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

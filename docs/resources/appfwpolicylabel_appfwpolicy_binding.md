@@ -9,7 +9,8 @@ The appfwpolicylabel_appfwpolicy_binding resource is used to bind appfw policy t
 
 ## Example usage
 
-```hclresource "citrixadc_appfwpolicylabel" "tf_appfwpolicylabel" {
+```hcl
+resource "citrixadc_appfwpolicylabel" "tf_appfwpolicylabel" {
   labelname       = "tf_appfwpolicylabel"
   policylabeltype = "http_req"
 }
@@ -65,7 +66,7 @@ resource "citrixadc_appfwpolicylabel_appfwpolicy_binding" "tf_binding" {
 * `priority` - (Required) Positive integer specifying the priority of the policy. A lower number specifies a higher priority. Must be unique within a group of policies that are bound to the same bind point or label. Policies are evaluated in the order of their priority numbers.
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - (Optional) If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
-* `invoke_labelname` - (Optional) Name of the policy label to invoke if the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is set to Policy Label.
+* `invokelabelname` - (Optional) Name of the policy label to invoke if the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is set to Policy Label.
 * `labeltype` - (Optional) Type of policy label to invoke if the current policy evaluates to TRUE and the invoke parameter is set. Available settings function as follows: * reqvserver. Invoke the unnamed policy label associated with the specified request virtual server. * policylabel. Invoke the specified user-defined policy label.
 
 
@@ -73,7 +74,7 @@ resource "citrixadc_appfwpolicylabel_appfwpolicy_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwpolicylabel_appfwpolicy_binding. It is the concatenation of `labelname`and `policyname` attributes separated by comma.
+* `id` - The id of the appfwpolicylabel_appfwpolicy_binding. It is the concatenation of the `labelname` and `policyname` attributes separated by a comma.
 
 
 ## Import

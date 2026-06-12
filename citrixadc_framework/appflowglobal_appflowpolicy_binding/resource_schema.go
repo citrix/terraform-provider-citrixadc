@@ -2,15 +2,14 @@ package appflowglobal_appflowpolicy_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -40,77 +39,99 @@ func (r *AppflowglobalAppflowpolicyBindingResource) Schema(ctx context.Context, 
 				Description: "The ID of the appflowglobal_appflowpolicy_binding resource.",
 			},
 			"globalbindtype": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "0",
+			},
+			"gotopriorityexpression": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
+			},
+			"invoke": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.",
+			},
+			"labelname": schema.StringAttribute{
+				// Optional only (not Computed): the binding GET never echoes labelname,
+				// so a Computed flag would leave it unknown after apply (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("SYSTEM_GLOBAL"),
-				Description: "0",
-			},
-			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
-			},
-			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.",
-			},
-			"labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
 				Description: "Name of the label to invoke if the current policy evaluates to TRUE.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// Optional only (not Computed): the binding GET never echoes labeltype (Pattern 13).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of policy label to invoke. Specify vserver for a policy label associated with a virtual server, or policylabel for a user-defined policy label.",
 			},
 			"policyname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the AppFlow policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specifies the priority of the policy.",
 			},
 			"type": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Global bind point for which to show detailed information about the policies bound to the bind point.",
 			},
 		},
 	}
 }
 
-func appflowglobal_appflowpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppflowglobalAppflowpolicyBindingResourceModel) appflow.Appflowglobalappflowpolicybinding {
-	tflog.Debug(ctx, "In appflowglobal_appflowpolicy_bindingGetThePayloadFromtheConfig Function")
+func appflowglobal_appflowpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppflowglobalAppflowpolicyBindingResourceModel) appflow.Appflowglobalappflowpolicybinding {
+	tflog.Debug(ctx, "In appflowglobal_appflowpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appflowglobal_appflowpolicy_binding := appflow.Appflowglobalappflowpolicybinding{}
-	if !data.Globalbindtype.IsNull() {
+	if !data.Globalbindtype.IsNull() && !data.Globalbindtype.IsUnknown() {
 		appflowglobal_appflowpolicy_binding.Globalbindtype = data.Globalbindtype.ValueString()
 	}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		appflowglobal_appflowpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Invoke.IsNull() {
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		appflowglobal_appflowpolicy_binding.Invoke = data.Invoke.ValueBool()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		appflowglobal_appflowpolicy_binding.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Labeltype.IsNull() {
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		appflowglobal_appflowpolicy_binding.Labeltype = data.Labeltype.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		appflowglobal_appflowpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		appflowglobal_appflowpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		appflowglobal_appflowpolicy_binding.Type = data.Type.ValueString()
 	}
 
@@ -136,15 +157,14 @@ func appflowglobal_appflowpolicy_bindingSetAttrFromGet(ctx context.Context, data
 	} else {
 		data.Invoke = types.BoolNull()
 	}
+	// labelname is not echoed back by the binding GET response; preserve the
+	// prior plan/state value to avoid spurious "inconsistent result" diffs (Pattern 7).
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
-	} else {
-		data.Labelname = types.StringNull()
 	}
+	// labeltype is not echoed back by the binding GET response; preserve prior value (Pattern 7).
 	if val, ok := getResponseData["labeltype"]; ok && val != nil {
 		data.Labeltype = types.StringValue(val.(string))
-	} else {
-		data.Labeltype = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
@@ -165,11 +185,9 @@ func appflowglobal_appflowpolicy_bindingSetAttrFromGet(ctx context.Context, data
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Backward-compatible with SDK v2: ID is the plain policyname value
+	// (resource_id_mapping.json legacy order: "policyname").
+	data.Id = types.StringValue(data.Policyname.ValueString())
 
 	return data
 }
