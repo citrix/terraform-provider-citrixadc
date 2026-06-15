@@ -10,7 +10,7 @@ func LinksetChannelBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			"linkset_id": schema.StringAttribute{
 				Required:    true,
 				Description: "ID of the linkset to which to bind the interfaces.",
 			},
