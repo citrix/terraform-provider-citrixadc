@@ -396,8 +396,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbgroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbgroup_lbvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmetrictable"
-	// lbmetrictable_metric_binding temporarily de-registered: pre-existing codegen bug (malformed tfsdk:"Snmpoid") fails provider schema validation. Unrelated to vlan_nsip_binding migration.
-	// "github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmetrictable_metric_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmetrictable_metric_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor_metric_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor_sslcertkey_binding"
@@ -1206,7 +1205,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		ipset_nsip6_binding.NewIpsetNsip6BindingResource,
 		ipset_nsip_binding.NewIpsetNsipBindingResource,
 		lbgroup_lbvserver_binding.NewLbgroupLbvserverBindingResource,
-		// lbmetrictable_metric_binding.NewLbmetrictableMetricBindingResource, // de-registered: pre-existing malformed schema, unrelated to vlan_nsip_binding
+		lbmetrictable_metric_binding.NewLbmetrictableMetricBindingResource,
 		lbmonitor_metric_binding.NewLbmonitorMetricBindingResource,
 		lbmonitor_sslcertkey_binding.NewLbmonitorSslcertkeyBindingResource,
 		lbvserver_analyticsprofile_binding.NewLbvserverAnalyticsprofileBindingResource,
@@ -1944,7 +1943,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		ipset_nsip6_binding.IPsetNsip6BindingDataSource,
 		ipset_nsip_binding.IPsetNsipBindingDataSource,
 		lbgroup_lbvserver_binding.LBgroupLbvserverBindingDataSource,
-		// lbmetrictable_metric_binding.LBmetrictableMetricBindingDataSource, // de-registered: pre-existing malformed schema, unrelated to vlan_nsip_binding
+		lbmetrictable_metric_binding.LBmetrictableMetricBindingDataSource,
 		lbmonitor_metric_binding.LBmonitorMetricBindingDataSource,
 		lbmonitor_sslcertkey_binding.LBmonitorSslcertkeyBindingDataSource,
 		lbvserver_analyticsprofile_binding.LBvserverAnalyticsprofileBindingDataSource,

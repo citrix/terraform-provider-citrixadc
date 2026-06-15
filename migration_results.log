@@ -1404,5 +1404,18 @@ BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct); r
 DATASOURCE: healthy; added bindpoint to schema, split setter to xxxSetAttrFromGetForDatasource (faithful copy + sets composite Id) per Pattern 7.
 PATTERNS: 1, 6, 7, 13
 FILES CHANGED: citrixadc_framework/csvserver_tmtrafficpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_tmtrafficpolicy_binding/resource_csvserver_tmtrafficpolicy_binding.go, citrixadc_framework/csvserver_tmtrafficpolicy_binding/datasource_schema.go, citrixadc_framework/csvserver_tmtrafficpolicy_binding/datasource_csvserver_tmtrafficpolicy_binding.go, citrixadc_framework/acctests/csvserver_tmtrafficpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc files
+RESOURCE: lbmetrictable_metric_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:08:29Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccLbmetrictable_metric_binding($|_basic|DataSource)
+TESTS:
+  - TestAccLbmetrictable_metric_binding_basic ............ PASS
+  - TestAccLbmetrictable_metric_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: snmpoid was Optional+Computed in Framework but Required+ForceNew in SDK v2 -> set Required, dropped Optional/Computed, kept RequiresReplace (Pattern 8). metric/metrictable parity OK. Create verb kept as UpdateUnnamedResource (PUT) - verified POST+idempotent=yes is rejected by ADC (errorcode 1074), PUT works. ID format new key:value with legacyOrder metrictable,metric matching resource_id_mapping.json. SetAttrFromGet reads Snmpoid (capital S) correctly; all fields echoed by GET so no Pattern-7 split needed.
+DATASOURCE: healthy as-is; re-registered (was commented out in provider.go).
+PATTERNS: 8
+FILES CHANGED: citrixadc_framework/lbmetrictable_metric_binding/resource_schema.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/lbmetrictable_metric_binding_test.go (ID-parse helper lines only - sanctioned exception)
 BLOCKER: none
 ========================================
