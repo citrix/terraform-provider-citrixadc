@@ -44,7 +44,6 @@ func (d *PolicydatasetValueBindingDataSource) Read(ctx context.Context, req data
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
-	endrange_Name := data.Endrange
 	value_Name := data.Value
 
 	var dataArr []map[string]interface{}
@@ -67,33 +66,11 @@ func (d *PolicydatasetValueBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right value.
+	// value is unique within a dataset, so it is sufficient to identify the binding.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check endrange
-		if val, ok := v["endrange"].(string); ok {
-			if endrange_Name.IsNull() || val != endrange_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !endrange_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check value
-		if val, ok := v["value"].(string); ok {
-			if value_Name.IsNull() || val != value_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !value_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["value"].(string); ok && !value_Name.IsNull() && val == value_Name.ValueString() {
 			foundIndex = i
 			break
 		}
@@ -101,7 +78,7 @@ func (d *PolicydatasetValueBindingDataSource) Read(ctx context.Context, req data
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("policydataset_value_binding with endrange %s not found", endrange_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("policydataset_value_binding with value %s not found", value_Name.ValueString()))
 		return
 	}
 

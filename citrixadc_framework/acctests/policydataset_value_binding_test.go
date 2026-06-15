@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -74,10 +74,12 @@ func testAccCheckPolicydatasetValue(n string) resource.TestCheckFunc {
 		if err != nil {
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
-		idSlice := strings.Split(rs.Primary.ID, ",")
-
-		name := idSlice[0]
-		value := idSlice[1]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"name", "value"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		name := idMap["name"]
+		value := idMap["value"]
 
 		findParams := service.FindParams{
 			ResourceType:             "policydataset_value_binding",

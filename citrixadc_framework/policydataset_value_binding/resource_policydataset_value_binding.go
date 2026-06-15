@@ -219,43 +219,14 @@ func (r *PolicydatasetValueBindingResource) readPolicydatasetValueBindingFromApi
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right value.
+	// value is unique within a dataset, so it is sufficient to identify the
+	// binding (mirrors the SDK v2 behaviour). endrange is not used for matching
+	// because it may be absent in the GET response for entries without a range.
+	value_Value := idMap["value"]
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check endrange
-		if idVal, ok := idMap["endrange"]; ok {
-			if val, ok := v["endrange"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["endrange"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check value
-		if idVal, ok := idMap["value"]; ok {
-			if val, ok := v["value"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["value"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["value"].(string); ok && val == value_Value {
 			foundIndex = i
 			break
 		}
