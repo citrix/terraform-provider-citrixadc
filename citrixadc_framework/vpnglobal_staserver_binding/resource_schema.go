@@ -31,8 +31,10 @@ func (r *VpnglobalStaserverBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the vpnglobal_staserver_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// Pattern 13: NITRO never echoes this field back in GET, so it cannot be
+				// Computed (Terraform would require a resolved value after apply that the
+				// provider can never supply). Keep it Optional-only.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -78,7 +80,28 @@ func vpnglobal_staserver_bindingGetThePayloadFromthePlan(ctx context.Context, da
 func vpnglobal_staserver_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalStaserverBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalStaserverBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_staserver_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// gotopriorityexpression is a write-only input that NITRO does NOT echo back in
+	// the GET response (Pattern 7): preserve the existing plan/state value rather than
+	// nulling it, which would cause an "inconsistent result after apply" / perpetual diff.
+	if val, ok := getResponseData["staaddresstype"]; ok && val != nil {
+		data.Staaddresstype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["staserver"]; ok && val != nil {
+		data.Staserver = types.StringValue(val.(string))
+	}
+
+	// ID is set once in Create (single unique attribute - plain value); do not recompute here.
+
+	return data
+}
+
+// Datasource-only setter (Pattern 7): faithfully copies every field from the GET
+// response and sets the ID, since a datasource has no prior plan/state to preserve
+// and never calls Create.
+func vpnglobal_staserver_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalStaserverBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalStaserverBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_staserver_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -95,8 +118,7 @@ func vpnglobal_staserver_bindingSetAttrFromGet(ctx context.Context, data *Vpnglo
 		data.Staserver = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Set ID for the datasource (single unique attribute - plain value).
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Staserver.ValueString()))
 
 	return data

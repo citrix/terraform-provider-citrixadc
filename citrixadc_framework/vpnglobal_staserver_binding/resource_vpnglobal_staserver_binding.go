@@ -3,9 +3,9 @@ package vpnglobal_staserver_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -151,9 +151,11 @@ func (r *VpnglobalStaserverBindingResource) Delete(ctx context.Context, req reso
 	tflog.Debug(ctx, "Deleting vpnglobal_staserver_binding resource")
 	// Global binding - delete using DeleteResourceWithArgs with empty resource name
 	// Single unique attribute - ID is the plain value
+	// URL-encode the staserver value: STA servers are URLs containing ':' and '/'
+	// which must be escaped in the delete args (matches SDK v2 behaviour).
 	staserver_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("staserver:%s", staserver_value),
+		fmt.Sprintf("staserver:%s", url.QueryEscape(staserver_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_staserver_binding.Type(), "", args)
@@ -168,12 +170,10 @@ func (r *VpnglobalStaserverBindingResource) Delete(ctx context.Context, req reso
 // Helper function to read vpnglobal_staserver_binding data from API
 func (r *VpnglobalStaserverBindingResource) readVpnglobalStaserverBindingFromApi(ctx context.Context, data *VpnglobalStaserverBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"staserver"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
+	// Pattern 10: single-key resource - ID is the plain staserver value (may contain
+	// ':' and '/' for URL-style STA servers), so it must NOT be passed through
+	// ParseIdString (which would misinterpret "http:..." as a key:value pair).
+	staserverId := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
 
@@ -181,7 +181,7 @@ func (r *VpnglobalStaserverBindingResource) readVpnglobalStaserverBindingFromApi
 		ResourceType:             service.Vpnglobal_staserver_binding.Type(),
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnglobal_staserver_binding, got error: %s", err))
 		return
@@ -196,25 +196,7 @@ func (r *VpnglobalStaserverBindingResource) readVpnglobalStaserverBindingFromApi
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check staserver
-		if idVal, ok := idMap["staserver"]; ok {
-			if val, ok := v["staserver"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["staserver"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["staserver"].(string); ok && val == staserverId {
 			foundIndex = i
 			break
 		}
@@ -222,7 +204,7 @@ func (r *VpnglobalStaserverBindingResource) readVpnglobalStaserverBindingFromApi
 
 	// Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnglobal_staserver_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "vpnglobal_staserver_binding not found with the provided ID attributes")
 		return
 	}
 
