@@ -3,6 +3,7 @@ package sslvserver_sslciphersuite_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *SslvserverSslciphersuiteBindingResource) Create(ctx context.Context, re
 	sslvserver_sslciphersuite_binding := sslvserver_sslciphersuite_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Sslvserver_sslciphersuite_binding.Type(), &sslvserver_sslciphersuite_binding)
+	// Binding resource - SDK v2 used AddResource (POST), matching NITRO add verb
+	_, err := r.client.AddResource(service.Sslvserver_sslciphersuite_binding.Type(), "", &sslvserver_sslciphersuite_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslvserver_sslciphersuite_binding, got error: %s", err))
 		return
@@ -168,7 +169,9 @@ func (r *SslvserverSslciphersuiteBindingResource) Delete(ctx context.Context, re
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["ciphername"]; ok && val != "" {
-		argsMap["ciphername"] = val
+		// URL-encode the delete arg value (matches SDK v2; the NITRO client does not
+		// encode arg values, only the resource name).
+		argsMap["ciphername"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Sslvserver_sslciphersuite_binding.Type(), vservername_value, argsMap)

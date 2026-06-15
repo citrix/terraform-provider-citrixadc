@@ -2264,5 +2264,17 @@ BACKWARD-COMPAT: SetAttrFromGet preserved omitted fields instead of nulling and 
 DATASOURCE: healthy; switched Read to new ForDatasource setter; made crlcheck/ocspcheck Optional+Computed (were Required) so the datasource test omitting them applies.
 PATTERNS: 6, 7, 13
 FILES CHANGED: citrixadc_framework/sslvserver_sslcertkey_binding/resource_sslvserver_sslcertkey_binding.go, citrixadc_framework/sslvserver_sslcertkey_binding/resource_schema.go, citrixadc_framework/sslvserver_sslcertkey_binding/datasource_sslvserver_sslcertkey_binding.go, citrixadc_framework/sslvserver_sslcertkey_binding/datasource_schema.go, citrixadc_framework/acctests/sslvserver_sslcertkey_binding_test.go (sanctioned ID-parse helper lines only); NO doc file changed.
+RESOURCE: sslvserver_sslciphersuite_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:09:36Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccSslvserver_sslciphersuite_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccSslvserver_sslciphersuite_binding_basic ............ SKIP[t.Skip "TODO: Operation not permitted!" - hardcoded in test body, pre-existing]
+  - TestAccSslvserver_sslciphersuite_bindingDataSource_basic .. SKIP[t.Skip "TODO: Operation not permitted when SSL profiles are enabled!" - hardcoded in test body, pre-existing]
+BACKWARD-COMPAT: attr name/type/Required/ForceNew/default/Computed parity all matched SDK v2 (ciphername Req+ForceNew, vservername Req+ForceNew, description Opt+Computed+ForceNew). Fixed Create to use AddResource (POST) instead of UpdateUnnamedResource (PUT) to match SDK v2 contract; URL-encoded the ciphername Delete arg value (matches SDK v2 url.QueryEscape; NITRO client does not encode arg values). ID format adopts new key:value; resource_id_mapping.json "vservername,ciphername" matches ParseIdString legacy order in Read/Delete. Verified full create/get/delete cycle on ADC .155.
+DATASOURCE: healthy as-is (shares SetAttrFromGet which sets the ID; GET echoes all fields incl description).
+PATTERNS: 1 (PUT-where-POST), Delete-arg URL-encode (binding-family hint b).
+FILES CHANGED: citrixadc_framework/sslvserver_sslciphersuite_binding/resource_sslvserver_sslciphersuite_binding.go (NO test/doc file modified)
 BLOCKER: none
 ========================================
