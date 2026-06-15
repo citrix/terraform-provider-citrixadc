@@ -2552,5 +2552,18 @@ BACKWARD-COMPAT: ID reverted from composite policyname:..,type:.. to plain polic
 DATASOURCE: healthy; split into dedicated ForDatasource setter (Pattern 7) that copies all GET fields + sets plain-policyname ID; datasource type flag relaxed Required->Optional+Computed (Pattern 11) so it accepts the now-Optional resource type reference.
 PATTERNS: 7, 10, 11, 13
 FILES CHANGED: citrixadc_framework/tunnelglobal_tunneltrafficpolicy_binding/{resource_tunnelglobal_tunneltrafficpolicy_binding.go,resource_schema.go,datasource_tunnelglobal_tunneltrafficpolicy_binding.go,datasource_schema.go} (NO test/doc file modified)
+RESOURCE: vpnglobal_authenticationnegotiatepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:45:13Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccVpnglobal_authenticationnegotiatepolicy_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccVpnglobal_authenticationnegotiatepolicy_binding_basic ............ PASS
+  - TestAccVpnglobal_authenticationnegotiatepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral test; resource has no secret attributes) ................. N/A
+BACKWARD-COMPAT: attribute/type/Required/ForceNew/ID-format parity with SDK v2 preserved. Dropped spurious Computed from non-echoed gotopriorityexpression & groupextraction (SDK v2 had Computed:true but it caused Framework unknown-value-after-apply; Optional contract preserved). Create verb UpdateUnnamedResource (PUT) matches SDK v2. ID format = plain policyname value; resource_id_mapping.json "policyname" matches.
+DATASOURCE: healthy; split setter added — datasource now uses xxxSetAttrFromGetForDatasource (copies all GET fields + sets Id), resource keeps xxxSetAttrFromGet (preserves non-echoed plan/state).
+PATTERNS: 6 (no Id reset in resource setter), 7 (preserve non-echoed inputs + datasource setter split), 8/13 (drop spurious Computed on non-echoed attrs), 10 (plain-value ID Read fix), binding-family (b) URL-encode Delete arg.
+FILES CHANGED: citrixadc_framework/vpnglobal_authenticationnegotiatepolicy_binding/resource_vpnglobal_authenticationnegotiatepolicy_binding.go, citrixadc_framework/vpnglobal_authenticationnegotiatepolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationnegotiatepolicy_binding/datasource_vpnglobal_authenticationnegotiatepolicy_binding.go (NO test/doc file modified)
 BLOCKER: none
 ========================================

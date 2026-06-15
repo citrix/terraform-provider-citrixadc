@@ -92,7 +92,7 @@ func (d *VpnglobalAuthenticationnegotiatepolicyBindingDataSource) Read(ctx conte
 		return
 	}
 
-	vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

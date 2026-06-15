@@ -3,6 +3,7 @@ package vpnglobal_authenticationnegotiatepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -150,10 +151,11 @@ func (r *VpnglobalAuthenticationnegotiatepolicyBindingResource) Delete(ctx conte
 
 	tflog.Debug(ctx, "Deleting vpnglobal_authenticationnegotiatepolicy_binding resource")
 	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
+	// Single unique attribute - ID is the plain value. URL-encode the value so a
+	// policyname containing slashes/special characters is passed safely (Pattern b).
 	policyname_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("policyname:%s", policyname_value),
+		fmt.Sprintf("policyname:%s", url.QueryEscape(policyname_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_authenticationnegotiatepolicy_binding.Type(), "", args)
@@ -168,11 +170,17 @@ func (r *VpnglobalAuthenticationnegotiatepolicyBindingResource) Delete(ctx conte
 // Helper function to read vpnglobal_authenticationnegotiatepolicy_binding data from API
 func (r *VpnglobalAuthenticationnegotiatepolicyBindingResource) readVpnglobalAuthenticationnegotiatepolicyBindingFromApi(ctx context.Context, data *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
+	// Single unique attribute - the ID is the plain policyname value (Pattern 10:
+	// do not use ParseIdString on a plain-value ID; it returns an empty map).
+	// ParseIdString still resolves a legacy SDK v2 import ID (plain "policyname") correctly.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return
+	}
+	policynameValue := data.Id.ValueString()
+	if v, ok := idMap["policyname"]; ok && v != "" {
+		policynameValue = v
 	}
 
 	var dataArr []map[string]interface{}
@@ -193,28 +201,10 @@ func (r *VpnglobalAuthenticationnegotiatepolicyBindingResource) readVpnglobalAut
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right policyname
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policyname
-		if idVal, ok := idMap["policyname"]; ok {
-			if val, ok := v["policyname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policyname"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["policyname"].(string); ok && val == policynameValue {
 			foundIndex = i
 			break
 		}
