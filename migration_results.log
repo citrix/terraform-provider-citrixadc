@@ -806,5 +806,18 @@ BACKWARD-COMPAT: Framework resource already matched the SDK v2 contract (attr na
 DATASOURCE: healthy as-is; shares SetAttrFromGet (both keys echoed by GET, no server-overridden non-echoed fields, so no Pattern 7 split needed).
 PATTERNS: none required in resource code (reviewed 6/7/10/11/13); Constraint-1 sanctioned ID-parse helper edit applied to test.
 FILES CHANGED: citrixadc_framework/acctests/crvserver_analyticsprofile_binding_test.go (ID-parse helper lines only: raw strings.SplitN -> utils.ParseIdString in Exist/NotExist helpers; import swap strings->utils). NO doc modified.
+RESOURCE: crvserver_appfwpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:29:14Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccCrvserver_appfwpolicy_binding_basic|TestAcccrvserver_appfwpolicy_bindingDataSource_basic
+TESTS:
+  - TestAccCrvserver_appfwpolicy_binding_basic .......... PASS
+  - TestAcccrvserver_appfwpolicy_bindingDataSource_basic  PASS
+  - (no ephemeral tests; resource has no secret attrs) .. N/A
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct); reverted labelname/labeltype from Required to Optional (SDK v2 contract = Optional+Computed; basic test omits them); dropped spurious Computed from labelname/labeltype/targetvserver (not echoed by NITRO GET -> "unknown after apply"); kept Computed on echoed bindpoint/gotopriorityexpression/invoke/priority; Create POST via AddResource (was UpdateUnnamedResource PUT) to match SDK v2; Delete now sends policyname + URL-encoded bindpoint + priority args (DeleteResourceWithArgs); ID format new key:value (legacy comma decoded via ParseIdString, order name,policyname matches resource_id_mapping.json).
+DATASOURCE: healthy; split setter per Pattern 7 -> added crvserver_appfwpolicy_bindingSetAttrFromGetForDatasource (faithful copy + sets composite Id), datasource Read switched to it; added bindpoint to datasource schema.
+PATTERNS: 1 (PUT->POST create), 6 (removed SetAttrFromGet Id recompute), 7 (preserve-state resource setter + datasource setter split), 13 (drop Computed on non-echoed Optional attrs), plus binding delete URL-encode.
+FILES CHANGED: citrixadc_framework/crvserver_appfwpolicy_binding/resource_schema.go, citrixadc_framework/crvserver_appfwpolicy_binding/resource_crvserver_appfwpolicy_binding.go, citrixadc_framework/crvserver_appfwpolicy_binding/datasource_crvserver_appfwpolicy_binding.go, citrixadc_framework/crvserver_appfwpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_appfwpolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc file modified; NO SDK v2 modified.
 BLOCKER: none
 ========================================
