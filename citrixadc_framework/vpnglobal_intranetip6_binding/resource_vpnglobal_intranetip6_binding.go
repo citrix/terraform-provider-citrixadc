@@ -3,8 +3,7 @@ package vpnglobal_intranetip6_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -69,11 +68,10 @@ func (r *VpnglobalIntranetip6BindingResource) Create(ctx context.Context, req re
 
 	tflog.Trace(ctx, "Created vpnglobal_intranetip6_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("intranetip6:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip6.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("numaddr:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Numaddr.ValueInt64()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state.
+	// Legacy single-key plain-value ID (intranetip6) for backward compatibility
+	// with SDK v2 state and resource_id_mapping.json ("intranetip6").
+	data.Id = types.StringValue(data.Intranetip6.ValueString())
 
 	// Read the updated state back
 	r.readVpnglobalIntranetip6BindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -154,23 +152,27 @@ func (r *VpnglobalIntranetip6BindingResource) Delete(ctx context.Context, req re
 	}
 
 	tflog.Debug(ctx, "Deleting vpnglobal_intranetip6_binding resource")
-	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Multiple unique attributes - parse from ID
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name.
+	// Single-key plain-value ID (intranetip6); numaddr (from state) disambiguates,
+	// mirroring the SDK v2 delete behavior. URL-encode values that may contain
+	// slashy/special characters (intranetip6 ranges).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"intranetip6"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
 	}
-
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["intranetip6"]; ok && val != "" {
-		argsMap["intranetip6"] = val
-	}
-	if val, ok := idMap["numaddr"]; ok && val != "" {
-		argsMap["numaddr"] = val
+	intranetip6 := idMap["intranetip6"]
+	if intranetip6 == "" {
+		intranetip6 = data.Id.ValueString()
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnglobal_intranetip6_binding.Type(), "", argsMap)
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("intranetip6:%s", url.QueryEscape(intranetip6)))
+	if !data.Numaddr.IsNull() && !data.Numaddr.IsUnknown() {
+		args = append(args, fmt.Sprintf("numaddr:%d", data.Numaddr.ValueInt64()))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Vpnglobal_intranetip6_binding.Type(), "", args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnglobal_intranetip6_binding, got error: %s", err))
 		return
@@ -182,11 +184,17 @@ func (r *VpnglobalIntranetip6BindingResource) Delete(ctx context.Context, req re
 // Helper function to read vpnglobal_intranetip6_binding data from API
 func (r *VpnglobalIntranetip6BindingResource) readVpnglobalIntranetip6BindingFromApi(ctx context.Context, data *VpnglobalIntranetip6BindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
+	// Single-key resource: ID is the plain intranetip6 value (matches SDK v2 and
+	// resource_id_mapping.json). ParseIdString also accepts the legacy/new forms,
+	// but the filter key here is simply the ID value.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"intranetip6"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return
+	}
+	intranetip6 := idMap["intranetip6"]
+	if intranetip6 == "" {
+		intranetip6 = data.Id.ValueString()
 	}
 
 	var dataArr []map[string]interface{}
@@ -207,46 +215,10 @@ func (r *VpnglobalIntranetip6BindingResource) readVpnglobalIntranetip6BindingFro
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching intranetip6 (SDK v2 parity)
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check intranetip6
-		if idVal, ok := idMap["intranetip6"]; ok {
-			if val, ok := v["intranetip6"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["intranetip6"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check numaddr
-		if idVal, ok := idMap["numaddr"]; ok {
-			if val, ok := v["numaddr"]; ok {
-				val, _ = utils.ConvertToInt64(val)
-				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
-				if val != idValInt64 {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["numaddr"]; ok {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["intranetip6"].(string); ok && val == intranetip6 {
 			foundIndex = i
 			break
 		}
@@ -254,7 +226,7 @@ func (r *VpnglobalIntranetip6BindingResource) readVpnglobalIntranetip6BindingFro
 
 	// Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnglobal_intranetip6_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "vpnglobal_intranetip6_binding not found with the provided ID attributes")
 		return
 	}
 

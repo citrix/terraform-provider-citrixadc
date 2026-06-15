@@ -2658,5 +2658,18 @@ BACKWARD-COMPAT: attr/type/flag parity matched SDK v2 (intranetdomain Required+F
 DATASOURCE: healthy; split setter into resource (preserve state / resolve unknown) + datasource (faithful copy + set Id) per Pattern 7; datasource Read now calls the datasource setter.
 PATTERNS: 7, 10, 13
 FILES CHANGED: citrixadc_framework/vpnglobal_domain_binding/resource_vpnglobal_domain_binding.go, citrixadc_framework/vpnglobal_domain_binding/resource_schema.go, citrixadc_framework/vpnglobal_domain_binding/datasource_vpnglobal_domain_binding.go
+RESOURCE: vpnglobal_intranetip6_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:54:31Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccVpnglobal_intranetip6_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnglobal_intranetip6_binding_basic ............ PASS
+  - TestAccVpnglobal_intranetip6_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: numaddr Required->Optional+Computed (SDK v2 parity); ID reverted from multi-key composite to legacy single-key plain intranetip6 (matches resource_id_mapping.json + SDK v2 d.SetId); gotopriorityexpression Computed dropped (not echoed by NITRO GET) and preserved in resource setter; Delete uses DeleteResourceWithArgs with url.QueryEscape + numaddr arg (SDK v2 parity).
+DATASOURCE: healthy; split setter added (xxxSetAttrFromGetForDatasource) and datasource Read switched to it (Pattern 7).
+PATTERNS: 7, 10, 13
+FILES CHANGED: citrixadc_framework/vpnglobal_intranetip6_binding/resource_vpnglobal_intranetip6_binding.go, citrixadc_framework/vpnglobal_intranetip6_binding/resource_schema.go, citrixadc_framework/vpnglobal_intranetip6_binding/datasource_vpnglobal_intranetip6_binding.go (NO test/doc files)
 BLOCKER: none
 ========================================
