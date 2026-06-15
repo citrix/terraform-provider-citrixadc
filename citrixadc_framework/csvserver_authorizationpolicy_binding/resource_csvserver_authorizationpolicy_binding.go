@@ -3,6 +3,7 @@ package csvserver_authorizationpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CsvserverAuthorizationpolicyBindingResource) Create(ctx context.Context
 	csvserver_authorizationpolicy_binding := csvserver_authorizationpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_authorizationpolicy_binding.Type(), &csvserver_authorizationpolicy_binding)
+	// Binding resource - NITRO `add` is POST (matches SDK v2 AddResource), Pattern 1
+	_, err := r.client.AddResource(service.Csvserver_authorizationpolicy_binding.Type(), "", &csvserver_authorizationpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_authorizationpolicy_binding, got error: %s", err))
 		return
@@ -168,7 +169,14 @@ func (r *CsvserverAuthorizationpolicyBindingResource) Delete(ctx context.Context
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		// URL-encode arg values for slashy/special characters (Pattern: binding delete arg encode)
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%d", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_authorizationpolicy_binding.Type(), name_value, argsMap)

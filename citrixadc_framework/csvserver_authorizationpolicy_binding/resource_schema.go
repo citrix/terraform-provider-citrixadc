@@ -22,6 +22,7 @@ import (
 // CsvserverAuthorizationpolicyBindingResourceModel describes the resource data model.
 type CsvserverAuthorizationpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *CsvserverAuthorizationpolicyBindingResource) Schema(ctx context.Context
 				Computed:    true,
 				Description: "The ID of the csvserver_authorizationpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +66,16 @@ func (r *CsvserverAuthorizationpolicyBindingResource) Schema(ctx context.Context
 				Description: "Invoke flag.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +120,9 @@ func csvserver_authorizationpolicy_bindingGetThePayloadFromthePlan(ctx context.C
 
 	// Create API request body from the model
 	csvserver_authorizationpolicy_binding := cs.Csvserverauthorizationpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		csvserver_authorizationpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_authorizationpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +151,98 @@ func csvserver_authorizationpolicy_bindingGetThePayloadFromthePlan(ctx context.C
 	return csvserver_authorizationpolicy_binding
 }
 
+// csvserver_authorizationpolicy_bindingSetAttrFromGet (resource) preserves the
+// configured plan/state for Optional+Computed attributes. All attributes here are
+// RequiresReplace, and the NITRO server may normalize, default, or not echo back
+// several of them (bindpoint, priority, gotopriorityexpression, invoke, labelname,
+// labeltype, targetlbvserver). Overwriting a user-configured (known) value with the
+// GET response would cause "inconsistent result after apply" (Pattern 7/13), so a
+// known value is preserved. When the model value is unknown/null (Computed-unset or
+// import), we adopt the GET value if present, otherwise resolve it to typed-null so
+// no value remains unknown after apply. Keys (name, policyname) come from the ID.
 func csvserver_authorizationpolicy_bindingSetAttrFromGet(ctx context.Context, data *CsvserverAuthorizationpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAuthorizationpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In csvserver_authorizationpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		// preserve user-configured value
+	} else if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
+		// preserve user-configured value
+	} else if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else {
+		data.Gotopriorityexpression = types.StringNull()
+	}
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
+		// preserve user-configured value
+	} else if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	} else {
+		data.Invoke = types.BoolNull()
+	}
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
+		// preserve user-configured value
+	} else if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	} else {
+		data.Labelname = types.StringNull()
+	}
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
+		// preserve user-configured value
+	} else if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	} else {
+		data.Labeltype = types.StringNull()
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		// preserve user-configured value
+	} else if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
+		}
+	} else {
+		data.Priority = types.Int64Null()
+	}
+	if !data.Targetlbvserver.IsNull() && !data.Targetlbvserver.IsUnknown() {
+		// preserve user-configured value
+	} else if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
+		data.Targetlbvserver = types.StringValue(val.(string))
+	} else {
+		data.Targetlbvserver = types.StringNull()
+	}
+
+	// Key attributes from the GET response (used to populate state on import).
+	if data.Name.IsNull() || data.Name.IsUnknown() {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
+	}
+	if data.Policyname.IsNull() || data.Policyname.IsUnknown() {
+		if val, ok := getResponseData["policyname"]; ok && val != nil {
+			data.Policyname = types.StringValue(val.(string))
+		}
+	}
+
+	return data
+}
+
+// csvserver_authorizationpolicy_bindingSetAttrFromGetForDatasource (datasource)
+// faithfully copies every field from the GET response (the datasource has no prior
+// plan/state to preserve) and sets the composite ID itself.
+func csvserver_authorizationpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CsvserverAuthorizationpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAuthorizationpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In csvserver_authorizationpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -184,7 +286,7 @@ func csvserver_authorizationpolicy_bindingSetAttrFromGet(ctx context.Context, da
 		data.Targetlbvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
