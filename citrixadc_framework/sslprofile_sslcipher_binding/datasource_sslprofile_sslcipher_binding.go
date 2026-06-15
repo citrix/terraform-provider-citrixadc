@@ -66,24 +66,16 @@ func (d *SslprofileSslcipherBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the matching cipher binding. The NITRO
+	// GET response exposes the bound cipher's name in "cipheraliasname"
+	// (there is no "ciphername" key).
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ciphername
-		if val, ok := v["ciphername"].(string); ok {
-			if ciphername_Name.IsNull() || val != ciphername_Name.ValueString() {
-				match = false
-				continue
+		if val, ok := v["cipheraliasname"].(string); ok {
+			if !ciphername_Name.IsNull() && val == ciphername_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !ciphername_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
@@ -93,7 +85,7 @@ func (d *SslprofileSslcipherBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	sslprofile_sslcipher_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	sslprofile_sslcipher_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

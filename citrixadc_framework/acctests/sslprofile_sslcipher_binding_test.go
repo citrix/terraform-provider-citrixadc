@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -81,10 +82,12 @@ func testAccCheckSslprofile_sslcipher_bindingExist(n string, id *string) resourc
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-
-		profileName := idSlice[0]
-		cipherName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "ciphername"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		profileName := idMap["name"]
+		cipherName := idMap["ciphername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslprofile_sslcipher_binding",
@@ -134,9 +137,11 @@ func testAccCheckSslprofile_sslcipher_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		idSlice := strings.Split(rs.Primary.ID, ",")
-
-		profileName := idSlice[0]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"name", "ciphername"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		profileName := idMap["name"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslprofile_sslcipher_binding",
