@@ -10,7 +10,7 @@ func BridgegroupNsip6BindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.Int64Attribute{
+			"bridgegroup_id": schema.Int64Attribute{
 				Required:    true,
 				Description: "The integer that uniquely identifies the bridge group.",
 			},
@@ -19,15 +19,18 @@ func BridgegroupNsip6BindingDataSourceSchema() schema.Schema {
 				Description: "The IP address assigned to the  bridge group.",
 			},
 			"netmask": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "A subnet mask associated with the network address.",
 			},
 			"ownergroup": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The owner node group in a Cluster for this vlan.",
 			},
 			"td": schema.Int64Attribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
 		},

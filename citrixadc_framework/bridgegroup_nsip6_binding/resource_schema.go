@@ -20,12 +20,12 @@ import (
 
 // BridgegroupNsip6BindingResourceModel describes the resource data model.
 type BridgegroupNsip6BindingResourceModel struct {
-	Id         types.String `tfsdk:"id"`
-	Id         types.Int64  `tfsdk:"id"`
-	Ipaddress  types.String `tfsdk:"ipaddress"`
-	Netmask    types.String `tfsdk:"netmask"`
-	Ownergroup types.String `tfsdk:"ownergroup"`
-	Td         types.Int64  `tfsdk:"td"`
+	Id            types.String `tfsdk:"id"`
+	BridgegroupId types.Int64  `tfsdk:"bridgegroup_id"`
+	Ipaddress     types.String `tfsdk:"ipaddress"`
+	Netmask       types.String `tfsdk:"netmask"`
+	Ownergroup    types.String `tfsdk:"ownergroup"`
+	Td            types.Int64  `tfsdk:"td"`
 }
 
 func (r *BridgegroupNsip6BindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -35,8 +35,11 @@ func (r *BridgegroupNsip6BindingResource) Schema(ctx context.Context, req resour
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the bridgegroup_nsip6_binding resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"id": schema.Int64Attribute{
+			"bridgegroup_id": schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
@@ -50,9 +53,11 @@ func (r *BridgegroupNsip6BindingResource) Schema(ctx context.Context, req resour
 				},
 				Description: "The IP address assigned to the  bridge group.",
 			},
+			// netmask/ownergroup/td are NOT echoed by the binding GET response, so
+			// they cannot be Computed (Terraform would see an unresolved unknown after
+			// apply). Keep them Optional-only — the configured value is preserved.
 			"netmask": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -60,7 +65,6 @@ func (r *BridgegroupNsip6BindingResource) Schema(ctx context.Context, req resour
 			},
 			"ownergroup": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -68,7 +72,6 @@ func (r *BridgegroupNsip6BindingResource) Schema(ctx context.Context, req resour
 			},
 			"td": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -83,8 +86,8 @@ func bridgegroup_nsip6_bindingGetThePayloadFromthePlan(ctx context.Context, data
 
 	// Create API request body from the model
 	bridgegroup_nsip6_binding := network.Bridgegroupnsip6binding{}
-	if !data.Id.IsNull() && !data.Id.IsUnknown() {
-		bridgegroup_nsip6_binding.Id = utils.IntPtr(int(data.Id.ValueInt64()))
+	if !data.BridgegroupId.IsNull() && !data.BridgegroupId.IsUnknown() {
+		bridgegroup_nsip6_binding.Id = utils.IntPtr(int(data.BridgegroupId.ValueInt64()))
 	}
 	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		bridgegroup_nsip6_binding.Ipaddress = data.Ipaddress.ValueString()
@@ -102,16 +105,55 @@ func bridgegroup_nsip6_bindingGetThePayloadFromthePlan(ctx context.Context, data
 	return bridgegroup_nsip6_binding
 }
 
+// bridgegroup_nsip6_bindingComposeId builds the composite resource ID using the
+// legacy SDK v2 attribute order (bridgegroup_id, ipaddress) in the new key:value form.
+func bridgegroup_nsip6_bindingComposeId(data *BridgegroupNsip6BindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("bridgegroup_id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BridgegroupId.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(data.Ipaddress.ValueString())))
+	return strings.Join(idParts, ",")
+}
+
+// bridgegroup_nsip6_bindingSetAttrFromGet populates the resource model from a GET
+// response while preserving the synthetic composite ID (set once in Create).
 func bridgegroup_nsip6_bindingSetAttrFromGet(ctx context.Context, data *BridgegroupNsip6BindingResourceModel, getResponseData map[string]interface{}) *BridgegroupNsip6BindingResourceModel {
 	tflog.Debug(ctx, "In bridgegroup_nsip6_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Id = types.Int64Value(intVal)
+			data.BridgegroupId = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+		data.Ipaddress = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
+		data.Ownergroup = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["td"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Td = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// bridgegroup_nsip6_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response and sets the datasource ID (datasources have no Create).
+func bridgegroup_nsip6_bindingSetAttrFromGetForDatasource(ctx context.Context, data *BridgegroupNsip6BindingResourceModel, getResponseData map[string]interface{}) *BridgegroupNsip6BindingResourceModel {
+	tflog.Debug(ctx, "In bridgegroup_nsip6_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["id"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.BridgegroupId = types.Int64Value(intVal)
 		}
 	} else {
-		data.Id = types.Int64Null()
+		data.BridgegroupId = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
@@ -136,15 +178,8 @@ func bridgegroup_nsip6_bindingSetAttrFromGet(ctx context.Context, data *Bridgegr
 		data.Td = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the datasource
+	data.Id = types.StringValue(bridgegroup_nsip6_bindingComposeId(data))
 
 	return data
 }

@@ -3,8 +3,6 @@ package bridgegroup_nsip6_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -69,14 +67,8 @@ func (r *BridgegroupNsip6BindingResource) Create(ctx context.Context, req resour
 
 	tflog.Trace(ctx, "Created bridgegroup_nsip6_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource (legacy SDK v2 order: bridgegroup_id, ipaddress)
+	data.Id = types.StringValue(bridgegroup_nsip6_bindingComposeId(&data))
 
 	// Read the updated state back
 	r.readBridgegroupNsip6BindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -118,28 +110,10 @@ func (r *BridgegroupNsip6BindingResource) Update(ctx context.Context, req resour
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating bridgegroup_nsip6_binding resource")
+	// All attributes are RequiresReplace; this binding has no NITRO update endpoint.
+	tflog.Debug(ctx, "Update is a no-op for bridgegroup_nsip6_binding; all attributes are RequiresReplace")
 
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		bridgegroup_nsip6_binding := bridgegroup_nsip6_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Bridgegroup_nsip6_binding.Type(), &bridgegroup_nsip6_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update bridgegroup_nsip6_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated bridgegroup_nsip6_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for bridgegroup_nsip6_binding resource, skipping update")
-	}
-
-	// Read the updated state back
+	// Read the current state back
 	r.readBridgegroupNsip6BindingFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -164,27 +138,28 @@ func (r *BridgegroupNsip6BindingResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	id_value, ok := idMap["id"]
+	bridgegroupId, ok := idMap["bridgegroup_id"]
 	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'id' not found in ID")
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'bridgegroup_id' not found in ID")
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Delete args: ipaddress (required) plus any set optional unique attrs.
+	args := make([]string, 0)
 	if val, ok := idMap["ipaddress"]; ok && val != "" {
-		argsMap["ipaddress"] = val
+		args = append(args, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(val)))
 	}
-	if val, ok := idMap["netmask"]; ok && val != "" {
-		argsMap["netmask"] = val
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		args = append(args, fmt.Sprintf("netmask:%s", utils.UrlEncode(data.Netmask.ValueString())))
 	}
-	if val, ok := idMap["ownergroup"]; ok && val != "" {
-		argsMap["ownergroup"] = val
+	if !data.Td.IsNull() {
+		args = append(args, fmt.Sprintf("td:%d", data.Td.ValueInt64()))
 	}
-	if val, ok := idMap["td"]; ok && val != "" {
-		argsMap["td"] = val
+	if !data.Ownergroup.IsNull() && data.Ownergroup.ValueString() != "" {
+		args = append(args, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(data.Ownergroup.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Bridgegroup_nsip6_binding.Type(), id_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Bridgegroup_nsip6_binding.Type(), bridgegroupId, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete bridgegroup_nsip6_binding, got error: %s", err))
 		return
@@ -196,16 +171,22 @@ func (r *BridgegroupNsip6BindingResource) Delete(ctx context.Context, req resour
 // Helper function to read bridgegroup_nsip6_binding data from API
 func (r *BridgegroupNsip6BindingResource) readBridgegroupNsip6BindingFromApi(ctx context.Context, data *BridgegroupNsip6BindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Array filter with parent ID - parse from ID (legacy order: bridgegroup_id, ipaddress)
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"bridgegroup_id", "ipaddress"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return
 	}
 
-	id_Name, ok := idMap["id"]
+	bridgegroupId, ok := idMap["bridgegroup_id"]
 	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'id' not found in ID string")
+		diags.AddError("Parse Error", "ID attribute 'bridgegroup_id' not found in ID string")
+		return
+	}
+
+	ipaddress, ok := idMap["ipaddress"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'ipaddress' not found in ID string")
 		return
 	}
 
@@ -213,7 +194,7 @@ func (r *BridgegroupNsip6BindingResource) readBridgegroupNsip6BindingFromApi(ctx
 
 	findParams := service.FindParams{
 		ResourceType:             service.Bridgegroup_nsip6_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             bridgegroupId,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
@@ -228,77 +209,10 @@ func (r *BridgegroupNsip6BindingResource) readBridgegroupNsip6BindingFromApi(ctx
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching ipaddress
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ipaddress
-		if idVal, ok := idMap["ipaddress"]; ok {
-			if val, ok := v["ipaddress"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ipaddress"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check netmask
-		if idVal, ok := idMap["netmask"]; ok {
-			if val, ok := v["netmask"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["netmask"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check ownergroup
-		if idVal, ok := idMap["ownergroup"]; ok {
-			if val, ok := v["ownergroup"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ownergroup"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check td
-		if idVal, ok := idMap["td"]; ok {
-			if val, ok := v["td"]; ok {
-				val, _ = utils.ConvertToInt64(val)
-				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
-				if val != idValInt64 {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["td"]; ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["ipaddress"].(string); ok && val == ipaddress {
 			foundIndex = i
 			break
 		}
@@ -306,7 +220,7 @@ func (r *BridgegroupNsip6BindingResource) readBridgegroupNsip6BindingFromApi(ctx
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("bridgegroup_nsip6_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "bridgegroup_nsip6_binding not found with the provided ID attributes")
 		return
 	}
 

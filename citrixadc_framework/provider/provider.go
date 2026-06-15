@@ -232,6 +232,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botsettings"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botsignature"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/bridgegroup"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/bridgegroup_nsip6_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/bridgegroup_nsip_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/bridgetable"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cachecontentgroup"
@@ -974,6 +975,7 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 
 func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		bridgegroup_nsip6_binding.NewBridgegroupNsip6BindingResource,
 		bridgegroup_nsip_binding.NewBridgegroupNsipBindingResource,
 		sslcertkey.NewSslCertKeyResource,
 		sslcertkey.NewSslCertKeyUpdateResource,
@@ -1455,6 +1457,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		botsettings.BOtsettingsDataSource,
 		botsignature.BOtsignatureDataSource,
 		bridgegroup.BRidgegroupDataSource,
+		bridgegroup_nsip6_binding.BRidgegroupNsip6BindingDataSource,
 		bridgegroup_nsip_binding.BRidgegroupNsipBindingDataSource,
 		bridgetable.BRidgetableDataSource,
 		cachecontentgroup.CAchecontentgroupDataSource,
