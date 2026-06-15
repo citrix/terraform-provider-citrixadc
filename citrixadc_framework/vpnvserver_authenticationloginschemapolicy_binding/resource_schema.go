@@ -40,8 +40,9 @@ func (r *VpnvserverAuthenticationloginschemapolicyBindingResource) Schema(ctx co
 				Description: "The ID of the vpnvserver_authenticationloginschemapolicy_binding resource.",
 			},
 			"bindpoint": schema.StringAttribute{
+				// Optional only (no Computed): NITRO GET does not echo bindpoint, so it can
+				// never be resolved server-side; Computed would cause "unknown after apply".
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -56,8 +57,8 @@ func (r *VpnvserverAuthenticationloginschemapolicyBindingResource) Schema(ctx co
 				Description: "Next priority expression.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// Optional only (no Computed): NITRO GET does not echo groupextraction.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -86,8 +87,8 @@ func (r *VpnvserverAuthenticationloginschemapolicyBindingResource) Schema(ctx co
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
+				// Optional only (no Computed): NITRO GET does not echo secondary.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +128,45 @@ func vpnvserver_authenticationloginschemapolicy_bindingGetThePayloadFromthePlan(
 	return vpnvserver_authenticationloginschemapolicy_binding
 }
 
+// vpnvserver_authenticationloginschemapolicy_bindingSetAttrFromGet is the RESOURCE-side
+// setter. NITRO GET for this binding does NOT echo back bindpoint, secondary or
+// groupextraction (they are write-only inputs the server normalizes/consumes). Setting
+// them from the (absent) GET response would null the user-configured values and trigger
+// an "inconsistent result after apply" error. So preserve the existing plan/state value
+// for those three fields and only adopt fields the server actually returns. The ID is set
+// once in Create (and preserved in Update); it must NOT be recomputed here. (Patterns 7, 13)
 func vpnvserver_authenticationloginschemapolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationloginschemapolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationloginschemapolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationloginschemapolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// bindpoint: not echoed by GET -> preserve existing plan/state value (do not null).
+	// secondary: not echoed by GET -> preserve existing plan/state value (do not null).
+	// groupextraction: not echoed by GET -> preserve existing plan/state value (do not null).
+
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// vpnvserver_authenticationloginschemapolicy_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE-side setter. A datasource has no prior plan/state to preserve, so it copies
+// every field faithfully from the GET response (defaulting the bool fields that the server
+// does not echo to false, the NITRO default) and sets the ID. (Pattern 7)
+func vpnvserver_authenticationloginschemapolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationloginschemapolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationloginschemapolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_authenticationloginschemapolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -144,7 +180,7 @@ func vpnvserver_authenticationloginschemapolicy_bindingSetAttrFromGet(ctx contex
 	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
 		data.Groupextraction = types.BoolValue(val.(bool))
 	} else {
-		data.Groupextraction = types.BoolNull()
+		data.Groupextraction = types.BoolValue(false)
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
@@ -166,13 +202,11 @@ func vpnvserver_authenticationloginschemapolicy_bindingSetAttrFromGet(ctx contex
 	if val, ok := getResponseData["secondary"]; ok && val != nil {
 		data.Secondary = types.BoolValue(val.(bool))
 	} else {
-		data.Secondary = types.BoolNull()
+		data.Secondary = types.BoolValue(false)
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (no Create runs). Composite "name,policy" order.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))

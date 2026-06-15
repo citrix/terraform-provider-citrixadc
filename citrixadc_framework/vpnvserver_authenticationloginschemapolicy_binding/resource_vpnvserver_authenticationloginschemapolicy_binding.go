@@ -68,9 +68,11 @@ func (r *VpnvserverAuthenticationloginschemapolicyBindingResource) Create(ctx co
 
 	tflog.Trace(ctx, "Created vpnvserver_authenticationloginschemapolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// SDK v2 composite ID order is "name,policy" (see resource_id_mapping.json).
+	// bindpoint is a delete-arg / payload field but is NOT echoed back by NITRO GET,
+	// so it cannot be part of the identity used to re-find the binding.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -219,26 +221,12 @@ func (r *VpnvserverAuthenticationloginschemapolicyBindingResource) readVpnvserve
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Match only on policy (the second identity key). bindpoint is NOT echoed by
+	// NITRO GET, so it cannot be used as a match key (SDK v2 matched on policy only).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
 
 		// Check policy
 		if idVal, ok := idMap["policy"]; ok {

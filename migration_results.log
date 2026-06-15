@@ -2879,3 +2879,19 @@ PATTERNS: 6, 7, 11, 13
 FILES CHANGED: citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/resource_vpnvserver_auditsyslogpolicy_binding.go, citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/datasource_vpnvserver_auditsyslogpolicy_binding.go, citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_auditsyslogpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_authenticationloginschemapolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:12:19Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccVpnvserver_authenticationloginschemapolicy_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccVpnvserver_authenticationloginschemapolicy_binding_basic ........ PASS
+  - TestAccVpnvserver_authenticationloginschemapolicy_bindingDataSource_basic .. PASS
+  - (ephemeral) ........................................................... N/A (no secret attributes)
+BACKWARD-COMPAT: ID composite re-aligned to SDK v2 "name,policy" (dropped spurious bindpoint key in ID/Read-match); bindpoint/secondary/groupextraction not echoed by NITRO GET so resource SetAttrFromGet now preserves them and dropped Computed (was Optional+Computed); gotopriorityexpression/priority kept Optional+Computed (server echoes them). Create verb (PUT/UpdateUnnamedResource) and attr name/type/Required/ForceNew parity confirmed unchanged.
+DATASOURCE: healthy; bindpoint flipped Required->Optional+Computed (datasource config does not pass it); match loop simplified to policy-only; switched to split SetAttrFromGetForDatasource setter (copies all + sets id).
+PATTERNS: 7, 13
+FILES CHANGED: citrixadc_framework/vpnvserver_authenticationloginschemapolicy_binding/resource_vpnvserver_authenticationloginschemapolicy_binding.go, citrixadc_framework/vpnvserver_authenticationloginschemapolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_authenticationloginschemapolicy_binding/datasource_vpnvserver_authenticationloginschemapolicy_binding.go, citrixadc_framework/vpnvserver_authenticationloginschemapolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_authenticationloginschemapolicy_binding_test.go (sanctioned ID-parse helper lines only; NO docs)
+BLOCKER: none
+========================================
