@@ -738,5 +738,18 @@ BACKWARD-COMPAT: labelname/labeltype were wrongly Required in Framework (SDK v2 
 DATASOURCE: healthy as-is (shares SetAttrFromGet, sets own Id; policyname+type Required lookup keys coherent).
 PATTERNS: 8 (Required->Optional+Computed flag correction)
 FILES CHANGED: citrixadc_framework/contentinspectionglobal_contentinspectionpolicy_binding/resource_schema.go, citrixadc_framework/contentinspectionglobal_contentinspectionpolicy_binding/resource_contentinspectionglobal_contentinspectionpolicy_binding.go, citrixadc_framework/acctests/contentinspectionglobal_contentinspectionpolicy_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: crvserver_appflowpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:01:59Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccCrvserver_appflowpolicy_binding_basic|TestAcccrvserver_appflowpolicy_bindingDataSource_basic
+TESTS:
+  - TestAccCrvserver_appflowpolicy_binding_basic ............ PASS
+  - TestAcccrvserver_appflowpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral test) .................................... N/A (no secret attrs)
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct); reverted name/labelname/labeltype from Required to Optional+Computed to match SDK v2 contract (only policyname Required); Create POST via AddResource (was UpdateUnnamedResource PUT); Delete args now include url-encoded bindpoint + priority like SDK v2; new key:value ID with legacy comma parse via ParseIdString (resource_id_mapping.json already 'name,policyname').
+DATASOURCE: healthy; split setter -> SetAttrFromGetForDatasource (Pattern 7), added 'bindpoint' to datasource schema.
+PATTERNS: 1, 7, 13
+FILES CHANGED: citrixadc_framework/crvserver_appflowpolicy_binding/resource_crvserver_appflowpolicy_binding.go, citrixadc_framework/crvserver_appflowpolicy_binding/resource_schema.go, citrixadc_framework/crvserver_appflowpolicy_binding/datasource_crvserver_appflowpolicy_binding.go, citrixadc_framework/crvserver_appflowpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_appflowpolicy_binding_test.go (ID-parse helper lines only, sanctioned); migration_results.log. NO doc modified.
 BLOCKER: none
 ========================================
