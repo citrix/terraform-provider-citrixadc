@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -126,10 +127,12 @@ func testAccCheckBotprofile_tps_bindingExist(n string, id *string) resource.Test
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		bot_tps_type := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "bot_tps_type"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		bot_tps_type := idMap["bot_tps_type"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_tps_binding",
@@ -171,10 +174,12 @@ func testAccCheckBotprofile_tps_bindingNotExist(n string, id string) resource.Te
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		bot_tps_type := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "bot_tps_type"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", id, err)
+		}
+		name := idMap["name"]
+		bot_tps_type := idMap["bot_tps_type"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_tps_binding",

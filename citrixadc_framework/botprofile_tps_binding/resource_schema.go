@@ -51,7 +51,8 @@ func (r *BotprofileTpsBindingResource) Schema(ctx context.Context, req resource.
 				Description: "Any comments about this binding.",
 			},
 			"bot_tps": schema.BoolAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -215,11 +216,13 @@ func botprofile_tps_bindingSetAttrFromGet(ctx context.Context, data *BotprofileT
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Multiple unique attributes - comma-separated key:UrlEncode(value) pairs.
+	// Matches the legacy SDK v2 ID order (name,bot_tps_type) from
+	// resource_id_mapping.json. bot_tps is NOT part of the binding identity
+	// (the per-type uniqueness is name + bot_tps_type) and is excluded from the ID.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_tps:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotTps.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("bot_tps_type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotTpsType.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_tps_type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotTpsType.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
