@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -101,10 +102,12 @@ func testAccCheckLsngroup_lsntransportprofile_bindingExist(n string, id *string)
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		groupname := idSlice[0]
-		transportprofilename := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"groupname", "transportprofilename"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		groupname := idMap["groupname"]
+		transportprofilename := idMap["transportprofilename"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsngroup_lsntransportprofile_binding",
