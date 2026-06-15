@@ -30,8 +30,11 @@ func (r *VpnglobalVpnportalthemeBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the vpnglobal_vpnportaltheme_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// gotopriorityexpression is a write-only input: the NITRO GET response for
+				// this binding never echoes it back. Dropping Computed (Pattern 8/13) avoids
+				// "known after apply" / "inconsistent result" churn; the value is preserved
+				// from plan/state in SetAttrFromGet (Pattern 7) instead of being nulled.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -63,10 +66,31 @@ func vpnglobal_vpnportaltheme_bindingGetThePayloadFromthePlan(ctx context.Contex
 	return vpnglobal_vpnportaltheme_binding
 }
 
+// vpnglobal_vpnportaltheme_bindingSetAttrFromGet is the RESOURCE-side setter. It
+// preserves user-supplied write-only inputs that the NITRO GET response never echoes
+// (gotopriorityexpression) so Terraform does not see a spurious diff / inconsistent
+// result after apply (Pattern 7). It does NOT recompute data.Id (Create sets it once).
 func vpnglobal_vpnportaltheme_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalVpnportalthemeBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalVpnportalthemeBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_vpnportaltheme_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// gotopriorityexpression is not echoed by the binding GET response; preserve the
+	// existing plan/state value rather than nulling it (Pattern 7).
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["portaltheme"]; ok && val != nil {
+		data.Portaltheme = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// vpnglobal_vpnportaltheme_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. The datasource has no prior state to preserve, so it faithfully copies the
+// GET response and sets data.Id itself (the datasource never calls Create) — Pattern 7.
+func vpnglobal_vpnportaltheme_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalVpnportalthemeBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalVpnportalthemeBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_vpnportaltheme_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -78,7 +102,7 @@ func vpnglobal_vpnportaltheme_bindingSetAttrFromGet(ctx context.Context, data *V
 		data.Portaltheme = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Portaltheme.ValueString()))
 
