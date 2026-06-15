@@ -44,7 +44,7 @@ func (d *NstrafficdomainVlanBindingDataSource) Read(ctx context.Context, req dat
 	}
 
 	// Case 4: Array filter with parent ID
-	td_Name := data.Td.ValueString()
+	td_Name := fmt.Sprintf("%d", data.Td.ValueInt64())
 	vlan_Name := data.Vlan
 
 	var dataArr []map[string]interface{}

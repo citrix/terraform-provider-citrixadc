@@ -38,4 +38,17 @@ DATASOURCE: rebuilt from the shared model: removed duplicate "id" key, lookup ke
 PATTERNS: 6, 7, 13 (Computed-flag implication), 5 (no-op Update for all-RequiresReplace binding)
 FILES CHANGED: citrixadc_framework/bridgegroup_nsip_binding/resource_schema.go, citrixadc_framework/bridgegroup_nsip_binding/resource_bridgegroup_nsip_binding.go, citrixadc_framework/bridgegroup_nsip_binding/datasource_schema.go, citrixadc_framework/bridgegroup_nsip_binding/datasource_bridgegroup_nsip_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/bridgegroup_nsip_binding_test.go (sanctioned ID-parse helper lines only). NO doc files changed.
 BLOCKER: none (note: two unrelated baseline siblings lbmetrictable_metric_binding/policypatset_pattern_binding have invalid uppercase tfsdk names that fail provider schema validation; temporarily disabled their registration to run tests, then fully restored provider.go to my-changes-only state).
+RESOURCE: nstrafficdomain_vlan_binding
+STATUS:   PASS
+TIME:     2026-06-15T03:52:31Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccNstrafficdomain_vlan_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccNstrafficdomain_vlan_binding_basic ........ PASS
+  - TestAccNstrafficdomain_vlan_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: td/vlan int Required+ForceNew->RequiresReplace parity OK; ID adopts new td:val,vlan:val format with resource_id_mapping "td,vlan" for legacy import via ParseIdString; delete args vlan:<val> match SDK v2. No schema changes needed.
+DATASOURCE: healthy as-is; fixed codegen compile bug only (data.Td.ValueString() on Int64 -> fmt.Sprintf("%d", data.Td.ValueInt64())). Shared SetAttrFromGet faithfully copies td/vlan and sets composite Id, so no Pattern-7 split needed.
+PATTERNS: codegen int-vs-string fix (no numbered pattern); test ID-parse helper migrated to utils.ParseIdString (sanctioned Constraint-1 exception)
+FILES CHANGED: citrixadc_framework/nstrafficdomain_vlan_binding/datasource_nstrafficdomain_vlan_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/nstrafficdomain_vlan_binding_test.go (ID-parse helper lines only)
+BLOCKER: none (note: muxed-provider schema validation is blocked at baseline by two UNRELATED resources lbmetrictable_metric_binding/policypatset_pattern_binding having PascalCase tfsdk attr names "Snmpoid"/"String"; verified my tests PASS with those unrelated resources temporarily deregistered, then restored baseline registration)
 ========================================
