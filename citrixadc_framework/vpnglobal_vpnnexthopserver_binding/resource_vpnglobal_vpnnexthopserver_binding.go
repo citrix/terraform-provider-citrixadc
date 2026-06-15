@@ -3,6 +3,7 @@ package vpnglobal_vpnnexthopserver_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -153,7 +154,7 @@ func (r *VpnglobalVpnnexthopserverBindingResource) Delete(ctx context.Context, r
 	// Single unique attribute - ID is the plain value
 	nexthopserver_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("nexthopserver:%s", nexthopserver_value),
+		fmt.Sprintf("nexthopserver:%s", url.QueryEscape(nexthopserver_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_vpnnexthopserver_binding.Type(), "", args)
