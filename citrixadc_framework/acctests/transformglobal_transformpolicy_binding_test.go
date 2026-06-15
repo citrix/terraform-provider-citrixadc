@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -103,8 +104,15 @@ func testAccCheckTransformglobal_transformpolicy_bindingExist(n string, id *stri
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policyname := rs.Primary.ID
-		typename := rs.Primary.Attributes["type"]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		policyname := idMap["policyname"]
+		typename := idMap["type"]
+		if typename == "" {
+			typename = rs.Primary.Attributes["type"]
+		}
 		findParams := service.FindParams{
 			ResourceType:             "transformglobal_transformpolicy_binding",
 			ArgsMap:                  map[string]string{"type": typename},
@@ -187,9 +195,28 @@ func testAccCheckTransformglobal_transformpolicy_bindingDestroy(s *terraform.Sta
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Transformglobal_transformpolicy_binding.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("transformglobal_transformpolicy_binding %s still exists", rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		policyname := idMap["policyname"]
+		typename := idMap["type"]
+		if typename == "" {
+			typename = rs.Primary.Attributes["type"]
+		}
+		findParams := service.FindParams{
+			ResourceType:             service.Transformglobal_transformpolicy_binding.Type(),
+			ArgsMap:                  map[string]string{"type": typename},
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+		for _, v := range dataArr {
+			if v["policyname"].(string) == policyname {
+				return fmt.Errorf("transformglobal_transformpolicy_binding %s still exists", rs.Primary.ID)
+			}
 		}
 
 	}
