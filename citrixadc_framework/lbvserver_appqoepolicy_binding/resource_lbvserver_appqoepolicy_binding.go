@@ -58,9 +58,11 @@ func (r *LbvserverAppqoepolicyBindingResource) Create(ctx context.Context, req r
 	tflog.Debug(ctx, "Creating lbvserver_appqoepolicy_binding resource")
 	lbvserver_appqoepolicy_binding := lbvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_appqoepolicy_binding.Type(), &lbvserver_appqoepolicy_binding)
+	// Make API call.
+	// NITRO binding "add" is POST here, matching the SDK v2 resource. UpdateUnnamedResource
+	// (PUT) returns errorcode 273 "Resource already exists" on re-bind, so use AddResource
+	// (Pattern 1).
+	_, err := r.client.AddResource(service.Lbvserver_appqoepolicy_binding.Type(), "", &lbvserver_appqoepolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_appqoepolicy_binding, got error: %s", err))
 		return

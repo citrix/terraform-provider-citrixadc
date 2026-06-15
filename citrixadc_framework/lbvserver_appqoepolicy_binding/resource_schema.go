@@ -22,6 +22,7 @@ import (
 // LbvserverAppqoepolicyBindingResourceModel describes the resource data model.
 type LbvserverAppqoepolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,18 @@ func (r *LbvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Computed:    true,
 				Description: "The ID of the lbvserver_appqoepolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				// Present in the SDK v2 schema and the NITRO struct; re-added for
+				// backward compatibility (the acceptance test config sets it).
+				// SDK v2 ForceNew: a binding cannot be re-bound in place, so a change
+				// forces replace.
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -49,22 +62,30 @@ func (r *LbvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"invoke": schema.BoolAttribute{
+				// Not echoed by the GET response, so it cannot be Computed without
+				// perpetual unknown-after-apply errors (Pattern 13). Optional (not
+				// Required) to match the SDK v2 contract.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				// SDK v2 contract: Optional (not Required). The acceptance test omits
+				// it, so forcing Required would break existing configs. Not echoed by
+				// GET, so drop Computed (Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				// SDK v2 contract: Optional (not Required). The acceptance test omits
+				// it, so forcing Required would break existing configs. Not echoed by
+				// GET, so drop Computed (Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -78,8 +99,9 @@ func (r *LbvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Description: "Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vserver\" or 'my vserver').",
 			},
 			"order": schema.Int64Attribute{
+				// Not echoed by the GET response for this binding, so it cannot be
+				// Computed without perpetual unknown-after-apply errors (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -109,6 +131,9 @@ func lbvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx context.Context,
 
 	// Create API request body from the model
 	lbvserver_appqoepolicy_binding := lb.Lbvserverappqoepolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		lbvserver_appqoepolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		lbvserver_appqoepolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +162,62 @@ func lbvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx context.Context,
 	return lbvserver_appqoepolicy_binding
 }
 
+// lbvserver_appqoepolicy_bindingSetAttrFromGet is the RESOURCE-side setter. It preserves
+// the configured plan/state values for non-echoed inputs (Pattern 7) and does NOT
+// recompute the ID (the ID is set exactly once in Create — Pattern 6).
 func lbvserver_appqoepolicy_bindingSetAttrFromGet(ctx context.Context, data *LbvserverAppqoepolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverAppqoepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In lbvserver_appqoepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. Preserve the configured plan/state value when a
+	// field is not echoed back by GET, rather than nulling it (Pattern 7).
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	// NOTE: ID is composed once in Create (and preserved in Update/Read); do not
+	// recompute it here.
+	return data
+}
+
+// lbvserver_appqoepolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side setter.
+// It faithfully copies every field from the GET response and sets the ID, since a
+// datasource has no prior plan/state and never calls Create (Pattern 7 split).
+func lbvserver_appqoepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LbvserverAppqoepolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverAppqoepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In lbvserver_appqoepolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -186,8 +263,7 @@ func lbvserver_appqoepolicy_bindingSetAttrFromGet(ctx context.Context, data *Lbv
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource: identity is "name,policyname".
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
