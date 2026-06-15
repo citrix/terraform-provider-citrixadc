@@ -3,6 +3,7 @@ package vpnvserver_sharefileserver_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -166,12 +167,15 @@ func (r *VpnvserverSharefileserverBindingResource) Delete(ctx context.Context, r
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// sharefile values may contain special characters (e.g. "IP:PORT"), so the
+	// delete arg value must be URL-encoded to avoid corrupting the NITRO
+	// "args=sharefile:<value>" query string.
+	args := make([]string, 0)
 	if val, ok := idMap["sharefile"]; ok && val != "" {
-		argsMap["sharefile"] = val
+		args = append(args, fmt.Sprintf("sharefile:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_sharefileserver_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_sharefileserver_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_sharefileserver_binding, got error: %s", err))
 		return

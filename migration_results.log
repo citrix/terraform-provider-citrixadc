@@ -3102,5 +3102,18 @@ BACKWARD-COMPAT: NITRO GET returns the bound policy under key "policyname" (not 
 DATASOURCE: healthy after fixes; split into xxxSetAttrFromGetForDatasource (Pattern 7); bindpoint changed Required->Optional+Computed (test passes only name+policy, Pattern 11); bindpoint made a filter only when supplied.
 PATTERNS: 7, 11, 13
 FILES CHANGED: citrixadc_framework/vpnvserver_feopolicy_binding/resource_vpnvserver_feopolicy_binding.go, citrixadc_framework/vpnvserver_feopolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_feopolicy_binding/datasource_vpnvserver_feopolicy_binding.go, citrixadc_framework/vpnvserver_feopolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_feopolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc modified)
+RESOURCE: vpnvserver_sharefileserver_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:41:07Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccVpnvserver_sharefileserver_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnvserver_sharefileserver_binding_basic ............ PASS
+  - TestAccVpnvserver_sharefileserver_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) .... N/A
+BACKWARD-COMPAT: Schema parity exact vs SDK v2 (name+sharefile, both Required+ForceNew/RequiresReplace, String, no defaults/secrets). Create verb matches SDK v2 (UpdateUnnamedResource/PUT). ID adopts new key:value format; resource_id_mapping.json "name,sharefile" + ParseIdString legacy order intact. Only fix: Delete now URL-encodes the sharefile arg value (contains ':') to avoid corrupting the NITRO args query string.
+DATASOURCE: healthy as-is; shares SetAttrFromGet (both fields echoed by GET, no server-overrides), sets its own Id. No split needed, no git recovery.
+PATTERNS: 1 (verify create verb - confirmed PUT matches SDK v2), binding-family Delete URL-encode (skill pattern b)
+FILES CHANGED: citrixadc_framework/vpnvserver_sharefileserver_binding/resource_vpnvserver_sharefileserver_binding.go, citrixadc_framework/acctests/vpnvserver_sharefileserver_binding_test.go (sanctioned ID-parse helper lines only). NO doc, NO provider registration, NO SDK v2 changes.
 BLOCKER: none
 ========================================
