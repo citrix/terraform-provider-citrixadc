@@ -3,10 +3,9 @@ package tunnelglobal_tunneltrafficpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -68,11 +67,11 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) Create(ctx context.Cont
 
 	tflog.Trace(ctx, "Created tunnelglobal_tunneltrafficpolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state.
+	// Backward-compatible with SDK v2 which set the ID to the plain policyname value
+	// (resource_id_mapping.json: "policyname"). type is a non-echoed bindpoint filter,
+	// not part of the identity, so the ID stays a single plain value.
+	data.Id = types.StringValue(data.Policyname.ValueString())
 
 	// Read the updated state back
 	r.readTunnelglobalTunneltrafficpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -153,23 +152,20 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) Delete(ctx context.Cont
 	}
 
 	tflog.Debug(ctx, "Deleting tunnelglobal_tunneltrafficpolicy_binding resource")
-	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Multiple unique attributes - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
-	if err != nil {
-		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
-		return
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name.
+	// Single-key plain-value ID: the ID is the policyname. type/priority are extra
+	// delete disambiguators (mirrors SDK v2 delete args). URL-encode slashy/special
+	// values per DeleteResourceWithArgs convention.
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(data.Id.ValueString())))
+	if !data.Type.IsNull() && data.Type.ValueString() != "" {
+		args = append(args, fmt.Sprintf("type:%s", url.QueryEscape(data.Type.ValueString())))
+	}
+	if !data.Priority.IsNull() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
-	}
-	if val, ok := idMap["type"]; ok && val != "" {
-		argsMap["type"] = val
-	}
-
-	err = r.client.DeleteResourceWithArgsMap(service.Tunnelglobal_tunneltrafficpolicy_binding.Type(), "", argsMap)
+	err := r.client.DeleteResourceWithArgs(service.Tunnelglobal_tunneltrafficpolicy_binding.Type(), "", args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete tunnelglobal_tunneltrafficpolicy_binding, got error: %s", err))
 		return
@@ -181,17 +177,13 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) Delete(ctx context.Cont
 // Helper function to read tunnelglobal_tunneltrafficpolicy_binding data from API
 func (r *TunnelglobalTunneltrafficpolicyBindingResource) readTunnelglobalTunneltrafficpolicyBindingFromApi(ctx context.Context, data *TunnelglobalTunneltrafficpolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
+	// Single-key plain-value ID: the ID is the plain policyname (Pattern 10).
+	policyname := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["type"]; ok && val != "" {
-		argsMap["type"] = val
+	if !data.Type.IsNull() && data.Type.ValueString() != "" {
+		argsMap["type"] = data.Type.ValueString()
 	}
 
 	findParams := service.FindParams{
@@ -199,7 +191,7 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) readTunnelglobalTunnelt
 		ArgsMap:                  argsMap,
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read tunnelglobal_tunneltrafficpolicy_binding, got error: %s", err))
 		return
@@ -211,36 +203,10 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) readTunnelglobalTunnelt
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policyname
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policyname
-		if idVal, ok := idMap["policyname"]; ok {
-			if val, ok := v["policyname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policyname"].(string); ok {
-			match = false
-			continue
-		}
-		// Check type
-		if val, ok := idMap["type"]; ok && val != "" {
-			if v, ok := v["type"]; ok {
-				if v.(string) != val {
-					match = false
-				}
-			}
-		}
-
-		if match {
+		if val, ok := v["policyname"].(string); ok && val == policyname {
 			foundIndex = i
 			break
 		}
@@ -248,7 +214,7 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) readTunnelglobalTunnelt
 
 	// Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("tunnelglobal_tunneltrafficpolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "tunnelglobal_tunneltrafficpolicy_binding not found with the provided ID attributes")
 		return
 	}
 

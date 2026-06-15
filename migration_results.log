@@ -2540,5 +2540,17 @@ BACKWARD-COMPAT: attribute names/types/Required-Optional/ForceNew/ID format all 
 DATASOURCE: healthy; split into vpnglobal_authenticationlocalpolicy_bindingSetAttrFromGetForDatasource (faithfully copies GET + sets Id) and pointed datasource Read at it (Pattern 7).
 PATTERNS: 7, 13
 FILES CHANGED: citrixadc_framework/vpnglobal_authenticationlocalpolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationlocalpolicy_binding/resource_vpnglobal_authenticationlocalpolicy_binding.go, citrixadc_framework/vpnglobal_authenticationlocalpolicy_binding/datasource_vpnglobal_authenticationlocalpolicy_binding.go (NO test/doc files modified)
+RESOURCE: tunnelglobal_tunneltrafficpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:38:01Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccTunnelglobal_tunneltrafficpolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccTunnelglobal_tunneltrafficpolicy_binding_basic ............ PASS
+  - TestAccTunnelglobal_tunneltrafficpolicy_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: ID reverted from composite policyname:..,type:.. to plain policyname (single-key, matches SDK v2 d.SetId(policyname) and resource_id_mapping.json="policyname"); Read/Delete switched off ParseIdString to plain ID (Pattern 10); Delete uses DeleteResourceWithArgs + url.QueryEscape with policyname/type/priority args mirroring SDK v2; non-echoed inputs (type/globalbindtype/gotopriorityexpression) preserved in resource SetAttrFromGet and dropped Computed (Pattern 13/7); Create verb UpdateUnnamedResource (PUT) kept to match SDK v2; flag parity otherwise unchanged.
+DATASOURCE: healthy; split into dedicated ForDatasource setter (Pattern 7) that copies all GET fields + sets plain-policyname ID; datasource type flag relaxed Required->Optional+Computed (Pattern 11) so it accepts the now-Optional resource type reference.
+PATTERNS: 7, 10, 11, 13
+FILES CHANGED: citrixadc_framework/tunnelglobal_tunneltrafficpolicy_binding/{resource_tunnelglobal_tunneltrafficpolicy_binding.go,resource_schema.go,datasource_tunnelglobal_tunneltrafficpolicy_binding.go,datasource_schema.go} (NO test/doc file modified)
 BLOCKER: none
 ========================================

@@ -106,7 +106,7 @@ func (d *TunnelglobalTunneltrafficpolicyBindingDataSource) Read(ctx context.Cont
 		return
 	}
 
-	tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
