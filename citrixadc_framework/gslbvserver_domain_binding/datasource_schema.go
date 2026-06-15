@@ -16,7 +16,8 @@ func GslbvserverDomainBindingDataSourceSchema() schema.Schema {
 				Description: "The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.",
 			},
 			"backupipflag": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.",
 			},
 			"cookie_domain": schema.StringAttribute{
@@ -25,7 +26,8 @@ func GslbvserverDomainBindingDataSourceSchema() schema.Schema {
 				Description: "The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.",
 			},
 			"cookie_domainflag": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.",
 			},
 			"cookietimeout": schema.Int64Attribute{

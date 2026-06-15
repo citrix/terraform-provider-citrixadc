@@ -3,7 +3,6 @@ package gslbvserver_domain_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,12 +68,12 @@ func (r *GslbvserverDomainBindingResource) Create(ctx context.Context, req resou
 
 	tflog.Trace(ctx, "Created gslbvserver_domain_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Legacy SDK v2 ID order is name,domainname (see resource_id_mapping.json). Use the new
+	// key:urlEncode(value) format; ParseIdString decodes both this and the legacy form.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("backupipflag:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Backupipflag.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("cookie_domainflag:%s", utils.UrlEncode(fmt.Sprintf("%v", data.CookieDomainflag.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("domainname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Domainname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("domainname:%s", utils.UrlEncode(data.Domainname.ValueString())))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -119,26 +118,12 @@ func (r *GslbvserverDomainBindingResource) Update(ctx context.Context, req resou
 
 	tflog.Debug(ctx, "Updating gslbvserver_domain_binding resource")
 
-	// Check if there are any changes in updateable attributes
+	// Check if there are any changes in the in-place-updateable attributes.
+	// backupip / cookie_domain / backupipflag / cookie_domainflag / domainname / order are
+	// all RequiresReplace, so they never reach Update.
 	hasChange := false
-	if !data.Backupip.Equal(state.Backupip) {
-		tflog.Debug(ctx, fmt.Sprintf("backupip has changed for gslbvserver_domain_binding"))
-		hasChange = true
-	}
-	if !data.CookieDomain.Equal(state.CookieDomain) {
-		tflog.Debug(ctx, fmt.Sprintf("cookie_domain has changed for gslbvserver_domain_binding"))
-		hasChange = true
-	}
 	if !data.Cookietimeout.Equal(state.Cookietimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("cookietimeout has changed for gslbvserver_domain_binding"))
-		hasChange = true
-	}
-	if !data.Domainname.Equal(state.Domainname) {
-		tflog.Debug(ctx, fmt.Sprintf("domainname has changed for gslbvserver_domain_binding"))
-		hasChange = true
-	}
-	if !data.Order.Equal(state.Order) {
-		tflog.Debug(ctx, fmt.Sprintf("order has changed for gslbvserver_domain_binding"))
 		hasChange = true
 	}
 	if !data.Sitedomainttl.Equal(state.Sitedomainttl) {
@@ -184,7 +169,9 @@ func (r *GslbvserverDomainBindingResource) Delete(ctx context.Context, req resou
 	}
 
 	tflog.Debug(ctx, "Deleting gslbvserver_domain_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Legacy ID order: name (parent) + domainname (delete arg). ParseIdString handles both
+	// the new key:value form and the legacy positional name,domainname form.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "domainname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -197,18 +184,17 @@ func (r *GslbvserverDomainBindingResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["backupipflag"]; ok && val != "" {
-		argsMap["backupipflag"] = val
-	}
-	if val, ok := idMap["cookie_domainflag"]; ok && val != "" {
-		argsMap["cookie_domainflag"] = val
-	}
-	if val, ok := idMap["domainname"]; ok && val != "" {
-		argsMap["domainname"] = val
+	domainname_value, ok := idMap["domainname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Attribute 'domainname' not found in ID")
+		return
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Gslbvserver_domain_binding.Type(), name_value, argsMap)
+	// URL-encode the domainname value so slashy/special characters are passed safely as a
+	// NITRO delete arg. (task hint b)
+	args := []string{fmt.Sprintf("domainname:%s", utils.UrlEncode(domainname_value))}
+
+	err = r.client.DeleteResourceWithArgs(service.Gslbvserver_domain_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete gslbvserver_domain_binding, got error: %s", err))
 		return
@@ -252,61 +238,17 @@ func (r *GslbvserverDomainBindingResource) readGslbvserverDomainBindingFromApi(c
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	domainname_Name, ok := idMap["domainname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'domainname' not found in ID string")
+		return
+	}
+
+	// Iterate through results to find the one matching domainname (the per-record unique key
+	// under the parent name; backupipflag/cookie_domainflag are not real keys).
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check backupipflag
-		if idVal, ok := idMap["backupipflag"]; ok {
-			if val, ok := v["backupipflag"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["backupipflag"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check cookie_domainflag
-		if idVal, ok := idMap["cookie_domainflag"]; ok {
-			if val, ok := v["cookie_domainflag"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["cookie_domainflag"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check domainname
-		if idVal, ok := idMap["domainname"]; ok {
-			if val, ok := v["domainname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["domainname"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["domainname"].(string); ok && val == domainname_Name {
 			foundIndex = i
 			break
 		}

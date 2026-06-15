@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -42,26 +43,32 @@ func (r *GslbvserverDomainBindingResource) Schema(ctx context.Context, req resou
 				Description: "The ID of the gslbvserver_domain_binding resource.",
 			},
 			"backupip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.",
 			},
 			"backupipflag": schema.BoolAttribute{
+				// GET-response-only flag; not accepted by the NITRO bind payload (errorcode 278).
+				// Optional only (no Computed): GET does not echo it back, so a Computed value
+				// would stay unknown after apply ("inconsistent result"). (Pattern 13 / Pattern 15)
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.",
 			},
 			"cookie_domain": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.",
 			},
 			"cookie_domainflag": schema.BoolAttribute{
+				// GET-response-only flag; not accepted by the NITRO bind payload (errorcode 278).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -73,7 +80,10 @@ func (r *GslbvserverDomainBindingResource) Schema(ctx context.Context, req resou
 				Description: "Timeout, in minutes, for the GSLB site cookie.",
 			},
 			"domainname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Domain name for which to change the time to live (TTL) and/or backup service IP address.",
 			},
 			"name": schema.StringAttribute{
@@ -84,8 +94,12 @@ func (r *GslbvserverDomainBindingResource) Schema(ctx context.Context, req resou
 				Description: "Name of the virtual server on which to perform the binding operation.",
 			},
 			"order": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				// order requires an accompanying serviceName (errorcode 1093) and is not
+				// applicable to a domain binding; GET does not echo it. Optional only.
+				Optional: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Order number to be assigned to the service when it is bound to the lb vserver.",
 			},
 			"sitedomainttl": schema.Int64Attribute{
@@ -110,14 +124,11 @@ func gslbvserver_domain_bindingGetThePayloadFromthePlan(ctx context.Context, dat
 	if !data.Backupip.IsNull() && !data.Backupip.IsUnknown() {
 		gslbvserver_domain_binding.Backupip = data.Backupip.ValueString()
 	}
-	if !data.Backupipflag.IsNull() && !data.Backupipflag.IsUnknown() {
-		gslbvserver_domain_binding.Backupipflag = data.Backupipflag.ValueBool()
-	}
+	// backupipflag and cookie_domainflag are GET-response-only flags; the NITRO add/bind
+	// endpoint rejects them with errorcode 278 ("Invalid argument"). They are never sent
+	// in the payload. (Pattern 15)
 	if !data.CookieDomain.IsNull() && !data.CookieDomain.IsUnknown() {
 		gslbvserver_domain_binding.Cookiedomain = data.CookieDomain.ValueString()
-	}
-	if !data.CookieDomainflag.IsNull() && !data.CookieDomainflag.IsUnknown() {
-		gslbvserver_domain_binding.Cookiedomainflag = data.CookieDomainflag.ValueBool()
 	}
 	if !data.Cookietimeout.IsNull() && !data.Cookietimeout.IsUnknown() {
 		gslbvserver_domain_binding.Cookietimeout = utils.IntPtr(int(data.Cookietimeout.ValueInt64()))
@@ -128,9 +139,8 @@ func gslbvserver_domain_bindingGetThePayloadFromthePlan(ctx context.Context, dat
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		gslbvserver_domain_binding.Name = data.Name.ValueString()
 	}
-	if !data.Order.IsNull() && !data.Order.IsUnknown() {
-		gslbvserver_domain_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
-	}
+	// order is not applicable to a domain binding (NITRO requires an accompanying
+	// serviceName, errorcode 1093); never sent in the payload.
 	if !data.Sitedomainttl.IsNull() && !data.Sitedomainttl.IsUnknown() {
 		gslbvserver_domain_binding.Sitedomainttl = utils.IntPtr(int(data.Sitedomainttl.ValueInt64()))
 	}
@@ -141,10 +151,56 @@ func gslbvserver_domain_bindingGetThePayloadFromthePlan(ctx context.Context, dat
 	return gslbvserver_domain_binding
 }
 
+// gslbvserver_domain_bindingSetAttrFromGet is used by the resource Read/Create/Update.
+// It preserves the existing plan/state values for write-only / server-non-echoed inputs
+// (backupipflag, cookie_domainflag, order) and never recomputes the ID — the ID is set
+// exactly once in Create. (Pattern 6 / Pattern 7 / Pattern 13)
 func gslbvserver_domain_bindingSetAttrFromGet(ctx context.Context, data *GslbvserverDomainBindingResourceModel, getResponseData map[string]interface{}) *GslbvserverDomainBindingResourceModel {
 	tflog.Debug(ctx, "In gslbvserver_domain_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// backupipflag / cookie_domainflag / order are write-only inputs the GET does not
+	// echo back reliably; preserve the configured plan/state value to avoid
+	// "inconsistent result after apply" churn.
+	if val, ok := getResponseData["backupip"]; ok && val != nil {
+		data.Backupip = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["cookie_domain"]; ok && val != nil {
+		data.CookieDomain = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["cookietimeout"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Cookietimeout = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["domainname"]; ok && val != nil {
+		data.Domainname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["sitedomainttl"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Sitedomainttl = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["ttl"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Ttl = types.Int64Value(intVal)
+		}
+	}
+
+	// ID is set once in Create; do not recompute it here.
+	return data
+}
+
+// gslbvserver_domain_bindingSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response (the datasource has no prior plan/state to preserve) and sets the
+// composite ID (legacy SDK v2 order: name,domainname) since the datasource has no Create.
+// (Pattern 7)
+func gslbvserver_domain_bindingSetAttrFromGetForDatasource(ctx context.Context, data *GslbvserverDomainBindingResourceModel, getResponseData map[string]interface{}) *GslbvserverDomainBindingResourceModel {
+	tflog.Debug(ctx, "In gslbvserver_domain_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["backupip"]; ok && val != nil {
 		data.Backupip = types.StringValue(val.(string))
 	} else {
@@ -204,13 +260,9 @@ func gslbvserver_domain_bindingSetAttrFromGet(ctx context.Context, data *Gslbvse
 		data.Ttl = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("backupipflag:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Backupipflag.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("cookie_domainflag:%s", utils.UrlEncode(fmt.Sprintf("%v", data.CookieDomainflag.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("domainname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Domainname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("domainname:%s", utils.UrlEncode(data.Domainname.ValueString())))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
