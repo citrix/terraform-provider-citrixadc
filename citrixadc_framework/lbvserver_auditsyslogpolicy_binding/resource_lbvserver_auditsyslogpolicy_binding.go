@@ -59,8 +59,8 @@ func (r *LbvserverAuditsyslogpolicyBindingResource) Create(ctx context.Context, 
 	lbvserver_auditsyslogpolicy_binding := lbvserver_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_auditsyslogpolicy_binding.Type(), &lbvserver_auditsyslogpolicy_binding)
+	// Binding resource - SDK v2 used AddResource (POST); match for backward compatibility (Pattern 1)
+	_, err := r.client.AddResource(service.Lbvserver_auditsyslogpolicy_binding.Type(), "", &lbvserver_auditsyslogpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_auditsyslogpolicy_binding, got error: %s", err))
 		return
@@ -123,8 +123,8 @@ func (r *LbvserverAuditsyslogpolicyBindingResource) Update(ctx context.Context, 
 		// Create API request body from the model
 		lbvserver_auditsyslogpolicy_binding := lbvserver_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Lbvserver_auditsyslogpolicy_binding.Type(), &lbvserver_auditsyslogpolicy_binding)
+		// Binding resource - SDK v2 used AddResource (POST); match for backward compatibility (Pattern 1)
+		_, err := r.client.AddResource(service.Lbvserver_auditsyslogpolicy_binding.Type(), "", &lbvserver_auditsyslogpolicy_binding)
 		if err != nil {
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbvserver_auditsyslogpolicy_binding, got error: %s", err))
 			return
