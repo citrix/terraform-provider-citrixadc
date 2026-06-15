@@ -949,3 +949,18 @@ PATTERNS: 8 (flag correction), binding-family Delete URL-encode (b); Pattern 1 c
 FILES CHANGED: citrixadc_framework/crvserver_lbvserver_binding/resource_schema.go, citrixadc_framework/crvserver_lbvserver_binding/resource_crvserver_lbvserver_binding.go, citrixadc_framework/acctests/crvserver_lbvserver_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: dnsglobal_dnspolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:58:18Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccDnsglobal_dnspolicy_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccDnsglobal_dnspolicy_binding_basic ............ PASS
+  - TestAccDnsglobal_dnspolicy_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Computed in SDK v2 (and not in NITRO add payload); reconciled to Optional+Computed (Pattern 8 flag-drift). All other attrs (policyname/priority Required+RequiresReplace; globalbindtype/gotopriorityexpression/invoke/type Optional+Computed+RequiresReplace) already matched SDK v2 ForceNew contract. Create verb PUT (UpdateUnnamedResource) matches SDK v2. Delete uses DeleteResourceWithArgsMap from ParseIdString-decoded ID (URL-safe). New key:value composite ID; resource_id_mapping.json "policyname" legacy order confirmed for ParseIdString back-compat.
+DATASOURCE: healthy as-is (shares SetAttrFromGet which sets composite Id; lookup keys policyname+type Required) - no changes needed.
+PATTERNS: 8
+FILES CHANGED: citrixadc_framework/dnsglobal_dnspolicy_binding/resource_schema.go, citrixadc_framework/acctests/dnsglobal_dnspolicy_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================
