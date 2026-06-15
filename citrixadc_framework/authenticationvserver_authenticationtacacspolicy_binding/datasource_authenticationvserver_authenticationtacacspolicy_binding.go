@@ -68,42 +68,36 @@ func (d *AuthenticationvserverAuthenticationtacacspolicyBindingDataSource) Read(
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Lookup keys (groupextraction, policy, secondary) are only applied as filters when the caller
+	// supplied them (non-null). policy is the primary lookup key; groupextraction/secondary are
+	// optional disambiguators (a name+policy pair is normally unique).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check groupextraction
-		if val, ok := v["groupextraction"].(bool); ok {
-			if groupextraction_Name.IsNull() || val != groupextraction_Name.ValueBool() {
+		// Check groupextraction (only when supplied)
+		if !groupextraction_Name.IsNull() {
+			if val, ok := v["groupextraction"].(bool); !ok || val != groupextraction_Name.ValueBool() {
 				match = false
 				continue
 			}
-		} else if !groupextraction_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
+		// Check policy (only when supplied)
+		if !policy_Name.IsNull() {
+			if val, ok := v["policy"].(string); !ok || val != policy_Name.ValueString() {
 				match = false
 				continue
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check secondary
-		if val, ok := v["secondary"].(bool); ok {
-			if secondary_Name.IsNull() || val != secondary_Name.ValueBool() {
+		// Check secondary (only when supplied)
+		if !secondary_Name.IsNull() {
+			if val, ok := v["secondary"].(bool); !ok || val != secondary_Name.ValueBool() {
 				match = false
 				continue
 			}
-		} else if !secondary_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
@@ -113,11 +107,11 @@ func (d *AuthenticationvserverAuthenticationtacacspolicyBindingDataSource) Read(
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationtacacspolicy_binding with groupextraction %s not found", groupextraction_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationtacacspolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	authenticationvserver_authenticationtacacspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationtacacspolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

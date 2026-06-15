@@ -3,8 +3,8 @@ package authenticationvserver_authenticationtacacspolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -70,12 +70,7 @@ func (r *AuthenticationvserverAuthenticationtacacspolicyBindingResource) Create(
 	tflog.Trace(ctx, "Created authenticationvserver_authenticationtacacspolicy_binding resource")
 
 	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(authenticationvserver_authenticationtacacspolicy_bindingComposeId(&data))
 
 	// Read the updated state back
 	r.readAuthenticationvserverAuthenticationtacacspolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -156,7 +151,12 @@ func (r *AuthenticationvserverAuthenticationtacacspolicyBindingResource) Delete(
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_authenticationtacacspolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// The parent (name) is the resource name; the bound policy and the remaining unique/disambiguating
+	// attributes are passed as delete args. ParseIdString handles both the new key:value ID format and
+	// the legacy SDK v2 "name,policy" comma format (returns URL-decoded values), so we URL-encode each
+	// arg value ourselves (DeleteResourceWithArgs/Map do NOT encode arg values) to handle slashy/special
+	// values, mirroring the SDK v2 resource.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -169,18 +169,21 @@ func (r *AuthenticationvserverAuthenticationtacacspolicyBindingResource) Delete(
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
-	}
+	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
 	}
 	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(val)))
+	}
+	if val, ok := idMap["groupextraction"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationtacacspolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_authenticationtacacspolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_authenticationtacacspolicy_binding, got error: %s", err))
 		return
@@ -224,29 +227,16 @@ func (r *AuthenticationvserverAuthenticationtacacspolicyBindingResource) readAut
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// policy is the primary (string) disambiguator under a given parent name. The boolean
+	// ID components (groupextraction, secondary) may be ABSENT from the GET response when
+	// they are at their NITRO default (false), so an absent boolean field is treated as
+	// false rather than as a non-match.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
+		// Check policy (strict)
 		if idVal, ok := idMap["policy"]; ok {
 			if val, ok := v["policy"].(string); ok {
 				if val != idVal {
@@ -257,26 +247,32 @@ func (r *AuthenticationvserverAuthenticationtacacspolicyBindingResource) readAut
 				match = false
 				continue
 			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
 		}
 
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
+		// Check groupextraction (absent => default false)
+		if idVal, ok := idMap["groupextraction"]; ok {
+			idValBool, _ := strconv.ParseBool(idVal)
+			respBool := false
+			if val, ok := v["groupextraction"].(bool); ok {
+				respBool = val
+			}
+			if respBool != idValBool {
 				match = false
 				continue
 			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
+		}
+
+		// Check secondary (absent => default false)
+		if idVal, ok := idMap["secondary"]; ok {
+			idValBool, _ := strconv.ParseBool(idVal)
+			respBool := false
+			if val, ok := v["secondary"].(bool); ok {
+				respBool = val
+			}
+			if respBool != idValBool {
+				match = false
+				continue
+			}
 		}
 		if match {
 			foundIndex = i
