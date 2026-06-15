@@ -3,7 +3,7 @@ package botprofile_blacklist_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,11 +69,12 @@ func (r *BotprofileBlacklistBindingResource) Create(ctx context.Context, req res
 
 	tflog.Trace(ctx, "Created botprofile_blacklist_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// ID order matches resource_id_mapping.json ("name,bot_blacklist_value") so
+	// legacy SDK v2 state imports parse correctly via ParseIdString.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_blacklist:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotBlacklist.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("bot_blacklist_value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotBlacklistValue.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_blacklist_value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotBlacklistValue.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -155,7 +156,10 @@ func (r *BotprofileBlacklistBindingResource) Delete(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Deleting botprofile_blacklist_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ID carries the parent name + bot_blacklist_value (legacy order); bot_blacklist
+	// is read from state because the NITRO delete endpoint requires it as a delete arg
+	// (args=bot_blacklist:<bool>,bot_blacklist_value:<string>), mirroring SDK v2.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "bot_blacklist_value"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -168,15 +172,15 @@ func (r *BotprofileBlacklistBindingResource) Delete(ctx context.Context, req res
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bot_blacklist"]; ok && val != "" {
-		argsMap["bot_blacklist"] = val
-	}
+	args := make([]string, 0)
 	if val, ok := idMap["bot_blacklist_value"]; ok && val != "" {
-		argsMap["bot_blacklist_value"] = val
+		args = append(args, fmt.Sprintf("bot_blacklist_value:%s", url.QueryEscape(val)))
+	}
+	if !data.BotBlacklist.IsNull() && !data.BotBlacklist.IsUnknown() {
+		args = append(args, fmt.Sprintf("bot_blacklist:%t", data.BotBlacklist.ValueBool()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Botprofile_blacklist_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Botprofile_blacklist_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botprofile_blacklist_binding, got error: %s", err))
 		return
@@ -220,27 +224,12 @@ func (r *BotprofileBlacklistBindingResource) readBotprofileBlacklistBindingFromA
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// The binding is uniquely identified within the parent profile by
+	// bot_blacklist_value (the legacy SDK v2 read matched on this same key).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bot_blacklist
-		if idVal, ok := idMap["bot_blacklist"]; ok {
-			if val, ok := v["bot_blacklist"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bot_blacklist"].(bool); ok {
-			match = false
-			continue
-		}
 
 		// Check bot_blacklist_value
 		if idVal, ok := idMap["bot_blacklist_value"]; ok {
@@ -253,9 +242,6 @@ func (r *BotprofileBlacklistBindingResource) readBotprofileBlacklistBindingFromA
 				match = false
 				continue
 			}
-		} else if _, ok := v["bot_blacklist_value"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

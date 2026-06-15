@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -121,10 +122,12 @@ func testAccCheckBotprofile_blacklist_bindingExist(n string, id *string) resourc
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		bot_blacklist_value := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "bot_blacklist_value"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		bot_blacklist_value := idMap["bot_blacklist_value"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_blacklist_binding",

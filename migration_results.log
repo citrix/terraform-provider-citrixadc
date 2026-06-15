@@ -542,5 +542,18 @@ BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (present in SDK v2 schema + N
 DATASOURCE: fixed in place - made groupextraction/secondary Optional+Computed (were Required, breaking the test config which sets only name+policy), added bindpoint, switched Read to filter on policy and use a dedicated datasource setter (Pattern 7 split).
 PATTERNS: 7 (preserve-state + datasource setter split), 13 (drop Computed on non-resolvable Optional attrs), plus binding-family (a) dropped-attr re-add, (b) URL-encoded delete args, (f) composite-ID order, (g) attr-name parity.
 FILES CHANGED: citrixadc_framework/authenticationvserver_tmsessionpolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_tmsessionpolicy_binding/resource_authenticationvserver_tmsessionpolicy_binding.go, citrixadc_framework/authenticationvserver_tmsessionpolicy_binding/datasource_schema.go, citrixadc_framework/authenticationvserver_tmsessionpolicy_binding/datasource_authenticationvserver_tmsessionpolicy_binding.go, citrixadc_framework/acctests/authenticationvserver_tmsessionpolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc files)
+RESOURCE: botprofile_blacklist_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:20:27Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccBotprofile_blacklist_binding_basic$|TestAccBotprofileBlacklistBindingDataSource_basic$
+TESTS:
+  - TestAccBotprofile_blacklist_binding_basic ........ PASS
+  - TestAccBotprofileBlacklistBindingDataSource_basic . PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: bot_blacklist/bot_blacklist_action/bot_blacklist_type were Required in Framework but Optional+Computed in SDK v2 and optional per NITRO doc -> restored Optional+Computed. ID format reduced from 3-key (bot_blacklist,bot_blacklist_value,name) to legacy 2-key order (name,bot_blacklist_value) matching resource_id_mapping.json; Create verb kept as UpdateUnnamedResource (NITRO 'add' is PUT). Delete now uses DeleteResourceWithArgs with url.QueryEscape on bot_blacklist_value and bot_blacklist read from state (NITRO delete args=bot_blacklist,bot_blacklist_value), mirroring SDK v2.
+DATASOURCE: healthy; split setter (Pattern 7) into resource setter (no ID recompute) + ForDatasource setter (sets 2-key ID); made bot_blacklist Optional+Computed (test does not supply it); fixed inverted filter logic that rejected records when an optional filter attr was null.
+PATTERNS: 7 (datasource setter split), and binding-family ID-format/delete-arg reconciliation; Pattern 13 (dropped spurious Required, kept Computed only on echoed fields).
+FILES CHANGED: citrixadc_framework/botprofile_blacklist_binding/resource_botprofile_blacklist_binding.go, citrixadc_framework/botprofile_blacklist_binding/resource_schema.go, citrixadc_framework/botprofile_blacklist_binding/datasource_botprofile_blacklist_binding.go, citrixadc_framework/botprofile_blacklist_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_blacklist_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified.
 BLOCKER: none
 ========================================
