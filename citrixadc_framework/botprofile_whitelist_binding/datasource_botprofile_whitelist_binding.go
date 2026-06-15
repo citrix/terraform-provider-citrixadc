@@ -42,9 +42,9 @@ func (d *BotprofileWhitelistBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Case 4: Array filter with parent ID. The binding is uniquely identified
+	// under the parent profile by bot_whitelist_value (matching the resource ID).
 	name_Name := data.Name.ValueString()
-	botwhitelist_Name := data.BotWhitelist
 	botwhitelistvalue_Name := data.BotWhitelistValue
 
 	var dataArr []map[string]interface{}
@@ -70,30 +70,7 @@ func (d *BotprofileWhitelistBindingDataSource) Read(ctx context.Context, req dat
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bot_whitelist
-		if val, ok := v["bot_whitelist"].(bool); ok {
-			if botwhitelist_Name.IsNull() || val != botwhitelist_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !botwhitelist_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check bot_whitelist_value
-		if val, ok := v["bot_whitelist_value"].(string); ok {
-			if botwhitelistvalue_Name.IsNull() || val != botwhitelistvalue_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !botwhitelistvalue_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["bot_whitelist_value"].(string); ok && !botwhitelistvalue_Name.IsNull() && val == botwhitelistvalue_Name.ValueString() {
 			foundIndex = i
 			break
 		}
@@ -101,11 +78,11 @@ func (d *BotprofileWhitelistBindingDataSource) Read(ctx context.Context, req dat
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("botprofile_whitelist_binding with bot_whitelist %s not found", botwhitelist_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("botprofile_whitelist_binding with bot_whitelist_value %s not found", botwhitelistvalue_Name))
 		return
 	}
 
-	botprofile_whitelist_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	botprofile_whitelist_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

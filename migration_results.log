@@ -622,3 +622,19 @@ PATTERNS: 6 (set ID once in Create), 7 (split resource/datasource setters), 8 (d
 FILES CHANGED: citrixadc_framework/botprofile_captcha_binding/resource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/resource_schema.go, citrixadc_framework/botprofile_captcha_binding/datasource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_captcha_binding_test.go (sanctioned ID-parse helper lines only). NO docs modified.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: botprofile_whitelist_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:51:54Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccBotprofile_whitelist_binding_basic|TestAccbotprofile_whitelist_bindingDataSource_basic
+TESTS:
+  - TestAccBotprofile_whitelist_binding_basic .......... PASS
+  - TestAccbotprofile_whitelist_bindingDataSource_basic. PASS
+  - (no ephemeral test: resource has no x-secret-attr) . N/A
+BACKWARD-COMPAT: SDK v2 had bot_whitelist + bot_whitelist_type as Optional+Computed; Framework had them Required -> reverted to Optional+Computed (resource+datasource). ID was 3-key (bot_whitelist,bot_whitelist_value,name) -> rebuilt as 2-key legacy order name:enc,bot_whitelist_value:enc matching resource_id_mapping.json so ParseIdString decodes legacy import IDs. Read/datasource match loops keyed on bot_whitelist_value only (Pattern 10). Delete sources bot_whitelist from model state (NITRO needs both bot_whitelist+bot_whitelist_value, errorcode 1093 otherwise) and URL-encodes value args (DeleteResourceWithArgs).
+DATASOURCE: healthy; bot_whitelist demoted Required->Optional+Computed (test does not set it); split setter botprofile_whitelist_bindingSetAttrFromGetForDatasource added (Pattern 7) since shared setter no longer sets ID.
+PATTERNS: 7, 8, 10
+FILES CHANGED: citrixadc_framework/botprofile_whitelist_binding/resource_botprofile_whitelist_binding.go, citrixadc_framework/botprofile_whitelist_binding/resource_schema.go, citrixadc_framework/botprofile_whitelist_binding/datasource_botprofile_whitelist_binding.go, citrixadc_framework/botprofile_whitelist_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_whitelist_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================

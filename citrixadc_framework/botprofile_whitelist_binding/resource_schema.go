@@ -48,7 +48,8 @@ func (r *BotprofileWhitelistBindingResource) Schema(ctx context.Context, req res
 				Description: "Any comments about this binding.",
 			},
 			"bot_whitelist": schema.BoolAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -63,7 +64,8 @@ func (r *BotprofileWhitelistBindingResource) Schema(ctx context.Context, req res
 				Description: "Enabled or disabled white-list binding.",
 			},
 			"bot_whitelist_type": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -181,12 +183,26 @@ func botprofile_whitelist_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 		data.Name = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// ID is set once in Create (and preserved through Read/Update). Do not
+	// recompute it here. The ID format matches the SDK v2 legacy order
+	// "name,bot_whitelist_value" (see resource_id_mapping.json) so imported
+	// legacy state resolves via utils.ParseIdString.
+
+	return data
+}
+
+// botprofile_whitelist_bindingSetAttrFromGetForDatasource faithfully copies the
+// GET response into the model and sets the composite ID. The datasource has no
+// Create call, so it must compute the ID itself (Pattern 7 datasource split).
+func botprofile_whitelist_bindingSetAttrFromGetForDatasource(ctx context.Context, data *BotprofileWhitelistBindingResourceModel, getResponseData map[string]interface{}) *BotprofileWhitelistBindingResourceModel {
+	tflog.Debug(ctx, "In botprofile_whitelist_bindingSetAttrFromGetForDatasource Function")
+
+	botprofile_whitelist_bindingSetAttrFromGet(ctx, data, getResponseData)
+
+	// Set ID for the datasource using the SDK v2 legacy order: name,bot_whitelist_value
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_whitelist:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotWhitelist.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("bot_whitelist_value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotWhitelistValue.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_whitelist_value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotWhitelistValue.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
