@@ -3,6 +3,7 @@ package vpnvserver_vpntrafficpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,8 +70,8 @@ func (r *VpnvserverVpntrafficpolicyBindingResource) Create(ctx context.Context, 
 	tflog.Trace(ctx, "Created vpnvserver_vpntrafficpolicy_binding resource")
 
 	// Set ID for the resource before reading state
+	// Composite ID uses the legacy SDK v2 key order: name,policy
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -154,7 +155,9 @@ func (r *VpnvserverVpntrafficpolicyBindingResource) Delete(ctx context.Context, 
 	}
 
 	tflog.Debug(ctx, "Deleting vpnvserver_vpntrafficpolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ID carries only the legacy key order name,policy; the remaining delete
+	// disambiguators (secondary/groupextraction/bindpoint) come from state.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -167,15 +170,25 @@ func (r *VpnvserverVpntrafficpolicyBindingResource) Delete(ctx context.Context, 
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
-	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "attribute 'policy' not found in ID")
+		return
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_vpntrafficpolicy_binding.Type(), name_value, argsMap)
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(policy_value)))
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%t", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%t", data.Groupextraction.ValueBool()))))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_vpntrafficpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_vpntrafficpolicy_binding, got error: %s", err))
 		return
@@ -219,26 +232,12 @@ func (r *VpnvserverVpntrafficpolicyBindingResource) readVpnvserverVpntrafficpoli
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// The composite ID carries name,policy; match on policy only (bindpoint
+	// and other flags are not reliably echoed back by NITRO for this binding).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
 
 		// Check policy
 		if idVal, ok := idMap["policy"]; ok {
@@ -251,9 +250,6 @@ func (r *VpnvserverVpntrafficpolicyBindingResource) readVpnvserverVpntrafficpoli
 				match = false
 				continue
 			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
