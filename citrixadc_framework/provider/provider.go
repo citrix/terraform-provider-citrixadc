@@ -526,6 +526,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstrafficdomain"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstrafficdomain_bridgegroup_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstrafficdomain_vlan_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstrafficdomain_vxlan_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsvariable"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsvpxparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsweblogparam"
@@ -1246,6 +1247,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		nspartition_vxlan_binding.NewNspartitionVxlanBindingResource,
 		nstrafficdomain_bridgegroup_binding.NewNstrafficdomainBridgegroupBindingResource,
 		nstrafficdomain_vlan_binding.NewNstrafficdomainVlanBindingResource,
+		nstrafficdomain_vxlan_binding.NewNstrafficdomainVxlanBindingResource,
 		nsservicepath_nsservicefunction_binding.NewNsservicepathNsservicefunctionBindingResource,
 		policydataset_value_binding.NewPolicydatasetValueBindingResource,
 		// policypatset_pattern_binding.NewPolicypatsetPatternBindingResource, // de-registered: pre-existing malformed schema, unrelated to vlan_nsip_binding
@@ -2066,6 +2068,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		nspartition_vxlan_binding.NSpartitionVxlanBindingDataSource,
 		nstrafficdomain_bridgegroup_binding.NStrafficdomainBridgegroupBindingDataSource,
 		nstrafficdomain_vlan_binding.NStrafficdomainVlanBindingDataSource,
+		nstrafficdomain_vxlan_binding.NStrafficdomainVxlanBindingDataSource,
 		nsservicepath_nsservicefunction_binding.NSservicepathNsservicefunctionBindingDataSource,
 		policydataset_value_binding.POlicydatasetValueBindingDataSource,
 		// policypatset_pattern_binding.POlicypatsetPatternBindingDataSource, // de-registered: pre-existing malformed schema, unrelated to vlan_nsip_binding
