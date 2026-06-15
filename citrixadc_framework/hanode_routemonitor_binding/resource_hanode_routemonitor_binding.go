@@ -3,7 +3,6 @@ package hanode_routemonitor_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -28,6 +27,10 @@ func NewHanodeRoutemonitorBindingResource() resource.Resource {
 type HanodeRoutemonitorBindingResource struct {
 	client *service.NitroClient
 }
+
+// legacyIdAttrOrder matches the SDK v2 comma-separated ID order so that imported
+// SDK v2 state IDs (e.g. "0,10.222.74.128") still parse correctly.
+var legacyIdAttrOrder = []string{"hanode_id", "routemonitor"}
 
 func (r *HanodeRoutemonitorBindingResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
@@ -69,10 +72,11 @@ func (r *HanodeRoutemonitorBindingResource) Create(ctx context.Context, req reso
 
 	tflog.Trace(ctx, "Created hanode_routemonitor_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Composite key:UrlEncode(value) pairs in the SDK v2 legacy attribute order
+	// (hanode_id,routemonitor).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("hanode_id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.HanodeId.ValueInt64()))))
 	idParts = append(idParts, fmt.Sprintf("routemonitor:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Routemonitor.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
@@ -116,26 +120,9 @@ func (r *HanodeRoutemonitorBindingResource) Update(ctx context.Context, req reso
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating hanode_routemonitor_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		hanode_routemonitor_binding := hanode_routemonitor_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Hanode_routemonitor_binding.Type(), &hanode_routemonitor_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update hanode_routemonitor_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated hanode_routemonitor_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for hanode_routemonitor_binding resource, skipping update")
-	}
+	// No NITRO update endpoint exists for this binding; every attribute uses
+	// RequiresReplace, so Terraform never reaches Update with a real change.
+	tflog.Debug(ctx, "Update is a no-op for hanode_routemonitor_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readHanodeRoutemonitorBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -155,28 +142,30 @@ func (r *HanodeRoutemonitorBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting hanode_routemonitor_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"hanode_id", "routemonitor"}, nil)
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), legacyIdAttrOrder, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
 	}
 
-	id_value, ok := idMap["id"]
+	hanodeId, ok := idMap["hanode_id"]
 	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'id' not found in ID")
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'hanode_id' not found in ID")
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["netmask"]; ok && val != "" {
-		argsMap["netmask"] = val
-	}
+	// netmask is not part of the ID; the DELETE endpoint requires it as an arg.
+	// Read it from state (matching the SDK v2 behaviour) and URL-encode it.
+	args := make([]string, 0)
 	if val, ok := idMap["routemonitor"]; ok && val != "" {
-		argsMap["routemonitor"] = val
+		args = append(args, fmt.Sprintf("routemonitor:%s", utils.UrlEncode(val)))
+	}
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		args = append(args, fmt.Sprintf("netmask:%s", utils.UrlEncode(data.Netmask.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Hanode_routemonitor_binding.Type(), id_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Hanode_routemonitor_binding.Type(), hanodeId, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete hanode_routemonitor_binding, got error: %s", err))
 		return
@@ -188,16 +177,16 @@ func (r *HanodeRoutemonitorBindingResource) Delete(ctx context.Context, req reso
 // Helper function to read hanode_routemonitor_binding data from API
 func (r *HanodeRoutemonitorBindingResource) readHanodeRoutemonitorBindingFromApi(ctx context.Context, data *HanodeRoutemonitorBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"hanode_id", "routemonitor"}, nil)
+	// Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), legacyIdAttrOrder, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return
 	}
 
-	id_Name, ok := idMap["id"]
+	hanodeId, ok := idMap["hanode_id"]
 	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'id' not found in ID string")
+		diags.AddError("Parse Error", "ID attribute 'hanode_id' not found in ID string")
 		return
 	}
 
@@ -205,7 +194,7 @@ func (r *HanodeRoutemonitorBindingResource) readHanodeRoutemonitorBindingFromApi
 
 	findParams := service.FindParams{
 		ResourceType:             service.Hanode_routemonitor_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             hanodeId,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
@@ -220,51 +209,20 @@ func (r *HanodeRoutemonitorBindingResource) readHanodeRoutemonitorBindingFromApi
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching routemonitor
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check netmask
-		if idVal, ok := idMap["netmask"]; ok {
-			if val, ok := v["netmask"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["netmask"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check routemonitor
 		if idVal, ok := idMap["routemonitor"]; ok {
-			if val, ok := v["routemonitor"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
+			if val, ok := v["routemonitor"].(string); ok && val == idVal {
+				foundIndex = i
+				break
 			}
-		} else if _, ok := v["routemonitor"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("hanode_routemonitor_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "hanode_routemonitor_binding not found with the provided ID attributes")
 		return
 	}
 

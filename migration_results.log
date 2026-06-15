@@ -78,3 +78,19 @@ PATTERNS: codegen int-vs-string fix; ID-format compat via ParseIdString (Phase-2
 FILES CHANGED: citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding/resource_nd6ravariables_onlinkipv6prefix_binding.go, citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding/datasource_nd6ravariables_onlinkipv6prefix_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/nd6ravariables_onlinkipv6prefix_binding_test.go (ID-parse helper only; NO doc changed)
 BLOCKER: none (note: two unrelated baseline-broken sibling resources lbmetrictable_metric_binding/policypatset_pattern_binding have invalid schema attr names that poison provider schema load; temporarily deregistered to validate, then RESTORED unchanged)
 ========================================
+========================================
+RESOURCE: hanode_routemonitor_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:16:36Z
+TESTBED:  HA_PAIR (NS_URL: http://10.101.132.141/)
+TEST RUN: TestAccHanode_routemonitor_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccHanode_routemonitor_binding_basic ............ PASS
+  - TestAccHanode_routemonitor_bindingDataSource_basic .. PASS
+  - ephemeral test(s) ................................... NONE (no secret attrs)
+BACKWARD-COMPAT: Fixed codegen duplicate-Id collision: user-facing integer key renamed from synthetic 'id' to SDK v2 contract name 'hanode_id' (tfsdk:"hanode_id" -> NITRO field "id"); synthetic computed string 'id' kept as the composite ID. Flags: hanode_id/netmask/routemonitor all Required+RequiresReplace (matching SDK v2 ForceNew); dropped spurious Optional/Computed. Composite ID = hanode_id:v,routemonitor:v in legacy order (matches resource_id_mapping.json "hanode_id,routemonitor"); ParseIdString handles legacy comma IDs on import. Delete args: routemonitor + netmask URL-encoded (netmask read from state, not in ID, as in SDK v2).
+DATASOURCE: healthy after fix; renamed lookup key id->hanode_id, parent name now hanode_id int; added split datasource setter (Pattern 7) that copies all fields + sets composite Id.
+PATTERNS: 6 (Id never recomputed in resource SetAttrFromGet), 7 (resource/datasource setter split), 5 (no-op Update for all-RequiresReplace binding)
+FILES CHANGED: citrixadc_framework/hanode_routemonitor_binding/resource_schema.go, citrixadc_framework/hanode_routemonitor_binding/resource_hanode_routemonitor_binding.go, citrixadc_framework/hanode_routemonitor_binding/datasource_schema.go, citrixadc_framework/hanode_routemonitor_binding/datasource_hanode_routemonitor_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/hanode_routemonitor_binding_test.go (sanctioned ID-parse helper lines only). No doc modified.
+BLOCKER: none
+========================================
