@@ -35,8 +35,7 @@ func (r *ClusternodeRoutemonitorBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the clusternode_routemonitor_binding resource.",
 			},
 			"netmask": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

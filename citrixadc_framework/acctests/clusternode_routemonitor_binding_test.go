@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -90,10 +91,12 @@ func testAccCheckClusternode_routemonitor_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		nodeid := idSlice[0]
-		routemonitor := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"nodeid", "routemonitor"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		nodeid := idMap["nodeid"]
+		routemonitor := idMap["routemonitor"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternode_routemonitor_binding",
@@ -135,10 +138,12 @@ func testAccCheckClusternode_routemonitor_bindingNotExist(n string, id string) r
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		nodeid := idSlice[0]
-		routemonitor := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"nodeid", "routemonitor"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		nodeid := idMap["nodeid"]
+		routemonitor := idMap["routemonitor"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternode_routemonitor_binding",
