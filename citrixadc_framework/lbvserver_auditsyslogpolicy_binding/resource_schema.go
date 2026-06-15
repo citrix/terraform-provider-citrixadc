@@ -22,6 +22,7 @@ import (
 // LbvserverAuditsyslogpolicyBindingResourceModel describes the resource data model.
 type LbvserverAuditsyslogpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,9 +41,17 @@ func (r *LbvserverAuditsyslogpolicyBindingResource) Schema(ctx context.Context, 
 				Computed:    true,
 				Description: "The ID of the lbvserver_auditsyslogpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				// Not echoed by the binding GET array view; Computed dropped to avoid
+				// "unknown value after apply" (Pattern 13).
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -50,21 +59,20 @@ func (r *LbvserverAuditsyslogpolicyBindingResource) Schema(ctx context.Context, 
 			},
 			"invoke": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -79,7 +87,6 @@ func (r *LbvserverAuditsyslogpolicyBindingResource) Schema(ctx context.Context, 
 			},
 			"order": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -109,6 +116,9 @@ func lbvserver_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Con
 
 	// Create API request body from the model
 	lbvserver_auditsyslogpolicy_binding := lb.Lbvserverauditsyslogpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		lbvserver_auditsyslogpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		lbvserver_auditsyslogpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +147,61 @@ func lbvserver_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Con
 	return lbvserver_auditsyslogpolicy_binding
 }
 
+// Resource state setter. NITRO does not echo back every user-supplied input for this
+// binding (gotopriorityexpression, invoke, labelname, labeltype, order, priority,
+// bindpoint are write-only/server-overridden in the GET array view). To avoid
+// "inconsistent result after apply" / perpetual diffs, only adopt a value from the
+// GET response when it is actually present; otherwise preserve the existing
+// plan/state value. The ID is set once in Create and is NOT recomputed here.
 func lbvserver_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *LbvserverAuditsyslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverAuditsyslogpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In lbvserver_auditsyslogpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model (preserve existing value when not echoed by GET)
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// Datasource state setter. The datasource has no prior plan/state, so it faithfully
+// copies every field from the GET response and sets its own ID (Pattern 7 split).
+func lbvserver_auditsyslogpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LbvserverAuditsyslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverAuditsyslogpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In lbvserver_auditsyslogpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -186,7 +247,7 @@ func lbvserver_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, data
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create to set it)
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

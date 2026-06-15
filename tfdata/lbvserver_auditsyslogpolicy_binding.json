@@ -1,5 +1,16 @@
 [
     {
+        "option_name": "bindpoint",
+        "type": "string",
+        "description": [
+            "Bind point to which to bind the policy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
         "option_name": "gotopriorityexpression",
         "type": "string",
         "description": [

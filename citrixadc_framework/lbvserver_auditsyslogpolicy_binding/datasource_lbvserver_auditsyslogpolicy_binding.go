@@ -93,7 +93,7 @@ func (d *LbvserverAuditsyslogpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	lbvserver_auditsyslogpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbvserver_auditsyslogpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
