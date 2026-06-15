@@ -84,8 +84,11 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Description: "Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver",
 			},
 			"order": schema.Int64Attribute{
+				// "order" is never echoed back by the NITRO GET response (only
+				// "orderstr" is returned), so it must NOT be Computed — otherwise a
+				// config that omits it leaves the value unknown after apply
+				// ("still indicated an unknown value", Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -187,10 +190,78 @@ func servicegroup_servicegroupmember_bindingGetThePayloadFromthePlan(ctx context
 	return servicegroup_servicegroupmember_binding
 }
 
+// servicegroup_servicegroupmember_bindingSetAttrFromGet is the RESOURCE-side state
+// setter. It preserves the prior plan/state value for attributes the NITRO GET
+// response does not echo back (notably "order", which only appears as "orderstr"
+// in GET) so that an Optional+Computed input the user supplied is not nulled and
+// does not trigger an "inconsistent result after apply" error (Pattern 7 / 13).
+// It does NOT recompute data.Id; the ID is set once in Create.
 func servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx context.Context, data *ServicegroupServicegroupmemberBindingResourceModel, getResponseData map[string]interface{}) *ServicegroupServicegroupmemberBindingResourceModel {
 	tflog.Debug(ctx, "In servicegroup_servicegroupmember_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. Only overwrite a field when the GET response
+	// actually echoes it; otherwise preserve the existing plan/state value.
+	if val, ok := getResponseData["customserverid"]; ok && val != nil {
+		data.Customserverid = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["dbsttl"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Dbsttl = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["hashid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Hashid = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["ip"]; ok && val != nil {
+		data.Ip = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["nameserver"]; ok && val != nil {
+		data.Nameserver = types.StringValue(val.(string))
+	}
+	// "order" is never echoed by the NITRO GET response (only "orderstr" is
+	// returned). Preserve the existing plan/state value rather than nulling it.
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["port"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Port = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["serverid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Serverid = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["servername"]; ok && val != nil {
+		data.Servername = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
+		data.Servicegroupname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["weight"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Weight = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// servicegroup_servicegroupmember_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE-side setter (Pattern 7). The datasource has no prior plan/state to
+// preserve, so it faithfully copies every field from the GET response (nulling
+// absent fields) and computes data.Id itself.
+func servicegroup_servicegroupmember_bindingSetAttrFromGetForDatasource(ctx context.Context, data *ServicegroupServicegroupmemberBindingResourceModel, getResponseData map[string]interface{}) *ServicegroupServicegroupmemberBindingResourceModel {
+	tflog.Debug(ctx, "In servicegroup_servicegroupmember_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["customserverid"]; ok && val != nil {
 		data.Customserverid = types.StringValue(val.(string))
 	} else {
@@ -264,8 +335,7 @@ func servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx context.Context, 
 		data.Weight = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (no Create to set it).
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("ip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ip.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))

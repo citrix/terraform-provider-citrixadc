@@ -2036,3 +2036,22 @@ PATTERNS: 1 (verb confirmed PUT), 7 (datasource setter split + preserve/resolve 
 FILES CHANGED: citrixadc_framework/servicegroup_lbmonitor_binding/resource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/resource_schema.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_schema.go, citrixadc_framework/acctests/servicegroup_lbmonitor_binding_test.go (ID-parse helper lines only - sanctioned). NO doc changed.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: servicegroup_servicegroupmember_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:52:45Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccServicegroup_servicegroupmember_binding($|_ipv4$|_ipv6$|_server_with_port$|DataSource$)
+TESTS:
+  - TestAccServicegroup_servicegroupmember_binding_ipv4 ............ PASS
+  - TestAccServicegroup_servicegroupmember_binding_ipv6 ............ PASS
+  - TestAccServicegroup_servicegroupmember_binding_server_with_port  PASS
+  - TestAccServicegroup_servicegroupmember_bindingDataSource ....... PASS
+  - TestAccServicegroup_servicegroupmember_binding_server_no_port .. SKIP[t.Skip in test source: "TODO: Read error"]
+  - TestAccServicegroup_servicegroupmember_binding_mixed_bindings .. SKIP[t.Skip in test source: "TODO:"]
+BACKWARD-COMPAT: ID now uses servicegroupname+servername(=ip)+optional port (mirrors SDK v2 servername-or-ip semantics); fixed resource_id_mapping.json to servicegroupname,servername?,port?; read/delete match on servername-or-ip + optional port like SDK v2; dropped spurious Computed on 'order' (never echoed by GET, only orderstr); split SetAttrFromGet into resource (preserve state) + datasource (full copy) setters; relaxed datasource ip/port/servername to Optional+Computed lookup keys; URL-encode delete args. Attribute/type/ForceNew parity preserved; SDK-v2-only 'disable_read' helper intentionally not re-added (not in NITRO/tfdata; only used by skipped tests).
+DATASOURCE: healthy after Pattern-7 split + match-loop rewrite (servername-or-ip + optional port); schema lookup keys relaxed to Optional+Computed.
+PATTERNS: 7, 13 (+ binding-family ID/delete-arg/flag-drift recipes)
+FILES CHANGED: citrixadc_framework/servicegroup_servicegroupmember_binding/resource_servicegroup_servicegroupmember_binding.go, citrixadc_framework/servicegroup_servicegroupmember_binding/resource_schema.go, citrixadc_framework/servicegroup_servicegroupmember_binding/datasource_servicegroup_servicegroupmember_binding.go, citrixadc_framework/servicegroup_servicegroupmember_binding/datasource_schema.go, resource_id_mapping.json, citrixadc_framework/acctests/servicegroup_servicegroupmember_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
+BLOCKER: none
+========================================

@@ -69,57 +69,46 @@ func (d *ServicegroupServicegroupmemberBindingDataSource) Read(ctx context.Conte
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// The effective member key is servername if supplied, else ip (the ADC names
+	// the server after the bound ip, so GET always returns servername == ip for
+	// ip-based members). Only filter on a value the caller actually supplied.
+	lookupKey := ""
+	if !servername_Name.IsNull() {
+		lookupKey = servername_Name.ValueString()
+	} else if !ip_Name.IsNull() {
+		lookupKey = ip_Name.ValueString()
+	}
+
+	// Iterate through results to find the matching member.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ip
-		if val, ok := v["ip"].(string); ok {
-			if ip_Name.IsNull() || val != ip_Name.ValueString() {
-				match = false
+		if lookupKey != "" {
+			servernameVal, _ := v["servername"].(string)
+			if servernameVal != lookupKey {
 				continue
 			}
-		} else if !ip_Name.IsNull() {
-			match = false
-			continue
 		}
-
-		// Check port
-		if val, ok := v["port"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if port_Name.IsNull() || val != port_Name.ValueInt64() {
-				match = false
+		if !port_Name.IsNull() {
+			if pv, ok := v["port"]; ok {
+				portVal, _ := utils.ConvertToInt64(pv)
+				if portVal != port_Name.ValueInt64() {
+					continue
+				}
+			} else {
 				continue
 			}
-		} else if !port_Name.IsNull() {
-			match = false
-			continue
 		}
-
-		// Check servername
-		if val, ok := v["servername"].(string); ok {
-			if servername_Name.IsNull() || val != servername_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !servername_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
-		}
+		foundIndex = i
+		break
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("servicegroup_servicegroupmember_binding with ip %s not found", ip_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("servicegroup_servicegroupmember_binding with key %s not found", lookupKey))
 		return
 	}
 
-	servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	servicegroup_servicegroupmember_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

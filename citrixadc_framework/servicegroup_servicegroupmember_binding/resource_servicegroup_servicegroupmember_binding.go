@@ -3,6 +3,7 @@ package servicegroup_servicegroupmember_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -69,12 +70,21 @@ func (r *ServicegroupServicegroupmemberBindingResource) Create(ctx context.Conte
 
 	tflog.Trace(ctx, "Created servicegroup_servicegroupmember_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Mirrors the SDK v2 ID semantics: the member is identified by
+	// servicegroupname + (servername OR ip) + optional port. When the user binds
+	// by ip, the ADC creates a server named after the ip, so servername always
+	// resolves to a valid search key — use ip as the effective servername here.
+	effectiveServername := data.Servername.ValueString()
+	if effectiveServername == "" {
+		effectiveServername = data.Ip.ValueString()
+	}
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ip.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("servername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servername.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(data.Servicegroupname.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("servername:%s", utils.UrlEncode(effectiveServername)))
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
+		idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
+	}
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -156,8 +166,10 @@ func (r *ServicegroupServicegroupmemberBindingResource) Delete(ctx context.Conte
 	}
 
 	tflog.Debug(ctx, "Deleting servicegroup_servicegroupmember_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicegroupname", "servername", "ip", "port"}, []string{"servername", "ip", "port"})
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Mirrors SDK v2: delete by servername (== ip for ip-based members) and,
+	// when present, port. ParseIdString handles new and legacy ID forms.
+	idMap, optionalAbsent, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicegroupname", "servername", "port"}, []string{"servername", "port"})
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
@@ -169,18 +181,17 @@ func (r *ServicegroupServicegroupmemberBindingResource) Delete(ctx context.Conte
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["ip"]; ok && val != "" {
-		argsMap["ip"] = val
-	}
-	if val, ok := idMap["port"]; ok && val != "" {
-		argsMap["port"] = val
-	}
+	args := make([]string, 0, 2)
 	if val, ok := idMap["servername"]; ok && val != "" {
-		argsMap["servername"] = val
+		// URL-encode the value so slashy/special chars (e.g. IPv6) survive the
+		// query string.
+		args = append(args, fmt.Sprintf("servername:%s", url.QueryEscape(val)))
+	}
+	if val, ok := idMap["port"]; ok && val != "" && !optionalAbsent["port"] {
+		args = append(args, fmt.Sprintf("port:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Servicegroup_servicegroupmember_binding.Type(), servicegroupname_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Servicegroup_servicegroupmember_binding.Type(), servicegroupname_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete servicegroup_servicegroupmember_binding, got error: %s", err))
 		return
@@ -192,8 +203,11 @@ func (r *ServicegroupServicegroupmemberBindingResource) Delete(ctx context.Conte
 // Helper function to read servicegroup_servicegroupmember_binding data from API
 func (r *ServicegroupServicegroupmemberBindingResource) readServicegroupServicegroupmemberBindingFromApi(ctx context.Context, data *ServicegroupServicegroupmemberBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicegroupname", "servername", "ip", "port"}, []string{"servername", "ip", "port"})
+	// Binding with parent ID - parse from ID. Mirrors the SDK v2 identity:
+	// servicegroupname + (servername OR ip, stored under "servername") + optional
+	// port. ParseIdString handles both the new key:value form and the legacy
+	// positional "servicegroupname,servername,port" form.
+	idMap, optionalAbsent, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicegroupname", "servername", "port"}, []string{"servername", "port"})
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return
@@ -203,6 +217,18 @@ func (r *ServicegroupServicegroupmemberBindingResource) readServicegroupServiceg
 	if !ok {
 		diags.AddError("Parse Error", "ID attribute 'servicegroupname' not found in ID string")
 		return
+	}
+
+	// The ADC creates a server named after the bound ip, so "servername" in the ID
+	// is the effective member key whether the user bound by servername or by ip.
+	idServername := idMap["servername"]
+
+	idPort := 0
+	if portStr, ok := idMap["port"]; ok && portStr != "" && !optionalAbsent["port"] {
+		if idPort, err = strconv.Atoi(portStr); err != nil {
+			diags.AddError("Parse Error", fmt.Sprintf("Unable to parse port from ID: %s", err))
+			return
+		}
 	}
 
 	var dataArr []map[string]interface{}
@@ -224,69 +250,31 @@ func (r *ServicegroupServicegroupmemberBindingResource) readServicegroupServiceg
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the matching member, matching on
+	// servername (== ip for ip-based members) and, when supplied, port.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ip
-		if idVal, ok := idMap["ip"]; ok {
-			if val, ok := v["ip"].(string); ok {
-				if val != idVal {
-					match = false
+		servernameVal, _ := v["servername"].(string)
+		if servernameVal != idServername {
+			continue
+		}
+		if idPort != 0 {
+			if pv, ok := v["port"]; ok {
+				portVal, _ := utils.ConvertToInt64(pv)
+				if portVal != int64(idPort) {
 					continue
 				}
 			} else {
-				match = false
 				continue
 			}
-		} else if _, ok := v["ip"].(string); ok {
-			match = false
-			continue
 		}
-
-		// Check port
-		if idVal, ok := idMap["port"]; ok {
-			if val, ok := v["port"]; ok {
-				val, _ = utils.ConvertToInt64(val)
-				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
-				if val != idValInt64 {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["port"]; ok {
-			match = false
-			continue
-		}
-
-		// Check servername
-		if idVal, ok := idMap["servername"]; ok {
-			if val, ok := v["servername"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["servername"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
-		}
+		foundIndex = i
+		break
 	}
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("servicegroup_servicegroupmember_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "servicegroup_servicegroupmember_binding not found with the provided ID attributes")
 		return
 	}
 

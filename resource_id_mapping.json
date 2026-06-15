@@ -234,7 +234,7 @@
   "rnat_nsip_binding": "name,natip",
   "service_dospolicy_binding": "name,policyname",
   "servicegroup_lbmonitor_binding": "servicegroupname,monitorname",
-  "servicegroup_servicegroupmember_binding": "servicegroupname,servername?,ip?,port?",
+  "servicegroup_servicegroupmember_binding": "servicegroupname,servername?,port?",
   "service_lbmonitor_binding": "name,monitor_name",
   "snmptrap_snmpuser_binding": "trapclass,trapdestination,username",
   "sslcacertgroup_sslcertkey_binding": "cacertgroupname,certkeyname",
