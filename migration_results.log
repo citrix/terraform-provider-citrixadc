@@ -988,5 +988,17 @@ BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Com
 DATASOURCE: healthy as-is (shares SetAttrFromGet which sets composite Id; lookup keys policyname+type Required) - no changes needed.
 PATTERNS: 8
 FILES CHANGED: citrixadc_framework/dnsglobal_dnspolicy_binding/resource_schema.go, citrixadc_framework/acctests/dnsglobal_dnspolicy_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: gslbvserver_gslbservice_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:04:40Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccGslbvserver_gslbservice_binding($|_basic|DataSource)
+TESTS:
+  - TestAccGslbvserver_gslbservice_binding_basic ......... PASS
+  - TestAccGslbvserver_gslbservice_bindingDataSource_basic PASS
+BACKWARD-COMPAT: SDK v2 declared ALL attributes ForceNew and had no UpdateContext; Framework left servicename/order/weight updateable. Added RequiresReplace() to servicename/order/weight to match SDK v2 ForceNew contract; converted Update to a documented no-op (Pattern 5). Attribute name/type/Required-Optional-Computed/default/ID-format parity all already correct; id_mapping "name,servicename" matches SDK v2 d.SetId order.
+DATASOURCE: healthy as-is; shares SetAttrFromGet which copies all GET fields and sets data.Id (no Pattern 7 split needed - no secrets/non-echoed inputs).
+PATTERNS: 5
+FILES CHANGED: citrixadc_framework/gslbvserver_gslbservice_binding/resource_schema.go, citrixadc_framework/gslbvserver_gslbservice_binding/resource_gslbvserver_gslbservice_binding.go, citrixadc_framework/acctests/gslbvserver_gslbservice_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================

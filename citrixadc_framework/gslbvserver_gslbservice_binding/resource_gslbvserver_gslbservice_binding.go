@@ -114,38 +114,10 @@ func (r *GslbvserverGslbserviceBindingResource) Update(ctx context.Context, req 
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating gslbvserver_gslbservice_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-	if !data.Order.Equal(state.Order) {
-		tflog.Debug(ctx, fmt.Sprintf("order has changed for gslbvserver_gslbservice_binding"))
-		hasChange = true
-	}
-	if !data.Servicename.Equal(state.Servicename) {
-		tflog.Debug(ctx, fmt.Sprintf("servicename has changed for gslbvserver_gslbservice_binding"))
-		hasChange = true
-	}
-	if !data.Weight.Equal(state.Weight) {
-		tflog.Debug(ctx, fmt.Sprintf("weight has changed for gslbvserver_gslbservice_binding"))
-		hasChange = true
-	}
-
-	if hasChange {
-		// Create API request body from the model
-		gslbvserver_gslbservice_binding := gslbvserver_gslbservice_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Gslbvserver_gslbservice_binding.Type(), &gslbvserver_gslbservice_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update gslbvserver_gslbservice_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated gslbvserver_gslbservice_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for gslbvserver_gslbservice_binding resource, skipping update")
-	}
+	// All attributes are RequiresReplace (the SDK v2 resource declared every
+	// attribute ForceNew and exposed no UpdateContext). The gslbvserver_gslbservice
+	// binding has no NITRO update endpoint, so Update is a documented no-op.
+	tflog.Debug(ctx, "Update is a no-op for gslbvserver_gslbservice_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readGslbvserverGslbserviceBindingFromApi(ctx, &data, &resp.Diagnostics)
