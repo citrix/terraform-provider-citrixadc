@@ -234,3 +234,19 @@ PATTERNS: 7 (datasource setter split), 13 (drop Computed where no GET echo)
 FILES CHANGED: citrixadc_framework/vlan_nsip6_binding/resource_schema.go, citrixadc_framework/vlan_nsip6_binding/resource_vlan_nsip6_binding.go, citrixadc_framework/vlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vlan_nsip6_binding/datasource_vlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: botprofile_ipreputation_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:20:23Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccBotprofile_ipreputation_binding_basic$|TestAccBotprofileIpreputationBindingDataSource_basic$
+TESTS:
+  - TestAccBotprofile_ipreputation_binding_basic ............ PASS
+  - TestAccBotprofileIpreputationBindingDataSource_basic .... PASS
+  - (no ephemeral tests; resource has no secret attributes) . N/A
+BACKWARD-COMPAT: attr/type/ForceNew parity OK; SDK v2 ID was name,category but Framework adopts new key:value 3-key ID (bot_ipreputation,category,name) parsed back-compatibly via ParseIdString(legacyOrder name,category); fixed datasource bot_ipreputation Required->Optional+Computed (datasource test omits it) and made the bot_ipreputation/category match filters apply only when supplied.
+DATASOURCE: healthy; bot_ipreputation flag fixed + null-safe lookup filter; shared SetAttrFromGet faithfully copies GET (verified ADC echoes all fields) and sets Id.
+PATTERNS: 11 (resource/datasource flag consistency), 10 (null-safe filter / ID parse)
+FILES CHANGED: citrixadc_framework/botprofile_ipreputation_binding/datasource_schema.go, citrixadc_framework/botprofile_ipreputation_binding/datasource_botprofile_ipreputation_binding.go, citrixadc_framework/acctests/botprofile_ipreputation_binding_test.go (sanctioned ID-parse helper lines only; NO doc changed)
+BLOCKER: none
+========================================
