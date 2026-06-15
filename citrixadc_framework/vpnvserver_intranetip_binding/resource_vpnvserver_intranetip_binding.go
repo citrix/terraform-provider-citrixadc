@@ -3,6 +3,7 @@ package vpnvserver_intranetip_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -68,11 +69,12 @@ func (r *VpnvserverIntranetipBindingResource) Create(ctx context.Context, req re
 
 	tflog.Trace(ctx, "Created vpnvserver_intranetip_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Use the legacy attribute order (name, intranetip) matching SDK v2 and
+	// resource_id_mapping.json so existing state/imports stay backward compatible.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("intranetip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("intranetip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -154,7 +156,7 @@ func (r *VpnvserverIntranetipBindingResource) Delete(ctx context.Context, req re
 	}
 
 	tflog.Debug(ctx, "Deleting vpnvserver_intranetip_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "intranetip"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -167,15 +169,17 @@ func (r *VpnvserverIntranetipBindingResource) Delete(ctx context.Context, req re
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args, URL-encoding values that may contain slashes/special
+	// characters (e.g. a CIDR intranetip range) — matches SDK v2 behavior.
+	args := make([]string, 0)
 	if val, ok := idMap["intranetip"]; ok && val != "" {
-		argsMap["intranetip"] = val
+		args = append(args, fmt.Sprintf("intranetip:%s", url.QueryEscape(val)))
 	}
-	if val, ok := idMap["netmask"]; ok && val != "" {
-		argsMap["netmask"] = val
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		args = append(args, fmt.Sprintf("netmask:%s", url.QueryEscape(data.Netmask.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_intranetip_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_intranetip_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_intranetip_binding, got error: %s", err))
 		return
@@ -219,7 +223,9 @@ func (r *VpnvserverIntranetipBindingResource) readVpnvserverIntranetipBindingFro
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// The binding is identified within the parent's array by intranetip
+	// (the legacy SDK v2 discriminator). netmask is not part of the identity.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -235,25 +241,6 @@ func (r *VpnvserverIntranetipBindingResource) readVpnvserverIntranetipBindingFro
 				match = false
 				continue
 			}
-		} else if _, ok := v["intranetip"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check netmask
-		if idVal, ok := idMap["netmask"]; ok {
-			if val, ok := v["netmask"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["netmask"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

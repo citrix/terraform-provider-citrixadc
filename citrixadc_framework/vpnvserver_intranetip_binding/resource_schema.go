@@ -48,9 +48,11 @@ func (r *VpnvserverIntranetipBindingResource) Schema(ctx context.Context, req re
 				Description: "Name of the virtual server.",
 			},
 			"netmask": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "The netmask of the intranet IP address or range.",
 			},
@@ -76,10 +78,34 @@ func vpnvserver_intranetip_bindingGetThePayloadFromthePlan(ctx context.Context, 
 	return vpnvserver_intranetip_binding
 }
 
+// vpnvserver_intranetip_bindingSetAttrFromGet is the resource-side state setter.
+// It copies the GET response into the model but does NOT recompute data.Id —
+// the ID is set exactly once in Create (Pattern 6). netmask is server-overridable
+// and not always echoed (Pattern 7/13): preserve the existing plan/state value when
+// the GET response does not carry it, instead of nulling it.
 func vpnvserver_intranetip_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverIntranetipBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverIntranetipBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_intranetip_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["intranetip"]; ok && val != nil {
+		data.Intranetip = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// vpnvserver_intranetip_bindingSetAttrFromGetForDatasource is the datasource-side
+// setter. The datasource has no prior plan/state, so it faithfully copies every
+// field from the GET response and sets data.Id (Pattern 7 datasource split).
+func vpnvserver_intranetip_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverIntranetipBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverIntranetipBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_intranetip_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["intranetip"]; ok && val != nil {
 		data.Intranetip = types.StringValue(val.(string))
 	} else {
@@ -96,12 +122,11 @@ func vpnvserver_intranetip_bindingSetAttrFromGet(ctx context.Context, data *Vpnv
 		data.Netmask = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource using the legacy attribute order (name, intranetip)
+	// matching resource_id_mapping.json.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("intranetip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("intranetip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

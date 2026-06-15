@@ -45,7 +45,6 @@ func (d *VpnvserverIntranetipBindingDataSource) Read(ctx context.Context, req da
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	intranetip_Name := data.Intranetip
-	netmask_Name := data.Netmask
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -72,24 +71,13 @@ func (d *VpnvserverIntranetipBindingDataSource) Read(ctx context.Context, req da
 	for i, v := range dataArr {
 		match := true
 
-		// Check intranetip
+		// Check intranetip (the binding discriminator within the parent's array)
 		if val, ok := v["intranetip"].(string); ok {
 			if intranetip_Name.IsNull() || val != intranetip_Name.ValueString() {
 				match = false
 				continue
 			}
 		} else if !intranetip_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check netmask
-		if val, ok := v["netmask"].(string); ok {
-			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !netmask_Name.IsNull() {
 			match = false
 			continue
 		}
@@ -105,7 +93,7 @@ func (d *VpnvserverIntranetipBindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	vpnvserver_intranetip_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_intranetip_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
