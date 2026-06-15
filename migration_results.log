@@ -3063,5 +3063,18 @@ BACKWARD-COMPAT: ID format changed from 3-key (bindpoint,name,policy) to legacy 
 DATASOURCE: healthy after recovery in-place; split setter (xxxSetAttrFromGetForDatasource sets ID), match on policy, bindpoint optional filter.
 PATTERNS: 6, 7, 15
 FILES CHANGED: citrixadc_framework/vpnvserver_responderpolicy_binding/resource_vpnvserver_responderpolicy_binding.go, citrixadc_framework/vpnvserver_responderpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_responderpolicy_binding/datasource_vpnvserver_responderpolicy_binding.go, citrixadc_framework/vpnvserver_responderpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_responderpolicy_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: vpnvserver_cspolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:33:55Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccVpnvserver_cspolicy_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccVpnvserver_cspolicy_binding_basic ............ PASS
+  - TestAccVpnvserver_cspolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs) .. N/A
+BACKWARD-COMPAT: Framework Create/SetAttrFromGet built a spurious 3-key ID (bindpoint:,name:,policy:); reduced to the SDK v2 2-key name,policy ID matching resource_id_mapping.json. Dropped Computed from non-echoed Optional attrs (bindpoint, gotopriorityexpression, groupextraction, secondary) and made resource SetAttrFromGet preserve them (GET only echoes name/policy/priority). priority kept Optional+Computed (echoed). Removed bindpoint from Read match loop and Delete args (Delete now policy-only, matching SDK v2/live NITRO). Create verb UpdateUnnamedResource (PUT) matches SDK v2.
+DATASOURCE: healthy; bindpoint flag fixed Required->Optional+Computed (not a lookup key, breaks ds test otherwise); Read filters on policy only; split setter added (xxxSetAttrFromGetForDatasource) per Pattern 7.
+PATTERNS: 6, 7, 11, 13, 15
+FILES CHANGED: citrixadc_framework/vpnvserver_cspolicy_binding/resource_vpnvserver_cspolicy_binding.go, citrixadc_framework/vpnvserver_cspolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_cspolicy_binding/datasource_vpnvserver_cspolicy_binding.go, citrixadc_framework/vpnvserver_cspolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_cspolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc files)
 BLOCKER: none
 ========================================

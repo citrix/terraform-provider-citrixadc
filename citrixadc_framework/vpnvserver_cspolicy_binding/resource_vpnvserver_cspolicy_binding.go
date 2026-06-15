@@ -3,7 +3,6 @@ package vpnvserver_cspolicy_binding
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -68,12 +67,11 @@ func (r *VpnvserverCspolicyBindingResource) Create(ctx context.Context, req reso
 
 	tflog.Trace(ctx, "Created vpnvserver_cspolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state.
+	// ID uses the two unique keys (name,policy) — matching SDK v2 d.SetId and
+	// resource_id_mapping.json. bindpoint is never echoed by GET and is not part
+	// of the identity.
+	data.Id = types.StringValue(vpnvserverCspolicyBindingComposeId(data.Name.ValueString(), data.Policy.ValueString()))
 
 	// Read the updated state back
 	r.readVpnvserverCspolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -168,9 +166,6 @@ func (r *VpnvserverCspolicyBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
 	if val, ok := idMap["policy"]; ok && val != "" {
 		argsMap["policy"] = val
 	}
@@ -219,45 +214,15 @@ func (r *VpnvserverCspolicyBindingResource) readVpnvserverCspolicyBindingFromApi
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policy (the second
+	// unique key). bindpoint is not part of the ID and is not echoed by GET.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
 		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
+			if val, ok := v["policy"].(string); ok && val == idVal {
+				foundIndex = i
+				break
 			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 

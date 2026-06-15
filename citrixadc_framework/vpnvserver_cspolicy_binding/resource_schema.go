@@ -40,24 +40,26 @@ func (r *VpnvserverCspolicyBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the vpnvserver_cspolicy_binding resource.",
 			},
 			"bindpoint": schema.StringAttribute{
+				// Not echoed back by the NITRO GET response for this binding, so it
+				// must not be Computed (Computed + null-from-GET => "inconsistent
+				// result after apply"). Optional + RequiresReplace matches SDK v2.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// Not echoed back by the NITRO GET response; not Computed.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Next priority expression.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// Not echoed back by the NITRO GET response; not Computed.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -86,8 +88,8 @@ func (r *VpnvserverCspolicyBindingResource) Schema(ctx context.Context, req reso
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
+				// Not echoed back by the NITRO GET response; not Computed.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +129,53 @@ func vpnvserver_cspolicy_bindingGetThePayloadFromthePlan(ctx context.Context, da
 	return vpnvserver_cspolicy_binding
 }
 
+// vpnvserverCspolicyBindingComposeId builds the composite ID from the two unique
+// keys (name, policy) — matching the SDK v2 ID order and resource_id_mapping.json.
+// bindpoint is NOT part of the ID: it is never echoed by the NITRO GET response and
+// was never part of the SDK v2 ID.
+func vpnvserverCspolicyBindingComposeId(name, policy string) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(name)))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(policy)))
+	return strings.Join(idParts, ",")
+}
+
+// vpnvserver_cspolicy_bindingSetAttrFromGet is the RESOURCE-side setter. The NITRO
+// GET response for this binding only echoes name, policy and priority. The other
+// inputs (bindpoint, gotopriorityexpression, groupextraction, secondary) are NOT
+// returned, so we must preserve the existing plan/state value instead of nulling
+// them (Pattern 7 — otherwise Terraform reports "inconsistent result after apply").
 func vpnvserver_cspolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverCspolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverCspolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_cspolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Echoed identity fields
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	// priority is echoed (as a string) by the GET response
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	// bindpoint, gotopriorityexpression, groupextraction and secondary are NOT
+	// echoed by NITRO — preserve the existing plan/state value (do not touch).
+
+	// Set ID for the resource (name,policy)
+	data.Id = types.StringValue(vpnvserverCspolicyBindingComposeId(data.Name.ValueString(), data.Policy.ValueString()))
+
+	return data
+}
+
+// vpnvserver_cspolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. The datasource has no prior plan/state to preserve, so it faithfully
+// copies every field present in the GET response and sets the ID (Pattern 7 split).
+func vpnvserver_cspolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverCspolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverCspolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_cspolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -159,6 +204,8 @@ func vpnvserver_cspolicy_bindingSetAttrFromGet(ctx context.Context, data *Vpnvse
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
 		}
 	} else {
 		data.Priority = types.Int64Null()
@@ -169,13 +216,8 @@ func vpnvserver_cspolicy_bindingSetAttrFromGet(ctx context.Context, data *Vpnvse
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the datasource (name,policy)
+	data.Id = types.StringValue(vpnvserverCspolicyBindingComposeId(data.Name.ValueString(), data.Policy.ValueString()))
 
 	return data
 }
