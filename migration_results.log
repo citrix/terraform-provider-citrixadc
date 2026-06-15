@@ -3373,3 +3373,18 @@ PATTERNS: 7 (datasource shared-setter / non-echoed field), 13 (drop spurious ide
 FILES CHANGED: citrixadc_framework/lsnclient_nsacl_binding/resource_lsnclient_nsacl_binding.go, citrixadc_framework/lsnclient_nsacl_binding/resource_schema.go, citrixadc_framework/lsnclient_nsacl_binding/datasource_lsnclient_nsacl_binding.go, citrixadc_framework/lsnclient_nsacl_binding/datasource_schema.go, citrixadc_framework/acctests/lsnclient_nsacl_binding_test.go (sanctioned ID-parse helper lines only). NO doc changes.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lsngroup_lsnpool_binding
+STATUS:   PASS
+TIME:     2026-06-15T15:05:16Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccLsngroup_lsnpool_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccLsngroup_lsnpool_binding_basic ............ PASS
+  - TestAccLsngroup_lsnpool_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: Framework resource already matched SDK v2 contract (attrs groupname/poolname, types, Required, ForceNew->RequiresReplace, Create=UpdateUnnamedResource/PUT same as v2, delete-arg poolname, ID order matches resource_id_mapping.json). No resource/datasource code changes needed.
+DATASOURCE: healthy as-is (shares ResourceModel + setter; reads groupname/poolname correctly).
+PATTERNS: none (no codegen defects found; only sanctioned ID-parse helper edit per Constraint 1)
+FILES CHANGED: citrixadc_framework/acctests/lsngroup_lsnpool_binding_test.go (ID-parse helper lines only -> utils.ParseIdString)
+BLOCKER: none
+========================================
