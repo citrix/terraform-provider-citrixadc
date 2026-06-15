@@ -71,7 +71,7 @@ func (r *BridgegroupVlanBindingResource) Create(ctx context.Context, req resourc
 
 	// Set ID for the resource before reading state
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("bridgegroup_id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BridgegroupId.ValueInt64()))))
 	idParts = append(idParts, fmt.Sprintf("vlan:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vlan.ValueInt64()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
@@ -115,26 +115,9 @@ func (r *BridgegroupVlanBindingResource) Update(ctx context.Context, req resourc
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating bridgegroup_vlan_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		bridgegroup_vlan_binding := bridgegroup_vlan_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Bridgegroup_vlan_binding.Type(), &bridgegroup_vlan_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update bridgegroup_vlan_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated bridgegroup_vlan_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for bridgegroup_vlan_binding resource, skipping update")
-	}
+	// No-op: bridgegroup_vlan_binding has no NITRO update endpoint and all
+	// attributes are RequiresReplace, so Update is never reached for a real change.
+	tflog.Debug(ctx, "Update is a no-op for bridgegroup_vlan_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readBridgegroupVlanBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -154,16 +137,16 @@ func (r *BridgegroupVlanBindingResource) Delete(ctx context.Context, req resourc
 	}
 
 	tflog.Debug(ctx, "Deleting bridgegroup_vlan_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgsMap
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"bridgegroup_id", "vlan"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
 	}
 
-	id_value, ok := idMap["id"]
+	bridgegroup_id, ok := idMap["bridgegroup_id"]
 	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'id' not found in ID")
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'bridgegroup_id' not found in ID")
 		return
 	}
 
@@ -172,7 +155,7 @@ func (r *BridgegroupVlanBindingResource) Delete(ctx context.Context, req resourc
 		argsMap["vlan"] = val
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Bridgegroup_vlan_binding.Type(), id_value, argsMap)
+	err = r.client.DeleteResourceWithArgsMap(service.Bridgegroup_vlan_binding.Type(), bridgegroup_id, argsMap)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete bridgegroup_vlan_binding, got error: %s", err))
 		return
@@ -184,16 +167,16 @@ func (r *BridgegroupVlanBindingResource) Delete(ctx context.Context, req resourc
 // Helper function to read bridgegroup_vlan_binding data from API
 func (r *BridgegroupVlanBindingResource) readBridgegroupVlanBindingFromApi(ctx context.Context, data *BridgegroupVlanBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Array filter with parent ID - parse from ID
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"bridgegroup_id", "vlan"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return
 	}
 
-	id_Name, ok := idMap["id"]
+	bridgegroup_id, ok := idMap["bridgegroup_id"]
 	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'id' not found in ID string")
+		diags.AddError("Parse Error", "ID attribute 'bridgegroup_id' not found in ID string")
 		return
 	}
 
@@ -201,7 +184,7 @@ func (r *BridgegroupVlanBindingResource) readBridgegroupVlanBindingFromApi(ctx c
 
 	findParams := service.FindParams{
 		ResourceType:             service.Bridgegroup_vlan_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             bridgegroup_id,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
@@ -216,7 +199,7 @@ func (r *BridgegroupVlanBindingResource) readBridgegroupVlanBindingFromApi(ctx c
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right vlan
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -224,7 +207,7 @@ func (r *BridgegroupVlanBindingResource) readBridgegroupVlanBindingFromApi(ctx c
 		// Check vlan
 		if idVal, ok := idMap["vlan"]; ok {
 			if val, ok := v["vlan"]; ok {
-				val, _ = utils.ConvertToInt64(val)
+				val, _ := utils.ConvertToInt64(val)
 				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
 				if val != idValInt64 {
 					match = false
@@ -246,7 +229,7 @@ func (r *BridgegroupVlanBindingResource) readBridgegroupVlanBindingFromApi(ctx c
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("bridgegroup_vlan_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "bridgegroup_vlan_binding not found with the provided ID attributes")
 		return
 	}
 

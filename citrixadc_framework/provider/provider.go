@@ -234,6 +234,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/bridgegroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/bridgegroup_nsip6_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/bridgegroup_nsip_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/bridgegroup_vlan_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/bridgetable"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cachecontentgroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cacheforwardproxy"
@@ -977,6 +978,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 	return []func() resource.Resource{
 		bridgegroup_nsip6_binding.NewBridgegroupNsip6BindingResource,
 		bridgegroup_nsip_binding.NewBridgegroupNsipBindingResource,
+		bridgegroup_vlan_binding.NewBridgegroupVlanBindingResource,
 		sslcertkey.NewSslCertKeyResource,
 		sslcertkey.NewSslCertKeyUpdateResource,
 		vpnvserver_appfwpolicy_binding.NewVpnvserverAppfwpolicyBindingResource,
@@ -1459,6 +1461,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		bridgegroup.BRidgegroupDataSource,
 		bridgegroup_nsip6_binding.BRidgegroupNsip6BindingDataSource,
 		bridgegroup_nsip_binding.BRidgegroupNsipBindingDataSource,
+		bridgegroup_vlan_binding.BRidgegroupVlanBindingDataSource,
 		bridgetable.BRidgetableDataSource,
 		cachecontentgroup.CAchecontentgroupDataSource,
 		cacheforwardproxy.CAcheforwardproxyDataSource,

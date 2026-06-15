@@ -91,5 +91,18 @@ BACKWARD-COMPAT: Fixed codegen compile error (duplicate Id field/schema key). Re
 DATASOURCE: rebuilt coherent with resource (bridgegroup_id/ipaddress lookup keys); added split setter SetAttrFromGetForDatasource that copies all fields and sets composite id.
 PATTERNS: 7 (datasource setter split / preserve-state), 13 (drop Computed on non-echoed Optional attrs), 10/ID-format (ParseIdString legacy order)
 FILES CHANGED: citrixadc_framework/bridgegroup_nsip6_binding/resource_schema.go, citrixadc_framework/bridgegroup_nsip6_binding/resource_bridgegroup_nsip6_binding.go, citrixadc_framework/bridgegroup_nsip6_binding/datasource_schema.go, citrixadc_framework/bridgegroup_nsip6_binding/datasource_bridgegroup_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/bridgegroup_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
+RESOURCE: bridgegroup_vlan_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:14:06Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: -run 'TestAccBridgegroup_vlan_binding_basic|TestAccbridgegroup_vlan_bindingDataSource_basic'
+TESTS:
+  - TestAccBridgegroup_vlan_binding_basic ............ PASS
+  - TestAccbridgegroup_vlan_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs)  N/A
+BACKWARD-COMPAT: Codegen collided two 'id' fields (computed string id + int key). Renamed the int key to user-facing 'bridgegroup_id' (matching SDK v2 contract; NITRO JSON field stays 'id'); removed duplicate schema/model 'id' keys, fixed int-vs-string method calls. Attr/type/flag parity: bridgegroup_id+vlan both Int64 Required + RequiresReplace (SDK v2 ForceNew). New composite key:value ID 'bridgegroup_id:<v>,vlan:<v>'; legacy order 'bridgegroup_id,vlan' already in resource_id_mapping.json, parsed via ParseIdString. Delete: parent=bridgegroup_id value, arg vlan:<v> via DeleteResourceWithArgsMap. Update made documented no-op (no NITRO update endpoint; all attrs RequiresReplace).
+DATASOURCE: Recovered/fixed in place — lookup now keyed on bridgegroup_id (was wrongly using data.Id string); added dedicated bridgegroup_vlan_bindingSetAttrFromGetForDatasource setter (Pattern 7 split) that copies all fields and sets composite Id.
+PATTERNS: 5 (no-op Update), 7 (datasource setter split)
+FILES CHANGED: citrixadc_framework/bridgegroup_vlan_binding/resource_schema.go, citrixadc_framework/bridgegroup_vlan_binding/resource_bridgegroup_vlan_binding.go, citrixadc_framework/bridgegroup_vlan_binding/datasource_schema.go, citrixadc_framework/bridgegroup_vlan_binding/datasource_bridgegroup_vlan_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/bridgegroup_vlan_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
 BLOCKER: none
 ========================================
