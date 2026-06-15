@@ -37,8 +37,10 @@ func (r *VpnglobalAuthenticationsamlpolicyBindingResource) Schema(ctx context.Co
 				Description: "The ID of the vpnglobal_authenticationsamlpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// Pattern 13: NITRO does not echo this back in GET (omitempty + not a
+				// server-defaulted property), so Computed would leave it unknown after
+				// apply. It is a pure optional user input.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -46,7 +48,6 @@ func (r *VpnglobalAuthenticationsamlpolicyBindingResource) Schema(ctx context.Co
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -61,7 +62,6 @@ func (r *VpnglobalAuthenticationsamlpolicyBindingResource) Schema(ctx context.Co
 			},
 			"priority": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -69,7 +69,6 @@ func (r *VpnglobalAuthenticationsamlpolicyBindingResource) Schema(ctx context.Co
 			},
 			"secondary": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -106,7 +105,44 @@ func vpnglobal_authenticationsamlpolicy_bindingGetThePayloadFromthePlan(ctx cont
 func vpnglobal_authenticationsamlpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalAuthenticationsamlpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationsamlpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_authenticationsamlpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Pattern 7: NITRO marshals these binding inputs with `omitempty`, so default/false
+	// values (e.g. groupextraction=false, secondary=false) and server-overridden inputs
+	// (priority, gotopriorityexpression) are NOT echoed back in the GET response. All of
+	// these attributes are RequiresReplace (never updated in place), so preserve the
+	// user-supplied plan/state value when the field is absent instead of nulling it,
+	// which would otherwise cause "inconsistent result after apply".
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
+	return data
+}
+
+// vpnglobal_authenticationsamlpolicy_bindingSetAttrFromGetForDatasource faithfully copies
+// every field from the GET response (Pattern 7 datasource variant). The datasource has no
+// prior plan/state to preserve, so absent fields are set to null rather than retaining a
+// configured value.
+func vpnglobal_authenticationsamlpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalAuthenticationsamlpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationsamlpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_authenticationsamlpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -135,8 +171,7 @@ func vpnglobal_authenticationsamlpolicy_bindingSetAttrFromGet(ctx context.Contex
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Set ID for the datasource (no Create is invoked for a datasource)
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data

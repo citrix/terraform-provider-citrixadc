@@ -3,6 +3,8 @@ package vpnglobal_authenticationsamlpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -149,11 +151,19 @@ func (r *VpnglobalAuthenticationsamlpolicyBindingResource) Delete(ctx context.Co
 	}
 
 	tflog.Debug(ctx, "Deleting vpnglobal_authenticationsamlpolicy_binding resource")
-	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name.
+	// The NITRO delete endpoint accepts args=policyname,secondary,groupextraction
+	// (matching the SDK v2 resource). secondary/groupextraction disambiguate when
+	// multiple bindings share a policyname. URL-encode arg values per item (b).
 	policyname_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("policyname:%s", policyname_value),
+		fmt.Sprintf("policyname:%s", url.QueryEscape(policyname_value)),
+	}
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(strconv.FormatBool(data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(strconv.FormatBool(data.Groupextraction.ValueBool()))))
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_authenticationsamlpolicy_binding.Type(), "", args)

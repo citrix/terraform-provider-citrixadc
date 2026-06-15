@@ -2592,3 +2592,19 @@ PATTERNS: 7, 13, 8, b (url-encode delete args)
 FILES CHANGED: citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/resource_vpnglobal_authenticationradiuspolicy_binding.go, citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/datasource_vpnglobal_authenticationradiuspolicy_binding.go (NO test/doc files modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnglobal_authenticationsamlpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:55:02Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccVpnglobal_authenticationsamlpolicy_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccVpnglobal_authenticationsamlpolicy_binding_basic ............ PASS
+  - TestAccVpnglobal_authenticationsamlpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ........... N/A
+BACKWARD-COMPAT: attr names/types/Required/ForceNew all matched SDK v2; ID format plain policyname matches resource_id_mapping.json and SDK v2 d.SetId. Fixed: SetAttrFromGet nulled non-echoed inputs (groupextraction/secondary/priority/gotopriorityexpression) -> preserve plan/state (Pattern 7); dropped spurious Computed on the 4 Optional+Computed attrs (Pattern 13); Delete now sends secondary+groupextraction args url-encoded to match SDK v2 + NITRO doc (item b/d). Create verb confirmed PUT (UpdateUnnamedResource) per NITRO doc add=PUT.
+DATASOURCE: healthy; split setter added (vpnglobal_authenticationsamlpolicy_bindingSetAttrFromGetForDatasource) so datasource copies all GET fields + sets Id (Pattern 7 datasource variant).
+PATTERNS: 7, 13
+FILES CHANGED: citrixadc_framework/vpnglobal_authenticationsamlpolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationsamlpolicy_binding/resource_vpnglobal_authenticationsamlpolicy_binding.go, citrixadc_framework/vpnglobal_authenticationsamlpolicy_binding/datasource_vpnglobal_authenticationsamlpolicy_binding.go (NO test/doc file modified)
+BLOCKER: none
+========================================
