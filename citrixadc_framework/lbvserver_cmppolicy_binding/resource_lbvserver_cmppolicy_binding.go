@@ -3,6 +3,7 @@ package lbvserver_cmppolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -68,9 +69,10 @@ func (r *LbvserverCmppolicyBindingResource) Create(ctx context.Context, req reso
 
 	tflog.Trace(ctx, "Created lbvserver_cmppolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Order matches resource_id_mapping.json ("name,policyname") for legacy SDK v2
+	// backward compatibility.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -154,7 +156,10 @@ func (r *LbvserverCmppolicyBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting lbvserver_cmppolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgsMap.
+	// Parse the parent name from the ID (handles both new key:value and legacy
+	// "name,policyname" formats), then build the delete args from state-preserved
+	// values. URL-encode arg values for slashy/special characters.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policyname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -168,11 +173,16 @@ func (r *LbvserverCmppolicyBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
+	if !data.Policyname.IsNull() && data.Policyname.ValueString() != "" {
+		argsMap["policyname"] = url.QueryEscape(data.Policyname.ValueString())
+	} else if val, ok := idMap["policyname"]; ok && val != "" {
+		argsMap["policyname"] = url.QueryEscape(val)
 	}
-	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_cmppolicy_binding.Type(), name_value, argsMap)
@@ -219,42 +229,45 @@ func (r *LbvserverCmppolicyBindingResource) readLbvserverCmppolicyBindingFromApi
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Determine the policyname to match: prefer the ID (set on every create/import),
+	// fall back to the model value.
+	policyname_match := ""
+	if val, ok := idMap["policyname"]; ok && val != "" {
+		policyname_match = val
+	} else if !data.Policyname.IsNull() {
+		policyname_match = data.Policyname.ValueString()
+	}
+
+	// bindpoint is not part of the ID; use the state value to disambiguate the same
+	// policy bound at different bindpoints, when known.
+	bindpoint_match := ""
+	if !data.Bindpoint.IsNull() {
+		bindpoint_match = data.Bindpoint.ValueString()
+	}
+
+	// Iterate through results to find the matching binding
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
+		// Check policyname
+		if val, ok := v["policyname"].(string); ok {
+			if val != policyname_match {
 				match = false
-				continue
 			}
-		} else if _, ok := v["bindpoint"].(string); ok {
+		} else {
 			match = false
-			continue
 		}
 
-		// Check policyname
-		if idVal, ok := idMap["policyname"]; ok {
-			if val, ok := v["policyname"].(string); ok {
-				if val != idVal {
+		// Check bindpoint only when known in state
+		if match && bindpoint_match != "" {
+			if val, ok := v["bindpoint"].(string); ok {
+				if val != bindpoint_match {
 					match = false
-					continue
 				}
-			} else {
-				match = false
-				continue
 			}
-		} else if _, ok := v["policyname"].(string); ok {
-			match = false
-			continue
 		}
+
 		if match {
 			foundIndex = i
 			break

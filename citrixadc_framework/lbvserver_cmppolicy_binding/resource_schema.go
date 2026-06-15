@@ -66,14 +66,16 @@ func (r *LbvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -204,9 +206,11 @@ func lbvserver_cmppolicy_bindingSetAttrFromGet(ctx context.Context, data *Lbvser
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Multiple unique attributes - comma-separated key:UrlEncode(value) pairs.
+	// Order matches resource_id_mapping.json ("name,policyname") for legacy SDK v2
+	// backward compatibility. bindpoint is part of binding identity but is preserved
+	// in state (and used for Delete args) rather than in the composite ID.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
