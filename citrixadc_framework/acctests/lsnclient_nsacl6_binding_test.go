@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -95,10 +95,12 @@ func testAccCheckLsnclient_nsacl6_bindingExist(n string, id *string) resource.Te
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		clientname := idSlice[0]
-		acl6name := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"clientname", "acl6name"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		clientname := idMap["clientname"]
+		acl6name := idMap["acl6name"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsnclient_nsacl6_binding",
@@ -137,13 +139,12 @@ func testAccCheckLsnclient_nsacl6_bindingNotExist(n string, id string) resource.
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"clientname", "acl6name"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		clientname := idSlice[0]
-		acl6name := idSlice[1]
+		clientname := idMap["clientname"]
+		acl6name := idMap["acl6name"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsnclient_nsacl6_binding",

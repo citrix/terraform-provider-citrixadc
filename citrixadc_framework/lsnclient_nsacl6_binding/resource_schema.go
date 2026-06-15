@@ -49,8 +49,11 @@ func (r *LsnclientNsacl6BindingResource) Schema(ctx context.Context, req resourc
 				Description: "Name for the LSN client entity. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN client is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn client1\" or 'lsn client1').",
 			},
 			"td": schema.Int64Attribute{
+				// Optional only (not Computed): the NITRO GET for this binding never
+				// echoes back "td", so a Computed value could never be resolved after
+				// apply ("unknown value" error). Mirrors the SDK v2 behaviour where an
+				// unset td is simply absent from the binding identity.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -92,20 +95,25 @@ func lsnclient_nsacl6_bindingSetAttrFromGet(ctx context.Context, data *Lsnclient
 	} else {
 		data.Clientname = types.StringNull()
 	}
+	// "td" is not echoed back by the NITRO GET for this binding. Only adopt it when
+	// the server actually returns it; otherwise preserve the existing plan/state value
+	// (an unset td stays null).
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
-		data.Td = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs.
+	// "td" is included only when set (it is optional and absent from the binding
+	// identity when unset, matching SDK v2 ID semantics).
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("acl6name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Acl6name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	}
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
