@@ -622,3 +622,19 @@ PATTERNS: 6 (set ID once in Create), 7 (split resource/datasource setters), 8 (d
 FILES CHANGED: citrixadc_framework/botprofile_captcha_binding/resource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/resource_schema.go, citrixadc_framework/botprofile_captcha_binding/datasource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_captcha_binding_test.go (sanctioned ID-parse helper lines only). NO docs modified.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: crvserver_appqoepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:05:55Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccCrvserver_appqoepolicy_binding_basic|TestAcccrvserver_appqoepolicy_bindingDataSource_basic
+TESTS:
+  - TestAccCrvserver_appqoepolicy_binding_basic .......... PASS
+  - TestAcccrvserver_appqoepolicy_bindingDataSource_basic  PASS
+  - (no ephemeral tests; resource has no secret attributes) N/A
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct, missing from Framework model/schema); relaxed labelname/labeltype from Required to Optional (SDK v2 contract was Optional+Computed, metadata wrongly marked them is_required); dropped spurious Computed from labelname/labeltype/targetvserver (not echoed by GET -> unknown-after-apply, Pattern 13); switched Create from UpdateUnnamedResource(PUT) to AddResource(POST) to match SDK v2 (Pattern 1); switched Delete to DeleteResourceWithArgs with url.QueryEscape on values + bindpoint/priority args (Pattern b); Update made a documented no-op (Pattern 5); ID format adopts new key:value composite, resource_id_mapping.json 'name,policyname' matches SDK v2 d.SetId order.
+DATASOURCE: healthy; split SetAttrFromGet into resource (preserve) + ForDatasource (faithful copy + set Id) per Pattern 7; datasource Read now calls the ForDatasource setter; added bindpoint to datasource schema for parity.
+PATTERNS: 1, 5, 7, 13
+FILES CHANGED: citrixadc_framework/crvserver_appqoepolicy_binding/resource_schema.go, citrixadc_framework/crvserver_appqoepolicy_binding/resource_crvserver_appqoepolicy_binding.go, citrixadc_framework/crvserver_appqoepolicy_binding/datasource_crvserver_appqoepolicy_binding.go, citrixadc_framework/crvserver_appqoepolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_appqoepolicy_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================

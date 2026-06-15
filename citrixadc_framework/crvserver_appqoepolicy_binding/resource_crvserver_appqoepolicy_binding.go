@@ -3,6 +3,7 @@ package crvserver_appqoepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CrvserverAppqoepolicyBindingResource) Create(ctx context.Context, req r
 	crvserver_appqoepolicy_binding := crvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Crvserver_appqoepolicy_binding.Type(), &crvserver_appqoepolicy_binding)
+	// Binding resource - NITRO 'add' is POST (matches SDK v2 AddResource)
+	_, err := r.client.AddResource(service.Crvserver_appqoepolicy_binding.Type(), "", &crvserver_appqoepolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_appqoepolicy_binding, got error: %s", err))
 		return
@@ -114,26 +115,9 @@ func (r *CrvserverAppqoepolicyBindingResource) Update(ctx context.Context, req r
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating crvserver_appqoepolicy_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		crvserver_appqoepolicy_binding := crvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Crvserver_appqoepolicy_binding.Type(), &crvserver_appqoepolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update crvserver_appqoepolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated crvserver_appqoepolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for crvserver_appqoepolicy_binding resource, skipping update")
-	}
+	// Update is a no-op for crvserver_appqoepolicy_binding; all attributes are
+	// RequiresReplace and NITRO exposes no update/set endpoint for this binding.
+	tflog.Debug(ctx, "Update is a no-op for crvserver_appqoepolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readCrvserverAppqoepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -166,12 +150,19 @@ func (r *CrvserverAppqoepolicyBindingResource) Delete(ctx context.Context, req r
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args, URL-encoding values that may contain slashy/special chars.
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Priority.IsNull() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_appqoepolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_appqoepolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_appqoepolicy_binding, got error: %s", err))
 		return
