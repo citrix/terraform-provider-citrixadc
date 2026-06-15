@@ -2396,5 +2396,17 @@ BACKWARD-COMPAT: re-added dropped 'builtin' (TypeList in SDK v2 + NITRO struct) 
 DATASOURCE: healthy as-is; shared SetAttrFromGet faithfully copies GET fields and sets Id, so no Pattern-7 split needed. Added 'builtin' to datasource schema to keep shared model coherent.
 PATTERNS: (a) re-add dropped attribute; (c) Required-vs-Optional flag drift.
 FILES CHANGED: citrixadc_framework/systemglobal_authenticationpolicy_binding/resource_schema.go, citrixadc_framework/systemglobal_authenticationpolicy_binding/datasource_schema.go (NO test/doc file modified)
+RESOURCE: systemuser_systemcmdpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:27:59Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccSystemuser_systemcmdpolicy_binding($|_|DataSource)
+TESTS:
+  - TestAccSystemuser_systemcmdpolicy_binding_basic ............ PASS
+  - TestAccSystemuser_systemcmdpolicy_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: attribute/type/ForceNew/Required parity already correct (policyname,priority,username all Required+RequiresReplace, matching SDK v2 ForceNew). Create verb UpdateUnnamedResource (PUT) confirmed correct vs NITRO doc (add=PUT). ID adopts new key:value format; legacy username,policyname order wired via ParseIdString (matches resource_id_mapping.json). priority is Required per SDK v2 contract though NITRO marks it optional. No resource/datasource Go changes needed.
+DATASOURCE: healthy as-is (shared SetAttrFromGet copies all GET fields incl. priority; GET echoes all attrs, no Pattern 7 split needed)
+PATTERNS: none (no codegen defects; verified Pattern 1 add=PUT is correct, no Pattern 6/7/10/15/16 issues)
+FILES CHANGED: citrixadc_framework/acctests/systemuser_systemcmdpolicy_binding_test.go (sanctioned ID-parse helper lines only), migration_results.log
 BLOCKER: none
 ========================================
