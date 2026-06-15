@@ -40,24 +40,25 @@ func (r *VpnvserverAuthenticationwebauthpolicyBindingResource) Schema(ctx contex
 				Description: "The ID of the vpnvserver_authenticationwebauthpolicy_binding resource.",
 			},
 			"bindpoint": schema.StringAttribute{
+				// Not echoed back by the NITRO GET response, so it cannot be Computed
+				// (would error with "unknown value after apply"). User-input only.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// Not echoed back by the NITRO GET response, so it cannot be Computed.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Applicable only to advance vpn session policy. Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n*  If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a number that is larger than the largest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// Not echoed back by the NITRO GET response, so it cannot be Computed.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +128,49 @@ func vpnvserver_authenticationwebauthpolicy_bindingGetThePayloadFromthePlan(ctx 
 	return vpnvserver_authenticationwebauthpolicy_binding
 }
 
+// vpnvserver_authenticationwebauthpolicy_bindingComposeId builds the resource ID from
+// the unique key attributes (name, policy) — matching the SDK v2 ID order in
+// resource_id_mapping.json. bindpoint is NOT part of the ID (the NITRO GET does not
+// echo it, so it cannot be reconstructed for an imported resource).
+func vpnvserver_authenticationwebauthpolicy_bindingComposeId(name string, policy string) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(name)))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(policy)))
+	return strings.Join(idParts, ",")
+}
+
+// Resource-side setter: preserves plan/state for attributes the NITRO GET does not
+// echo back (bindpoint, gotopriorityexpression, groupextraction). Only copies the
+// fields the appliance reliably returns (name, policy, priority, secondary).
 func vpnvserver_authenticationwebauthpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationwebauthpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationwebauthpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationwebauthpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// name and policy are echoed; keep them in sync with the GET response.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+	// bindpoint, gotopriorityexpression, groupextraction are NOT echoed by the GET
+	// response — preserve the plan/state values already in `data`.
+
+	return data
+}
+
+// Datasource-side setter: faithfully copies every field from the GET response and sets
+// the ID (the datasource has no Create to set it). Non-echoed fields become null.
+func vpnvserver_authenticationwebauthpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationwebauthpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationwebauthpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_authenticationwebauthpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,13 +209,7 @@ func vpnvserver_authenticationwebauthpolicy_bindingSetAttrFromGet(ctx context.Co
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(vpnvserver_authenticationwebauthpolicy_bindingComposeId(data.Name.ValueString(), data.Policy.ValueString()))
 
 	return data
 }
