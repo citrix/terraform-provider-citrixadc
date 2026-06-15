@@ -2021,5 +2021,18 @@ BACKWARD-COMPAT: type Required (was Optional+Computed) to match SDK v2 + composi
 DATASOURCE: healthy; shares SetAttrFromGet (GET echoes all fields faithfully, no Pattern 7 split needed); priority lookup made optional to match the test's policyname+type lookup.
 PATTERNS: 1, 8, 11
 FILES CHANGED: citrixadc_framework/rewriteglobal_rewritepolicy_binding/resource_schema.go, citrixadc_framework/rewriteglobal_rewritepolicy_binding/resource_rewriteglobal_rewritepolicy_binding.go, citrixadc_framework/rewriteglobal_rewritepolicy_binding/datasource_schema.go, citrixadc_framework/rewriteglobal_rewritepolicy_binding/datasource_rewriteglobal_rewritepolicy_binding.go, citrixadc_framework/acctests/rewriteglobal_rewritepolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc/provider/SDKv2 changes.
+RESOURCE: servicegroup_lbmonitor_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:37:50Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccServicegroup_lbmonitor_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccServicegroup_lbmonitor_binding_basic ............ PASS
+  - TestAccServicegroup_lbmonitor_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) . N/A
+BACKWARD-COMPAT: tfsdk drift monitor_name->monitorname (resource attr matches SDK v2 + test); composite ID order aligned to resource_id_mapping.json (servicegroupname,monitorname), port dropped from ID; Delete uses DeleteResourceWithArgs + url.QueryEscape (SDK v2 parity, PUT/UpdateUnnamedResource create kept); port SetAttrFromGet resolves omitted to 0 to avoid inconsistent-result; datasource port Required->Optional+Computed.
+DATASOURCE: healthy; split into dedicated DataSource model (monitor_name tag) + servicegroup_lbmonitor_bindingSetAttrFromGetForDatasource (Pattern 7) so resource keeps SDK v2 monitorname attr while datasource keeps monitor_name attr/assertions.
+PATTERNS: 1 (verb confirmed PUT), 7 (datasource setter split + preserve/resolve non-echoed port), 11 (datasource flag drift), plus binding ID-mapping + tfsdk-name fixes.
+FILES CHANGED: citrixadc_framework/servicegroup_lbmonitor_binding/resource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/resource_schema.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_schema.go, citrixadc_framework/acctests/servicegroup_lbmonitor_binding_test.go (ID-parse helper lines only - sanctioned). NO doc changed.
 BLOCKER: none
 ========================================
