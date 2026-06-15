@@ -82,9 +82,10 @@ func sslservice_ecccurve_bindingSetAttrFromGet(ctx context.Context, data *Sslser
 
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Order matches the legacy SDK v2 positional ID (servicename,ecccurvename)
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ecccurvename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ecccurvename.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("servicename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicename.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ecccurvename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ecccurvename.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

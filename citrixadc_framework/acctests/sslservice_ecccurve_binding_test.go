@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -171,10 +172,12 @@ func testAccCheckSslservice_ecccurve_bindingExist(n string, id *string) resource
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		servicename := idSlice[0]
-		ecccurvename := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicename", "ecccurvename"}, nil)
+		if err != nil {
+			return err
+		}
+		servicename := idMap["servicename"]
+		ecccurvename := idMap["ecccurvename"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservice_ecccurve_binding",
@@ -217,10 +220,12 @@ func testAccCheckSslservice_ecccurve_bindingNotExist(n string, id string) resour
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
 
-		idSlice := strings.SplitN(id, ",", 2)
-
-		servicename := idSlice[0]
-		ecccurvename := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"servicename", "ecccurvename"}, nil)
+		if err != nil {
+			return err
+		}
+		servicename := idMap["servicename"]
+		ecccurvename := idMap["ecccurvename"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservice_ecccurve_binding",
