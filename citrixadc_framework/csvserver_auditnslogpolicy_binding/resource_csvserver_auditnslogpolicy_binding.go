@@ -3,6 +3,7 @@ package csvserver_auditnslogpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CsvserverAuditnslogpolicyBindingResource) Create(ctx context.Context, r
 	csvserver_auditnslogpolicy_binding := csvserver_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_auditnslogpolicy_binding.Type(), &csvserver_auditnslogpolicy_binding)
+	// Binding resource - NITRO `add` is POST, use AddResource (matches SDK v2)
+	_, err := r.client.AddResource(service.Csvserver_auditnslogpolicy_binding.Type(), data.Name.ValueString(), &csvserver_auditnslogpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_auditnslogpolicy_binding, got error: %s", err))
 		return
@@ -168,7 +169,13 @@ func (r *CsvserverAuditnslogpolicyBindingResource) Delete(ctx context.Context, r
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_auditnslogpolicy_binding.Type(), name_value, argsMap)
