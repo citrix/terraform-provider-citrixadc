@@ -3,6 +3,7 @@ package lbvserver_rewritepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *LbvserverRewritepolicyBindingResource) Create(ctx context.Context, req 
 	lbvserver_rewritepolicy_binding := lbvserver_rewritepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_rewritepolicy_binding.Type(), &lbvserver_rewritepolicy_binding)
+	// Binding resource - NITRO `add` is POST (matches the SDK v2 AddResource contract)
+	_, err := r.client.AddResource(service.Lbvserver_rewritepolicy_binding.Type(), data.Name.ValueString(), &lbvserver_rewritepolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_rewritepolicy_binding, got error: %s", err))
 		return
@@ -70,7 +71,6 @@ func (r *LbvserverRewritepolicyBindingResource) Create(ctx context.Context, req 
 
 	// Set ID for the resource before reading state
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -168,11 +168,15 @@ func (r *LbvserverRewritepolicyBindingResource) Delete(ctx context.Context, req 
 	}
 
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	// Disambiguating delete args (match the SDK v2 contract): URL-encode slashy/special values.
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_rewritepolicy_binding.Type(), name_value, argsMap)
@@ -223,22 +227,6 @@ func (r *LbvserverRewritepolicyBindingResource) readLbvserverRewritepolicyBindin
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
 
 		// Check policyname
 		if idVal, ok := idMap["policyname"]; ok {
