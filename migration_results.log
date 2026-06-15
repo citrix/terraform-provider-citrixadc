@@ -1263,3 +1263,18 @@ PATTERNS: 6, 7, 8, 13
 FILES CHANGED: citrixadc_framework/csvserver_cspolicy_binding/resource_schema.go, citrixadc_framework/csvserver_cspolicy_binding/datasource_csvserver_cspolicy_binding.go, citrixadc_framework/csvserver_cspolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_cspolicy_binding_test.go (ID-parse helper lines only)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: csvserver_responderpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:54:46Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccCsvserver_responderpolicy_binding($|_|DataSource)
+TESTS:
+  - TestAccCsvserver_responderpolicy_binding_basic ............ PASS
+  - TestAccCsvserver_responderpolicy_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 + NITRO struct + test, missing from Framework model/schema/payload/setter/delete-args); reverted labelname/labeltype from Required back to Optional+Computed (SDK v2 contract; tfdata wrongly marked them required); dropped Computed from never-echoed labelname/labeltype/targetlbvserver and preserved state in setter to avoid known-after-apply & inconsistent-result errors; kept Computed on server-defaulted/echoed bindpoint/gotopriorityexpression/invoke/priority; Create verb left as UpdateUnnamedResource (NITRO add=PUT, matches SDK v2); URL-encoded delete args (policyname/bindpoint/priority per NITRO delete args) since DeleteResourceWithArgsMap does not encode and ParseIdString decodes; ID format new key:value, legacy order name,policyname confirmed in resource_id_mapping.json.
+DATASOURCE: healthy; split setter per Pattern 7 (added csvserver_responderpolicy_bindingSetAttrFromGetForDatasource that faithfully copies all fields + sets data.Id), datasource Read now calls it; added bindpoint to datasource schema.
+PATTERNS: 7, 13
+FILES CHANGED: citrixadc_framework/csvserver_responderpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_responderpolicy_binding/resource_csvserver_responderpolicy_binding.go, citrixadc_framework/csvserver_responderpolicy_binding/datasource_csvserver_responderpolicy_binding.go, citrixadc_framework/csvserver_responderpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_responderpolicy_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================

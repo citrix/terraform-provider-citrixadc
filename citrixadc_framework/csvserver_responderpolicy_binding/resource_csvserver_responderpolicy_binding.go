@@ -3,6 +3,7 @@ package csvserver_responderpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -166,9 +167,19 @@ func (r *CsvserverResponderpolicyBindingResource) Delete(ctx context.Context, re
 		return
 	}
 
+	// Delete args per NITRO doc: policyname, bindpoint, priority.
+	// DeleteResourceWithArgsMap does NOT URL-encode arg values, and ParseIdString
+	// returns already-decoded values, so re-encode them here for slashy/special
+	// values (matches the SDK v2 url.QueryEscape behaviour).
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_responderpolicy_binding.Type(), name_value, argsMap)
