@@ -3,6 +3,7 @@ package csvserver_tmtrafficpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CsvserverTmtrafficpolicyBindingResource) Create(ctx context.Context, re
 	csvserver_tmtrafficpolicy_binding := csvserver_tmtrafficpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_tmtrafficpolicy_binding.Type(), &csvserver_tmtrafficpolicy_binding)
+	// Binding resource - NITRO `add` is POST; mirrors SDK v2 AddResource (Pattern 1, POST-where-PUT-emitted)
+	_, err := r.client.AddResource(service.Csvserver_tmtrafficpolicy_binding.Type(), "", &csvserver_tmtrafficpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_tmtrafficpolicy_binding, got error: %s", err))
 		return
@@ -166,9 +167,18 @@ func (r *CsvserverTmtrafficpolicyBindingResource) Delete(ctx context.Context, re
 		return
 	}
 
+	// URL-encode delete arg values (slashy/special policy names, bindpoints) — the NITRO
+	// client puts these directly into the `args=key:value` query string without encoding,
+	// mirroring SDK v2's url.QueryEscape on each arg value (Pattern (b)).
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_tmtrafficpolicy_binding.Type(), name_value, argsMap)
