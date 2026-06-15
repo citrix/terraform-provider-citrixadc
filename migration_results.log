@@ -3373,3 +3373,19 @@ PATTERNS: 7 (datasource shared-setter / non-echoed field), 13 (drop spurious ide
 FILES CHANGED: citrixadc_framework/lsnclient_nsacl_binding/resource_lsnclient_nsacl_binding.go, citrixadc_framework/lsnclient_nsacl_binding/resource_schema.go, citrixadc_framework/lsnclient_nsacl_binding/datasource_lsnclient_nsacl_binding.go, citrixadc_framework/lsnclient_nsacl_binding/datasource_schema.go, citrixadc_framework/acctests/lsnclient_nsacl_binding_test.go (sanctioned ID-parse helper lines only). NO doc changes.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lsngroup_lsnhttphdrlogprofile_binding
+STATUS:   PASS
+TIME:     2026-06-15T14:56:55Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/) [LSN-capable ADC only]
+TEST RUN: TestAccLsngroup_lsnhttphdrlogprofile_binding_basic$|TestAccLsngroup_lsnhttphdrlogprofile_bindingDataSource_basic$
+TESTS:
+  - TestAccLsngroup_lsnhttphdrlogprofile_binding_basic ............ PASS
+  - TestAccLsngroup_lsnhttphdrlogprofile_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ....... N/A
+BACKWARD-COMPAT: Resource Go files were already migrated in baseline and match SDK v2 contract (groupname+httphdrlogprofilename both Required+RequiresReplace == SDK v2 Required+ForceNew; create via UpdateUnnamedResource PUT == SDK v2; delete via DeleteResourceWithArgsMap with httphdrlogprofilename arg == SDK v2 DeleteResourceWithArgs; new key:value ID format with legacy order groupname,httphdrlogprofilename in resource_id_mapping.json). No resource/schema changes needed.
+DATASOURCE: healthy as-is (unchanged from master); pure binding, both fields echoed by GET, shared SetAttrFromGet correct, datasource sets own ID.
+PATTERNS: Constraint-1 sanctioned ID-parse helper fix (new key:value ID broke raw strings.SplitN in Exist/NotExist helpers); replaced with utils.ParseIdString.
+FILES CHANGED: citrixadc_framework/acctests/lsngroup_lsnhttphdrlogprofile_binding_test.go (ID-parse helper lines only). No resource/datasource/doc files changed.
+BLOCKER: none
+========================================
