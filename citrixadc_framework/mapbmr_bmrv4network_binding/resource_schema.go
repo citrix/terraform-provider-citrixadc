@@ -98,10 +98,10 @@ func mapbmr_bmrv4network_bindingSetAttrFromGet(ctx context.Context, data *Mapbmr
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Composite ID matches legacy SDK v2 order (resource_id_mapping.json: "name,network").
+	// netmask is recoverable from GET and is intentionally NOT part of the identity ID.
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 

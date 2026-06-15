@@ -3,6 +3,7 @@ package mapbmr_bmrv4network_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,9 +70,9 @@ func (r *MapbmrBmrv4networkBindingResource) Create(ctx context.Context, req reso
 	tflog.Trace(ctx, "Created mapbmr_bmrv4network_binding resource")
 
 	// Set ID for the resource before reading state
+	// Composite ID matches legacy SDK v2 order (resource_id_mapping.json: "name,network").
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
@@ -167,12 +168,15 @@ func (r *MapbmrBmrv4networkBindingResource) Delete(ctx context.Context, req reso
 		return
 	}
 
+	// network is the mandatory delete arg (red/bold in NITRO doc); netmask is optional.
+	// netmask is not part of the ID, so read it from state. URL-encode arg values since
+	// the NITRO client joins them raw into the delete URL.
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["netmask"]; ok && val != "" {
-		argsMap["netmask"] = val
-	}
 	if val, ok := idMap["network"]; ok && val != "" {
-		argsMap["network"] = val
+		argsMap["network"] = url.QueryEscape(val)
+	}
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		argsMap["netmask"] = url.QueryEscape(data.Netmask.ValueString())
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Mapbmr_bmrv4network_binding.Type(), name_value, argsMap)
@@ -219,26 +223,11 @@ func (r *MapbmrBmrv4networkBindingResource) readMapbmrBmrv4networkBindingFromApi
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Identity is (name, network); netmask is not part of the ID.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check netmask
-		if idVal, ok := idMap["netmask"]; ok {
-			if val, ok := v["netmask"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["netmask"].(string); ok {
-			match = false
-			continue
-		}
 
 		// Check network
 		if idVal, ok := idMap["network"]; ok {

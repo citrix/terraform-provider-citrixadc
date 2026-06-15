@@ -67,23 +67,13 @@ func (d *MapbmrBmrv4networkBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Identity is (name, network); netmask is an optional narrowing filter only when provided.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check netmask
-		if val, ok := v["netmask"].(string); ok {
-			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !netmask_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check network
+		// Check network (identity)
 		if val, ok := v["network"].(string); ok {
 			if network_Name.IsNull() || val != network_Name.ValueString() {
 				match = false
@@ -93,6 +83,19 @@ func (d *MapbmrBmrv4networkBindingDataSource) Read(ctx context.Context, req data
 			match = false
 			continue
 		}
+
+		// Check netmask only if the user supplied it
+		if !netmask_Name.IsNull() {
+			if val, ok := v["netmask"].(string); ok {
+				if val != netmask_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
 		if match {
 			foundIndex = i
 			break
@@ -101,7 +104,7 @@ func (d *MapbmrBmrv4networkBindingDataSource) Read(ctx context.Context, req data
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("mapbmr_bmrv4network_binding with netmask %s not found", netmask_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("mapbmr_bmrv4network_binding with network %s not found", network_Name))
 		return
 	}
 
