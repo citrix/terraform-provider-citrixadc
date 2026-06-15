@@ -2592,3 +2592,19 @@ PATTERNS: 7, 13, 8, b (url-encode delete args)
 FILES CHANGED: citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/resource_vpnglobal_authenticationradiuspolicy_binding.go, citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/datasource_vpnglobal_authenticationradiuspolicy_binding.go (NO test/doc files modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnglobal_vpnnexthopserver_binding
+STATUS:   PASS
+TIME:     2026-06-15T12:41:32Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccVpnglobal_vpnnexthopserver_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccVpnglobal_vpnnexthopserver_binding_basic ............ PASS
+  - TestAccVpnglobal_vpnnexthopserver_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) .... N/A
+BACKWARD-COMPAT: Full parity with SDK v2 (nexthopserver Required+ForceNew; gotopriorityexpression Optional+Computed+ForceNew; plain single-key ID = nexthopserver matching resource_id_mapping.json; Create=UpdateUnnamedResource=PUT same as v2; Delete=DeleteResourceWithArgs same as v2). Only change: URL-encode the Delete nexthopserver arg value (url.QueryEscape) for slashy/special values.
+DATASOURCE: healthy as-is; shares resource SetAttrFromGet which faithfully copies GET fields and sets data.Id; no Pattern 7 split needed.
+PATTERNS: 2(b)/Delete-arg URL-encode (per binding-family hint b).
+FILES CHANGED: citrixadc_framework/vpnglobal_vpnnexthopserver_binding/resource_vpnglobal_vpnnexthopserver_binding.go (NO test/doc file changed)
+BLOCKER: none
+========================================
