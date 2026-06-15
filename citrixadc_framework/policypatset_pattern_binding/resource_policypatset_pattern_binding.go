@@ -3,8 +3,10 @@ package policypatset_pattern_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -57,9 +59,8 @@ func (r *PolicypatsetPatternBindingResource) Create(ctx context.Context, req res
 	policypatset_pattern_binding := policypatset_pattern_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Named resource - use AddResource
-	name_value := data.Name.ValueString()
-	_, err := r.client.AddResource(service.Policypatset_pattern_binding.Type(), name_value, &policypatset_pattern_binding)
+	// Binding resource - use UpdateUnnamedResource (PUT), matching the SDK v2 behaviour
+	err := r.client.UpdateUnnamedResource(service.Policypatset_pattern_binding.Type(), &policypatset_pattern_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create policypatset_pattern_binding, got error: %s", err))
 		return
@@ -67,8 +68,8 @@ func (r *PolicypatsetPatternBindingResource) Create(ctx context.Context, req res
 
 	tflog.Trace(ctx, "Created policypatset_pattern_binding resource")
 
-	// Set ID for the resource before reading state
-	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+	// Set composite ID (name:string) for the resource before reading state
+	data.Id = types.StringValue(policypatset_pattern_bindingComputeId(&data))
 
 	// Read the updated state back
 	r.readPolicypatsetPatternBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -107,30 +108,11 @@ func (r *PolicypatsetPatternBindingResource) Update(ctx context.Context, req res
 		return
 	}
 
-	// Preserve ID from prior state
+	// Preserve ID from prior state. All attributes are RequiresReplace, so Update is a
+	// no-op: Terraform recreates the binding rather than calling Update for any change.
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating policypatset_pattern_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		policypatset_pattern_binding := policypatset_pattern_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Named resource - use UpdateResource
-		name_value := data.Name.ValueString()
-		_, err := r.client.UpdateResource(service.Policypatset_pattern_binding.Type(), name_value, &policypatset_pattern_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update policypatset_pattern_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated policypatset_pattern_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for policypatset_pattern_binding resource, skipping update")
-	}
+	tflog.Debug(ctx, "Update is a no-op for policypatset_pattern_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readPolicypatsetPatternBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -150,32 +132,94 @@ func (r *PolicypatsetPatternBindingResource) Delete(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Deleting policypatset_pattern_binding resource")
-	// Named resource - delete using DeleteResource
-	name_value := data.Name.ValueString()
-	err := r.client.DeleteResource(service.Policypatset_pattern_binding.Type(), name_value)
+
+	// Binding with parent - delete using DeleteResourceWithArgsMap.
+	// Parse the ID (handles both the new name:string form and the legacy name,string form).
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "string"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
+
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	argsMap := make(map[string]string)
+	if val, ok := idMap["string"]; ok && val != "" {
+		// URL-encode the slashy/special characters that may appear in the pattern string.
+		argsMap["String"] = url.QueryEscape(val)
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Policypatset_pattern_binding.Type(), name_value, argsMap)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete policypatset_pattern_binding, got error: %s", err))
 		return
 	}
 
-	tflog.Trace(ctx, "Deleted policypatset_pattern_binding resource")
+	tflog.Trace(ctx, "Deleted policypatset_pattern_binding binding")
 }
 
 // Helper function to read policypatset_pattern_binding data from API
 func (r *PolicypatsetPatternBindingResource) readPolicypatsetPatternBindingFromApi(ctx context.Context, data *PolicypatsetPatternBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 2: Find with single ID attribute - ID is the plain value
-	name_Name := data.Id.ValueString()
+	// Array filter with parent ID - parse from ID (supports legacy name,string form)
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "string"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
 
-	var getResponseData map[string]interface{}
-	var err error
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+	stringText, ok := idMap["string"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'string' not found in ID string")
+		return
+	}
 
-	getResponseData, err = r.client.FindResource(service.Policypatset_pattern_binding.Type(), name_Name)
+	findParams := service.FindParams{
+		ResourceType:             service.Policypatset_pattern_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 2823,
+	}
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read policypatset_pattern_binding, got error: %s", err))
 		return
 	}
 
-	policypatset_pattern_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		tflog.Warn(ctx, fmt.Sprintf("policypatset_pattern_binding %s returned empty array; clearing state", data.Id.ValueString()))
+		data.Id = types.StringNull()
+		return
+	}
 
+	// Iterate through results to find the one with the right String
+	foundIndex := -1
+	for i, v := range dataArr {
+		if val, ok := v["String"].(string); ok && val == stringText {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		tflog.Warn(ctx, fmt.Sprintf("policypatset_pattern_binding %s String not found in array; clearing state", data.Id.ValueString()))
+		data.Id = types.StringNull()
+		return
+	}
+
+	// Ensure the identity keys are populated from the ID before applying the GET response.
+	data.Name = types.StringValue(name_Name)
+	data.String = types.StringValue(stringText)
+
+	policypatset_pattern_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

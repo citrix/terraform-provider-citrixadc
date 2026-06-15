@@ -3,6 +3,7 @@ package policypatset_pattern_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 
@@ -37,8 +38,7 @@ func (r *PolicypatsetPatternBindingResource) Schema(ctx context.Context, req res
 				Description: "The ID of the policypatset_pattern_binding resource.",
 			},
 			"string": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -114,14 +114,65 @@ func policypatset_pattern_bindingGetThePayloadFromthePlan(ctx context.Context, d
 	return policypatset_pattern_binding
 }
 
+// policypatset_pattern_bindingComputeId builds the composite ID (name:string) for the binding.
+func policypatset_pattern_bindingComputeId(data *PolicypatsetPatternBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("string:%s", utils.UrlEncode(fmt.Sprintf("%v", data.String.ValueString()))))
+	return strings.Join(idParts, ",")
+}
+
+// policypatset_pattern_bindingSetAttrFromGet is used by the resource Read/Create/Update.
+// It preserves the identity keys (name, string) from the existing plan/state and only
+// adopts server-side attributes from the GET response. The binding GET array element
+// echoes "String" but not the parent "name"; the configured String must be preserved
+// verbatim to avoid "inconsistent result after apply" on slashy/comma values.
 func policypatset_pattern_bindingSetAttrFromGet(ctx context.Context, data *PolicypatsetPatternBindingResourceModel, getResponseData map[string]interface{}) *PolicypatsetPatternBindingResourceModel {
 	tflog.Debug(ctx, "In policypatset_pattern_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Server-side / non-key attributes are read from the GET response. They are
+	// Optional+Computed, so they must always resolve to a concrete value (null when
+	// the binding GET does not echo them) to avoid "unknown value after apply".
+	if val, ok := getResponseData["charset"]; ok && val != nil {
+		data.Charset = types.StringValue(val.(string))
+	} else {
+		data.Charset = types.StringNull()
+	}
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["feature"]; ok && val != nil {
+		data.Feature = types.StringValue(val.(string))
+	} else {
+		data.Feature = types.StringNull()
+	}
+	if val, ok := getResponseData["index"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Index = types.Int64Value(intVal)
+		} else {
+			data.Index = types.Int64Null()
+		}
+	} else {
+		data.Index = types.Int64Null()
+	}
+	// name and string are the identity keys; preserve the configured/state values.
+
+	// Set ID for the resource (composite name:string)
+	data.Id = types.StringValue(policypatset_pattern_bindingComputeId(data))
+
+	return data
+}
+
+// policypatset_pattern_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (the datasource has no prior plan/state to preserve)
+// and sets the composite ID.
+func policypatset_pattern_bindingSetAttrFromGetForDatasource(ctx context.Context, data *PolicypatsetPatternBindingResourceModel, getResponseData map[string]interface{}) *PolicypatsetPatternBindingResourceModel {
+	tflog.Debug(ctx, "In policypatset_pattern_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["String"]; ok && val != nil {
 		data.String = types.StringValue(val.(string))
-	} else {
-		data.String = types.StringNull()
 	}
 	if val, ok := getResponseData["charset"]; ok && val != nil {
 		data.Charset = types.StringValue(val.(string))
@@ -141,19 +192,17 @@ func policypatset_pattern_bindingSetAttrFromGet(ctx context.Context, data *Polic
 	if val, ok := getResponseData["index"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Index = types.Int64Value(intVal)
+		} else {
+			data.Index = types.Int64Null()
 		}
 	} else {
 		data.Index = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
-	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+	data.Id = types.StringValue(policypatset_pattern_bindingComputeId(data))
 
 	return data
 }
