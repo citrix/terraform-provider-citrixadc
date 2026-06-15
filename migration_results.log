@@ -649,5 +649,18 @@ BACKWARD-COMPAT: bot_tps was Required in FW but Optional+Computed in SDK v2 -> r
 DATASOURCE: healthy after fixes - bot_tps Required->Optional+Computed (test passes only name+bot_tps_type) and match loop made bot_tps an optional filter keyed on bot_tps_type. Shared SetAttrFromGet faithfully copies full binding GET, so no Pattern-7 setter split needed.
 PATTERNS: 8 (Required/Optional flag fix), 15/16-adjacent (ID-key & delete-arg correction), 10 (avoid mis-keying composite ID)
 FILES CHANGED: citrixadc_framework/botprofile_tps_binding/resource_schema.go, citrixadc_framework/botprofile_tps_binding/resource_botprofile_tps_binding.go, citrixadc_framework/botprofile_tps_binding/datasource_schema.go, citrixadc_framework/botprofile_tps_binding/datasource_botprofile_tps_binding.go, citrixadc_framework/acctests/botprofile_tps_binding_test.go (sanctioned ID-parse helper lines only); NO docs changed
+RESOURCE: botprofile_trapinsertionurl_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:52:46Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccBotprofile_trapinsertionurl_binding_basic|TestAccbotprofile_trapinsertionurl_bindingDataSource_basic
+TESTS:
+  - TestAccBotprofile_trapinsertionurl_binding_basic ............ PASS
+  - TestAccbotprofile_trapinsertionurl_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ..... N/A
+BACKWARD-COMPAT: Attr names/types/ForceNew all parity with SDK v2. trapinsertionurl is Required in resource (x-unique-attr + part of new key:value ID; SDK v2 had it Optional+Computed) - kept Required, noted discrepancy. Delete arg values now URL-encoded (url.QueryEscape) for slashy bot_trap_url regex patterns. Read/Delete match loops made tolerant of legacy 2-part (name,bot_trap_url) IDs via ParseIdString legacyOrder. Create keeps new key:value ID.
+DATASOURCE: healthy structure; fixed two bugs - trapinsertionurl was Required (test only supplies name+bot_trap_url) -> made Optional+Computed; match loop filtered on null trapinsertionurl -> now skips unset filters. Shares SetAttrFromGet (copies all fields + sets Id), no split needed.
+PATTERNS: 7 (preserve/skip non-supplied filter fields), 10/11 (match-loop + resource-vs-datasource flag inconsistency), 1 (verified Create PUT/UpdateUnnamedResource matches SDK v2 - no change).
+FILES CHANGED: citrixadc_framework/botprofile_trapinsertionurl_binding/resource_botprofile_trapinsertionurl_binding.go, citrixadc_framework/botprofile_trapinsertionurl_binding/datasource_botprofile_trapinsertionurl_binding.go, citrixadc_framework/botprofile_trapinsertionurl_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_trapinsertionurl_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
 BLOCKER: none
 ========================================

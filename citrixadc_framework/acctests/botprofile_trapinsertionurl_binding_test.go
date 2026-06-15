@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -118,10 +119,12 @@ func testAccCheckBotprofile_trapinsertionurl_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		bot_trap_url := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "bot_trap_url"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		bot_trap_url := idMap["bot_trap_url"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_trapinsertionurl_binding",
@@ -163,10 +166,12 @@ func testAccCheckBotprofile_trapinsertionurl_bindingNotExist(n string, id string
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		bot_trap_url := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "bot_trap_url"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		bot_trap_url := idMap["bot_trap_url"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_trapinsertionurl_binding",
