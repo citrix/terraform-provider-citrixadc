@@ -1578,3 +1578,19 @@ PATTERNS: 1, 6, 7, 13
 FILES CHANGED: citrixadc_framework/lbvserver_contentinspectionpolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_contentinspectionpolicy_binding/resource_lbvserver_contentinspectionpolicy_binding.go, citrixadc_framework/lbvserver_contentinspectionpolicy_binding/datasource_lbvserver_contentinspectionpolicy_binding.go, citrixadc_framework/acctests/lbvserver_contentinspectionpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc changed
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lbvserver_rewritepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:50:42Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccLbvserver_rewritepolicy_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccLbvserver_rewritepolicy_binding_basic ............ PASS
+  - TestAccLbvserver_rewritepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) . N/A
+BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Computed in SDK v2 -> made Optional (test omits them); dropped spurious Computed from bindpoint/gotopriorityexpression/invoke/labelname/labeltype/order (non-echoed user inputs, Pattern 13); priority kept Optional+Computed (server-authoritative); composite ID reduced from bindpoint:name:policyname to name,policyname per resource_id_mapping.json; Create switched from UpdateUnnamedResource(PUT) to AddResource(POST) (Pattern 1); Read match-loop bindpoint branch removed (broke legacy name,policyname IDs); Delete args URL-encoded with bindpoint/priority disambiguation from state (Pattern 7 server-overrides).
+DATASOURCE: healthy; switched to split setter lbvserver_rewritepolicy_bindingSetAttrFromGetForDatasource (Pattern 7 datasource-split) which copies all fields + sets name,policyname composite ID.
+PATTERNS: 1, 7, 8, 13
+FILES CHANGED: citrixadc_framework/lbvserver_rewritepolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_rewritepolicy_binding/resource_lbvserver_rewritepolicy_binding.go, citrixadc_framework/lbvserver_rewritepolicy_binding/datasource_lbvserver_rewritepolicy_binding.go, citrixadc_framework/acctests/lbvserver_rewritepolicy_binding_test.go (sanctioned ID-parse helper line only); NO doc file changed
+BLOCKER: none
+========================================
