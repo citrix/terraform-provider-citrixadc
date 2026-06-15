@@ -104,5 +104,18 @@ BACKWARD-COMPAT: Codegen collided two 'id' fields (computed string id + int key)
 DATASOURCE: Recovered/fixed in place — lookup now keyed on bridgegroup_id (was wrongly using data.Id string); added dedicated bridgegroup_vlan_bindingSetAttrFromGetForDatasource setter (Pattern 7 split) that copies all fields and sets composite Id.
 PATTERNS: 5 (no-op Update), 7 (datasource setter split)
 FILES CHANGED: citrixadc_framework/bridgegroup_vlan_binding/resource_schema.go, citrixadc_framework/bridgegroup_vlan_binding/resource_bridgegroup_vlan_binding.go, citrixadc_framework/bridgegroup_vlan_binding/datasource_schema.go, citrixadc_framework/bridgegroup_vlan_binding/datasource_bridgegroup_vlan_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/bridgegroup_vlan_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
+RESOURCE: nstrafficdomain_bridgegroup_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:13:40Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccNstrafficdomain_bridgegroup_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccNstrafficdomain_bridgegroup_binding_basic ............ PASS
+  - TestAccNstrafficdomain_bridgegroup_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ..... N/A
+BACKWARD-COMPAT: SDK v2 contract (td int Required/ForceNew, bridgegroup int Required/ForceNew) preserved as Int64Attribute Required + RequiresReplace; single computed string composite id; new key:value ID (bridgegroup:v,td:v) with legacy positional fallback via resource_id_mapping.json "td,bridgegroup" + ParseIdString; Delete uses DeleteResourceWithArgsMap(td,{bridgegroup:v}) matching v2 delete arg. Model already correct (Td/Bridgegroup Int64, no duplicate Id); fixed remaining codegen int-vs-string bug.
+DATASOURCE: healthy as-is; fixed compile error data.Td.ValueString() -> fmt.Sprintf("%v", data.Td.ValueInt64()); shared SetAttrFromGet faithful for datasource (keys echoed by GET, sets Id) so no Pattern 7 split needed.
+PATTERNS: codegen int-vs-string call fix; ID-parse helper exception (Constraint 1)
+FILES CHANGED: citrixadc_framework/nstrafficdomain_bridgegroup_binding/datasource_nstrafficdomain_bridgegroup_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/nstrafficdomain_bridgegroup_binding_test.go (ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
