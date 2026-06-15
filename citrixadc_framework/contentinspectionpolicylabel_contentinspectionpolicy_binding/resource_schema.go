@@ -24,7 +24,7 @@ type ContentinspectionpolicylabelContentinspectionpolicyBindingResourceModel str
 	Id                     types.String `tfsdk:"id"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
-	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+	InvokeLabelname        types.String `tfsdk:"invokelabelname"`
 	Labelname              types.String `tfsdk:"labelname"`
 	Labeltype              types.String `tfsdk:"labeltype"`
 	Policyname             types.String `tfsdk:"policyname"`
@@ -55,8 +55,11 @@ func (r *ContentinspectionpolicylabelContentinspectionpolicyBindingResource) Sch
 				},
 				Description: "Suspend evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.",
 			},
-			"invoke_labelname": schema.StringAttribute{
-				Required: true,
+			"invokelabelname": schema.StringAttribute{
+				// SDK v2 contract: Optional (ForceNew). The NITRO GET does NOT echo
+				// this field back, so it is NOT Computed (Computed would force an
+				// unknown-after-apply value that GET can never resolve -> Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -70,7 +73,9 @@ func (r *ContentinspectionpolicylabelContentinspectionpolicyBindingResource) Sch
 				Description: "Name of the contentInspection policy label to which to bind the policy.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				// SDK v2 contract: Optional (ForceNew). The NITRO GET does NOT echo
+				// this field back, so it is NOT Computed (Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -124,50 +129,73 @@ func contentinspectionpolicylabel_contentinspectionpolicy_bindingGetThePayloadFr
 	return contentinspectionpolicylabel_contentinspectionpolicy_binding
 }
 
+// contentinspectionpolicylabel_contentinspectionpolicy_bindingSetAttrFromGet is
+// the RESOURCE-side state setter. The NITRO GET for this binding echoes back
+// labelname, policyname, priority, gotopriorityexpression and invoke (the
+// server may override gotopriorityexpression to "END" — adopt it). It does NOT
+// echo invokelabelname (invoke_labelname) or labeltype, so for those we PRESERVE
+// the existing plan/state value rather than nulling it (Pattern 7 / pattern (e)).
+// The ID is NOT recomputed here — Create sets it once (Pattern 6).
 func contentinspectionpolicylabel_contentinspectionpolicy_bindingSetAttrFromGet(ctx context.Context, data *ContentinspectionpolicylabelContentinspectionpolicyBindingResourceModel, getResponseData map[string]interface{}) *ContentinspectionpolicylabelContentinspectionpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In contentinspectionpolicylabel_contentinspectionpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Echoed by GET — safe to adopt (gotopriorityexpression is server-overridden, e.g. "END").
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
-		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
 		data.Invoke = types.BoolValue(val.(bool))
-	} else {
-		data.Invoke = types.BoolNull()
-	}
-	if val, ok := getResponseData["invoke_labelname"]; ok && val != nil {
-		data.InvokeLabelname = types.StringValue(val.(string))
-	} else {
-		data.InvokeLabelname = types.StringNull()
 	}
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
-	} else {
-		data.Labelname = types.StringNull()
-	}
-	if val, ok := getResponseData["labeltype"]; ok && val != nil {
-		data.Labeltype = types.StringValue(val.(string))
-	} else {
-		data.Labeltype = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
-	} else {
-		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
-		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// NOT echoed by the NITRO GET (invokelabelname, labeltype) — preserve the
+	// configured plan/state value rather than nulling it.
+
+	return data
+}
+
+// contentinspectionpolicylabel_contentinspectionpolicy_bindingSetAttrFromGetForDatasource
+// is the DATASOURCE-side setter. A datasource has no prior plan/state to
+// preserve, so it faithfully copies every field the GET response returns and
+// sets data.Id (Pattern 7 datasource split).
+func contentinspectionpolicylabel_contentinspectionpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *ContentinspectionpolicylabelContentinspectionpolicyBindingResourceModel, getResponseData map[string]interface{}) *ContentinspectionpolicylabelContentinspectionpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In contentinspectionpolicylabel_contentinspectionpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["invoke_labelname"]; ok && val != nil {
+		data.InvokeLabelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	// Set ID for the datasource (matches the resource Create ID format: labelname,policyname)
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("labelname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Labelname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))

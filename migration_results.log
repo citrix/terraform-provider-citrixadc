@@ -622,3 +622,19 @@ PATTERNS: 6 (set ID once in Create), 7 (split resource/datasource setters), 8 (d
 FILES CHANGED: citrixadc_framework/botprofile_captcha_binding/resource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/resource_schema.go, citrixadc_framework/botprofile_captcha_binding/datasource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_captcha_binding_test.go (sanctioned ID-parse helper lines only). NO docs modified.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: contentinspectionpolicylabel_contentinspectionpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:00:17Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAcc(C|c)ontentinspectionpolicylabel_contentinspectionpolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic ............ PASS
+  - TestAcccontentinspectionpolicylabel_contentinspectionpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral/secret tests) ........................................................ N/A
+BACKWARD-COMPAT: tfsdk attr renamed invoke_labelname->invokelabelname (matches SDK v2); invokelabelname & labeltype changed Required->Optional and Computed dropped (not echoed by GET, Pattern 13); resource SetAttrFromGet now preserves non-echoed inputs and adopts server-overridden gotopriorityexpression (Pattern 7); ID stays new key:value format (legacy parse via resource_id_mapping labelname,policyname); Delete now passes priority arg (SDK v2 contract); Create verb UpdateUnnamedResource/PUT matches SDK v2.
+DATASOURCE: healthy; split into dedicated SetAttrFromGetForDatasource (faithful copy + sets Id), datasource Read updated, datasource_schema attr key renamed to invokelabelname.
+PATTERNS: 6, 7, 13 (and pattern (b)/(c)/(d)/(e)/(g) from the brief)
+FILES CHANGED: citrixadc_framework/contentinspectionpolicylabel_contentinspectionpolicy_binding/resource_schema.go, resource_contentinspectionpolicylabel_contentinspectionpolicy_binding.go, datasource_schema.go, datasource_contentinspectionpolicylabel_contentinspectionpolicy_binding.go; acctests test file (sanctioned ID-parse helper lines only). NO doc modified.
+BLOCKER: none
+========================================
