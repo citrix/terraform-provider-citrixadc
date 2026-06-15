@@ -3,6 +3,7 @@ package systemglobal_authenticationlocalpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -153,7 +154,7 @@ func (r *SystemglobalAuthenticationlocalpolicyBindingResource) Delete(ctx contex
 	// Single unique attribute - ID is the plain value
 	policyname_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("policyname:%s", policyname_value),
+		fmt.Sprintf("policyname:%s", url.QueryEscape(policyname_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Systemglobal_authenticationlocalpolicy_binding.Type(), "", args)
