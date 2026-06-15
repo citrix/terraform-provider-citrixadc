@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -94,10 +95,12 @@ func testAccCheckLbmetrictable_metric_bindingExist(n string, id *string) resourc
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		metrictable := idSlice[0]
-		metric := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"metrictable", "metric"}, nil)
+		if err != nil {
+			return err
+		}
+		metrictable := idMap["metrictable"]
+		metric := idMap["metric"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbmetrictable_metric_binding",

@@ -34,8 +34,7 @@ func (r *LbmetrictableMetricBindingResource) Schema(ctx context.Context, req res
 				Description: "The ID of the lbmetrictable_metric_binding resource.",
 			},
 			"snmpoid": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
