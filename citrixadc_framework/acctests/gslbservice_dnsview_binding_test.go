@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -156,10 +157,12 @@ func testAccCheckGslbservice_dnsview_bindingExist(n string, id *string) resource
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		servicename := idSlice[0]
-		viewname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicename", "viewname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		servicename := idMap["servicename"]
+		viewname := idMap["viewname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "gslbservice_dnsview_binding",
