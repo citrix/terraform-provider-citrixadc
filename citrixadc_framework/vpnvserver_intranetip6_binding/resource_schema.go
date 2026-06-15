@@ -49,7 +49,10 @@ func (r *VpnvserverIntranetip6BindingResource) Schema(ctx context.Context, req r
 				Description: "Name of the virtual server.",
 			},
 			"numaddr": schema.Int64Attribute{
-				Required: true,
+				// SDK v2 contract: numaddr was Optional + Computed (server fills a value
+				// when omitted). Keep that contract for backward compatibility.
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},

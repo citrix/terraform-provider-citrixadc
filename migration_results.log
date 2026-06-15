@@ -3141,5 +3141,18 @@ BACKWARD-COMPAT: attribute/type/flag/ForceNew/ID-order parity all matched SDK v2
 DATASOURCE: healthy as-is (all three attrs echoed by NITRO GET; shared SetAttrFromGet sets data.Id correctly). No git recovery needed.
 PATTERNS: binding-family Delete URL-encode (prompt point b); sanctioned ID-parse helper rewrite (Constraint 1).
 FILES CHANGED: citrixadc_framework/vpnvserver_staserver_binding/resource_vpnvserver_staserver_binding.go, citrixadc_framework/acctests/vpnvserver_staserver_binding_test.go (ID-parse helper lines only). No doc modified.
+RESOURCE: vpnvserver_intranetip6_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:33:56Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccVpnvserver_intranetip6_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnvserver_intranetip6_binding_basic ............ PASS
+  - TestAccVpnvserver_intranetip6_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: numaddr was Required in Framework but Optional+Computed in SDK v2 -> restored Optional+Computed (resource + datasource); Delete switched to DeleteResourceWithArgs with url.QueryEscape on arg values; ID order (name,intranetip6) confirmed against resource_id_mapping.json; Create verb kept as UpdateUnnamedResource matching SDK v2.
+DATASOURCE: healthy; fixed inverted match-filter logic so an omitted optional numaddr no longer rejects all records; numaddr relaxed to Optional+Computed.
+PATTERNS: 7 (datasource setter shape preserved/coherent), 8/Required-vs-Optional flag drift, binding Delete url-encode arg values.
+FILES CHANGED: citrixadc_framework/vpnvserver_intranetip6_binding/resource_schema.go, citrixadc_framework/vpnvserver_intranetip6_binding/resource_vpnvserver_intranetip6_binding.go, citrixadc_framework/vpnvserver_intranetip6_binding/datasource_schema.go, citrixadc_framework/vpnvserver_intranetip6_binding/datasource_vpnvserver_intranetip6_binding.go, citrixadc_framework/acctests/vpnvserver_intranetip6_binding_test.go (sanctioned ID-parse helper line only); NO doc modified.
 BLOCKER: none
 ========================================
