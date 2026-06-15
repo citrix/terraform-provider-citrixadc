@@ -207,5 +207,17 @@ BACKWARD-COMPAT: codegen used synthetic "id" as both the computed string ID and 
 DATASOURCE: fixed duplicate "id" schema key and "id"->"vxlanid" lookup; added split setter vxlan_nsip6_bindingSetAttrFromGetForDatasource (copies all fields + composes Id); resource setter preserves state (Pattern 7).
 PATTERNS: 6, 7, 5, 14(verified in lockstep)
 FILES CHANGED: citrixadc_framework/vxlan_nsip6_binding/resource_schema.go, citrixadc_framework/vxlan_nsip6_binding/resource_vxlan_nsip6_binding.go, citrixadc_framework/vxlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vxlan_nsip6_binding/datasource_vxlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vxlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
+RESOURCE: hanode_routemonitor6_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:24:42Z
+TESTBED:  HA_PAIR (NS_URL: http://10.101.132.141/)
+TEST RUN: TestAccHanode_routemonitor6_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccHanode_routemonitor6_binding_basic ............ PASS
+  - TestAccHanode_routemonitor6_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: Fixed codegen duplicate Id field -> single computed string id + real int key renamed to hanode_id (matches SDK v2 contract & test). hanode_id Required+RequiresReplace (SDK v2 Required/ForceNew), netmask Optional+Computed+RequiresReplace, routemonitor Required+RequiresReplace. Composite ID = hanode_id,routemonitor (netmask excluded, matches resource_id_mapping.json & SDK v2). Delete: name=hanode_id, args=routemonitor only (URL-encoded), matching SDK v2; dropped erroneous netmask delete arg.
+DATASOURCE: healthy after fix; added xxxSetAttrFromGetForDatasource split (Pattern 7), lookup keys hanode_id+routemonitor Required, netmask Optional+Computed output; Read keys off hanode_id and filters routemonitor.
+PATTERNS: 5 (no-op Update), 6 (ID set once, not in SetAttrFromGet), 7 (datasource setter split)
+FILES CHANGED: citrixadc_framework/hanode_routemonitor6_binding/resource_schema.go, citrixadc_framework/hanode_routemonitor6_binding/resource_hanode_routemonitor6_binding.go, citrixadc_framework/hanode_routemonitor6_binding/datasource_schema.go, citrixadc_framework/hanode_routemonitor6_binding/datasource_hanode_routemonitor6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/hanode_routemonitor6_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
