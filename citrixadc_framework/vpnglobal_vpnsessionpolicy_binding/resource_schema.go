@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -21,6 +22,7 @@ import (
 // VpnglobalVpnsessionpolicyBindingResourceModel describes the resource data model.
 type VpnglobalVpnsessionpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Builtin                types.List   `tfsdk:"builtin"`
 	Feature                types.String `tfsdk:"feature"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
@@ -36,6 +38,15 @@ func (r *VpnglobalVpnsessionpolicyBindingResource) Schema(ctx context.Context, r
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the vpnglobal_vpnsessionpolicy_binding resource.",
+			},
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
 			},
 			"feature": schema.StringAttribute{
 				Optional: true,
@@ -93,6 +104,11 @@ func vpnglobal_vpnsessionpolicy_bindingGetThePayloadFromthePlan(ctx context.Cont
 
 	// Create API request body from the model
 	vpnglobal_vpnsessionpolicy_binding := vpn.Vpnglobalvpnsessionpolicybinding{}
+	if !data.Builtin.IsNull() && !data.Builtin.IsUnknown() {
+		builtin := make([]string, 0, len(data.Builtin.Elements()))
+		data.Builtin.ElementsAs(ctx, &builtin, false)
+		vpnglobal_vpnsessionpolicy_binding.Builtin = builtin
+	}
 	if !data.Feature.IsNull() && !data.Feature.IsUnknown() {
 		vpnglobal_vpnsessionpolicy_binding.Feature = data.Feature.ValueString()
 	}
@@ -119,6 +135,20 @@ func vpnglobal_vpnsessionpolicy_bindingSetAttrFromGet(ctx context.Context, data 
 	tflog.Debug(ctx, "In vpnglobal_vpnsessionpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if rawList, ok := val.([]interface{}); ok {
+			strList := make([]string, 0, len(rawList))
+			for _, item := range rawList {
+				strList = append(strList, fmt.Sprintf("%v", item))
+			}
+			listVal, _ := types.ListValueFrom(ctx, types.StringType, strList)
+			data.Builtin = listVal
+		} else {
+			data.Builtin = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Builtin = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
 	} else {
