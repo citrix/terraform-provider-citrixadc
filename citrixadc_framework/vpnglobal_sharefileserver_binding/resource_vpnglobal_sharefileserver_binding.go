@@ -3,9 +3,9 @@ package vpnglobal_sharefileserver_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -150,10 +150,13 @@ func (r *VpnglobalSharefileserverBindingResource) Delete(ctx context.Context, re
 
 	tflog.Debug(ctx, "Deleting vpnglobal_sharefileserver_binding resource")
 	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
+	// Single unique attribute - ID is the plain value.
+	// URL-encode the value: sharefile is "IP:PORT / FQDN:PORT", so it contains ':'
+	// (and possibly '/') which collide with the NITRO "key:value,key:value" arg
+	// syntax. Encoding only the value keeps the "sharefile:" key prefix intact.
 	sharefile_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("sharefile:%s", sharefile_value),
+		fmt.Sprintf("sharefile:%s", url.QueryEscape(sharefile_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_sharefileserver_binding.Type(), "", args)
@@ -168,14 +171,14 @@ func (r *VpnglobalSharefileserverBindingResource) Delete(ctx context.Context, re
 // Helper function to read vpnglobal_sharefileserver_binding data from API
 func (r *VpnglobalSharefileserverBindingResource) readVpnglobalSharefileserverBindingFromApi(ctx context.Context, data *VpnglobalSharefileserverBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"sharefile"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
+	// Pattern 10: single unique attribute => ID is the plain "sharefile" value.
+	// The value itself can contain ':' (IP:PORT), which would confuse
+	// ParseIdString's key:value detection, so use the ID directly as the filter
+	// value instead of parsing it.
+	sharefileId := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
+	var err error
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vpnglobal_sharefileserver_binding.Type(),
@@ -196,25 +199,7 @@ func (r *VpnglobalSharefileserverBindingResource) readVpnglobalSharefileserverBi
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check sharefile
-		if idVal, ok := idMap["sharefile"]; ok {
-			if val, ok := v["sharefile"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["sharefile"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["sharefile"].(string); ok && val == sharefileId {
 			foundIndex = i
 			break
 		}

@@ -2696,5 +2696,18 @@ BACKWARD-COMPAT: SDK v2 had gotopriorityexpression Optional+Computed+ForceNew; N
 DATASOURCE: healthy; split setter applied (Pattern 7) -> added vpnglobal_vpnintranetapplication_bindingSetAttrFromGetForDatasource and pointed datasource Read at it so reads do not depend on resource state-preservation.
 PATTERNS: 7, 13 (plus Delete arg URL-encoding)
 FILES CHANGED: citrixadc_framework/vpnglobal_vpnintranetapplication_binding/resource_schema.go, citrixadc_framework/vpnglobal_vpnintranetapplication_binding/resource_vpnglobal_vpnintranetapplication_binding.go, citrixadc_framework/vpnglobal_vpnintranetapplication_binding/datasource_vpnglobal_vpnintranetapplication_binding.go, citrixadc_framework/vpnglobal_vpnintranetapplication_binding/datasource_schema.go (NO test/doc files modified)
+RESOURCE: vpnglobal_sharefileserver_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:54:33Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccVpnglobal_sharefileserver_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccVpnglobal_sharefileserver_binding_basic ............ PASS
+  - TestAccVpnglobal_sharefileserver_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ... N/A
+BACKWARD-COMPAT: attr/type/Required/ForceNew/ID-order all matched SDK v2; reconciled (1) gotopriorityexpression dropped spurious Computed (resource) since NITRO GET never echoes it, (2) SetAttrFromGet now preserves the non-echoed gotopriorityexpression instead of nulling it, (3) Delete arg value URL-encoded (sharefile is IP:PORT, colon collides with NITRO key:value arg syntax), (4) Read no longer mis-parses the colon-bearing plain-value ID via ParseIdString. Create verb (UpdateUnnamedResource/PUT) matches SDK v2.
+DATASOURCE: healthy; split a dedicated SetAttrFromGetForDatasource setter (faithfully copies GET + sets id) so the resource-side preserve-state fix does not null datasource outputs.
+PATTERNS: 7 (non-echoed input + datasource setter split), 10 (plain-value ID, skip ParseIdString), 13 (drop spurious Computed); binding-family delete-arg URL-encode.
+FILES CHANGED: citrixadc_framework/vpnglobal_sharefileserver_binding/resource_vpnglobal_sharefileserver_binding.go, citrixadc_framework/vpnglobal_sharefileserver_binding/resource_schema.go, citrixadc_framework/vpnglobal_sharefileserver_binding/datasource_vpnglobal_sharefileserver_binding.go, citrixadc_framework/vpnglobal_sharefileserver_binding/datasource_schema.go (NO test/doc files)
 BLOCKER: none
 ========================================
