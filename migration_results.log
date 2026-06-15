@@ -2436,3 +2436,19 @@ PATTERNS: 7, 8, 13 (+ Delete URL-encode)
 FILES CHANGED: citrixadc_framework/tmglobal_auditnslogpolicy_binding/resource_schema.go, citrixadc_framework/tmglobal_auditnslogpolicy_binding/resource_tmglobal_auditnslogpolicy_binding.go, citrixadc_framework/tmglobal_auditnslogpolicy_binding/datasource_tmglobal_auditnslogpolicy_binding.go (no test/doc file modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: transformpolicylabel_transformpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:37:02Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccTransformpolicylabel_transformpolicy_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccTransformpolicylabel_transformpolicy_binding_basic ............ PASS
+  - TestAccTransformpolicylabel_transformpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no x-secret-attr) ................. N/A
+BACKWARD-COMPAT: SDK v2 had invoke_labelname (invokelabelname) and labeltype as Optional+Computed; Framework made them Required (drift). Reconciled to Optional+Computed (Pattern c) to match SDK v2 contract + docs + test config (which omits them). Create verb (UpdateUnnamedResource/PUT), composite ID order (labelname,policyname), delete args (policyname) already matched SDK v2 and resource_id_mapping.json.
+DATASOURCE: healthy as-is; shares SetAttrFromGet which copies all fields + sets Id (works for datasource); no split needed (GET echoes fields, Computed flags absorb server values).
+PATTERNS: c (Required-vs-Optional+Computed flag drift); sanctioned Constraint-1 ID-parse helper edit (Exist helper -> utils.ParseIdString)
+FILES CHANGED: citrixadc_framework/transformpolicylabel_transformpolicy_binding/resource_schema.go, citrixadc_framework/acctests/transformpolicylabel_transformpolicy_binding_test.go (ID-parse helper lines only)
+BLOCKER: none
+========================================
