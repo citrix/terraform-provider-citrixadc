@@ -41,7 +41,6 @@ func (r *VpnvserverAuthenticationcertpolicyBindingResource) Schema(ctx context.C
 			},
 			"bindpoint": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -49,7 +48,6 @@ func (r *VpnvserverAuthenticationcertpolicyBindingResource) Schema(ctx context.C
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -57,7 +55,6 @@ func (r *VpnvserverAuthenticationcertpolicyBindingResource) Schema(ctx context.C
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +124,57 @@ func vpnvserver_authenticationcertpolicy_bindingGetThePayloadFromthePlan(ctx con
 	return vpnvserver_authenticationcertpolicy_binding
 }
 
+// vpnvserver_authenticationcertpolicy_bindingComputeId builds the composite resource ID
+// from the two legacy identity attributes (name,policy) matching the SDK v2 ID format and
+// resource_id_mapping.json. bindpoint is NOT part of the ID: the NITRO GET response does
+// not echo bindpoint back, so it cannot participate in identity/lookup.
+func vpnvserver_authenticationcertpolicy_bindingComputeId(data *VpnvserverAuthenticationcertpolicyBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	return strings.Join(idParts, ",")
+}
+
+// vpnvserver_authenticationcertpolicy_bindingSetAttrFromGet is the RESOURCE-side setter.
+// The NITRO GET response for this binding only echoes name, policy, priority and secondary
+// (bindpoint, gotopriorityexpression and groupextraction are write-only inputs that the
+// appliance never returns). To avoid "inconsistent result after apply" errors, the
+// non-echoed user inputs are PRESERVED from plan/state and only the echoed fields are
+// refreshed from the API. (Pattern 7 server-overrides / Pattern 13.)
 func vpnvserver_authenticationcertpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationcertpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationcertpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationcertpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Echoed identity fields - refresh from API
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	// Echoed attributes - refresh from API
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+	// bindpoint, gotopriorityexpression, groupextraction are NOT echoed by NITRO GET -
+	// preserve the existing plan/state values (do not overwrite/null them).
+
+	// Set ID for the resource (legacy name,policy order)
+	data.Id = types.StringValue(vpnvserver_authenticationcertpolicy_bindingComputeId(data))
+
+	return data
+}
+
+// vpnvserver_authenticationcertpolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. A datasource has no prior plan/state to preserve, so it faithfully copies every
+// field that the GET response actually returns and sets the computed ID. (Pattern 7 split.)
+func vpnvserver_authenticationcertpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationcertpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationcertpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_authenticationcertpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,13 +213,7 @@ func vpnvserver_authenticationcertpolicy_bindingSetAttrFromGet(ctx context.Conte
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(vpnvserver_authenticationcertpolicy_bindingComputeId(data))
 
 	return data
 }

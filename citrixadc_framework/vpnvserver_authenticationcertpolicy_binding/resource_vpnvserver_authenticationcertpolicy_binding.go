@@ -3,7 +3,6 @@ package vpnvserver_authenticationcertpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -68,12 +67,10 @@ func (r *VpnvserverAuthenticationcertpolicyBindingResource) Create(ctx context.C
 
 	tflog.Trace(ctx, "Created vpnvserver_authenticationcertpolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state.
+	// Legacy SDK v2 ID order is name,policy (see resource_id_mapping.json); bindpoint is
+	// not part of the identity because the NITRO GET response never echoes it back.
+	data.Id = types.StringValue(vpnvserver_authenticationcertpolicy_bindingComputeId(&data))
 
 	// Read the updated state back
 	r.readVpnvserverAuthenticationcertpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -168,9 +165,6 @@ func (r *VpnvserverAuthenticationcertpolicyBindingResource) Delete(ctx context.C
 	}
 
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
 	if val, ok := idMap["policy"]; ok && val != "" {
 		argsMap["policy"] = val
 	}
@@ -219,26 +213,12 @@ func (r *VpnvserverAuthenticationcertpolicyBindingResource) readVpnvserverAuthen
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policy.
+	// bindpoint is NOT echoed by the NITRO GET response, so it cannot be used to
+	// disambiguate records; policy is the discriminator (matching SDK v2 read).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
 
 		// Check policy
 		if idVal, ok := idMap["policy"]; ok {
@@ -251,9 +231,6 @@ func (r *VpnvserverAuthenticationcertpolicyBindingResource) readVpnvserverAuthen
 				match = false
 				continue
 			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
