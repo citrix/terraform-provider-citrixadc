@@ -2592,3 +2592,19 @@ PATTERNS: 7, 13, 8, b (url-encode delete args)
 FILES CHANGED: citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/resource_vpnglobal_authenticationradiuspolicy_binding.go, citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/datasource_vpnglobal_authenticationradiuspolicy_binding.go (NO test/doc files modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnglobal_staserver_binding
+STATUS:   PASS
+TIME:     2026-06-15T12:37:05Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccVpnglobal_staserver_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnglobal_staserver_binding_basic ............ PASS
+  - TestAccVpnglobal_staserver_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs) .. N/A
+BACKWARD-COMPAT: Attribute names/types/flags/ForceNew/ID-format all matched SDK v2; no schema parity drift. Fixed (1) broken Read: plain-value URL ID misparsed by ParseIdString (Pattern 10) -> filter by data.Id directly; (2) Delete args not URL-encoded -> url.QueryEscape(staserver) to match SDK v2; (3) gotopriorityexpression not echoed by NITRO GET -> dropped spurious Computed (Pattern 13) + preserve in resource SetAttrFromGet (Pattern 7).
+DATASOURCE: healthy; split setter per Pattern 7 (vpnglobal_staserver_bindingSetAttrFromGetForDatasource copies all fields + sets Id), datasource Read switched to it.
+PATTERNS: 7, 10, 13 (+ Delete URL-encode b)
+FILES CHANGED: citrixadc_framework/vpnglobal_staserver_binding/resource_vpnglobal_staserver_binding.go, citrixadc_framework/vpnglobal_staserver_binding/resource_schema.go, citrixadc_framework/vpnglobal_staserver_binding/datasource_vpnglobal_staserver_binding.go (NO test/doc file)
+BLOCKER: none
+========================================
