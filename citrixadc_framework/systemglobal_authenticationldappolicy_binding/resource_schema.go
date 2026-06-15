@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,6 +21,7 @@ import (
 // SystemglobalAuthenticationldappolicyBindingResourceModel describes the resource data model.
 type SystemglobalAuthenticationldappolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Builtin                types.List   `tfsdk:"builtin"`
 	Feature                types.String `tfsdk:"feature"`
 	Globalbindtype         types.String `tfsdk:"globalbindtype"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
@@ -35,6 +37,14 @@ func (r *SystemglobalAuthenticationldappolicyBindingResource) Schema(ctx context
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the systemglobal_authenticationldappolicy_binding resource.",
+			},
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
 			},
 			"feature": schema.StringAttribute{
 				Optional: true,
@@ -54,7 +64,6 @@ func (r *SystemglobalAuthenticationldappolicyBindingResource) Schema(ctx context
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -62,7 +71,6 @@ func (r *SystemglobalAuthenticationldappolicyBindingResource) Schema(ctx context
 			},
 			"nextfactor": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -92,6 +100,11 @@ func systemglobal_authenticationldappolicy_bindingGetThePayloadFromthePlan(ctx c
 
 	// Create API request body from the model
 	systemglobal_authenticationldappolicy_binding := system.Systemglobalauthenticationldappolicybinding{}
+	if !data.Builtin.IsNull() && !data.Builtin.IsUnknown() {
+		builtinList := make([]string, 0, len(data.Builtin.Elements()))
+		data.Builtin.ElementsAs(ctx, &builtinList, false)
+		systemglobal_authenticationldappolicy_binding.Builtin = builtinList
+	}
 	if !data.Feature.IsNull() && !data.Feature.IsUnknown() {
 		systemglobal_authenticationldappolicy_binding.Feature = data.Feature.ValueString()
 	}
@@ -114,10 +127,48 @@ func systemglobal_authenticationldappolicy_bindingGetThePayloadFromthePlan(ctx c
 	return systemglobal_authenticationldappolicy_binding
 }
 
+// systemglobal_authenticationldappolicy_bindingSetAttrFromGet updates the RESOURCE
+// state from a GET response. The NITRO GET for this binding echoes only
+// policyname, priority, feature and globalbindtype; it does NOT return
+// gotopriorityexpression, nextfactor or builtin. Those write-only inputs are
+// therefore preserved from the existing plan/state rather than nulled, so that
+// Terraform does not see an "inconsistent result after apply" (Pattern 7/13).
 func systemglobal_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Context, data *SystemglobalAuthenticationldappolicyBindingResourceModel, getResponseData map[string]interface{}) *SystemglobalAuthenticationldappolicyBindingResourceModel {
 	tflog.Debug(ctx, "In systemglobal_authenticationldappolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Echoed-back fields: copy from the GET response.
+	if val, ok := getResponseData["feature"]; ok && val != nil {
+		data.Feature = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
+		data.Globalbindtype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	// gotopriorityexpression, nextfactor and builtin are not returned by GET;
+	// preserve the existing plan/state values (do not touch them).
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
+	return data
+}
+
+// systemglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource
+// faithfully copies the GET response into the model for the datasource flow,
+// which has no prior plan/state to preserve. Fields the GET does not return are
+// set to null. It also sets data.Id since the datasource has no Create.
+func systemglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *SystemglobalAuthenticationldappolicyBindingResourceModel, getResponseData map[string]interface{}) *SystemglobalAuthenticationldappolicyBindingResourceModel {
+	tflog.Debug(ctx, "In systemglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
 	} else {
@@ -146,13 +197,23 @@ func systemglobal_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Con
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
 		}
 	} else {
 		data.Priority = types.Int64Null()
 	}
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if listVal, diags := types.ListValueFrom(ctx, types.StringType, val); !diags.HasError() {
+			data.Builtin = listVal
+		} else {
+			data.Builtin = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Builtin = types.ListNull(types.StringType)
+	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Set ID for the datasource
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data

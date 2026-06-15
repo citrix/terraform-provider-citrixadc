@@ -2278,3 +2278,19 @@ PATTERNS: 1 (PUT-where-POST), Delete-arg URL-encode (binding-family hint b).
 FILES CHANGED: citrixadc_framework/sslvserver_sslciphersuite_binding/resource_sslvserver_sslciphersuite_binding.go (NO test/doc file modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: systemglobal_authenticationldappolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:22:50Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccSystemglobal_authenticationldappolicy_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccSystemglobal_authenticationldappolicy_binding_basic ............ PASS
+  - TestAccSystemglobal_authenticationldappolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral test; resource has no secret attributes) ............... N/A
+BACKWARD-COMPAT: re-added dropped 'builtin' list attr (in SDK v2 + NITRO struct); resource SetAttrFromGet now preserves non-echoed inputs (gotopriorityexpression/nextfactor/builtin) instead of nulling them; dropped spurious Computed on those non-echoed Optional attrs; single-key plain-value ID 'policyname' matches resource_id_mapping.json; Delete keeps DeleteResourceWithArgs(policyname:Id); Create keeps PUT/UpdateUnnamedResource (matches SDK v2).
+DATASOURCE: healthy; split Pattern-7 setter — added systemglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource (copies GET faithfully + sets Id + builtin), datasource Read now calls it; added 'builtin' to datasource schema.
+PATTERNS: 7, 13
+FILES CHANGED: citrixadc_framework/systemglobal_authenticationldappolicy_binding/resource_schema.go, citrixadc_framework/systemglobal_authenticationldappolicy_binding/datasource_schema.go, citrixadc_framework/systemglobal_authenticationldappolicy_binding/datasource_systemglobal_authenticationldappolicy_binding.go (NO test/doc files modified)
+BLOCKER: none
+========================================
