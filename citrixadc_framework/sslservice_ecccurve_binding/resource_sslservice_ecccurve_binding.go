@@ -59,8 +59,8 @@ func (r *SslserviceEcccurveBindingResource) Create(ctx context.Context, req reso
 	sslservice_ecccurve_binding := sslservice_ecccurve_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Sslservice_ecccurve_binding.Type(), &sslservice_ecccurve_binding)
+	// Binding resource - SDK v2 used AddResource (POST); preserve that contract
+	_, err := r.client.AddResource(service.Sslservice_ecccurve_binding.Type(), "", &sslservice_ecccurve_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservice_ecccurve_binding, got error: %s", err))
 		return
@@ -69,9 +69,10 @@ func (r *SslserviceEcccurveBindingResource) Create(ctx context.Context, req reso
 	tflog.Trace(ctx, "Created sslservice_ecccurve_binding resource")
 
 	// Set ID for the resource before reading state
+	// Order matches the legacy SDK v2 positional ID (servicename,ecccurvename)
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ecccurvename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ecccurvename.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("servicename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicename.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ecccurvename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ecccurvename.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
