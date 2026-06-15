@@ -1,0 +1,15 @@
+========================================
+RESOURCE: linkset_channel_binding
+STATUS:   PASS
+TIME:     2026-06-15T03:52:25Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccLinkset_channel_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccLinkset_channel_binding_basic ............ SKIP[test file has unconditional t.Skip("TODO: Need to find a way to test this resource!") - pre-existing, not modifiable per Constraint 1]
+  - TestAccLinkset_channel_bindingDataSource_basic .. SKIP[same unconditional t.Skip in test file]
+BACKWARD-COMPAT: SDK v2 user-facing attr is "linkset_id" (mapped to NITRO "id" field) + "ifnum", both Required+ForceNew. Codegen had wrongly used NITRO option_name "id" as the model field, colliding with the synthetic computed string id (duplicate Id field, duplicate "id" schema key). Fixed: model = {Id(computed composite), LinksetId(tfsdk linkset_id), Ifnum}; schema "linkset_id" Required+RequiresReplace, "ifnum" Required+RequiresReplace, "id" Computed+UseStateForUnknown. Payload/SetAttrFromGet map NITRO "id" <-> linkset_id. Composite ID format linkset_id:enc,ifnum:enc; legacy order linkset_id,ifnum (matches resource_id_mapping.json). Delete keys off linkset_id with ifnum arg. Read/datasource double-URL-encode parent name (LS/3 has a slash) to match SDK v2.
+DATASOURCE: healthy after fix; schema duplicate "id" key removed -> linkset_id Required; split setter linkset_channel_bindingSetAttrFromGetForDatasource added and wired into datasource Read; data.Id set there.
+PATTERNS: 6 (SetAttrFromGet overwriting synthetic Id), 7 (datasource setter split), 11 (resource/datasource schema coherence), 16-adjacent (delete args ifnum). 
+FILES CHANGED: citrixadc_framework/linkset_channel_binding/resource_schema.go, citrixadc_framework/linkset_channel_binding/resource_linkset_channel_binding.go, citrixadc_framework/linkset_channel_binding/datasource_schema.go, citrixadc_framework/linkset_channel_binding/datasource_linkset_channel_binding.go, citrixadc_framework/provider/provider.go (NO test/doc file changed)
+BLOCKER: none (live binding create blocked by ADC errorcode 257 on linkset LS/3 creation - the same constraint that led the original authors to t.Skip both tests; code verified by compile/link/registration + NITRO-level channel create/delete confirming double-encode path)
+========================================

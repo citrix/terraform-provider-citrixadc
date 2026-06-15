@@ -19,9 +19,9 @@ import (
 
 // LinksetChannelBindingResourceModel describes the resource data model.
 type LinksetChannelBindingResourceModel struct {
-	Id    types.String `tfsdk:"id"`
-	Id    types.String `tfsdk:"id"`
-	Ifnum types.String `tfsdk:"ifnum"`
+	Id        types.String `tfsdk:"id"`
+	LinksetId types.String `tfsdk:"linkset_id"`
+	Ifnum     types.String `tfsdk:"ifnum"`
 }
 
 func (r *LinksetChannelBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -31,8 +31,11 @@ func (r *LinksetChannelBindingResource) Schema(ctx context.Context, req resource
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the linkset_channel_binding resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"id": schema.StringAttribute{
+			"linkset_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -53,10 +56,11 @@ func (r *LinksetChannelBindingResource) Schema(ctx context.Context, req resource
 func linkset_channel_bindingGetThePayloadFromthePlan(ctx context.Context, data *LinksetChannelBindingResourceModel) network.Linksetchannelbinding {
 	tflog.Debug(ctx, "In linkset_channel_bindingGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
+	// Create API request body from the model.
+	// The NITRO "id" field maps to the user-facing "linkset_id" attribute.
 	linkset_channel_binding := network.Linksetchannelbinding{}
-	if !data.Id.IsNull() && !data.Id.IsUnknown() {
-		linkset_channel_binding.Id = data.Id.ValueString()
+	if !data.LinksetId.IsNull() && !data.LinksetId.IsUnknown() {
+		linkset_channel_binding.Id = data.LinksetId.ValueString()
 	}
 	if !data.Ifnum.IsNull() && !data.Ifnum.IsUnknown() {
 		linkset_channel_binding.Ifnum = data.Ifnum.ValueString()
@@ -68,11 +72,34 @@ func linkset_channel_bindingGetThePayloadFromthePlan(ctx context.Context, data *
 func linkset_channel_bindingSetAttrFromGet(ctx context.Context, data *LinksetChannelBindingResourceModel, getResponseData map[string]interface{}) *LinksetChannelBindingResourceModel {
 	tflog.Debug(ctx, "In linkset_channel_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// The NITRO "id" field maps to the user-facing "linkset_id" attribute.
 	if val, ok := getResponseData["id"]; ok && val != nil {
-		data.Id = types.StringValue(val.(string))
+		data.LinksetId = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ifnum"]; ok && val != nil {
+		data.Ifnum = types.StringValue(val.(string))
+	}
+
+	// Set the synthetic composite ID for the resource.
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("linkset_id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.LinksetId.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+func linkset_channel_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LinksetChannelBindingResourceModel, getResponseData map[string]interface{}) *LinksetChannelBindingResourceModel {
+	tflog.Debug(ctx, "In linkset_channel_bindingSetAttrFromGetForDatasource Function")
+
+	// Convert API response to model.
+	// The NITRO "id" field maps to the user-facing "linkset_id" attribute.
+	if val, ok := getResponseData["id"]; ok && val != nil {
+		data.LinksetId = types.StringValue(val.(string))
 	} else {
-		data.Id = types.StringNull()
+		data.LinksetId = types.StringNull()
 	}
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
@@ -80,10 +107,9 @@ func linkset_channel_bindingSetAttrFromGet(ctx context.Context, data *LinksetCha
 		data.Ifnum = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set the synthetic composite ID for the datasource (no Create to set it).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("linkset_id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.LinksetId.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 

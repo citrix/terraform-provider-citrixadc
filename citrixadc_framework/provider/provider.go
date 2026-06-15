@@ -424,6 +424,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_videooptimizationdetectionpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_videooptimizationpacingpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/linkset"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/linkset_channel_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lldpparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/location"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/locationfile"
@@ -1205,6 +1206,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		lbvserver_transformpolicy_binding.NewLbvserverTransformpolicyBindingResource,
 		lbvserver_videooptimizationdetectionpolicy_binding.NewLbvserverVideooptimizationdetectionpolicyBindingResource,
 		lbvserver_videooptimizationpacingpolicy_binding.NewLbvserverVideooptimizationpacingpolicyBindingResource,
+		linkset_channel_binding.NewLinksetChannelBindingResource,
 		lsnappsprofile_lsnappsattributes_binding.NewLsnappsprofileLsnappsattributesBindingResource,
 		lsnappsprofile_port_binding.NewLsnappsprofilePortBindingResource,
 		lsnclient_network6_binding.NewLsnclientNetwork6BindingResource,
@@ -1537,6 +1539,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		lbsipparameters.LBsipparametersDataSource,
 		lbvserver.LBvserverDataSource,
 		linkset.LInksetDataSource,
+		linkset_channel_binding.LInksetChannelBindingDataSource,
 		lldpparam.LLdpparamDataSource,
 		location.LOcationDataSource,
 		locationfile.LOcationfileDataSource,

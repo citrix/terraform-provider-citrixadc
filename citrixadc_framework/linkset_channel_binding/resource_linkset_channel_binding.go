@@ -3,6 +3,7 @@ package linkset_channel_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -70,7 +71,7 @@ func (r *LinksetChannelBindingResource) Create(ctx context.Context, req resource
 
 	// Set ID for the resource before reading state
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("linkset_id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.LinksetId.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
@@ -153,16 +154,17 @@ func (r *LinksetChannelBindingResource) Delete(ctx context.Context, req resource
 	}
 
 	tflog.Debug(ctx, "Deleting linkset_channel_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgsMap.
+	// The user-facing "linkset_id" attribute maps to the NITRO resource name.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"linkset_id", "ifnum"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
 	}
 
-	id_value, ok := idMap["id"]
+	linkset_id_value, ok := idMap["linkset_id"]
 	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'id' not found in ID")
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'linkset_id' not found in ID")
 		return
 	}
 
@@ -171,7 +173,7 @@ func (r *LinksetChannelBindingResource) Delete(ctx context.Context, req resource
 		argsMap["ifnum"] = val
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Linkset_channel_binding.Type(), id_value, argsMap)
+	err = r.client.DeleteResourceWithArgsMap(service.Linkset_channel_binding.Type(), linkset_id_value, argsMap)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete linkset_channel_binding, got error: %s", err))
 		return
@@ -190,17 +192,19 @@ func (r *LinksetChannelBindingResource) readLinksetChannelBindingFromApi(ctx con
 		return
 	}
 
-	id_Name, ok := idMap["id"]
+	linkset_id_Name, ok := idMap["linkset_id"]
 	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'id' not found in ID string")
+		diags.AddError("Parse Error", "ID attribute 'linkset_id' not found in ID string")
 		return
 	}
 
 	var dataArr []map[string]interface{}
 
+	// The linkset id (e.g. "LS/3") contains a '/', so it must be double
+	// URL-encoded for the NITRO GET path (matches SDK v2 behavior).
 	findParams := service.FindParams{
 		ResourceType:             service.Linkset_channel_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             url.QueryEscape(url.QueryEscape(linkset_id_Name)),
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
