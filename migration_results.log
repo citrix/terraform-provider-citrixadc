@@ -1105,3 +1105,18 @@ PATTERNS: 8 (Required/Optional flag correction).
 FILES CHANGED: citrixadc_framework/icaglobal_icapolicy_binding/resource_schema.go, citrixadc_framework/acctests/icaglobal_icapolicy_binding_test.go (sanctioned ID-parse helper line only). No doc modified.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: csvserver_contentinspectionpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:33:25Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccCsvserver_contentinspectionpolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccCsvserver_contentinspectionpolicy_binding_basic ........... PASS
+  - TestAccCsvserver_contentinspectionpolicy_bindingDataSource_basic . PASS
+BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Computed in SDK v2 (test omits them) -> reverted to Optional+Computed; Create used UpdateUnnamedResource (PUT) but SDK v2 used AddResource (POST) -> switched to AddResource. ID format kept as new key:value (bindpoint,name,policyname); resource_id_mapping.json (name,policyname) unchanged.
+DATASOURCE: healthy as-is; shares SetAttrFromGet which correctly echoes all fields and sets ID; no git recovery or Pattern 7 split needed.
+PATTERNS: 1 (PUT->POST create), 8 (Required->Optional+Computed flag drift); plus sanctioned ID-parse helper fix (ParseIdString).
+FILES CHANGED: citrixadc_framework/csvserver_contentinspectionpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_contentinspectionpolicy_binding/resource_csvserver_contentinspectionpolicy_binding.go, citrixadc_framework/acctests/csvserver_contentinspectionpolicy_binding_test.go (ID-parse helper lines only). NO doc modified.
+BLOCKER: none
+========================================

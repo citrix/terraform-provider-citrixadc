@@ -59,8 +59,8 @@ func (r *CsvserverContentinspectionpolicyBindingResource) Create(ctx context.Con
 	csvserver_contentinspectionpolicy_binding := csvserver_contentinspectionpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_contentinspectionpolicy_binding.Type(), &csvserver_contentinspectionpolicy_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource)
+	_, err := r.client.AddResource(service.Csvserver_contentinspectionpolicy_binding.Type(), "", &csvserver_contentinspectionpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_contentinspectionpolicy_binding, got error: %s", err))
 		return
