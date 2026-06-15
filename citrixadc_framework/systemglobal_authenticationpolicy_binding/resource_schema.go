@@ -6,9 +6,11 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,6 +22,7 @@ import (
 // SystemglobalAuthenticationpolicyBindingResourceModel describes the resource data model.
 type SystemglobalAuthenticationpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Builtin                types.List   `tfsdk:"builtin"`
 	Feature                types.String `tfsdk:"feature"`
 	Globalbindtype         types.String `tfsdk:"globalbindtype"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
@@ -35,6 +38,16 @@ func (r *SystemglobalAuthenticationpolicyBindingResource) Schema(ctx context.Con
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the systemglobal_authenticationpolicy_binding resource.",
+			},
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
 			},
 			"feature": schema.StringAttribute{
 				Optional: true,
@@ -76,8 +89,7 @@ func (r *SystemglobalAuthenticationpolicyBindingResource) Schema(ctx context.Con
 				Description: "The name of the  command policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -92,6 +104,15 @@ func systemglobal_authenticationpolicy_bindingGetThePayloadFromthePlan(ctx conte
 
 	// Create API request body from the model
 	systemglobal_authenticationpolicy_binding := system.Systemglobalauthenticationpolicybinding{}
+	if !data.Builtin.IsNull() && !data.Builtin.IsUnknown() {
+		builtinList := make([]string, 0, len(data.Builtin.Elements()))
+		for _, elem := range data.Builtin.Elements() {
+			if strElem, ok := elem.(types.String); ok {
+				builtinList = append(builtinList, strElem.ValueString())
+			}
+		}
+		systemglobal_authenticationpolicy_binding.Builtin = builtinList
+	}
 	if !data.Feature.IsNull() && !data.Feature.IsUnknown() {
 		systemglobal_authenticationpolicy_binding.Feature = data.Feature.ValueString()
 	}
@@ -118,6 +139,24 @@ func systemglobal_authenticationpolicy_bindingSetAttrFromGet(ctx context.Context
 	tflog.Debug(ctx, "In systemglobal_authenticationpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if rawList, ok := val.([]interface{}); ok {
+			elems := make([]attr.Value, 0, len(rawList))
+			for _, item := range rawList {
+				elems = append(elems, types.StringValue(fmt.Sprintf("%v", item)))
+			}
+			listVal, diags := types.ListValue(types.StringType, elems)
+			if !diags.HasError() {
+				data.Builtin = listVal
+			} else {
+				data.Builtin = types.ListNull(types.StringType)
+			}
+		} else {
+			data.Builtin = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Builtin = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
 	} else {
