@@ -2,8 +2,6 @@ package tunnelglobal_tunneltrafficpolicy_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/tunnel"
 
@@ -47,16 +45,17 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) Schema(ctx context.Cont
 				Description: "The feature to be checked while applying this config",
 			},
 			"globalbindtype": schema.StringAttribute{
+				// Not echoed by NITRO GET - Optional only (no Computed) so it resolves
+				// to null after apply instead of staying unknown (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "0",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// Not echoed by NITRO GET - Optional only (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -86,8 +85,9 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) Schema(ctx context.Cont
 				Description: "Current state of the binding. If the binding is enabled, the policy is active.",
 			},
 			"type": schema.StringAttribute{
+				// Bind point / GET filter - not echoed by NITRO GET. Optional only
+				// (no Computed) so it resolves to null after apply (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +127,43 @@ func tunnelglobal_tunneltrafficpolicy_bindingGetThePayloadFromthePlan(ctx contex
 	return tunnelglobal_tunneltrafficpolicy_binding
 }
 
+// tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGet is the RESOURCE-side state
+// setter. The NITRO GET for this binding echoes back only policyname, priority, state
+// and feature; it does NOT return globalbindtype, gotopriorityexpression or type. For
+// those non-echoed inputs we PRESERVE the existing plan/state value (Pattern 7) instead
+// of nulling it, which would otherwise trigger an "inconsistent result after apply"
+// error or a perpetual diff. The ID is preserved as set by Create (plain policyname).
 func tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data *TunnelglobalTunneltrafficpolicyBindingResourceModel, getResponseData map[string]interface{}) *TunnelglobalTunneltrafficpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Echoed fields - safe to adopt from the GET response.
+	if val, ok := getResponseData["feature"]; ok && val != nil {
+		data.Feature = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	}
+	// globalbindtype, gotopriorityexpression and type are non-echoed inputs - preserve
+	// whatever the plan/state already holds (do not overwrite or null them out).
+
+	return data
+}
+
+// tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE-side setter. A datasource has no prior plan/state to preserve, so it
+// faithfully copies every field present in the GET response and sets its own ID
+// (plain policyname, matching the resource ID format).
+func tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *TunnelglobalTunneltrafficpolicyBindingResourceModel, getResponseData map[string]interface{}) *TunnelglobalTunneltrafficpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
 	} else {
@@ -163,18 +196,10 @@ func tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGet(ctx context.Context,
 	} else {
 		data.State = types.StringNull()
 	}
-	if val, ok := getResponseData["type"]; ok && val != nil {
-		data.Type = types.StringValue(val.(string))
-	} else {
-		data.Type = types.StringNull()
-	}
+	// type is not echoed by GET - retain the value the datasource was queried with.
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the datasource (plain policyname, matching the resource).
+	data.Id = types.StringValue(data.Policyname.ValueString())
 
 	return data
 }

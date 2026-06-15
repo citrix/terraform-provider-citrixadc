@@ -40,7 +40,8 @@ func TunnelglobalTunneltrafficpolicyBindingDataSourceSchema() schema.Schema {
 				Description: "Current state of the binding. If the binding is enabled, the policy is active.",
 			},
 			"type": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Bind point to which the policy is bound.",
 			},
 		},
