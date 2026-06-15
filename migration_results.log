@@ -3452,3 +3452,10 @@ PATTERNS: Constraint-1 sanctioned ID-parse helper exception (raw SplitN -> utils
 FILES CHANGED: citrixadc_framework/acctests/lsngroup_pcpserver_binding_test.go (Exist-helper ID-parse lines only; no test logic/assertions/steps changed; no docs changed)
 BLOCKER: none
 ========================================
+
+========================================
+RESOURCE: lsnappsprofile_lsnappsattributes_binding
+TEST RUN: TestAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic (basic has pre-existing t.Skip)
+  - TestAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic .. PASS
+NOTES: resource code already a faithful SDK v2 replacement (no code change). Fixed pre-existing datasource test-config defect (orchestrator, user-authorized): added lsnappsprofile_port_binding prerequisite (lsnport 80-100 covering appsattributes port 90) + depends_on, aligned appsprofilename with assertion. Tested green on LSN box 10.101.132.121.
+========================================

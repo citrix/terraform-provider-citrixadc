@@ -41,9 +41,16 @@ const testAccLsnappsprofile_lsnappsattributes_binding_basic_step2 = `
 const testAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic = `
 
 	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
-		appsprofilename   = "my_lsn_appsprofile"
+		appsprofilename   = "my_lsn_profile"
 		transportprotocol = "TCP"
 		mapping           = "ENDPOINT-INDEPENDENT"
+	}
+
+	# Prerequisite: the appsprofile must have a port binding whose range covers the
+	# appsattributes port (90) before an appsattributes binding is accepted (NITRO errorcode 257).
+	resource "citrixadc_lsnappsprofile_port_binding" "tf_lsnappsprofile_port_binding" {
+		appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+		lsnport         = "80-100"
 	}
 
 	resource "citrixadc_lsnappsattributes" "tf_lsnappsattributes" {
@@ -55,6 +62,7 @@ const testAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic = `
 resource "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {
 	appsprofilename    = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
 	appsattributesname = citrixadc_lsnappsattributes.tf_lsnappsattributes.name
+	depends_on         = [citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding]
 }
 
 data "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {
