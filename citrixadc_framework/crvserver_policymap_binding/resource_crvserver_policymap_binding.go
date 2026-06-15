@@ -3,6 +3,7 @@ package crvserver_policymap_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -166,12 +167,20 @@ func (r *CrvserverPolicymapBindingResource) Delete(ctx context.Context, req reso
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build the delete args. NITRO's delete URL does not URL-encode arg values, so
+	// encode slashy/special values here (mirrors the SDK v2 url.QueryEscape behaviour).
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Priority.IsNull() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_policymap_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_policymap_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_policymap_binding, got error: %s", err))
 		return

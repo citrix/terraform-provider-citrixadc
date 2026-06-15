@@ -884,4 +884,17 @@ DATASOURCE: healthy; split out crvserver_icapolicy_bindingSetAttrFromGetForDatas
 PATTERNS: 1, 5, 7, 13
 FILES CHANGED: citrixadc_framework/crvserver_icapolicy_binding/resource_schema.go, citrixadc_framework/crvserver_icapolicy_binding/resource_crvserver_icapolicy_binding.go, citrixadc_framework/crvserver_icapolicy_binding/datasource_schema.go, citrixadc_framework/crvserver_icapolicy_binding/datasource_crvserver_icapolicy_binding.go, citrixadc_framework/acctests/crvserver_icapolicy_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
+RESOURCE: crvserver_policymap_binding
+STATUS:   BLOCKED
+TIME:     2026-06-15T06:42:20Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccCrvserver_policymap_binding_basic$|TestAcccrvserver_policymap_bindingDataSource_basic$
+TESTS:
+  - TestAccCrvserver_policymap_binding_basic ............ PASS
+  - TestAcccrvserver_policymap_bindingDataSource_basic .. FAIL[blocked by out-of-scope sibling resource citrixadc_lbvserver_service_binding in the datasource test fixture: that (un-migrated) resource returns unknown-after-apply for order/servicegroupname/weight and a Read "not found" error; failure occurs while applying the prerequisite, before the crvserver_policymap_binding datasource is read. crvserver_policymap_binding datasource code itself is correct.]
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 + NITRO struct) to model/resource schema/payload/SetAttrFromGet/datasource schema/Delete args (Pattern: re-add dropped binding attr); changed labelname/labeltype from Required back to Optional+Computed->Optional to match SDK v2 contract (test omits them); dropped spurious Computed from non-echoed inputs bindpoint/gotopriorityexpression/invoke/labelname/labeltype/priority (NITRO GET only echoes name,policyname,targetvserver) to stop unknown-after-apply errors; kept new key:value composite ID format (resource_id_mapping.json "name,policyname" already correct); Create verb kept as UpdateUnnamedResource (PUT) matching SDK v2; Delete switched to DeleteResourceWithArgs with url.QueryEscape on policyname + bindpoint values (matches SDK v2 url-encoding).
+DATASOURCE: healthy; split setter into resource (preserve-state) + new crvserver_policymap_bindingSetAttrFromGetForDatasource (faithful copy + sets composite Id) per Pattern 7; datasource Read updated to call the new setter; added bindpoint to datasource schema.
+PATTERNS: 7 (SetAttrFromGet preserve + datasource split), 13 (drop Computed on non-echoed Optional attrs), plus binding-family re-add-dropped-attr and Delete url-encode.
+FILES CHANGED: citrixadc_framework/crvserver_policymap_binding/resource_schema.go, citrixadc_framework/crvserver_policymap_binding/resource_crvserver_policymap_binding.go, citrixadc_framework/crvserver_policymap_binding/datasource_crvserver_policymap_binding.go, citrixadc_framework/crvserver_policymap_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_policymap_binding_test.go (sanctioned ID-parse helper lines only). NO doc files modified.
+BLOCKER: datasource acceptance test cannot pass until the out-of-scope sibling resource citrixadc_lbvserver_service_binding (used as a prerequisite in the datasource test fixture) is migrated/fixed; modifying that resource or the test is out of scope for this task.
 ========================================
