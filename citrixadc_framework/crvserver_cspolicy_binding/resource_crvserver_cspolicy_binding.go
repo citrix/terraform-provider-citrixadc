@@ -3,6 +3,7 @@ package crvserver_cspolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CrvserverCspolicyBindingResource) Create(ctx context.Context, req resou
 	crvserver_cspolicy_binding := crvserver_cspolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Crvserver_cspolicy_binding.Type(), &crvserver_cspolicy_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource)
+	_, err := r.client.AddResource(service.Crvserver_cspolicy_binding.Type(), "", &crvserver_cspolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_cspolicy_binding, got error: %s", err))
 		return
@@ -114,26 +115,9 @@ func (r *CrvserverCspolicyBindingResource) Update(ctx context.Context, req resou
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating crvserver_cspolicy_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		crvserver_cspolicy_binding := crvserver_cspolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Crvserver_cspolicy_binding.Type(), &crvserver_cspolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update crvserver_cspolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated crvserver_cspolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for crvserver_cspolicy_binding resource, skipping update")
-	}
+	// Update is a no-op for crvserver_cspolicy_binding; all attributes are
+	// RequiresReplace, so Terraform never reaches Update with a real change.
+	tflog.Debug(ctx, "Update is a no-op for crvserver_cspolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readCrvserverCspolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -153,7 +137,8 @@ func (r *CrvserverCspolicyBindingResource) Delete(ctx context.Context, req resou
 	}
 
 	tflog.Debug(ctx, "Deleting crvserver_cspolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ID auto-detects new key:value and legacy comma formats via ParseIdString.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policyname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -166,12 +151,19 @@ func (r *CrvserverCspolicyBindingResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args, URL-encoding slashy/special values (matches SDK v2).
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Priority.IsNull() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_cspolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_cspolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_cspolicy_binding, got error: %s", err))
 		return

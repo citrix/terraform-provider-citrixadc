@@ -845,4 +845,17 @@ DATASOURCE: healthy; split setter into resource (preserve-state) + ForDatasource
 PATTERNS: 7, 13; binding-family (a) re-add dropped attr, (b) url-encode delete arg, (c) Required->Optional drift, (e) preserve non-echoed inputs.
 FILES CHANGED: citrixadc_framework/crvserver_cmppolicy_binding/resource_schema.go, citrixadc_framework/crvserver_cmppolicy_binding/resource_crvserver_cmppolicy_binding.go, citrixadc_framework/crvserver_cmppolicy_binding/datasource_crvserver_cmppolicy_binding.go, citrixadc_framework/crvserver_cmppolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_cmppolicy_binding_test.go (sanctioned ID-parse helper lines only). No doc modified.
 BLOCKER: none
+RESOURCE: crvserver_cspolicy_binding
+STATUS:   BLOCKED
+TIME:     2026-06-15T06:28:00Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/ ; retried on http://10.101.132.155/)
+TEST RUN: TestAccCrvserver_cspolicy_binding_basic|TestAcccrvserver_cspolicy_bindingDataSource_basic
+TESTS:
+  - TestAccCrvserver_cspolicy_binding_basic ............ PASS
+  - TestAcccrvserver_cspolicy_bindingDataSource_basic .. FAIL[blocked by sibling resource citrixadc_lbvserver_service_binding bug in datasource scaffolding HCL - unknown-value-after-apply for order/servicegroupname/weight + "not found with provided ID attributes"; reproduces on clean .154 and .155; out of scope per Constraint 3, cannot edit test config per Constraint 1]
+BACKWARD-COMPAT: re-added dropped attr 'bindpoint' (in SDK v2 + NITRO struct); fixed labelname/labeltype Required->Optional+Computed to match SDK v2 contract (test omits them); kept name/policyname Required (composite ID/delete keys); Create verb PUT->POST (AddResource, matches SDK v2); Delete switched to DeleteResourceWithArgs with url.QueryEscape on values (matches SDK v2); Update reduced to documented no-op (all attrs RequiresReplace); ID stays new key:value format with ParseIdString legacy-comma fallback; resource_id_mapping.json already "name,policyname" (correct).
+DATASOURCE: healthy as-is; added 'bindpoint' to shared model + datasource schema; shares fixed SetAttrFromGet (sets Id). Datasource code path unaffected by the failure (failure is in scaffolding apply before datasource read).
+PATTERNS: 1 (PUT->POST create), 5 (no-op Update), 8 (Required->Optional+Computed flag drift), plus binding-family dropped-attribute re-add and Delete URL-encode.
+FILES CHANGED: citrixadc_framework/crvserver_cspolicy_binding/resource_schema.go, citrixadc_framework/crvserver_cspolicy_binding/resource_crvserver_cspolicy_binding.go, citrixadc_framework/crvserver_cspolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_cspolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
+BLOCKER: Datasource acceptance test depends on sibling Framework resource citrixadc_lbvserver_service_binding, which has a genuine (non-flaky, reproduces on 2 clean boxes) unknown-value-after-apply migration bug. That resource is outside this migration's scope (Constraint 3); fixing it belongs to its own migration task. The crvserver_cspolicy_binding resource itself is fully migrated and its basic test passes.
 ========================================
