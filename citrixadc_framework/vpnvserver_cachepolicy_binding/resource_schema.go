@@ -56,8 +56,9 @@ func (r *VpnvserverCachepolicyBindingResource) Schema(ctx context.Context, req r
 				Description: "Next priority expression.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// Not echoed by the NITRO GET response; keep Optional-only (no Computed)
+				// so Terraform does not expect a server-resolved value after apply (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -86,8 +87,9 @@ func (r *VpnvserverCachepolicyBindingResource) Schema(ctx context.Context, req r
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
+				// Not echoed by the NITRO GET response; keep Optional-only (no Computed)
+				// so Terraform does not expect a server-resolved value after apply (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +129,57 @@ func vpnvserver_cachepolicy_bindingGetThePayloadFromthePlan(ctx context.Context,
 	return vpnvserver_cachepolicy_binding
 }
 
+// vpnvserver_cachepolicy_bindingSetAttrFromGet is the resource-side setter. It
+// preserves the user-configured / prior-state plan values for inputs that the NITRO
+// GET response does NOT echo back (the live appliance omits secondary and
+// groupextraction from the binding listing) so Terraform never sees an
+// "inconsistent result after apply" or a spurious diff (Pattern 7/13). The ID is set
+// exactly once in Create and is preserved here (Pattern 6).
 func vpnvserver_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverCachepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverCachepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_cachepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Identity / echoed attributes - adopt the value the server returns.
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	// gotopriorityexpression, groupextraction and secondary are not always echoed by
+	// the NITRO GET (secondary/groupextraction are omitted entirely). Only adopt the
+	// server value when present; otherwise preserve the existing plan/state value so
+	// we do not null out user input (Pattern 7).
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// Do NOT recompute data.Id here - it is set once in Create and preserved across
+	// Read/Update via prior state.
+
+	return data
+}
+
+// vpnvserver_cachepolicy_bindingSetAttrFromGetForDatasource is the datasource-side
+// setter. A datasource has no prior plan/state to preserve, so it faithfully copies
+// every field from the GET response and sets the composite ID itself (the datasource
+// never calls Create). Reference: Pattern 7 datasource split.
+func vpnvserver_cachepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverCachepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverCachepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_cachepolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,7 +218,7 @@ func vpnvserver_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *Vpn
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
