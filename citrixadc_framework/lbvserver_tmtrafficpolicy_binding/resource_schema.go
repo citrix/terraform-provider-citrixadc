@@ -22,6 +22,7 @@ import (
 // LbvserverTmtrafficpolicyBindingResourceModel describes the resource data model.
 type LbvserverTmtrafficpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *LbvserverTmtrafficpolicyBindingResource) Schema(ctx context.Context, re
 				Computed:    true,
 				Description: "The ID of the lbvserver_tmtrafficpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +66,16 @@ func (r *LbvserverTmtrafficpolicyBindingResource) Schema(ctx context.Context, re
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +120,9 @@ func lbvserver_tmtrafficpolicy_bindingGetThePayloadFromthePlan(ctx context.Conte
 
 	// Create API request body from the model
 	lbvserver_tmtrafficpolicy_binding := lb.Lbvservertmtrafficpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		lbvserver_tmtrafficpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		lbvserver_tmtrafficpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,17 +151,39 @@ func lbvserver_tmtrafficpolicy_bindingGetThePayloadFromthePlan(ctx context.Conte
 	return lbvserver_tmtrafficpolicy_binding
 }
 
+// boolFromGet safely converts a NITRO GET response value to a bool.
+// The ADC may return a real bool or the string "true"/"false".
+func boolFromGet(val interface{}) bool {
+	switch v := val.(type) {
+	case bool:
+		return v
+	case string:
+		return v == "true" || v == "True" || v == "TRUE"
+	default:
+		return false
+	}
+}
+
+// lbvserver_tmtrafficpolicy_bindingSetAttrFromGet is used by the resource Read/Create.
+// All attributes are Optional+Computed (matching SDK v2), so the server-returned values
+// are authoritative and may legitimately differ from / fill in the user's config.
+// The ID is set once in Create, so it is NOT recomputed here.
 func lbvserver_tmtrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data *LbvserverTmtrafficpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverTmtrafficpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In lbvserver_tmtrafficpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
-		data.Invoke = types.BoolValue(val.(bool))
+		data.Invoke = types.BoolValue(boolFromGet(val))
 	} else {
 		data.Invoke = types.BoolNull()
 	}
@@ -186,7 +222,18 @@ func lbvserver_tmtrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	return data
+}
+
+// lbvserver_tmtrafficpolicy_bindingSetAttrFromGetForDatasource is used by the datasource Read.
+// The datasource has no prior state and no Create, so it copies every field from the
+// GET response and sets the composite ID itself.
+func lbvserver_tmtrafficpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LbvserverTmtrafficpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverTmtrafficpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In lbvserver_tmtrafficpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	lbvserver_tmtrafficpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

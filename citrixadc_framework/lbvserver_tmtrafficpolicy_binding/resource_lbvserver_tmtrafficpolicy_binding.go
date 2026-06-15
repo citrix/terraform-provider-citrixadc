@@ -3,6 +3,7 @@ package lbvserver_tmtrafficpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *LbvserverTmtrafficpolicyBindingResource) Create(ctx context.Context, re
 	lbvserver_tmtrafficpolicy_binding := lbvserver_tmtrafficpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_tmtrafficpolicy_binding.Type(), &lbvserver_tmtrafficpolicy_binding)
+	// Binding resource - SDK v2 used AddResource (POST), matching NITRO's add verb
+	_, err := r.client.AddResource(service.Lbvserver_tmtrafficpolicy_binding.Type(), data.Name.ValueString(), &lbvserver_tmtrafficpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_tmtrafficpolicy_binding, got error: %s", err))
 		return
@@ -168,7 +169,15 @@ func (r *LbvserverTmtrafficpolicyBindingResource) Delete(ctx context.Context, re
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		// URL-encode the delete arg value (SDK v2 used url.QueryEscape) so slashy/special
+		// values (e.g. bindpoint REQUEST/RESPONSE, expression policynames) are handled.
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_tmtrafficpolicy_binding.Type(), name_value, argsMap)
