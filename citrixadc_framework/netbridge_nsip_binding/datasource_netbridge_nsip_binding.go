@@ -45,7 +45,6 @@ func (d *NetbridgeNsipBindingDataSource) Read(ctx context.Context, req datasourc
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	ipaddress_Name := data.Ipaddress
-	netmask_Name := data.Netmask
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -72,24 +71,14 @@ func (d *NetbridgeNsipBindingDataSource) Read(ctx context.Context, req datasourc
 	for i, v := range dataArr {
 		match := true
 
-		// Check ipaddress
+		// Check ipaddress (the unique discriminator under a given netbridge name).
+		// netmask is NOT echoed by the GET response, so it cannot be used as a filter.
 		if val, ok := v["ipaddress"].(string); ok {
 			if ipaddress_Name.IsNull() || val != ipaddress_Name.ValueString() {
 				match = false
 				continue
 			}
 		} else if !ipaddress_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check netmask
-		if val, ok := v["netmask"].(string); ok {
-			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !netmask_Name.IsNull() {
 			match = false
 			continue
 		}
@@ -105,7 +94,7 @@ func (d *NetbridgeNsipBindingDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	netbridge_nsip_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	netbridge_nsip_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

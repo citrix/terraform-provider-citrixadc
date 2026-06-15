@@ -167,11 +167,19 @@ func (r *NetbridgeNsipBindingResource) Delete(ctx context.Context, req resource.
 		return
 	}
 
+	// Prefer the live state values for the delete args (SDK v2 sourced these from
+	// d.Get(...)); fall back to the parsed ID. netmask is never echoed by GET, so the
+	// state value is the authoritative source and a legacy "name,ipaddress" import ID
+	// would not carry it. DeleteResourceWithArgsMap URL-encodes the arg values.
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["ipaddress"]; ok && val != "" {
+	if !data.Ipaddress.IsNull() && data.Ipaddress.ValueString() != "" {
+		argsMap["ipaddress"] = data.Ipaddress.ValueString()
+	} else if val, ok := idMap["ipaddress"]; ok && val != "" {
 		argsMap["ipaddress"] = val
 	}
-	if val, ok := idMap["netmask"]; ok && val != "" {
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		argsMap["netmask"] = data.Netmask.ValueString()
+	} else if val, ok := idMap["netmask"]; ok && val != "" {
 		argsMap["netmask"] = val
 	}
 
