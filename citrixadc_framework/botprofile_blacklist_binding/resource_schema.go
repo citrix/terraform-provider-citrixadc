@@ -49,7 +49,8 @@ func (r *BotprofileBlacklistBindingResource) Schema(ctx context.Context, req res
 				Description: "Any comments about this binding.",
 			},
 			"bot_blacklist": schema.BoolAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -57,7 +58,8 @@ func (r *BotprofileBlacklistBindingResource) Schema(ctx context.Context, req res
 			},
 			"bot_blacklist_action": schema.ListAttribute{
 				ElementType: types.StringType,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -72,7 +74,8 @@ func (r *BotprofileBlacklistBindingResource) Schema(ctx context.Context, req res
 				Description: "Enabled or disbaled black-list binding.",
 			},
 			"bot_blacklist_type": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -190,12 +193,23 @@ func botprofile_blacklist_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 		data.Name = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// The resource ID is composed once in Create (and preserved across reads);
+	// do not recompute it here so a sparse/normalized GET cannot wipe it.
+
+	return data
+}
+
+// Datasource variant: faithfully copy the GET response and set the ID (the
+// datasource has no Create to set it). ID uses the legacy attribute order
+// (name, bot_blacklist_value) so it matches resource_id_mapping.json.
+func botprofile_blacklist_bindingSetAttrFromGetForDatasource(ctx context.Context, data *BotprofileBlacklistBindingResourceModel, getResponseData map[string]interface{}) *BotprofileBlacklistBindingResourceModel {
+	tflog.Debug(ctx, "In botprofile_blacklist_bindingSetAttrFromGetForDatasource Function")
+
+	botprofile_blacklist_bindingSetAttrFromGet(ctx, data, getResponseData)
+
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_blacklist:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotBlacklist.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("bot_blacklist_value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotBlacklistValue.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_blacklist_value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotBlacklistValue.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
