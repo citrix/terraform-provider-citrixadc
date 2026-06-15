@@ -10,13 +10,19 @@ func AuthenticationvserverAuthenticationpolicyBindingDataSourceSchema() schema.S
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupextraction": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
 			"name": schema.StringAttribute{
@@ -38,7 +44,8 @@ func AuthenticationvserverAuthenticationpolicyBindingDataSourceSchema() schema.S
 				Description: "The priority, if any, of the vpn vserver policy.",
 			},
 			"secondary": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
 		},
