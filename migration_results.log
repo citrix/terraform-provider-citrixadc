@@ -1801,5 +1801,18 @@ BACKWARD-COMPAT: Framework resource already backward-compatible vs SDK v2 (attr 
 DATASOURCE: healthy as-is (shares SetAttrFromGet; both keys echoed by GET so no Pattern-7 split needed).
 PATTERNS: none (no code fixes needed beyond sanctioned test ID-parse helper)
 FILES CHANGED: citrixadc_framework/acctests/nspartition_bridgegroup_binding_test.go (sanctioned ID-parse helper lines only; no test logic/assertions/docs changed)
+RESOURCE: netbridge_nsip6_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:11:39Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccNetbridge_nsip6_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccNetbridge_nsip6_binding_basic ............ PASS
+  - TestAccNetbridge_nsip6_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: schema flag parity already correct (ipaddress/name Required+RequiresReplace, netmask Optional+Computed+RequiresReplace). Fixed: composite ID order now matches resource_id_mapping.json (name,ipaddress) and excludes Computed netmask; Delete now URL-encodes the slashy IPv6 ipaddress arg via DeleteResourceWithArgs+url.QueryEscape and drops netmask from delete args (mirrors SDK v2); Read/datasource match loops filter on ipaddress only.
+DATASOURCE: healthy; split setter (Pattern 7) - datasource uses netbridge_nsip6_bindingSetAttrFromGetForDatasource (faithful copy + sets ID); datasource netmask relaxed Required->Optional+Computed so lookup by name+ipaddress works.
+PATTERNS: 7 (datasource setter split + preserve-state), 13 (drop spurious null-on-missing for netmask)
+FILES CHANGED: citrixadc_framework/netbridge_nsip6_binding/resource_netbridge_nsip6_binding.go, citrixadc_framework/netbridge_nsip6_binding/resource_schema.go, citrixadc_framework/netbridge_nsip6_binding/datasource_netbridge_nsip6_binding.go, citrixadc_framework/netbridge_nsip6_binding/datasource_schema.go, citrixadc_framework/acctests/netbridge_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc changed
 BLOCKER: none
 ========================================

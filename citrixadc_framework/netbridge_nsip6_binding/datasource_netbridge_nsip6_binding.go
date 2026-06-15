@@ -45,7 +45,6 @@ func (d *NetbridgeNsip6BindingDataSource) Read(ctx context.Context, req datasour
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	ipaddress_Name := data.Ipaddress
-	netmask_Name := data.Netmask
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -67,7 +66,8 @@ func (d *NetbridgeNsip6BindingDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the requested ipaddress.
+	// Identity is (name, ipaddress); netmask is not a lookup key.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -79,17 +79,6 @@ func (d *NetbridgeNsip6BindingDataSource) Read(ctx context.Context, req datasour
 				continue
 			}
 		} else if !ipaddress_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check netmask
-		if val, ok := v["netmask"].(string); ok {
-			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !netmask_Name.IsNull() {
 			match = false
 			continue
 		}
@@ -105,7 +94,7 @@ func (d *NetbridgeNsip6BindingDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	netbridge_nsip6_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	netbridge_nsip6_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

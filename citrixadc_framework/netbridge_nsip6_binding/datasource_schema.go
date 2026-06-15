@@ -19,7 +19,8 @@ func NetbridgeNsip6BindingDataSourceSchema() schema.Schema {
 				Description: "The name of the network bridge.",
 			},
 			"netmask": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The network mask for the subnet.",
 			},
 		},
