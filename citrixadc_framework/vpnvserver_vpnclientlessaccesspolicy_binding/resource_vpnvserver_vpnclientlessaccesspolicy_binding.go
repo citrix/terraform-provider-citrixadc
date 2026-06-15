@@ -224,8 +224,8 @@ func (r *VpnvserverVpnclientlessaccesspolicyBindingResource) readVpnvserverVpncl
 	for i, v := range dataArr {
 		match := true
 
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
+		// Check bindpoint (only filter when present in the ID; absent for legacy name,policy imports)
+		if idVal, ok := idMap["bindpoint"]; ok && idVal != "" {
 			if val, ok := v["bindpoint"].(string); ok {
 				if val != idVal {
 					match = false
@@ -235,13 +235,10 @@ func (r *VpnvserverVpnclientlessaccesspolicyBindingResource) readVpnvserverVpncl
 				match = false
 				continue
 			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
 		}
 
 		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
+		if idVal, ok := idMap["policy"]; ok && idVal != "" {
 			if val, ok := v["policy"].(string); ok {
 				if val != idVal {
 					match = false
@@ -251,9 +248,6 @@ func (r *VpnvserverVpnclientlessaccesspolicyBindingResource) readVpnvserverVpncl
 				match = false
 				continue
 			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

@@ -72,26 +72,30 @@ func (d *VpnvserverVpnclientlessaccesspolicyBindingDataSource) Read(ctx context.
 	for i, v := range dataArr {
 		match := true
 
-		// Check bindpoint
-		if val, ok := v["bindpoint"].(string); ok {
-			if bindpoint_Name.IsNull() || val != bindpoint_Name.ValueString() {
+		// Check bindpoint (only filter when the user supplied it; primary lookup is name+policy)
+		if !bindpoint_Name.IsNull() && !bindpoint_Name.IsUnknown() {
+			if val, ok := v["bindpoint"].(string); ok {
+				if val != bindpoint_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !bindpoint_Name.IsNull() {
-			match = false
-			continue
 		}
 
 		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
+		if !policy_Name.IsNull() && !policy_Name.IsUnknown() {
+			if val, ok := v["policy"].(string); ok {
+				if val != policy_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
