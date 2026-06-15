@@ -22,6 +22,7 @@ import (
 // LbvserverAppflowpolicyBindingResourceModel describes the resource data model.
 type LbvserverAppflowpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,9 +41,15 @@ func (r *LbvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Computed:    true,
 				Description: "The ID of the lbvserver_appflowpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -50,21 +57,20 @@ func (r *LbvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 			},
 			"invoke": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -79,7 +85,6 @@ func (r *LbvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 			},
 			"order": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -109,6 +114,9 @@ func lbvserver_appflowpolicy_bindingGetThePayloadFromthePlan(ctx context.Context
 
 	// Create API request body from the model
 	lbvserver_appflowpolicy_binding := lb.Lbvserverappflowpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		lbvserver_appflowpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		lbvserver_appflowpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +145,43 @@ func lbvserver_appflowpolicy_bindingGetThePayloadFromthePlan(ctx context.Context
 	return lbvserver_appflowpolicy_binding
 }
 
+// lbvserver_appflowpolicy_bindingSetAttrFromGet is the resource-side state setter.
+// The NITRO GET for this binding does not faithfully echo back the user-configured
+// inputs (invoke, gotopriorityexpression, labelname, labeltype, bindpoint, order are
+// either omitted or returned normalized), so we preserve the existing plan/state values
+// to avoid "inconsistent result after apply" errors. Only the identity keys and the
+// server-authoritative priority are adopted from the GET response.
 func lbvserver_appflowpolicy_bindingSetAttrFromGet(ctx context.Context, data *LbvserverAppflowpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverAppflowpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In lbvserver_appflowpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	// All other attributes are user inputs preserved from plan/state.
+
+	return data
+}
+
+// lbvserver_appflowpolicy_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (the datasource has no prior plan/state to preserve) and
+// sets the composite ID.
+func lbvserver_appflowpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LbvserverAppflowpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverAppflowpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In lbvserver_appflowpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -186,8 +227,7 @@ func lbvserver_appflowpolicy_bindingSetAttrFromGet(ctx context.Context, data *Lb
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the resource (composite key:UrlEncode(value) pairs)
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))

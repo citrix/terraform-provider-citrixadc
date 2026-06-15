@@ -1499,5 +1499,18 @@ BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct + d
 DATASOURCE: healthy; split setter added (xxxSetAttrFromGetForDatasource) and datasource Read switched to it; bindpoint added to datasource schema for parity.
 PATTERNS: 1, 7, 13
 FILES CHANGED: citrixadc_framework/lbvserver_botpolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_botpolicy_binding/resource_lbvserver_botpolicy_binding.go, citrixadc_framework/lbvserver_botpolicy_binding/datasource_lbvserver_botpolicy_binding.go, citrixadc_framework/lbvserver_botpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_botpolicy_binding_test.go (ID-parse helper lines only - sanctioned). NO doc files changed.
+RESOURCE: lbvserver_appflowpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:23:44Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccLbvserver_appflowpolicy_binding($|_basic|DataSource)
+TESTS:
+  - TestAccLbvserver_appflowpolicy_binding_basic ......... PASS
+  - TestAccLbvserver_appflowpolicy_bindingDataSource_basic PASS
+  - (no ephemeral tests: no secret attributes) .......... N/A
+BACKWARD-COMPAT: Re-added dropped 'bindpoint' (in SDK v2 + NITRO struct); relaxed labelname/labeltype Required->Optional (SDK v2 contract, datasource config omits them); dropped spurious Computed from non-echoed user inputs (kept Computed only on priority + id); Create verb switched UpdateUnnamedResource(PUT)->AddResource(POST) per SDK v2; Delete args now include URL-encoded policyname/bindpoint/priority; ID kept new key:value format, resource_id_mapping 'name,policyname' verified for legacy import.
+DATASOURCE: healthy as-is (generated 27de55dde, never regressed); split setter (Pattern 7) -> datasource Read now calls lbvserver_appflowpolicy_bindingSetAttrFromGetForDatasource; added bindpoint to datasource schema.
+PATTERNS: 1 (PUT->POST create), 6 (ID set once, not in resource setter), 7 (preserve-state setter + datasource setter split), 13 (drop spurious Computed on non-echoed inputs)
+FILES CHANGED: citrixadc_framework/lbvserver_appflowpolicy_binding/resource_lbvserver_appflowpolicy_binding.go, citrixadc_framework/lbvserver_appflowpolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_appflowpolicy_binding/datasource_lbvserver_appflowpolicy_binding.go, citrixadc_framework/lbvserver_appflowpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_appflowpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc/SDKv2/provider-registration changes
 BLOCKER: none
 ========================================
