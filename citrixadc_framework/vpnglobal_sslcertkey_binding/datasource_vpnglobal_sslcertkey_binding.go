@@ -42,19 +42,15 @@ func (d *VpnglobalSslcertkeyBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Case 3: Array filter without parent ID
-	cacert_Name := data.Cacert
-	certkeyname_Name := data.Certkeyname
-	userdataencryptionkey_Name := data.Userdataencryptionkey
-
-	var dataArr []map[string]interface{}
-	var err error
+	// Lookup key is the Required certkeyname; cacert/userdataencryptionkey act as
+	// optional additional filters when supplied.
+	certkeyname := data.Certkeyname
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vpnglobal_sslcertkey_binding.Type(),
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read vpnglobal_sslcertkey_binding, got error: %s", err))
 		return
@@ -66,57 +62,33 @@ func (d *VpnglobalSslcertkeyBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the matching certkeyname (plus optional filters)
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check cacert
-		if val, ok := v["cacert"].(string); ok {
-			if cacert_Name.IsNull() || val != cacert_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !cacert_Name.IsNull() {
-			match = false
+		if val, ok := v["certkeyname"].(string); !ok || certkeyname.IsNull() || val != certkeyname.ValueString() {
 			continue
 		}
-
-		// Check certkeyname
-		if val, ok := v["certkeyname"].(string); ok {
-			if certkeyname_Name.IsNull() || val != certkeyname_Name.ValueString() {
-				match = false
+		if !data.Cacert.IsNull() {
+			if val, ok := v["cacert"].(string); !ok || val != data.Cacert.ValueString() {
 				continue
 			}
-		} else if !certkeyname_Name.IsNull() {
-			match = false
-			continue
 		}
-
-		// Check userdataencryptionkey
-		if val, ok := v["userdataencryptionkey"].(string); ok {
-			if userdataencryptionkey_Name.IsNull() || val != userdataencryptionkey_Name.ValueString() {
-				match = false
+		if !data.Userdataencryptionkey.IsNull() {
+			if val, ok := v["userdataencryptionkey"].(string); !ok || val != data.Userdataencryptionkey.ValueString() {
 				continue
 			}
-		} else if !userdataencryptionkey_Name.IsNull() {
-			match = false
-			continue
 		}
-
-		if match {
-			foundIndex = i
-			break
-		}
+		foundIndex = i
+		break
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnglobal_sslcertkey_binding with cacert %s not found", cacert_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnglobal_sslcertkey_binding with certkeyname %s not found", certkeyname.ValueString()))
 		return
 	}
 
-	vpnglobal_sslcertkey_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnglobal_sslcertkey_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
