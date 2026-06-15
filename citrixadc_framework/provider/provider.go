@@ -777,6 +777,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vridparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlan"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlan_nsip_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlan_nsip6_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlan_srcip_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlanvlanmap"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlanvlanmap_vxlan_binding"
@@ -1366,6 +1367,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		vpnvserver_vpnurl_binding.NewVpnvserverVpnurlBindingResource,
 		vpnvserver_vpnurlpolicy_binding.NewVpnvserverVpnurlpolicyBindingResource,
 		vxlan_nsip_binding.NewVxlanNsipBindingResource,
+		vxlan_nsip6_binding.NewVxlanNsip6BindingResource,
 		vxlan_srcip_binding.NewVxlanSrcipBindingResource,
 		vxlanvlanmap_vxlan_binding.NewVxlanvlanmapVxlanBindingResource,
 		vlan_channel_binding.NewVlanChannelBindingResource,
@@ -1775,6 +1777,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		vridparam.VRidparamDataSource,
 		vxlan.VXlanDataSource,
 		vxlan_nsip_binding.VXlanNsipBindingDataSource,
+		vxlan_nsip6_binding.VXlanNsip6BindingDataSource,
 		vxlan_srcip_binding.VXlanSrcipBindingDataSource,
 		vxlanvlanmap.VXlanvlanmapDataSource,
 		Interface.INterfaceDataSource,
