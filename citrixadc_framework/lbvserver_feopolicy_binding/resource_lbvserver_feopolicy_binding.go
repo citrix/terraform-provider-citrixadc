@@ -3,6 +3,7 @@ package lbvserver_feopolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *LbvserverFeopolicyBindingResource) Create(ctx context.Context, req reso
 	lbvserver_feopolicy_binding := lbvserver_feopolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_feopolicy_binding.Type(), &lbvserver_feopolicy_binding)
+	// Binding resource - SDK v2 used AddResource (POST). Preserve that verb.
+	_, err := r.client.AddResource(service.Lbvserver_feopolicy_binding.Type(), data.Name.ValueString(), &lbvserver_feopolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_feopolicy_binding, got error: %s", err))
 		return
@@ -168,7 +169,15 @@ func (r *LbvserverFeopolicyBindingResource) Delete(ctx context.Context, req reso
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	// Preserve SDK v2 delete args: bindpoint and priority help disambiguate the
+	// binding. URL-encode values that may contain slashes/special characters.
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%d", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_feopolicy_binding.Type(), name_value, argsMap)
