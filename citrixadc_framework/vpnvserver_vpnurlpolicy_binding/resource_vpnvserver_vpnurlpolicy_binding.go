@@ -68,9 +68,12 @@ func (r *VpnvserverVpnurlpolicyBindingResource) Create(ctx context.Context, req 
 
 	tflog.Trace(ctx, "Created vpnvserver_vpnurlpolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Composite ID order matches resource_id_mapping.json ("name,policy") so a
+	// legacy SDK v2 ID ("name,policy") imports correctly. bindpoint is NOT part of
+	// the identity (it may be empty/unset on the live record and is not in the
+	// SDK v2 ID).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -167,10 +170,10 @@ func (r *VpnvserverVpnurlpolicyBindingResource) Delete(ctx context.Context, req 
 		return
 	}
 
+	// Delete by parent name (vserver) disambiguated by the bound policy.
+	// Matches SDK v2, which passed policy as the delete arg. Values are
+	// URL-encoded by DeleteResourceWithArgsMap.
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
 	if val, ok := idMap["policy"]; ok && val != "" {
 		argsMap["policy"] = val
 	}
@@ -219,26 +222,11 @@ func (r *VpnvserverVpnurlpolicyBindingResource) readVpnvserverVpnurlpolicyBindin
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Identity is (name, policy); name is the parent (GET filter), so match on policy.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
 
 		// Check policy
 		if idVal, ok := idMap["policy"]; ok {

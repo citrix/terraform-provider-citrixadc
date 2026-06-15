@@ -3276,3 +3276,19 @@ PATTERNS: Pattern 8/16-family delete-arg encoding (URL-encode delete arg value);
 FILES CHANGED: citrixadc_framework/vpnvserver_vpnurl_binding/resource_vpnvserver_vpnurl_binding.go, citrixadc_framework/acctests/vpnvserver_vpnurl_binding_test.go (ID-parse helper lines only; NO doc changed)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_vpnurlpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T14:00:47Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccVpnvserver_vpnurlpolicy_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccVpnvserver_vpnurlpolicy_binding_basic ........... PASS
+  - TestAccVpnvserver_vpnurlpolicy_bindingDataSource_basic . PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: ID format aligned to resource_id_mapping.json ("name,policy"): dropped spurious bindpoint key from composite ID in Create + SetAttrFromGet; Read/Delete match on policy only; Delete arg = policy (URL-encoded by client). Dropped spurious Computed from bindpoint/secondary/groupextraction (NITRO GET does not echo them -> would stay unknown after apply). priority/gotopriorityexpression kept Optional+Computed (echoed). Create verb confirmed PUT (UpdateUnnamedResource), matching SDK v2.
+DATASOURCE: healthy after fix; made bindpoint Optional+Computed (was Required, but test queries by name+policy only); match on policy only; split setter -> uses new xxxSetAttrFromGetForDatasource (faithful copy + sets name:policy ID).
+PATTERNS: 6 (ID recompute), 7 (split resource/datasource setter; preserve non-echoed inputs), 11 (resource/datasource flag consistency), 13 (drop spurious Computed on non-echoed attrs)
+FILES CHANGED: citrixadc_framework/vpnvserver_vpnurlpolicy_binding/resource_vpnvserver_vpnurlpolicy_binding.go, citrixadc_framework/vpnvserver_vpnurlpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_vpnurlpolicy_binding/datasource_vpnvserver_vpnurlpolicy_binding.go, citrixadc_framework/vpnvserver_vpnurlpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_vpnurlpolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
+BLOCKER: none
+========================================
