@@ -3,6 +3,7 @@ package gslbservice_dnsview_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -114,34 +115,11 @@ func (r *GslbserviceDnsviewBindingResource) Update(ctx context.Context, req reso
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating gslbservice_dnsview_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-	if !data.Viewip.Equal(state.Viewip) {
-		tflog.Debug(ctx, fmt.Sprintf("viewip has changed for gslbservice_dnsview_binding"))
-		hasChange = true
-	}
-	if !data.Viewname.Equal(state.Viewname) {
-		tflog.Debug(ctx, fmt.Sprintf("viewname has changed for gslbservice_dnsview_binding"))
-		hasChange = true
-	}
-
-	if hasChange {
-		// Create API request body from the model
-		gslbservice_dnsview_binding := gslbservice_dnsview_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Gslbservice_dnsview_binding.Type(), &gslbservice_dnsview_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update gslbservice_dnsview_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated gslbservice_dnsview_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for gslbservice_dnsview_binding resource, skipping update")
-	}
+	// No-op: every schema attribute (servicename, viewip, viewname) is RequiresReplace,
+	// matching the SDK v2 resource which had no Update (all ForceNew). The NITRO binding
+	// has no in-place update endpoint, so Terraform forces recreation on any change and
+	// Update is never reached with an actual diff.
+	tflog.Debug(ctx, "Update is a no-op for gslbservice_dnsview_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readGslbserviceDnsviewBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -174,12 +152,15 @@ func (r *GslbserviceDnsviewBindingResource) Delete(ctx context.Context, req reso
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args; URL-encode the viewname value so slashy/special characters
+	// survive in the DELETE ?args=viewname:<value> query (the NITRO client does not
+	// encode arg values, only the resource name).
+	args := make([]string, 0)
 	if val, ok := idMap["viewname"]; ok && val != "" {
-		argsMap["viewname"] = val
+		args = append(args, fmt.Sprintf("viewname:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Gslbservice_dnsview_binding.Type(), servicename_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Gslbservice_dnsview_binding.Type(), servicename_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete gslbservice_dnsview_binding, got error: %s", err))
 		return

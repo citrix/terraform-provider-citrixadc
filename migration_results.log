@@ -949,3 +949,19 @@ PATTERNS: 8 (flag correction), binding-family Delete URL-encode (b); Pattern 1 c
 FILES CHANGED: citrixadc_framework/crvserver_lbvserver_binding/resource_schema.go, citrixadc_framework/crvserver_lbvserver_binding/resource_crvserver_lbvserver_binding.go, citrixadc_framework/acctests/crvserver_lbvserver_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: gslbservice_dnsview_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:59:01Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccGslbservice_dnsview_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccGslbservice_dnsview_binding_basic ........ PASS
+  - TestAccGslbservice_dnsview_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs)
+BACKWARD-COMPAT: viewip was Required in Framework but Optional+Computed+ForceNew in SDK v2 -> reconciled to Optional+Computed+RequiresReplace; viewname was missing RequiresReplace vs SDK v2 ForceNew -> added RequiresReplace; Update converted to RequiresReplace no-op (SDK v2 had no Update); Delete switched to DeleteResourceWithArgs with url.QueryEscape on viewname arg value; ID format/order (servicename,viewname) matches resource_id_mapping.json.
+DATASOURCE: healthy as-is; SetAttrFromGet semantics unchanged (faithfully copies all fields + sets Id), so no Pattern-7 split needed.
+PATTERNS: 5 (RequiresReplace no-op Update), 8 (Required->Optional+Computed flag correction), 1b/Delete arg URL-encode hint; sanctioned Constraint-1 ID-parse helper fix in Exist check.
+FILES CHANGED: citrixadc_framework/gslbservice_dnsview_binding/resource_gslbservice_dnsview_binding.go, citrixadc_framework/gslbservice_dnsview_binding/resource_schema.go, citrixadc_framework/acctests/gslbservice_dnsview_binding_test.go (ID-parse helper lines only; NO doc files)
+BLOCKER: none
+========================================

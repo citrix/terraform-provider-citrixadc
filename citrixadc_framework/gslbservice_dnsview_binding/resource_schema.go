@@ -41,11 +41,18 @@ func (r *GslbserviceDnsviewBindingResource) Schema(ctx context.Context, req reso
 				Description: "Name of the GSLB service.",
 			},
 			"viewip": schema.StringAttribute{
-				Required:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IP address to be used for the given view",
 			},
 			"viewname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the DNS view of the service. A DNS view is used in global server load balancing (GSLB) to return a predetermined IP address to a specific group of clients, which are identified by using a DNS policy.",
 			},
 		},
