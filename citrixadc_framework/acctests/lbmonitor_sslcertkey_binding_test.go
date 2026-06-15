@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -190,10 +191,12 @@ func testAccCheckLbmonitor_sslcertkey_bindingExist(n string, id *string) resourc
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		monitorName := idSlice[0]
-		sslcertkeyName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"monitorname", "certkeyname"}, nil)
+		if err != nil {
+			return err
+		}
+		monitorName := idMap["monitorname"]
+		sslcertkeyName := idMap["certkeyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbmonitor_sslcertkey_binding",
@@ -235,10 +238,12 @@ func testAccCheckLbmonitor_sslcertkey_bindingNotExist(n string, id string) resou
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		lbmonitorName := idSlice[0]
-		sslcertkeyName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"monitorname", "certkeyname"}, nil)
+		if err != nil {
+			return err
+		}
+		lbmonitorName := idMap["monitorname"]
+		sslcertkeyName := idMap["certkeyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbmonitor_sslcertkey_binding",
