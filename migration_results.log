@@ -529,5 +529,18 @@ BACKWARD-COMPAT: invoke_labelname and labeltype were Required in Framework but O
 DATASOURCE: healthy as-is (shares SetAttrFromGet which copies from GET response and recomputes Id from config-supplied labelname/policyname; no split needed).
 PATTERNS: 8 (Required->Optional+Computed relaxation, both attrs)
 FILES CHANGED: citrixadc_framework/authorizationpolicylabel_authorizationpolicy_binding/resource_schema.go, citrixadc_framework/authorizationpolicylabel_authorizationpolicy_binding/resource_authorizationpolicylabel_authorizationpolicy_binding.go, citrixadc_framework/acctests/authorizationpolicylabel_authorizationpolicy_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: authenticationvserver_tmsessionpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:20:58Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: 'TestAccAuthenticationvserver_tmsessionpolicy_binding_basic$|TestAccAuthenticationvserverTmsessionpolicyBindingDataSource_basic$'
+TESTS:
+  - TestAccAuthenticationvserver_tmsessionpolicy_binding_basic ........ PASS
+  - TestAccAuthenticationvserverTmsessionpolicyBindingDataSource_basic  PASS
+  - (no ephemeral tests: resource has no x-secret-attr) .............. N/A
+BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (present in SDK v2 schema + NITRO struct + test config); aligned composite ID to legacy name,policy order (resource_id_mapping.json) instead of generated 4-key groupextraction,name,policy,secondary; dropped spurious Computed from all six non-echoed inputs (bindpoint/gotopriorityexpression/groupextraction/nextfactor/priority/secondary) to fix unknown-value-after-apply; preserved non-echoed inputs in resource SetAttrFromGet; URL-encoded Delete args via DeleteResourceWithArgs; type/Required/Optional/ForceNew(RequiresReplace) parity matches SDK v2.
+DATASOURCE: fixed in place - made groupextraction/secondary Optional+Computed (were Required, breaking the test config which sets only name+policy), added bindpoint, switched Read to filter on policy and use a dedicated datasource setter (Pattern 7 split).
+PATTERNS: 7 (preserve-state + datasource setter split), 13 (drop Computed on non-resolvable Optional attrs), plus binding-family (a) dropped-attr re-add, (b) URL-encoded delete args, (f) composite-ID order, (g) attr-name parity.
+FILES CHANGED: citrixadc_framework/authenticationvserver_tmsessionpolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_tmsessionpolicy_binding/resource_authenticationvserver_tmsessionpolicy_binding.go, citrixadc_framework/authenticationvserver_tmsessionpolicy_binding/datasource_schema.go, citrixadc_framework/authenticationvserver_tmsessionpolicy_binding/datasource_authenticationvserver_tmsessionpolicy_binding.go, citrixadc_framework/acctests/authenticationvserver_tmsessionpolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc files)
 BLOCKER: none
 ========================================
