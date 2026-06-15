@@ -93,7 +93,7 @@ func (d *CmppolicylabelCmppolicyBindingDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	cmppolicylabel_cmppolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	cmppolicylabel_cmppolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
