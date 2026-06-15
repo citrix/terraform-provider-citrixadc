@@ -3,6 +3,7 @@ package rewriteglobal_rewritepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -60,8 +61,8 @@ func (r *RewriteglobalRewritepolicyBindingResource) Create(ctx context.Context, 
 	rewriteglobal_rewritepolicy_binding := rewriteglobal_rewritepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Rewriteglobal_rewritepolicy_binding.Type(), &rewriteglobal_rewritepolicy_binding)
+	// Binding resource - SDK v2 used AddResource (POST); NITRO add verb is POST
+	_, err := r.client.AddResource(service.Rewriteglobal_rewritepolicy_binding.Type(), "", &rewriteglobal_rewritepolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create rewriteglobal_rewritepolicy_binding, got error: %s", err))
 		return
@@ -163,15 +164,17 @@ func (r *RewriteglobalRewritepolicyBindingResource) Delete(ctx context.Context, 
 		return
 	}
 
+	// URL-encode arg values (matches SDK v2 behavior) so slashy/special values are
+	// transmitted safely in the delete query string.
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
 	}
 	if val, ok := idMap["priority"]; ok && val != "" {
-		argsMap["priority"] = val
+		argsMap["priority"] = url.QueryEscape(val)
 	}
 	if val, ok := idMap["type"]; ok && val != "" {
-		argsMap["type"] = val
+		argsMap["type"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Rewriteglobal_rewritepolicy_binding.Type(), "", argsMap)
