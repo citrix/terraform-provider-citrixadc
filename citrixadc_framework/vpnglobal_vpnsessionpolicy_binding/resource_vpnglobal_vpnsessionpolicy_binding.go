@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"net/url"
+
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -153,7 +154,15 @@ func (r *VpnglobalVpnsessionpolicyBindingResource) Delete(ctx context.Context, r
 	// Single unique attribute - ID is the plain value
 	policyname_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("policyname:%s", policyname_value),
+		fmt.Sprintf("policyname:%s", url.QueryEscape(policyname_value)),
+	}
+	// NITRO delete accepts secondary and groupextraction as disambiguating args
+	// (mirrors the SDK v2 resource). Only send them when set in state.
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%t", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%t", data.Groupextraction.ValueBool()))))
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_vpnsessionpolicy_binding.Type(), "", args)
@@ -168,12 +177,8 @@ func (r *VpnglobalVpnsessionpolicyBindingResource) Delete(ctx context.Context, r
 // Helper function to read vpnglobal_vpnsessionpolicy_binding data from API
 func (r *VpnglobalVpnsessionpolicyBindingResource) readVpnglobalVpnsessionpolicyBindingFromApi(ctx context.Context, data *VpnglobalVpnsessionpolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
+	// Single unique attribute - ID is the plain policyname value (Pattern 10)
+	policyname := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
 
@@ -181,7 +186,7 @@ func (r *VpnglobalVpnsessionpolicyBindingResource) readVpnglobalVpnsessionpolicy
 		ResourceType:             service.Vpnglobal_vpnsessionpolicy_binding.Type(),
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnglobal_vpnsessionpolicy_binding, got error: %s", err))
 		return
@@ -196,25 +201,7 @@ func (r *VpnglobalVpnsessionpolicyBindingResource) readVpnglobalVpnsessionpolicy
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policyname
-		if idVal, ok := idMap["policyname"]; ok {
-			if val, ok := v["policyname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policyname"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["policyname"].(string); ok && val == policyname {
 			foundIndex = i
 			break
 		}
@@ -222,7 +209,7 @@ func (r *VpnglobalVpnsessionpolicyBindingResource) readVpnglobalVpnsessionpolicy
 
 	// Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnglobal_vpnsessionpolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "vpnglobal_vpnsessionpolicy_binding not found with the provided ID attributes")
 		return
 	}
 
