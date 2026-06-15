@@ -1263,3 +1263,19 @@ PATTERNS: 6, 7, 8, 13
 FILES CHANGED: citrixadc_framework/csvserver_cspolicy_binding/resource_schema.go, citrixadc_framework/csvserver_cspolicy_binding/datasource_csvserver_cspolicy_binding.go, citrixadc_framework/csvserver_cspolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_cspolicy_binding_test.go (ID-parse helper lines only)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: ipset_nsip6_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:09:07Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccIpset_nsip6_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccIpset_nsip6_binding_basic ............ PASS
+  - TestAccIpset_nsip6_bindingDataSource_basic .. PASS
+  - (no ephemeral test; resource has no secret attributes)
+BACKWARD-COMPAT: attr/type/Required/ForceNew parity all matched SDK v2 (ipaddress+name Required+RequiresReplace, string). ID adopts new key:value format; resource_id_mapping.json "name,ipaddress" verified; ParseIdString handles legacy import. One fix: Delete arg value for ipaddress (IPv6 CIDR with '/' and ':') was passed RAW via DeleteResourceWithArgsMap, which does not URL-encode arg values; SDK v2 used url.PathEscape. Switched Delete to DeleteResourceWithArgs with url.QueryEscape on the ipaddress value (Pattern b).
+DATASOURCE: healthy as-is; shared SetAttrFromGet faithfully copies GET fields (both echoed by NITRO) and sets ID; no Pattern-7 split needed. DataSource test passed.
+PATTERNS: (b) Delete-arg URL-encoding; Constraint-1 sanctioned ID-parse helper exception (Exist helper rewritten to utils.ParseIdString).
+FILES CHANGED: citrixadc_framework/ipset_nsip6_binding/resource_ipset_nsip6_binding.go, citrixadc_framework/acctests/ipset_nsip6_binding_test.go
+BLOCKER: none
+========================================
