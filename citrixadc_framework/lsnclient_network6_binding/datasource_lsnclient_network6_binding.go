@@ -84,16 +84,18 @@ func (d *LsnclientNetwork6BindingDataSource) Read(ctx context.Context, req datas
 			continue
 		}
 
-		// Check td
-		if val, ok := v["td"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if td_Name.IsNull() || val != td_Name.ValueInt64() {
+		// Check td (optional filter - only applied when supplied in config)
+		if !td_Name.IsNull() {
+			if val, ok := v["td"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != td_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !td_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

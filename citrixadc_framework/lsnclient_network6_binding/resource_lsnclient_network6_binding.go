@@ -3,7 +3,7 @@ package lsnclient_network6_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,11 +69,14 @@ func (r *LsnclientNetwork6BindingResource) Create(ctx context.Context, req resou
 
 	tflog.Trace(ctx, "Created lsnclient_network6_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// td is excluded: the NITRO GET response for this binding does not echo td,
+	// so including it in the composite ID would break the read-back match loop.
+	// This also matches the SDK v2 ID order (clientname,network6) in
+	// resource_id_mapping.json.
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("network6:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network6.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -168,15 +171,18 @@ func (r *LsnclientNetwork6BindingResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// network6 values contain '/' and ':' (e.g. "2001:db8:5001::/96") which are
+	// not URL-escaped by the NITRO client's args path; escape them explicitly
+	// (matches the SDK v2 resource which used url.PathEscape on network6).
+	args := make([]string, 0)
 	if val, ok := idMap["network6"]; ok && val != "" {
-		argsMap["network6"] = val
+		args = append(args, fmt.Sprintf("network6:%s", url.QueryEscape(val)))
 	}
 	if val, ok := idMap["td"]; ok && val != "" {
-		argsMap["td"] = val
+		args = append(args, fmt.Sprintf("td:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Lsnclient_network6_binding.Type(), clientname_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Lsnclient_network6_binding.Type(), clientname_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsnclient_network6_binding, got error: %s", err))
 		return
@@ -237,24 +243,6 @@ func (r *LsnclientNetwork6BindingResource) readLsnclientNetwork6BindingFromApi(c
 				continue
 			}
 		} else if _, ok := v["network6"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check td
-		if idVal, ok := idMap["td"]; ok {
-			if val, ok := v["td"]; ok {
-				val, _ = utils.ConvertToInt64(val)
-				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
-				if val != idValInt64 {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["td"]; ok {
 			match = false
 			continue
 		}

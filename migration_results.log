@@ -3305,3 +3305,19 @@ PATTERNS: 8 (Required->Optional+Computed flag drift)
 FILES CHANGED: citrixadc_framework/vxlanvlanmap_vxlan_binding/resource_schema.go, citrixadc_framework/acctests/vxlanvlanmap_vxlan_binding_test.go (sanctioned ID-parse helper lines only), migration_results.log
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lsnclient_network6_binding
+STATUS:   PASS
+TIME:     2026-06-15T14:20:00Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccLsnclient_network6_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccLsnclient_network6_binding_basic ............ PASS
+  - TestAccLsnclient_network6_bindingDataSource_basic .. PASS
+  - (no ephemeral/secret tests) ....................... N/A
+BACKWARD-COMPAT: SDK v2 contract = {clientname Req/ForceNew, network6 Req/ForceNew, td Opt/Computed/ForceNew}. Reconciled: (1) Delete now URL-encodes network6/td arg values via DeleteResourceWithArgs+url.QueryEscape (SDK v2 used url.PathEscape; slashy IPv6 value broke the raw args URL); (2) td dropped from composite ID (GET never echoes td) so ID = clientname:..,network6:.. matching resource_id_mapping.json legacy order clientname,network6; (3) td Computed dropped (GET doesn't echo it -> unknown-after-apply); SetAttrFromGet now preserves configured td (Pattern 7); (4) datasource td Required->Optional and td filter made conditional on non-null; (5) codegen-added netmask/network (not in SDK v2, not echoed by network6 GET) had Computed dropped to avoid unknown-after-apply. Create verb UpdateUnnamedResource(PUT) matches SDK v2.
+DATASOURCE: healthy as-is; fixed shared td flag (Required->Optional), conditional td filter, and shares the corrected SetAttrFromGet (td-preserve, no td in ID).
+PATTERNS: 7 (non-echoed input preserve + drop Computed), 11 (resource/datasource flag drift), 13 (drop Computed on attrs that can't resolve after apply); binding-family Delete URL-encoding.
+FILES CHANGED: citrixadc_framework/lsnclient_network6_binding/resource_lsnclient_network6_binding.go, citrixadc_framework/lsnclient_network6_binding/resource_schema.go, citrixadc_framework/lsnclient_network6_binding/datasource_schema.go, citrixadc_framework/lsnclient_network6_binding/datasource_lsnclient_network6_binding.go, citrixadc_framework/acctests/lsnclient_network6_binding_test.go (sanctioned ID-parse helper lines only; NO docs)
+BLOCKER: none
+========================================
