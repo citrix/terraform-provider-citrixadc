@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -131,10 +131,12 @@ func testAccCheckAuthenticationvserver_vpnportaltheme_bindingExist(n string, id 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		portaltheme := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "portaltheme"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		portaltheme := idMap["portaltheme"]
 
 		findParams := service.FindParams{
 			ResourceType:             "authenticationvserver_vpnportaltheme_binding",
@@ -173,13 +175,12 @@ func testAccCheckAuthenticationvserver_vpnportaltheme_bindingNotExist(n string, 
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "portaltheme"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		portaltheme := idSlice[1]
+		name := idMap["name"]
+		portaltheme := idMap["portaltheme"]
 
 		findParams := service.FindParams{
 			ResourceType:             "authenticationvserver_vpnportaltheme_binding",

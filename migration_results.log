@@ -503,5 +503,18 @@ BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (in SDK v2 schema + NITRO str
 DATASOURCE: healthy after fixes; split setter into resource (preserve state) + xxxSetAttrFromGetForDatasource (copy-all + set legacy ID); added bindpoint; match on policy.
 PATTERNS: 5, 6, 7, 13 (and binding-family fixes a, b, e, f, g)
 FILES CHANGED: citrixadc_framework/authenticationvserver_responderpolicy_binding/{resource_authenticationvserver_responderpolicy_binding.go,resource_schema.go,datasource_authenticationvserver_responderpolicy_binding.go,datasource_schema.go} (NO test/doc files modified)
+RESOURCE: authenticationvserver_vpnportaltheme_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:13:55Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccAuthenticationvserver_vpnportaltheme_binding_basic$|TestAccAuthenticationvserverVpnportalthemeBindingDataSource_basic$
+TESTS:
+  - TestAccAuthenticationvserver_vpnportaltheme_binding_basic ... PASS
+  - TestAccAuthenticationvserverVpnportalthemeBindingDataSource_basic ... PASS
+  - (no ephemeral tests - resource has no secret attributes)
+BACKWARD-COMPAT: Framework resource already backward-compatible vs SDK v2 (name+portaltheme both Required+RequiresReplace matching v2 Required+ForceNew; string types; Create=UpdateUnnamedResource/PUT matching v2; delete args portaltheme:<val> matching v2; new key:value ID format with resource_id_mapping.json "name,portaltheme" for legacy parsing). No resource/datasource code changes needed.
+DATASOURCE: healthy as-is (shares ResourceModel + SetAttrFromGet; lookup keys name+portaltheme Required; both echoed by GET).
+PATTERNS: none (no codegen defects found; only sanctioned test ID-parse helper fix per Constraint 1)
+FILES CHANGED: citrixadc_framework/acctests/authenticationvserver_vpnportaltheme_binding_test.go (sanctioned ID-parse helper lines only). NO doc/non-test-helper changes.
 BLOCKER: none
 ========================================
