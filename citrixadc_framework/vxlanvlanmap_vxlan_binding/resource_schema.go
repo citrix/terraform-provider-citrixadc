@@ -44,7 +44,8 @@ func (r *VxlanvlanmapVxlanBindingResource) Schema(ctx context.Context, req resou
 			},
 			"vlan": schema.ListAttribute{
 				ElementType: types.StringType,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
