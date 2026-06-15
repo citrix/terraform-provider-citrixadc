@@ -3,7 +3,6 @@ package authenticationvserver_authenticationnegotiatepolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,12 +68,12 @@ func (r *AuthenticationvserverAuthenticationnegotiatepolicyBindingResource) Crea
 
 	tflog.Trace(ctx, "Created authenticationvserver_authenticationnegotiatepolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Composite key:UrlEncode(value) pairs in the legacy SDK v2 order (name,policy)
+	// per resource_id_mapping.json. name+policy uniquely identify the binding.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -156,7 +155,10 @@ func (r *AuthenticationvserverAuthenticationnegotiatepolicyBindingResource) Dele
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_authenticationnegotiatepolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgsMap.
+	// Parent (name) and policy come from the ID; the remaining delete args
+	// (secondary, groupextraction, bindpoint) come from state, mirroring the
+	// SDK v2 delete-arg set. DeleteResourceWithArgsMap URL-encodes values internally.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -170,14 +172,17 @@ func (r *AuthenticationvserverAuthenticationnegotiatepolicyBindingResource) Dele
 	}
 
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
-	}
 	if val, ok := idMap["policy"]; ok && val != "" {
 		argsMap["policy"] = val
 	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		argsMap["secondary"] = fmt.Sprintf("%v", data.Secondary.ValueBool())
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		argsMap["groupextraction"] = fmt.Sprintf("%v", data.Groupextraction.ValueBool())
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = data.Bindpoint.ValueString()
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationnegotiatepolicy_binding.Type(), name_value, argsMap)
@@ -224,61 +229,12 @@ func (r *AuthenticationvserverAuthenticationnegotiatepolicyBindingResource) read
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding matching the policy from the ID.
+	// name+policy uniquely identify the binding (same as SDK v2 Read).
+	policy_value := idMap["policy"]
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
 			foundIndex = i
 			break
 		}
