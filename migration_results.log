@@ -2724,3 +2724,19 @@ PATTERNS: 2(b)/Delete-arg URL-encode (per binding-family hint b).
 FILES CHANGED: citrixadc_framework/vpnglobal_vpnnexthopserver_binding/resource_vpnglobal_vpnnexthopserver_binding.go (NO test/doc file changed)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_auditnslogpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T12:56:57Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccVpnvserver_auditnslogpolicy_binding($|_basic|DataSource)
+TESTS:
+  - TestAccVpnvserver_auditnslogpolicy_binding_basic ............ PASS
+  - TestAccVpnvserver_auditnslogpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ..... N/A
+BACKWARD-COMPAT: 7-attr parity OK vs SDK v2. ID reverted to legacy name,policy keys (bindpoint dropped from composite ID since NITRO GET does not echo it). Create verb kept as UpdateUnnamedResource (PUT, matches SDK v2). SetAttrFromGet now preserves non-echoed inputs (bindpoint/gotopriorityexpression/groupextraction/secondary). Dropped spurious Computed from those 4 attrs; priority stays Optional+Computed (echoed). Datasource bindpoint changed Required->Optional+Computed (test supplies only name+policy).
+DATASOURCE: healthy; switched Read to new SetAttrFromGetForDatasource setter (Pattern 7 split) + sets own name,policy ID; removed bindpoint filter (never echoed).
+PATTERNS: 7, 8, 11, 13
+FILES CHANGED: citrixadc_framework/vpnvserver_auditnslogpolicy_binding/resource_vpnvserver_auditnslogpolicy_binding.go, citrixadc_framework/vpnvserver_auditnslogpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_auditnslogpolicy_binding/datasource_vpnvserver_auditnslogpolicy_binding.go, citrixadc_framework/vpnvserver_auditnslogpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_auditnslogpolicy_binding_test.go (sanctioned ID-parse helper lines only). No docs modified.
+BLOCKER: none
+========================================
