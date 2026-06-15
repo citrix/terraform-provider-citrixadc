@@ -3,8 +3,7 @@ package authenticationvserver_authenticationradiuspolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -69,13 +68,9 @@ func (r *AuthenticationvserverAuthenticationradiuspolicyBindingResource) Create(
 
 	tflog.Trace(ctx, "Created authenticationvserver_authenticationradiuspolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state.
+	// Composite ID uses the SDK v2 identity keys name,policy (see resource_id_mapping.json).
+	data.Id = types.StringValue(authenticationvserver_authenticationradiuspolicy_bindingComputeId(&data))
 
 	// Read the updated state back
 	r.readAuthenticationvserverAuthenticationradiuspolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -169,15 +164,11 @@ func (r *AuthenticationvserverAuthenticationradiuspolicyBindingResource) Delete(
 		return
 	}
 
+	// The NITRO delete endpoint disambiguates the binding by the bound policy name.
+	// URL-encode slashy/special values (DeleteResourceWithArgsMap does not encode arg values).
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
-	}
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
-	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+		argsMap["policy"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationradiuspolicy_binding.Type(), name_value, argsMap)
@@ -224,61 +215,16 @@ func (r *AuthenticationvserverAuthenticationradiuspolicyBindingResource) readAut
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return
+	}
+
+	// Iterate through results to find the one matching the policy key
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
 			foundIndex = i
 			break
 		}
