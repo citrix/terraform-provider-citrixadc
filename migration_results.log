@@ -1419,3 +1419,19 @@ PATTERNS: 8
 FILES CHANGED: citrixadc_framework/lbmetrictable_metric_binding/resource_schema.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/lbmetrictable_metric_binding_test.go (ID-parse helper lines only - sanctioned exception)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lbmonitor_metric_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:22:34Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccLbmonitor_metric_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccLbmonitor_metric_binding_basic ............ PASS
+  - TestAccLbmonitor_metric_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) .. N/A
+BACKWARD-COMPAT: metricthreshold Required->Optional+Computed (SDK v2 was Optional); added RequiresReplace to metric/metricthreshold/metricweight to match SDK v2 ForceNew; Update made a no-op (Pattern 5) since all attrs are ForceNew and NITRO has no change endpoint; ID order monitorname,metric matches resource_id_mapping.json; metricweight kept Computed (server-defaulted).
+DATASOURCE: healthy as-is; shares faithful SetAttrFromGet (no Pattern 7 split needed); sets composite id.
+PATTERNS: 5, 8 (reverse: relax over-constrained Required)
+FILES CHANGED: citrixadc_framework/lbmonitor_metric_binding/resource_schema.go, citrixadc_framework/lbmonitor_metric_binding/resource_lbmonitor_metric_binding.go, citrixadc_framework/acctests/lbmonitor_metric_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================

@@ -114,40 +114,13 @@ func (r *LbmonitorMetricBindingResource) Update(ctx context.Context, req resourc
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating lbmonitor_metric_binding resource")
+	// Update is a no-op for lbmonitor_metric_binding. All attributes are
+	// RequiresReplace (matching the SDK v2 ForceNew contract: monitorname, metric,
+	// metricthreshold, metricweight) and NITRO exposes no change/update endpoint for
+	// this binding, so Terraform recreates instead of ever reaching Update with a diff.
+	tflog.Debug(ctx, "Update is a no-op for lbmonitor_metric_binding; all attributes are RequiresReplace")
 
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-	if !data.Metric.Equal(state.Metric) {
-		tflog.Debug(ctx, fmt.Sprintf("metric has changed for lbmonitor_metric_binding"))
-		hasChange = true
-	}
-	if !data.Metricthreshold.Equal(state.Metricthreshold) {
-		tflog.Debug(ctx, fmt.Sprintf("metricthreshold has changed for lbmonitor_metric_binding"))
-		hasChange = true
-	}
-	if !data.Metricweight.Equal(state.Metricweight) {
-		tflog.Debug(ctx, fmt.Sprintf("metricweight has changed for lbmonitor_metric_binding"))
-		hasChange = true
-	}
-
-	if hasChange {
-		// Create API request body from the model
-		lbmonitor_metric_binding := lbmonitor_metric_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Lbmonitor_metric_binding.Type(), &lbmonitor_metric_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbmonitor_metric_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated lbmonitor_metric_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for lbmonitor_metric_binding resource, skipping update")
-	}
-
-	// Read the updated state back
+	// Read the current state back
 	r.readLbmonitorMetricBindingFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
