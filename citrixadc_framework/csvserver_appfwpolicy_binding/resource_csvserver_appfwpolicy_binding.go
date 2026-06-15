@@ -59,8 +59,9 @@ func (r *CsvserverAppfwpolicyBindingResource) Create(ctx context.Context, req re
 	csvserver_appfwpolicy_binding := csvserver_appfwpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_appfwpolicy_binding.Type(), &csvserver_appfwpolicy_binding)
+	// Binding resource - NITRO `add` is POST (matches SDK v2 AddResource); the
+	// nitro client omits ?idempotent=yes for *_binding types (Pattern 1).
+	_, err := r.client.AddResource(service.Csvserver_appfwpolicy_binding.Type(), data.Name.ValueString(), &csvserver_appfwpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_appfwpolicy_binding, got error: %s", err))
 		return
@@ -114,26 +115,10 @@ func (r *CsvserverAppfwpolicyBindingResource) Update(ctx context.Context, req re
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating csvserver_appfwpolicy_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		csvserver_appfwpolicy_binding := csvserver_appfwpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Csvserver_appfwpolicy_binding.Type(), &csvserver_appfwpolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csvserver_appfwpolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated csvserver_appfwpolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for csvserver_appfwpolicy_binding resource, skipping update")
-	}
+	// Update is a no-op for csvserver_appfwpolicy_binding; every schema attribute
+	// is RequiresReplace so Terraform recreates rather than updating in place
+	// (Pattern 5). NITRO exposes no update endpoint for this binding.
+	tflog.Debug(ctx, "Update is a no-op for csvserver_appfwpolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readCsvserverAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)

@@ -22,6 +22,7 @@ import (
 // CsvserverAppfwpolicyBindingResourceModel describes the resource data model.
 type CsvserverAppfwpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -39,12 +40,25 @@ func (r *CsvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req re
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the csvserver_appfwpolicy_binding resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -53,18 +67,22 @@ func (r *CsvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req re
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Invoke flag.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				// Pure user input: NITRO GET does not echo labelname when unset,
+				// so it can never be resolved at apply time. Optional-only (no
+				// Computed) avoids "unknown value after apply" (Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -89,12 +107,13 @@ func (r *CsvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req re
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
 				},
 				Description: "Priority for the policy.",
 			},
 			"targetlbvserver": schema.StringAttribute{
+				// Pure user input: not echoed by NITRO GET when unset (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +128,9 @@ func csvserver_appfwpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, 
 
 	// Create API request body from the model
 	csvserver_appfwpolicy_binding := cs.Csvserverappfwpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		csvserver_appfwpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_appfwpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +159,61 @@ func csvserver_appfwpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, 
 	return csvserver_appfwpolicy_binding
 }
 
+// csvserver_appfwpolicy_bindingSetAttrFromGet is the resource-side state setter.
+// The NITRO GET response server-overrides / does not echo several user inputs
+// (e.g. bindpoint defaults to REQUEST; labelname/labeltype/targetlbvserver are
+// absent when unset). To avoid "inconsistent result after apply" churn
+// (Pattern 7 / Pattern 13) it preserves the existing plan/state value when the
+// field is absent in the response, and never recomputes the ID (Pattern 6 — the
+// ID is set exactly once in Create).
 func csvserver_appfwpolicy_bindingSetAttrFromGet(ctx context.Context, data *CsvserverAppfwpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAppfwpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In csvserver_appfwpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
+		data.Targetlbvserver = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// csvserver_appfwpolicy_bindingSetAttrFromGetForDatasource faithfully copies the
+// GET response into the model and sets the composite ID. The datasource has no
+// prior plan/state to preserve and no Create to set the ID, so unlike the
+// resource setter it populates every field and the ID (Pattern 7 split).
+func csvserver_appfwpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CsvserverAppfwpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAppfwpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In csvserver_appfwpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -184,7 +257,7 @@ func csvserver_appfwpolicy_bindingSetAttrFromGet(ctx context.Context, data *Csvs
 		data.Targetlbvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create runs for a datasource).
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
