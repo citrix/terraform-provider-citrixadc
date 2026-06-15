@@ -3,8 +3,7 @@ package responderglobal_responderpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -69,12 +68,10 @@ func (r *ResponderglobalResponderpolicyBindingResource) Create(ctx context.Conte
 
 	tflog.Trace(ctx, "Created responderglobal_responderpolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("priority:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Priority.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state.
+	// Backward-compatible with SDK v2 (d.SetId(policyname)) and resource_id_mapping.json
+	// which maps this binding to a single "policyname" key.
+	data.Id = types.StringValue(data.Policyname.ValueString())
 
 	// Read the updated state back
 	r.readResponderglobalResponderpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -155,26 +152,21 @@ func (r *ResponderglobalResponderpolicyBindingResource) Delete(ctx context.Conte
 	}
 
 	tflog.Debug(ctx, "Deleting responderglobal_responderpolicy_binding resource")
-	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Multiple unique attributes - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
-	if err != nil {
-		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
-		return
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name.
+	// The ID is the plain policyname (SDK v2 contract). priority and type are read from
+	// state (they are part of the binding's unique identity). Values are URL-encoded so
+	// slashy/special characters survive (matches SDK v2 deleteResponderglobal_..._bindingFunc).
+	policyname := data.Id.ValueString()
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(policyname)))
+	if !data.Type.IsNull() && data.Type.ValueString() != "" {
+		args = append(args, fmt.Sprintf("type:%s", url.QueryEscape(data.Type.ValueString())))
+	}
+	if !data.Priority.IsNull() {
+		args = append(args, fmt.Sprintf("priority:%v", data.Priority.ValueInt64()))
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
-	}
-	if val, ok := idMap["priority"]; ok && val != "" {
-		argsMap["priority"] = val
-	}
-	if val, ok := idMap["type"]; ok && val != "" {
-		argsMap["type"] = val
-	}
-
-	err = r.client.DeleteResourceWithArgsMap(service.Responderglobal_responderpolicy_binding.Type(), "", argsMap)
+	err := r.client.DeleteResourceWithArgs(service.Responderglobal_responderpolicy_binding.Type(), "", args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete responderglobal_responderpolicy_binding, got error: %s", err))
 		return
@@ -186,17 +178,18 @@ func (r *ResponderglobalResponderpolicyBindingResource) Delete(ctx context.Conte
 // Helper function to read responderglobal_responderpolicy_binding data from API
 func (r *ResponderglobalResponderpolicyBindingResource) readResponderglobalResponderpolicyBindingFromApi(ctx context.Context, data *ResponderglobalResponderpolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
+	// ID is the plain policyname (SDK v2 contract). priority and type are read from
+	// state since they form the binding's unique identity (Pattern 10 - no ParseIdString).
+	policyname := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["type"]; ok && val != "" {
-		argsMap["type"] = val
+	// Match SDK v2 read: the GET requires a bind-point type filter; default to
+	// REQ_DEFAULT when the user did not set type explicitly.
+	if !data.Type.IsNull() && !data.Type.IsUnknown() && data.Type.ValueString() != "" {
+		argsMap["type"] = data.Type.ValueString()
+	} else {
+		argsMap["type"] = "REQ_DEFAULT"
 	}
 
 	findParams := service.FindParams{
@@ -204,7 +197,7 @@ func (r *ResponderglobalResponderpolicyBindingResource) readResponderglobalRespo
 		ArgsMap:                  argsMap,
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read responderglobal_responderpolicy_binding, got error: %s", err))
 		return
@@ -216,49 +209,30 @@ func (r *ResponderglobalResponderpolicyBindingResource) readResponderglobalRespo
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policyname (and priority
+	// if it is known in state).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
 		// Check policyname
-		if idVal, ok := idMap["policyname"]; ok {
-			if val, ok := v["policyname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
+		if val, ok := v["policyname"].(string); ok {
+			if val != policyname {
 				match = false
 				continue
 			}
-		} else if _, ok := v["policyname"].(string); ok {
+		} else {
 			match = false
 			continue
 		}
 
-		// Check priority
-		if idVal, ok := idMap["priority"]; ok {
+		// Check priority when known in state
+		if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 			if val, ok := v["priority"]; ok {
-				val, _ = utils.ConvertToInt64(val)
-				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
-				if val != idValInt64 {
+				vi, _ := utils.ConvertToInt64(val)
+				if vi != data.Priority.ValueInt64() {
 					match = false
 					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["priority"]; ok {
-			match = false
-			continue
-		}
-		// Check type
-		if val, ok := idMap["type"]; ok && val != "" {
-			if v, ok := v["type"]; ok {
-				if v.(string) != val {
-					match = false
 				}
 			}
 		}

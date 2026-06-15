@@ -40,7 +40,8 @@ func ResponderglobalResponderpolicyBindingDataSourceSchema() schema.Schema {
 				Description: "Name of the responder policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Specifies the priority of the policy.",
 			},
 			"type": schema.StringAttribute{
