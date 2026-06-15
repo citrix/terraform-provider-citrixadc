@@ -22,6 +22,7 @@ import (
 // CsvserverAppflowpolicyBindingResourceModel describes the resource data model.
 type CsvserverAppflowpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *CsvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Computed:    true,
 				Description: "The ID of the csvserver_appflowpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point at which policy needs to be bound. Note: Content switching policies are evaluated only at request time.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +66,16 @@ func (r *CsvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Description: "Invoke flag.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +120,9 @@ func csvserver_appflowpolicy_bindingGetThePayloadFromthePlan(ctx context.Context
 
 	// Create API request body from the model
 	csvserver_appflowpolicy_binding := cs.Csvserverappflowpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		csvserver_appflowpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_appflowpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +151,69 @@ func csvserver_appflowpolicy_bindingGetThePayloadFromthePlan(ctx context.Context
 	return csvserver_appflowpolicy_binding
 }
 
+// csvserver_appflowpolicy_bindingSetAttrFromGet is the resource-side state setter.
+// All schema attributes are RequiresReplace (no update endpoint), and several inputs
+// (priority, gotopriorityexpression, invoke, labeltype, bindpoint) are server-defaulted
+// or not faithfully echoed back. To avoid "inconsistent result after apply"/perpetual
+// diffs it preserves the planned/state values rather than overwriting from the GET
+// response. The ID is set once in Create and must not be recomputed here (Pattern 6/7).
 func csvserver_appflowpolicy_bindingSetAttrFromGet(ctx context.Context, data *CsvserverAppflowpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAppflowpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In csvserver_appflowpolicy_bindingSetAttrFromGet Function")
 
+	// The GET response for this binding echoes back name, policyname, priority,
+	// gotopriorityexpression, invoke, labeltype, labelname. Copy those to resolve any
+	// Computed unknowns. It does NOT echo bindpoint or targetlbvserver, so those
+	// Optional+Computed values are PRESERVED from the plan/state (overwriting them with
+	// null would cause an "inconsistent result after apply" / perpetual diff).
+	// The ID is set once in Create and must NOT be recomputed here (Pattern 6/7).
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	// bindpoint / targetlbvserver: not echoed by GET — preserve plan/state value.
+	// If still unknown (Computed and never set by user), resolve to null so the apply
+	// result is consistent.
+	if data.Bindpoint.IsUnknown() {
+		data.Bindpoint = types.StringNull()
+	}
+	if data.Targetlbvserver.IsUnknown() {
+		data.Targetlbvserver = types.StringNull()
+	}
+
+	return data
+}
+
+// csvserver_appflowpolicy_bindingSetAttrFromGetForDatasource faithfully copies the GET
+// response into the model for the datasource (which has no prior plan/state to preserve)
+// and sets the composite ID.
+func csvserver_appflowpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CsvserverAppflowpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAppflowpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In csvserver_appflowpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	// Convert API response to model
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -184,7 +257,7 @@ func csvserver_appflowpolicy_bindingSetAttrFromGet(ctx context.Context, data *Cs
 		data.Targetlbvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

@@ -3,6 +3,7 @@ package csvserver_appflowpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CsvserverAppflowpolicyBindingResource) Create(ctx context.Context, req 
 	csvserver_appflowpolicy_binding := csvserver_appflowpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_appflowpolicy_binding.Type(), &csvserver_appflowpolicy_binding)
+	// Binding resource - SDK v2 used AddResource (POST) with the parent (csvserver) name.
+	_, err := r.client.AddResource(service.Csvserver_appflowpolicy_binding.Type(), data.Name.ValueString(), &csvserver_appflowpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_appflowpolicy_binding, got error: %s", err))
 		return
@@ -168,7 +169,15 @@ func (r *CsvserverAppflowpolicyBindingResource) Delete(ctx context.Context, req 
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	// Include the disambiguating bind args (URL-encoded) the same way SDK v2 did,
+	// pulled from prior state since they are not part of the composite ID.
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_appflowpolicy_binding.Type(), name_value, argsMap)
