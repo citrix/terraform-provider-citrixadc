@@ -2278,3 +2278,19 @@ PATTERNS: 1 (PUT-where-POST), Delete-arg URL-encode (binding-family hint b).
 FILES CHANGED: citrixadc_framework/sslvserver_sslciphersuite_binding/resource_sslvserver_sslciphersuite_binding.go (NO test/doc file modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: systemgroup_systemcmdpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:29:48Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccSystemgroup_systemcmdpolicy_binding($|_|DataSource)
+TESTS:
+  - TestAccSystemgroup_systemcmdpolicy_binding_basic ............ PASS
+  - TestAccSystemgroup_systemcmdpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral test; resource has no secret attribute) ....... N/A
+BACKWARD-COMPAT: attribute/type/Required/ForceNew parity already correct (groupname,policyname,priority all Required+RequiresReplace, matching SDK v2). ID adopts new key:value format; resource_id_mapping.json="groupname,policyname" matches SDK v2 d.SetId order; Read/Delete pass legacy order to ParseIdString. priority IS echoed by GET (as string "100", ConvertToInt64 handles it) so SetAttrFromGet preserves it -> no Pattern 7/13 needed. No resource code changes required.
+DATASOURCE: healthy as-is; shares SetAttrFromGet which faithfully copies all 3 fields from GET and sets data.Id; datasource test passed on first run. No split needed.
+PATTERNS: none (implementation already correct; only sanctioned test ID-parse helper fix applied)
+FILES CHANGED: citrixadc_framework/acctests/systemgroup_systemcmdpolicy_binding_test.go (sanctioned ID-parse helper lines only). NO resource/datasource/doc file changed.
+BLOCKER: none
+========================================
