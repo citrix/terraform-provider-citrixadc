@@ -897,4 +897,18 @@ DATASOURCE: healthy; split setter into resource (preserve-state) + new crvserver
 PATTERNS: 7 (SetAttrFromGet preserve + datasource split), 13 (drop Computed on non-echoed Optional attrs), plus binding-family re-add-dropped-attr and Delete url-encode.
 FILES CHANGED: citrixadc_framework/crvserver_policymap_binding/resource_schema.go, citrixadc_framework/crvserver_policymap_binding/resource_crvserver_policymap_binding.go, citrixadc_framework/crvserver_policymap_binding/datasource_crvserver_policymap_binding.go, citrixadc_framework/crvserver_policymap_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_policymap_binding_test.go (sanctioned ID-parse helper lines only). NO doc files modified.
 BLOCKER: datasource acceptance test cannot pass until the out-of-scope sibling resource citrixadc_lbvserver_service_binding (used as a prerequisite in the datasource test fixture) is migrated/fixed; modifying that resource or the test is out of scope for this task.
+RESOURCE: crvserver_rewritepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:39:44Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccCrvserver_rewritepolicy_binding_basic|TestAcccrvserver_rewritepolicy_bindingDataSource_basic
+TESTS:
+  - TestAccCrvserver_rewritepolicy_binding_basic ............ PASS
+  - TestAcccrvserver_rewritepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral/secret tests for this resource) ........... N/A
+BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Computed in SDK v2 (and not set by config) -> reverted to Optional+Computed; Create switched from UpdateUnnamedResource(PUT) to AddResource(POST) to match SDK v2; Delete switched to DeleteResourceWithArgs with url.QueryEscape on policyname/bindpoint (SDK v2 encoding); attribute names/types all matched; ID adopts new key:value format with resource_id_mapping order name,policyname for legacy parse.
+DATASOURCE: healthy as-is; shares faithful SetAttrFromGet setter (no Pattern 7 split needed since resource setter was not changed to preserve-state).
+PATTERNS: 1 (PUT->POST Create), 7b/url-encode Delete args, 8 (Required->Optional+Computed flag fix).
+FILES CHANGED: citrixadc_framework/crvserver_rewritepolicy_binding/resource_schema.go, citrixadc_framework/crvserver_rewritepolicy_binding/resource_crvserver_rewritepolicy_binding.go, citrixadc_framework/acctests/crvserver_rewritepolicy_binding_test.go (sanctioned ID-parse lines + utils import only; NO doc files)
+BLOCKER: none
 ========================================
