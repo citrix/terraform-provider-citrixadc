@@ -105,7 +105,7 @@ func (d *AppfwprofileXmlxssBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	appfwprofile_xmlxss_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_xmlxss_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

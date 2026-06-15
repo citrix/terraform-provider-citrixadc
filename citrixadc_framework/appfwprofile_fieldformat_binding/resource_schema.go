@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -31,6 +32,7 @@ type AppfwprofileFieldformatBindingResourceModel struct {
 	IsregexFf            types.String `tfsdk:"isregexff"`
 	Name                 types.String `tfsdk:"name"`
 	Resourceid           types.String `tfsdk:"resourceid"`
+	Ruletype             types.String `tfsdk:"ruletype"`
 	State                types.String `tfsdk:"state"`
 }
 
@@ -51,102 +53,143 @@ func (r *AppfwprofileFieldformatBindingResource) Schema(ctx context.Context, req
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"fieldformat": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the form field to which a field format will be assigned.",
 			},
 			"fieldformatmaxlength": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The maximum allowed length for data in this form field.",
 			},
 			"fieldformatminlength": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The minimum allowed length for data in this form field.",
 			},
 			"fieldtype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The field type you are assigning to this form field.",
 			},
 			"formactionurl_ff": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Action URL of the form field to which a field format will be assigned.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"isregexff": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the form field name a regular expression?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 		},
 	}
 }
 
-func appfwprofile_fieldformat_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileFieldformatBindingResourceModel) appfw.Appfwprofilefieldformatbinding {
-	tflog.Debug(ctx, "In appfwprofile_fieldformat_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_fieldformat_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileFieldformatBindingResourceModel) appfw.Appfwprofilefieldformatbinding {
+	tflog.Debug(ctx, "In appfwprofile_fieldformat_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_fieldformat_binding := appfw.Appfwprofilefieldformatbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_fieldformat_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_fieldformat_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Fieldformat.IsNull() {
+	if !data.Fieldformat.IsNull() && !data.Fieldformat.IsUnknown() {
 		appfwprofile_fieldformat_binding.Fieldformat = data.Fieldformat.ValueString()
 	}
-	if !data.Fieldformatmaxlength.IsNull() {
+	if !data.Fieldformatmaxlength.IsNull() && !data.Fieldformatmaxlength.IsUnknown() {
 		appfwprofile_fieldformat_binding.Fieldformatmaxlength = utils.IntPtr(int(data.Fieldformatmaxlength.ValueInt64()))
 	}
-	if !data.Fieldformatminlength.IsNull() {
+	if !data.Fieldformatminlength.IsNull() && !data.Fieldformatminlength.IsUnknown() {
 		appfwprofile_fieldformat_binding.Fieldformatminlength = utils.IntPtr(int(data.Fieldformatminlength.ValueInt64()))
 	}
-	if !data.Fieldtype.IsNull() {
+	if !data.Fieldtype.IsNull() && !data.Fieldtype.IsUnknown() {
 		appfwprofile_fieldformat_binding.Fieldtype = data.Fieldtype.ValueString()
 	}
-	if !data.FormactionurlFf.IsNull() {
+	if !data.FormactionurlFf.IsNull() && !data.FormactionurlFf.IsUnknown() {
 		appfwprofile_fieldformat_binding.Formactionurlff = data.FormactionurlFf.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_fieldformat_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.IsregexFf.IsNull() {
+	if !data.IsregexFf.IsNull() && !data.IsregexFf.IsUnknown() {
 		appfwprofile_fieldformat_binding.Isregexff = data.IsregexFf.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_fieldformat_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_fieldformat_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_fieldformat_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_fieldformat_binding.State = data.State.ValueString()
 	}
 
@@ -215,6 +258,11 @@ func appfwprofile_fieldformat_bindingSetAttrFromGet(ctx context.Context, data *A
 		data.Resourceid = types.StringValue(val.(string))
 	} else {
 		data.Resourceid = types.StringNull()
+	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))

@@ -40,8 +40,9 @@ In addition to the arguments, the following attributes are available:
 
 * `alertonly` - Send SNMP alert?
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
-* `id` - The id of the appfwprofile_xmlsqlinjection_binding. It is a system-generated identifier.
+* `id` - The id of the appfwprofile_xmlsqlinjection_binding. It is the concatenation of `name`, `xmlsqlinjection` and `as_scan_location_xmlsql` attributes separated by a comma.
 * `isautodeployed` - Is the rule auto deployed by dynamic profile?
 * `isregex_xmlsql` - Is the XML SQL Injection exempted field name a regular expression?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

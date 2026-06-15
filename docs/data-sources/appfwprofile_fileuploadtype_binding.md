@@ -38,9 +38,10 @@ In addition to the arguments, the following attributes are available:
 
 * `alertonly` - Send SNMP alert?
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
-* `id` - The id of the appfwprofile_fileuploadtype_binding. It is a system-generated identifier.
+* `id` - The id of the appfwprofile_fileuploadtype_binding. It is the concatenation of `name`, `fileuploadtype`, `as_fileuploadtypes_url`, and `filetype` attributes separated by comma. Because `filetype` is a list, its elements are joined with a semicolon (`;`) within the comma-separated id (e.g., `pdf;text`).
 * `isautodeployed` - Is the rule auto deployed by dynamic profile?
 * `isnameregex` - Is field name a regular expression?
 * `isregex_fileuploadtypes_url` - Is a regular expression?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

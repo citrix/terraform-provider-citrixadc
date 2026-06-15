@@ -27,6 +27,7 @@ type AppfwprofileCookieconsistencyBindingResourceModel struct {
 	Isregex           types.String `tfsdk:"isregex"`
 	Name              types.String `tfsdk:"name"`
 	Resourceid        types.String `tfsdk:"resourceid"`
+	Ruletype          types.String `tfsdk:"ruletype"`
 	State             types.String `tfsdk:"state"`
 }
 
@@ -47,70 +48,101 @@ func (r *AppfwprofileCookieconsistencyBindingResource) Schema(ctx context.Contex
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"cookieconsistency": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the cookie to be checked.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"isregex": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the cookie name a regular expression?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 		},
 	}
 }
 
-func appfwprofile_cookieconsistency_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileCookieconsistencyBindingResourceModel) appfw.Appfwprofilecookieconsistencybinding {
-	tflog.Debug(ctx, "In appfwprofile_cookieconsistency_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_cookieconsistency_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileCookieconsistencyBindingResourceModel) appfw.Appfwprofilecookieconsistencybinding {
+	tflog.Debug(ctx, "In appfwprofile_cookieconsistency_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_cookieconsistency_binding := appfw.Appfwprofilecookieconsistencybinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_cookieconsistency_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_cookieconsistency_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Cookieconsistency.IsNull() {
+	if !data.Cookieconsistency.IsNull() && !data.Cookieconsistency.IsUnknown() {
 		appfwprofile_cookieconsistency_binding.Cookieconsistency = data.Cookieconsistency.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_cookieconsistency_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.Isregex.IsNull() {
+	if !data.Isregex.IsNull() && !data.Isregex.IsUnknown() {
 		appfwprofile_cookieconsistency_binding.Isregex = data.Isregex.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_cookieconsistency_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_cookieconsistency_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_cookieconsistency_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_cookieconsistency_binding.State = data.State.ValueString()
 	}
 
@@ -155,6 +187,11 @@ func appfwprofile_cookieconsistency_bindingSetAttrFromGet(ctx context.Context, d
 		data.Resourceid = types.StringValue(val.(string))
 	} else {
 		data.Resourceid = types.StringNull()
+	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))

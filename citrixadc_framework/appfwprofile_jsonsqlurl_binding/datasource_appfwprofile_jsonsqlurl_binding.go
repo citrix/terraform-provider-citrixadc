@@ -129,7 +129,7 @@ func (d *AppfwprofileJsonsqlurlBindingDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	appfwprofile_jsonsqlurl_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_jsonsqlurl_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

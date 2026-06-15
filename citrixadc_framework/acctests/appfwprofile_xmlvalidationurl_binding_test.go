@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -103,10 +104,12 @@ func testAccCheckAppfwprofile_xmlvalidationurl_bindingExist(n string, id *string
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		xmlvalidationurl := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "xmlvalidationurl"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		xmlvalidationurl := idMap["xmlvalidationurl"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_xmlvalidationurl_binding",
@@ -148,10 +151,12 @@ func testAccCheckAppfwprofile_xmlvalidationurl_bindingNotExist(n string, id stri
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		xmlvalidationurl := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "xmlvalidationurl"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		xmlvalidationurl := idMap["xmlvalidationurl"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_xmlvalidationurl_binding",

@@ -93,7 +93,7 @@ func (d *AppfwprofileTrustedlearningclientsBindingDataSource) Read(ctx context.C
 		return
 	}
 
-	appfwprofile_trustedlearningclients_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_trustedlearningclients_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

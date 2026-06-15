@@ -25,6 +25,7 @@ type AppfwprofileTrustedlearningclientsBindingResourceModel struct {
 	Isautodeployed         types.String `tfsdk:"isautodeployed"`
 	Name                   types.String `tfsdk:"name"`
 	Resourceid             types.String `tfsdk:"resourceid"`
+	Ruletype               types.String `tfsdk:"ruletype"`
 	State                  types.String `tfsdk:"state"`
 	Trustedlearningclients types.String `tfsdk:"trustedlearningclients"`
 }
@@ -38,80 +39,141 @@ func (r *AppfwprofileTrustedlearningclientsBindingResource) Schema(ctx context.C
 				Description: "The ID of the appfwprofile_trustedlearningclients_binding resource.",
 			},
 			"alertonly": schema.StringAttribute{
+				// GET overrides the configured value (e.g. ON -> OFF); preserve the
+				// configured value in state, so Computed is dropped (Pattern 7).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// GET overrides the configured value (e.g. AUTODEPLOYED ->
+				// NOTAUTODEPLOYED); preserve the configured value (Pattern 7).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// GET never echoes resourceid; preserve the configured value and drop
+				// Computed to avoid known-after-apply churn (Pattern 7).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				// Present in SDK v2 + NITRO struct; GET never echoes it, so Optional
+				// only (re-added per migration family pattern a).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 			"trustedlearningclients": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Specify trusted host/network IP",
 			},
 		},
 	}
 }
 
-func appfwprofile_trustedlearningclients_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileTrustedlearningclientsBindingResourceModel) appfw.Appfwprofiletrustedlearningclientsbinding {
-	tflog.Debug(ctx, "In appfwprofile_trustedlearningclients_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_trustedlearningclients_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileTrustedlearningclientsBindingResourceModel) appfw.Appfwprofiletrustedlearningclientsbinding {
+	tflog.Debug(ctx, "In appfwprofile_trustedlearningclients_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_trustedlearningclients_binding := appfw.Appfwprofiletrustedlearningclientsbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_trustedlearningclients_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_trustedlearningclients_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_trustedlearningclients_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_trustedlearningclients_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_trustedlearningclients_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_trustedlearningclients_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_trustedlearningclients_binding.State = data.State.ValueString()
 	}
-	if !data.Trustedlearningclients.IsNull() {
+	if !data.Trustedlearningclients.IsNull() && !data.Trustedlearningclients.IsUnknown() {
 		appfwprofile_trustedlearningclients_binding.Trustedlearningclients = data.Trustedlearningclients.ValueString()
 	}
 
 	return appfwprofile_trustedlearningclients_binding
 }
 
+// appfwprofile_trustedlearningclients_bindingSetAttrFromGet is the RESOURCE setter.
+// It only reads back fields the NITRO GET echoes faithfully (name, trustedlearningclients,
+// state, comment). It deliberately PRESERVES the plan/state value for:
+//   - alertonly, isautodeployed: server overrides the configured value (Pattern 7).
+//   - resourceid, ruletype: never echoed by GET (Pattern 7).
+//
+// This mirrors the SDK v2 resource which commented out d.Set for alertonly/isautodeployed.
+// ID is set once in Create, so it is not recomputed here (Pattern 6).
 func appfwprofile_trustedlearningclients_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileTrustedlearningclientsBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileTrustedlearningclientsBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_trustedlearningclients_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["trustedlearningclients"]; ok && val != nil {
+		data.Trustedlearningclients = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// appfwprofile_trustedlearningclients_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE setter (Pattern 7 split). It faithfully copies every field the GET
+// response returns and sets the composite ID, since the datasource has no Create.
+func appfwprofile_trustedlearningclients_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwprofileTrustedlearningclientsBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileTrustedlearningclientsBindingResourceModel {
+	tflog.Debug(ctx, "In appfwprofile_trustedlearningclients_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
 	} else {
@@ -137,6 +199,11 @@ func appfwprofile_trustedlearningclients_bindingSetAttrFromGet(ctx context.Conte
 	} else {
 		data.Resourceid = types.StringNull()
 	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
+	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
 	} else {
@@ -148,8 +215,7 @@ func appfwprofile_trustedlearningclients_bindingSetAttrFromGet(ctx context.Conte
 		data.Trustedlearningclients = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set composite ID for the datasource
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("trustedlearningclients:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Trustedlearningclients.ValueString()))))

@@ -26,6 +26,7 @@ type AppfwprofileContenttypeBindingResourceModel struct {
 	Isautodeployed types.String `tfsdk:"isautodeployed"`
 	Name           types.String `tfsdk:"name"`
 	Resourceid     types.String `tfsdk:"resourceid"`
+	Ruletype       types.String `tfsdk:"ruletype"`
 	State          types.String `tfsdk:"state"`
 }
 
@@ -46,62 +47,90 @@ func (r *AppfwprofileContenttypeBindingResource) Schema(ctx context.Context, req
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"contenttype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A regular expression that designates a content-type on the content-types list.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 		},
 	}
 }
 
-func appfwprofile_contenttype_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileContenttypeBindingResourceModel) appfw.Appfwprofilecontenttypebinding {
-	tflog.Debug(ctx, "In appfwprofile_contenttype_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_contenttype_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileContenttypeBindingResourceModel) appfw.Appfwprofilecontenttypebinding {
+	tflog.Debug(ctx, "In appfwprofile_contenttype_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_contenttype_binding := appfw.Appfwprofilecontenttypebinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_contenttype_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_contenttype_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Contenttype.IsNull() {
+	if !data.Contenttype.IsNull() && !data.Contenttype.IsUnknown() {
 		appfwprofile_contenttype_binding.Contenttype = data.Contenttype.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_contenttype_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_contenttype_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_contenttype_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_contenttype_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_contenttype_binding.State = data.State.ValueString()
 	}
 
@@ -141,6 +170,11 @@ func appfwprofile_contenttype_bindingSetAttrFromGet(ctx context.Context, data *A
 		data.Resourceid = types.StringValue(val.(string))
 	} else {
 		data.Resourceid = types.StringNull()
+	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))

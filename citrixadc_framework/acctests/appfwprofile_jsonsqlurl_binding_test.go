@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -114,21 +115,15 @@ func testAccCheckAppfwprofile_jsonsqlurl_bindingExist(n string, id *string) reso
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-
-		name := idSlice[0]
-		jsonsqlurl := idSlice[1]
-		keyname_json_sql := ""
-		as_value_type_json_sql := ""
-		as_value_expr_json_sql := ""
-		if len(idSlice) > 2 {
-			keyname_json_sql = idSlice[2]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"name", "jsonsqlurl", "keyname_json_sql", "as_value_type_json_sql", "as_value_expr_json_sql"}, []string{"keyname_json_sql", "as_value_type_json_sql", "as_value_expr_json_sql"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
 		}
-		if len(idSlice) > 4 {
-			as_value_type_json_sql = idSlice[3]
-			as_value_expr_json_sql = idSlice[4]
-		}
+		name := idMap["name"]
+		jsonsqlurl := idMap["jsonsqlurl"]
+		keyname_json_sql := idMap["keyname_json_sql"]
+		as_value_type_json_sql := idMap["as_value_type_json_sql"]
+		as_value_expr_json_sql := idMap["as_value_expr_json_sql"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_jsonsqlurl_binding",

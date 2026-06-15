@@ -17,11 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -136,13 +136,16 @@ func testAccCheckAppfwprofile_sqlinjection_bindingExist(n string, id *string) re
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-		appFwName := idSlice[0]
-		sqlinjection := idSlice[1]
-		formactionurl_sql := idSlice[2]
-		as_scan_location_sql := idSlice[3]
-		as_value_type_sql := idSlice[4]
-		as_value_expr_sql := idSlice[5]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "sqlinjection", "formactionurl_sql", "as_scan_location_sql", "as_value_type_sql", "as_value_expr_sql", "ruletype"}, []string{"as_value_type_sql", "as_value_expr_sql", "ruletype"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		appFwName := idMap["name"]
+		sqlinjection := idMap["sqlinjection"]
+		formactionurl_sql := idMap["formactionurl_sql"]
+		as_scan_location_sql := idMap["as_scan_location_sql"]
+		as_value_type_sql := idMap["as_value_type_sql"]
+		as_value_expr_sql := idMap["as_value_expr_sql"]
 
 		findParams := service.FindParams{
 			ResourceType:             service.Appfwprofile_sqlinjection_binding.Type(),
@@ -193,10 +196,13 @@ func testAccCheckAppfwprofile_sqlinjection_bindingDestroy(s *terraform.State) er
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-		appFwName := idSlice[0]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "sqlinjection", "formactionurl_sql", "as_scan_location_sql", "as_value_type_sql", "as_value_expr_sql", "ruletype"}, []string{"as_value_type_sql", "as_value_expr_sql", "ruletype"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		appFwName := idMap["name"]
 
-		_, err := client.FindResource(service.Appfwprofile_sqlinjection_binding.Type(), appFwName)
+		_, err = client.FindResource(service.Appfwprofile_sqlinjection_binding.Type(), appFwName)
 		if err == nil {
 			return fmt.Errorf("appfwprofile_sqlinjection_binding %s still exists", appFwName)
 		}

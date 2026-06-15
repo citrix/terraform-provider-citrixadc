@@ -25,6 +25,7 @@ type AppfwprofileStarturlBindingResourceModel struct {
 	Isautodeployed types.String `tfsdk:"isautodeployed"`
 	Name           types.String `tfsdk:"name"`
 	Resourceid     types.String `tfsdk:"resourceid"`
+	Ruletype       types.String `tfsdk:"ruletype"`
 	Starturl       types.String `tfsdk:"starturl"`
 	State          types.String `tfsdk:"state"`
 }
@@ -46,72 +47,134 @@ func (r *AppfwprofileStarturlBindingResource) Schema(ctx context.Context, req re
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// GET does not echo back comment; keep Optional only so a
+				// configured value is not clobbered to null on Read.
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				// GET does not echo back ruletype; keep Optional only so a
+				// configured value is not clobbered to null on Read.
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
+			},
 			"starturl": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A regular expression that designates a URL on the Start URL list.",
 			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 		},
 	}
 }
 
-func appfwprofile_starturl_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileStarturlBindingResourceModel) appfw.Appfwprofilestarturlbinding {
-	tflog.Debug(ctx, "In appfwprofile_starturl_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_starturl_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileStarturlBindingResourceModel) appfw.Appfwprofilestarturlbinding {
+	tflog.Debug(ctx, "In appfwprofile_starturl_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_starturl_binding := appfw.Appfwprofilestarturlbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_starturl_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_starturl_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_starturl_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_starturl_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_starturl_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.Starturl.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_starturl_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.Starturl.IsNull() && !data.Starturl.IsUnknown() {
 		appfwprofile_starturl_binding.Starturl = data.Starturl.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_starturl_binding.State = data.State.ValueString()
 	}
 
 	return appfwprofile_starturl_binding
 }
 
+// appfwprofile_starturl_bindingSetAttrFromGet is the resource-side setter. It
+// preserves user-configured fields that the GET response does not echo back
+// (comment, ruletype) to avoid spurious "inconsistent result" diffs (P7).
 func appfwprofile_starturl_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileStarturlBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileStarturlBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_starturl_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["alertonly"]; ok && val != nil {
+		data.Alertonly = types.StringValue(val.(string))
+	}
+	// comment is not echoed back by GET; preserve the existing plan/state value.
+	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
+		data.Isautodeployed = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["resourceid"]; ok && val != nil {
+		data.Resourceid = types.StringValue(val.(string))
+	}
+	// ruletype is not echoed back by GET; preserve the existing plan/state value.
+	if val, ok := getResponseData["starturl"]; ok && val != nil {
+		data.Starturl = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// appfwprofile_starturl_bindingSetAttrFromGetForDatasource faithfully copies the
+// GET response into the model and sets the composite ID (datasource has no Create).
+func appfwprofile_starturl_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwprofileStarturlBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileStarturlBindingResourceModel {
+	tflog.Debug(ctx, "In appfwprofile_starturl_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
 	} else {
@@ -136,6 +199,11 @@ func appfwprofile_starturl_bindingSetAttrFromGet(ctx context.Context, data *Appf
 		data.Resourceid = types.StringValue(val.(string))
 	} else {
 		data.Resourceid = types.StringNull()
+	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["starturl"]; ok && val != nil {
 		data.Starturl = types.StringValue(val.(string))

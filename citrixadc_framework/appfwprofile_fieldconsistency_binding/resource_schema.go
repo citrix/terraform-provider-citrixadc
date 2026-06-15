@@ -28,6 +28,7 @@ type AppfwprofileFieldconsistencyBindingResourceModel struct {
 	IsregexFfc       types.String `tfsdk:"isregex_ffc"`
 	Name             types.String `tfsdk:"name"`
 	Resourceid       types.String `tfsdk:"resourceid"`
+	Ruletype         types.String `tfsdk:"ruletype"`
 	State            types.String `tfsdk:"state"`
 }
 
@@ -48,78 +49,110 @@ func (r *AppfwprofileFieldconsistencyBindingResource) Schema(ctx context.Context
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"fieldconsistency": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The web form field name.",
 			},
 			"formactionurl_ffc": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The web form action URL.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"isregex_ffc": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the web form field name a regular expression?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 		},
 	}
 }
 
-func appfwprofile_fieldconsistency_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileFieldconsistencyBindingResourceModel) appfw.Appfwprofilefieldconsistencybinding {
-	tflog.Debug(ctx, "In appfwprofile_fieldconsistency_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_fieldconsistency_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileFieldconsistencyBindingResourceModel) appfw.Appfwprofilefieldconsistencybinding {
+	tflog.Debug(ctx, "In appfwprofile_fieldconsistency_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_fieldconsistency_binding := appfw.Appfwprofilefieldconsistencybinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_fieldconsistency_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_fieldconsistency_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Fieldconsistency.IsNull() {
+	if !data.Fieldconsistency.IsNull() && !data.Fieldconsistency.IsUnknown() {
 		appfwprofile_fieldconsistency_binding.Fieldconsistency = data.Fieldconsistency.ValueString()
 	}
-	if !data.FormactionurlFfc.IsNull() {
+	if !data.FormactionurlFfc.IsNull() && !data.FormactionurlFfc.IsUnknown() {
 		appfwprofile_fieldconsistency_binding.Formactionurlffc = data.FormactionurlFfc.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_fieldconsistency_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.IsregexFfc.IsNull() {
+	if !data.IsregexFfc.IsNull() && !data.IsregexFfc.IsUnknown() {
 		appfwprofile_fieldconsistency_binding.Isregexffc = data.IsregexFfc.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_fieldconsistency_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_fieldconsistency_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_fieldconsistency_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_fieldconsistency_binding.State = data.State.ValueString()
 	}
 

@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -104,10 +105,12 @@ func testAccCheckAppfwprofile_xmlwsiurl_bindingExist(n string, id *string) resou
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		xmlwsiurl := idSlice[1]
+		idMap, _, parseErr := utils.ParseIdString(bindingId, []string{"name", "xmlwsiurl"}, nil)
+		if parseErr != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, parseErr)
+		}
+		name := idMap["name"]
+		xmlwsiurl := idMap["xmlwsiurl"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_xmlwsiurl_binding",
@@ -149,10 +152,12 @@ func testAccCheckAppfwprofile_xmlwsiurl_bindingNotExist(n string, id string) res
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		xmlwsiurl := idSlice[1]
+		idMap, _, parseErr := utils.ParseIdString(id, []string{"name", "xmlwsiurl"}, nil)
+		if parseErr != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, parseErr)
+		}
+		name := idMap["name"]
+		xmlwsiurl := idMap["xmlwsiurl"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_xmlwsiurl_binding",

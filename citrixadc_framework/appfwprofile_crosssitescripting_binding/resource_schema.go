@@ -33,6 +33,7 @@ type AppfwprofileCrosssitescriptingBindingResourceModel struct {
 	Name               types.String `tfsdk:"name"`
 	Resourceid         types.String `tfsdk:"resourceid"`
 	State              types.String `tfsdk:"state"`
+	Ruletype           types.String `tfsdk:"ruletype"`
 }
 
 func (r *AppfwprofileCrosssitescriptingBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -52,187 +53,227 @@ func (r *AppfwprofileCrosssitescriptingBindingResource) Schema(ctx context.Conte
 				Description: "Send SNMP alert?",
 			},
 			"as_scan_location_xss": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Location of cross-site scripting exception - form field, header, cookie or URL.",
 			},
 			"as_value_expr_xss": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The web form value expression.",
 			},
 			"as_value_type_xss": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The web form value type.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"crosssitescripting": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The web form field name.",
 			},
 			"formactionurl_xss": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The web form action URL.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"isregex_xss": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the web form field name a regular expression?",
 			},
 			"isvalueregex_xss": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the web form field value a regular expression?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
+			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
 			},
 		},
 	}
 }
 
-func appfwprofile_crosssitescripting_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileCrosssitescriptingBindingResourceModel) appfw.Appfwprofilecrosssitescriptingbinding {
-	tflog.Debug(ctx, "In appfwprofile_crosssitescripting_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_crosssitescripting_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileCrosssitescriptingBindingResourceModel) appfw.Appfwprofilecrosssitescriptingbinding {
+	tflog.Debug(ctx, "In appfwprofile_crosssitescripting_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_crosssitescripting_binding := appfw.Appfwprofilecrosssitescriptingbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.AsScanLocationXss.IsNull() {
+	if !data.AsScanLocationXss.IsNull() && !data.AsScanLocationXss.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Asscanlocationxss = data.AsScanLocationXss.ValueString()
 	}
-	if !data.AsValueExprXss.IsNull() {
+	if !data.AsValueExprXss.IsNull() && !data.AsValueExprXss.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Asvalueexprxss = data.AsValueExprXss.ValueString()
 	}
-	if !data.AsValueTypeXss.IsNull() {
+	if !data.AsValueTypeXss.IsNull() && !data.AsValueTypeXss.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Asvaluetypexss = data.AsValueTypeXss.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Crosssitescripting.IsNull() {
+	if !data.Crosssitescripting.IsNull() && !data.Crosssitescripting.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Crosssitescripting = data.Crosssitescripting.ValueString()
 	}
-	if !data.FormactionurlXss.IsNull() {
+	if !data.FormactionurlXss.IsNull() && !data.FormactionurlXss.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Formactionurlxss = data.FormactionurlXss.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.IsregexXss.IsNull() {
+	if !data.IsregexXss.IsNull() && !data.IsregexXss.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Isregexxss = data.IsregexXss.ValueString()
 	}
-	if !data.IsvalueregexXss.IsNull() {
+	if !data.IsvalueregexXss.IsNull() && !data.IsvalueregexXss.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Isvalueregexxss = data.IsvalueregexXss.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_crosssitescripting_binding.State = data.State.ValueString()
+	}
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_crosssitescripting_binding.Ruletype = data.Ruletype.ValueString()
 	}
 
 	return appfwprofile_crosssitescripting_binding
 }
 
+// appfwprofile_crosssitescripting_bindingSetAttrFromGet is the RESOURCE-side setter.
+// All attributes are RequiresReplace (no update endpoint) and the NITRO server may
+// echo server-defaulted/normalized values for fields like alertonly, isautodeployed,
+// resourceid, ruletype. To avoid "inconsistent result after apply" we adopt the GET
+// value only when the model field is currently null/unknown (e.g. import); otherwise
+// we preserve the configured plan/state value. The ID is set once in Create and is
+// preserved here.
 func appfwprofile_crosssitescripting_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileCrosssitescriptingBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileCrosssitescriptingBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_crosssitescripting_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["alertonly"]; ok && val != nil {
-		data.Alertonly = types.StringValue(val.(string))
-	} else {
-		data.Alertonly = types.StringNull()
-	}
-	if val, ok := getResponseData["as_scan_location_xss"]; ok && val != nil {
-		data.AsScanLocationXss = types.StringValue(val.(string))
-	} else {
-		data.AsScanLocationXss = types.StringNull()
-	}
-	if val, ok := getResponseData["as_value_expr_xss"]; ok && val != nil {
-		data.AsValueExprXss = types.StringValue(val.(string))
-	} else {
-		data.AsValueExprXss = types.StringNull()
-	}
-	if val, ok := getResponseData["as_value_type_xss"]; ok && val != nil {
-		data.AsValueTypeXss = types.StringValue(val.(string))
-	} else {
-		data.AsValueTypeXss = types.StringNull()
-	}
-	if val, ok := getResponseData["comment"]; ok && val != nil {
-		data.Comment = types.StringValue(val.(string))
-	} else {
-		data.Comment = types.StringNull()
-	}
-	if val, ok := getResponseData["crosssitescripting"]; ok && val != nil {
-		data.Crosssitescripting = types.StringValue(val.(string))
-	} else {
-		data.Crosssitescripting = types.StringNull()
-	}
-	if val, ok := getResponseData["formactionurl_xss"]; ok && val != nil {
-		data.FormactionurlXss = types.StringValue(val.(string))
-	} else {
-		data.FormactionurlXss = types.StringNull()
-	}
-	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
-		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
-		data.Isautodeployed = types.StringNull()
-	}
-	if val, ok := getResponseData["isregex_xss"]; ok && val != nil {
-		data.IsregexXss = types.StringValue(val.(string))
-	} else {
-		data.IsregexXss = types.StringNull()
-	}
-	if val, ok := getResponseData["isvalueregex_xss"]; ok && val != nil {
-		data.IsvalueregexXss = types.StringValue(val.(string))
-	} else {
-		data.IsvalueregexXss = types.StringNull()
-	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
-	}
-	if val, ok := getResponseData["resourceid"]; ok && val != nil {
-		data.Resourceid = types.StringValue(val.(string))
-	} else {
-		data.Resourceid = types.StringNull()
-	}
-	if val, ok := getResponseData["state"]; ok && val != nil {
-		data.State = types.StringValue(val.(string))
-	} else {
-		data.State = types.StringNull()
+	adopt := func(cur types.String, key string) types.String {
+		if !cur.IsNull() && !cur.IsUnknown() {
+			return cur
+		}
+		if val, ok := getResponseData[key]; ok && val != nil {
+			return types.StringValue(val.(string))
+		}
+		return types.StringNull()
 	}
 
-	// Set ID for the resource
+	data.Alertonly = adopt(data.Alertonly, "alertonly")
+	data.AsScanLocationXss = adopt(data.AsScanLocationXss, "as_scan_location_xss")
+	data.AsValueExprXss = adopt(data.AsValueExprXss, "as_value_expr_xss")
+	data.AsValueTypeXss = adopt(data.AsValueTypeXss, "as_value_type_xss")
+	data.Comment = adopt(data.Comment, "comment")
+	data.Crosssitescripting = adopt(data.Crosssitescripting, "crosssitescripting")
+	data.FormactionurlXss = adopt(data.FormactionurlXss, "formactionurl_xss")
+	data.Isautodeployed = adopt(data.Isautodeployed, "isautodeployed")
+	data.IsregexXss = adopt(data.IsregexXss, "isregex_xss")
+	data.IsvalueregexXss = adopt(data.IsvalueregexXss, "isvalueregex_xss")
+	data.Name = adopt(data.Name, "name")
+	data.Resourceid = adopt(data.Resourceid, "resourceid")
+	data.State = adopt(data.State, "state")
+	data.Ruletype = adopt(data.Ruletype, "ruletype")
+
+	return data
+}
+
+// appfwprofile_crosssitescripting_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE-side setter: it faithfully copies every field from the GET response
+// (the datasource has no prior plan/state to preserve) and sets the composite ID.
+func appfwprofile_crosssitescripting_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwprofileCrosssitescriptingBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileCrosssitescriptingBindingResourceModel {
+	tflog.Debug(ctx, "In appfwprofile_crosssitescripting_bindingSetAttrFromGetForDatasource Function")
+
+	copyField := func(key string) types.String {
+		if val, ok := getResponseData[key]; ok && val != nil {
+			return types.StringValue(val.(string))
+		}
+		return types.StringNull()
+	}
+
+	data.Alertonly = copyField("alertonly")
+	data.AsScanLocationXss = copyField("as_scan_location_xss")
+	data.AsValueExprXss = copyField("as_value_expr_xss")
+	data.AsValueTypeXss = copyField("as_value_type_xss")
+	data.Comment = copyField("comment")
+	data.Crosssitescripting = copyField("crosssitescripting")
+	data.FormactionurlXss = copyField("formactionurl_xss")
+	data.Isautodeployed = copyField("isautodeployed")
+	data.IsregexXss = copyField("isregex_xss")
+	data.IsvalueregexXss = copyField("isvalueregex_xss")
+	data.Name = copyField("name")
+	data.Resourceid = copyField("resourceid")
+	data.State = copyField("state")
+	data.Ruletype = copyField("ruletype")
+
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("as_scan_location_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsScanLocationXss.ValueString()))))

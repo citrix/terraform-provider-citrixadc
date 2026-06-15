@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -121,11 +122,13 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingExist(n string, id *string)
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.Split(bindingId, ",")
-
-		name := idSlice[0]
-		xmlsqlinjection := idSlice[1]
-		locationName := idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "xmlsqlinjection", "as_scan_location_xmlsql"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		xmlsqlinjection := idMap["xmlsqlinjection"]
+		locationName := idMap["as_scan_location_xmlsql"]
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_xmlsqlinjection_binding",
 			ResourceName:             name,
@@ -222,9 +225,11 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingDestroy(s *terraform.State)
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.Split(bindingId, ",")
-
-		name := idSlice[0]
+		idMap, _, parseErr := utils.ParseIdString(bindingId, []string{"name", "xmlsqlinjection", "as_scan_location_xmlsql"}, nil)
+		if parseErr != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, parseErr)
+		}
+		name := idMap["name"]
 		_, err := client.FindResource(service.Appfwprofile_xmlsqlinjection_binding.Type(), name)
 		if err == nil {
 			return fmt.Errorf("appfwprofile_xmlsqlinjection_binding %s still exists", name)

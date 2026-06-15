@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -120,11 +121,13 @@ func testAccCheckAppfwprofile_xmlxss_bindingExist(n string, id *string) resource
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 3)
-
-		name := idSlice[0]
-		xmlxss := idSlice[1]
-		as_scan_location_xmlxss := idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "xmlxss", "as_scan_location_xmlxss"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		xmlxss := idMap["xmlxss"]
+		as_scan_location_xmlxss := idMap["as_scan_location_xmlxss"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_xmlxss_binding",

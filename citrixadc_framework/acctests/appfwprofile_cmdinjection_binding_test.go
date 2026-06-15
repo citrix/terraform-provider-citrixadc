@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -130,17 +131,16 @@ func testAccCheckAppfwprofile_cmdinjection_bindingExist(n string, id *string) re
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-		appFwName := idSlice[0]
-		cmdinjection := idSlice[1]
-		formactionurl_cmd := idSlice[2]
-		as_scan_location_cmd := idSlice[3]
-		as_value_type_cmd := ""
-		as_value_expr_cmd := ""
-		if len(idSlice) > 4 {
-			as_value_type_cmd = idSlice[4]
-			as_value_expr_cmd = idSlice[5]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "cmdinjection", "formactionurl_cmd", "as_scan_location_cmd", "as_value_type_cmd", "as_value_expr_cmd"}, []string{"as_value_type_cmd", "as_value_expr_cmd"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
 		}
+		appFwName := idMap["name"]
+		cmdinjection := idMap["cmdinjection"]
+		formactionurl_cmd := idMap["formactionurl_cmd"]
+		as_scan_location_cmd := idMap["as_scan_location_cmd"]
+		as_value_type_cmd := idMap["as_value_type_cmd"]
+		as_value_expr_cmd := idMap["as_value_expr_cmd"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_cmdinjection_binding",

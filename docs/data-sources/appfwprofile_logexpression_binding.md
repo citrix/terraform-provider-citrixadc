@@ -35,7 +35,8 @@ In addition to the arguments, the following attributes are available:
 * `alertonly` - Send SNMP alert?
 * `as_logexpression` - LogExpression to log when violation happened on appfw profile.
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
-* `id` - The id of the appfwprofile_logexpression_binding. It is a system-generated identifier.
+* `id` - The id of the appfwprofile_logexpression_binding. It is the concatenation of `name` and `logexpression` attributes separated by a comma.
 * `isautodeployed` - Is the rule auto deployed by dynamic profile?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

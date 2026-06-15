@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -123,20 +124,15 @@ func testAccCheckAppfwprofile_jsoncmdurl_bindingExist(n string, id *string) reso
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-
-		name := idSlice[0]
-		jsoncmdurl := idSlice[1]
-		keyname_json_cmd := ""
-		as_value_type_json_cmd := ""
-		as_value_expr_json_cmd := ""
-		if len(idSlice) > 2 {
-			keyname_json_cmd = idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "jsoncmdurl", "keyname_json_cmd", "as_value_type_json_cmd", "as_value_expr_json_cmd"}, []string{"keyname_json_cmd", "as_value_type_json_cmd", "as_value_expr_json_cmd"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", bindingId, err)
 		}
-		if len(idSlice) > 4 {
-			as_value_type_json_cmd = idSlice[3]
-			as_value_expr_json_cmd = idSlice[4]
-		}
+		name := idMap["name"]
+		jsoncmdurl := idMap["jsoncmdurl"]
+		keyname_json_cmd := idMap["keyname_json_cmd"]
+		as_value_type_json_cmd := idMap["as_value_type_json_cmd"]
+		as_value_expr_json_cmd := idMap["as_value_expr_json_cmd"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_jsoncmdurl_binding",
@@ -204,20 +200,15 @@ func testAccCheckAppfwprofile_jsoncmdurl_bindingNotExist(n string, id string) re
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.Split(id, ",")
-
-		name := idSlice[0]
-		jsoncmdurl := idSlice[1]
-		keyname_json_cmd := ""
-		as_value_type_json_cmd := ""
-		as_value_expr_json_cmd := ""
-		if len(idSlice) > 2 {
-			keyname_json_cmd = idSlice[2]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "jsoncmdurl", "keyname_json_cmd", "as_value_type_json_cmd", "as_value_expr_json_cmd"}, []string{"keyname_json_cmd", "as_value_type_json_cmd", "as_value_expr_json_cmd"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", id, err)
 		}
-		if len(idSlice) > 4 {
-			as_value_type_json_cmd = idSlice[3]
-			as_value_expr_json_cmd = idSlice[4]
-		}
+		name := idMap["name"]
+		jsoncmdurl := idMap["jsoncmdurl"]
+		keyname_json_cmd := idMap["keyname_json_cmd"]
+		as_value_type_json_cmd := idMap["as_value_type_json_cmd"]
+		as_value_expr_json_cmd := idMap["as_value_expr_json_cmd"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_jsoncmdurl_binding",

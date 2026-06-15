@@ -25,6 +25,7 @@ type AppfwprofileXmlvalidationurlBindingResourceModel struct {
 	Isautodeployed           types.String `tfsdk:"isautodeployed"`
 	Name                     types.String `tfsdk:"name"`
 	Resourceid               types.String `tfsdk:"resourceid"`
+	Ruletype                 types.String `tfsdk:"ruletype"`
 	State                    types.String `tfsdk:"state"`
 	Xmladditionalsoapheaders types.String `tfsdk:"xmladditionalsoapheaders"`
 	Xmlendpointcheck         types.String `tfsdk:"xmlendpointcheck"`
@@ -53,200 +54,243 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 			"xmladditionalsoapheaders": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Allow addtional soap headers.",
 			},
 			"xmlendpointcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Modifies the behaviour of the Request URL validation w.r.t. the Service URL.\n	If set to ABSOLUTE, the entire request URL is validated with the entire URL mentioned in Service of the associated WSDL.\n		eg: Service URL: http://example.org/ExampleService, Request URL: http//example.com/ExampleService would FAIL the validation.\n	If set to RELAIVE, only the non-hostname part of the request URL is validated against the non-hostname part of the Service URL.\n		eg: Service URL: http://example.org/ExampleService, Request URL: http//example.com/ExampleService would PASS the validation.",
 			},
 			"xmlrequestschema": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "XML Schema object for request validation .",
 			},
 			"xmlresponseschema": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "XML Schema object for response validation.",
 			},
 			"xmlvalidateresponse": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Validate response message.",
 			},
 			"xmlvalidatesoapenvelope": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Validate SOAP Evelope only.",
 			},
 			"xmlvalidationurl": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "XML Validation URL regular expression.",
 			},
 			"xmlwsdl": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "WSDL object for soap request validation.",
 			},
 		},
 	}
 }
 
-func appfwprofile_xmlvalidationurl_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileXmlvalidationurlBindingResourceModel) appfw.Appfwprofilexmlvalidationurlbinding {
-	tflog.Debug(ctx, "In appfwprofile_xmlvalidationurl_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_xmlvalidationurl_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileXmlvalidationurlBindingResourceModel) appfw.Appfwprofilexmlvalidationurlbinding {
+	tflog.Debug(ctx, "In appfwprofile_xmlvalidationurl_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_xmlvalidationurl_binding := appfw.Appfwprofilexmlvalidationurlbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_xmlvalidationurl_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.State = data.State.ValueString()
 	}
-	if !data.Xmladditionalsoapheaders.IsNull() {
+	if !data.Xmladditionalsoapheaders.IsNull() && !data.Xmladditionalsoapheaders.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Xmladditionalsoapheaders = data.Xmladditionalsoapheaders.ValueString()
 	}
-	if !data.Xmlendpointcheck.IsNull() {
+	if !data.Xmlendpointcheck.IsNull() && !data.Xmlendpointcheck.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Xmlendpointcheck = data.Xmlendpointcheck.ValueString()
 	}
-	if !data.Xmlrequestschema.IsNull() {
+	if !data.Xmlrequestschema.IsNull() && !data.Xmlrequestschema.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Xmlrequestschema = data.Xmlrequestschema.ValueString()
 	}
-	if !data.Xmlresponseschema.IsNull() {
+	if !data.Xmlresponseschema.IsNull() && !data.Xmlresponseschema.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Xmlresponseschema = data.Xmlresponseschema.ValueString()
 	}
-	if !data.Xmlvalidateresponse.IsNull() {
+	if !data.Xmlvalidateresponse.IsNull() && !data.Xmlvalidateresponse.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Xmlvalidateresponse = data.Xmlvalidateresponse.ValueString()
 	}
-	if !data.Xmlvalidatesoapenvelope.IsNull() {
+	if !data.Xmlvalidatesoapenvelope.IsNull() && !data.Xmlvalidatesoapenvelope.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Xmlvalidatesoapenvelope = data.Xmlvalidatesoapenvelope.ValueString()
 	}
-	if !data.Xmlvalidationurl.IsNull() {
+	if !data.Xmlvalidationurl.IsNull() && !data.Xmlvalidationurl.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Xmlvalidationurl = data.Xmlvalidationurl.ValueString()
 	}
-	if !data.Xmlwsdl.IsNull() {
+	if !data.Xmlwsdl.IsNull() && !data.Xmlwsdl.IsUnknown() {
 		appfwprofile_xmlvalidationurl_binding.Xmlwsdl = data.Xmlwsdl.ValueString()
 	}
 
 	return appfwprofile_xmlvalidationurl_binding
 }
 
+// appfwprofile_xmlvalidationurl_bindingSetAttrFromGet is the RESOURCE-side setter.
+// All attributes are RequiresReplace (no update endpoint) and the NITRO server may
+// echo server-defaulted/normalized values for fields like alertonly and isautodeployed
+// (the SDK v2 resource explicitly skipped re-setting alertonly/isautodeployed in Read
+// to preserve the configured values). To avoid "inconsistent result after apply" we
+// adopt the GET value only when the model field is currently null/unknown (e.g. import);
+// otherwise we preserve the configured plan/state value. The ID is set once in Create
+// and is preserved here.
 func appfwprofile_xmlvalidationurl_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileXmlvalidationurlBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileXmlvalidationurlBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_xmlvalidationurl_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["alertonly"]; ok && val != nil {
-		data.Alertonly = types.StringValue(val.(string))
-	} else {
-		data.Alertonly = types.StringNull()
-	}
-	if val, ok := getResponseData["comment"]; ok && val != nil {
-		data.Comment = types.StringValue(val.(string))
-	} else {
-		data.Comment = types.StringNull()
-	}
-	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
-		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
-		data.Isautodeployed = types.StringNull()
-	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
-	}
-	if val, ok := getResponseData["resourceid"]; ok && val != nil {
-		data.Resourceid = types.StringValue(val.(string))
-	} else {
-		data.Resourceid = types.StringNull()
-	}
-	if val, ok := getResponseData["state"]; ok && val != nil {
-		data.State = types.StringValue(val.(string))
-	} else {
-		data.State = types.StringNull()
-	}
-	if val, ok := getResponseData["xmladditionalsoapheaders"]; ok && val != nil {
-		data.Xmladditionalsoapheaders = types.StringValue(val.(string))
-	} else {
-		data.Xmladditionalsoapheaders = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlendpointcheck"]; ok && val != nil {
-		data.Xmlendpointcheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlendpointcheck = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlrequestschema"]; ok && val != nil {
-		data.Xmlrequestschema = types.StringValue(val.(string))
-	} else {
-		data.Xmlrequestschema = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlresponseschema"]; ok && val != nil {
-		data.Xmlresponseschema = types.StringValue(val.(string))
-	} else {
-		data.Xmlresponseschema = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlvalidateresponse"]; ok && val != nil {
-		data.Xmlvalidateresponse = types.StringValue(val.(string))
-	} else {
-		data.Xmlvalidateresponse = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlvalidatesoapenvelope"]; ok && val != nil {
-		data.Xmlvalidatesoapenvelope = types.StringValue(val.(string))
-	} else {
-		data.Xmlvalidatesoapenvelope = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlvalidationurl"]; ok && val != nil {
-		data.Xmlvalidationurl = types.StringValue(val.(string))
-	} else {
-		data.Xmlvalidationurl = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlwsdl"]; ok && val != nil {
-		data.Xmlwsdl = types.StringValue(val.(string))
-	} else {
-		data.Xmlwsdl = types.StringNull()
+	adopt := func(cur types.String, key string) types.String {
+		if !cur.IsNull() && !cur.IsUnknown() {
+			return cur
+		}
+		if val, ok := getResponseData[key]; ok && val != nil {
+			return types.StringValue(val.(string))
+		}
+		return types.StringNull()
 	}
 
-	// Set ID for the resource
+	data.Alertonly = adopt(data.Alertonly, "alertonly")
+	data.Comment = adopt(data.Comment, "comment")
+	data.Isautodeployed = adopt(data.Isautodeployed, "isautodeployed")
+	data.Name = adopt(data.Name, "name")
+	data.Resourceid = adopt(data.Resourceid, "resourceid")
+	data.Ruletype = adopt(data.Ruletype, "ruletype")
+	data.State = adopt(data.State, "state")
+	data.Xmladditionalsoapheaders = adopt(data.Xmladditionalsoapheaders, "xmladditionalsoapheaders")
+	data.Xmlendpointcheck = adopt(data.Xmlendpointcheck, "xmlendpointcheck")
+	data.Xmlrequestschema = adopt(data.Xmlrequestschema, "xmlrequestschema")
+	data.Xmlresponseschema = adopt(data.Xmlresponseschema, "xmlresponseschema")
+	data.Xmlvalidateresponse = adopt(data.Xmlvalidateresponse, "xmlvalidateresponse")
+	data.Xmlvalidatesoapenvelope = adopt(data.Xmlvalidatesoapenvelope, "xmlvalidatesoapenvelope")
+	data.Xmlvalidationurl = adopt(data.Xmlvalidationurl, "xmlvalidationurl")
+	data.Xmlwsdl = adopt(data.Xmlwsdl, "xmlwsdl")
+
+	return data
+}
+
+// appfwprofile_xmlvalidationurl_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter: it faithfully copies every field from the GET response (the datasource has no
+// prior plan/state to preserve) and sets the composite ID.
+func appfwprofile_xmlvalidationurl_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwprofileXmlvalidationurlBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileXmlvalidationurlBindingResourceModel {
+	tflog.Debug(ctx, "In appfwprofile_xmlvalidationurl_bindingSetAttrFromGetForDatasource Function")
+
+	copyField := func(key string) types.String {
+		if val, ok := getResponseData[key]; ok && val != nil {
+			return types.StringValue(val.(string))
+		}
+		return types.StringNull()
+	}
+
+	data.Alertonly = copyField("alertonly")
+	data.Comment = copyField("comment")
+	data.Isautodeployed = copyField("isautodeployed")
+	data.Name = copyField("name")
+	data.Resourceid = copyField("resourceid")
+	data.Ruletype = copyField("ruletype")
+	data.State = copyField("state")
+	data.Xmladditionalsoapheaders = copyField("xmladditionalsoapheaders")
+	data.Xmlendpointcheck = copyField("xmlendpointcheck")
+	data.Xmlrequestschema = copyField("xmlrequestschema")
+	data.Xmlresponseschema = copyField("xmlresponseschema")
+	data.Xmlvalidateresponse = copyField("xmlvalidateresponse")
+	data.Xmlvalidatesoapenvelope = copyField("xmlvalidatesoapenvelope")
+	data.Xmlvalidationurl = copyField("xmlvalidationurl")
+	data.Xmlwsdl = copyField("xmlwsdl")
+
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

@@ -105,7 +105,7 @@ func (d *AppfwprofileXmlsqlinjectionBindingDataSource) Read(ctx context.Context,
 		return
 	}
 
-	appfwprofile_xmlsqlinjection_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_xmlsqlinjection_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -20,13 +20,11 @@ func AppfwprofileSqlinjectionBindingDataSourceSchema() schema.Schema {
 				Description: "Location of SQL injection exception - form field, header or cookie.",
 			},
 			"as_value_expr_sql": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The web form value expression.",
 			},
 			"as_value_type_sql": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The web form value type.",
 			},
 			"comment": schema.StringAttribute{

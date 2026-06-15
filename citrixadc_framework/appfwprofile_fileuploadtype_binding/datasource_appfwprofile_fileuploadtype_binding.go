@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
-
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -47,14 +47,17 @@ func (d *AppfwprofileFileuploadtypeBindingDataSource) Read(ctx context.Context, 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	asfileuploadtypesurl_Name := data.AsFileuploadtypesUrl
-	filetype_Name := ""
-	if !data.Filetype.IsNull() && !data.Filetype.IsUnknown() {
-		var filetypes []string
-		diags := data.Filetype.ElementsAs(ctx, &filetypes, false)
-		resp.Diagnostics.Append(diags...)
-		filetype_Name = strings.Join(filetypes, ";")
-	}
 	fileuploadtype_Name := data.Fileuploadtype
+
+	// filetype is a list; join with ';' to compare against the response list.
+	var filetypeFilter string
+	filetypeFilterSet := false
+	if !data.Filetype.IsNull() && !data.Filetype.IsUnknown() {
+		var filetypeList []string
+		data.Filetype.ElementsAs(ctx, &filetypeList, false)
+		filetypeFilter = strings.Join(filetypeList, ";")
+		filetypeFilterSet = true
+	}
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -92,13 +95,17 @@ func (d *AppfwprofileFileuploadtypeBindingDataSource) Read(ctx context.Context, 
 			continue
 		}
 
-		// Check filetype
-		if v["filetype"] != nil {
-			if filetypeSlice, ok := v["filetype"].([]interface{}); ok {
-				dataFiletype := strings.Join(utils.ToStringList(filetypeSlice), ";")
-				if dataFiletype != filetype_Name {
-					match = false
+		// Check filetype (response is a list, encoded as a ';'-joined string)
+		if filetypeFilterSet {
+			dataFiletype := ""
+			if v["filetype"] != nil {
+				if filetypeSlice, ok := v["filetype"].([]interface{}); ok {
+					dataFiletype = strings.Join(utils.ToStringList(filetypeSlice), ";")
 				}
+			}
+			if dataFiletype != filetypeFilter {
+				match = false
+				continue
 			}
 		}
 

@@ -120,12 +120,14 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 4)
-
-		name := idSlice[0]
-		fileuploadtype := idSlice[1]
-		as_fileuploadtypes_url := idSlice[2]
-		filetype := idSlice[3]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "fileuploadtype", "as_fileuploadtypes_url", "filetype"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		fileuploadtype := idMap["fileuploadtype"]
+		as_fileuploadtypes_url := idMap["as_fileuploadtypes_url"]
+		filetype := idMap["filetype"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fileuploadtype_binding",
@@ -178,12 +180,14 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingNotExist(n string, id string
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 4)
-
-		name := idSlice[0]
-		fileuploadtype := idSlice[1]
-		as_fileuploadtypes_url := idSlice[2]
-		filetype := idSlice[3]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "fileuploadtype", "as_fileuploadtypes_url", "filetype"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
+		}
+		name := idMap["name"]
+		fileuploadtype := idMap["fileuploadtype"]
+		as_fileuploadtypes_url := idMap["as_fileuploadtypes_url"]
+		filetype := idMap["filetype"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fileuploadtype_binding",

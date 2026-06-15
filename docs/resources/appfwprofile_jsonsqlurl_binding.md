@@ -9,7 +9,8 @@ The appfwprofile_jsonsqlurl_binding resource is used to bind jsonsqlurl to appfw
 
 ## Example usage
 
-```hclresource "citrixadc_appfwprofile" "tf_appfwprofile" {
+```hcl
+resource "citrixadc_appfwprofile" "tf_appfwprofile" {
   name                     = "tf_appfwprofile"
   bufferoverflowaction     = ["none"]
   contenttypeaction        = ["none"]
@@ -72,9 +73,9 @@ resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding2" {
 * `resourceid` - (Optional) A "id" that identifies the rule.
 * `ruletype` - (Optional) Specifies rule type of binding
 * `state` - (Optional) Enabled.
-* `isvalueregex_json_sql` - (Optional) Is the JSON SQL key value a regular expression? Possible values = REGEX, NOTREGEX
-* `iskeyregex_json_sql` - (Optional) Is the key name a regular expression? Possible values = REGEX, NOTREGEX
-* `as_value_type_json_sql` - (Optional) Type of the relaxed JSON SQL key value. Possible values = Keyword, SpecialString, Wildchar.
+* `isvalueregex_json_sql` - (Optional) Is the JSON SQL key value a regular expression? Possible values: [ REGEX, NOTREGEX ]
+* `iskeyregex_json_sql` - (Optional) Is the key name a regular expression? Possible values: [ REGEX, NOTREGEX ]
+* `as_value_type_json_sql` - (Optional) Type of the relaxed JSON SQL key value. Possible values: [ Keyword, SpecialString, Wildchar ]
 * `as_value_expr_json_sql` - (Optional) The JSON SQL key value expression.
 * `keyname_json_sql` - (Optional) An expression that designates a keyname on the JSON SQL URL for which SQL injection violations are relaxed.
 
@@ -82,7 +83,7 @@ resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding2" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_jsonsqlurl_binding. It is concatenation of `name`,`jsonsqlurl`,`keyname_json_sql`,`as_value_type_json_sql` and `as_value_expr_json_sql`attributes separated by comma.
+* `id` - The id of the appfwprofile_jsonsqlurl_binding. It is the concatenation of the `name`, `jsonsqlurl`, `keyname_json_sql`, `as_value_type_json_sql` and `as_value_expr_json_sql` attributes separated by a comma.
 
 
 ## Import

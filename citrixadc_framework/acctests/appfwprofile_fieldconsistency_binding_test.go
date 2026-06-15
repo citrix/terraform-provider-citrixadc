@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -129,11 +130,13 @@ func testAccCheckAppfwprofile_fieldconsistency_bindingExist(n string, id *string
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 3)
-
-		name := idSlice[0]
-		fieldconsistency := idSlice[1]
-		formactionurl_ffc := idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "fieldconsistency", "formactionurl_ffc"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		fieldconsistency := idMap["fieldconsistency"]
+		formactionurl_ffc := idMap["formactionurl_ffc"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fieldconsistency_binding",
@@ -177,11 +180,13 @@ func testAccCheckAppfwprofile_fieldconsistency_bindingNotExist(n string, id stri
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 3)
-
-		name := idSlice[0]
-		fieldconsistency := idSlice[1]
-		formactionurl_ffc := idSlice[2]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "fieldconsistency", "formactionurl_ffc"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		fieldconsistency := idMap["fieldconsistency"]
+		formactionurl_ffc := idMap["formactionurl_ffc"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fieldconsistency_binding",

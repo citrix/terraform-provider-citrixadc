@@ -32,6 +32,7 @@ type AppfwprofileCmdinjectionBindingResourceModel struct {
 	IsvalueregexCmd   types.String `tfsdk:"isvalueregex_cmd"`
 	Name              types.String `tfsdk:"name"`
 	Resourceid        types.String `tfsdk:"resourceid"`
+	Ruletype          types.String `tfsdk:"ruletype"`
 	State             types.String `tfsdk:"state"`
 }
 
@@ -52,110 +53,155 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Description: "Send SNMP alert?",
 			},
 			"as_scan_location_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Location of command injection exception - form field, header or cookie.",
 			},
 			"as_value_expr_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The web form/header/cookie value expression.",
 			},
 			"as_value_type_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of the relaxed web form value",
 			},
 			"cmdinjection": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the relaxed web form field/header/cookie",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"formactionurl_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The web form action URL.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"isregex_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the relaxed web form field name/header/cookie a regular expression?",
 			},
 			"isvalueregex_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the web form field/header/cookie value a regular expression?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 		},
 	}
 }
 
-func appfwprofile_cmdinjection_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileCmdinjectionBindingResourceModel) appfw.Appfwprofilecmdinjectionbinding {
-	tflog.Debug(ctx, "In appfwprofile_cmdinjection_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_cmdinjection_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileCmdinjectionBindingResourceModel) appfw.Appfwprofilecmdinjectionbinding {
+	tflog.Debug(ctx, "In appfwprofile_cmdinjection_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_cmdinjection_binding := appfw.Appfwprofilecmdinjectionbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.AsScanLocationCmd.IsNull() {
+	if !data.AsScanLocationCmd.IsNull() && !data.AsScanLocationCmd.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Asscanlocationcmd = data.AsScanLocationCmd.ValueString()
 	}
-	if !data.AsValueExprCmd.IsNull() {
+	if !data.AsValueExprCmd.IsNull() && !data.AsValueExprCmd.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Asvalueexprcmd = data.AsValueExprCmd.ValueString()
 	}
-	if !data.AsValueTypeCmd.IsNull() {
+	if !data.AsValueTypeCmd.IsNull() && !data.AsValueTypeCmd.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Asvaluetypecmd = data.AsValueTypeCmd.ValueString()
 	}
-	if !data.Cmdinjection.IsNull() {
+	if !data.Cmdinjection.IsNull() && !data.Cmdinjection.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Cmdinjection = data.Cmdinjection.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.FormactionurlCmd.IsNull() {
+	if !data.FormactionurlCmd.IsNull() && !data.FormactionurlCmd.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Formactionurlcmd = data.FormactionurlCmd.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.IsregexCmd.IsNull() {
+	if !data.IsregexCmd.IsNull() && !data.IsregexCmd.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Isregexcmd = data.IsregexCmd.ValueString()
 	}
-	if !data.IsvalueregexCmd.IsNull() {
+	if !data.IsvalueregexCmd.IsNull() && !data.IsvalueregexCmd.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Isvalueregexcmd = data.IsvalueregexCmd.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_cmdinjection_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_cmdinjection_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_cmdinjection_binding.State = data.State.ValueString()
 	}
 
@@ -225,6 +271,11 @@ func appfwprofile_cmdinjection_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Resourceid = types.StringValue(val.(string))
 	} else {
 		data.Resourceid = types.StringNull()
+	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
