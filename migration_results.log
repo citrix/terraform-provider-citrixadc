@@ -963,5 +963,18 @@ BACKWARD-COMPAT: Adopted new key:value ID but trimmed it to 2 keys "name,service
 DATASOURCE: healthy after reconciliation; made servicegroupname/servicename Optional+Computed (were Required, but the test config supplies only name+servicename) and switched Read to a dedicated ForDatasource setter (Pattern 7 split).
 PATTERNS: 1, 5, 6, 7, 8, 11, 13
 FILES CHANGED: citrixadc_framework/lbvserver_service_binding/resource_lbvserver_service_binding.go, citrixadc_framework/lbvserver_service_binding/resource_schema.go, citrixadc_framework/lbvserver_service_binding/datasource_lbvserver_service_binding.go, citrixadc_framework/lbvserver_service_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_service_binding_test.go (sanctioned ID-parse helper lines only); NO doc files changed
+RESOURCE: gslbvserver_domain_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:15:25Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccGslbvserver_domain_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccGslbvserver_domain_binding_basic ............ PASS
+  - TestAccGslbvserver_domain_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: ID inflated to 4 keys (name,domainname,backupipflag,cookie_domainflag) -> restored to legacy name,domainname (matches resource_id_mapping.json + docs). Delete args reduced from 3 (incl flags) to domainname only, URL-encoded (DeleteResourceWithArgs). backupipflag/cookie_domainflag excluded from add payload (NITRO errorcode 278) and Computed dropped. order excluded from payload (errorcode 1093, requires serviceName) and Computed dropped. backupip/cookie_domain made RequiresReplace (SDK v2 ForceNew parity), Computed dropped (GET does not echo when set absent). domainname made RequiresReplace (SDK v2 ForceNew parity). Create verb UpdateUnnamedResource (PUT) preserved (matches SDK v2). Read/datasource match loops simplified to domainname only.
+DATASOURCE: split setter added (gslbvserver_domain_bindingSetAttrFromGetForDatasource, Pattern 7); resource setter now preserves state + no ID recompute; datasource Read filters on domainname and sets composite ID; datasource schema flags backupipflag/cookie_domainflag changed Required->Optional+Computed (not lookup keys).
+PATTERNS: 6, 7, 13, 15
+FILES CHANGED: citrixadc_framework/gslbvserver_domain_binding/resource_gslbvserver_domain_binding.go, citrixadc_framework/gslbvserver_domain_binding/resource_schema.go, citrixadc_framework/gslbvserver_domain_binding/datasource_gslbvserver_domain_binding.go, citrixadc_framework/gslbvserver_domain_binding/datasource_schema.go, citrixadc_framework/acctests/gslbvserver_domain_binding_test.go (sanctioned ID-parse helper lines only; no doc changed)
 BLOCKER: none
 ========================================
