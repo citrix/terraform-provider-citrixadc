@@ -1263,3 +1263,18 @@ PATTERNS: 6, 7, 8, 13
 FILES CHANGED: citrixadc_framework/csvserver_cspolicy_binding/resource_schema.go, citrixadc_framework/csvserver_cspolicy_binding/datasource_csvserver_cspolicy_binding.go, citrixadc_framework/csvserver_cspolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_cspolicy_binding_test.go (ID-parse helper lines only)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: csvserver_gslbvserver_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:50:26Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAcc[cC]svserver_gslbvserver_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccCsvserver_gslbvserver_binding_basic ............ PASS
+  - TestAcccsvserver_gslbvserver_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: full parity, no resource/datasource code changes needed. SDK v2 schema (name,vserver both Required+ForceNew, string) matches Framework (Required+RequiresReplace). NITRO doc confirms add=PUT, so Framework UpdateUnnamedResource verb is correct (no Pattern 1 change). Delete uses DeleteResourceWithArgsMap{vserver} = SDK v2 args. ID migrated to new key:value format with legacy order name,vserver (matches resource_id_mapping.json). No dropped attrs, no Computed drift, no secrets.
+DATASOURCE: healthy as-is; both name and vserver are echoed by GET so the shared SetAttrFromGet works for resource and datasource (no Pattern 7 split needed).
+PATTERNS: none (sanctioned Constraint-1 ID-parse helper edit only)
+FILES CHANGED: citrixadc_framework/acctests/csvserver_gslbvserver_binding_test.go (ID-parse helper lines in bindingExist only; added utils import)
+BLOCKER: none
+========================================
