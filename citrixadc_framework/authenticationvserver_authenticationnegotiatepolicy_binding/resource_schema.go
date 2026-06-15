@@ -22,6 +22,7 @@ import (
 // AuthenticationvserverAuthenticationnegotiatepolicyBindingResourceModel describes the resource data model.
 type AuthenticationvserverAuthenticationnegotiatepolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -38,6 +39,14 @@ func (r *AuthenticationvserverAuthenticationnegotiatepolicyBindingResource) Sche
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the authenticationvserver_authenticationnegotiatepolicy_binding resource.",
+			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
@@ -102,6 +111,9 @@ func authenticationvserver_authenticationnegotiatepolicy_bindingGetThePayloadFro
 
 	// Create API request body from the model
 	authenticationvserver_authenticationnegotiatepolicy_binding := authentication.Authenticationvserverauthenticationnegotiatepolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		authenticationvserver_authenticationnegotiatepolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		authenticationvserver_authenticationnegotiatepolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -127,10 +139,69 @@ func authenticationvserver_authenticationnegotiatepolicy_bindingGetThePayloadFro
 	return authenticationvserver_authenticationnegotiatepolicy_binding
 }
 
+// authenticationvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet is the
+// RESOURCE setter. It preserves user-supplied / server-non-echoed inputs (bindpoint,
+// gotopriorityexpression, priority) in plan/state instead of overwriting them from the
+// GET response (the NITRO GET for this binding does not faithfully echo these back —
+// the SDK v2 Read deliberately skipped bindpoint for the same reason). This avoids
+// "inconsistent result after apply" / perpetual-diff errors. The ID is preserved
+// (set once in Create / by import); this function does not recompute it.
 func authenticationvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.Context, data *AuthenticationvserverAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationnegotiatepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In authenticationvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// bindpoint is NOT overwritten from the GET response: the NITRO GET does not echo
+	// it back consistently (the SDK v2 Read deliberately skipped bindpoint for the same
+	// reason), so preserve the configured plan/state value to avoid an
+	// "inconsistent result after apply" error.
+	// gotopriorityexpression and nextfactor ARE resolved from the GET response (and
+	// nulled when absent) because they are Computed and Terraform requires a known
+	// value after apply.
+	// priority is set from the GET response when present, otherwise preserved (the
+	// configured value), since a missing priority in GET would otherwise null a
+	// user-supplied value.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else {
+		data.Gotopriorityexpression = types.StringNull()
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
+		data.Nextfactor = types.StringValue(val.(string))
+	} else {
+		data.Nextfactor = types.StringNull()
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	return data
+}
+
+// authenticationvserver_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource
+// is the DATASOURCE setter. A datasource has no prior plan/state to preserve, so it
+// faithfully copies every field from the GET response and sets the ID itself.
+func authenticationvserver_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationvserverAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationnegotiatepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In authenticationvserver_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -169,13 +240,11 @@ func authenticationvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet(c
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (composite key:UrlEncode(value), matching Create and
+	// resource_id_mapping.json order: name,policy).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
