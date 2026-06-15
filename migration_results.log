@@ -1538,5 +1538,17 @@ BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct + a
 DATASOURCE: healthy; split setter into resource (preserve-state) + datasource (faithful copy + sets Id) per Pattern 7; added bindpoint to datasource schema.
 PATTERNS: 1, 6, 7, 8, 13
 FILES CHANGED: citrixadc_framework/lbvserver_appfwpolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_appfwpolicy_binding/resource_lbvserver_appfwpolicy_binding.go, citrixadc_framework/lbvserver_appfwpolicy_binding/datasource_lbvserver_appfwpolicy_binding.go, citrixadc_framework/lbvserver_appfwpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_appfwpolicy_binding_test.go (sanctioned ID-parse helper lines only). No docs modified.
+RESOURCE: lbvserver_cmppolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:31:40Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccLbvserver_cmppolicy_binding($|_|DataSource)
+TESTS:
+  - TestAccLbvserver_cmppolicy_binding_basic ........... PASS
+  - TestAccLbvserver_cmppolicy_bindingDataSource_basic . PASS
+BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Computed in SDK v2 (test omits them) -> reverted to Optional+Computed (Pattern 8). Composite ID had 3 keys (bindpoint:name:policyname); reduced to name,policyname to match resource_id_mapping.json + SDK v2 ID + test helpers (Pattern f/6). Read filter loop keyed bindpoint off the (removed) ID -> rewritten to filter by policyname + state bindpoint (Pattern 10). Delete now reads bindpoint/policyname/priority from state model with url.QueryEscape (Pattern b). 'order' attr (not in SDK v2 but in NITRO struct/tfdata) kept as codegen-included Optional+Computed.
+DATASOURCE: healthy as-is; shares resource SetAttrFromGet which faithfully copies GET + sets 2-key ID; no Pattern 7 split needed.
+PATTERNS: 6, 8, 10, plus binding-family delete url-encode (b) and composite-ID-order (f)
+FILES CHANGED: citrixadc_framework/lbvserver_cmppolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_cmppolicy_binding/resource_lbvserver_cmppolicy_binding.go, citrixadc_framework/acctests/lbvserver_cmppolicy_binding_test.go (ID-parse helper lines only, sanctioned)
 BLOCKER: none
 ========================================
