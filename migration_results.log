@@ -78,3 +78,19 @@ PATTERNS: codegen int-vs-string fix; ID-format compat via ParseIdString (Phase-2
 FILES CHANGED: citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding/resource_nd6ravariables_onlinkipv6prefix_binding.go, citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding/datasource_nd6ravariables_onlinkipv6prefix_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/nd6ravariables_onlinkipv6prefix_binding_test.go (ID-parse helper only; NO doc changed)
 BLOCKER: none (note: two unrelated baseline-broken sibling resources lbmetrictable_metric_binding/policypatset_pattern_binding have invalid schema attr names that poison provider schema load; temporarily deregistered to validate, then RESTORED unchanged)
 ========================================
+========================================
+RESOURCE: nstrafficdomain_vxlan_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:12:30Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccNstrafficdomain_vxlan_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccNstrafficdomain_vxlan_binding_basic ........ PASS
+  - TestAccNstrafficdomain_vxlan_bindingDataSource_basic .. PASS
+  - (no ephemeral/secret tests) ...................... N/A
+BACKWARD-COMPAT: attr/type/flag parity preserved (td Int64 Required+RequiresReplace parent, vxlan Int64 Required+RequiresReplace delete-arg); ID adopts new key:value format with legacy order td,vxlan in resource_id_mapping.json so ParseIdString decodes old SDK v2 "td,vxlan" imports; Delete uses DeleteResourceWithArgsMap(td, {vxlan}). Codegen compile error was an int-vs-string call (datasource Read used data.Td.ValueString() on an Int64) — fixed to fmt.Sprintf("%d", data.Td.ValueInt64()). No duplicate Id field / duplicate schema key / unused imports were present.
+DATASOURCE: healthy after the int-vs-string fix; shares SetAttrFromGet which copies td/vxlan and sets data.Id (both identity keys, no server-overridden fields, so no Pattern 7 split needed).
+PATTERNS: codegen int-vs-string fix (Step 4 / undefined-method family); Constraint-1 sanctioned ID-parse helper edit in test.
+FILES CHANGED: citrixadc_framework/nstrafficdomain_vxlan_binding/datasource_nstrafficdomain_vxlan_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/nstrafficdomain_vxlan_binding_test.go (ID-parse helper lines only)
+BLOCKER: none
+========================================
