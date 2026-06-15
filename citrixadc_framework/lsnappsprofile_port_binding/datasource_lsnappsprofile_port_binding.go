@@ -46,15 +46,10 @@ func (d *LsnappsprofilePortBindingDataSource) Read(ctx context.Context, req data
 	appsprofilename_Name := data.Appsprofilename.ValueString()
 	lsnport_Name := data.Lsnport
 
-	var dataArr []map[string]interface{}
-	var err error
-
-	findParams := service.FindParams{
-		ResourceType:             service.Lsnappsprofile_port_binding.Type(),
-		ResourceName:             appsprofilename_Name,
-		ResourceMissingErrorCode: 258,
-	}
-	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
+	// The direct lsnappsprofile_port_binding GET endpoint does not return the bound
+	// ports; they are only available nested under the parent's aggregate
+	// lsnappsprofile_binding endpoint. Fetch them from there.
+	dataArr, err := getLsnappsprofilePortBindings(d.client, appsprofilename_Name)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read lsnappsprofile_port_binding, got error: %s", err))
 		return

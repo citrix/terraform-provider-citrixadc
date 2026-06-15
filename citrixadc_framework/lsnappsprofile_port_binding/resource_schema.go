@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
+	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -88,4 +89,39 @@ func lsnappsprofile_port_bindingSetAttrFromGet(ctx context.Context, data *Lsnapp
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
+}
+
+// getLsnappsprofilePortBindings retrieves the lsnappsprofile_port_binding records for a
+// given application profile. The direct lsnappsprofile_port_binding GET endpoint does
+// not return the bound ports on the ADC; they are only exposed nested under the parent
+// aggregate lsnappsprofile_binding endpoint. This helper reads that aggregate and
+// returns the nested lsnappsprofile_port_binding array (empty if none are bound).
+func getLsnappsprofilePortBindings(client *service.NitroClient, appsprofilename string) ([]map[string]interface{}, error) {
+	findParams := service.FindParams{
+		ResourceType:             "lsnappsprofile_binding",
+		ResourceName:             appsprofilename,
+		ResourceMissingErrorCode: 258,
+	}
+	aggArr, err := client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]map[string]interface{}, 0)
+	for _, agg := range aggArr {
+		nested, ok := agg["lsnappsprofile_port_binding"]
+		if !ok || nested == nil {
+			continue
+		}
+		nestedArr, ok := nested.([]interface{})
+		if !ok {
+			continue
+		}
+		for _, n := range nestedArr {
+			if m, ok := n.(map[string]interface{}); ok {
+				result = append(result, m)
+			}
+		}
+	}
+	return result, nil
 }
