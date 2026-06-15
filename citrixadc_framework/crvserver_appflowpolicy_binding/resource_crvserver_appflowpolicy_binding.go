@@ -3,6 +3,7 @@ package crvserver_appflowpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CrvserverAppflowpolicyBindingResource) Create(ctx context.Context, req 
 	crvserver_appflowpolicy_binding := crvserver_appflowpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Crvserver_appflowpolicy_binding.Type(), &crvserver_appflowpolicy_binding)
+	// Binding resource - NITRO `add` is POST (matches SDK v2 AddResource). Pattern 1.
+	_, err := r.client.AddResource(service.Crvserver_appflowpolicy_binding.Type(), "", &crvserver_appflowpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_appflowpolicy_binding, got error: %s", err))
 		return
@@ -153,7 +154,8 @@ func (r *CrvserverAppflowpolicyBindingResource) Delete(ctx context.Context, req 
 	}
 
 	tflog.Debug(ctx, "Deleting crvserver_appflowpolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ParseIdString handles both the new key:value form and the legacy comma form.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policyname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -166,12 +168,20 @@ func (r *CrvserverAppflowpolicyBindingResource) Delete(ctx context.Context, req 
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args matching the SDK v2 contract: policyname (required), and the
+	// disambiguating bindpoint (URL-encoded) and priority when present in state.
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_appflowpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_appflowpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_appflowpolicy_binding, got error: %s", err))
 		return
