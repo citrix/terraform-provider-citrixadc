@@ -2,8 +2,6 @@ package lsnclient_network_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 
@@ -109,22 +107,49 @@ func lsnclient_network_bindingSetAttrFromGet(ctx context.Context, data *Lsnclien
 	} else {
 		data.Network = types.StringNull()
 	}
+	// Pattern 7: The NITRO GET response for this binding does NOT echo back the
+	// configured `td` value. Preserve the value already present in plan/state
+	// (set in Create) instead of nulling it, which would otherwise cause an
+	// "inconsistent result after apply" for a config that sets td explicitly.
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
-		data.Td = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// ID is composed in Create from the legacy identity keys (clientname,network);
+	// do not recompute it here.
+
+	return data
+}
+
+// lsnclient_network_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (the datasource has no prior plan/state to
+// preserve). The ID is set by the datasource Read.
+func lsnclient_network_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LsnclientNetworkBindingResourceModel, getResponseData map[string]interface{}) *LsnclientNetworkBindingResourceModel {
+	tflog.Debug(ctx, "In lsnclient_network_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["clientname"]; ok && val != nil {
+		data.Clientname = types.StringValue(val.(string))
+	} else {
+		data.Clientname = types.StringNull()
+	}
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	} else {
+		data.Netmask = types.StringNull()
+	}
+	if val, ok := getResponseData["network"]; ok && val != nil {
+		data.Network = types.StringValue(val.(string))
+	} else {
+		data.Network = types.StringNull()
+	}
+	// td is not echoed by the GET response; preserve the config-supplied value.
+	if val, ok := getResponseData["td"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Td = types.Int64Value(intVal)
+		}
+	}
 
 	return data
 }
