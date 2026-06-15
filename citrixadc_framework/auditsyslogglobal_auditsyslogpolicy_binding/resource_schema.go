@@ -7,9 +7,11 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -21,6 +23,7 @@ import (
 // AuditsyslogglobalAuditsyslogpolicyBindingResourceModel describes the resource data model.
 type AuditsyslogglobalAuditsyslogpolicyBindingResourceModel struct {
 	Id             types.String `tfsdk:"id"`
+	Builtin        types.List   `tfsdk:"builtin"`
 	Feature        types.String `tfsdk:"feature"`
 	Globalbindtype types.String `tfsdk:"globalbindtype"`
 	Policyname     types.String `tfsdk:"policyname"`
@@ -34,6 +37,16 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Schema(ctx context.C
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the auditsyslogglobal_auditsyslogpolicy_binding resource.",
+			},
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
 			},
 			"feature": schema.StringAttribute{
 				Optional: true,
@@ -94,6 +107,24 @@ func auditsyslogglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Conte
 	tflog.Debug(ctx, "In auditsyslogglobal_auditsyslogpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if rawList, ok := val.([]interface{}); ok {
+			elems := make([]attr.Value, 0, len(rawList))
+			for _, item := range rawList {
+				elems = append(elems, types.StringValue(fmt.Sprintf("%v", item)))
+			}
+			listVal, diags := types.ListValue(types.StringType, elems)
+			if !diags.HasError() {
+				data.Builtin = listVal
+			} else {
+				data.Builtin = types.ListNull(types.StringType)
+			}
+		} else {
+			data.Builtin = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Builtin = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
 	} else {
