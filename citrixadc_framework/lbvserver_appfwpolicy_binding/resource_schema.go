@@ -22,6 +22,7 @@ import (
 // LbvserverAppfwpolicyBindingResourceModel describes the resource data model.
 type LbvserverAppfwpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *LbvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req re
 				Computed:    true,
 				Description: "The ID of the lbvserver_appfwpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +66,18 @@ func (r *LbvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req re
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				// Not Computed: the NITRO GET response does not echo labelname back,
+				// so a Computed flag would leave it "unknown after apply" (Pattern 13).
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				// Not Computed: the NITRO GET response does not echo labeltype back,
+				// so a Computed flag would leave it "unknown after apply" (Pattern 13).
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -79,7 +92,8 @@ func (r *LbvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req re
 			},
 			"order": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
+				// Not Computed: the NITRO GET response does not echo order back,
+				// so a Computed flag would leave it "unknown after apply" (Pattern 13).
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -109,6 +123,9 @@ func lbvserver_appfwpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, 
 
 	// Create API request body from the model
 	lbvserver_appfwpolicy_binding := lb.Lbvserverappfwpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		lbvserver_appfwpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		lbvserver_appfwpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +154,62 @@ func lbvserver_appfwpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, 
 	return lbvserver_appfwpolicy_binding
 }
 
+// lbvserver_appfwpolicy_bindingSetAttrFromGet is the resource-side state setter.
+// All attributes are RequiresReplace, so Read must not introduce spurious diffs:
+// when the GET response does not echo back a field (server-overridden or non-echoed
+// Optional+Computed input), preserve the existing plan/state value instead of nulling
+// it (Pattern 7 / Pattern 13). The ID is set exactly once in Create, never here
+// (Pattern 6).
 func lbvserver_appfwpolicy_bindingSetAttrFromGet(ctx context.Context, data *LbvserverAppfwpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverAppfwpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In lbvserver_appfwpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model - preserve existing value when not echoed back
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// lbvserver_appfwpolicy_bindingSetAttrFromGetForDatasource is the datasource-side setter.
+// A datasource has no prior plan/state, so it must faithfully copy every field from the
+// GET response and set its own ID (Pattern 7 datasource split).
+func lbvserver_appfwpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LbvserverAppfwpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverAppfwpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In lbvserver_appfwpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -186,7 +255,7 @@ func lbvserver_appfwpolicy_bindingSetAttrFromGet(ctx context.Context, data *Lbvs
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create runs for a datasource)
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

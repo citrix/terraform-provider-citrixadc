@@ -59,8 +59,8 @@ func (r *LbvserverAppfwpolicyBindingResource) Create(ctx context.Context, req re
 	lbvserver_appfwpolicy_binding := lbvserver_appfwpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_appfwpolicy_binding.Type(), &lbvserver_appfwpolicy_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource), so use AddResource
+	_, err := r.client.AddResource(service.Lbvserver_appfwpolicy_binding.Type(), "", &lbvserver_appfwpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_appfwpolicy_binding, got error: %s", err))
 		return
