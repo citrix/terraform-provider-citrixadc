@@ -3,6 +3,7 @@ package crvserver_responderpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CrvserverResponderpolicyBindingResource) Create(ctx context.Context, re
 	crvserver_responderpolicy_binding := crvserver_responderpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Crvserver_responderpolicy_binding.Type(), &crvserver_responderpolicy_binding)
+	// Binding resource - NITRO 'add' is POST (matches SDK v2 AddResource). Pattern 1.
+	_, err := r.client.AddResource(service.Crvserver_responderpolicy_binding.Type(), "", &crvserver_responderpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_responderpolicy_binding, got error: %s", err))
 		return
@@ -114,26 +115,10 @@ func (r *CrvserverResponderpolicyBindingResource) Update(ctx context.Context, re
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating crvserver_responderpolicy_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		crvserver_responderpolicy_binding := crvserver_responderpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Crvserver_responderpolicy_binding.Type(), &crvserver_responderpolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update crvserver_responderpolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated crvserver_responderpolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for crvserver_responderpolicy_binding resource, skipping update")
-	}
+	// Update is a no-op for crvserver_responderpolicy_binding: NITRO exposes no update
+	// endpoint and every schema attribute is RequiresReplace, so attribute changes
+	// trigger recreation rather than reaching Update (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for crvserver_responderpolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readCrvserverResponderpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -166,12 +151,21 @@ func (r *CrvserverResponderpolicyBindingResource) Delete(ctx context.Context, re
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args. policyname comes from the ID; bindpoint and priority come from
+	// state and disambiguate the binding (matching the SDK v2 delete args). bindpoint
+	// values may contain special characters, so URL-encode them (Pattern b).
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Priority.IsNull() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_responderpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_responderpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_responderpolicy_binding, got error: %s", err))
 		return
