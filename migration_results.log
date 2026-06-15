@@ -234,3 +234,19 @@ PATTERNS: 7 (datasource setter split), 13 (drop Computed where no GET echo)
 FILES CHANGED: citrixadc_framework/vlan_nsip6_binding/resource_schema.go, citrixadc_framework/vlan_nsip6_binding/resource_vlan_nsip6_binding.go, citrixadc_framework/vlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vlan_nsip6_binding/datasource_vlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: authenticationvserver_authenticationradiuspolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:05:35Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccAuthenticationvserver_authenticationradiuspolicy_binding_basic|TestAccAuthenticationvserverAuthenticationradiuspolicyBindingDataSource_basic
+TESTS:
+  - TestAccAuthenticationvserver_authenticationradiuspolicy_binding_basic ............ PASS
+  - TestAccAuthenticationvserverAuthenticationradiuspolicyBindingDataSource_basic .... PASS
+  - (no ephemeral tests; resource has no secret attributes) ......................... N/A
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 + NITRO struct + test config); ID reduced from over-wide 4-key (groupextraction/name/policy/secondary) to SDK v2 name,policy composite matching resource_id_mapping.json; dropped spurious Computed from non-echoed inputs (bindpoint/gotopriorityexpression/groupextraction/nextfactor); datasource lookup keys name+policy (dropped Required on groupextraction/secondary so test passing only name+policy works); URL-encode policy delete arg.
+DATASOURCE: healthy after fix; added bindpoint, relaxed Required->Optional+Computed on groupextraction/secondary, filter by policy only, split setter (SetAttrFromGetForDatasource) per Pattern 7.
+PATTERNS: 7, 13, 15
+FILES CHANGED: citrixadc_framework/authenticationvserver_authenticationradiuspolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_authenticationradiuspolicy_binding/resource_authenticationvserver_authenticationradiuspolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationradiuspolicy_binding/datasource_schema.go, citrixadc_framework/authenticationvserver_authenticationradiuspolicy_binding/datasource_authenticationvserver_authenticationradiuspolicy_binding.go, citrixadc_framework/acctests/authenticationvserver_authenticationradiuspolicy_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================

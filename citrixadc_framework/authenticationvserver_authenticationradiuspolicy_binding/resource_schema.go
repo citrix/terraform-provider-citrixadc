@@ -22,6 +22,7 @@ import (
 // AuthenticationvserverAuthenticationradiuspolicyBindingResourceModel describes the resource data model.
 type AuthenticationvserverAuthenticationradiuspolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -39,9 +40,15 @@ func (r *AuthenticationvserverAuthenticationradiuspolicyBindingResource) Schema(
 				Computed:    true,
 				Description: "The ID of the authenticationvserver_authenticationradiuspolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -49,7 +56,6 @@ func (r *AuthenticationvserverAuthenticationradiuspolicyBindingResource) Schema(
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -64,7 +70,6 @@ func (r *AuthenticationvserverAuthenticationradiuspolicyBindingResource) Schema(
 			},
 			"nextfactor": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -102,6 +107,9 @@ func authenticationvserver_authenticationradiuspolicy_bindingGetThePayloadFromth
 
 	// Create API request body from the model
 	authenticationvserver_authenticationradiuspolicy_binding := authentication.Authenticationvserverauthenticationradiuspolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		authenticationvserver_authenticationradiuspolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		authenticationvserver_authenticationradiuspolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -127,10 +135,69 @@ func authenticationvserver_authenticationradiuspolicy_bindingGetThePayloadFromth
 	return authenticationvserver_authenticationradiuspolicy_binding
 }
 
+// authenticationvserver_authenticationradiuspolicy_bindingComputeId builds the composite ID for this
+// binding. Backward-compatible with the SDK v2 ID format (name,policy) recorded in
+// resource_id_mapping.json — the new key:value form is decoded by utils.ParseIdString.
+func authenticationvserver_authenticationradiuspolicy_bindingComputeId(data *AuthenticationvserverAuthenticationradiuspolicyBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
+	return strings.Join(idParts, ",")
+}
+
+// authenticationvserver_authenticationradiuspolicy_bindingSetAttrFromGet maps the GET response onto the
+// resource model. The NITRO GET for this binding only echoes name, policy, priority and secondary;
+// it does NOT echo bindpoint, gotopriorityexpression, nextfactor or groupextraction. For those
+// write-only inputs we PRESERVE the existing plan/state value instead of nulling it, otherwise
+// Terraform reports an "inconsistent result after apply" (Pattern 7).
 func authenticationvserver_authenticationradiuspolicy_bindingSetAttrFromGet(ctx context.Context, data *AuthenticationvserverAuthenticationradiuspolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationradiuspolicyBindingResourceModel {
 	tflog.Debug(ctx, "In authenticationvserver_authenticationradiuspolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// bindpoint, gotopriorityexpression, nextfactor and groupextraction are not echoed by GET —
+	// preserve the existing plan/state value (do not touch).
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
+		data.Nextfactor = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	data.Id = types.StringValue(authenticationvserver_authenticationradiuspolicy_bindingComputeId(data))
+
+	return data
+}
+
+// authenticationvserver_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource faithfully copies
+// every field from the GET response — the datasource has no prior plan/state to preserve (Pattern 7
+// datasource split). Fields not echoed by GET become null.
+func authenticationvserver_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationvserverAuthenticationradiuspolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationradiuspolicyBindingResourceModel {
+	tflog.Debug(ctx, "In authenticationvserver_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -169,14 +236,7 @@ func authenticationvserver_authenticationradiuspolicy_bindingSetAttrFromGet(ctx 
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(authenticationvserver_authenticationradiuspolicy_bindingComputeId(data))
 
 	return data
 }
