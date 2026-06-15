@@ -141,7 +141,7 @@ func (d *SslvserverSslcertkeyBindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	sslvserver_sslcertkey_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	sslvserver_sslcertkey_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

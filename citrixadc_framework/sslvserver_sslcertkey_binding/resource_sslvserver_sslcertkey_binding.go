@@ -69,14 +69,15 @@ func (r *SslvserverSslcertkeyBindingResource) Create(ctx context.Context, req re
 
 	tflog.Trace(ctx, "Created sslvserver_sslcertkey_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Compose in the legacy resource_id_mapping.json order
+	// (vservername,certkeyname,snicert,ca) so the new key:value ID matches the
+	// positional order ParseIdString uses to decode legacy SDK v2 IDs.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("crlcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Crlcheck.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ocspcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ocspcheck.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("vservername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vservername.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -171,21 +172,23 @@ func (r *SslvserverSslcertkeyBindingResource) Delete(ctx context.Context, req re
 		return
 	}
 
+	// Build delete args the way the SDK v2 resource did: certkeyname always,
+	// and ca / snicert only when true. NITRO omits false bools from binding
+	// rows, so listing with ca:false / snicert:false would fail to find the
+	// binding and the delete would be skipped, leaving it dangling.
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["ca"]; ok && val != "" {
-		argsMap["ca"] = val
-	}
 	if val, ok := idMap["certkeyname"]; ok && val != "" {
 		argsMap["certkeyname"] = val
 	}
-	if val, ok := idMap["crlcheck"]; ok && val != "" {
-		argsMap["crlcheck"] = val
+	if val, ok := idMap["ca"]; ok {
+		if b, _ := strconv.ParseBool(val); b {
+			argsMap["ca"] = val
+		}
 	}
-	if val, ok := idMap["ocspcheck"]; ok && val != "" {
-		argsMap["ocspcheck"] = val
-	}
-	if val, ok := idMap["snicert"]; ok && val != "" {
-		argsMap["snicert"] = val
+	if val, ok := idMap["snicert"]; ok {
+		if b, _ := strconv.ParseBool(val); b {
+			argsMap["snicert"] = val
+		}
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Sslvserver_sslcertkey_binding.Type(), vservername_value, argsMap)
@@ -232,93 +235,26 @@ func (r *SslvserverSslcertkeyBindingResource) readSslvserverSslcertkeyBindingFro
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// NITRO omits false bools and unset strings from binding rows, so absent
+	// fields are treated as their zero value (mirrors the SDK v2 read loop),
+	// and the certkeyname identity is the primary discriminator.
+	certkeynameId := idMap["certkeyname"]
+	caId := false
+	if v, ok := idMap["ca"]; ok {
+		caId, _ = strconv.ParseBool(v)
+	}
+	snicertId := false
+	if v, ok := idMap["snicert"]; ok {
+		snicertId, _ = strconv.ParseBool(v)
+	}
+
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ca
-		if idVal, ok := idMap["ca"]; ok {
-			if val, ok := v["ca"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ca"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check certkeyname
-		if idVal, ok := idMap["certkeyname"]; ok {
-			if val, ok := v["certkeyname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["certkeyname"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check crlcheck
-		if idVal, ok := idMap["crlcheck"]; ok {
-			if val, ok := v["crlcheck"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["crlcheck"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check ocspcheck
-		if idVal, ok := idMap["ocspcheck"]; ok {
-			if val, ok := v["ocspcheck"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ocspcheck"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check snicert
-		if idVal, ok := idMap["snicert"]; ok {
-			if val, ok := v["snicert"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["snicert"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		certkeynameVal, _ := v["certkeyname"].(string)
+		caVal, _ := v["ca"].(bool)
+		snicertVal, _ := v["snicert"].(bool)
+		if certkeynameVal == certkeynameId && caVal == caId && snicertVal == snicertId {
 			foundIndex = i
 			break
 		}
