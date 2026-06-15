@@ -22,6 +22,7 @@ import (
 // CsvserverTmtrafficpolicyBindingResourceModel describes the resource data model.
 type CsvserverTmtrafficpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,9 +41,15 @@ func (r *CsvserverTmtrafficpolicyBindingResource) Schema(ctx context.Context, re
 				Computed:    true,
 				Description: "The ID of the csvserver_tmtrafficpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point at which policy needs to be bound. Note: Content switching policies are evaluated only at request time.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -50,21 +57,20 @@ func (r *CsvserverTmtrafficpolicyBindingResource) Schema(ctx context.Context, re
 			},
 			"invoke": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "Invoke a policy label if this policy's rule evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label to be invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -86,7 +92,6 @@ func (r *CsvserverTmtrafficpolicyBindingResource) Schema(ctx context.Context, re
 			},
 			"priority": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -94,7 +99,6 @@ func (r *CsvserverTmtrafficpolicyBindingResource) Schema(ctx context.Context, re
 			},
 			"targetlbvserver": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +113,9 @@ func csvserver_tmtrafficpolicy_bindingGetThePayloadFromthePlan(ctx context.Conte
 
 	// Create API request body from the model
 	csvserver_tmtrafficpolicy_binding := cs.Csvservertmtrafficpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		csvserver_tmtrafficpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_tmtrafficpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +144,81 @@ func csvserver_tmtrafficpolicy_bindingGetThePayloadFromthePlan(ctx context.Conte
 	return csvserver_tmtrafficpolicy_binding
 }
 
+// csvserver_tmtrafficpolicy_bindingSetAttrFromGet is the RESOURCE-side setter.
+// All attributes are RequiresReplace (no in-place update), so the configured plan/state
+// values are authoritative. Several inputs are not echoed back by the NITRO GET (e.g.
+// bindpoint) or are server-overridden, which would null/clobber user values and produce
+// "inconsistent result after apply" errors. We therefore only adopt a value from the GET
+// response when the model field is currently null/unknown (the import case); otherwise we
+// preserve the existing plan/state value. The ID is set exactly once in Create, so it is
+// not recomputed here (Pattern 6).
 func csvserver_tmtrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data *CsvserverTmtrafficpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverTmtrafficpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In csvserver_tmtrafficpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// bindpoint is not echoed by the GET response; preserve plan/state value.
+	if data.Bindpoint.IsNull() || data.Bindpoint.IsUnknown() {
+		if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+			data.Bindpoint = types.StringValue(val.(string))
+		}
+	}
+	if data.Gotopriorityexpression.IsNull() || data.Gotopriorityexpression.IsUnknown() {
+		if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+			data.Gotopriorityexpression = types.StringValue(val.(string))
+		}
+	}
+	if data.Invoke.IsNull() || data.Invoke.IsUnknown() {
+		if val, ok := getResponseData["invoke"]; ok && val != nil {
+			data.Invoke = types.BoolValue(val.(bool))
+		}
+	}
+	if data.Labelname.IsNull() || data.Labelname.IsUnknown() {
+		if val, ok := getResponseData["labelname"]; ok && val != nil {
+			data.Labelname = types.StringValue(val.(string))
+		}
+	}
+	if data.Labeltype.IsNull() || data.Labeltype.IsUnknown() {
+		if val, ok := getResponseData["labeltype"]; ok && val != nil {
+			data.Labeltype = types.StringValue(val.(string))
+		}
+	}
+	if data.Name.IsNull() || data.Name.IsUnknown() {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
+	}
+	if data.Policyname.IsNull() || data.Policyname.IsUnknown() {
+		if val, ok := getResponseData["policyname"]; ok && val != nil {
+			data.Policyname = types.StringValue(val.(string))
+		}
+	}
+	if data.Priority.IsNull() || data.Priority.IsUnknown() {
+		if val, ok := getResponseData["priority"]; ok && val != nil {
+			if intVal, err := utils.ConvertToInt64(val); err == nil {
+				data.Priority = types.Int64Value(intVal)
+			}
+		}
+	}
+	if data.Targetlbvserver.IsNull() || data.Targetlbvserver.IsUnknown() {
+		if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
+			data.Targetlbvserver = types.StringValue(val.(string))
+		}
+	}
+
+	return data
+}
+
+// csvserver_tmtrafficpolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. A datasource has no prior plan/state to preserve, so it faithfully copies every
+// field from the GET response and sets the composite ID itself (the datasource has no
+// Create). (Pattern 7 datasource split.)
+func csvserver_tmtrafficpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CsvserverTmtrafficpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverTmtrafficpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In csvserver_tmtrafficpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -184,7 +262,7 @@ func csvserver_tmtrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Targetlbvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
