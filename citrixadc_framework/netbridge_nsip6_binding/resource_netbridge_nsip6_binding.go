@@ -3,6 +3,7 @@ package netbridge_nsip6_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -68,11 +69,13 @@ func (r *NetbridgeNsip6BindingResource) Create(ctx context.Context, req resource
 
 	tflog.Trace(ctx, "Created netbridge_nsip6_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Composite ID order matches resource_id_mapping.json ("name,ipaddress").
+	// netmask is intentionally excluded (it is not part of the SDK v2 ID and is a
+	// Computed/server-overridden value for IPv6 bindings).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -167,15 +170,17 @@ func (r *NetbridgeNsip6BindingResource) Delete(ctx context.Context, req resource
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// The ipaddress value (an IPv6 subnet, e.g. "dea:97c5:d381:e72b::/64") contains
+	// characters such as '/' that must be URL-encoded before being placed in the
+	// delete ?args= query string. The NITRO client does NOT encode arg values, so we
+	// encode here (mirrors the SDK v2 resource's url.PathEscape). netmask is excluded
+	// from the delete args, matching the SDK v2 resource.
+	args := make([]string, 0)
 	if val, ok := idMap["ipaddress"]; ok && val != "" {
-		argsMap["ipaddress"] = val
-	}
-	if val, ok := idMap["netmask"]; ok && val != "" {
-		argsMap["netmask"] = val
+		args = append(args, fmt.Sprintf("ipaddress:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Netbridge_nsip6_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Netbridge_nsip6_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete netbridge_nsip6_binding, got error: %s", err))
 		return
@@ -219,7 +224,9 @@ func (r *NetbridgeNsip6BindingResource) readNetbridgeNsip6BindingFromApi(ctx con
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the binding's ipaddress.
+	// Identity is (name, ipaddress) per resource_id_mapping.json; netmask is not a
+	// match key (it is server-derived for IPv6 bindings).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -235,25 +242,6 @@ func (r *NetbridgeNsip6BindingResource) readNetbridgeNsip6BindingFromApi(ctx con
 				match = false
 				continue
 			}
-		} else if _, ok := v["ipaddress"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check netmask
-		if idVal, ok := idMap["netmask"]; ok {
-			if val, ok := v["netmask"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["netmask"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
