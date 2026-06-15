@@ -127,10 +127,55 @@ func vpnvserver_authenticationnegotiatepolicy_bindingGetThePayloadFromthePlan(ct
 	return vpnvserver_authenticationnegotiatepolicy_binding
 }
 
+// vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet is the RESOURCE-side setter.
+// It mirrors the SDK v2 read: it adopts the server-returned values for the policy-controlled
+// fields (so the Computed attributes resolve) but PRESERVES the configured bindpoint from the
+// prior plan/state. The SDK v2 resource deliberately never read bindpoint back from the GET
+// response because the server normalizes it, which would otherwise cause an "inconsistent
+// result after apply". The ID is set in Create and is not recomputed here.
 func vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// bindpoint: preserved from plan/state (server-normalized; SDK v2 did not read it back).
+
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else {
+		data.Gotopriorityexpression = types.StringNull()
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	} else {
+		data.Groupextraction = types.BoolNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	} else {
+		data.Priority = types.Int64Null()
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	} else {
+		data.Secondary = types.BoolNull()
+	}
+
+	return data
+}
+
+// vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. The datasource has no prior plan/state to preserve, so it faithfully copies every field
+// from the GET response and sets the ID itself.
+func vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,10 +214,8 @@ func vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (identity is name,policy).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
