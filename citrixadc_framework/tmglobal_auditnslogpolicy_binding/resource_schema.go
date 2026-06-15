@@ -35,7 +35,6 @@ func (r *TmglobalAuditnslogpolicyBindingResource) Schema(ctx context.Context, re
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -49,8 +48,7 @@ func (r *TmglobalAuditnslogpolicyBindingResource) Schema(ctx context.Context, re
 				Description: "The name of the policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -78,10 +76,36 @@ func tmglobal_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Conte
 	return tmglobal_auditnslogpolicy_binding
 }
 
+// Resource-side state setter. Preserves user-supplied inputs that the NITRO GET
+// response does not echo back (e.g. gotopriorityexpression is not returned by GET),
+// and does NOT recompute the ID (Create sets the ID exactly once). This avoids
+// "inconsistent result after apply" diffs for non-echoed inputs (Pattern 7/13).
 func tmglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *TmglobalAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *TmglobalAuditnslogpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In tmglobal_auditnslogpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// gotopriorityexpression is NOT echoed back by NITRO GET — preserve the existing
+	// plan/state value instead of nulling it.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// Datasource-side state setter. Faithfully copies every field from the GET response
+// (a datasource has no prior plan/state to preserve) and sets the ID, since a
+// datasource never calls Create.
+func tmglobal_auditnslogpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *TmglobalAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *TmglobalAuditnslogpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In tmglobal_auditnslogpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -100,7 +124,7 @@ func tmglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
