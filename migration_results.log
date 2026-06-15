@@ -1723,3 +1723,19 @@ PATTERNS: 6, 7, 8, 10, 11, 13
 FILES CHANGED: citrixadc_framework/lbvserver_servicegroup_binding/resource_lbvserver_servicegroup_binding.go, citrixadc_framework/lbvserver_servicegroup_binding/resource_schema.go, citrixadc_framework/lbvserver_servicegroup_binding/datasource_lbvserver_servicegroup_binding.go, citrixadc_framework/lbvserver_servicegroup_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_servicegroup_binding_test.go (sanctioned ID-parse helper lines only; no test/step/assertion changes; no docs changed)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: netbridge_vlan_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:10:29Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccNetbridge_vlan_binding($|_basic|DataSource)
+TESTS:
+  - TestAccNetbridge_vlan_binding_basic ...... PASS
+  - TestAccNetbridge_vlan_bindingDataSource .. PASS
+  - (no ephemeral tests; resource has no secret attrs) ... N/A
+BACKWARD-COMPAT: Framework resource already matched SDK v2 contract (name Required+RequiresReplace string, vlan Required+RequiresReplace int; Create=UpdateUnnamedResource/PUT same as SDK v2; Delete via DeleteResourceWithArgsMap vlan arg; ID order name,vlan matches resource_id_mapping.json). No resource/datasource code changes needed.
+DATASOURCE: healthy as-is (shares SetAttrFromGet; name/vlan both echoed by GET, no server-override/non-echoed fields, so no Pattern 7 split required).
+PATTERNS: none (resource correct); applied Constraint-1 sanctioned ID-parse helper fix only.
+FILES CHANGED: citrixadc_framework/acctests/netbridge_vlan_binding_test.go (ID-parse helper lines only: SplitN -> utils.ParseIdString in Exist/NotExist helpers). NO doc file changed.
+BLOCKER: none
+========================================
