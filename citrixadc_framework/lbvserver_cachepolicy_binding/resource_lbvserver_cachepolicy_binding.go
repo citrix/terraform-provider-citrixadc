@@ -3,6 +3,7 @@ package lbvserver_cachepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *LbvserverCachepolicyBindingResource) Create(ctx context.Context, req re
 	lbvserver_cachepolicy_binding := lbvserver_cachepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_cachepolicy_binding.Type(), &lbvserver_cachepolicy_binding)
+	// Binding resource - NITRO `add` is POST; matches the SDK v2 resource which used AddResource (Pattern 1)
+	_, err := r.client.AddResource(service.Lbvserver_cachepolicy_binding.Type(), "", &lbvserver_cachepolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_cachepolicy_binding, got error: %s", err))
 		return
@@ -167,12 +168,14 @@ func (r *LbvserverCachepolicyBindingResource) Delete(ctx context.Context, req re
 		return
 	}
 
+	// DeleteResourceWithArgsMap does NOT url-encode arg values, so encode here
+	// (matches the SDK v2 resource which used url.QueryEscape) for slashy/special values.
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
+		argsMap["bindpoint"] = url.QueryEscape(val)
 	}
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_cachepolicy_binding.Type(), name_value, argsMap)

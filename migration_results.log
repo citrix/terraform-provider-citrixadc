@@ -1419,3 +1419,19 @@ PATTERNS: 8
 FILES CHANGED: citrixadc_framework/lbmetrictable_metric_binding/resource_schema.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/lbmetrictable_metric_binding_test.go (ID-parse helper lines only - sanctioned exception)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lbvserver_cachepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:32:39Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccLbvserver_cachepolicy_binding($|_basic|DataSource)
+TESTS:
+  - TestAccLbvserver_cachepolicy_binding_basic ............ PASS
+  - TestAccLbvserver_cachepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral test: resource has no x-secret-attr) .... N/A
+BACKWARD-COMPAT: Create switched from UpdateUnnamedResource(PUT) to AddResource(POST) to match SDK v2; labelname/labeltype demoted Required->Optional (SDK v2 baseline, test omits them) and Computed dropped (GET never echoes -> unknown-after-apply); order Computed dropped for same reason; Delete arg values url-encoded (matches SDK v2 url.QueryEscape); SetAttrFromGet split (resource preserves non-echoed inputs, datasource setter copies all + sets composite ID). 'order' attr is codegen/NITRO-only (not in SDK v2) and was kept per constraint.
+DATASOURCE: healthy; switched Read to new lbvserver_cachepolicy_bindingSetAttrFromGetForDatasource setter (Pattern 7 split).
+PATTERNS: 1, 7, 8, 13
+FILES CHANGED: citrixadc_framework/lbvserver_cachepolicy_binding/resource_lbvserver_cachepolicy_binding.go, citrixadc_framework/lbvserver_cachepolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_cachepolicy_binding/datasource_lbvserver_cachepolicy_binding.go, citrixadc_framework/acctests/lbvserver_cachepolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified.
+BLOCKER: none
+========================================

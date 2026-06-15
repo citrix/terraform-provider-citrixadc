@@ -66,14 +66,18 @@ func (r *LbvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				// SDK v2 baseline: not Required. NITRO GET never echoes this field, so it
+				// cannot be Computed (would be unknown-after-apply) - Optional only (Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				// SDK v2 baseline: not Required. NITRO GET never echoes this field, so it
+				// cannot be Computed (would be unknown-after-apply) - Optional only (Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -87,8 +91,9 @@ func (r *LbvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				Description: "Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vserver\" or 'my vserver').",
 			},
 			"order": schema.Int64Attribute{
+				// NITRO GET never echoes this field, so it cannot be Computed
+				// (would be unknown-after-apply) - Optional only (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -149,10 +154,58 @@ func lbvserver_cachepolicy_bindingGetThePayloadFromthePlan(ctx context.Context, 
 	return lbvserver_cachepolicy_binding
 }
 
+// lbvserver_cachepolicy_bindingSetAttrFromGet is the RESOURCE-side setter (Pattern 7).
+// It preserves plan/state for inputs that the NITRO GET response does not echo back
+// (labelname, labeltype, order are never returned for this binding) so that those
+// values are not nulled out of state on every Read. It does NOT recompute the ID
+// (Create sets it exactly once - Pattern 6).
 func lbvserver_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *LbvserverCachepolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverCachepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In lbvserver_cachepolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	// labelname / labeltype are not echoed by the GET response - preserve plan/state value
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	// order is not echoed by the GET response - preserve plan/state value
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// lbvserver_cachepolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side setter
+// (Pattern 7). The datasource has no prior plan/state to preserve, so it faithfully copies
+// every field from the GET response and sets the composite ID itself.
+func lbvserver_cachepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LbvserverCachepolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverCachepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In lbvserver_cachepolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -203,7 +256,7 @@ func lbvserver_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *Lbvs
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
