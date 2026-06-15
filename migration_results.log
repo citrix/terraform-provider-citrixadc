@@ -234,3 +234,19 @@ PATTERNS: 7 (datasource setter split), 13 (drop Computed where no GET echo)
 FILES CHANGED: citrixadc_framework/vlan_nsip6_binding/resource_schema.go, citrixadc_framework/vlan_nsip6_binding/resource_vlan_nsip6_binding.go, citrixadc_framework/vlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vlan_nsip6_binding/datasource_vlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: botprofile_logexpression_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:22:21Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccBotprofile_logexpression_binding_basic|TestAccBotprofileLogexpressionBindingDataSource_basic
+TESTS:
+  - TestAccBotprofile_logexpression_binding_basic .......... PASS
+  - TestAccBotprofileLogexpressionBindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) . N/A
+BACKWARD-COMPAT: SDK v2 had bot_log_expression_value and logexpression as Optional+Computed; Framework baseline had them Required -> reverted both to Optional+Computed to match the v2 contract (test omits logexpression in datasource). ID format (new key:value) + resource_id_mapping.json order name,bot_log_expression_name verified; ParseIdString legacyOrder matches. Create verb kept as UpdateUnnamedResource (PUT) matching SDK v2. Delete args (bot_log_expression_name + optional logexpression) match SDK v2; arg values are safe (no slashy values) so no extra URL-encoding required.
+DATASOURCE: recovered datasource_botprofile_logexpression_binding.go + datasource_schema.go from git master (baseline regressed logexpression to Required and added a logexpression filter that broke matching when the lookup omits it). Master version filters only on bot_log_expression_name and uses shared SetAttrFromGet; all GET fields echoed except logmessage, so no Pattern 7 split needed.
+PATTERNS: 8 (Required->Optional+Computed flag correction); datasource recovery from git master (Phase 3).
+FILES CHANGED: citrixadc_framework/botprofile_logexpression_binding/resource_schema.go, citrixadc_framework/botprofile_logexpression_binding/datasource_botprofile_logexpression_binding.go, citrixadc_framework/botprofile_logexpression_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_logexpression_binding_test.go (sanctioned ID-parse helper lines only). NO doc files modified.
+BLOCKER: none
+========================================
