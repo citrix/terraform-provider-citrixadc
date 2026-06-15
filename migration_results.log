@@ -3276,3 +3276,19 @@ PATTERNS: Pattern 8/16-family delete-arg encoding (URL-encode delete arg value);
 FILES CHANGED: citrixadc_framework/vpnvserver_vpnurl_binding/resource_vpnvserver_vpnurl_binding.go, citrixadc_framework/acctests/vpnvserver_vpnurl_binding_test.go (ID-parse helper lines only; NO doc changed)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vxlanvlanmap_vxlan_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:57:21Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccVxlanvlanmap_vxlan_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVxlanvlanmap_vxlan_binding_basic ............ PASS
+  - TestAccVxlanvlanmap_vxlan_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: vlan attr drift reconciled (Framework Required -> Optional+Computed to match SDK v2 Optional+Computed+ForceNew); name/vxlan flags + types + ForceNew already in parity; Create verb PUT (UpdateUnnamedResource) matches SDK v2; ID format new key:value with legacy "name,vxlan" mapping intact; delete args via DeleteResourceWithArgsMap.
+DATASOURCE: healthy as-is; shares SetAttrFromGet (no non-echoed/server-overridden fields, so no Pattern 7 split needed); sets Id via shared setter.
+PATTERNS: 8 (Required->Optional+Computed flag drift)
+FILES CHANGED: citrixadc_framework/vxlanvlanmap_vxlan_binding/resource_schema.go, citrixadc_framework/acctests/vxlanvlanmap_vxlan_binding_test.go (sanctioned ID-parse helper lines only), migration_results.log
+BLOCKER: none
+========================================
