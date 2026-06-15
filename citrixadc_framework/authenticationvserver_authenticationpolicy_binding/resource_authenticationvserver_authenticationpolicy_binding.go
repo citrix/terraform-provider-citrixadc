@@ -3,7 +3,6 @@ package authenticationvserver_authenticationpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,12 +68,12 @@ func (r *AuthenticationvserverAuthenticationpolicyBindingResource) Create(ctx co
 
 	tflog.Trace(ctx, "Created authenticationvserver_authenticationpolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Composite key order matches the legacy SDK v2 ID (name,policy) recorded in
+	// resource_id_mapping.json so imported SDK v2 state IDs resolve via ParseIdString.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -169,15 +168,21 @@ func (r *AuthenticationvserverAuthenticationpolicyBindingResource) Delete(ctx co
 		return
 	}
 
+	// Build delete args matching the SDK v2 contract: policy is required; secondary,
+	// groupextraction and bindpoint are passed when known (from state) to disambiguate
+	// the binding. DeleteResourceWithArgsMap URL-encodes the values.
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
-	}
 	if val, ok := idMap["policy"]; ok && val != "" {
 		argsMap["policy"] = val
 	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		argsMap["secondary"] = fmt.Sprintf("%v", data.Secondary.ValueBool())
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		argsMap["groupextraction"] = fmt.Sprintf("%v", data.Groupextraction.ValueBool())
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = data.Bindpoint.ValueString()
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationpolicy_binding.Type(), name_value, argsMap)
@@ -224,61 +229,13 @@ func (r *AuthenticationvserverAuthenticationpolicyBindingResource) readAuthentic
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// The composite ID is (name,policy); the binding is uniquely identified within the
+	// parent vserver by its policy name (mirrors the SDK v2 read).
 	foundIndex := -1
+	policyVal := idMap["policy"]
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policyVal {
 			foundIndex = i
 			break
 		}

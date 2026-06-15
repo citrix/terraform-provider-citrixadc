@@ -376,5 +376,18 @@ BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 schema + NITRO str
 DATASOURCE: healthy after fix - flipped groupextraction/secondary from Required to Optional+Computed (test supplies only name+policy), added bindpoint attr, switched Read to filter by policy and to use new xxxSetAttrFromGetForDatasource setter (Pattern 7 split) which copies all GET fields and sets composite ID.
 PATTERNS: 7 (setter split + preserve non-echoed inputs), 8/13 (Optional+Computed flag drift), 11 (resource/datasource flag consistency)
 FILES CHANGED: citrixadc_framework/authenticationvserver_authenticationnegotiatepolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_authenticationnegotiatepolicy_binding/resource_authenticationvserver_authenticationnegotiatepolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationnegotiatepolicy_binding/datasource_schema.go, citrixadc_framework/authenticationvserver_authenticationnegotiatepolicy_binding/datasource_authenticationvserver_authenticationnegotiatepolicy_binding.go, citrixadc_framework/acctests/authenticationvserver_authenticationnegotiatepolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc changed)
+RESOURCE: authenticationvserver_authenticationpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:58:01Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccAuthenticationvserver_authenticationpolicy_binding_basic$|TestAccAuthenticationvserverAuthenticationpolicyBindingDataSource_basic$
+TESTS:
+  - TestAccAuthenticationvserver_authenticationpolicy_binding_basic ............ PASS
+  - TestAccAuthenticationvserverAuthenticationpolicyBindingDataSource_basic .... PASS
+  - (no ephemeral tests; resource has no secret attributes) ................... N/A
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 schema + NITRO struct); reduced 4-key composite ID (groupextraction,name,policy,secondary) to legacy 2-key (name,policy) matching resource_id_mapping.json + SDK v2 d.SetId; fixed Read/Delete/datasource match loops to filter by policy; datasource groupextraction/secondary changed Required->Optional+Computed to match SDK v2 contract + test config.
+DATASOURCE: healthy after fixes; split setter into resource (no ID recompute) + xxxSetAttrFromGetForDatasource (copies all, sets name:..,policy:.. ID); datasource Read filters by name+policy only.
+PATTERNS: 6 (removed ID recompute in SetAttrFromGet), 7 (datasource setter split), 13 (Optional+Computed resolved to concrete null for non-echoed bindpoint/groupextraction/nextfactor/secondary), 11 (resource/datasource flag coherence).
+FILES CHANGED: citrixadc_framework/authenticationvserver_authenticationpolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_authenticationpolicy_binding/resource_authenticationvserver_authenticationpolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationpolicy_binding/datasource_schema.go, citrixadc_framework/authenticationvserver_authenticationpolicy_binding/datasource_authenticationvserver_authenticationpolicy_binding.go, citrixadc_framework/acctests/authenticationvserver_authenticationpolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
 BLOCKER: none
 ========================================
