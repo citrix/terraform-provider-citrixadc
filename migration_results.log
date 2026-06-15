@@ -3261,5 +3261,18 @@ BACKWARD-COMPAT: ID reduced from 3-key (bindpoint,name,policy) to legacy 2-key n
 DATASOURCE: fixed in place (no git recovery) - bindpoint changed Required->Optional+Computed (datasource test does not set it), Read filters on policy only, added/used split setter SetAttrFromGetForDatasource (faithful copy + sets composite name,policy ID).
 PATTERNS: 7 (preserve non-echoed inputs + datasource setter split), 13 (drop spurious Computed), 11 (resource/datasource flag coherence for bindpoint)
 FILES CHANGED: citrixadc_framework/vpnvserver_vpntrafficpolicy_binding/resource_vpnvserver_vpntrafficpolicy_binding.go, citrixadc_framework/vpnvserver_vpntrafficpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_vpntrafficpolicy_binding/datasource_vpnvserver_vpntrafficpolicy_binding.go, citrixadc_framework/vpnvserver_vpntrafficpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_vpntrafficpolicy_binding_test.go (sanctioned ID-parse helper lines ONLY). No docs modified.
+RESOURCE: vpnvserver_vpnurl_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:48:04Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccVpnvserver_vpnurl_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnvserver_vpnurl_binding_basic ............ PASS
+  - TestAccVpnvserver_vpnurl_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs)
+BACKWARD-COMPAT: attr/type/Required/ForceNew parity already correct (name, urlname both Required+RequiresReplace); ID legacy order name,urlname matches resource_id_mapping.json; Create kept as UpdateUnnamedResource consistent with SDK v2; URL-encoded the urlname Delete arg value (switched DeleteResourceWithArgsMap -> DeleteResourceWithArgs + url.QueryEscape) since the NITRO client does not escape arg values.
+DATASOURCE: healthy as-is; shared SetAttrFromGet is safe (both keys echoed by GET, datasource supplies both) - no Pattern 7 split needed.
+PATTERNS: Pattern 8/16-family delete-arg encoding (URL-encode delete arg value); ID-parse helper fix (Constraint 1 sanctioned exception).
+FILES CHANGED: citrixadc_framework/vpnvserver_vpnurl_binding/resource_vpnvserver_vpnurl_binding.go, citrixadc_framework/acctests/vpnvserver_vpnurl_binding_test.go (ID-parse helper lines only; NO doc changed)
 BLOCKER: none
 ========================================
