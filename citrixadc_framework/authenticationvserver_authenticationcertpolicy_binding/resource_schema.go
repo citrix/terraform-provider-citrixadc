@@ -22,6 +22,7 @@ import (
 // AuthenticationvserverAuthenticationcertpolicyBindingResourceModel describes the resource data model.
 type AuthenticationvserverAuthenticationcertpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -39,17 +40,26 @@ func (r *AuthenticationvserverAuthenticationcertpolicyBindingResource) Schema(ct
 				Computed:    true,
 				Description: "The ID of the authenticationvserver_authenticationcertpolicy_binding resource.",
 			},
-			"gotopriorityexpression": schema.StringAttribute{
+			"bindpoint": schema.StringAttribute{
+				// Not echoed by the NITRO GET response — keep as plain Optional
+				// (no Computed) so an unset value resolves to null (known after apply).
 				Optional: true,
-				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
+			},
+			"gotopriorityexpression": schema.StringAttribute{
+				// Not echoed by GET — Optional only (see bindpoint).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Applicable only to advance authentication policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n* If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a priority number that is numerically higher than the highest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// Not echoed by GET — Optional only (see bindpoint).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -63,8 +73,8 @@ func (r *AuthenticationvserverAuthenticationcertpolicyBindingResource) Schema(ct
 				Description: "Name of the authentication virtual server to which to bind the policy.",
 			},
 			"nextfactor": schema.StringAttribute{
+				// Not echoed by GET — Optional only (see bindpoint).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -102,6 +112,9 @@ func authenticationvserver_authenticationcertpolicy_bindingGetThePayloadFromtheP
 
 	// Create API request body from the model
 	authenticationvserver_authenticationcertpolicy_binding := authentication.Authenticationvserverauthenticationcertpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		authenticationvserver_authenticationcertpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		authenticationvserver_authenticationcertpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -127,55 +140,80 @@ func authenticationvserver_authenticationcertpolicy_bindingGetThePayloadFromtheP
 	return authenticationvserver_authenticationcertpolicy_binding
 }
 
+// authenticationvserver_authenticationcertpolicy_bindingSetAttrFromGet is the
+// RESOURCE-side state setter. The NITRO GET for this binding does NOT echo back
+// several user inputs (bindpoint, gotopriorityexpression, groupextraction,
+// nextfactor). Overwriting them from the (absent) GET response would null the
+// values the user configured and cause an "inconsistent result after apply" /
+// perpetual diff. So for those non-echoed fields we PRESERVE the existing
+// plan/state value (Pattern 7 / pattern (e)). Echoed fields (name, policy,
+// priority, secondary) are adopted from the GET response. The ID is NOT
+// recomputed here — Create sets it once.
 func authenticationvserver_authenticationcertpolicy_bindingSetAttrFromGet(ctx context.Context, data *AuthenticationvserverAuthenticationcertpolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationcertpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In authenticationvserver_authenticationcertpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
-		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
-		data.Gotopriorityexpression = types.StringNull()
-	}
-	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
-		data.Groupextraction = types.BoolValue(val.(bool))
-	} else {
-		data.Groupextraction = types.BoolNull()
-	}
+	// Echoed by GET — safe to adopt.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
-	}
-	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
-		data.Nextfactor = types.StringValue(val.(string))
-	} else {
-		data.Nextfactor = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
-	} else {
-		data.Policy = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
-		data.Priority = types.Int64Null()
 	}
 	if val, ok := getResponseData["secondary"]; ok && val != nil {
 		data.Secondary = types.BoolValue(val.(bool))
-	} else {
-		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// NOT echoed by the NITRO GET (bindpoint, gotopriorityexpression,
+	// groupextraction, nextfactor) — preserve the configured value rather than
+	// nulling it. On import these are absent from state and stay null, which is
+	// acceptable for these optional inputs.
+
+	return data
+}
+
+// authenticationvserver_authenticationcertpolicy_bindingSetAttrFromGetForDatasource
+// is the DATASOURCE-side setter. A datasource has no prior plan/state to
+// preserve, so it faithfully copies every field the GET response returns and
+// sets data.Id (Pattern 7 datasource split).
+func authenticationvserver_authenticationcertpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationvserverAuthenticationcertpolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationcertpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In authenticationvserver_authenticationcertpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
+		data.Nextfactor = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// Set ID for the datasource (matches the resource Create ID format: name,policy)
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

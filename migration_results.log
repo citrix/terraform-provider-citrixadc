@@ -234,3 +234,19 @@ PATTERNS: 7 (datasource setter split), 13 (drop Computed where no GET echo)
 FILES CHANGED: citrixadc_framework/vlan_nsip6_binding/resource_schema.go, citrixadc_framework/vlan_nsip6_binding/resource_vlan_nsip6_binding.go, citrixadc_framework/vlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vlan_nsip6_binding/datasource_vlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: authenticationvserver_authenticationcertpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:48:42Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccAuthenticationvserver_authenticationcertpolicy_binding_basic$|TestAccAuthenticationvserverAuthenticationcertpolicyBindingDataSource_basic$
+TESTS:
+  - TestAccAuthenticationvserver_authenticationcertpolicy_binding_basic ............ PASS
+  - TestAccAuthenticationvserverAuthenticationcertpolicyBindingDataSource_basic .... PASS
+  - (no ephemeral tests; resource has no secret attributes) ....... N/A
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 schema + NITRO struct + test config); dropped spurious Computed from non-echoed inputs (bindpoint/gotopriorityexpression/groupextraction/nextfactor) to fix unknown-after-apply; ID format reduced from 4-key to name,policy matching SDK v2 + resource_id_mapping.json; Delete now builds URL-encoded args from state (DeleteResourceWithArgs) like SDK v2; Read/datasource filter on policy only.
+DATASOURCE: healthy after fix; split setter (xxxSetAttrFromGetForDatasource) added per Pattern 7; datasource groupextraction/secondary changed Required->Optional+Computed (Pattern 11); added bindpoint.
+PATTERNS: 1(create verb confirmed PUT/UpdateUnnamedResource), 7, 8, 11, 13; pattern (a)/(b)/(e)/(f)/(g) from brief.
+FILES CHANGED: citrixadc_framework/authenticationvserver_authenticationcertpolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_authenticationcertpolicy_binding/resource_authenticationvserver_authenticationcertpolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationcertpolicy_binding/datasource_schema.go, citrixadc_framework/authenticationvserver_authenticationcertpolicy_binding/datasource_authenticationvserver_authenticationcertpolicy_binding.go, citrixadc_framework/acctests/authenticationvserver_authenticationcertpolicy_binding_test.go (sanctioned ID-parse lines only); NO doc files changed.
+BLOCKER: none
+========================================
