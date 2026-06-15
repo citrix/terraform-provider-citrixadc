@@ -3,6 +3,7 @@ package ipset_nsip6_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -166,12 +167,17 @@ func (r *IpsetNsip6BindingResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// The ipaddress value can contain '/' and ':' (IPv6 CIDR). NITRO's
+	// DeleteResourceWithArgs joins the arg value raw into the request URL,
+	// so the value must be URL-encoded here (matching the SDK v2 resource,
+	// which used url.PathEscape). Without this the slashy IPv6 value breaks
+	// the URL and the binding is never found/deleted.
+	args := make([]string, 0)
 	if val, ok := idMap["ipaddress"]; ok && val != "" {
-		argsMap["ipaddress"] = val
+		args = append(args, fmt.Sprintf("ipaddress:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Ipset_nsip6_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Ipset_nsip6_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete ipset_nsip6_binding, got error: %s", err))
 		return
