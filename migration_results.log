@@ -1090,5 +1090,18 @@ BACKWARD-COMPAT: attribute names/types/flags (monitor_name/servicename Required+
 DATASOURCE: healthy as-is (passed on first run).
 PATTERNS: none (framework code already correct); Constraint-1 sanctioned ID-parse helper exception applied to test Exist helper.
 FILES CHANGED: citrixadc_framework/acctests/gslbservice_lbmonitor_binding_test.go (ID-parse helper lines only)
+RESOURCE: icaglobal_icapolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:05:10Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccIcaglobal_icapolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccIcaglobal_icapolicy_binding_basic ............ PASS
+  - TestAccIcaglobal_icapolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: SDK v2 had 'type' Required+ForceNew; Framework resource schema had it Optional+Computed (drift). Reconciled to Required + RequiresReplace to match the SDK v2 contract and the datasource (already Required). Other flags (policyname/priority Required+ForceNew, globalbindtype/gotopriorityexpression Optional+Computed+ForceNew) already matched. Create verb UpdateUnnamedResource (PUT) matches SDK v2. Delete via DeleteResourceWithArgsMap; values needed no URL-encoding for the tested keys. New key:value composite ID (policyname,type) adopted; resource_id_mapping.json legacy order 'policyname' left intact (ParseIdString handles both legacy plain and new composite).
+DATASOURCE: healthy as-is (shares SetAttrFromGet, sets data.Id correctly; DataSource_basic passed). No git recovery needed.
+PATTERNS: 8 (Required/Optional flag correction).
+FILES CHANGED: citrixadc_framework/icaglobal_icapolicy_binding/resource_schema.go, citrixadc_framework/acctests/icaglobal_icapolicy_binding_test.go (sanctioned ID-parse helper line only). No doc modified.
 BLOCKER: none
 ========================================
