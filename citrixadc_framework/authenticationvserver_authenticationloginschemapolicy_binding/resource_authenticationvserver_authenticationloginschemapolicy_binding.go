@@ -3,8 +3,7 @@ package authenticationvserver_authenticationloginschemapolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -69,13 +68,10 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) Cr
 
 	tflog.Trace(ctx, "Created authenticationvserver_authenticationloginschemapolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state.
+	// Backward-compatible composite ID matching SDK v2 ("name,policy") expressed in the
+	// new "name:value,policy:value" form (resource_id_mapping.json: "name,policy").
+	data.Id = types.StringValue(authenticationvserver_authenticationloginschemapolicy_bindingComposeId(&data))
 
 	// Read the updated state back
 	r.readAuthenticationvserverAuthenticationloginschemapolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -156,7 +152,10 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) De
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_authenticationloginschemapolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Parse name from the (legacy- or new-format) ID; the disambiguating delete args
+	// (policy/secondary/groupextraction/bindpoint) come from the model state, matching
+	// the SDK v2 resource. Slashy/special values are URL-encoded.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -169,18 +168,23 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) De
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
+	args := make([]string, 0)
+	policy_value, ok := idMap["policy"]
+	if !ok || policy_value == "" {
+		policy_value = data.Policy.ValueString()
 	}
-	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+	args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(policy_value)))
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationloginschemapolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_authenticationloginschemapolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_authenticationloginschemapolicy_binding, got error: %s", err))
 		return
@@ -205,6 +209,12 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) re
 		return
 	}
 
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return
+	}
+
 	var dataArr []map[string]interface{}
 
 	findParams := service.FindParams{
@@ -224,61 +234,11 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) re
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one whose policy matches the ID (matches the
+	// SDK v2 read filter, which keyed only on policy under the parent name).
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
 			foundIndex = i
 			break
 		}
@@ -286,7 +246,7 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) re
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationloginschemapolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "authenticationvserver_authenticationloginschemapolicy_binding not found with the provided ID attributes")
 		return
 	}
 

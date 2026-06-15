@@ -22,6 +22,7 @@ import (
 // AuthenticationvserverAuthenticationloginschemapolicyBindingResourceModel describes the resource data model.
 type AuthenticationvserverAuthenticationloginschemapolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -39,9 +40,15 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) Sc
 				Computed:    true,
 				Description: "The ID of the authenticationvserver_authenticationloginschemapolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -49,7 +56,6 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) Sc
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -64,7 +70,6 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) Sc
 			},
 			"nextfactor": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -79,7 +84,6 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) Sc
 			},
 			"priority": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -87,7 +91,6 @@ func (r *AuthenticationvserverAuthenticationloginschemapolicyBindingResource) Sc
 			},
 			"secondary": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -102,6 +105,9 @@ func authenticationvserver_authenticationloginschemapolicy_bindingGetThePayloadF
 
 	// Create API request body from the model
 	authenticationvserver_authenticationloginschemapolicy_binding := authentication.Authenticationvserverauthenticationloginschemapolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		authenticationvserver_authenticationloginschemapolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		authenticationvserver_authenticationloginschemapolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -127,10 +133,57 @@ func authenticationvserver_authenticationloginschemapolicy_bindingGetThePayloadF
 	return authenticationvserver_authenticationloginschemapolicy_binding
 }
 
+// authenticationvserver_authenticationloginschemapolicy_bindingComposeId builds the
+// backward-compatible composite ID. The SDK v2 resource used "name,policy"; the new
+// format is "name:urlEncode(value),policy:urlEncode(value)". utils.ParseIdString decodes
+// both forms (legacy order "name,policy" lives in resource_id_mapping.json).
+func authenticationvserver_authenticationloginschemapolicy_bindingComposeId(data *AuthenticationvserverAuthenticationloginschemapolicyBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
+	return strings.Join(idParts, ",")
+}
+
+// Resource setter: every non-identity attribute of this binding is an immutable input
+// (all RequiresReplace, no NITRO update endpoint). The NITRO GET response is unreliable
+// for these — it drops some inputs and substitutes server defaults for others (e.g.
+// gotopriorityexpression="END", bindpoint, priority). Adopting those would cause
+// "inconsistent result after apply" / spurious drift, so the input values are preserved
+// verbatim from the plan/state; only the identity keys + ID are refreshed from the GET.
+// (Pattern 7 — server-overrides / non-echoed inputs; the datasource uses its own setter.)
 func authenticationvserver_authenticationloginschemapolicy_bindingSetAttrFromGet(ctx context.Context, data *AuthenticationvserverAuthenticationloginschemapolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationloginschemapolicyBindingResourceModel {
 	tflog.Debug(ctx, "In authenticationvserver_authenticationloginschemapolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// name and policy are the identity keys - reflect the GET response (also populates
+	// them on import, where the model carries only the ID).
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+
+	// All other attributes (bindpoint, gotopriorityexpression, groupextraction,
+	// nextfactor, priority, secondary) are immutable user inputs and are intentionally
+	// NOT overwritten from the GET response — keep the plan/state values.
+
+	// Backward-compatible ID: "name:value,policy:value"
+	data.Id = types.StringValue(authenticationvserver_authenticationloginschemapolicy_bindingComposeId(data))
+
+	return data
+}
+
+// Datasource setter: faithfully copy every field from the GET response (the datasource
+// has no prior plan/state to preserve) and set the ID. Fields absent in the response are
+// nulled. (Pattern 7 datasource split.)
+func authenticationvserver_authenticationloginschemapolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationvserverAuthenticationloginschemapolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationloginschemapolicyBindingResourceModel {
+	tflog.Debug(ctx, "In authenticationvserver_authenticationloginschemapolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -169,14 +222,7 @@ func authenticationvserver_authenticationloginschemapolicy_bindingSetAttrFromGet
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(authenticationvserver_authenticationloginschemapolicy_bindingComposeId(data))
 
 	return data
 }
