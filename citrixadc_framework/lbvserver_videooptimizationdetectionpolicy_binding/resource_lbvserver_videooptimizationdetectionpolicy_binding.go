@@ -3,6 +3,7 @@ package lbvserver_videooptimizationdetectionpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *LbvserverVideooptimizationdetectionpolicyBindingResource) Create(ctx co
 	lbvserver_videooptimizationdetectionpolicy_binding := lbvserver_videooptimizationdetectionpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_videooptimizationdetectionpolicy_binding.Type(), &lbvserver_videooptimizationdetectionpolicy_binding)
+	// Binding resource - NITRO add is POST; use AddResource (matches SDK v2 behavior)
+	_, err := r.client.AddResource(service.Lbvserver_videooptimizationdetectionpolicy_binding.Type(), "", &lbvserver_videooptimizationdetectionpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_videooptimizationdetectionpolicy_binding, got error: %s", err))
 		return
@@ -168,11 +169,12 @@ func (r *LbvserverVideooptimizationdetectionpolicyBindingResource) Delete(ctx co
 	}
 
 	var argsMap map[string]string = make(map[string]string)
+	// URL-encode arg values for slashy/special characters (matches SDK v2 url.QueryEscape)
 	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
+		argsMap["bindpoint"] = url.QueryEscape(val)
 	}
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_videooptimizationdetectionpolicy_binding.Type(), name_value, argsMap)
