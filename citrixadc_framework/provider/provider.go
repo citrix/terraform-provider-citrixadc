@@ -761,6 +761,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vrid6"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vridparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlan"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlan_srcip_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlanvlanmap"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vxlanvlanmap_vxlan_binding"
 )
@@ -1336,6 +1337,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		vpnvserver_vpntrafficpolicy_binding.NewVpnvserverVpntrafficpolicyBindingResource,
 		vpnvserver_vpnurl_binding.NewVpnvserverVpnurlBindingResource,
 		vpnvserver_vpnurlpolicy_binding.NewVpnvserverVpnurlpolicyBindingResource,
+		vxlan_srcip_binding.NewVxlanSrcipBindingResource,
 		vxlanvlanmap_vxlan_binding.NewVxlanvlanmapVxlanBindingResource,
 	}
 }
@@ -1734,6 +1736,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		vrid6.VRid6DataSource,
 		vridparam.VRidparamDataSource,
 		vxlan.VXlanDataSource,
+		vxlan_srcip_binding.VXlanSrcipBindingDataSource,
 		vxlanvlanmap.VXlanvlanmapDataSource,
 		Interface.INterfaceDataSource,
 		aaagroup_auditnslogpolicy_binding.AAagroupAuditnslogpolicyBindingDataSource,

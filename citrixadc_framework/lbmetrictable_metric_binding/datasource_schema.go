@@ -10,7 +10,7 @@ func LbmetrictableMetricBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"Snmpoid": schema.StringAttribute{
+			"snmpoid": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "New SNMP OID of the metric.",

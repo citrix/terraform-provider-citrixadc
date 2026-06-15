@@ -10,7 +10,7 @@ func PolicypatsetPatternBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"String": schema.StringAttribute{
+			"string": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "String of characters that constitutes a pattern. For more information about the characters that can be used, refer to the character set parameter.\nNote: Minimum length for pattern sets used in rewrite actions of type REPLACE_ALL, DELETE_ALL, INSERT_AFTER_ALL, and INSERT_BEFORE_ALL, is three characters.",

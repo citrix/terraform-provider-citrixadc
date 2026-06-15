@@ -20,9 +20,9 @@ import (
 
 // VxlanSrcipBindingResourceModel describes the resource data model.
 type VxlanSrcipBindingResourceModel struct {
-	Id    types.String `tfsdk:"id"`
-	Id    types.Int64  `tfsdk:"id"`
-	Srcip types.String `tfsdk:"srcip"`
+	Id      types.String `tfsdk:"id"`
+	Vxlanid types.Int64  `tfsdk:"vxlanid"`
+	Srcip   types.String `tfsdk:"srcip"`
 }
 
 func (r *VxlanSrcipBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -32,8 +32,11 @@ func (r *VxlanSrcipBindingResource) Schema(ctx context.Context, req resource.Sch
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the vxlan_srcip_binding resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"id": schema.Int64Attribute{
+			"vxlanid": schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
@@ -56,8 +59,9 @@ func vxlan_srcip_bindingGetThePayloadFromthePlan(ctx context.Context, data *Vxla
 
 	// Create API request body from the model
 	vxlan_srcip_binding := network.Vxlansrcipbinding{}
-	if !data.Id.IsNull() && !data.Id.IsUnknown() {
-		vxlan_srcip_binding.Id = utils.IntPtr(int(data.Id.ValueInt64()))
+	// NITRO field "id" holds the VXLAN VNI (Terraform attribute "vxlanid")
+	if !data.Vxlanid.IsNull() && !data.Vxlanid.IsUnknown() {
+		vxlan_srcip_binding.Id = utils.IntPtr(int(data.Vxlanid.ValueInt64()))
 	}
 	if !data.Srcip.IsNull() && !data.Srcip.IsUnknown() {
 		vxlan_srcip_binding.Srcip = data.Srcip.ValueString()
@@ -69,13 +73,12 @@ func vxlan_srcip_bindingGetThePayloadFromthePlan(ctx context.Context, data *Vxla
 func vxlan_srcip_bindingSetAttrFromGet(ctx context.Context, data *VxlanSrcipBindingResourceModel, getResponseData map[string]interface{}) *VxlanSrcipBindingResourceModel {
 	tflog.Debug(ctx, "In vxlan_srcip_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. NITRO returns the VNI in the "id" field,
+	// which maps to the Terraform attribute "vxlanid".
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Id = types.Int64Value(intVal)
+			data.Vxlanid = types.Int64Value(intVal)
 		}
-	} else {
-		data.Id = types.Int64Null()
 	}
 	if val, ok := getResponseData["srcip"]; ok && val != nil {
 		data.Srcip = types.StringValue(val.(string))
@@ -84,9 +87,9 @@ func vxlan_srcip_bindingSetAttrFromGet(ctx context.Context, data *VxlanSrcipBind
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("vxlanid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vxlanid.ValueInt64()))))
 	idParts = append(idParts, fmt.Sprintf("srcip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Srcip.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 

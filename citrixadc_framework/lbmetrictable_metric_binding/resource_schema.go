@@ -20,7 +20,7 @@ import (
 // LbmetrictableMetricBindingResourceModel describes the resource data model.
 type LbmetrictableMetricBindingResourceModel struct {
 	Id          types.String `tfsdk:"id"`
-	Snmpoid     types.String `tfsdk:"Snmpoid"`
+	Snmpoid     types.String `tfsdk:"snmpoid"`
 	Metric      types.String `tfsdk:"metric"`
 	Metrictable types.String `tfsdk:"metrictable"`
 }
@@ -33,7 +33,7 @@ func (r *LbmetrictableMetricBindingResource) Schema(ctx context.Context, req res
 				Computed:    true,
 				Description: "The ID of the lbmetrictable_metric_binding resource.",
 			},
-			"Snmpoid": schema.StringAttribute{
+			"snmpoid": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

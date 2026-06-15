@@ -20,7 +20,7 @@ import (
 // PolicypatsetPatternBindingResourceModel describes the resource data model.
 type PolicypatsetPatternBindingResourceModel struct {
 	Id      types.String `tfsdk:"id"`
-	String  types.String `tfsdk:"String"`
+	String  types.String `tfsdk:"string"`
 	Charset types.String `tfsdk:"charset"`
 	Comment types.String `tfsdk:"comment"`
 	Feature types.String `tfsdk:"feature"`
@@ -36,7 +36,7 @@ func (r *PolicypatsetPatternBindingResource) Schema(ctx context.Context, req res
 				Computed:    true,
 				Description: "The ID of the policypatset_pattern_binding resource.",
 			},
-			"String": schema.StringAttribute{
+			"string": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

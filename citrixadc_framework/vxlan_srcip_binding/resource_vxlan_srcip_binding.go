@@ -3,7 +3,6 @@ package vxlan_srcip_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -71,7 +70,7 @@ func (r *VxlanSrcipBindingResource) Create(ctx context.Context, req resource.Cre
 
 	// Set ID for the resource before reading state
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("vxlanid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vxlanid.ValueInt64()))))
 	idParts = append(idParts, fmt.Sprintf("srcip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Srcip.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
@@ -161,9 +160,9 @@ func (r *VxlanSrcipBindingResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	id_value, ok := idMap["id"]
+	vxlanid_value, ok := idMap["vxlanid"]
 	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'id' not found in ID")
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'vxlanid' not found in ID")
 		return
 	}
 
@@ -172,7 +171,7 @@ func (r *VxlanSrcipBindingResource) Delete(ctx context.Context, req resource.Del
 		argsMap["srcip"] = val
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vxlan_srcip_binding.Type(), id_value, argsMap)
+	err = r.client.DeleteResourceWithArgsMap(service.Vxlan_srcip_binding.Type(), vxlanid_value, argsMap)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vxlan_srcip_binding, got error: %s", err))
 		return
@@ -191,9 +190,9 @@ func (r *VxlanSrcipBindingResource) readVxlanSrcipBindingFromApi(ctx context.Con
 		return
 	}
 
-	id_Name, ok := idMap["id"]
+	vxlanid_Name, ok := idMap["vxlanid"]
 	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'id' not found in ID string")
+		diags.AddError("Parse Error", "ID attribute 'vxlanid' not found in ID string")
 		return
 	}
 
@@ -201,7 +200,7 @@ func (r *VxlanSrcipBindingResource) readVxlanSrcipBindingFromApi(ctx context.Con
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vxlan_srcip_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vxlanid_Name,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)

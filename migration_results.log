@@ -1,0 +1,15 @@
+========================================
+RESOURCE: vxlan_srcip_binding
+STATUS:   PASS
+TIME:     2026-06-15T03:54:24Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccVxlan_srcip_binding($|_|DataSource)
+TESTS:
+  - TestAccVxlan_srcip_binding_basic ............ PASS
+  - TestAccVxlan_srcip_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: Codegen had duplicate Id field/schema key + int/string method collision. Fixed by keeping a single computed string composite id and representing the real VNI integer key under its NITRO name "vxlanid" (matching SDK v2 schema + test assertions). Model: Id(String)+Vxlanid(Int64)+Srcip(String). Schema keys id/vxlanid/srcip unique. vxlanid Int64 Required RequiresReplace (SDK v2 ForceNew), srcip String Required RequiresReplace. NITRO struct field "Id" populated from Vxlanid in payload; SetAttrFromGet maps GET "id"->Vxlanid. Composite ID order vxlanid,srcip matches resource_id_mapping.json. Read/Delete use vxlanid value as parent ResourceName + srcip delete arg.
+DATASOURCE: healthy after fix; corrected duplicate id key -> vxlanid, and Read parent name now uses data.Vxlanid (was data.Id). Shares vxlan_srcip_bindingSetAttrFromGet which copies GET fields + sets composite Id.
+PATTERNS: codegen duplicate-id/int-vs-string fix (task-specific); ID-parse helper rewrite (Constraint 1 sanctioned exception) using utils.ParseIdString.
+FILES CHANGED: citrixadc_framework/vxlan_srcip_binding/resource_schema.go, citrixadc_framework/vxlan_srcip_binding/resource_vxlan_srcip_binding.go, citrixadc_framework/vxlan_srcip_binding/datasource_schema.go, citrixadc_framework/vxlan_srcip_binding/datasource_vxlan_srcip_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vxlan_srcip_binding_test.go (sanctioned ID-parse lines only), citrixadc_framework/lbmetrictable_metric_binding/{resource_schema.go,datasource_schema.go} + citrixadc_framework/policypatset_pattern_binding/{resource_schema.go,datasource_schema.go} (baseline blocker: invalid capital-letter tfsdk attribute names "Snmpoid"/"String" poisoned the whole provider schema; lowercased tfsdk tag + schema key only). NO doc modified.
+BLOCKER: none
+========================================
