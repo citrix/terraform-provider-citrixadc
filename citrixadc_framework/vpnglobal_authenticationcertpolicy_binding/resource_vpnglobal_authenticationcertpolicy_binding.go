@@ -3,9 +3,9 @@ package vpnglobal_authenticationcertpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -150,10 +150,11 @@ func (r *VpnglobalAuthenticationcertpolicyBindingResource) Delete(ctx context.Co
 
 	tflog.Debug(ctx, "Deleting vpnglobal_authenticationcertpolicy_binding resource")
 	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
+	// Single unique attribute - ID is the plain value. URL-encode the arg value so
+	// names with slashes/special characters are escaped (binding-family pattern).
 	policyname_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("policyname:%s", policyname_value),
+		fmt.Sprintf("policyname:%s", url.QueryEscape(policyname_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_authenticationcertpolicy_binding.Type(), "", args)
@@ -168,14 +169,13 @@ func (r *VpnglobalAuthenticationcertpolicyBindingResource) Delete(ctx context.Co
 // Helper function to read vpnglobal_authenticationcertpolicy_binding data from API
 func (r *VpnglobalAuthenticationcertpolicyBindingResource) readVpnglobalAuthenticationcertpolicyBindingFromApi(ctx context.Context, data *VpnglobalAuthenticationcertpolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
+	// Single unique attribute - ID is the plain policyname value (Pattern 10:
+	// do not run ParseIdString on a plain-value ID; it returns an empty map and
+	// the match loop would then reject every record).
+	policyname := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
+	var err error
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vpnglobal_authenticationcertpolicy_binding.Type(),
@@ -193,28 +193,10 @@ func (r *VpnglobalAuthenticationcertpolicyBindingResource) readVpnglobalAuthenti
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policyname ID
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policyname
-		if idVal, ok := idMap["policyname"]; ok {
-			if val, ok := v["policyname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policyname"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["policyname"].(string); ok && val == policyname {
 			foundIndex = i
 			break
 		}
@@ -222,7 +204,7 @@ func (r *VpnglobalAuthenticationcertpolicyBindingResource) readVpnglobalAuthenti
 
 	// Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnglobal_authenticationcertpolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "vpnglobal_authenticationcertpolicy_binding not found with the provided ID attributes")
 		return
 	}
 

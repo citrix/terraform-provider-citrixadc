@@ -36,17 +36,21 @@ func (r *VpnglobalAuthenticationcertpolicyBindingResource) Schema(ctx context.Co
 				Computed:    true,
 				Description: "The ID of the vpnglobal_authenticationcertpolicy_binding resource.",
 			},
+			// Pattern 13: gotopriorityexpression is never echoed by the NITRO GET and
+			// has no server-side default resolvable at apply time. Keeping Computed
+			// would leave it "unknown after apply" when the user omits it. Drop
+			// Computed so an unset value plans to null.
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
+			// Pattern 13: groupextraction is likewise not echoed by the NITRO GET;
+			// drop Computed so an unset value plans to null instead of unknown.
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -107,6 +111,42 @@ func vpnglobal_authenticationcertpolicy_bindingSetAttrFromGet(ctx context.Contex
 	tflog.Debug(ctx, "In vpnglobal_authenticationcertpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	// Pattern 7: the NITRO GET for this binding does NOT echo back several of the
+	// configured inputs (gotopriorityexpression and groupextraction are never
+	// returned by the appliance). Nulling them from a missing GET field wipes the
+	// user-supplied value from state and produces an "inconsistent result after
+	// apply" error. So in the resource setter we PRESERVE the existing plan/state
+	// value when the field is absent, and only adopt the GET value when present.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// ID is set once in Create (plain policyname value); do not recompute here.
+
+	return data
+}
+
+// vpnglobal_authenticationcertpolicy_bindingSetAttrFromGetForDatasource is the
+// datasource counterpart of the setter. The datasource has no prior plan/state to
+// preserve, so it faithfully copies every field present in the GET response and
+// sets the synthetic ID itself (datasources never call Create). Pattern 7 split.
+func vpnglobal_authenticationcertpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalAuthenticationcertpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationcertpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_authenticationcertpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -135,8 +175,7 @@ func vpnglobal_authenticationcertpolicy_bindingSetAttrFromGet(ctx context.Contex
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Set ID for the datasource (single unique attribute - plain value).
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
