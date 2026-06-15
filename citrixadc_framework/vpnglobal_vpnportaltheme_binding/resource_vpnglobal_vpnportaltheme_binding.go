@@ -3,6 +3,7 @@ package vpnglobal_vpnportaltheme_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -150,10 +151,11 @@ func (r *VpnglobalVpnportalthemeBindingResource) Delete(ctx context.Context, req
 
 	tflog.Debug(ctx, "Deleting vpnglobal_vpnportaltheme_binding resource")
 	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
+	// Single unique attribute - ID is the plain value. URL-encode the value so
+	// slashy/special theme names are passed safely as a delete arg (Pattern (b)).
 	portaltheme_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("portaltheme:%s", portaltheme_value),
+		fmt.Sprintf("portaltheme:%s", url.QueryEscape(portaltheme_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_vpnportaltheme_binding.Type(), "", args)

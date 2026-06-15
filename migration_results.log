@@ -2724,3 +2724,18 @@ PATTERNS: 2(b)/Delete-arg URL-encode (per binding-family hint b).
 FILES CHANGED: citrixadc_framework/vpnglobal_vpnnexthopserver_binding/resource_vpnglobal_vpnnexthopserver_binding.go (NO test/doc file changed)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnglobal_vpnportaltheme_binding
+STATUS:   PASS
+TIME:     2026-06-15T12:48:50Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccVpnglobal_vpnportaltheme_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccVpnglobal_vpnportaltheme_binding_basic ............ PASS
+  - TestAccVpnglobal_vpnportaltheme_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: attr/type/Required/ForceNew parity with SDK v2 OK; ID stays plain portaltheme (matches resource_id_mapping.json + SDK v2 d.SetId). Dropped spurious Computed on gotopriorityexpression (never echoed by GET) and made SetAttrFromGet preserve it instead of nulling.
+DATASOURCE: healthy; split setter into resource (preserve state) + datasource (faithful copy + sets data.Id) per Pattern 7; datasource Read now calls the datasource setter.
+PATTERNS: 7, 8, 13, plus delete-arg URL-encode (b)
+FILES CHANGED: citrixadc_framework/vpnglobal_vpnportaltheme_binding/resource_schema.go, citrixadc_framework/vpnglobal_vpnportaltheme_binding/resource_vpnglobal_vpnportaltheme_binding.go, citrixadc_framework/vpnglobal_vpnportaltheme_binding/datasource_vpnglobal_vpnportaltheme_binding.go (NO test/doc file changed)
+BLOCKER: none
+========================================
