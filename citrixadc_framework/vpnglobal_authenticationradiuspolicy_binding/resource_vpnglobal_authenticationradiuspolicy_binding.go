@@ -3,6 +3,8 @@ package vpnglobal_authenticationradiuspolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -149,11 +151,19 @@ func (r *VpnglobalAuthenticationradiuspolicyBindingResource) Delete(ctx context.
 	}
 
 	tflog.Debug(ctx, "Deleting vpnglobal_authenticationradiuspolicy_binding resource")
-	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name.
+	// Single unique attribute (policyname) is the ID. The SDK v2 resource also passed
+	// secondary/groupextraction as disambiguating delete args; mirror that for
+	// backward compatibility, URL-encoding the values (Pattern b).
 	policyname_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("policyname:%s", policyname_value),
+		fmt.Sprintf("policyname:%s", url.QueryEscape(policyname_value)),
+	}
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(strconv.FormatBool(data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(strconv.FormatBool(data.Groupextraction.ValueBool()))))
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_authenticationradiuspolicy_binding.Type(), "", args)
