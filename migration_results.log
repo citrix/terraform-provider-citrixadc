@@ -3038,3 +3038,19 @@ PATTERNS: 7, 13
 FILES CHANGED: citrixadc_framework/vpnvserver_authenticationwebauthpolicy_binding/resource_vpnvserver_authenticationwebauthpolicy_binding.go, citrixadc_framework/vpnvserver_authenticationwebauthpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_authenticationwebauthpolicy_binding/datasource_vpnvserver_authenticationwebauthpolicy_binding.go, citrixadc_framework/vpnvserver_authenticationwebauthpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_authenticationwebauthpolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc files)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_rewritepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:40:10Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccVpnvserver_rewritepolicy_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccVpnvserver_rewritepolicy_binding_basic ............ PASS
+  - TestAccVpnvserver_rewritepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral/secret tests) ............................... N/A
+BACKWARD-COMPAT: attribute/type/flag/ForceNew parity all match SDK v2 (name,policy Required+ForceNew; bindpoint/gotopriorityexpression/groupextraction/priority/secondary Optional+Computed+RequiresReplace). Create verb PUT (UpdateUnnamedResource) matches SDK v2. ID adopts new key:value format (bindpoint,name,policy); legacy import handled via resource_id_mapping.json "name,policy" + ParseIdString. Delete via DeleteResourceWithArgsMap(name, {bindpoint,policy}) verified on ADC. No resource Go changes needed beyond confirming behavior.
+DATASOURCE: healthy as-is; shared SetAttrFromGet faithfully copies GET response + sets data.Id; no Pattern-7 split needed.
+PATTERNS: none required (codegen output correct); applied Constraint-1 sanctioned ID-parse helper fix in test Exist helper.
+FILES CHANGED: citrixadc_framework/acctests/vpnvserver_rewritepolicy_binding_test.go (ID-parse helper lines only), migration_results.log
+BLOCKER: none
+========================================
