@@ -59,8 +59,8 @@ func (r *LbvserverVideooptimizationpacingpolicyBindingResource) Create(ctx conte
 	lbvserver_videooptimizationpacingpolicy_binding := lbvserver_videooptimizationpacingpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_videooptimizationpacingpolicy_binding.Type(), &lbvserver_videooptimizationpacingpolicy_binding)
+	// Binding resource - NITRO `add` is POST (matches SDK v2 AddResource). Pattern 1.
+	_, err := r.client.AddResource(service.Lbvserver_videooptimizationpacingpolicy_binding.Type(), "", &lbvserver_videooptimizationpacingpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_videooptimizationpacingpolicy_binding, got error: %s", err))
 		return

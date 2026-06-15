@@ -1578,3 +1578,19 @@ PATTERNS: 1, 6, 7, 13
 FILES CHANGED: citrixadc_framework/lbvserver_contentinspectionpolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_contentinspectionpolicy_binding/resource_lbvserver_contentinspectionpolicy_binding.go, citrixadc_framework/lbvserver_contentinspectionpolicy_binding/datasource_lbvserver_contentinspectionpolicy_binding.go, citrixadc_framework/acctests/lbvserver_contentinspectionpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc changed
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lbvserver_videooptimizationpacingpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:58:16Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccLbvserver_videooptimizationpacingpolicy_binding($|_|DataSource)
+TESTS:
+  - TestAccLbvserver_videooptimizationpacingpolicy_binding_basic ............ PASS
+  - TestAccLbvserver_videooptimizationpacingpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ................. N/A
+BACKWARD-COMPAT: Create switched UpdateUnnamedResource(PUT)->AddResource(POST) to match SDK v2 (Pattern 1); labelname/labeltype changed Required->Optional+Computed to match SDK v2 contract (test omits them, NITRO does not echo them); attribute names/types/ForceNew(RequiresReplace) all parity; legacy ID order name,policyname matches resource_id_mapping.json; new key:value ID format retained, ParseIdString handles legacy.
+DATASOURCE: healthy as-is; shares SetAttrFromGet which faithfully copies GET response and sets Id; no split needed (setter not changed to preserve-state).
+PATTERNS: 1 (PUT->POST create), 8 (Required->Optional+Computed flag drift)
+FILES CHANGED: citrixadc_framework/lbvserver_videooptimizationpacingpolicy_binding/resource_lbvserver_videooptimizationpacingpolicy_binding.go, citrixadc_framework/lbvserver_videooptimizationpacingpolicy_binding/resource_schema.go, citrixadc_framework/acctests/lbvserver_videooptimizationpacingpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
+BLOCKER: none
+========================================
