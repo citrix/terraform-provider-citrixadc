@@ -3373,3 +3373,19 @@ PATTERNS: 7 (datasource shared-setter / non-echoed field), 13 (drop spurious ide
 FILES CHANGED: citrixadc_framework/lsnclient_nsacl_binding/resource_lsnclient_nsacl_binding.go, citrixadc_framework/lsnclient_nsacl_binding/resource_schema.go, citrixadc_framework/lsnclient_nsacl_binding/datasource_lsnclient_nsacl_binding.go, citrixadc_framework/lsnclient_nsacl_binding/datasource_schema.go, citrixadc_framework/acctests/lsnclient_nsacl_binding_test.go (sanctioned ID-parse helper lines only). NO doc changes.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lsngroup_lsntransportprofile_binding
+STATUS:   PASS
+TIME:     2026-06-15T15:09:09Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccLsngroup_lsntransportprofile_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccLsngroup_lsntransportprofile_binding_basic ........ PASS
+  - TestAccLsngroup_lsntransportprofile_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: SDK v2 vs Framework fully parity-compatible (groupname+transportprofilename both Required+RequiresReplace, string types, no defaults/secrets). Create=UpdateUnnamedResource (PUT) matches SDK v2; Delete=DeleteResourceWithArgsMap with transportprofilename arg matches SDK v2 semantics. ID adopts new key:value format; resource_id_mapping.json="groupname,transportprofilename" lets ParseIdString decode legacy state. No implementation changes needed.
+DATASOURCE: healthy as-is (both key attrs echoed by GET; shared SetAttrFromGet works, no Pattern 7 split needed).
+PATTERNS: none required (implementation already backward-compatible); applied sanctioned Constraint-1 ID-parse helper exception only.
+FILES CHANGED: citrixadc_framework/acctests/lsngroup_lsntransportprofile_binding_test.go (Exist helper ID-parse lines only: SplitN -> utils.ParseIdString), migration_results.log
+BLOCKER: none
+========================================
