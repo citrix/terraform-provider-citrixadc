@@ -22,6 +22,7 @@ import (
 // CsvserverAuditnslogpolicyBindingResourceModel describes the resource data model.
 type CsvserverAuditnslogpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,9 +41,15 @@ func (r *CsvserverAuditnslogpolicyBindingResource) Schema(ctx context.Context, r
 				Computed:    true,
 				Description: "The ID of the csvserver_auditnslogpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point at which policy needs to be bound. Note: Content switching policies are evaluated only at request time.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -50,21 +57,20 @@ func (r *CsvserverAuditnslogpolicyBindingResource) Schema(ctx context.Context, r
 			},
 			"invoke": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "Invoke a policy label if this policy's rule evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label to be invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -94,7 +100,6 @@ func (r *CsvserverAuditnslogpolicyBindingResource) Schema(ctx context.Context, r
 			},
 			"targetlbvserver": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +114,9 @@ func csvserver_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Cont
 
 	// Create API request body from the model
 	csvserver_auditnslogpolicy_binding := cs.Csvserverauditnslogpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		csvserver_auditnslogpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_auditnslogpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +145,54 @@ func csvserver_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Cont
 	return csvserver_auditnslogpolicy_binding
 }
 
+// csvserver_auditnslogpolicy_bindingSetAttrFromGet is the resource-side setter.
+// It preserves user-configured plan/state values for inputs that the NITRO GET
+// response may not echo back (or returns in a server-normalized form), so the
+// resource does not error with "inconsistent result after apply" and does not
+// show perpetual diffs. Only the live key/identity fields are adopted from GET.
 func csvserver_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *CsvserverAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAuditnslogpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In csvserver_auditnslogpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// bindpoint, gotopriorityexpression, invoke, labelname, labeltype and
+	// targetlbvserver are write-only/server-overridden inputs that NITRO does not
+	// reliably echo back (or echoes back in a server-normalized form) for this
+	// binding. They are Optional-only (not Computed), so the resource MUST preserve
+	// the user-configured plan/state value rather than clobbering it from the GET
+	// response — otherwise Terraform errors with "inconsistent result after apply".
+	// Only the echoed identity/priority fields below are adopted from GET.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	// Set ID for the resource
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+// csvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource is the datasource-side
+// setter. Unlike the resource setter it faithfully copies every field from the GET
+// response (the datasource has no prior plan/state to preserve) and sets data.Id.
+func csvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CsvserverAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAuditnslogpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In csvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -184,8 +236,7 @@ func csvserver_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data 
 		data.Targetlbvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
