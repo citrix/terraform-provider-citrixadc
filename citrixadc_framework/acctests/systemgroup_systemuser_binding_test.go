@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -111,10 +111,12 @@ func testAccCheckSystemgroup_systemuser_bindingExist(n string, id *string) resou
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		groupname := idSlice[0]
-		username := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"groupname", "username"}, nil)
+		if err != nil {
+			return err
+		}
+		groupname := idMap["groupname"]
+		username := idMap["username"]
 
 		findParams := service.FindParams{
 			ResourceType:             "systemgroup_systemuser_binding",
@@ -153,13 +155,12 @@ func testAccCheckSystemgroup_systemuser_bindingNotExist(n string, id string) res
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"groupname", "username"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		groupname := idSlice[0]
-		username := idSlice[1]
+		groupname := idMap["groupname"]
+		username := idMap["username"]
 
 		findParams := service.FindParams{
 			ResourceType:             "systemgroup_systemuser_binding",
