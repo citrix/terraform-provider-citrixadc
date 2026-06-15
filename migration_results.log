@@ -247,5 +247,18 @@ BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 schema + NITRO str
 DATASOURCE: healthy after split into xxxSetAttrFromGetForDatasource (Pattern 7) + policy-only filter; datasource priority=77 asserted and passes.
 PATTERNS: 7, 13
 FILES CHANGED: citrixadc_framework/authenticationvserver_authenticationloginschemapolicy_binding/resource_authenticationvserver_authenticationloginschemapolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationloginschemapolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_authenticationloginschemapolicy_binding/datasource_authenticationvserver_authenticationloginschemapolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationloginschemapolicy_binding/datasource_schema.go, citrixadc_framework/acctests/authenticationvserver_authenticationloginschemapolicy_binding_test.go (ID-parse helper lines only; no docs, no SDK v2)
+RESOURCE: auditnslogglobal_auditnslogpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:44:15Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccAuditnslogglobal_auditnslogpolicy_binding_basic|TestAccAuditnslogglobalAuditnslogpolicyBindingDataSource_basic
+TESTS:
+  - TestAccAuditnslogglobal_auditnslogpolicy_binding_basic ............ PASS
+  - TestAccAuditnslogglobalAuditnslogpolicyBindingDataSource_basic .... PASS
+  - (no ephemeral tests; resource has no secret attributes) .......... N/A
+BACKWARD-COMPAT: re-added dropped 'builtin' attr (in SDK v2 + NITRO struct + GET response) as Optional+Computed ListAttribute with RequiresReplace+UseStateForUnknown; added Default("SYSTEM_GLOBAL") on globalbindtype for parity with SDK v2 Default; populated builtin in SetAttrFromGet (list wire-format handling) and datasource schema. Create verb confirmed PUT (UpdateUnnamedResource) per NITRO add=PUT, matches SDK v2. Delete args (policyname,globalbindtype) handled via DeleteResourceWithArgsMap (auto URL-encodes). ID adopts new key:value format; resource_id_mapping.json legacy order 'policyname' matches SDK v2 d.SetId(policyname).
+DATASOURCE: healthy as-is; only added 'builtin' to datasource schema to match shared model. Passed live.
+PATTERNS: 7 (builtin list mapping/preserve-unknown), schema flag/Default parity
+FILES CHANGED: citrixadc_framework/auditnslogglobal_auditnslogpolicy_binding/resource_schema.go, citrixadc_framework/auditnslogglobal_auditnslogpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/auditnslogglobal_auditnslogpolicy_binding_test.go (sanctioned ID-parse helper line only), resource_id_mapping.json (verified, unchanged). NO doc files modified.
 BLOCKER: none
 ========================================
