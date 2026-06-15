@@ -3,7 +3,6 @@ package botprofile_tps_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,11 +68,12 @@ func (r *BotprofileTpsBindingResource) Create(ctx context.Context, req resource.
 
 	tflog.Trace(ctx, "Created botprofile_tps_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// ID uses the legacy SDK v2 order (name,bot_tps_type) from resource_id_mapping.json;
+	// bot_tps is not part of the binding identity and is excluded.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_tps:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotTps.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("bot_tps_type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotTpsType.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_tps_type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotTpsType.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -168,12 +168,15 @@ func (r *BotprofileTpsBindingResource) Delete(ctx context.Context, req resource.
 		return
 	}
 
+	// NITRO requires BOTH bot_tps_type and bot_tps to disambiguate the binding for
+	// delete (errorcode 1093 "Argument pre-requisite missing [type, tps]" otherwise).
+	// bot_tps_type comes from the ID; bot_tps is read from prior state.
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bot_tps"]; ok && val != "" {
-		argsMap["bot_tps"] = val
-	}
 	if val, ok := idMap["bot_tps_type"]; ok && val != "" {
 		argsMap["bot_tps_type"] = val
+	}
+	if !data.BotTps.IsNull() && !data.BotTps.IsUnknown() {
+		argsMap["bot_tps"] = fmt.Sprintf("%t", data.BotTps.ValueBool())
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Botprofile_tps_binding.Type(), name_value, argsMap)
@@ -220,27 +223,11 @@ func (r *BotprofileTpsBindingResource) readBotprofileTpsBindingFromApi(ctx conte
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding with the matching bot_tps_type.
+	// bot_tps_type is the per-binding-type identity (mirrors SDK v2 behaviour).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bot_tps
-		if idVal, ok := idMap["bot_tps"]; ok {
-			if val, ok := v["bot_tps"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bot_tps"].(bool); ok {
-			match = false
-			continue
-		}
 
 		// Check bot_tps_type
 		if idVal, ok := idMap["bot_tps_type"]; ok {
@@ -253,9 +240,6 @@ func (r *BotprofileTpsBindingResource) readBotprofileTpsBindingFromApi(ctx conte
 				match = false
 				continue
 			}
-		} else if _, ok := v["bot_tps_type"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

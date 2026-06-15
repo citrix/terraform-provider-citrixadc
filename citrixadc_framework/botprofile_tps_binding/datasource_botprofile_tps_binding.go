@@ -67,23 +67,13 @@ func (d *BotprofileTpsBindingDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding with the matching bot_tps_type.
+	// bot_tps is an optional filter; only applied when the user supplies it.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check bot_tps
-		if val, ok := v["bot_tps"].(bool); ok {
-			if bottps_Name.IsNull() || val != bottps_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !bottps_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check bot_tps_type
+		// Check bot_tps_type (the binding identity filter)
 		if val, ok := v["bot_tps_type"].(string); ok {
 			if bottpstype_Name.IsNull() || val != bottpstype_Name.ValueString() {
 				match = false
@@ -92,6 +82,19 @@ func (d *BotprofileTpsBindingDataSource) Read(ctx context.Context, req datasourc
 		} else if !bottpstype_Name.IsNull() {
 			match = false
 			continue
+		}
+
+		// Check bot_tps only when supplied as a filter
+		if !bottps_Name.IsNull() && !bottps_Name.IsUnknown() {
+			if val, ok := v["bot_tps"].(bool); ok {
+				if val != bottps_Name.ValueBool() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
 		}
 		if match {
 			foundIndex = i
