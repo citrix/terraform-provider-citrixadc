@@ -2,8 +2,6 @@ package sslpolicylabel_sslpolicy_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
@@ -24,7 +22,7 @@ type SslpolicylabelSslpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
-	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+	InvokeLabelname        types.String `tfsdk:"invokelabelname"`
 	Labelname              types.String `tfsdk:"labelname"`
 	Labeltype              types.String `tfsdk:"labeltype"`
 	Policyname             types.String `tfsdk:"policyname"`
@@ -55,8 +53,9 @@ func (r *SslpolicylabelSslpolicyBindingResource) Schema(ctx context.Context, req
 				},
 				Description: "Invoke policies bound to a policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.",
 			},
-			"invoke_labelname": schema.StringAttribute{
-				Required: true,
+			"invokelabelname": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -70,7 +69,8 @@ func (r *SslpolicylabelSslpolicyBindingResource) Schema(ctx context.Context, req
 				Description: "Name of the SSL policy label to which to bind policies.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -127,52 +127,34 @@ func sslpolicylabel_sslpolicy_bindingGetThePayloadFromthePlan(ctx context.Contex
 func sslpolicylabel_sslpolicy_bindingSetAttrFromGet(ctx context.Context, data *SslpolicylabelSslpolicyBindingResourceModel, getResponseData map[string]interface{}) *SslpolicylabelSslpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In sslpolicylabel_sslpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NOTE: 'invoke' is a write-only flag that the NITRO GET response never echoes
+	// back (matching the SDK v2 resource which deliberately skipped d.Set("invoke")).
+	// Preserve the prior plan/state value so the apply result stays consistent.
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
-		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
 		data.Invoke = types.BoolValue(val.(bool))
-	} else {
-		data.Invoke = types.BoolNull()
 	}
+	// else: preserve existing data.Invoke (not returned by GET)
 	if val, ok := getResponseData["invoke_labelname"]; ok && val != nil {
 		data.InvokeLabelname = types.StringValue(val.(string))
-	} else {
-		data.InvokeLabelname = types.StringNull()
 	}
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
-	} else {
-		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["labeltype"]; ok && val != nil {
 		data.Labeltype = types.StringValue(val.(string))
-	} else {
-		data.Labeltype = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
-	} else {
-		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
-		data.Priority = types.Int64Null()
 	}
-
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("labelname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Labelname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("priority:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Priority.ValueInt64()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }
