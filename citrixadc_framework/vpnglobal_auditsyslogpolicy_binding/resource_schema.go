@@ -37,16 +37,18 @@ func (r *VpnglobalAuditsyslogpolicyBindingResource) Schema(ctx context.Context, 
 				Description: "The ID of the vpnglobal_auditsyslogpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// NITRO GET does not echo this back, so it cannot be Computed
+				// (would stay unknown after apply). Pure Optional input.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// NITRO GET does not echo this back, so it cannot be Computed
+				// (would stay unknown after apply). Pure Optional input.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -68,8 +70,9 @@ func (r *VpnglobalAuditsyslogpolicyBindingResource) Schema(ctx context.Context, 
 				Description: "Integer specifying the policy's priority. The lower the priority number, the higher the policy's priority. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
+				// NITRO GET does not echo this back, so it cannot be Computed
+				// (would stay unknown after apply). Pure Optional input.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -106,7 +109,37 @@ func vpnglobal_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Con
 func vpnglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalAuditsyslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuditsyslogpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_auditsyslogpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NITRO GET for this binding does NOT echo back gotopriorityexpression,
+	// groupextraction, or secondary (matching the SDK v2 resource, which also
+	// skips gotopriorityexpression). For these non-echoed inputs we PRESERVE the
+	// existing plan/state value rather than nulling it, otherwise Terraform fails
+	// with "inconsistent result after apply" (Pattern 7 / Pattern 13).
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	// gotopriorityexpression, groupextraction, secondary: not returned by NITRO,
+	// preserve the value already in data (from the plan/state).
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
+	return data
+}
+
+// vpnglobal_auditsyslogpolicy_bindingSetAttrFromGetForDatasource faithfully
+// copies every field from the GET response. The datasource has no prior
+// plan/state to preserve (Pattern 7 datasource split). Non-echoed fields are
+// set to null since NITRO never returns them.
+func vpnglobal_auditsyslogpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalAuditsyslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuditsyslogpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_auditsyslogpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -135,8 +168,7 @@ func vpnglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, data
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Set ID for the datasource (no Create to set it).
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
