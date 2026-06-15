@@ -1880,3 +1880,19 @@ PATTERNS: Constraint-1 sanctioned ID-parse helper exception (new key:value ID fo
 FILES CHANGED: citrixadc_framework/acctests/nsservicepath_nsservicefunction_binding_test.go (bindingExist helper ID-parse lines only -> utils.ParseIdString)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: rnat_nsip_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:31:52Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccRnat_nsip_binding($|_basic|DataSource)
+TESTS:
+  - TestAccRnat_nsip_binding_basic ......... PASS
+  - TestAccRnat_nsip_bindingDataSource ..... PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: Framework resource already matched SDK v2 contract (name+natip both Required+RequiresReplace/ForceNew, no defaults/secrets). Create uses UpdateUnnamedResource (PUT) matching SDK v2. New key:value ID format with resource_id_mapping.json "name,natip" legacy order; ParseIdString handles legacy import. Delete uses DeleteResourceWithArgsMap (natip is an IP, no URL-encoding issue). No resource/datasource Go changes needed.
+DATASOURCE: healthy as-is; shared SetAttrFromGet faithfully copies both echoed identity keys and sets data.Id — no Pattern-7 split required (no server-overridden/non-echoed fields).
+PATTERNS: none (no codegen defects; sanctioned Constraint-1 ID-parse helper edit only)
+FILES CHANGED: citrixadc_framework/acctests/rnat_nsip_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================
