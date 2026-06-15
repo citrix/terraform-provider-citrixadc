@@ -11,7 +11,8 @@ func SslserviceSslcertkeyBindingDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"ca": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "CA certificate.",
 			},
 			"certkeyname": schema.StringAttribute{
@@ -19,7 +20,8 @@ func SslserviceSslcertkeyBindingDataSourceSchema() schema.Schema {
 				Description: "The certificate key pair binding.",
 			},
 			"crlcheck": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
 			"ocspcheck": schema.StringAttribute{
@@ -37,7 +39,8 @@ func SslserviceSslcertkeyBindingDataSourceSchema() schema.Schema {
 				Description: "The flag is used to indicate whether this particular CA certificate's CA_Name needs to be sent to the SSL client while requesting      for client certificate in a SSL handshake",
 			},
 			"snicert": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The name of the CertKey. Use this option to bind Certkey(s) which will be used in SNI processing.",
 			},
 		},

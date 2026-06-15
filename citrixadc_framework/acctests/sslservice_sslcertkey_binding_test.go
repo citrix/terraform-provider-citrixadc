@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -347,18 +348,16 @@ func testAccCheckSslservice_sslcertkey_bindingExist(n string, id *string) resour
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.Split(bindingId, ",")
-
-		servicename := idSlice[0]
-		certkeyname := idSlice[1]
-		snicert := false
-		ca := false
-		if val, ok := rs.Primary.Attributes["snicert"]; ok {
-			snicert = val == "true"
+		// ID-parse helper: handle both the new key:value ID format and the
+		// legacy SDK v2 comma format via ParseIdString.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicename", "certkeyname", "snicert", "ca"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
 		}
-		if val, ok := rs.Primary.Attributes["ca"]; ok {
-			ca = val == "true"
-		}
+		servicename := idMap["servicename"]
+		certkeyname := idMap["certkeyname"]
+		snicert := idMap["snicert"] == "true"
+		ca := idMap["ca"] == "true"
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservice_sslcertkey_binding",
@@ -403,11 +402,16 @@ func testAccCheckSslservice_sslcertkey_bindingNotExist(n string, id string) reso
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
 
-		idSlice := strings.Split(id, ",")
-		servicename := idSlice[0]
-		certkeyname := idSlice[1]
-		snicert := idSlice[2] == "true"
-		ca := idSlice[3] == "true"
+		// ID-parse helper: handle both the new key:value ID format and the
+		// legacy SDK v2 comma format via ParseIdString.
+		idMap, _, err := utils.ParseIdString(id, []string{"servicename", "certkeyname", "snicert", "ca"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", id, err)
+		}
+		servicename := idMap["servicename"]
+		certkeyname := idMap["certkeyname"]
+		snicert := idMap["snicert"] == "true"
+		ca := idMap["ca"] == "true"
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservice_sslcertkey_binding",
