@@ -68,9 +68,10 @@ func (r *VpnvserverAuthenticationtacacspolicyBindingResource) Create(ctx context
 
 	tflog.Trace(ctx, "Created vpnvserver_authenticationtacacspolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// ID is composed of name,policy per resource_id_mapping.json (matches SDK v2
+	// d.SetId(name + "," + policy)). bindpoint is NOT part of the identity.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -168,11 +169,20 @@ func (r *VpnvserverAuthenticationtacacspolicyBindingResource) Delete(ctx context
 	}
 
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
 	if val, ok := idMap["policy"]; ok && val != "" {
 		argsMap["policy"] = val
+	}
+	// bindpoint is not part of the ID; source it from state to disambiguate the
+	// binding on delete (matches SDK v2 delete which passed bindpoint when set).
+	// DeleteResourceWithArgsMap URL-encodes the arg values internally.
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = data.Bindpoint.ValueString()
+	}
+	if !data.Secondary.IsNull() && data.Secondary.ValueBool() {
+		argsMap["secondary"] = "true"
+	}
+	if !data.Groupextraction.IsNull() && data.Groupextraction.ValueBool() {
+		argsMap["groupextraction"] = "true"
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_authenticationtacacspolicy_binding.Type(), name_value, argsMap)
@@ -219,45 +229,16 @@ func (r *VpnvserverAuthenticationtacacspolicyBindingResource) readVpnvserverAuth
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// The binding identity is (name, policy); bindpoint is not part of the ID
+	// and is not returned by GET, so match on policy only (matches SDK v2 read).
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
 		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
+			if val, ok := v["policy"].(string); ok && val == idVal {
+				foundIndex = i
+				break
 			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 

@@ -41,7 +41,8 @@ func (r *VpnvserverAuthenticationtacacspolicyBindingResource) Schema(ctx context
 			},
 			"bindpoint": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				// Not echoed by NITRO GET - drop Computed to avoid
+				// "still indicated an unknown value" after apply (Pattern 13).
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -49,7 +50,7 @@ func (r *VpnvserverAuthenticationtacacspolicyBindingResource) Schema(ctx context
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				// Not echoed by NITRO GET - drop Computed (Pattern 13).
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -57,7 +58,7 @@ func (r *VpnvserverAuthenticationtacacspolicyBindingResource) Schema(ctx context
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
+				// Not echoed by NITRO GET - drop Computed (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -130,7 +131,43 @@ func vpnvserver_authenticationtacacspolicy_bindingGetThePayloadFromthePlan(ctx c
 func vpnvserver_authenticationtacacspolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationtacacspolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationtacacspolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationtacacspolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NOTE: The NITRO GET for this binding does NOT echo back bindpoint,
+	// gotopriorityexpression or groupextraction (verified against live ADC).
+	// Those are write-only inputs (ForceNew in SDK v2); preserve the existing
+	// plan/state value instead of nulling them, otherwise Terraform reports
+	// "inconsistent result after apply" (Pattern 7).
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// bindpoint, gotopriorityexpression, groupextraction are intentionally NOT
+	// overwritten here - they are not returned by NITRO and must keep the
+	// configured plan/state value.
+
+	// ID is composed once in Create (name,policy per resource_id_mapping.json);
+	// do not recompute it here (Pattern 6).
+
+	return data
+}
+
+// Datasource variant: faithfully copies every field returned by the GET and
+// sets the ID, since the datasource has no prior plan/state and no Create
+// (Pattern 7 datasource split).
+func vpnvserver_authenticationtacacspolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationtacacspolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationtacacspolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_authenticationtacacspolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,10 +206,8 @@ func vpnvserver_authenticationtacacspolicy_bindingSetAttrFromGet(ctx context.Con
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (name,policy per resource_id_mapping.json)
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
