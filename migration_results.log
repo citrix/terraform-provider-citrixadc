@@ -1750,5 +1750,18 @@ BACKWARD-COMPAT: netmask & rewriteip were Required in Framework but Optional+Com
 DATASOURCE: healthy; netmask flag fixed Required->Optional+Computed; SetAttrFromGet split into resource setter (preserves ID) + datasource setter that sets 2-key ID (Pattern 7).
 PATTERNS: 6, 7, 8
 FILES CHANGED: citrixadc_framework/netprofile_natrule_binding/resource_schema.go, citrixadc_framework/netprofile_natrule_binding/resource_netprofile_natrule_binding.go, citrixadc_framework/netprofile_natrule_binding/datasource_schema.go, citrixadc_framework/netprofile_natrule_binding/datasource_netprofile_natrule_binding.go, citrixadc_framework/acctests/netprofile_natrule_binding_test.go (sanctioned ID-parse helper lines only). No doc files.
+RESOURCE: mapdomain_mapbmr_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:10:55Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccMapdomain_mapbmr_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccMapdomain_mapbmr_binding_basic ............ PASS
+  - TestAccMapdomain_mapbmr_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs) SKIP[n/a]
+BACKWARD-COMPAT: Framework resource already backward-compatible with SDK v2 (name+mapbmrname both Required+ForceNew/RequiresReplace, TypeString->StringAttribute, Create verb PUT/UpdateUnnamedResource matches SDK v2, delete via DeleteResourceWithArgsMap mapbmrname). ID adopts new key:value format; resource_id_mapping.json "name,mapbmrname" + ParseIdString legacy order in Read/Delete preserve legacy import. No Framework Go changes needed.
+DATASOURCE: healthy as-is (both keys echoed by GET; shared SetAttrFromGet copies both + sets Id; no Pattern 7 split required).
+PATTERNS: Constraint-1 sanctioned ID-parse helper exception (new key:value ID broke raw strings.SplitN in Exist helper).
+FILES CHANGED: citrixadc_framework/acctests/mapdomain_mapbmr_binding_test.go (ID-parse helper lines only; NO doc, NO Framework resource/datasource code changes)
 BLOCKER: none
 ========================================
