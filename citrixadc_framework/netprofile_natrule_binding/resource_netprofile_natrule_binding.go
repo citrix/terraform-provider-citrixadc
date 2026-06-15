@@ -72,7 +72,6 @@ func (r *NetprofileNatruleBindingResource) Create(ctx context.Context, req resou
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("natrule:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Natrule.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -171,8 +170,9 @@ func (r *NetprofileNatruleBindingResource) Delete(ctx context.Context, req resou
 	if val, ok := idMap["natrule"]; ok && val != "" {
 		argsMap["natrule"] = val
 	}
-	if val, ok := idMap["netmask"]; ok && val != "" {
-		argsMap["netmask"] = val
+	// netmask is not part of the ID; take it from state (matches SDK v2 delete args).
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		argsMap["netmask"] = data.Netmask.ValueString()
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Netprofile_natrule_binding.Type(), name_value, argsMap)
@@ -236,22 +236,6 @@ func (r *NetprofileNatruleBindingResource) readNetprofileNatruleBindingFromApi(c
 				continue
 			}
 		} else if _, ok := v["natrule"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check netmask
-		if idVal, ok := idMap["netmask"]; ok {
-			if val, ok := v["netmask"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["netmask"].(string); ok {
 			match = false
 			continue
 		}

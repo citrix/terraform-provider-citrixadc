@@ -49,16 +49,20 @@ func (r *NetprofileNatruleBindingResource) Schema(ctx context.Context, req resou
 				Description: "IPv4 network address on whose traffic you want the Citrix ADC to do rewrite ip prefix.",
 			},
 			"netmask": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "0",
 			},
 			"rewriteip": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "0",
 			},
@@ -112,12 +116,21 @@ func netprofile_natrule_bindingSetAttrFromGet(ctx context.Context, data *Netprof
 		data.Rewriteip = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// ID is set once in Create / preserved from prior state; do not recompute here.
+	return data
+}
+
+// Datasource variant: faithfully copies the GET response and sets the composite ID
+// (the datasource has no Create to set it). ID order matches resource_id_mapping.json
+// (name,natrule) and the legacy SDK v2 ID format.
+func netprofile_natrule_bindingSetAttrFromGetForDatasource(ctx context.Context, data *NetprofileNatruleBindingResourceModel, getResponseData map[string]interface{}) *NetprofileNatruleBindingResourceModel {
+	tflog.Debug(ctx, "In netprofile_natrule_bindingSetAttrFromGetForDatasource Function")
+
+	netprofile_natrule_bindingSetAttrFromGet(ctx, data, getResponseData)
+
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("natrule:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Natrule.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
