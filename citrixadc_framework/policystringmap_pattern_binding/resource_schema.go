@@ -35,11 +35,8 @@ func (r *PolicystringmapPatternBindingResource) Schema(ctx context.Context, req 
 				Description: "The ID of the policystringmap_pattern_binding resource.",
 			},
 			"comment": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// SDK v2 backward-compat: comment is Optional and updateable in-place (not ForceNew, not Computed).
+				Optional:    true,
 				Description: "Comments associated with the string map or key-value pair bound to this string map.",
 			},
 			"key": schema.StringAttribute{

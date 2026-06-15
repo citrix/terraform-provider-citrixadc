@@ -3,6 +3,7 @@ package policystringmap_pattern_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *PolicystringmapPatternBindingResource) Create(ctx context.Context, req 
 	policystringmap_pattern_binding := policystringmap_pattern_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Policystringmap_pattern_binding.Type(), &policystringmap_pattern_binding)
+	// SDK v2 backward-compat (Pattern 1): binding add is POST via AddResource, not PUT/UpdateUnnamedResource.
+	_, err := r.client.AddResource(service.Policystringmap_pattern_binding.Type(), data.Name.ValueString(), &policystringmap_pattern_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create policystringmap_pattern_binding, got error: %s", err))
 		return
@@ -116,15 +117,19 @@ func (r *PolicystringmapPatternBindingResource) Update(ctx context.Context, req 
 
 	tflog.Debug(ctx, "Updating policystringmap_pattern_binding resource")
 
-	// Check if there are any changes in updateable attributes
+	// Check if there are any changes in updateable attributes.
+	// SDK v2 backward-compat: only comment is updateable in-place (key/name/value are ForceNew/RequiresReplace).
 	hasChange := false
+	if !data.Comment.Equal(state.Comment) {
+		hasChange = true
+	}
 
 	if hasChange {
 		// Create API request body from the model
 		policystringmap_pattern_binding := policystringmap_pattern_bindingGetThePayloadFromthePlan(ctx, &data)
 		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Policystringmap_pattern_binding.Type(), &policystringmap_pattern_binding)
+		// SDK v2 backward-compat (Pattern 1): re-bind via AddResource (POST).
+		_, err := r.client.AddResource(service.Policystringmap_pattern_binding.Type(), data.Name.ValueString(), &policystringmap_pattern_binding)
 		if err != nil {
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update policystringmap_pattern_binding, got error: %s", err))
 			return
@@ -166,12 +171,13 @@ func (r *PolicystringmapPatternBindingResource) Delete(ctx context.Context, req 
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// SDK v2 backward-compat: URL-encode the key value in the delete arg (handles slashy/special chars).
+	args := make([]string, 0)
 	if val, ok := idMap["key"]; ok && val != "" {
-		argsMap["key"] = val
+		args = append(args, fmt.Sprintf("key:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Policystringmap_pattern_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Policystringmap_pattern_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete policystringmap_pattern_binding, got error: %s", err))
 		return
