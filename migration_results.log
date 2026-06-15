@@ -2724,3 +2724,18 @@ PATTERNS: 2(b)/Delete-arg URL-encode (per binding-family hint b).
 FILES CHANGED: citrixadc_framework/vpnglobal_vpnnexthopserver_binding/resource_vpnglobal_vpnnexthopserver_binding.go (NO test/doc file changed)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_appcontroller_binding
+STATUS:   PASS
+TIME:     2026-06-15T12:55:18Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccVpnvserver_appcontroller_binding($|_|DataSource)
+TESTS:
+  - TestAccVpnvserver_appcontroller_binding_basic ........ PASS
+  - TestAccVpnvserver_appcontroller_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: Schema parity OK (name/appcontroller both Required+RequiresReplace, matching SDK v2 ForceNew). Fixed Delete: SDK v2 used DeleteResourceWithArgs+url.QueryEscape for the slashy appcontroller value; Framework used DeleteResourceWithArgsMap which passes raw unencoded value -> NITRO rejects with "Invalid query parameters [encode the special characters]". Switched to DeleteResourceWithArgs + url.QueryEscape. ID format / resource_id_mapping.json ("name,appcontroller") verified; ParseIdString legacyOrder consistent.
+DATASOURCE: healthy as-is (GET echoes both keys; shared SetAttrFromGet yields valid ID; no split needed)
+PATTERNS: 1 (verb confirmed PUT, kept), 2 (delete arg encoding via SDK v2 contract / point b)
+FILES CHANGED: citrixadc_framework/vpnvserver_appcontroller_binding/resource_vpnvserver_appcontroller_binding.go, citrixadc_framework/acctests/vpnvserver_appcontroller_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================
