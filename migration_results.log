@@ -260,5 +260,17 @@ BACKWARD-COMPAT: re-added dropped 'builtin' attr (in SDK v2 + NITRO struct + GET
 DATASOURCE: healthy as-is; only added 'builtin' to datasource schema to match shared model. Passed live.
 PATTERNS: 7 (builtin list mapping/preserve-unknown), schema flag/Default parity
 FILES CHANGED: citrixadc_framework/auditnslogglobal_auditnslogpolicy_binding/resource_schema.go, citrixadc_framework/auditnslogglobal_auditnslogpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/auditnslogglobal_auditnslogpolicy_binding_test.go (sanctioned ID-parse helper line only), resource_id_mapping.json (verified, unchanged). NO doc files modified.
+RESOURCE: auditsyslogglobal_auditsyslogpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:45:03Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccAuditsyslogglobal(_auditsyslogpolicy_binding_basic|AuditsyslogpolicyBindingDataSource_basic)$
+TESTS:
+  - TestAccAuditsyslogglobal_auditsyslogpolicy_binding_basic ............ PASS
+  - TestAccAuditsyslogglobalAuditsyslogpolicyBindingDataSource_basic .... PASS
+BACKWARD-COMPAT: re-added dropped 'builtin' list attr (SDK v2 + NITRO struct, Optional+Computed+RequiresReplace); type/flag/ForceNew/default parity otherwise OK; Create stays PUT (UpdateUnnamedResource) matching SDK v2; ID adopts new key:value format, legacy 'policyname' mapping preserved for old-state import via ParseIdString.
+DATASOURCE: healthy as-is; added 'builtin' to shared model/datasource schema; shares faithful SetAttrFromGet (no Pattern-7 split needed).
+PATTERNS: binding-family (a) re-add dropped attr; 6/7 reviewed (no split required).
+FILES CHANGED: citrixadc_framework/auditsyslogglobal_auditsyslogpolicy_binding/resource_schema.go, citrixadc_framework/auditsyslogglobal_auditsyslogpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/auditsyslogglobal_auditsyslogpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified.
 BLOCKER: none
 ========================================
