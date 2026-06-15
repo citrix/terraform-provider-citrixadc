@@ -20,12 +20,12 @@ import (
 
 // BridgegroupNsipBindingResourceModel describes the resource data model.
 type BridgegroupNsipBindingResourceModel struct {
-	Id         types.String `tfsdk:"id"`
-	Id         types.Int64  `tfsdk:"id"`
-	Ipaddress  types.String `tfsdk:"ipaddress"`
-	Netmask    types.String `tfsdk:"netmask"`
-	Ownergroup types.String `tfsdk:"ownergroup"`
-	Td         types.Int64  `tfsdk:"td"`
+	Id            types.String `tfsdk:"id"`
+	Bridgegroupid types.Int64  `tfsdk:"bridgegroup_id"`
+	Ipaddress     types.String `tfsdk:"ipaddress"`
+	Netmask       types.String `tfsdk:"netmask"`
+	Ownergroup    types.String `tfsdk:"ownergroup"`
+	Td            types.Int64  `tfsdk:"td"`
 }
 
 func (r *BridgegroupNsipBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -35,8 +35,11 @@ func (r *BridgegroupNsipBindingResource) Schema(ctx context.Context, req resourc
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the bridgegroup_nsip_binding resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"id": schema.Int64Attribute{
+			"bridgegroup_id": schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
@@ -59,16 +62,18 @@ func (r *BridgegroupNsipBindingResource) Schema(ctx context.Context, req resourc
 				Description: "The network mask for the subnet defined for the bridge group.",
 			},
 			"ownergroup": schema.StringAttribute{
+				// Not echoed back by the NITRO GET response, so Computed would
+				// leave it perpetually unknown after apply. Optional-only.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "The owner node group in a Cluster for this vlan.",
 			},
 			"td": schema.Int64Attribute{
+				// Not echoed back by the NITRO GET response, so Computed would
+				// leave it perpetually unknown after apply. Optional-only.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -81,10 +86,11 @@ func (r *BridgegroupNsipBindingResource) Schema(ctx context.Context, req resourc
 func bridgegroup_nsip_bindingGetThePayloadFromthePlan(ctx context.Context, data *BridgegroupNsipBindingResourceModel) network.Bridgegroupnsipbinding {
 	tflog.Debug(ctx, "In bridgegroup_nsip_bindingGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
+	// Create API request body from the model.
+	// The bridge group integer key maps to the NITRO "id" field.
 	bridgegroup_nsip_binding := network.Bridgegroupnsipbinding{}
-	if !data.Id.IsNull() && !data.Id.IsUnknown() {
-		bridgegroup_nsip_binding.Id = utils.IntPtr(int(data.Id.ValueInt64()))
+	if !data.Bridgegroupid.IsNull() && !data.Bridgegroupid.IsUnknown() {
+		bridgegroup_nsip_binding.Id = utils.IntPtr(int(data.Bridgegroupid.ValueInt64()))
 	}
 	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		bridgegroup_nsip_binding.Ipaddress = data.Ipaddress.ValueString()
@@ -102,16 +108,58 @@ func bridgegroup_nsip_bindingGetThePayloadFromthePlan(ctx context.Context, data 
 	return bridgegroup_nsip_binding
 }
 
+// bridgegroupNsipBindingComputeId builds the composite ID in the new
+// key:urlEncode(value) format, using the legacy attribute order
+// (bridgegroup_id,ipaddress) recorded in resource_id_mapping.json so that
+// ParseIdString round-trips both new and legacy SDK v2 IDs.
+func bridgegroupNsipBindingComputeId(data *BridgegroupNsipBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("bridgegroup_id:%s", utils.UrlEncode(fmt.Sprintf("%d", data.Bridgegroupid.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(data.Ipaddress.ValueString())))
+	return strings.Join(idParts, ",")
+}
+
+// bridgegroup_nsip_bindingSetAttrFromGet maps the GET response onto the model
+// while preserving the resource's prior ID (set once in Create).
 func bridgegroup_nsip_bindingSetAttrFromGet(ctx context.Context, data *BridgegroupNsipBindingResourceModel, getResponseData map[string]interface{}) *BridgegroupNsipBindingResourceModel {
 	tflog.Debug(ctx, "In bridgegroup_nsip_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. The NITRO "id" field is the bridge group key.
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Id = types.Int64Value(intVal)
+			data.Bridgegroupid = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+		data.Ipaddress = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
+		data.Ownergroup = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["td"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Td = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// bridgegroup_nsip_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response and (re)computes the synthetic ID, since the
+// datasource never runs Create.
+func bridgegroup_nsip_bindingSetAttrFromGetForDatasource(ctx context.Context, data *BridgegroupNsipBindingResourceModel, getResponseData map[string]interface{}) *BridgegroupNsipBindingResourceModel {
+	tflog.Debug(ctx, "In bridgegroup_nsip_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["id"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Bridgegroupid = types.Int64Value(intVal)
 		}
 	} else {
-		data.Id = types.Int64Null()
+		data.Bridgegroupid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
@@ -136,15 +184,7 @@ func bridgegroup_nsip_bindingSetAttrFromGet(ctx context.Context, data *Bridgegro
 		data.Td = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(bridgegroupNsipBindingComputeId(data))
 
 	return data
 }
