@@ -41,7 +41,6 @@ func (r *VpnvserverAaapreauthenticationpolicyBindingResource) Schema(ctx context
 			},
 			"bindpoint": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -49,7 +48,6 @@ func (r *VpnvserverAaapreauthenticationpolicyBindingResource) Schema(ctx context
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -57,7 +55,6 @@ func (r *VpnvserverAaapreauthenticationpolicyBindingResource) Schema(ctx context
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -79,7 +76,6 @@ func (r *VpnvserverAaapreauthenticationpolicyBindingResource) Schema(ctx context
 			},
 			"priority": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -87,7 +83,6 @@ func (r *VpnvserverAaapreauthenticationpolicyBindingResource) Schema(ctx context
 			},
 			"secondary": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +122,43 @@ func vpnvserver_aaapreauthenticationpolicy_bindingGetThePayloadFromthePlan(ctx c
 	return vpnvserver_aaapreauthenticationpolicy_binding
 }
 
+// vpnvserver_aaapreauthenticationpolicy_bindingSetAttrFromGet is the RESOURCE setter.
+// All attributes are RequiresReplace inputs and several of them (bindpoint,
+// gotopriorityexpression, priority, secondary, groupextraction) are not reliably
+// echoed back (or are returned normalized) by the binding GET response. To avoid
+// "inconsistent result after apply" (Pattern 7 / Pattern 13), preserve the
+// configured plan/state values; only adopt a GET value when the current model
+// value is null/unknown (e.g. on import, where state carries only the ID).
 func vpnvserver_aaapreauthenticationpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAaapreauthenticationpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAaapreauthenticationpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_aaapreauthenticationpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// name and policy form the identity; always adopt from the GET response.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+
+	// All remaining attributes are Optional, RequiresReplace inputs that the binding
+	// GET response does not reliably echo (the SDK v2 resource likewise did not read
+	// bindpoint back, and the others are returned normalized or absent). Preserving
+	// the configured plan/state value verbatim avoids "inconsistent result after
+	// apply" (Pattern 7 / Pattern 13). They are intentionally NOT overwritten here.
+
+	// Set ID for the resource (legacy SDK v2 order: name,policy)
+	data.Id = types.StringValue(vpnvserver_aaapreauthenticationpolicy_bindingBuildId(data))
+
+	return data
+}
+
+// vpnvserver_aaapreauthenticationpolicy_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE setter. A datasource has no prior plan/state to preserve, so it
+// faithfully copies every field from the GET response and sets its own ID
+// (Pattern 7 datasource split).
+func vpnvserver_aaapreauthenticationpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAaapreauthenticationpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAaapreauthenticationpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_aaapreauthenticationpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,13 +197,17 @@ func vpnvserver_aaapreauthenticationpolicy_bindingSetAttrFromGet(ctx context.Con
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(vpnvserver_aaapreauthenticationpolicy_bindingBuildId(data))
 
 	return data
+}
+
+// vpnvserver_aaapreauthenticationpolicy_bindingBuildId composes the resource ID in
+// the new key:value format using the legacy SDK v2 attribute order (name,policy),
+// matching resource_id_mapping.json so legacy imports resolve via ParseIdString.
+func vpnvserver_aaapreauthenticationpolicy_bindingBuildId(data *VpnvserverAaapreauthenticationpolicyBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
+	return strings.Join(idParts, ",")
 }
