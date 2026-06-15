@@ -463,6 +463,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nat64param"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nd6"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nd6ravariables"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/netbridge"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/netbridge_iptunnel_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/netbridge_nsip6_binding"
@@ -1219,6 +1220,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		lsngroup_pcpserver_binding.NewLsngroupPcpserverBindingResource,
 		mapbmr_bmrv4network_binding.NewMapbmrBmrv4networkBindingResource,
 		mapdomain_mapbmr_binding.NewMapdomainMapbmrBindingResource,
+		nd6ravariables_onlinkipv6prefix_binding.NewNd6ravariablesOnlinkipv6prefixBindingResource,
 		netbridge_iptunnel_binding.NewNetbridgeIptunnelBindingResource,
 		netbridge_nsip6_binding.NewNetbridgeNsip6BindingResource,
 		netbridge_nsip_binding.NewNetbridgeNsipBindingResource,
@@ -2028,6 +2030,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		lsngroup_pcpserver_binding.LSngroupPcpserverBindingDataSource,
 		mapbmr_bmrv4network_binding.MApbmrBmrv4networkBindingDataSource,
 		mapdomain_mapbmr_binding.MApdomainMapbmrBindingDataSource,
+		nd6ravariables_onlinkipv6prefix_binding.ND6ravariablesOnlinkipv6prefixBindingDataSource,
 		netbridge_iptunnel_binding.NEtbridgeIptunnelBindingDataSource,
 		netbridge_nsip6_binding.NEtbridgeNsip6BindingDataSource,
 		netbridge_nsip_binding.NEtbridgeNsipBindingDataSource,

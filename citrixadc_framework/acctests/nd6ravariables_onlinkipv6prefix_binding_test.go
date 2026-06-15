@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -117,10 +118,12 @@ func testAccCheckNd6ravariables_onlinkipv6prefix_bindingExist(n string, id *stri
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		vlan := idSlice[0]
-		ipv6prefix := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"vlan", "ipv6prefix"}, nil)
+		if err != nil {
+			return err
+		}
+		vlan := idMap["vlan"]
+		ipv6prefix := idMap["ipv6prefix"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nd6ravariables_onlinkipv6prefix_binding",
