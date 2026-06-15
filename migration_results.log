@@ -1460,5 +1460,18 @@ BACKWARD-COMPAT: attr/type/flag parity OK vs SDK v2. Fixes: composite ID was wro
 DATASOURCE: healthy; split setter per Pattern 7 (resource preserves state, new ForDatasource setter copies GET + sets 2-key id). ca=false filter retained (GET returns ca:false for non-CA bindings).
 PATTERNS: 7, 13 (also pattern (b) URL-encode delete args, (f) composite ID order)
 FILES CHANGED: citrixadc_framework/lbmonitor_sslcertkey_binding/resource_lbmonitor_sslcertkey_binding.go, citrixadc_framework/lbmonitor_sslcertkey_binding/resource_schema.go, citrixadc_framework/lbmonitor_sslcertkey_binding/datasource_lbmonitor_sslcertkey_binding.go, citrixadc_framework/acctests/lbmonitor_sslcertkey_binding_test.go (sanctioned ID-parse helper lines only). NO doc/SDKv2/provider-registration changes.
+RESOURCE: lbvserver_authorizationpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:34:07Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccLbvserver_authorizationpolicy_binding($|_|DataSource)
+TESTS:
+  - TestAccLbvserver_authorizationpolicy_binding_basic ............ PASS
+  - TestAccLbvserver_authorizationpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no x-secret-attr) ........... N/A
+BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct + datasource test); changed labelname/labeltype from Required to Optional+Computed (SDK v2 contract; basic test omits both); Create verb PUT->POST (UpdateUnnamedResource->AddResource) matching SDK v2; Delete args URL-encoded + bindpoint/priority re-added; Update made documented no-op (all attrs RequiresReplace); SetAttrFromGet preserves user inputs (no null-clobber) and no longer recomputes ID; ID order name,policyname matches resource_id_mapping.json.
+DATASOURCE: healthy; split setter added (lbvserver_authorizationpolicy_bindingSetAttrFromGetForDatasource) per Pattern 7, datasource Read switched to it, bindpoint added to datasource schema.
+PATTERNS: 1, 5, 6, 7, 8
+FILES CHANGED: citrixadc_framework/lbvserver_authorizationpolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_authorizationpolicy_binding/resource_lbvserver_authorizationpolicy_binding.go, citrixadc_framework/lbvserver_authorizationpolicy_binding/datasource_schema.go, citrixadc_framework/lbvserver_authorizationpolicy_binding/datasource_lbvserver_authorizationpolicy_binding.go, citrixadc_framework/acctests/lbvserver_authorizationpolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc changed)
 BLOCKER: none
 ========================================

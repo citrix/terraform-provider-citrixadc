@@ -3,6 +3,7 @@ package lbvserver_authorizationpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *LbvserverAuthorizationpolicyBindingResource) Create(ctx context.Context
 	lbvserver_authorizationpolicy_binding := lbvserver_authorizationpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_authorizationpolicy_binding.Type(), &lbvserver_authorizationpolicy_binding)
+	// Binding resource - NITRO add is POST; match the SDK v2 contract (AddResource).
+	_, err := r.client.AddResource(service.Lbvserver_authorizationpolicy_binding.Type(), data.Name.ValueString(), &lbvserver_authorizationpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_authorizationpolicy_binding, got error: %s", err))
 		return
@@ -114,26 +115,9 @@ func (r *LbvserverAuthorizationpolicyBindingResource) Update(ctx context.Context
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating lbvserver_authorizationpolicy_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		lbvserver_authorizationpolicy_binding := lbvserver_authorizationpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Lbvserver_authorizationpolicy_binding.Type(), &lbvserver_authorizationpolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbvserver_authorizationpolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated lbvserver_authorizationpolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for lbvserver_authorizationpolicy_binding resource, skipping update")
-	}
+	// Update is a no-op for this binding; every attribute is RequiresReplace and NITRO
+	// exposes no update endpoint for the binding (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for lbvserver_authorizationpolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readLbvserverAuthorizationpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -167,8 +151,16 @@ func (r *LbvserverAuthorizationpolicyBindingResource) Delete(ctx context.Context
 	}
 
 	var argsMap map[string]string = make(map[string]string)
+	// URL-encode arg values (they were url-decoded by ParseIdString) so slashy/special
+	// policy names and bindpoints are transmitted correctly.
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_authorizationpolicy_binding.Type(), name_value, argsMap)
