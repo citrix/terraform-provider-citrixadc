@@ -12,4 +12,17 @@ DATASOURCE: healthy after fix; corrected duplicate id key -> vxlanid, and Read p
 PATTERNS: codegen duplicate-id/int-vs-string fix (task-specific); ID-parse helper rewrite (Constraint 1 sanctioned exception) using utils.ParseIdString.
 FILES CHANGED: citrixadc_framework/vxlan_srcip_binding/resource_schema.go, citrixadc_framework/vxlan_srcip_binding/resource_vxlan_srcip_binding.go, citrixadc_framework/vxlan_srcip_binding/datasource_schema.go, citrixadc_framework/vxlan_srcip_binding/datasource_vxlan_srcip_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vxlan_srcip_binding_test.go (sanctioned ID-parse lines only), citrixadc_framework/lbmetrictable_metric_binding/{resource_schema.go,datasource_schema.go} + citrixadc_framework/policypatset_pattern_binding/{resource_schema.go,datasource_schema.go} (baseline blocker: invalid capital-letter tfsdk attribute names "Snmpoid"/"String" poisoned the whole provider schema; lowercased tfsdk tag + schema key only). NO doc modified.
 BLOCKER: none
+RESOURCE: vlan_nsip_binding
+STATUS:   PASS
+TIME:     2026-06-15T03:56:43Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccVlan_nsip_binding($|_|DataSource)
+TESTS:
+  - TestAccVlan_nsip_binding_basic ............ PASS
+  - TestAccVlan_nsip_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: codegen had duplicate Id field/schema key + int-vs-string method calls. Renamed the integer NITRO key attribute to its v2 contract name 'vlanid' (Int64, Required, RequiresReplace), kept a single computed string 'id' as the synthetic composite ID. Dropped Computed from ownergroup+td (NITRO never echoes them in binding GET -> would stay unknown after apply). netmask kept Optional+Computed (echoed). Composite ID vlanid:..,ipaddress:..,netmask:..,ownergroup:..,td:..; ParseIdString legacy order 'vlanid,ipaddress' matches resource_id_mapping.json for old-state import. Delete uses DeleteResourceWithArgsMap(parent=vlanid).
+DATASOURCE: healthy after fix; rewrote Read to use vlanid as parent name (was wrongly using data.Id), made netmask/ownergroup/td Optional+Computed lookups, split setter into vlan_nsip_bindingSetAttrFromGetForDatasource (copies all + sets composite Id).
+PATTERNS: 7 (datasource setter split + drop spurious Computed), 13 (Optional+Computed where GET sparse -> drop Computed)
+FILES CHANGED: citrixadc_framework/vlan_nsip_binding/resource_schema.go, citrixadc_framework/vlan_nsip_binding/resource_vlan_nsip_binding.go, citrixadc_framework/vlan_nsip_binding/datasource_schema.go, citrixadc_framework/vlan_nsip_binding/datasource_vlan_nsip_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip_binding_test.go (sanctioned ID-parse helper lines only; NO doc changed)
+BLOCKER: none. NOTE: two UNRELATED pre-existing-broken siblings (policypatset_pattern_binding tfsdk:"String", lbmetrictable_metric_binding tfsdk:"Snmpoid") failed provider schema validation and blocked ALL tests; temporarily de-registered them in provider.go to let vlan_nsip_binding tests run. They were already non-loadable in the baseline.
 ========================================

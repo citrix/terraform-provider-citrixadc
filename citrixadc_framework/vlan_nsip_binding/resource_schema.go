@@ -21,7 +21,7 @@ import (
 // VlanNsipBindingResourceModel describes the resource data model.
 type VlanNsipBindingResourceModel struct {
 	Id         types.String `tfsdk:"id"`
-	Id         types.Int64  `tfsdk:"id"`
+	Vlanid     types.Int64  `tfsdk:"vlanid"`
 	Ipaddress  types.String `tfsdk:"ipaddress"`
 	Netmask    types.String `tfsdk:"netmask"`
 	Ownergroup types.String `tfsdk:"ownergroup"`
@@ -35,8 +35,11 @@ func (r *VlanNsipBindingResource) Schema(ctx context.Context, req resource.Schem
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the vlan_nsip_binding resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"id": schema.Int64Attribute{
+			"vlanid": schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
@@ -59,16 +62,18 @@ func (r *VlanNsipBindingResource) Schema(ctx context.Context, req resource.Schem
 				Description: "Subnet mask for the network address defined for this VLAN.",
 			},
 			"ownergroup": schema.StringAttribute{
+				// NITRO does not echo ownergroup in the binding GET response, so it can
+				// never resolve to a known value after apply. Optional-only (no Computed).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "The owner node group in a Cluster for this vlan.",
 			},
 			"td": schema.Int64Attribute{
+				// NITRO does not echo td in the binding GET response, so it can never
+				// resolve to a known value after apply. Optional-only (no Computed).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -83,8 +88,8 @@ func vlan_nsip_bindingGetThePayloadFromthePlan(ctx context.Context, data *VlanNs
 
 	// Create API request body from the model
 	vlan_nsip_binding := network.Vlannsipbinding{}
-	if !data.Id.IsNull() && !data.Id.IsUnknown() {
-		vlan_nsip_binding.Id = utils.IntPtr(int(data.Id.ValueInt64()))
+	if !data.Vlanid.IsNull() && !data.Vlanid.IsUnknown() {
+		vlan_nsip_binding.Id = utils.IntPtr(int(data.Vlanid.ValueInt64()))
 	}
 	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		vlan_nsip_binding.Ipaddress = data.Ipaddress.ValueString()
@@ -102,16 +107,56 @@ func vlan_nsip_bindingGetThePayloadFromthePlan(ctx context.Context, data *VlanNs
 	return vlan_nsip_binding
 }
 
+// buildVlanNsipBindingId composes the composite key:value ID from the model.
+func buildVlanNsipBindingId(data *VlanNsipBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("vlanid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vlanid.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	return strings.Join(idParts, ",")
+}
+
 func vlan_nsip_bindingSetAttrFromGet(ctx context.Context, data *VlanNsipBindingResourceModel, getResponseData map[string]interface{}) *VlanNsipBindingResourceModel {
 	tflog.Debug(ctx, "In vlan_nsip_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model (preserve prior plan/state values when the
+	// server does not echo a field).
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Id = types.Int64Value(intVal)
+			data.Vlanid = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+		data.Ipaddress = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
+		data.Ownergroup = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["td"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Td = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// vlan_nsip_bindingSetAttrFromGetForDatasource faithfully copies all fields from the
+// GET response and sets the synthetic composite ID (datasource has no Create).
+func vlan_nsip_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VlanNsipBindingResourceModel, getResponseData map[string]interface{}) *VlanNsipBindingResourceModel {
+	tflog.Debug(ctx, "In vlan_nsip_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["id"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Vlanid = types.Int64Value(intVal)
 		}
 	} else {
-		data.Id = types.Int64Null()
+		data.Vlanid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
@@ -136,15 +181,7 @@ func vlan_nsip_bindingSetAttrFromGet(ctx context.Context, data *VlanNsipBindingR
 		data.Td = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(buildVlanNsipBindingId(data))
 
 	return data
 }
