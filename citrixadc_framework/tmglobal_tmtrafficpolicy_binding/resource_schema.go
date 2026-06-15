@@ -59,8 +59,7 @@ func (r *TmglobalTmtrafficpolicyBindingResource) Schema(ctx context.Context, req
 				Description: "The name of the policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
