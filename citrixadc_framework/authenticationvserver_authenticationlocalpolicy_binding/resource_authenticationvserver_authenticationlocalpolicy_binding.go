@@ -3,7 +3,7 @@ package authenticationvserver_authenticationlocalpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -60,7 +60,7 @@ func (r *AuthenticationvserverAuthenticationlocalpolicyBindingResource) Create(c
 	authenticationvserver_authenticationlocalpolicy_binding := authenticationvserver_authenticationlocalpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
+	// Binding resource - use UpdateUnnamedResource (NITRO add for this binding is PUT)
 	err := r.client.UpdateUnnamedResource(service.Authenticationvserver_authenticationlocalpolicy_binding.Type(), &authenticationvserver_authenticationlocalpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationvserver_authenticationlocalpolicy_binding, got error: %s", err))
@@ -69,12 +69,11 @@ func (r *AuthenticationvserverAuthenticationlocalpolicyBindingResource) Create(c
 
 	tflog.Trace(ctx, "Created authenticationvserver_authenticationlocalpolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Legacy-compatible composite ID: name,policy (matches resource_id_mapping.json).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -117,26 +116,9 @@ func (r *AuthenticationvserverAuthenticationlocalpolicyBindingResource) Update(c
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating authenticationvserver_authenticationlocalpolicy_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		authenticationvserver_authenticationlocalpolicy_binding := authenticationvserver_authenticationlocalpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Authenticationvserver_authenticationlocalpolicy_binding.Type(), &authenticationvserver_authenticationlocalpolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationvserver_authenticationlocalpolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated authenticationvserver_authenticationlocalpolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for authenticationvserver_authenticationlocalpolicy_binding resource, skipping update")
-	}
+	// No-op update: every attribute is RequiresReplace, so Terraform never reaches
+	// Update with a real change. Just re-read and persist (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for authenticationvserver_authenticationlocalpolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readAuthenticationvserverAuthenticationlocalpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -156,7 +138,8 @@ func (r *AuthenticationvserverAuthenticationlocalpolicyBindingResource) Delete(c
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_authenticationlocalpolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ID is legacy-compatible name,policy; ParseIdString handles both new and legacy formats.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -169,18 +152,23 @@ func (r *AuthenticationvserverAuthenticationlocalpolicyBindingResource) Delete(c
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
-	}
+	// Build delete args. URL-encode arg values to handle slashy/special characters
+	// (mirrors the SDK v2 resource's url.QueryEscape behavior).
+	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
 	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationlocalpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_authenticationlocalpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_authenticationlocalpolicy_binding, got error: %s", err))
 		return
@@ -192,7 +180,7 @@ func (r *AuthenticationvserverAuthenticationlocalpolicyBindingResource) Delete(c
 // Helper function to read authenticationvserver_authenticationlocalpolicy_binding data from API
 func (r *AuthenticationvserverAuthenticationlocalpolicyBindingResource) readAuthenticationvserverAuthenticationlocalpolicyBindingFromApi(ctx context.Context, data *AuthenticationvserverAuthenticationlocalpolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Case 4: Array filter with parent ID - parse from ID (legacy order name,policy)
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
@@ -202,6 +190,12 @@ func (r *AuthenticationvserverAuthenticationlocalpolicyBindingResource) readAuth
 	name_Name, ok := idMap["name"]
 	if !ok {
 		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
 		return
 	}
 
@@ -224,61 +218,10 @@ func (r *AuthenticationvserverAuthenticationlocalpolicyBindingResource) readAuth
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding for this policy.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
 			foundIndex = i
 			break
 		}
@@ -286,7 +229,7 @@ func (r *AuthenticationvserverAuthenticationlocalpolicyBindingResource) readAuth
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationlocalpolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "authenticationvserver_authenticationlocalpolicy_binding not found with the provided ID attributes")
 		return
 	}
 
