@@ -234,3 +234,19 @@ PATTERNS: 7 (datasource setter split), 13 (drop Computed where no GET echo)
 FILES CHANGED: citrixadc_framework/vlan_nsip6_binding/resource_schema.go, citrixadc_framework/vlan_nsip6_binding/resource_vlan_nsip6_binding.go, citrixadc_framework/vlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vlan_nsip6_binding/datasource_vlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: authenticationvserver_auditnslogpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:48:29Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccAuthenticationvserver_auditnslogpolicy_binding_basic|TestAccAuthenticationvserverAuditnslogpolicyBindingDataSource_basic
+TESTS:
+  - TestAccAuthenticationvserver_auditnslogpolicy_binding_basic ............ PASS
+  - TestAccAuthenticationvserverAuditnslogpolicyBindingDataSource_basic .... PASS
+  - (no ephemeral tests; resource has no x-secret-attr) ................... N/A
+BACKWARD-COMPAT: re-added dropped bindpoint attr (SDK v2 + NITRO struct + test); narrowed composite ID from 4 keys to canonical name,policy per resource_id_mapping.json; fixed Read/Delete match+args to key off policy; URL-encoded Delete args via DeleteResourceWithArgs; Create stays POST/UpdateUnnamedResource (PUT) as in SDK v2; datasource groupextraction/secondary relaxed Required->Optional+Computed.
+DATASOURCE: healthy after Pattern 7 split (added xxxSetAttrFromGetForDatasource, sets own name,policy ID); added bindpoint attr; filter by policy only.
+PATTERNS: 7, 13 (+ binding-family: re-add dropped attr, URL-encode delete args, ID-order vs mapping, Required/Optional drift)
+FILES CHANGED: citrixadc_framework/authenticationvserver_auditnslogpolicy_binding/resource_authenticationvserver_auditnslogpolicy_binding.go, citrixadc_framework/authenticationvserver_auditnslogpolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_auditnslogpolicy_binding/datasource_authenticationvserver_auditnslogpolicy_binding.go, citrixadc_framework/authenticationvserver_auditnslogpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/authenticationvserver_auditnslogpolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc touched)
+BLOCKER: none
+========================================
