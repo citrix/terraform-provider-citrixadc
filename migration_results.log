@@ -1302,5 +1302,18 @@ BACKWARD-COMPAT: full parity, no resource/datasource code changes needed. SDK v2
 DATASOURCE: healthy as-is; both name and vserver are echoed by GET so the shared SetAttrFromGet works for resource and datasource (no Pattern 7 split needed).
 PATTERNS: none (sanctioned Constraint-1 ID-parse helper edit only)
 FILES CHANGED: citrixadc_framework/acctests/csvserver_gslbvserver_binding_test.go (ID-parse helper lines in bindingExist only; added utils import)
+RESOURCE: csvserver_vpnvserver_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:55:00Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccCsvserver_vpnvserver_binding($|_basic|DataSource)
+TESTS:
+  - TestAccCsvserver_vpnvserver_binding_basic ............ PASS
+  - TestAccCsvserver_vpnvserver_bindingDataSource_basic .. PASS
+  - (no ephemeral test — no secret attributes) .......... N/A
+BACKWARD-COMPAT: schema parity OK (name/vserver both Required+RequiresReplace match SDK v2 ForceNew); Create switched from UpdateUnnamedResource(PUT) to AddResource("",..)(POST) to match SDK v2 contract; ID adopts new key:value format, legacyOrder name,vserver matches resource_id_mapping.json.
+DATASOURCE: healthy as-is (shares SetAttrFromGet; both name+vserver echoed by GET so Id resolves) — no changes needed.
+PATTERNS: 1 (PUT-where-POST in Create)
+FILES CHANGED: citrixadc_framework/csvserver_vpnvserver_binding/resource_csvserver_vpnvserver_binding.go, citrixadc_framework/acctests/csvserver_vpnvserver_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
