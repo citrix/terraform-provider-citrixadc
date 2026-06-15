@@ -764,5 +764,18 @@ BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Com
 DATASOURCE: healthy as-is (shares SetAttrFromGet which copies all GET fields; datasource test passed unchanged).
 PATTERNS: 8 (flag drift), 7/13 (Computed-after-apply via read fix), binding-family delete URL-encode (b).
 FILES CHANGED: citrixadc_framework/cmpglobal_cmppolicy_binding/resource_cmpglobal_cmppolicy_binding.go, citrixadc_framework/cmpglobal_cmppolicy_binding/resource_schema.go, citrixadc_framework/acctests/cmpglobal_cmppolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc file modified.
+RESOURCE: crvserver_crpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:03:13Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccCrvserver_crpolicy_binding_basic|TestAcccrvserver_crpolicy_bindingDataSource_basic
+TESTS:
+  - TestAccCrvserver_crpolicy_binding_basic .......... PASS
+  - TestAcccrvserver_crpolicy_bindingDataSource_basic. PASS
+  - (no ephemeral test; resource has no secret attrs)
+BACKWARD-COMPAT: re-added dropped attr 'bindpoint' (in SDK v2 schema + NITRO struct) to model/schema/payload/setters; reverted labelname/labeltype from Required to Optional (SDK v2 was Optional+Computed; test omits them); changed Create from UpdateUnnamedResource(PUT) to AddResource(POST) to match SDK v2; dropped spurious Computed from bindpoint/labelname/labeltype/targetvserver (not echoed by binding GET -> were unknown-after-apply); kept gotopriorityexpression/invoke/priority Optional+Computed (GET echoes them); ID adopts new key:value format, legacy 'name,policyname' order matches resource_id_mapping.json.
+DATASOURCE: healthy; added 'bindpoint' attr; split setter -> datasource now calls crvserver_crpolicy_bindingSetAttrFromGetForDatasource (Pattern 7) which copies all fields + sets composite ID.
+PATTERNS: 1, 7, 8, 13
+FILES CHANGED: citrixadc_framework/crvserver_crpolicy_binding/resource_schema.go, citrixadc_framework/crvserver_crpolicy_binding/resource_crvserver_crpolicy_binding.go, citrixadc_framework/crvserver_crpolicy_binding/datasource_crvserver_crpolicy_binding.go, citrixadc_framework/crvserver_crpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_crpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
