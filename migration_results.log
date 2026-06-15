@@ -1880,3 +1880,19 @@ PATTERNS: Constraint-1 sanctioned ID-parse helper exception (new key:value ID fo
 FILES CHANGED: citrixadc_framework/acctests/nsservicepath_nsservicefunction_binding_test.go (bindingExist helper ID-parse lines only -> utils.ParseIdString)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: service_lbmonitor_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:34:58Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccService_lbmonitor_binding($|_|DataSource)
+TESTS:
+  - TestAccService_lbmonitor_binding_basic ............ PASS
+  - TestAccService_lbmonitor_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; no secret attributes) ........ N/A
+BACKWARD-COMPAT: Framework schema already matched SDK v2 contract (name/monitor_name Required+ForceNew->RequiresReplace; monstate/passive/weight Optional+Computed+ForceNew; types parity; Create=UpdateUnnamedResource PUT same as SDK v2; ID adopts new key:value format with resource_id_mapping.json="name,monitor_name" for legacy import). No resource/datasource Go changes needed. Only fix: sanctioned ID-parse helper lines in the Exist check (raw SplitN -> utils.ParseIdString) so the new key:value ID resolves.
+DATASOURCE: healthy as-is (shared SetAttrFromGet returns monstate/weight from GET; datasource test asserts monstate=ENABLED, weight=2 and passed; no Pattern 7 split required).
+PATTERNS: none (no codegen bug; only the sanctioned Constraint-1 ID-parse helper edit).
+FILES CHANGED: citrixadc_framework/acctests/service_lbmonitor_binding_test.go (ID-parse helper lines only). No doc modified. No resource/datasource/provider Go changes.
+BLOCKER: none
+========================================
