@@ -1763,5 +1763,18 @@ BACKWARD-COMPAT: Framework resource already backward-compatible with SDK v2 (nam
 DATASOURCE: healthy as-is (both keys echoed by GET; shared SetAttrFromGet copies both + sets Id; no Pattern 7 split required).
 PATTERNS: Constraint-1 sanctioned ID-parse helper exception (new key:value ID broke raw strings.SplitN in Exist helper).
 FILES CHANGED: citrixadc_framework/acctests/mapdomain_mapbmr_binding_test.go (ID-parse helper lines only; NO doc, NO Framework resource/datasource code changes)
+RESOURCE: netprofile_srcportset_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:16:51Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccNetprofile_srcportset_binding($|_basic|DataSource)
+TESTS:
+  - TestAccNetprofile_srcportset_binding_basic ............ PASS
+  - TestAccNetprofile_srcportset_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: full parity - name/srcportrange both Required+RequiresReplace (matches SDK v2 ForceNew); Create keeps UpdateUnnamedResource (PUT) matching SDK v2; new key:value ID format with resource_id_mapping.json "name,srcportrange" matching legacy order; no dropped attrs, no flag drift. No resource/datasource code changes needed.
+DATASOURCE: healthy as-is (shares SetAttrFromGet; both name+srcportrange echoed by GET, so no Pattern 7 split needed; sets data.Id correctly)
+PATTERNS: none (implementation already correct; only sanctioned ID-parse helper fix)
+FILES CHANGED: citrixadc_framework/acctests/netprofile_srcportset_binding_test.go (Constraint-1 sanctioned ID-parse helper lines only; NO docs, NO resource/datasource code)
 BLOCKER: none
 ========================================
