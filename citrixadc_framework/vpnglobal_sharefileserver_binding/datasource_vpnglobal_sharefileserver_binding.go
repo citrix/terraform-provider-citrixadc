@@ -92,7 +92,7 @@ func (d *VpnglobalSharefileserverBindingDataSource) Read(ctx context.Context, re
 		return
 	}
 
-	vpnglobal_sharefileserver_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnglobal_sharefileserver_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

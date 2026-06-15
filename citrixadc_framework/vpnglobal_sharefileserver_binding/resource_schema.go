@@ -30,8 +30,11 @@ func (r *VpnglobalSharefileserverBindingResource) Schema(ctx context.Context, re
 				Description: "The ID of the vpnglobal_sharefileserver_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// Pattern 13: gotopriorityexpression is a pure user input that the NITRO
+				// GET for this binding does not echo back. Keeping Computed would force
+				// "known after apply"/inconsistent-result churn; it is Optional only,
+				// matching the SDK v2 user-facing contract (omitting it leaves it unset).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -63,10 +66,31 @@ func vpnglobal_sharefileserver_bindingGetThePayloadFromthePlan(ctx context.Conte
 	return vpnglobal_sharefileserver_binding
 }
 
+// vpnglobal_sharefileserver_bindingSetAttrFromGet is the RESOURCE setter: it preserves
+// user-supplied inputs that the NITRO GET does not echo back. The binding GET only
+// returns "sharefile" (and stateflag); it never echoes "gotopriorityexpression", so we
+// MUST NOT null it here or Terraform reports "inconsistent result after apply"
+// (Pattern 7 — server-non-echoed input). The id is set once in Create, not here.
 func vpnglobal_sharefileserver_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalSharefileserverBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalSharefileserverBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_sharefileserver_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// gotopriorityexpression is a write-only input not echoed by GET — preserve the
+	// existing plan/state value; do not overwrite or null it.
+
+	if val, ok := getResponseData["sharefile"]; ok && val != nil {
+		data.Sharefile = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// vpnglobal_sharefileserver_bindingSetAttrFromGetForDatasource is the DATASOURCE setter
+// (Pattern 7 datasource split): a datasource has no prior plan/state, so it faithfully
+// copies every field from the GET response and sets its own id (the datasource never
+// calls Create). gotopriorityexpression is not echoed by GET, so it is set to null.
+func vpnglobal_sharefileserver_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalSharefileserverBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalSharefileserverBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_sharefileserver_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -78,7 +102,7 @@ func vpnglobal_sharefileserver_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Sharefile = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Sharefile.ValueString()))
 
