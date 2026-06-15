@@ -3,6 +3,7 @@ package vpnglobal_auditsyslogpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -150,10 +151,18 @@ func (r *VpnglobalAuditsyslogpolicyBindingResource) Delete(ctx context.Context, 
 
 	tflog.Debug(ctx, "Deleting vpnglobal_auditsyslogpolicy_binding resource")
 	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
+	// Single unique attribute - ID is the plain value.
+	// URL-encode arg values (slashy/special chars), matching the SDK v2 resource.
 	policyname_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("policyname:%s", policyname_value),
+		fmt.Sprintf("policyname:%s", url.QueryEscape(policyname_value)),
+	}
+	// Mirror the SDK v2 delete args: include secondary / groupextraction when set.
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%t", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%t", data.Groupextraction.ValueBool()))))
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_auditsyslogpolicy_binding.Type(), "", args)
