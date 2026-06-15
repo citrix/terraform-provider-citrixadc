@@ -3,6 +3,7 @@ package vpnvserver_appcontroller_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -166,12 +167,15 @@ func (r *VpnvserverAppcontrollerBindingResource) Delete(ctx context.Context, req
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// The appcontroller value can contain special characters (e.g. URLs like
+	// "http://www.example.com"); NITRO requires the delete arg value to be
+	// URL-encoded (mirrors the SDK v2 resource which used url.QueryEscape).
+	args := make([]string, 0)
 	if val, ok := idMap["appcontroller"]; ok && val != "" {
-		argsMap["appcontroller"] = val
+		args = append(args, fmt.Sprintf("appcontroller:%v", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_appcontroller_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_appcontroller_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_appcontroller_binding, got error: %s", err))
 		return
