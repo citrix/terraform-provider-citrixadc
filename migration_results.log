@@ -1880,3 +1880,18 @@ PATTERNS: Constraint-1 sanctioned ID-parse helper exception (new key:value ID fo
 FILES CHANGED: citrixadc_framework/acctests/nsservicepath_nsservicefunction_binding_test.go (bindingExist helper ID-parse lines only -> utils.ParseIdString)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: policypatset_pattern_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:29:14Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccPolicypatset_pattern_binding($|_|DataSource)
+TESTS:
+  - TestAccPolicypatset_pattern_binding_basic ............ PASS
+  - TestAccPolicypatset_pattern_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: codegen misclassified this binding_with_parent as a single-key named_resource. Reconciled: composite ID name:string (matches resource_id_mapping.json "name,string"); Create switched AddResource(POST)->UpdateUnnamedResource(PUT) per SDK v2; Read switched FindResource->FindResourceArrayWithParams(name)+filter on String; Delete switched DeleteResource->DeleteResourceWithArgsMap(name,{String:url.QueryEscape(value)}); 'string' Optional+Computed->Required (SDK v2 contract); Optional+Computed server attrs (charset/comment/feature/index) resolved to null when GET omits them to fix unknown-after-apply.
+DATASOURCE: healthy; updated to FindResourceArrayWithParams+filter and split setter (xxxSetAttrFromGetForDatasource) so it copies GET fields and sets composite Id.
+PATTERNS: 1 (PUT-vs-POST), 7 (split datasource setter / preserve keys), 13 (drop unknown-after-apply on Optional+Computed), plus binding Delete url-encode arg.
+FILES CHANGED: citrixadc_framework/policypatset_pattern_binding/resource_schema.go, citrixadc_framework/policypatset_pattern_binding/resource_policypatset_pattern_binding.go, citrixadc_framework/policypatset_pattern_binding/datasource_policypatset_pattern_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/policypatset_pattern_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================

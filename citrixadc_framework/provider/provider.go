@@ -545,8 +545,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policymap"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policyparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policypatset"
-	// policypatset_pattern_binding temporarily de-registered: pre-existing codegen bug (malformed tfsdk:"String") fails provider schema validation. Unrelated to vlan_nsip_binding migration.
-	// "github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policypatset_pattern_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policypatset_pattern_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policystringmap"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policystringmap_pattern_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ptp"
@@ -1260,7 +1259,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		nstrafficdomain_vxlan_binding.NewNstrafficdomainVxlanBindingResource,
 		nsservicepath_nsservicefunction_binding.NewNsservicepathNsservicefunctionBindingResource,
 		policydataset_value_binding.NewPolicydatasetValueBindingResource,
-		// policypatset_pattern_binding.NewPolicypatsetPatternBindingResource, // de-registered: pre-existing malformed schema, unrelated to vlan_nsip_binding
+		policypatset_pattern_binding.NewPolicypatsetPatternBindingResource,
 		policystringmap_pattern_binding.NewPolicystringmapPatternBindingResource,
 		responderglobal_responderpolicy_binding.NewResponderglobalResponderpolicyBindingResource,
 		responderpolicylabel_responderpolicy_binding.NewResponderpolicylabelResponderpolicyBindingResource,
@@ -2093,7 +2092,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		nstrafficdomain_vxlan_binding.NStrafficdomainVxlanBindingDataSource,
 		nsservicepath_nsservicefunction_binding.NSservicepathNsservicefunctionBindingDataSource,
 		policydataset_value_binding.POlicydatasetValueBindingDataSource,
-		// policypatset_pattern_binding.POlicypatsetPatternBindingDataSource, // de-registered: pre-existing malformed schema, unrelated to vlan_nsip_binding
+		policypatset_pattern_binding.POlicypatsetPatternBindingDataSource,
 		policystringmap_pattern_binding.POlicystringmapPatternBindingDataSource,
 		responderglobal_responderpolicy_binding.REsponderglobalResponderpolicyBindingDataSource,
 		responderpolicylabel_responderpolicy_binding.REsponderpolicylabelResponderpolicyBindingDataSource,
