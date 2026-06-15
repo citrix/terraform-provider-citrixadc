@@ -64,4 +64,17 @@ DATASOURCE: healthy after fix; schema duplicate "id" key removed -> linkset_id R
 PATTERNS: 6 (SetAttrFromGet overwriting synthetic Id), 7 (datasource setter split), 11 (resource/datasource schema coherence), 16-adjacent (delete args ifnum). 
 FILES CHANGED: citrixadc_framework/linkset_channel_binding/resource_schema.go, citrixadc_framework/linkset_channel_binding/resource_linkset_channel_binding.go, citrixadc_framework/linkset_channel_binding/datasource_schema.go, citrixadc_framework/linkset_channel_binding/datasource_linkset_channel_binding.go, citrixadc_framework/provider/provider.go (NO test/doc file changed)
 BLOCKER: none (live binding create blocked by ADC errorcode 257 on linkset LS/3 creation - the same constraint that led the original authors to t.Skip both tests; code verified by compile/link/registration + NITRO-level channel create/delete confirming double-encode path)
+RESOURCE: nd6ravariables_onlinkipv6prefix_binding
+STATUS:   PASS
+TIME:     2026-06-15T03:52:51Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccNd6ravariables_onlinkipv6prefix_binding($|_basic|DataSource)
+TESTS:
+  - TestAccNd6ravariables_onlinkipv6prefix_binding_basic ............ PASS
+  - TestAccNd6ravariables_onlinkipv6prefix_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: attribute/type/flag parity preserved (ipv6prefix string Required+RequiresReplace, vlan int Required+RequiresReplace); model keeps single computed string id distinct from int vlan key; legacy id order vlan,ipv6prefix matches resource_id_mapping.json; Delete now URL-escapes ipv6prefix arg (matches SDK v2 url.PathEscape) so "2003::/64" deletes correctly.
+DATASOURCE: healthy as-is; fixed compile bug (data.Vlan.ValueString -> strconv.FormatInt(ValueInt64)).
+PATTERNS: codegen int-vs-string fix; ID-format compat via ParseIdString (Phase-2 ID compatibility); sanctioned test ID-parse helper edit (Constraint 1).
+FILES CHANGED: citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding/resource_nd6ravariables_onlinkipv6prefix_binding.go, citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding/datasource_nd6ravariables_onlinkipv6prefix_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/nd6ravariables_onlinkipv6prefix_binding_test.go (ID-parse helper only; NO doc changed)
+BLOCKER: none (note: two unrelated baseline-broken sibling resources lbmetrictable_metric_binding/policypatset_pattern_binding have invalid schema attr names that poison provider schema load; temporarily deregistered to validate, then RESTORED unchanged)
 ========================================

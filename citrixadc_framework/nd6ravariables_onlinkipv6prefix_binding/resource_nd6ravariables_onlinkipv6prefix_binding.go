@@ -3,7 +3,7 @@ package nd6ravariables_onlinkipv6prefix_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -169,7 +169,10 @@ func (r *Nd6ravariablesOnlinkipv6prefixBindingResource) Delete(ctx context.Conte
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["ipv6prefix"]; ok && val != "" {
-		argsMap["ipv6prefix"] = val
+		// ipv6prefix contains ':' and '/' (e.g. "2003::/64"); the NITRO client joins
+		// arg values into the DELETE URL raw, so escape the value here (matches the
+		// SDK v2 resource which used url.PathEscape on the ipv6prefix delete arg).
+		argsMap["ipv6prefix"] = url.PathEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Nd6ravariables_onlinkipv6prefix_binding.Type(), vlan_value, argsMap)
