@@ -93,7 +93,7 @@ func (d *LbvserverTmtrafficpolicyBindingDataSource) Read(ctx context.Context, re
 		return
 	}
 
-	lbvserver_tmtrafficpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbvserver_tmtrafficpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

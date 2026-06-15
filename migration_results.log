@@ -1618,5 +1618,18 @@ BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct) to
 DATASOURCE: healthy; split setter per Pattern 7 (lbvserver_feopolicy_bindingSetAttrFromGetForDatasource copies all fields + sets composite Id), datasource Read updated to call it.
 PATTERNS: 1 (AddResource POST not PUT), 7 (split SetAttrFromGet: resource preserves non-echoed inputs / datasource copies all), 13 (resolve unknown Computed to null for non-echoed fields).
 FILES CHANGED: citrixadc_framework/lbvserver_feopolicy_binding/resource_lbvserver_feopolicy_binding.go, citrixadc_framework/lbvserver_feopolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_feopolicy_binding/datasource_lbvserver_feopolicy_binding.go, citrixadc_framework/lbvserver_feopolicy_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_feopolicy_binding_test.go (sanctioned ID-parse helper line only). No docs modified.
+RESOURCE: lbvserver_tmtrafficpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:59:54Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccLbvserver_tmtrafficpolicy_binding($|_|DataSource)
+TESTS:
+  - TestAccLbvserver_tmtrafficpolicy_binding_basic ............ PASS
+  - TestAccLbvserver_tmtrafficpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral test; resource has no secret attributes) .... N/A
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct); reverted labelname/labeltype from Required to Optional+Computed to match SDK v2 contract (tfdata over-marked them required); changed Create from UpdateUnnamedResource(PUT) to AddResource(POST) matching SDK v2; URL-encoded Delete arg values + re-added bindpoint/priority delete args; robust bool parse for 'invoke'; kept new key:value ID format with legacy parse via resource_id_mapping.json (name,policyname); 'order' kept (codegen choice, NITRO struct, non-breaking).
+DATASOURCE: healthy; split setter into SetAttrFromGet (resource, preserves state, no ID recompute) + SetAttrFromGetForDatasource (copies all + sets composite ID); added bindpoint to datasource schema; switched datasource Read to the new setter.
+PATTERNS: 1 (PUT->POST create), 6 (ID set once in Create, removed recompute from setter), 7 (datasource setter split), plus binding-family hints (a) re-add dropped attr, (b) URL-encode delete args, (c) Required/Optional drift, (d) create verb.
+FILES CHANGED: citrixadc_framework/lbvserver_tmtrafficpolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_tmtrafficpolicy_binding/resource_lbvserver_tmtrafficpolicy_binding.go, citrixadc_framework/lbvserver_tmtrafficpolicy_binding/datasource_lbvserver_tmtrafficpolicy_binding.go, citrixadc_framework/lbvserver_tmtrafficpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_tmtrafficpolicy_binding_test.go (sanctioned ID-parse helper lines only; no docs touched)
 BLOCKER: none
 ========================================
