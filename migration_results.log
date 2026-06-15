@@ -1277,5 +1277,18 @@ BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 + NITRO st
 DATASOURCE: healthy; split setter -> csvserver_feopolicy_bindingSetAttrFromGetForDatasource (copies all GET fields + sets composite ID); added bindpoint to datasource schema.
 PATTERNS: 1, 7, 13
 FILES CHANGED: citrixadc_framework/csvserver_feopolicy_binding/resource_csvserver_feopolicy_binding.go, citrixadc_framework/csvserver_feopolicy_binding/resource_schema.go, citrixadc_framework/csvserver_feopolicy_binding/datasource_csvserver_feopolicy_binding.go, citrixadc_framework/csvserver_feopolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_feopolicy_binding_test.go (ID-parse helper lines only - sanctioned)
+RESOURCE: csvserver_transformpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:09:07Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccCsvserver_transformpolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccCsvserver_transformpolicy_binding_basic ........ PASS
+  - TestAccCsvserver_transformpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) .. N/A
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (SDK v2 + NITRO struct, used by test); changed labelname/labeltype from Required to Optional (SDK v2 was Optional+Computed); Create switched UpdateUnnamedResource(PUT) -> AddResource(POST); Update made no-op (all attrs RequiresReplace); ID format new key:value with legacy name,policyname parse; Pattern 7 setter split for datasource.
+DATASOURCE: healthy; switched Read to new ForDatasource setter (Pattern 7 split); added bindpoint to datasource schema (shared model).
+PATTERNS: 1, 5, 6, 7, 13
+FILES CHANGED: citrixadc_framework/csvserver_transformpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_transformpolicy_binding/resource_csvserver_transformpolicy_binding.go, citrixadc_framework/csvserver_transformpolicy_binding/datasource_csvserver_transformpolicy_binding.go, citrixadc_framework/csvserver_transformpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_transformpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc files changed.
 BLOCKER: none
 ========================================

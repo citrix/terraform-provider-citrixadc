@@ -18,11 +18,11 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"fmt"
-	"strings"
 	"testing"
 )
 
@@ -130,9 +130,12 @@ func testAccCheckCsvserver_transformpolicy_bindingExist(n string, id *string) re
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 2)
-		name := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "csvserver_transformpolicy_binding",

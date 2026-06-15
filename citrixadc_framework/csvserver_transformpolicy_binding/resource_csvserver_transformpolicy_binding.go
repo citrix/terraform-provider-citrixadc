@@ -59,8 +59,9 @@ func (r *CsvserverTransformpolicyBindingResource) Create(ctx context.Context, re
 	csvserver_transformpolicy_binding := csvserver_transformpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_transformpolicy_binding.Type(), &csvserver_transformpolicy_binding)
+	// Binding resource - NITRO `add` is POST (matches SDK v2 AddResource); the
+	// nitro client omits ?idempotent=yes for *_binding types (Pattern 1).
+	_, err := r.client.AddResource(service.Csvserver_transformpolicy_binding.Type(), data.Name.ValueString(), &csvserver_transformpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_transformpolicy_binding, got error: %s", err))
 		return
@@ -114,26 +115,10 @@ func (r *CsvserverTransformpolicyBindingResource) Update(ctx context.Context, re
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating csvserver_transformpolicy_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		csvserver_transformpolicy_binding := csvserver_transformpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Csvserver_transformpolicy_binding.Type(), &csvserver_transformpolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csvserver_transformpolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated csvserver_transformpolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for csvserver_transformpolicy_binding resource, skipping update")
-	}
+	// Update is a no-op for csvserver_transformpolicy_binding; every schema attribute
+	// is RequiresReplace so Terraform recreates rather than updating in place
+	// (Pattern 5). NITRO exposes no update endpoint for this binding.
+	tflog.Debug(ctx, "Update is a no-op for csvserver_transformpolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readCsvserverTransformpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
