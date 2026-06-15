@@ -72,7 +72,7 @@ func (d *LbvserverServicegroupBindingDataSource) Read(ctx context.Context, req d
 	for i, v := range dataArr {
 		match := true
 
-		// Check servicegroupname
+		// Check servicegroupname (required lookup key)
 		if val, ok := v["servicegroupname"].(string); ok {
 			if servicegroupname_Name.IsNull() || val != servicegroupname_Name.ValueString() {
 				match = false
@@ -83,15 +83,17 @@ func (d *LbvserverServicegroupBindingDataSource) Read(ctx context.Context, req d
 			continue
 		}
 
-		// Check servicename
-		if val, ok := v["servicename"].(string); ok {
-			if servicename_Name.IsNull() || val != servicename_Name.ValueString() {
+		// Check servicename only when the user supplied it (optional narrowing filter).
+		if !servicename_Name.IsNull() {
+			if val, ok := v["servicename"].(string); ok {
+				if val != servicename_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !servicename_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
@@ -105,7 +107,7 @@ func (d *LbvserverServicegroupBindingDataSource) Read(ctx context.Context, req d
 		return
 	}
 
-	lbvserver_servicegroup_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbvserver_servicegroup_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

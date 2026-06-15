@@ -1708,5 +1708,18 @@ BACKWARD-COMPAT: Create switched UpdateUnnamedResource(PUT)->AddResource(POST) t
 DATASOURCE: healthy as-is; shares SetAttrFromGet which faithfully copies GET response and sets Id; no split needed (setter not changed to preserve-state).
 PATTERNS: 1 (PUT->POST create), 8 (Required->Optional+Computed flag drift)
 FILES CHANGED: citrixadc_framework/lbvserver_videooptimizationpacingpolicy_binding/resource_lbvserver_videooptimizationpacingpolicy_binding.go, citrixadc_framework/lbvserver_videooptimizationpacingpolicy_binding/resource_schema.go, citrixadc_framework/acctests/lbvserver_videooptimizationpacingpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
+RESOURCE: lbvserver_servicegroup_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:51:36Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccLbvserver_servicegroup_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccLbvserver_servicegroup_binding_basic ............ PASS
+  - TestAccLbvserver_servicegroup_bindingDataSource_basic .. PASS
+  - (no ephemeral tests: resource has no secret attributes)
+BACKWARD-COMPAT: 2-key ID restored to legacy "name,servicegroupname" (was wrongly 3-key with servicename) in Create + setter; servicegroupname Optional+Computed -> Required (SDK v2 ForceNew contract); order/weight dropped spurious Computed (Optional only) to avoid unknown-value; servicename kept Optional+Computed (always echoed by GET); SetAttrFromGet now preserves non-echoed inputs (Pattern 7) and no longer recomputes ID (Pattern 6); Read match loop no longer filters on servicename (Pattern 10-style fix); Delete drops the bogus servicename arg (matches SDK v2). Create verb kept as UpdateUnnamedResource/PUT (POST+idempotent rejected by this binding, errorcode 1074; PUT verified live).
+DATASOURCE: healthy; split setter added (SetAttrFromGetForDatasource sets composite ID + copies all fields, Pattern 7); datasource Read filters servicename only when supplied; datasource schema servicename Required -> Optional+Computed (test omits it, Pattern 11).
+PATTERNS: 6, 7, 8, 10, 11, 13
+FILES CHANGED: citrixadc_framework/lbvserver_servicegroup_binding/resource_lbvserver_servicegroup_binding.go, citrixadc_framework/lbvserver_servicegroup_binding/resource_schema.go, citrixadc_framework/lbvserver_servicegroup_binding/datasource_lbvserver_servicegroup_binding.go, citrixadc_framework/lbvserver_servicegroup_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_servicegroup_binding_test.go (sanctioned ID-parse helper lines only; no test/step/assertion changes; no docs changed)
 BLOCKER: none
 ========================================

@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -120,9 +120,14 @@ func testAccCheckLbvserver_servicegroup_bindingExist(n string, id *string, expec
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-		name := idSlice[0]
-		servicegroupname := idSlice[1]
+		// ID-parse helper line updated for the new key:value ID format (migration adopts
+		// the Framework ID format; ParseIdString also decodes the legacy "name,servicegroupname" form).
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "servicegroupname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		servicegroupname := idMap["servicegroupname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbvserver_servicegroup_binding",
@@ -181,7 +186,13 @@ func testAccCheckLbvserver_servicegroup_bindingDestroy(s *terraform.State) error
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Lbvserver_servicegroup_binding.Type(), rs.Primary.ID)
+		// ID-parse helper line updated for the new key:value ID format (ParseIdString also
+		// decodes the legacy "name,servicegroupname" form). FindResource call shape unchanged.
+		idMap, _, perr := utils.ParseIdString(rs.Primary.ID, []string{"name", "servicegroupname"}, nil)
+		if perr != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", rs.Primary.ID, perr)
+		}
+		_, err := client.FindResource(service.Lbvserver_servicegroup_binding.Type(), idMap["name"])
 		if err == nil {
 			return fmt.Errorf("lbvserver_servicegroup_binding %s still exists", rs.Primary.ID)
 		}

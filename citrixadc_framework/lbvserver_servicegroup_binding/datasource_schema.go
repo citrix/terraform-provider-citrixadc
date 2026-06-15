@@ -24,7 +24,8 @@ func LbvserverServicegroupBindingDataSourceSchema() schema.Schema {
 				Description: "The service group name bound to the selected load balancing virtual server.",
 			},
 			"servicename": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Service to bind to the virtual server.",
 			},
 			"weight": schema.Int64Attribute{
