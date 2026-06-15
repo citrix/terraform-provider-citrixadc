@@ -1013,5 +1013,18 @@ BACKWARD-COMPAT: tfsdk name drift invoke_labelname->invokelabelname (matches SDK
 DATASOURCE: healthy; split setter added (dnspolicylabel_dnspolicy_bindingSetAttrFromGetForDatasource) per Pattern 7, datasource Read switched to it; datasource schema attr renamed invoke_labelname->invokelabelname.
 PATTERNS: 7, 13
 FILES CHANGED: citrixadc_framework/dnspolicylabel_dnspolicy_binding/resource_schema.go, citrixadc_framework/dnspolicylabel_dnspolicy_binding/resource_dnspolicylabel_dnspolicy_binding.go, citrixadc_framework/dnspolicylabel_dnspolicy_binding/datasource_dnspolicylabel_dnspolicy_binding.go, citrixadc_framework/dnspolicylabel_dnspolicy_binding/datasource_schema.go, citrixadc_framework/acctests/dnspolicylabel_dnspolicy_binding_test.go (ID-parse helper lines only; NO docs)
+RESOURCE: gslbvserver_gslbservicegroup_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:06:00Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccGslbvserver_gslbservicegroup_binding($|_basic|DataSource)
+TESTS:
+  - TestAccGslbvserver_gslbservicegroup_binding_basic ............ PASS
+  - TestAccGslbvserver_gslbservicegroup_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ...... N/A
+BACKWARD-COMPAT: SDK v2 had ForceNew on servicegroupname and order; Framework was missing RequiresReplace on both (tfdata wrongly marked them is_updateable:true). Added RequiresReplace to servicegroupname and order to match SDK v2 ForceNew contract. name parity OK. ID format key:value with legacy "name,servicegroupname" mapping intact; ParseIdString handles both. Create verb UpdateUnnamedResource matches SDK v2 (binding add is PUT). Update is now dead code (all attrs RequiresReplace) -> replaced with documented no-op (Pattern 5).
+DATASOURCE: healthy as-is; shares SetAttrFromGet which faithfully copies all GET fields and sets data.Id (no null-regression), so no Pattern 7 split needed. servicegroupname Required as lookup key.
+PATTERNS: 5 (no-op Update), plus ForceNew/RequiresReplace parity fix.
+FILES CHANGED: citrixadc_framework/gslbvserver_gslbservicegroup_binding/resource_schema.go, citrixadc_framework/gslbvserver_gslbservicegroup_binding/resource_gslbvserver_gslbservicegroup_binding.go, citrixadc_framework/acctests/gslbvserver_gslbservicegroup_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
 BLOCKER: none
 ========================================
