@@ -60,8 +60,8 @@ func (r *SslservicegroupSslcertkeyBindingResource) Create(ctx context.Context, r
 	sslservicegroup_sslcertkey_binding := sslservicegroup_sslcertkey_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Sslservicegroup_sslcertkey_binding.Type(), &sslservicegroup_sslcertkey_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource), Pattern 1
+	_, err := r.client.AddResource(service.Sslservicegroup_sslcertkey_binding.Type(), "", &sslservicegroup_sslcertkey_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservicegroup_sslcertkey_binding, got error: %s", err))
 		return
@@ -233,70 +233,39 @@ func (r *SslservicegroupSslcertkeyBindingResource) readSslservicegroupSslcertkey
 	for i, v := range dataArr {
 		match := true
 
-		// Check ca
-		if idVal, ok := idMap["ca"]; ok {
-			if val, ok := v["ca"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
+		// Check ca - only filter when the ID carries a non-empty value
+		if idVal, ok := idMap["ca"]; ok && idVal != "" {
+			idValBool, _ := strconv.ParseBool(idVal)
+			if val, ok := v["ca"].(bool); !ok || val != idValBool {
 				match = false
 				continue
 			}
-		} else if _, ok := v["ca"].(bool); ok {
-			match = false
-			continue
 		}
 
-		// Check certkeyname
-		if idVal, ok := idMap["certkeyname"]; ok {
-			if val, ok := v["certkeyname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
+		// Check certkeyname - only filter when the ID carries a non-empty value
+		if idVal, ok := idMap["certkeyname"]; ok && idVal != "" {
+			if val, ok := v["certkeyname"].(string); !ok || val != idVal {
 				match = false
 				continue
 			}
-		} else if _, ok := v["certkeyname"].(string); ok {
-			match = false
-			continue
 		}
 
-		// Check crlcheck
-		if idVal, ok := idMap["crlcheck"]; ok {
-			if val, ok := v["crlcheck"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
+		// Check crlcheck - only filter when the ID carries a non-empty value
+		// (NITRO GET does not echo crlcheck, so an empty ID value must not reject records)
+		if idVal, ok := idMap["crlcheck"]; ok && idVal != "" {
+			if val, ok := v["crlcheck"].(string); !ok || val != idVal {
 				match = false
 				continue
 			}
-		} else if _, ok := v["crlcheck"].(string); ok {
-			match = false
-			continue
 		}
 
-		// Check snicert
-		if idVal, ok := idMap["snicert"]; ok {
-			if val, ok := v["snicert"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
+		// Check snicert - only filter when the ID carries a non-empty value
+		if idVal, ok := idMap["snicert"]; ok && idVal != "" {
+			idValBool, _ := strconv.ParseBool(idVal)
+			if val, ok := v["snicert"].(bool); !ok || val != idValBool {
 				match = false
 				continue
 			}
-		} else if _, ok := v["snicert"].(bool); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
