@@ -792,3 +792,19 @@ PATTERNS: 1, 5, 7, 13
 FILES CHANGED: citrixadc_framework/crvserver_appqoepolicy_binding/resource_schema.go, citrixadc_framework/crvserver_appqoepolicy_binding/resource_crvserver_appqoepolicy_binding.go, citrixadc_framework/crvserver_appqoepolicy_binding/datasource_crvserver_appqoepolicy_binding.go, citrixadc_framework/crvserver_appqoepolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_appqoepolicy_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: crvserver_analyticsprofile_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:23:53Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAcc[cC]rvserver_analyticsprofile_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccCrvserver_analyticsprofile_binding_basic ............ PASS
+  - TestAcccrvserver_analyticsprofile_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) .... N/A
+BACKWARD-COMPAT: Framework resource already matched the SDK v2 contract (attr names/types, ForceNew->RequiresReplace, UpdateUnnamedResource PUT create, DeleteResourceWithArgsMap delete, legacy ID order name,analyticsprofile in resource_id_mapping.json + ParseIdString). analyticsprofile is Required in Framework vs Optional+Computed in SDK v2 - kept Required (it is x-unique-attr, part of ID + delete args, always supplied; Pattern 11 composite-key consistency). No Framework code changes needed.
+DATASOURCE: healthy as-is; shares SetAttrFromGet (both keys echoed by GET, no server-overridden non-echoed fields, so no Pattern 7 split needed).
+PATTERNS: none required in resource code (reviewed 6/7/10/11/13); Constraint-1 sanctioned ID-parse helper edit applied to test.
+FILES CHANGED: citrixadc_framework/acctests/crvserver_analyticsprofile_binding_test.go (ID-parse helper lines only: raw strings.SplitN -> utils.ParseIdString in Exist/NotExist helpers; import swap strings->utils). NO doc modified.
+BLOCKER: none
+========================================
