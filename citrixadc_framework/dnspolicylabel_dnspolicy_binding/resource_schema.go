@@ -24,7 +24,7 @@ type DnspolicylabelDnspolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
-	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+	InvokeLabelname        types.String `tfsdk:"invokelabelname"`
 	Labelname              types.String `tfsdk:"labelname"`
 	Labeltype              types.String `tfsdk:"labeltype"`
 	Policyname             types.String `tfsdk:"policyname"`
@@ -55,8 +55,10 @@ func (r *DnspolicylabelDnspolicyBindingResource) Schema(ctx context.Context, req
 				},
 				Description: "Invoke flag.",
 			},
-			"invoke_labelname": schema.StringAttribute{
-				Required: true,
+			"invokelabelname": schema.StringAttribute{
+				// Optional only (no Computed): the binding GET never echoes this field,
+				// so a Computed value can never be resolved after apply (Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -70,7 +72,9 @@ func (r *DnspolicylabelDnspolicyBindingResource) Schema(ctx context.Context, req
 				Description: "Name of the dns policy label.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				// Optional only (no Computed): the binding GET never echoes this field,
+				// so a Computed value can never be resolved after apply (Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -124,10 +128,52 @@ func dnspolicylabel_dnspolicy_bindingGetThePayloadFromthePlan(ctx context.Contex
 	return dnspolicylabel_dnspolicy_binding
 }
 
+// dnspolicylabel_dnspolicy_bindingSetAttrFromGet is the resource-side state setter.
+// All attributes except the unique keys (labelname, policyname) are RequiresReplace and
+// several (gotopriorityexpression, invoke, invokelabelname, labeltype) are server-derived
+// / not echoed back for a binding GET. Overwriting them from a sparse GET response would
+// either wipe the user's configured values or set "inconsistent result after apply"
+// errors (Pattern 7 / Pattern 13). So preserve the existing plan/state values; only
+// adopt a GET value when it is present, otherwise leave the model field untouched.
 func dnspolicylabel_dnspolicy_bindingSetAttrFromGet(ctx context.Context, data *DnspolicylabelDnspolicyBindingResourceModel, getResponseData map[string]interface{}) *DnspolicylabelDnspolicyBindingResourceModel {
 	tflog.Debug(ctx, "In dnspolicylabel_dnspolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Preserve user-supplied / server-overridden inputs. Only adopt a GET value when
+	// it is present and non-nil; never null out an existing value.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["invoke_labelname"]; ok && val != nil {
+		data.InvokeLabelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	// ID is set once in Create; do not recompute here.
+	return data
+}
+
+// dnspolicylabel_dnspolicy_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (the datasource has no prior plan/state to preserve) and
+// sets the composite ID (Pattern 7 datasource split).
+func dnspolicylabel_dnspolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *DnspolicylabelDnspolicyBindingResourceModel, getResponseData map[string]interface{}) *DnspolicylabelDnspolicyBindingResourceModel {
+	tflog.Debug(ctx, "In dnspolicylabel_dnspolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -166,7 +212,7 @@ func dnspolicylabel_dnspolicy_bindingSetAttrFromGet(ctx context.Context, data *D
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create path).
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("labelname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Labelname.ValueString()))))

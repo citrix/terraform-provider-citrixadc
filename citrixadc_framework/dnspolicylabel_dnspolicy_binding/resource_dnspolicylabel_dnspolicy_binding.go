@@ -3,6 +3,7 @@ package dnspolicylabel_dnspolicy_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -169,6 +170,11 @@ func (r *DnspolicylabelDnspolicyBindingResource) Delete(ctx context.Context, req
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
 		argsMap["policyname"] = val
+	}
+	// priority disambiguates multiple policy bindings on the same label (matches the
+	// SDK v2 delete contract which passed both policyname and priority).
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		argsMap["priority"] = strconv.FormatInt(data.Priority.ValueInt64(), 10)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Dnspolicylabel_dnspolicy_binding.Type(), labelname_value, argsMap)
