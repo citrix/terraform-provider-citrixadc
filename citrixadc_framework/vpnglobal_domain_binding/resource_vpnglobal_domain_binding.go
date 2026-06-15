@@ -3,9 +3,9 @@ package vpnglobal_domain_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -150,10 +150,12 @@ func (r *VpnglobalDomainBindingResource) Delete(ctx context.Context, req resourc
 
 	tflog.Debug(ctx, "Deleting vpnglobal_domain_binding resource")
 	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
+	// Single unique attribute - ID is the plain value.
+	// URL-encode the value: intranetdomain can be a URL with '/' and ':'
+	// (matches the SDK v2 resource which used url.QueryEscape).
 	intranetdomain_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("intranetdomain:%s", intranetdomain_value),
+		fmt.Sprintf("intranetdomain:%s", url.QueryEscape(intranetdomain_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_domain_binding.Type(), "", args)
@@ -168,14 +170,14 @@ func (r *VpnglobalDomainBindingResource) Delete(ctx context.Context, req resourc
 // Helper function to read vpnglobal_domain_binding data from API
 func (r *VpnglobalDomainBindingResource) readVpnglobalDomainBindingFromApi(ctx context.Context, data *VpnglobalDomainBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"intranetdomain"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
+	// Single unique attribute - the ID is the plain intranetdomain value.
+	// intranetdomain values can contain ':' (e.g. URLs like
+	// "http://www.example.com/"), so do NOT run it through ParseIdString
+	// (Pattern 10) - that would misparse "http:" as a key. Use the ID directly.
+	intranetdomain_value := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
+	var err error
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vpnglobal_domain_binding.Type(),
@@ -196,25 +198,7 @@ func (r *VpnglobalDomainBindingResource) readVpnglobalDomainBindingFromApi(ctx c
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check intranetdomain
-		if idVal, ok := idMap["intranetdomain"]; ok {
-			if val, ok := v["intranetdomain"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["intranetdomain"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["intranetdomain"].(string); ok && val == intranetdomain_value {
 			foundIndex = i
 			break
 		}

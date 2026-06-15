@@ -2645,5 +2645,18 @@ BACKWARD-COMPAT: Attribute names/types/flags/ForceNew/ID-format all matched SDK 
 DATASOURCE: healthy; split setter per Pattern 7 (vpnglobal_staserver_bindingSetAttrFromGetForDatasource copies all fields + sets Id), datasource Read switched to it.
 PATTERNS: 7, 10, 13 (+ Delete URL-encode b)
 FILES CHANGED: citrixadc_framework/vpnglobal_staserver_binding/resource_vpnglobal_staserver_binding.go, citrixadc_framework/vpnglobal_staserver_binding/resource_schema.go, citrixadc_framework/vpnglobal_staserver_binding/datasource_vpnglobal_staserver_binding.go (NO test/doc file)
+RESOURCE: vpnglobal_domain_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:54:43Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccVpnglobal_domain_binding($|_|DataSource)
+TESTS:
+  - TestAccVpnglobal_domain_binding_basic ............ PASS
+  - TestAccVpnglobal_domain_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs)
+BACKWARD-COMPAT: attr/type/flag parity matched SDK v2 (intranetdomain Required+ForceNew, gotopriorityexpression Optional+Computed+ForceNew). Fixed: (1) Read used ParseIdString on a plain-value ID that contains ':' (URL) -> "http" misparsed as key, every record rejected; switched to direct ID filter (Pattern 10). (2) Delete arg value was not URL-encoded; added url.QueryEscape to match SDK v2 (DeleteResourceWithArgs). (3) gotopriorityexpression is Optional+Computed but never echoed by NITRO GET -> resolve unknown to null in resource setter so apply does not fail with "unknown value". ID format (plain intranetdomain) and resource_id_mapping.json already correct. Create verb (UpdateUnnamedResource/PUT) matches SDK v2.
+DATASOURCE: healthy; split setter into resource (preserve state / resolve unknown) + datasource (faithful copy + set Id) per Pattern 7; datasource Read now calls the datasource setter.
+PATTERNS: 7, 10, 13
+FILES CHANGED: citrixadc_framework/vpnglobal_domain_binding/resource_vpnglobal_domain_binding.go, citrixadc_framework/vpnglobal_domain_binding/resource_schema.go, citrixadc_framework/vpnglobal_domain_binding/datasource_vpnglobal_domain_binding.go
 BLOCKER: none
 ========================================
