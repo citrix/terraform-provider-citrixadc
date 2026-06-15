@@ -66,14 +66,14 @@ func (r *LbvserverContentinspectionpolicyBindingResource) Schema(ctx context.Con
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -88,7 +88,6 @@ func (r *LbvserverContentinspectionpolicyBindingResource) Schema(ctx context.Con
 			},
 			"order": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -149,10 +148,57 @@ func lbvserver_contentinspectionpolicy_bindingGetThePayloadFromthePlan(ctx conte
 	return lbvserver_contentinspectionpolicy_binding
 }
 
+// lbvserver_contentinspectionpolicy_bindingSetAttrFromGet is the resource-side setter.
+// It preserves the plan/state value for any attribute the NITRO GET does not echo back
+// (labelname, labeltype, order are never returned for this binding) so Terraform does not
+// see an "inconsistent result after apply". It does NOT recompute the ID — the ID is set
+// exactly once in Create (Pattern 6/7/13).
 func lbvserver_contentinspectionpolicy_bindingSetAttrFromGet(ctx context.Context, data *LbvserverContentinspectionpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverContentinspectionpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In lbvserver_contentinspectionpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. Only overwrite when the field is present in the
+	// response; otherwise preserve the existing plan/state value.
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// lbvserver_contentinspectionpolicy_bindingSetAttrFromGetForDatasource is the datasource-side
+// setter (Pattern 7). The datasource has no prior plan/state, so it faithfully copies every
+// field from the GET response (nulling absent ones) and composes the ID itself.
+func lbvserver_contentinspectionpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LbvserverContentinspectionpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverContentinspectionpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In lbvserver_contentinspectionpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -203,7 +249,7 @@ func lbvserver_contentinspectionpolicy_bindingSetAttrFromGet(ctx context.Context
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create runs for datasources).
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
