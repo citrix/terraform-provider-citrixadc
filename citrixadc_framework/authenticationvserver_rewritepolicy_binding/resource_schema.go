@@ -58,7 +58,7 @@ func (r *AuthenticationvserverRewritepolicyBindingResource) Schema(ctx context.C
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
+				// Not echoed by GET — drop Computed to avoid known-after-apply churn (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -73,7 +73,7 @@ func (r *AuthenticationvserverRewritepolicyBindingResource) Schema(ctx context.C
 			},
 			"nextfactor": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				// Not echoed by GET — drop Computed to avoid known-after-apply churn (Pattern 13).
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -96,7 +96,7 @@ func (r *AuthenticationvserverRewritepolicyBindingResource) Schema(ctx context.C
 			},
 			"secondary": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
+				// Not echoed by GET — drop Computed to avoid known-after-apply churn (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -139,10 +139,46 @@ func authenticationvserver_rewritepolicy_bindingGetThePayloadFromthePlan(ctx con
 	return authenticationvserver_rewritepolicy_binding
 }
 
+// authenticationvserver_rewritepolicy_bindingSetAttrFromGet is the RESOURCE state setter.
+// The NITRO GET array for this binding echoes back only name, policy, priority,
+// gotopriorityexpression and bindpoint. It does NOT return groupextraction, secondary
+// or nextfactor, so those user inputs are PRESERVED (Pattern 7) rather than nulled, to
+// avoid "inconsistent result after apply" / perpetual diffs. The ID is set once in
+// Create and is NOT recomputed here (Pattern 6).
 func authenticationvserver_rewritepolicy_bindingSetAttrFromGet(ctx context.Context, data *AuthenticationvserverRewritepolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverRewritepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In authenticationvserver_rewritepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Echoed by GET
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	// groupextraction, secondary, nextfactor are NOT echoed by GET — preserve the
+	// existing plan/state value (do not null them).
+
+	// ID is set once in Create — do not recompute here (Pattern 6).
+	return data
+}
+
+// authenticationvserver_rewritepolicy_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE state setter (Pattern 7 split). The datasource has no prior plan/state to
+// preserve, so it copies every echoed field from the GET response and sets its own ID.
+func authenticationvserver_rewritepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationvserverRewritepolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverRewritepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In authenticationvserver_rewritepolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -176,6 +212,8 @@ func authenticationvserver_rewritepolicy_bindingSetAttrFromGet(ctx context.Conte
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
 		}
 	} else {
 		data.Priority = types.Int64Null()
@@ -186,14 +224,10 @@ func authenticationvserver_rewritepolicy_bindingSetAttrFromGet(ctx context.Conte
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID (datasource has no Create) — match the resource ID format: name,policy.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
