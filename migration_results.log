@@ -1419,3 +1419,19 @@ PATTERNS: 8
 FILES CHANGED: citrixadc_framework/lbmetrictable_metric_binding/resource_schema.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/lbmetrictable_metric_binding_test.go (ID-parse helper lines only - sanctioned exception)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lbvserver_appqoepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:24:07Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccLbvserver_appqoepolicy_binding($|_basic|DataSource)
+TESTS:
+  - TestAccLbvserver_appqoepolicy_binding_basic ............ PASS
+  - TestAccLbvserver_appqoepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: Re-added dropped 'bindpoint' (in SDK v2 schema + NITRO struct, used by test config); relaxed labelname/labeltype from Required to Optional to match SDK v2 contract; dropped spurious Computed on invoke/labelname/labeltype (not echoed by GET, Pattern 13); kept Computed on echoed bindpoint/gotopriorityexpression/priority; changed Create from UpdateUnnamedResource (PUT) to AddResource (POST) matching SDK v2 (Pattern 1); ID stays new key:value format, resource_id_mapping.json already 'name,policyname'.
+DATASOURCE: healthy; split SetAttrFromGet into resource (preserve state, Pattern 7) + ForDatasource (full copy + sets Id) and wired datasource Read to the new setter; added 'bindpoint' to datasource schema.
+PATTERNS: 1, 7, 13
+FILES CHANGED: citrixadc_framework/lbvserver_appqoepolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_appqoepolicy_binding/resource_lbvserver_appqoepolicy_binding.go, citrixadc_framework/lbvserver_appqoepolicy_binding/datasource_lbvserver_appqoepolicy_binding.go, citrixadc_framework/lbvserver_appqoepolicy_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_appqoepolicy_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================
