@@ -11,7 +11,6 @@ func SslserviceSslciphersuiteBindingDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"cipherdefaulton": schema.Int64Attribute{
-				Optional:    true,
 				Computed:    true,
 				Description: "Flag indicating whether the bound cipher was the DEFAULT cipher, bound at boot time, or any other cipher from the CLI",
 			},
