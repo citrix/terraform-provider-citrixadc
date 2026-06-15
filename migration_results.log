@@ -1105,3 +1105,19 @@ PATTERNS: 8 (Required/Optional flag correction).
 FILES CHANGED: citrixadc_framework/icaglobal_icapolicy_binding/resource_schema.go, citrixadc_framework/acctests/icaglobal_icapolicy_binding_test.go (sanctioned ID-parse helper line only). No doc modified.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: csvserver_cmppolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:33:30Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccCsvserver_cmppolicy_binding_basic$|TestAccCsvserver_cmppolicy_bindingDataSource_basic$
+TESTS:
+  - TestAccCsvserver_cmppolicy_binding_basic ............ PASS
+  - TestAccCsvserver_cmppolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs) .. N/A
+BACKWARD-COMPAT: SDK v2 had labelname/labeltype as Optional+Computed+ForceNew, but Framework schema (driven by wrong tfdata is_required:true) marked them Required; NITRO add payload marks only 'name' mandatory (red/bold). Reverted both to Optional+Computed (Pattern 8) to preserve the SDK v2 contract (test omits both). All other attribute names/types/flags/ForceNew/ID match. Create verb confirmed PUT (NITRO add=PUT) so UpdateUnnamedResource is correct. Delete args (policyname,bindpoint) URL-handled via DeleteResourceWithArgsMap. resource_id_mapping.json legacy order 'name,policyname' matches SDK v2 d.SetId.
+DATASOURCE: healthy as-is (shared SetAttrFromGet composes its own ID; no split needed; lookup keys name/policyname/bindpoint Required and coherent).
+PATTERNS: 8
+FILES CHANGED: citrixadc_framework/csvserver_cmppolicy_binding/resource_schema.go, citrixadc_framework/acctests/csvserver_cmppolicy_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================
