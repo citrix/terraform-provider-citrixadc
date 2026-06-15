@@ -3,6 +3,7 @@ package vpnvserver_vpnurl_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -166,12 +167,14 @@ func (r *VpnvserverVpnurlBindingResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	args := make([]string, 0)
 	if val, ok := idMap["urlname"]; ok && val != "" {
-		argsMap["urlname"] = val
+		// URL-encode the arg value: urlname is an intranet URL and may contain
+		// slashes / special characters that would otherwise break the delete URL.
+		args = append(args, fmt.Sprintf("urlname:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_vpnurl_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_vpnurl_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_vpnurl_binding, got error: %s", err))
 		return
