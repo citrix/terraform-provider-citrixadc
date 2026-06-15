@@ -2724,3 +2724,19 @@ PATTERNS: 2(b)/Delete-arg URL-encode (per binding-family hint b).
 FILES CHANGED: citrixadc_framework/vpnglobal_vpnnexthopserver_binding/resource_vpnglobal_vpnnexthopserver_binding.go (NO test/doc file changed)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_aaapreauthenticationpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:00:17Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccVpnvserver_aaapreauthenticationpolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnvserver_aaapreauthenticationpolicy_binding_basic ............ PASS
+  - TestAccVpnvserver_aaapreauthenticationpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) .............. N/A
+BACKWARD-COMPAT: ID format was 3-key (bindpoint:..,name:..,policy:..) but SDK v2 / resource_id_mapping.json use name,policy -> rebuilt ID as new key:value form over name,policy only (BuildId helper), Delete reads bindpoint/secondary/groupextraction from state and URL-encodes via DeleteResourceWithArgs (matches SDK v2). Dropped spurious Computed from bindpoint/gotopriorityexpression/groupextraction/priority/secondary (Optional+RequiresReplace) since binding GET does not echo them (fixed unknown-after-apply). Resource SetAttrFromGet now preserves configured inputs. Datasource bindpoint Required->Optional+Computed (lookup keys are name,policy).
+DATASOURCE: healthy; split setter (SetAttrFromGetForDatasource) added per Pattern 7, datasource Read filters on policy and sets its own ID.
+PATTERNS: 7, 13, 11, 8, plus binding-family delete URL-encode (b) and ID-order (f)
+FILES CHANGED: citrixadc_framework/vpnvserver_aaapreauthenticationpolicy_binding/resource_vpnvserver_aaapreauthenticationpolicy_binding.go, citrixadc_framework/vpnvserver_aaapreauthenticationpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_aaapreauthenticationpolicy_binding/datasource_vpnvserver_aaapreauthenticationpolicy_binding.go, citrixadc_framework/vpnvserver_aaapreauthenticationpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_aaapreauthenticationpolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc files)
+BLOCKER: none
+========================================
