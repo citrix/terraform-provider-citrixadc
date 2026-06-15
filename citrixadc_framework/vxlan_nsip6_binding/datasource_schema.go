@@ -10,7 +10,7 @@ func VxlanNsip6BindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.Int64Attribute{
+			"vxlanid": schema.Int64Attribute{
 				Required:    true,
 				Description: "A positive integer, which is also called VXLAN Network Identifier (VNI), that uniquely identifies a VXLAN.",
 			},
@@ -19,7 +19,8 @@ func VxlanNsip6BindingDataSourceSchema() schema.Schema {
 				Description: "The IP address assigned to the VXLAN.",
 			},
 			"netmask": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Subnet mask for the network address defined for this VXLAN.",
 			},
 		},

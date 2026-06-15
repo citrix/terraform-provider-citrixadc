@@ -78,3 +78,19 @@ PATTERNS: codegen int-vs-string fix; ID-format compat via ParseIdString (Phase-2
 FILES CHANGED: citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding/resource_nd6ravariables_onlinkipv6prefix_binding.go, citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding/datasource_nd6ravariables_onlinkipv6prefix_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/nd6ravariables_onlinkipv6prefix_binding_test.go (ID-parse helper only; NO doc changed)
 BLOCKER: none (note: two unrelated baseline-broken sibling resources lbmetrictable_metric_binding/policypatset_pattern_binding have invalid schema attr names that poison provider schema load; temporarily deregistered to validate, then RESTORED unchanged)
 ========================================
+========================================
+RESOURCE: vxlan_nsip6_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:22:45Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccVxlan_nsip6_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccVxlan_nsip6_binding_basic ............ PASS
+  - TestAccVxlan_nsip6_bindingDataSource_basic .. PASS
+  - ephemeral test(s) ........................... NONE (no secret attrs)
+BACKWARD-COMPAT: codegen used synthetic "id" as both the computed string ID and the integer VXLAN key (duplicate model field + duplicate schema key). Renamed the integer key to the SDK v2 user-facing name "vxlanid" (Int64, Required, RequiresReplace) per resource_citrixadc_vxlan_nsip6_binding.go and the test; kept a single computed string "id" composite (vxlanid:enc,ipaddress:enc) matching resource_id_mapping.json order "vxlanid,ipaddress". ipaddress Required+RequiresReplace; netmask Optional+Computed+RequiresReplace. Delete uses DeleteResourceWithArgs(parent=vxlanid, ipaddress[+netmask], URL-encoded). ParseIdString(legacy ["vxlanid","ipaddress"]) handles both legacy comma and new key:value IDs. Update is a documented no-op (all RequiresReplace, no NITRO set endpoint).
+DATASOURCE: fixed duplicate "id" schema key and "id"->"vxlanid" lookup; added split setter vxlan_nsip6_bindingSetAttrFromGetForDatasource (copies all fields + composes Id); resource setter preserves state (Pattern 7).
+PATTERNS: 6, 7, 5, 14(verified in lockstep)
+FILES CHANGED: citrixadc_framework/vxlan_nsip6_binding/resource_schema.go, citrixadc_framework/vxlan_nsip6_binding/resource_vxlan_nsip6_binding.go, citrixadc_framework/vxlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vxlan_nsip6_binding/datasource_vxlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vxlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
+BLOCKER: none
+========================================

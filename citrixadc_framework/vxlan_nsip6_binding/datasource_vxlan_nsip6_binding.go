@@ -42,17 +42,17 @@ func (d *VxlanNsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	id_Name := data.Id.ValueString()
+	// Case 4: Array filter with parent ID. The parent name is the integer
+	// VXLAN id (user-facing "vxlanid").
+	vxlanid_Name := fmt.Sprintf("%d", data.Vxlanid.ValueInt64())
 	ipaddress_Name := data.Ipaddress
-	netmask_Name := data.Netmask
 
 	var dataArr []map[string]interface{}
 	var err error
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vxlan_nsip6_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vxlanid_Name,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -67,33 +67,13 @@ func (d *VxlanNsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching ipaddress
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ipaddress
 		if val, ok := v["ipaddress"].(string); ok {
 			if ipaddress_Name.IsNull() || val != ipaddress_Name.ValueString() {
-				match = false
 				continue
 			}
-		} else if !ipaddress_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check netmask
-		if val, ok := v["netmask"].(string); ok {
-			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !netmask_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
 			foundIndex = i
 			break
 		}
@@ -105,7 +85,7 @@ func (d *VxlanNsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	vxlan_nsip6_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vxlan_nsip6_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
