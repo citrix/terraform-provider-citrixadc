@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -21,6 +22,7 @@ import (
 // VpnglobalVpnurlpolicyBindingResourceModel describes the resource data model.
 type VpnglobalVpnurlpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Builtin                types.List   `tfsdk:"builtin"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Policyname             types.String `tfsdk:"policyname"`
@@ -36,6 +38,15 @@ func (r *VpnglobalVpnurlpolicyBindingResource) Schema(ctx context.Context, req r
 				Computed:    true,
 				Description: "The ID of the vpnglobal_vpnurlpolicy_binding resource.",
 			},
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				// Not echoed by NITRO GET; Computed dropped to avoid unknown-after-apply (Pattern 13).
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -46,7 +57,7 @@ func (r *VpnglobalVpnurlpolicyBindingResource) Schema(ctx context.Context, req r
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
+				// Not echoed by NITRO GET; Computed dropped to avoid unknown-after-apply (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -69,7 +80,7 @@ func (r *VpnglobalVpnurlpolicyBindingResource) Schema(ctx context.Context, req r
 			},
 			"secondary": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
+				// Not echoed by NITRO GET; Computed dropped to avoid unknown-after-apply (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -84,6 +95,11 @@ func vpnglobal_vpnurlpolicy_bindingGetThePayloadFromthePlan(ctx context.Context,
 
 	// Create API request body from the model
 	vpnglobal_vpnurlpolicy_binding := vpn.Vpnglobalvpnurlpolicybinding{}
+	if !data.Builtin.IsNull() && !data.Builtin.IsUnknown() {
+		builtinList := make([]string, 0, len(data.Builtin.Elements()))
+		data.Builtin.ElementsAs(ctx, &builtinList, false)
+		vpnglobal_vpnurlpolicy_binding.Builtin = builtinList
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		vpnglobal_vpnurlpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -103,10 +119,74 @@ func vpnglobal_vpnurlpolicy_bindingGetThePayloadFromthePlan(ctx context.Context,
 	return vpnglobal_vpnurlpolicy_binding
 }
 
+// vpnglobal_vpnurlpolicy_bindingSetAttrFromGet is the resource-side state setter.
+// The NITRO GET for this binding only echoes back policyname, priority and
+// gotopriorityexpression. Fields the server does NOT echo (builtin, groupextraction,
+// secondary) are preserved from the prior plan/state so that Terraform does not see an
+// "inconsistent result after apply" when the user configured them (Pattern 7 / Pattern 13).
 func vpnglobal_vpnurlpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalVpnurlpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalVpnurlpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_vpnurlpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Builtin = listValue
+		}
+	}
+	// else: not echoed by GET - preserve existing plan/state value
+
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	// else: preserve existing value
+
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	// else: not echoed by GET - preserve existing value
+
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	// else: preserve existing value
+
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+	// else: not echoed by GET - preserve existing value
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
+	return data
+}
+
+// vpnglobal_vpnurlpolicy_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response. The datasource has no prior plan/state to preserve, so
+// non-echoed fields are set to null (Pattern 7 datasource split).
+func vpnglobal_vpnurlpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalVpnurlpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalVpnurlpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_vpnurlpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Builtin = listValue
+		} else {
+			data.Builtin = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Builtin = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -125,6 +205,8 @@ func vpnglobal_vpnurlpolicy_bindingSetAttrFromGet(ctx context.Context, data *Vpn
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
 		}
 	} else {
 		data.Priority = types.Int64Null()
@@ -135,8 +217,7 @@ func vpnglobal_vpnurlpolicy_bindingSetAttrFromGet(ctx context.Context, data *Vpn
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Set ID for the datasource (no Create to set it)
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
