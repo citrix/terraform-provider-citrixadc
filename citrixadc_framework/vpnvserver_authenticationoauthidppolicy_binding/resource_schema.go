@@ -40,8 +40,9 @@ func (r *VpnvserverAuthenticationoauthidppolicyBindingResource) Schema(ctx conte
 				Description: "The ID of the vpnvserver_authenticationoauthidppolicy_binding resource.",
 			},
 			"bindpoint": schema.StringAttribute{
+				// NITRO GET for this binding does not echo bindpoint back, so it must not be
+				// Computed (Computed would cause "inconsistent result"/known-after-apply churn).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -56,8 +57,9 @@ func (r *VpnvserverAuthenticationoauthidppolicyBindingResource) Schema(ctx conte
 				Description: "Next priority expression.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// NITRO GET for this binding does not echo groupextraction back, so it must
+				// not be Computed (would cause "inconsistent result" after apply).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -86,8 +88,9 @@ func (r *VpnvserverAuthenticationoauthidppolicyBindingResource) Schema(ctx conte
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
+				// NITRO GET for this binding does not echo secondary back, so it must not be
+				// Computed (would cause "inconsistent result" after apply).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +130,43 @@ func vpnvserver_authenticationoauthidppolicy_bindingGetThePayloadFromthePlan(ctx
 	return vpnvserver_authenticationoauthidppolicy_binding
 }
 
+// Resource-side state setter. The NITRO GET for this binding only echoes back
+// name, policy, priority and gotopriorityexpression; it does NOT return bindpoint,
+// secondary or groupextraction. Those non-echoed user inputs are PRESERVED from the
+// existing plan/state (Pattern 7) so the post-apply state matches the configuration
+// and there is no "inconsistent result after apply" error.
 func vpnvserver_authenticationoauthidppolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationoauthidppolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationoauthidppolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationoauthidppolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// bindpoint, secondary, groupextraction are NOT returned by GET -> preserve existing value.
+
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	// Set ID for the resource - composite of legacy unique attrs (name,policy),
+	// matching resource_id_mapping.json so legacy SDK v2 state imports resolve.
+	data.Id = types.StringValue(vpnvserver_authenticationoauthidppolicy_bindingComposeId(data))
+
+	return data
+}
+
+// Datasource-side state setter. Datasources have no prior plan/state to preserve,
+// so this faithfully copies every field the GET response provides and sets the ID.
+func vpnvserver_authenticationoauthidppolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationoauthidppolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationoauthidppolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_authenticationoauthidppolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,13 +205,16 @@ func vpnvserver_authenticationoauthidppolicy_bindingSetAttrFromGet(ctx context.C
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(vpnvserver_authenticationoauthidppolicy_bindingComposeId(data))
 
 	return data
+}
+
+// vpnvserver_authenticationoauthidppolicy_bindingComposeId builds the composite ID
+// from the legacy unique attrs (name,policy) in resource_id_mapping.json order.
+func vpnvserver_authenticationoauthidppolicy_bindingComposeId(data *VpnvserverAuthenticationoauthidppolicyBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
+	return strings.Join(idParts, ",")
 }

@@ -44,7 +44,6 @@ func (d *VpnvserverAuthenticationoauthidppolicyBindingDataSource) Read(ctx conte
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
-	bindpoint_Name := data.Bindpoint
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -67,33 +66,15 @@ func (d *VpnvserverAuthenticationoauthidppolicyBindingDataSource) Read(ctx conte
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policy.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bindpoint
-		if val, ok := v["bindpoint"].(string); ok {
-			if bindpoint_Name.IsNull() || val != bindpoint_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !bindpoint_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check policy
 		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
+			if policy_Name.IsNull() || val == policy_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		} else if policy_Name.IsNull() {
 			foundIndex = i
 			break
 		}
@@ -101,11 +82,11 @@ func (d *VpnvserverAuthenticationoauthidppolicyBindingDataSource) Read(ctx conte
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationoauthidppolicy_binding with bindpoint %s not found", bindpoint_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationoauthidppolicy_binding with policy %s not found", policy_Name))
 		return
 	}
 
-	vpnvserver_authenticationoauthidppolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_authenticationoauthidppolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
