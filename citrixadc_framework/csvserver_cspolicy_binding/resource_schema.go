@@ -22,6 +22,7 @@ import (
 // CsvserverCspolicyBindingResourceModel describes the resource data model.
 type CsvserverCspolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,9 +41,15 @@ func (r *CsvserverCspolicyBindingResource) Schema(ctx context.Context, req resou
 				Computed:    true,
 				Description: "The ID of the csvserver_cspolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -57,14 +64,14 @@ func (r *CsvserverCspolicyBindingResource) Schema(ctx context.Context, req resou
 				Description: "Invoke flag.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +116,9 @@ func csvserver_cspolicy_bindingGetThePayloadFromthePlan(ctx context.Context, dat
 
 	// Create API request body from the model
 	csvserver_cspolicy_binding := cs.Csvservercspolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		csvserver_cspolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_cspolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +147,60 @@ func csvserver_cspolicy_bindingGetThePayloadFromthePlan(ctx context.Context, dat
 	return csvserver_cspolicy_binding
 }
 
+// csvserver_cspolicy_bindingSetAttrFromGet is the resource-side state setter.
+// It preserves the prior plan/state value for fields the GET response does not
+// echo back (server-overridden / non-echoed inputs) so that Terraform does not
+// see a spurious diff or "inconsistent result after apply". It does NOT recompute
+// the ID (the ID is set exactly once in Create — Pattern 6).
 func csvserver_cspolicy_bindingSetAttrFromGet(ctx context.Context, data *CsvserverCspolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverCspolicyBindingResourceModel {
 	tflog.Debug(ctx, "In csvserver_cspolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. Only overwrite when the field is present in
+	// the GET response; otherwise preserve the existing plan/state value.
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
+		data.Targetlbvserver = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// csvserver_cspolicy_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (nulling fields the response omits) and sets the
+// datasource ID, since the datasource has no Create to set it (Pattern 7).
+func csvserver_cspolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CsvserverCspolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverCspolicyBindingResourceModel {
+	tflog.Debug(ctx, "In csvserver_cspolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -174,6 +234,8 @@ func csvserver_cspolicy_bindingSetAttrFromGet(ctx context.Context, data *Csvserv
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
 		}
 	} else {
 		data.Priority = types.Int64Null()
@@ -184,8 +246,7 @@ func csvserver_cspolicy_bindingSetAttrFromGet(ctx context.Context, data *Csvserv
 		data.Targetlbvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (no Create to set it).
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
