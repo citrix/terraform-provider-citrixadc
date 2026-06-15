@@ -37,16 +37,18 @@ func (r *VpnglobalAuthenticationnegotiatepolicyBindingResource) Schema(ctx conte
 				Description: "The ID of the vpnglobal_authenticationnegotiatepolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// NITRO GET does not echo this field; drop Computed so an omitted value
+				// resolves to null instead of staying unknown after apply (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// NITRO GET does not echo this field; drop Computed so an omitted value
+				// resolves to null instead of staying unknown after apply (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -103,10 +105,39 @@ func vpnglobal_authenticationnegotiatepolicy_bindingGetThePayloadFromthePlan(ctx
 	return vpnglobal_authenticationnegotiatepolicy_binding
 }
 
+// vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGet (resource path) preserves the
+// plan/state values for attributes that the NITRO GET response does NOT echo back
+// (gotopriorityexpression, groupextraction). All schema attributes are RequiresReplace, so the
+// state must match exactly what the user configured at create time to avoid an
+// "inconsistent result after apply" error (Pattern 7 / Pattern 13). The ID is set once in
+// Create, so this function must NOT recompute data.Id (Pattern 6).
 func vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// gotopriorityexpression and groupextraction are NOT echoed back by NITRO GET.
+	// Preserve the existing plan/state value (do not null it).
+
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	return data
+}
+
+// vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource (datasource path)
+// faithfully copies every field from the GET response and sets the ID, since the datasource has
+// no prior plan/state to preserve and never calls Create (Pattern 7 datasource split).
+func vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -135,7 +166,7 @@ func vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.C
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create path)
 	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
