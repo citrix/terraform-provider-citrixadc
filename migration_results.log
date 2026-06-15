@@ -3400,5 +3400,18 @@ BACKWARD-COMPAT: Resource Go files were already migrated in baseline and match S
 DATASOURCE: healthy as-is (unchanged from master); pure binding, both fields echoed by GET, shared SetAttrFromGet correct, datasource sets own ID.
 PATTERNS: Constraint-1 sanctioned ID-parse helper fix (new key:value ID broke raw strings.SplitN in Exist/NotExist helpers); replaced with utils.ParseIdString.
 FILES CHANGED: citrixadc_framework/acctests/lsngroup_lsnhttphdrlogprofile_binding_test.go (ID-parse helper lines only). No resource/datasource/doc files changed.
+RESOURCE: lsngroup_lsnlogprofile_binding
+STATUS:   PASS
+TIME:     2026-06-15T15:00:57Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccLsngroup_lsnlogprofile_binding_basic$|TestAccLsngroup_lsnlogprofile_bindingDataSource_basic$
+TESTS:
+  - TestAccLsngroup_lsnlogprofile_binding_basic ............ PASS
+  - TestAccLsngroup_lsnlogprofile_bindingDataSource_basic .. PASS
+  - (no ephemeral test - no secret attributes) ............ N/A
+BACKWARD-COMPAT: Framework impl already matched SDK v2 contract (groupname+logprofilename both Required+ForceNew/RequiresReplace, String types, no defaults/secrets). Create uses UpdateUnnamedResource = same PUT verb as SDK v2. New key:value ID format with resource_id_mapping.json "groupname,logprofilename" + ParseIdString handles legacy import. Delete uses DeleteResourceWithArgsMap (auto-encodes). No resource/datasource Go changes needed.
+DATASOURCE: healthy as-is (shares ResourceModel + SetAttrFromGet which sets data.Id; lookup keys Required).
+PATTERNS: none (impl was already correct); only sanctioned Constraint-1 ID-parse helper edit applied to test.
+FILES CHANGED: citrixadc_framework/acctests/lsngroup_lsnlogprofile_binding_test.go (ID-parse helper lines only: strings.SplitN -> utils.ParseIdString in Exist/NotExist; import swap). NO doc modified. NO resource/datasource/provider/SDKv2 modified.
 BLOCKER: none
 ========================================
