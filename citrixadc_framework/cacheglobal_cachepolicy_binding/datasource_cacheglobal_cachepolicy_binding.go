@@ -106,7 +106,7 @@ func (d *CacheglobalCachepolicyBindingDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	cacheglobal_cachepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	cacheglobal_cachepolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
