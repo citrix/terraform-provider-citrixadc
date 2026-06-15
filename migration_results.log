@@ -3195,3 +3195,19 @@ PATTERNS: hint(b) Delete-arg URL-encode; Constraint-1 sanctioned ID-parse helper
 FILES CHANGED: citrixadc_framework/vpnvserver_vpneula_binding/resource_vpnvserver_vpneula_binding.go, citrixadc_framework/acctests/vpnvserver_vpneula_binding_test.go (ID-parse helper lines only); NO doc modified.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_vpnportaltheme_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:48:12Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccVpnvserver_vpnportaltheme_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnvserver_vpnportaltheme_binding_basic ............ PASS
+  - TestAccVpnvserver_vpnportaltheme_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; no secret attrs) .................... N/A
+BACKWARD-COMPAT: attr/type/Required/ForceNew parity already correct (name+portaltheme both Required+RequiresReplace, no defaults/secrets); Create keeps UpdateUnnamedResource (PUT) matching SDK v2; Delete via DeleteResourceWithArgsMap[portaltheme] equiv to SDK v2 DeleteResourceWithArgs; ID adopts new key:value format, resource_id_mapping.json "name,portaltheme" matches SDK v2 order. No resource/datasource code changes needed.
+DATASOURCE: healthy as-is (DataSource_basic passed unchanged).
+PATTERNS: Constraint-1 sanctioned ID-parse helper exception (new key:value ID broke strings.SplitN in Exist/NotExist helpers -> ParseIdString).
+FILES CHANGED: citrixadc_framework/acctests/vpnvserver_vpnportaltheme_binding_test.go (ID-parse helper lines only)
+BLOCKER: none
+========================================
