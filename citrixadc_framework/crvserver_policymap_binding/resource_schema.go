@@ -22,6 +22,7 @@ import (
 // CrvserverPolicymapBindingResourceModel describes the resource data model.
 type CrvserverPolicymapBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,9 +41,15 @@ func (r *CrvserverPolicymapBindingResource) Schema(ctx context.Context, req reso
 				Computed:    true,
 				Description: "The ID of the crvserver_policymap_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "For a rewrite policy, the bind point to which to bind the policy. Note: This parameter applies only to rewrite policies, because content switching policies are evaluated only at request time.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -50,21 +57,20 @@ func (r *CrvserverPolicymapBindingResource) Schema(ctx context.Context, req reso
 			},
 			"invoke": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "Invoke a policy label if this policy's rule evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label to be invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -86,7 +92,6 @@ func (r *CrvserverPolicymapBindingResource) Schema(ctx context.Context, req reso
 			},
 			"priority": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -109,6 +114,9 @@ func crvserver_policymap_bindingGetThePayloadFromthePlan(ctx context.Context, da
 
 	// Create API request body from the model
 	crvserver_policymap_binding := cr.Crvserverpolicymapbinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		crvserver_policymap_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		crvserver_policymap_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +145,64 @@ func crvserver_policymap_bindingGetThePayloadFromthePlan(ctx context.Context, da
 	return crvserver_policymap_binding
 }
 
+// crvserver_policymap_bindingSetAttrFromGet updates the RESOURCE state from a GET response.
+// The NITRO GET for this binding only echoes name, policyname and targetvserver. The other
+// inputs (bindpoint, gotopriorityexpression, invoke, labelname, labeltype, priority) are NOT
+// returned by the appliance, so we must PRESERVE the prior plan/state value for those fields
+// instead of nulling them — otherwise Terraform reports "inconsistent result after apply"
+// and perpetual diffs (Pattern 7 / Pattern 13). The ID is set once in Create, not here.
 func crvserver_policymap_bindingSetAttrFromGet(ctx context.Context, data *CrvserverPolicymapBindingResourceModel, getResponseData map[string]interface{}) *CrvserverPolicymapBindingResourceModel {
 	tflog.Debug(ctx, "In crvserver_policymap_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Fields the GET echoes back: adopt the live value.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["targetvserver"]; ok && val != nil {
+		data.Targetvserver = types.StringValue(val.(string))
+	}
+
+	// Fields NOT echoed by NITRO (bindpoint, gotopriorityexpression, invoke, labelname,
+	// labeltype, priority): only adopt if the appliance actually returned them; otherwise
+	// preserve the existing plan/state value (do nothing).
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// crvserver_policymap_bindingSetAttrFromGetForDatasource faithfully copies every field from
+// the GET response and sets the ID. The datasource has no prior plan/state to preserve, so it
+// must copy the response verbatim (Pattern 7 datasource split).
+func crvserver_policymap_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CrvserverPolicymapBindingResourceModel, getResponseData map[string]interface{}) *CrvserverPolicymapBindingResourceModel {
+	tflog.Debug(ctx, "In crvserver_policymap_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -174,6 +236,8 @@ func crvserver_policymap_bindingSetAttrFromGet(ctx context.Context, data *Crvser
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
 		}
 	} else {
 		data.Priority = types.Int64Null()
@@ -184,7 +248,7 @@ func crvserver_policymap_bindingSetAttrFromGet(ctx context.Context, data *Crvser
 		data.Targetvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create to set it).
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
