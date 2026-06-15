@@ -11,7 +11,8 @@ func VpnvserverAppflowpolicyBindingDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"bindpoint": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Bindpoint to which the policy is bound.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{

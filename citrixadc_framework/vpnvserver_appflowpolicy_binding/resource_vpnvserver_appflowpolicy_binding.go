@@ -3,6 +3,7 @@ package vpnvserver_appflowpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -167,15 +168,17 @@ func (r *VpnvserverAppflowpolicyBindingResource) Delete(ctx context.Context, req
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
+	// Build delete args, URL-encoding values so slashy/special characters survive the
+	// raw arg join performed by the NITRO client (matches SDK v2 url.QueryEscape).
+	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	}
+	if val, ok := idMap["bindpoint"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_appflowpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_appflowpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_appflowpolicy_binding, got error: %s", err))
 		return
