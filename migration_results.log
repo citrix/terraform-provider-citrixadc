@@ -2592,3 +2592,18 @@ PATTERNS: 7, 13, 8, b (url-encode delete args)
 FILES CHANGED: citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/resource_vpnglobal_authenticationradiuspolicy_binding.go, citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/datasource_vpnglobal_authenticationradiuspolicy_binding.go (NO test/doc files modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnglobal_intranetip_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:54:56Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccVpnglobal_intranetip_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnglobal_intranetip_binding_basic ............ PASS
+  - TestAccVpnglobal_intranetip_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: Attribute/type/Required/ForceNew parity OK vs SDK v2. gotopriorityexpression (Optional+Computed+ForceNew in SDK v2) is not echoed by NITRO GET -> dropped spurious Computed on resource schema and preserve plan/state in SetAttrFromGet (Pattern 7/13). ID adopts new key:value composite (intranetip:..,netmask:..); ParseIdString(legacyOrder=[intranetip]) handles legacy plain-value import per resource_id_mapping.json. Create stays UpdateUnnamedResource (PUT) matching SDK v2.
+DATASOURCE: Healthy logic, but lookup keys fixed: netmask was Required (broke query-by-intranetip-only test) -> Optional+Computed; null-netmask filter logic corrected; split datasource setter (SetAttrFromGetForDatasource copies all fields + sets composite Id) per Pattern 7.
+PATTERNS: 6, 7, 11, 13
+FILES CHANGED: citrixadc_framework/vpnglobal_intranetip_binding/resource_schema.go, citrixadc_framework/vpnglobal_intranetip_binding/datasource_schema.go, citrixadc_framework/vpnglobal_intranetip_binding/datasource_vpnglobal_intranetip_binding.go, citrixadc_framework/acctests/vpnglobal_intranetip_binding_test.go (sanctioned ID-parse helper line only)
+BLOCKER: none
+========================================

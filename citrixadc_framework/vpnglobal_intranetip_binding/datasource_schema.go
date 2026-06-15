@@ -20,7 +20,10 @@ func VpnglobalIntranetipBindingDataSourceSchema() schema.Schema {
 				Description: "The intranet ip address or range.",
 			},
 			"netmask": schema.StringAttribute{
-				Required:    true,
+				// Optional+Computed: the datasource can be queried by intranetip alone
+				// (a unique lookup key); netmask is then resolved from the GET response.
+				Optional:    true,
+				Computed:    true,
 				Description: "The intranet ip address or range's netmask.",
 			},
 		},

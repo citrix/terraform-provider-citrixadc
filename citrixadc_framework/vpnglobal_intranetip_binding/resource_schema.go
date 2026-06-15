@@ -35,7 +35,11 @@ func (r *VpnglobalIntranetipBindingResource) Schema(ctx context.Context, req res
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				// Pattern 7/13: this field is NOT echoed back by the NITRO GET response for
+				// this binding. Marking it Computed would cause "known after apply" churn /
+				// "inconsistent result after apply". It is preserved from plan/state in
+				// vpnglobal_intranetip_bindingSetAttrFromGet. RequiresReplace mirrors the
+				// SDK v2 ForceNew on this attribute.
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -77,10 +81,35 @@ func vpnglobal_intranetip_bindingGetThePayloadFromthePlan(ctx context.Context, d
 	return vpnglobal_intranetip_binding
 }
 
+// vpnglobal_intranetip_bindingSetAttrFromGet is the RESOURCE setter. It preserves
+// plan/state values for fields that NITRO does not echo back (gotopriorityexpression)
+// and does NOT recompute the ID (the ID is set exactly once in Create / preserved in
+// Update — see Pattern 6 and Pattern 7).
 func vpnglobal_intranetip_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalIntranetipBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalIntranetipBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_intranetip_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// gotopriorityexpression is NOT returned by the NITRO GET for this binding; preserve
+	// the existing plan/state value instead of nulling it (Pattern 7).
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["intranetip"]; ok && val != nil {
+		data.Intranetip = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// vpnglobal_intranetip_bindingSetAttrFromGetForDatasource is the DATASOURCE setter. The
+// datasource has no prior plan/state to preserve, so it faithfully copies every field
+// from the GET response and sets the composite ID itself (Pattern 7 datasource split).
+func vpnglobal_intranetip_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalIntranetipBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalIntranetipBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_intranetip_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -97,8 +126,8 @@ func vpnglobal_intranetip_bindingSetAttrFromGet(ctx context.Context, data *Vpngl
 		data.Netmask = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (no Create to do it).
+	// Multiple unique attributes - comma-separated key:UrlEncode(value) pairs.
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("intranetip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))

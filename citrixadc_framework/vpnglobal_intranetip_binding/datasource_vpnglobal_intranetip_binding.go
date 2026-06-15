@@ -81,15 +81,17 @@ func (d *VpnglobalIntranetipBindingDataSource) Read(ctx context.Context, req dat
 			continue
 		}
 
-		// Check netmask
-		if val, ok := v["netmask"].(string); ok {
-			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
+		// Check netmask (only filter on it when supplied in the config)
+		if !netmask_Name.IsNull() {
+			if val, ok := v["netmask"].(string); ok {
+				if val != netmask_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !netmask_Name.IsNull() {
-			match = false
-			continue
 		}
 
 		if match {
@@ -104,7 +106,7 @@ func (d *VpnglobalIntranetipBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	vpnglobal_intranetip_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnglobal_intranetip_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

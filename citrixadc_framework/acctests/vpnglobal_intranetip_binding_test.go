@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -82,7 +83,14 @@ func testAccCheckVpnglobal_intranetip_bindingExist(n string, id *string) resourc
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		intranetip := rs.Primary.ID
+		// ID-parse helper line (sanctioned migration exception): the migrated resource
+		// uses the new key:value ID format, so parse it instead of treating the raw ID
+		// as the intranetip value. ParseIdString also accepts the legacy comma format.
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"intranetip"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", rs.Primary.ID, err)
+		}
+		intranetip := idMap["intranetip"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnglobal_intranetip_binding",
