@@ -272,5 +272,18 @@ BACKWARD-COMPAT: re-added dropped 'builtin' list attr (SDK v2 + NITRO struct, Op
 DATASOURCE: healthy as-is; added 'builtin' to shared model/datasource schema; shares faithful SetAttrFromGet (no Pattern-7 split needed).
 PATTERNS: binding-family (a) re-add dropped attr; 6/7 reviewed (no split required).
 FILES CHANGED: citrixadc_framework/auditsyslogglobal_auditsyslogpolicy_binding/resource_schema.go, citrixadc_framework/auditsyslogglobal_auditsyslogpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/auditsyslogglobal_auditsyslogpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified.
+RESOURCE: authenticationpolicylabel_authenticationpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:44:12Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccAuthenticationpolicylabel_authenticationpolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccAuthenticationpolicylabel_authenticationpolicy_binding_basic ............ PASS
+  - TestAccAuthenticationpolicylabel_authenticationpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ....................... N/A
+BACKWARD-COMPAT: Full attribute/type/flag/ForceNew parity with SDK v2 (labelname, policyname, priority Required+ForceNew; gotopriorityexpression, nextfactor Optional+Computed+ForceNew). ID migrated to new key:value format; legacy order labelname,policyname confirmed in resource_id_mapping.json and used by ParseIdString. Added priority to Delete args (URL-encoded internally) to match SDK v2 DeleteResourceWithArgs disambiguation.
+DATASOURCE: healthy as-is; shares SetAttrFromGet which faithfully copies GET fields and sets composite ID. No git recovery needed.
+PATTERNS: item(b) URL-encoded delete args, item(d) Create verb PUT confirmed vs NITRO add, item(f) composite ID order vs resource_id_mapping.json. Sanctioned Constraint-1 ID-parse helper edit.
+FILES CHANGED: citrixadc_framework/authenticationpolicylabel_authenticationpolicy_binding/resource_authenticationpolicylabel_authenticationpolicy_binding.go, citrixadc_framework/acctests/authenticationpolicylabel_authenticationpolicy_binding_test.go
 BLOCKER: none
 ========================================

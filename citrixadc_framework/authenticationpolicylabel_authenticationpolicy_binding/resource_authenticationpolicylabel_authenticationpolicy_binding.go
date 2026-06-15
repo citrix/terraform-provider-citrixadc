@@ -170,6 +170,12 @@ func (r *AuthenticationpolicylabelAuthenticationpolicyBindingResource) Delete(ct
 	if val, ok := idMap["policyname"]; ok && val != "" {
 		argsMap["policyname"] = val
 	}
+	// Match SDK v2 behavior: include priority as a delete arg to disambiguate
+	// bindings of the same policy at different priorities (values are URL-encoded
+	// internally by DeleteResourceWithArgsMap).
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		argsMap["priority"] = fmt.Sprintf("%v", data.Priority.ValueInt64())
+	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Authenticationpolicylabel_authenticationpolicy_binding.Type(), labelname_value, argsMap)
 	if err != nil {
