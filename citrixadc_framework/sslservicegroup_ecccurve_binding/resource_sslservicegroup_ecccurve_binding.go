@@ -3,6 +3,7 @@ package sslservicegroup_ecccurve_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -168,7 +169,9 @@ func (r *SslservicegroupEcccurveBindingResource) Delete(ctx context.Context, req
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["ecccurvename"]; ok && val != "" {
-		argsMap["ecccurvename"] = val
+		// URL-encode the arg value (matches SDK v2 url.QueryEscape) so slashy/special
+		// ecccurve values are passed correctly in the NITRO args= query string.
+		argsMap["ecccurvename"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Sslservicegroup_ecccurve_binding.Type(), servicegroupname_value, argsMap)
