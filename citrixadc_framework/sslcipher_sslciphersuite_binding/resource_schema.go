@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -37,15 +38,17 @@ func (r *SslcipherSslciphersuiteBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the sslcipher_sslciphersuite_binding resource.",
 			},
 			"ciphergroupname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the user-defined cipher group.",
 			},
 			"ciphername": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Cipher name.",
 			},
 			"cipheroperation": schema.StringAttribute{
@@ -57,8 +60,11 @@ func (r *SslcipherSslciphersuiteBindingResource) Schema(ctx context.Context, req
 				Description: "The operation that is performed when adding the cipher-suite.\n\nPossible cipher operations are:\n	ADD - Appends the given cipher-suite to the existing one configured for the virtual server.\n	REM - Removes the given cipher-suite from the existing one configured for the virtual server.\n	ORD - Overrides the current configured cipher-suite for the virtual server with the given cipher-suite.",
 			},
 			"cipherpriority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "This indicates priority assigned to the particular cipher",
 			},
 			"ciphgrpals": schema.StringAttribute{

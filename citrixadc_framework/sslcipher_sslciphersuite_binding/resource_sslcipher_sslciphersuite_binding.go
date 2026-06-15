@@ -3,6 +3,7 @@ package sslcipher_sslciphersuite_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *SslcipherSslciphersuiteBindingResource) Create(ctx context.Context, req
 	sslcipher_sslciphersuite_binding := sslcipher_sslciphersuite_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Sslcipher_sslciphersuite_binding.Type(), &sslcipher_sslciphersuite_binding)
+	// Binding resource - SDK v2 used AddResource (POST); match for backward compatibility
+	_, err := r.client.AddResource(service.Sslcipher_sslciphersuite_binding.Type(), "", &sslcipher_sslciphersuite_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslcipher_sslciphersuite_binding, got error: %s", err))
 		return
@@ -114,34 +115,10 @@ func (r *SslcipherSslciphersuiteBindingResource) Update(ctx context.Context, req
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating sslcipher_sslciphersuite_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-	if !data.Ciphername.Equal(state.Ciphername) {
-		tflog.Debug(ctx, fmt.Sprintf("ciphername has changed for sslcipher_sslciphersuite_binding"))
-		hasChange = true
-	}
-	if !data.Cipherpriority.Equal(state.Cipherpriority) {
-		tflog.Debug(ctx, fmt.Sprintf("cipherpriority has changed for sslcipher_sslciphersuite_binding"))
-		hasChange = true
-	}
-
-	if hasChange {
-		// Create API request body from the model
-		sslcipher_sslciphersuite_binding := sslcipher_sslciphersuite_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Sslcipher_sslciphersuite_binding.Type(), &sslcipher_sslciphersuite_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslcipher_sslciphersuite_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated sslcipher_sslciphersuite_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for sslcipher_sslciphersuite_binding resource, skipping update")
-	}
+	// Update is a no-op for sslcipher_sslciphersuite_binding; all attributes are
+	// RequiresReplace (SDK v2 marked every field ForceNew and had no UpdateContext).
+	// Terraform recreates on any change, so this branch is never reached with a diff.
+	tflog.Debug(ctx, "Update is a no-op for sslcipher_sslciphersuite_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readSslcipherSslciphersuiteBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -174,12 +151,14 @@ func (r *SslcipherSslciphersuiteBindingResource) Delete(ctx context.Context, req
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Delete args are appended raw to the URL by the NITRO client, so URL-encode the
+	// value here to handle ciphernames containing slashes/special characters.
+	args := make([]string, 0)
 	if val, ok := idMap["ciphername"]; ok && val != "" {
-		argsMap["ciphername"] = val
+		args = append(args, fmt.Sprintf("ciphername:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslcipher_sslciphersuite_binding, got error: %s", err))
 		return
