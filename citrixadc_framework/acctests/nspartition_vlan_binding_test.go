@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -107,10 +108,12 @@ func testAccCheckNspartition_vlan_bindingExist(n string, id *string) resource.Te
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		partitionname := idSlice[0]
-		vlan := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"partitionname", "vlan"}, nil)
+		if err != nil {
+			return err
+		}
+		partitionname := idMap["partitionname"]
+		vlan := idMap["vlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nspartition_vlan_binding",
@@ -127,7 +130,7 @@ func testAccCheckNspartition_vlan_bindingExist(n string, id *string) resource.Te
 		// Iterate through results to find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["vlan"].(string) == vlan {
+			if fmt.Sprintf("%v", v["vlan"]) == vlan {
 				found = true
 				break
 			}
