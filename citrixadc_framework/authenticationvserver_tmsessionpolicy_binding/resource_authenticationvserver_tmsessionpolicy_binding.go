@@ -3,8 +3,7 @@ package authenticationvserver_tmsessionpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -60,7 +59,7 @@ func (r *AuthenticationvserverTmsessionpolicyBindingResource) Create(ctx context
 	authenticationvserver_tmsessionpolicy_binding := authenticationvserver_tmsessionpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
+	// Binding resource - use UpdateUnnamedResource (NITRO add for this binding is PUT)
 	err := r.client.UpdateUnnamedResource(service.Authenticationvserver_tmsessionpolicy_binding.Type(), &authenticationvserver_tmsessionpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationvserver_tmsessionpolicy_binding, got error: %s", err))
@@ -69,13 +68,8 @@ func (r *AuthenticationvserverTmsessionpolicyBindingResource) Create(ctx context
 
 	tflog.Trace(ctx, "Created authenticationvserver_tmsessionpolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state (legacy order name,policy).
+	data.Id = types.StringValue(authenticationvserver_tmsessionpolicy_bindingComputeId(&data))
 
 	// Read the updated state back
 	r.readAuthenticationvserverTmsessionpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -117,28 +111,10 @@ func (r *AuthenticationvserverTmsessionpolicyBindingResource) Update(ctx context
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating authenticationvserver_tmsessionpolicy_binding resource")
+	// All attributes are RequiresReplace; this binding has no NITRO update endpoint.
+	tflog.Debug(ctx, "Update is a no-op for authenticationvserver_tmsessionpolicy_binding; all attributes are RequiresReplace")
 
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		authenticationvserver_tmsessionpolicy_binding := authenticationvserver_tmsessionpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Authenticationvserver_tmsessionpolicy_binding.Type(), &authenticationvserver_tmsessionpolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationvserver_tmsessionpolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated authenticationvserver_tmsessionpolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for authenticationvserver_tmsessionpolicy_binding resource, skipping update")
-	}
-
-	// Read the updated state back
+	// Read the current state back
 	r.readAuthenticationvserverTmsessionpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -156,7 +132,8 @@ func (r *AuthenticationvserverTmsessionpolicyBindingResource) Delete(ctx context
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_tmsessionpolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+
+	// Parent name from the ID (handles both new key:value and legacy name,policy IDs).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -169,18 +146,25 @@ func (r *AuthenticationvserverTmsessionpolicyBindingResource) Delete(ctx context
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
-	}
+	// Build delete args from the bound-resource state, URL-encoding values that may
+	// contain slashy/special characters (Pattern (b)).
+	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	} else if !data.Policy.IsNull() {
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(data.Policy.ValueString())))
 	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_tmsessionpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_tmsessionpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_tmsessionpolicy_binding, got error: %s", err))
 		return
@@ -192,7 +176,7 @@ func (r *AuthenticationvserverTmsessionpolicyBindingResource) Delete(ctx context
 // Helper function to read authenticationvserver_tmsessionpolicy_binding data from API
 func (r *AuthenticationvserverTmsessionpolicyBindingResource) readAuthenticationvserverTmsessionpolicyBindingFromApi(ctx context.Context, data *AuthenticationvserverTmsessionpolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Array filter with parent ID - parse from ID (handles new and legacy formats).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
@@ -202,6 +186,11 @@ func (r *AuthenticationvserverTmsessionpolicyBindingResource) readAuthentication
 	name_Name, ok := idMap["name"]
 	if !ok {
 		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
 		return
 	}
 
@@ -224,61 +213,10 @@ func (r *AuthenticationvserverTmsessionpolicyBindingResource) readAuthentication
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Match on policy (the bound entity), consistent with the SDK v2 Read.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
 			foundIndex = i
 			break
 		}
@@ -286,7 +224,7 @@ func (r *AuthenticationvserverTmsessionpolicyBindingResource) readAuthentication
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("authenticationvserver_tmsessionpolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "authenticationvserver_tmsessionpolicy_binding not found with the provided ID attributes")
 		return
 	}
 
