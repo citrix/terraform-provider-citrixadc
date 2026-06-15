@@ -3,6 +3,7 @@ package vpnvserver_staserver_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -166,12 +167,15 @@ func (r *VpnvserverStaserverBindingResource) Delete(ctx context.Context, req res
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// staserver values can contain slashes/special characters (e.g. URLs), so the
+	// arg value must be URL-encoded. DeleteResourceWithArgs/Map do not escape arg
+	// values, so we encode it here (mirrors the SDK v2 implementation).
+	args := make([]string, 0)
 	if val, ok := idMap["staserver"]; ok && val != "" {
-		argsMap["staserver"] = val
+		args = append(args, fmt.Sprintf("staserver:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_staserver_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_staserver_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_staserver_binding, got error: %s", err))
 		return

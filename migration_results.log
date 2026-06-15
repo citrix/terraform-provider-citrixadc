@@ -3128,5 +3128,18 @@ BACKWARD-COMPAT: Composite ID realigned to legacy order name,policy (codegen wro
 DATASOURCE: healthy; split setter added (vpnvserver_icapolicy_bindingSetAttrFromGetForDatasource sets all fields + composite name,policy ID); datasource bindpoint changed Required->Optional+Computed (lookup keys are name+policy; GET does not return bindpoint).
 PATTERNS: 7 (preserve non-echoed inputs + datasource setter split), 13 (drop spurious Computed), 11 (resource/datasource flag consistency)
 FILES CHANGED: citrixadc_framework/vpnvserver_icapolicy_binding/resource_vpnvserver_icapolicy_binding.go, citrixadc_framework/vpnvserver_icapolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_icapolicy_binding/datasource_vpnvserver_icapolicy_binding.go, citrixadc_framework/vpnvserver_icapolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_icapolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc file modified
+RESOURCE: vpnvserver_staserver_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:40:12Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccVpnvserver_staserver_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccVpnvserver_staserver_binding_basic ............ PASS
+  - TestAccVpnvserver_staserver_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: attribute/type/flag/ForceNew/ID-order parity all matched SDK v2 (name+staserver Required+ForceNew, staaddresstype Optional+Computed+ForceNew). Fixed Delete to URL-encode the staserver arg value via DeleteResourceWithArgs+url.QueryEscape (NITRO client does not escape arg values; staserver is a slashy URL) to mirror SDK v2. Create verb kept as UpdateUnnamedResource (PUT) matching SDK v2. ID adopts new key:value format; resource_id_mapping.json "name,staserver" lets ParseIdString decode legacy imports.
+DATASOURCE: healthy as-is (all three attrs echoed by NITRO GET; shared SetAttrFromGet sets data.Id correctly). No git recovery needed.
+PATTERNS: binding-family Delete URL-encode (prompt point b); sanctioned ID-parse helper rewrite (Constraint 1).
+FILES CHANGED: citrixadc_framework/vpnvserver_staserver_binding/resource_vpnvserver_staserver_binding.go, citrixadc_framework/acctests/vpnvserver_staserver_binding_test.go (ID-parse helper lines only). No doc modified.
 BLOCKER: none
 ========================================
