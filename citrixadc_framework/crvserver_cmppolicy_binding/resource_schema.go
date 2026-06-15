@@ -22,6 +22,7 @@ import (
 // CrvserverCmppolicyBindingResourceModel describes the resource data model.
 type CrvserverCmppolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *CrvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				Computed:    true,
 				Description: "The ID of the crvserver_cmppolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +66,18 @@ func (r *CrvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				Description: "Invoke flag.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				// NITRO GET never echoes labelname back; Computed would leave it
+				// unknown-after-apply. Optional only. (Pattern 13)
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				// NITRO GET never echoes labeltype back; Computed would leave it
+				// unknown-after-apply. Optional only. (Pattern 13)
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -93,8 +106,9 @@ func (r *CrvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				Description: "The priority for the policy.",
 			},
 			"targetvserver": schema.StringAttribute{
+				// NITRO GET never echoes targetvserver back; Computed would leave it
+				// unknown-after-apply. Optional only. (Pattern 13)
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +123,9 @@ func crvserver_cmppolicy_bindingGetThePayloadFromthePlan(ctx context.Context, da
 
 	// Create API request body from the model
 	crvserver_cmppolicy_binding := cr.Crvservercmppolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		crvserver_cmppolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		crvserver_cmppolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +154,61 @@ func crvserver_cmppolicy_bindingGetThePayloadFromthePlan(ctx context.Context, da
 	return crvserver_cmppolicy_binding
 }
 
+// crvserver_cmppolicy_bindingSetAttrFromGet is the RESOURCE-side state setter.
+// The binding GET response does not faithfully echo back every configured input
+// (server-overridden / non-echoed fields such as priority, bindpoint,
+// gotopriorityexpression, invoke, labelname, labeltype, targetvserver). To avoid
+// "inconsistent result after apply" / perpetual-diff churn, preserve the existing
+// plan/state value when the field is absent from the GET response, and only adopt
+// the value when the server actually returns it. (Pattern 7 / Pattern 13)
 func crvserver_cmppolicy_bindingSetAttrFromGet(ctx context.Context, data *CrvserverCmppolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverCmppolicyBindingResourceModel {
 	tflog.Debug(ctx, "In crvserver_cmppolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["targetvserver"]; ok && val != nil {
+		data.Targetvserver = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// crvserver_cmppolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// state setter. A datasource has no prior plan/state to preserve, so it must
+// faithfully copy every field from the GET response (and null the rest), and it
+// must set data.Id itself because the datasource never calls Create. (Pattern 7)
+func crvserver_cmppolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CrvserverCmppolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverCmppolicyBindingResourceModel {
+	tflog.Debug(ctx, "In crvserver_cmppolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -174,6 +242,8 @@ func crvserver_cmppolicy_bindingSetAttrFromGet(ctx context.Context, data *Crvser
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
 		}
 	} else {
 		data.Priority = types.Int64Null()
@@ -184,7 +254,7 @@ func crvserver_cmppolicy_bindingSetAttrFromGet(ctx context.Context, data *Crvser
 		data.Targetvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create runs for a datasource).
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
