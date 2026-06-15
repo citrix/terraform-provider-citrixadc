@@ -234,3 +234,18 @@ PATTERNS: 7 (datasource setter split), 13 (drop Computed where no GET echo)
 FILES CHANGED: citrixadc_framework/vlan_nsip6_binding/resource_schema.go, citrixadc_framework/vlan_nsip6_binding/resource_vlan_nsip6_binding.go, citrixadc_framework/vlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vlan_nsip6_binding/datasource_vlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: authenticationvserver_authenticationsamlidppolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:08:03Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccAuthenticationvserver_authenticationsamlidppolicy_binding_basic$|TestAccAuthenticationvserverAuthenticationsamlidppolicyBindingDataSource_basic$
+TESTS:
+  - TestAccAuthenticationvserver_authenticationsamlidppolicy_binding_basic ........ PASS
+  - TestAccAuthenticationvserverAuthenticationsamlidppolicyBindingDataSource_basic . PASS
+BACKWARD-COMPAT: re-added dropped bindpoint attr (SDK v2 + NITRO struct); ID reduced from spurious 4-key to legacy name,policy order (matches resource_id_mapping.json); dropped spurious Computed from bindpoint/groupextraction/nextfactor/secondary (server does not echo them - Pattern 13); kept Computed on gotopriorityexpression/priority (server-echoed); Delete args (policy,secondary,groupextraction,bindpoint) now read from model with url.QueryEscape via DeleteResourceWithArgs (matches SDK v2 contract).
+DATASOURCE: healthy after fix - split xxxSetAttrFromGetForDatasource (Pattern 7); changed groupextraction/secondary from Required to Optional+Computed (Pattern 11); added bindpoint; filter now matches on policy only (test supplies only name+policy).
+PATTERNS: 7, 11, 13 (+ binding-family: re-add dropped attr, URL-encode delete args, ID order vs id_mapping)
+FILES CHANGED: citrixadc_framework/authenticationvserver_authenticationsamlidppolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_authenticationsamlidppolicy_binding/resource_authenticationvserver_authenticationsamlidppolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationsamlidppolicy_binding/datasource_schema.go, citrixadc_framework/authenticationvserver_authenticationsamlidppolicy_binding/datasource_authenticationvserver_authenticationsamlidppolicy_binding.go, citrixadc_framework/acctests/authenticationvserver_authenticationsamlidppolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified.
+BLOCKER: none
+========================================
