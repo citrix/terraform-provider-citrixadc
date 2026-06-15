@@ -2577,5 +2577,18 @@ BACKWARD-COMPAT: Create switched UpdateUnnamedResource(PUT)->AddResource(POST) t
 DATASOURCE: healthy; split setter (Pattern 7) - resource setter preserves non-echoed gotopriorityexpression + no Id recompute, new ForDatasource setter copies all + sets Id; datasource Read calls it; datasource schema gotopriorityexpression now Computed-only.
 PATTERNS: 1, 7, 10, 13
 FILES CHANGED: citrixadc_framework/vpnglobal_appcontroller_binding/resource_vpnglobal_appcontroller_binding.go, citrixadc_framework/vpnglobal_appcontroller_binding/resource_schema.go, citrixadc_framework/vpnglobal_appcontroller_binding/datasource_vpnglobal_appcontroller_binding.go, citrixadc_framework/vpnglobal_appcontroller_binding/datasource_schema.go
+RESOURCE: vpnglobal_authenticationradiuspolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:45:32Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccVpnglobal_authenticationradiuspolicy_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccVpnglobal_authenticationradiuspolicy_binding_basic ........ PASS
+  - TestAccVpnglobal_authenticationradiuspolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) .......... N/A
+BACKWARD-COMPAT: attr/type/ID-order parity with SDK v2 (plain policyname ID, matches resource_id_mapping.json). Fixed: (1) resource SetAttrFromGet now preserves plan/state for non-echoed/false-boolean fields instead of nulling them (Pattern 7/13); (2) dropped spurious Computed from gotopriorityexpression/groupextraction/priority/secondary so unset Optionals stay known-Null after apply (Pattern 13/8) - GET never echoes gotopriorityexpression nor false booleans; (3) Delete now passes url-encoded secondary/groupextraction disambiguating args like SDK v2 (Pattern b). Create verb left as PUT/UpdateUnnamedResource (matches SDK v2).
+DATASOURCE: healthy; split setter into vpnglobal_..._bindingSetAttrFromGetForDatasource (faithfully copies GET + sets Id) so datasource is unaffected by resource preserve-state change (Pattern 7 split).
+PATTERNS: 7, 13, 8, b (url-encode delete args)
+FILES CHANGED: citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/resource_vpnglobal_authenticationradiuspolicy_binding.go, citrixadc_framework/vpnglobal_authenticationradiuspolicy_binding/datasource_vpnglobal_authenticationradiuspolicy_binding.go (NO test/doc files modified)
 BLOCKER: none
 ========================================

@@ -37,8 +37,10 @@ func (r *VpnglobalAuthenticationradiuspolicyBindingResource) Schema(ctx context.
 				Description: "The ID of the vpnglobal_authenticationradiuspolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// Optional only (no Computed): the NITRO binding GET never echoes this
+				// field, so a Computed flag would leave an unset value Unknown after
+				// apply (Pattern 13 / Pattern 8). SDK v2 contract was Optional.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -46,7 +48,6 @@ func (r *VpnglobalAuthenticationradiuspolicyBindingResource) Schema(ctx context.
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -61,7 +62,6 @@ func (r *VpnglobalAuthenticationradiuspolicyBindingResource) Schema(ctx context.
 			},
 			"priority": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -69,7 +69,6 @@ func (r *VpnglobalAuthenticationradiuspolicyBindingResource) Schema(ctx context.
 			},
 			"secondary": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -106,7 +105,42 @@ func vpnglobal_authenticationradiuspolicy_bindingGetThePayloadFromthePlan(ctx co
 func vpnglobal_authenticationradiuspolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalAuthenticationradiuspolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationradiuspolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_authenticationradiuspolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Resource setter: every attribute is RequiresReplace (write-once). The NITRO
+	// binding GET omits non-echoed / false-boolean / default fields (omitempty), so
+	// only overwrite a model field when the GET response actually carries a value;
+	// otherwise preserve the prior plan/state value to avoid "inconsistent result
+	// after apply" diffs (Pattern 7 / Pattern 13).
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
+	return data
+}
+
+// vpnglobal_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource faithfully
+// copies every field from the GET response (the datasource has no prior plan/state to
+// preserve) and sets the datasource ID. (Pattern 7 datasource split.)
+func vpnglobal_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalAuthenticationradiuspolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationradiuspolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -135,8 +169,7 @@ func vpnglobal_authenticationradiuspolicy_bindingSetAttrFromGet(ctx context.Cont
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Set ID for the datasource (no Create runs)
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
