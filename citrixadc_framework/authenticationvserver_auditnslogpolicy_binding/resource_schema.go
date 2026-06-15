@@ -22,6 +22,7 @@ import (
 // AuthenticationvserverAuditnslogpolicyBindingResourceModel describes the resource data model.
 type AuthenticationvserverAuditnslogpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -38,6 +39,14 @@ func (r *AuthenticationvserverAuditnslogpolicyBindingResource) Schema(ctx contex
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the authenticationvserver_auditnslogpolicy_binding resource.",
+			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
@@ -102,6 +111,9 @@ func authenticationvserver_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx 
 
 	// Create API request body from the model
 	authenticationvserver_auditnslogpolicy_binding := authentication.Authenticationvserverauditnslogpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		authenticationvserver_auditnslogpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		authenticationvserver_auditnslogpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -127,10 +139,76 @@ func authenticationvserver_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx 
 	return authenticationvserver_auditnslogpolicy_binding
 }
 
+// authenticationvserver_auditnslogpolicy_bindingSetAttrFromGet is the RESOURCE-side
+// setter. The NITRO binding GET response echoes only name/policy/priority; it does
+// NOT echo bindpoint (mirroring the legacy SDK v2 read, which deliberately left
+// bindpoint unset). To avoid "inconsistent result after apply", bindpoint is
+// PRESERVED from the plan/state rather than overwritten with the missing GET value
+// (Pattern 7). All other Optional+Computed inputs are resolved from the GET response
+// (set to null when absent) so no attribute remains unknown post-apply (Pattern 13).
+// The ID is set once in Create, so it is not recomputed here.
 func authenticationvserver_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *AuthenticationvserverAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuditnslogpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In authenticationvserver_auditnslogpolicy_bindingSetAttrFromGet Function")
 
+	// bindpoint is never echoed by the GET response; preserve the configured
+	// plan/state value. If it was never set, normalize unknown -> null.
+	if data.Bindpoint.IsUnknown() {
+		data.Bindpoint = types.StringNull()
+	}
+
+	// Resolve the remaining Optional+Computed inputs from the GET response.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else {
+		data.Gotopriorityexpression = types.StringNull()
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	} else {
+		data.Groupextraction = types.BoolNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
+		data.Nextfactor = types.StringValue(val.(string))
+	} else {
+		data.Nextfactor = types.StringNull()
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
+		}
+	} else {
+		data.Priority = types.Int64Null()
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	} else {
+		data.Secondary = types.BoolNull()
+	}
+
+	return data
+}
+
+// authenticationvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE-side setter. The datasource has no prior plan/state to preserve, so
+// it faithfully copies every field from the GET response and sets the ID.
+// (Pattern 7 datasource split)
+func authenticationvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationvserverAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuditnslogpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In authenticationvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	// Convert API response to model
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -169,13 +247,11 @@ func authenticationvserver_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Co
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (no Create to set it).
+	// Canonical legacy ID order is name,policy (resource_id_mapping.json).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
