@@ -3,6 +3,7 @@ package lbgroup_lbvserver_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *LbgroupLbvserverBindingResource) Create(ctx context.Context, req resour
 	lbgroup_lbvserver_binding := lbgroup_lbvserver_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbgroup_lbvserver_binding.Type(), &lbgroup_lbvserver_binding)
+	// Binding resource - SDK v2 contract used AddResource (POST) for this binding (Pattern 1)
+	_, err := r.client.AddResource(service.Lbgroup_lbvserver_binding.Type(), data.Name.ValueString(), &lbgroup_lbvserver_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbgroup_lbvserver_binding, got error: %s", err))
 		return
@@ -114,26 +115,9 @@ func (r *LbgroupLbvserverBindingResource) Update(ctx context.Context, req resour
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating lbgroup_lbvserver_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		lbgroup_lbvserver_binding := lbgroup_lbvserver_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Lbgroup_lbvserver_binding.Type(), &lbgroup_lbvserver_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbgroup_lbvserver_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated lbgroup_lbvserver_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for lbgroup_lbvserver_binding resource, skipping update")
-	}
+	// Update is a no-op for lbgroup_lbvserver_binding; all attributes are RequiresReplace
+	// and the NITRO binding exposes no update endpoint (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for lbgroup_lbvserver_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readLbgroupLbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -168,7 +152,9 @@ func (r *LbgroupLbvserverBindingResource) Delete(ctx context.Context, req resour
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["vservername"]; ok && val != "" {
-		argsMap["vservername"] = val
+		// URL-encode the delete arg value (SDK v2 used url.QueryEscape); the NITRO
+		// client does not encode argsMap values itself.
+		argsMap["vservername"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbgroup_lbvserver_binding.Type(), name_value, argsMap)

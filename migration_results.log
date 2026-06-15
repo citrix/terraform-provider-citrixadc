@@ -1379,5 +1379,18 @@ BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 schema + N
 DATASOURCE: healthy; split setter into resource (preserve state) + ...ForDatasource (faithful copy + sets Id); added bindpoint to datasource schema.
 PATTERNS: 1, 6, 7, 13
 FILES CHANGED: citrixadc_framework/csvserver_spilloverpolicy_binding/resource_csvserver_spilloverpolicy_binding.go, citrixadc_framework/csvserver_spilloverpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_spilloverpolicy_binding/datasource_csvserver_spilloverpolicy_binding.go, citrixadc_framework/csvserver_spilloverpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_spilloverpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc changed
+RESOURCE: lbgroup_lbvserver_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:13:51Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccLbgroup_lbvserver_binding($|_basic|DataSource)
+TESTS:
+  - TestAccLbgroup_lbvserver_binding_basic ............ PASS
+  - TestAccLbgroup_lbvserver_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; no secret attributes) ........ N/A
+BACKWARD-COMPAT: attr/type/flags/ForceNew/ID all matched SDK v2 (name,vservername both Required+RequiresReplace; ID order matches resource_id_mapping.json "name,vservername"). Create uses AddResource (POST) per SDK v2 contract; Update made a clean no-op (Pattern 5); Delete URL-encodes vservername arg to match SDK v2 url.QueryEscape behavior.
+DATASOURCE: healthy as-is; shares SetAttrFromGet (both name+vservername echoed by GET, ID recomputed) - no Pattern 7 split needed.
+PATTERNS: 1 (Create verb POST vs SDK v2), 5 (no-op Update), delete-arg URL-encode
+FILES CHANGED: citrixadc_framework/lbgroup_lbvserver_binding/resource_lbgroup_lbvserver_binding.go, citrixadc_framework/acctests/lbgroup_lbvserver_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
