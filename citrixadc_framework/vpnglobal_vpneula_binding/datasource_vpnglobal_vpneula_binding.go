@@ -92,7 +92,7 @@ func (d *VpnglobalVpneulaBindingDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	vpnglobal_vpneula_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnglobal_vpneula_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
