@@ -2436,3 +2436,19 @@ PATTERNS: 7, 8, 13 (+ Delete URL-encode)
 FILES CHANGED: citrixadc_framework/tmglobal_auditnslogpolicy_binding/resource_schema.go, citrixadc_framework/tmglobal_auditnslogpolicy_binding/resource_tmglobal_auditnslogpolicy_binding.go, citrixadc_framework/tmglobal_auditnslogpolicy_binding/datasource_tmglobal_auditnslogpolicy_binding.go (no test/doc file modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnglobal_authenticationcertpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:44:44Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccVpnglobal_authenticationcertpolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnglobal_authenticationcertpolicy_binding_basic ............ PASS
+  - TestAccVpnglobal_authenticationcertpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ............ N/A
+BACKWARD-COMPAT: Attribute/type/Required/ForceNew parity with SDK v2 already correct (policyname Required+RequiresReplace; others Optional+RequiresReplace). ID kept as plain policyname value (matches SDK v2 d.SetId(policyname) and resource_id_mapping.json "policyname"). Dropped spurious Computed from gotopriorityexpression and groupextraction (server never echoes them) for backward-compatible flag correction.
+DATASOURCE: healthy as-is; split setter (Pattern 7) - added vpnglobal_authenticationcertpolicy_bindingSetAttrFromGetForDatasource (copies all GET fields + sets Id) and pointed datasource Read at it.
+PATTERNS: 7 (preserve non-echoed inputs + datasource setter split), 10 (plain-value ID Read - dropped ParseIdString), 13 (drop Computed from non-echoed Optional fields), plus binding-family delete-arg URL-encode.
+FILES CHANGED: citrixadc_framework/vpnglobal_authenticationcertpolicy_binding/resource_vpnglobal_authenticationcertpolicy_binding.go, citrixadc_framework/vpnglobal_authenticationcertpolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationcertpolicy_binding/datasource_vpnglobal_authenticationcertpolicy_binding.go (NO test/doc file modified)
+BLOCKER: none
+========================================
