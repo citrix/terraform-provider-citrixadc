@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
@@ -97,7 +98,11 @@ func testAccCheckBotglobal_botpolicy_bindingExist(n string, id *string) resource
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policyname := rs.Primary.ID
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		policyname := idMap["policyname"]
 		typename := rs.Primary.Attributes["type"]
 
 		findParams := service.FindParams{

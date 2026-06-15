@@ -234,3 +234,19 @@ PATTERNS: 7 (datasource setter split), 13 (drop Computed where no GET echo)
 FILES CHANGED: citrixadc_framework/vlan_nsip6_binding/resource_schema.go, citrixadc_framework/vlan_nsip6_binding/resource_vlan_nsip6_binding.go, citrixadc_framework/vlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vlan_nsip6_binding/datasource_vlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: botglobal_botpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:19:31Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccBotglobal_botpolicy_binding_basic|TestAccBotglobalBotpolicyBindingDataSource_basic
+TESTS:
+  - TestAccBotglobal_botpolicy_binding_basic ............ PASS
+  - TestAccBotglobalBotpolicyBindingDataSource_basic .... PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: SDK v2 marked labelname/labeltype Optional+Computed but Framework made them Required (would break existing configs incl. the acctest which omits them); reverted to Optional+Computed. All other attrs (policyname/priority Required, others Optional+Computed, all ForceNew->RequiresReplace) already matched. ID adopts new key:value (policyname:..,type:..) form; ParseIdString legacyOrder=["policyname"] handles old plain-policyname imports.
+DATASOURCE: healthy as-is (shares SetAttrFromGet which faithfully copies GET + sets Id; no split needed since setter was not changed to preserve-state).
+PATTERNS: 8 (Required-vs-Optional+Computed flag drift)
+FILES CHANGED: citrixadc_framework/botglobal_botpolicy_binding/resource_schema.go, citrixadc_framework/acctests/botglobal_botpolicy_binding_test.go (sanctioned ID-parse helper line only)
+BLOCKER: none
+========================================
