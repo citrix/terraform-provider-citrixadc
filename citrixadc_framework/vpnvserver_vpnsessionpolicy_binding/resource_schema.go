@@ -40,24 +40,26 @@ func (r *VpnvserverVpnsessionpolicyBindingResource) Schema(ctx context.Context, 
 				Description: "The ID of the vpnvserver_vpnsessionpolicy_binding resource.",
 			},
 			"bindpoint": schema.StringAttribute{
+				// NITRO never echoes bindpoint in the GET response, so it cannot be
+				// resolved at apply time. Keep it Optional-only (drop Computed) so an
+				// unset value stays null instead of "unknown after apply" (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// Not echoed back by the NITRO GET response; Optional-only (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Applicable only to advance vpn session policy. Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n*  If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a number that is larger than the largest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// Not echoed back by the NITRO GET response; Optional-only (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -86,8 +88,8 @@ func (r *VpnvserverVpnsessionpolicyBindingResource) Schema(ctx context.Context, 
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
+				// Not echoed back by the NITRO GET response; Optional-only (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +129,54 @@ func vpnvserver_vpnsessionpolicy_bindingGetThePayloadFromthePlan(ctx context.Con
 	return vpnvserver_vpnsessionpolicy_binding
 }
 
+// vpnvserver_vpnsessionpolicy_bindingSetAttrFromGet is the RESOURCE-side setter.
+// NITRO does NOT echo bindpoint, gotopriorityexpression, groupextraction or secondary
+// in the GET response for this binding, and only ever returns priority as a string.
+// Blindly copying the response (the codegen default) would null the user-configured
+// values and produce "inconsistent result after apply" (Pattern 7). So for the
+// non-echoed inputs we PRESERVE the existing plan/state value, and only adopt
+// name/policy/priority (which GET does return). The ID is set once in Create and is
+// NOT recomputed here (Pattern 6).
 func vpnvserver_vpnsessionpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverVpnsessionpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverVpnsessionpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_vpnsessionpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// bindpoint / gotopriorityexpression / groupextraction / secondary are never
+	// returned by NITRO GET for this binding -> preserve the existing plan/state value.
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// Identity + server-returned attributes.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// vpnvserver_vpnsessionpolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. A datasource has no prior plan/state to preserve, so it faithfully copies
+// every field the GET response provides and sets its own composite ID (Pattern 7).
+func vpnvserver_vpnsessionpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverVpnsessionpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverVpnsessionpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_vpnsessionpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,8 +215,8 @@ func vpnvserver_vpnsessionpolicy_bindingSetAttrFromGet(ctx context.Context, data
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (no Create to set it).
+	// Composite key:UrlEncode(value) pairs.
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
