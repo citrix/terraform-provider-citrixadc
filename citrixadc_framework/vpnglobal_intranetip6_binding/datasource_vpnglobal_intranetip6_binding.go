@@ -106,7 +106,7 @@ func (d *VpnglobalIntranetip6BindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	vpnglobal_intranetip6_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnglobal_intranetip6_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
