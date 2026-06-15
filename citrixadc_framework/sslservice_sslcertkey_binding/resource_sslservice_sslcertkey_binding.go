@@ -3,6 +3,7 @@ package sslservice_sslcertkey_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -170,18 +171,19 @@ func (r *SslserviceSslcertkeyBindingResource) Delete(ctx context.Context, req re
 		return
 	}
 
+	// Build delete args matching the SDK v2 contract: certkeyname is always
+	// passed; ca / snicert are passed only when true. crlcheck is not a delete
+	// discriminator. URL-encode values to handle slashy/special characters
+	// (ParseIdString returns already-decoded values).
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["ca"]; ok && val != "" {
-		argsMap["ca"] = val
-	}
 	if val, ok := idMap["certkeyname"]; ok && val != "" {
-		argsMap["certkeyname"] = val
+		argsMap["certkeyname"] = url.QueryEscape(val)
 	}
-	if val, ok := idMap["crlcheck"]; ok && val != "" {
-		argsMap["crlcheck"] = val
+	if val, ok := idMap["ca"]; ok && val == "true" {
+		argsMap["ca"] = url.QueryEscape(val)
 	}
-	if val, ok := idMap["snicert"]; ok && val != "" {
-		argsMap["snicert"] = val
+	if val, ok := idMap["snicert"]; ok && val == "true" {
+		argsMap["snicert"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Sslservice_sslcertkey_binding.Type(), servicename_value, argsMap)
@@ -228,77 +230,22 @@ func (r *SslserviceSslcertkeyBindingResource) readSslserviceSslcertkeyBindingFro
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the binding identity.
+	// The binding is uniquely identified by certkeyname + ca + snicert (the
+	// boolean discriminators default to false when absent from the ID or the
+	// record). crlcheck/ocspcheck are properties of the matched binding, not
+	// identity discriminators, so they are not used for matching (mirrors the
+	// SDK v2 read contract).
+	wantCertkeyname := idMap["certkeyname"]
+	wantCa, _ := strconv.ParseBool(idMap["ca"])
+	wantSnicert, _ := strconv.ParseBool(idMap["snicert"])
+
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ca
-		if idVal, ok := idMap["ca"]; ok {
-			if val, ok := v["ca"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ca"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check certkeyname
-		if idVal, ok := idMap["certkeyname"]; ok {
-			if val, ok := v["certkeyname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["certkeyname"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check crlcheck
-		if idVal, ok := idMap["crlcheck"]; ok {
-			if val, ok := v["crlcheck"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["crlcheck"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check snicert
-		if idVal, ok := idMap["snicert"]; ok {
-			if val, ok := v["snicert"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["snicert"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		gotCertkeyname, _ := v["certkeyname"].(string)
+		gotCa, _ := v["ca"].(bool)
+		gotSnicert, _ := v["snicert"].(bool)
+		if gotCertkeyname == wantCertkeyname && gotCa == wantCa && gotSnicert == wantSnicert {
 			foundIndex = i
 			break
 		}

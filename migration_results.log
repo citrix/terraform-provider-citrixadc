@@ -2036,3 +2036,19 @@ PATTERNS: 1 (verb confirmed PUT), 7 (datasource setter split + preserve/resolve 
 FILES CHANGED: citrixadc_framework/servicegroup_lbmonitor_binding/resource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/resource_schema.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_schema.go, citrixadc_framework/acctests/servicegroup_lbmonitor_binding_test.go (ID-parse helper lines only - sanctioned). NO doc changed.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: sslservice_sslcertkey_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:00:57Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccSslservice_sslcertkey_binding($|_|DataSource)
+TESTS:
+  - TestAccSslservice_sslcertkey_binding_basic ........ PASS
+  - TestAccSslservice_sslcertkey_binding_basic_no_ca .. PASS
+  - TestAccSslservice_sslcertkey_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: Attr/type/flag/ForceNew parity with SDK v2 all present & correct (7 attrs, all RequiresReplace; certkeyname/servicename Required; rest Optional+Computed). Fixed: (1) resource Read match loop matched on certkeyname+ca+snicert only (mirrors SDK v2), dropping over-strict crlcheck/inverted-presence checks that broke create-readback; (2) Delete args URL-encode values + restricted to certkeyname(always)/ca/snicert(when true) per SDK v2 contract; new key:value ID + ParseIdString(legacy order servicename,certkeyname,snicert,ca) preserves import of old comma IDs.
+DATASOURCE: healthy; fixed Pattern-11 flag drift (ca/crlcheck/snicert were Required -> Optional+Computed) and made Read match loop filter only on non-null supplied lookup keys. Shared SetAttrFromGet faithfully copies GET + sets ID, so no Pattern-7 split needed.
+PATTERNS: 7 (datasource match consistency), 11 (resource/datasource flag coherence), binding Delete URL-encode (skill pattern b)
+FILES CHANGED: citrixadc_framework/sslservice_sslcertkey_binding/resource_sslservice_sslcertkey_binding.go, citrixadc_framework/sslservice_sslcertkey_binding/datasource_sslservice_sslcertkey_binding.go, citrixadc_framework/sslservice_sslcertkey_binding/datasource_schema.go, citrixadc_framework/acctests/sslservice_sslcertkey_binding_test.go (sanctioned ID-parse helper lines only); NO doc files
+BLOCKER: none
+========================================

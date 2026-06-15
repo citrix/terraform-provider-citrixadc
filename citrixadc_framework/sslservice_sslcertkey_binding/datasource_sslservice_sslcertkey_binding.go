@@ -69,53 +69,43 @@ func (d *SslserviceSslcertkeyBindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Only filter on attributes the caller actually supplied (non-null);
+	// unset lookup attributes must not exclude an otherwise-matching record.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check ca
-		if val, ok := v["ca"].(bool); ok {
-			if ca_Name.IsNull() || val != ca_Name.ValueBool() {
+		// Check ca (only when supplied in config)
+		if !ca_Name.IsNull() {
+			if val, ok := v["ca"].(bool); !ok || val != ca_Name.ValueBool() {
 				match = false
 				continue
 			}
-		} else if !ca_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check certkeyname
-		if val, ok := v["certkeyname"].(string); ok {
-			if certkeyname_Name.IsNull() || val != certkeyname_Name.ValueString() {
+		// Check certkeyname (only when supplied in config)
+		if !certkeyname_Name.IsNull() {
+			if val, ok := v["certkeyname"].(string); !ok || val != certkeyname_Name.ValueString() {
 				match = false
 				continue
 			}
-		} else if !certkeyname_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check crlcheck
-		if val, ok := v["crlcheck"].(string); ok {
-			if crlcheck_Name.IsNull() || val != crlcheck_Name.ValueString() {
+		// Check crlcheck (only when supplied in config)
+		if !crlcheck_Name.IsNull() {
+			if val, ok := v["crlcheck"].(string); !ok || val != crlcheck_Name.ValueString() {
 				match = false
 				continue
 			}
-		} else if !crlcheck_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check snicert
-		if val, ok := v["snicert"].(bool); ok {
-			if snicert_Name.IsNull() || val != snicert_Name.ValueBool() {
+		// Check snicert (only when supplied in config)
+		if !snicert_Name.IsNull() {
+			if val, ok := v["snicert"].(bool); !ok || val != snicert_Name.ValueBool() {
 				match = false
 				continue
 			}
-		} else if !snicert_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
