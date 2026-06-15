@@ -3,6 +3,7 @@ package snmptrap_snmpuser_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -60,8 +61,8 @@ func (r *SnmptrapSnmpuserBindingResource) Create(ctx context.Context, req resour
 	snmptrap_snmpuser_binding := snmptrap_snmpuser_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Snmptrap_snmpuser_binding.Type(), &snmptrap_snmpuser_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource)
+	_, err := r.client.AddResource(service.Snmptrap_snmpuser_binding.Type(), "", &snmptrap_snmpuser_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmptrap_snmpuser_binding, got error: %s", err))
 		return
@@ -157,29 +158,44 @@ func (r *SnmptrapSnmpuserBindingResource) Delete(ctx context.Context, req resour
 	}
 
 	tflog.Debug(ctx, "Deleting snmptrap_snmpuser_binding resource")
-	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Multiple unique attributes - parse from ID
+	// Binding with parent (trapclass) - delete mirrors SDK v2: resource name is
+	// trapclass, the remaining identity attrs are passed as delete args. The NITRO
+	// client special-cases this binding type (strips username for the existence
+	// check). Parse from ID, falling back to current state values.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"trapclass", "trapdestination", "username"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["trapclass"]; ok && val != "" {
-		argsMap["trapclass"] = val
-	}
-	if val, ok := idMap["trapdestination"]; ok && val != "" {
-		argsMap["trapdestination"] = val
-	}
-	if val, ok := idMap["username"]; ok && val != "" {
-		argsMap["username"] = val
-	}
-	if val, ok := idMap["version"]; ok && val != "" {
-		argsMap["version"] = val
+	trapclass := idMap["trapclass"]
+	if trapclass == "" {
+		trapclass = data.Trapclass.ValueString()
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Snmptrap_snmpuser_binding.Type(), "", argsMap)
+	args := make([]string, 0)
+	if val, ok := idMap["trapdestination"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("trapdestination:%s", url.QueryEscape(val)))
+	} else if !data.Trapdestination.IsNull() {
+		args = append(args, fmt.Sprintf("trapdestination:%s", url.QueryEscape(data.Trapdestination.ValueString())))
+	}
+	if val, ok := idMap["username"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("username:%s", url.QueryEscape(val)))
+	} else if !data.Username.IsNull() {
+		args = append(args, fmt.Sprintf("username:%s", url.QueryEscape(data.Username.ValueString())))
+	}
+	if val, ok := idMap["version"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("version:%s", url.QueryEscape(val)))
+	} else if !data.Version.IsNull() {
+		args = append(args, fmt.Sprintf("version:%s", url.QueryEscape(data.Version.ValueString())))
+	}
+	if val, ok := idMap["td"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("td:%s", val))
+	} else if !data.Td.IsNull() {
+		args = append(args, fmt.Sprintf("td:%v", data.Td.ValueInt64()))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Snmptrap_snmpuser_binding.Type(), trapclass, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete snmptrap_snmpuser_binding, got error: %s", err))
 		return
@@ -200,8 +216,39 @@ func (r *SnmptrapSnmpuserBindingResource) readSnmptrapSnmpuserBindingFromApi(ctx
 
 	var dataArr []map[string]interface{}
 
+	// The snmptrap_snmpuser_binding GET endpoint requires the parent name
+	// (trapclass) plus the disambiguating args (trapdestination/version/td) -
+	// without them NITRO returns 1095 "Name argument required for binding object".
+	// Mirror the SDK v2 read: pass them as ArgsMap, falling back to current state.
+	args := make(map[string]string)
+	if val, ok := idMap["trapclass"]; ok && val != "" {
+		args["trapclass"] = val
+	} else if !data.Trapclass.IsNull() {
+		args["trapclass"] = data.Trapclass.ValueString()
+	}
+	if val, ok := idMap["trapdestination"]; ok && val != "" {
+		args["trapdestination"] = val
+	} else if !data.Trapdestination.IsNull() {
+		args["trapdestination"] = data.Trapdestination.ValueString()
+	}
+	if val, ok := idMap["version"]; ok && val != "" {
+		args["version"] = val
+	} else if !data.Version.IsNull() {
+		args["version"] = data.Version.ValueString()
+	} else {
+		args["version"] = "V3"
+	}
+	if val, ok := idMap["td"]; ok && val != "" {
+		args["td"] = val
+	} else if !data.Td.IsNull() {
+		args["td"] = strconv.FormatInt(data.Td.ValueInt64(), 10)
+	} else {
+		args["td"] = "0"
+	}
+
 	findParams := service.FindParams{
 		ResourceType:             service.Snmptrap_snmpuser_binding.Type(),
+		ArgsMap:                  args,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)

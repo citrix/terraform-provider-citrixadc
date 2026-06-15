@@ -3,6 +3,7 @@ package snmptrap_snmpuser_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -53,8 +54,30 @@ func (d *SnmptrapSnmpuserBindingDataSource) Read(ctx context.Context, req dataso
 	var dataArr []map[string]interface{}
 	var err error
 
+	// The binding GET endpoint requires the parent name (trapclass) plus the
+	// disambiguating args (trapdestination/version/td); without them NITRO
+	// returns 1095 "Name argument required for binding object".
+	args := make(map[string]string)
+	if !trapclass_Name.IsNull() {
+		args["trapclass"] = trapclass_Name.ValueString()
+	}
+	if !trapdestination_Name.IsNull() {
+		args["trapdestination"] = trapdestination_Name.ValueString()
+	}
+	if !version_Name.IsNull() {
+		args["version"] = version_Name.ValueString()
+	} else {
+		args["version"] = "V3"
+	}
+	if !td_Name.IsNull() {
+		args["td"] = strconv.FormatInt(td_Name.ValueInt64(), 10)
+	} else {
+		args["td"] = "0"
+	}
+
 	findParams := service.FindParams{
 		ResourceType:             service.Snmptrap_snmpuser_binding.Type(),
+		ArgsMap:                  args,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -142,7 +165,7 @@ func (d *SnmptrapSnmpuserBindingDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	snmptrap_snmpuser_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	snmptrap_snmpuser_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
