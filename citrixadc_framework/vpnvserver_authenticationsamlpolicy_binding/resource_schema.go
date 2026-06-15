@@ -41,7 +41,6 @@ func (r *VpnvserverAuthenticationsamlpolicyBindingResource) Schema(ctx context.C
 			},
 			"bindpoint": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -49,7 +48,6 @@ func (r *VpnvserverAuthenticationsamlpolicyBindingResource) Schema(ctx context.C
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -57,7 +55,6 @@ func (r *VpnvserverAuthenticationsamlpolicyBindingResource) Schema(ctx context.C
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -79,7 +76,6 @@ func (r *VpnvserverAuthenticationsamlpolicyBindingResource) Schema(ctx context.C
 			},
 			"priority": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -87,7 +83,6 @@ func (r *VpnvserverAuthenticationsamlpolicyBindingResource) Schema(ctx context.C
 			},
 			"secondary": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +122,44 @@ func vpnvserver_authenticationsamlpolicy_bindingGetThePayloadFromthePlan(ctx con
 	return vpnvserver_authenticationsamlpolicy_binding
 }
 
+// vpnvserver_authenticationsamlpolicy_bindingSetAttrFromGet is the resource-side state
+// setter. All schema attributes are RequiresReplace (no update endpoint), and the NITRO
+// server normalizes/overrides several inputs (bindpoint, priority, gotopriorityexpression,
+// secondary, groupextraction) or does not echo them back faithfully. To avoid
+// "inconsistent result after apply" errors, this setter PRESERVES the configured plan/state
+// values for the user-driven attributes (mirroring the SDK v2 read, which deliberately did
+// not re-read bindpoint) and only re-establishes identity (name/policy) and the composite ID.
 func vpnvserver_authenticationsamlpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationsamlpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationsamlpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationsamlpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Identity attributes are stable; adopt them from the GET response only if the model is
+	// empty (e.g. on import where only the ID is present), otherwise preserve the config value.
+	if data.Name.IsNull() || data.Name.ValueString() == "" {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
+	}
+	if data.Policy.IsNull() || data.Policy.ValueString() == "" {
+		if val, ok := getResponseData["policy"]; ok && val != nil {
+			data.Policy = types.StringValue(val.(string))
+		}
+	}
+
+	// bindpoint, gotopriorityexpression, groupextraction, priority, secondary are
+	// server-overridden / not faithfully echoed: preserve the existing plan/state value.
+
+	// Set ID for the resource (legacy order: name,policy)
+	data.Id = types.StringValue(vpnvserver_authenticationsamlpolicy_bindingComposeId(data.Name.ValueString(), data.Policy.ValueString()))
+
+	return data
+}
+
+// vpnvserver_authenticationsamlpolicy_bindingSetAttrFromGetForDatasource faithfully copies
+// every field from the GET response into the model (datasources have no prior plan/state to
+// preserve) and sets the ID.
+func vpnvserver_authenticationsamlpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationsamlpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationsamlpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_authenticationsamlpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,13 +198,16 @@ func vpnvserver_authenticationsamlpolicy_bindingSetAttrFromGet(ctx context.Conte
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(vpnvserver_authenticationsamlpolicy_bindingComposeId(data.Name.ValueString(), data.Policy.ValueString()))
 
 	return data
+}
+
+// vpnvserver_authenticationsamlpolicy_bindingComposeId builds the composite ID in the
+// legacy attribute order (name,policy) using the new key:UrlEncode(value) format.
+func vpnvserver_authenticationsamlpolicy_bindingComposeId(name string, policy string) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(name)))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(policy)))
+	return strings.Join(idParts, ",")
 }
