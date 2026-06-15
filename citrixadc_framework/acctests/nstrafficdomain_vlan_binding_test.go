@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -124,10 +125,12 @@ func testAccCheckNstrafficdomain_vlan_bindingExist(n string, id *string) resourc
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		td := idSlice[0]
-		vlan := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"td", "vlan"}, nil)
+		if err != nil {
+			return err
+		}
+		td := idMap["td"]
+		vlan := idMap["vlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nstrafficdomain_vlan_binding",
@@ -144,7 +147,7 @@ func testAccCheckNstrafficdomain_vlan_bindingExist(n string, id *string) resourc
 		// Iterate through results to find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["vlan"].(string) == vlan {
+			if fmt.Sprintf("%v", v["vlan"]) == vlan {
 				found = true
 				break
 			}
@@ -169,10 +172,12 @@ func testAccCheckNstrafficdomain_vlan_bindingNotExist(n string, id string) resou
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		td := idSlice[0]
-		vlan := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"td", "vlan"}, nil)
+		if err != nil {
+			return err
+		}
+		td := idMap["td"]
+		vlan := idMap["vlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nstrafficdomain_vlan_binding",
@@ -189,7 +194,7 @@ func testAccCheckNstrafficdomain_vlan_bindingNotExist(n string, id string) resou
 		// Iterate through results to hopefully not find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["vlan"].(string) == vlan {
+			if fmt.Sprintf("%v", v["vlan"]) == vlan {
 				found = true
 				break
 			}

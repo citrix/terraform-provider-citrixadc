@@ -518,6 +518,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstimeout"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstimer"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstrafficdomain"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstrafficdomain_vlan_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsvariable"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsvpxparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsweblogparam"
@@ -1228,6 +1229,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		nspartition_bridgegroup_binding.NewNspartitionBridgegroupBindingResource,
 		nspartition_vlan_binding.NewNspartitionVlanBindingResource,
 		nspartition_vxlan_binding.NewNspartitionVxlanBindingResource,
+		nstrafficdomain_vlan_binding.NewNstrafficdomainVlanBindingResource,
 		nsservicepath_nsservicefunction_binding.NewNsservicepathNsservicefunctionBindingResource,
 		policydataset_value_binding.NewPolicydatasetValueBindingResource,
 		policypatset_pattern_binding.NewPolicypatsetPatternBindingResource,
@@ -2037,6 +2039,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		nspartition_bridgegroup_binding.NSpartitionBridgegroupBindingDataSource,
 		nspartition_vlan_binding.NSpartitionVlanBindingDataSource,
 		nspartition_vxlan_binding.NSpartitionVxlanBindingDataSource,
+		nstrafficdomain_vlan_binding.NStrafficdomainVlanBindingDataSource,
 		nsservicepath_nsservicefunction_binding.NSservicepathNsservicefunctionBindingDataSource,
 		policydataset_value_binding.POlicydatasetValueBindingDataSource,
 		policypatset_pattern_binding.POlicypatsetPatternBindingDataSource,
