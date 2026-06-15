@@ -13,3 +13,4 @@ dist/
 tf.log
 *.plan
 .terraform.lock.hcl
+terraform-provider-citrixadc
