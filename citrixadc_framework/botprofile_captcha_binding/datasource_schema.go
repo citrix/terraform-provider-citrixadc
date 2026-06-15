@@ -32,7 +32,8 @@ func BotprofileCaptchaBindingDataSourceSchema() schema.Schema {
 				Description: "URL for which the Captcha action, if configured under IP reputation, TPS or device fingerprint, need to be applied.",
 			},
 			"captcharesource": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Captcha action binding. For each URL, only one binding is allowed. To update the values of an existing URL binding, user has to first unbind that binding, and then needs to bind the URL again with new values. Maximum 30 bindings can be configured per profile.",
 			},
 			"graceperiod": schema.Int64Attribute{

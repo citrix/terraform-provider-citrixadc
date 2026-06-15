@@ -3,7 +3,7 @@ package botprofile_captcha_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,11 +69,13 @@ func (r *BotprofileCaptchaBindingResource) Create(ctx context.Context, req resou
 
 	tflog.Trace(ctx, "Created botprofile_captcha_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Legacy SDK v2 ID order is "name,bot_captcha_url" (see resource_id_mapping.json);
+	// captcharesource was NOT part of the legacy ID and is excluded here for
+	// backward compatibility.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_captcha_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotCaptchaUrl.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("captcharesource:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Captcharesource.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_captcha_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotCaptchaUrl.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -155,7 +157,9 @@ func (r *BotprofileCaptchaBindingResource) Delete(ctx context.Context, req resou
 	}
 
 	tflog.Debug(ctx, "Deleting botprofile_captcha_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Legacy ID order is "name,bot_captcha_url"; ParseIdString handles both the
+	// new key:value format and the legacy positional format.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "bot_captcha_url"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -168,15 +172,18 @@ func (r *BotprofileCaptchaBindingResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bot_captcha_url"]; ok && val != "" {
-		argsMap["bot_captcha_url"] = val
+	// Build delete args mirroring the SDK v2 resource: URL-encode the
+	// bot_captcha_url value (it can contain slashes/special characters), and
+	// include captcharesource when it is known (it is not part of the ID).
+	args := make([]string, 0, 2)
+	if botCaptchaUrl, ok := idMap["bot_captcha_url"]; ok && botCaptchaUrl != "" {
+		args = append(args, fmt.Sprintf("bot_captcha_url:%s", url.QueryEscape(botCaptchaUrl)))
 	}
-	if val, ok := idMap["captcharesource"]; ok && val != "" {
-		argsMap["captcharesource"] = val
+	if !data.Captcharesource.IsNull() && !data.Captcharesource.IsUnknown() {
+		args = append(args, fmt.Sprintf("captcharesource:%t", data.Captcharesource.ValueBool()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Botprofile_captcha_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Botprofile_captcha_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botprofile_captcha_binding, got error: %s", err))
 		return
@@ -220,7 +227,9 @@ func (r *BotprofileCaptchaBindingResource) readBotprofileCaptchaBindingFromApi(c
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Identity is name (parent) + bot_captcha_url, matching the legacy SDK v2
+	// contract (captcharesource is not part of the identity).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -236,26 +245,6 @@ func (r *BotprofileCaptchaBindingResource) readBotprofileCaptchaBindingFromApi(c
 				match = false
 				continue
 			}
-		} else if _, ok := v["bot_captcha_url"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check captcharesource
-		if idVal, ok := idMap["captcharesource"]; ok {
-			if val, ok := v["captcharesource"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["captcharesource"].(bool); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

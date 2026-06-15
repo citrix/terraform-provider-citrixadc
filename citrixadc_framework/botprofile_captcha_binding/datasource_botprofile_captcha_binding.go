@@ -45,7 +45,6 @@ func (d *BotprofileCaptchaBindingDataSource) Read(ctx context.Context, req datas
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	botcaptchaurl_Name := data.BotCaptchaUrl
-	captcharesource_Name := data.Captcharesource
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -72,24 +71,13 @@ func (d *BotprofileCaptchaBindingDataSource) Read(ctx context.Context, req datas
 	for i, v := range dataArr {
 		match := true
 
-		// Check bot_captcha_url
+		// Check bot_captcha_url (the lookup key alongside the parent name)
 		if val, ok := v["bot_captcha_url"].(string); ok {
 			if botcaptchaurl_Name.IsNull() || val != botcaptchaurl_Name.ValueString() {
 				match = false
 				continue
 			}
 		} else if !botcaptchaurl_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check captcharesource
-		if val, ok := v["captcharesource"].(bool); ok {
-			if captcharesource_Name.IsNull() || val != captcharesource_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !captcharesource_Name.IsNull() {
 			match = false
 			continue
 		}
@@ -105,7 +93,7 @@ func (d *BotprofileCaptchaBindingDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	botprofile_captcha_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	botprofile_captcha_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
