@@ -3,7 +3,7 @@ package lsnclient_network_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,12 +69,14 @@ func (r *LsnclientNetworkBindingResource) Create(ctx context.Context, req resour
 
 	tflog.Trace(ctx, "Created lsnclient_network_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Use the legacy identity keys only (clientname,network) so the ID stays
+	// backward-compatible with the SDK v2 "clientname,network" format and with
+	// resource_id_mapping.json. netmask/td are not part of the binding identity
+	// (and td is not even echoed by the GET response).
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -156,7 +158,8 @@ func (r *LsnclientNetworkBindingResource) Delete(ctx context.Context, req resour
 	}
 
 	tflog.Debug(ctx, "Deleting lsnclient_network_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Parse the (clientname,network) identity from the ID; the parent is clientname.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"clientname", "network"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -169,18 +172,24 @@ func (r *LsnclientNetworkBindingResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["netmask"]; ok && val != "" {
-		argsMap["netmask"] = val
-	}
-	if val, ok := idMap["network"]; ok && val != "" {
-		argsMap["network"] = val
-	}
-	if val, ok := idMap["td"]; ok && val != "" {
-		argsMap["td"] = val
+	network_value, ok := idMap["network"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Attribute 'network' not found in ID")
+		return
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Lsnclient_network_binding.Type(), clientname_value, argsMap)
+	// Mirror the SDK v2 delete args: network (required), plus netmask/td when set.
+	// URL-encode values so slashy/special characters are transmitted correctly.
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("network:%s", url.QueryEscape(network_value)))
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		args = append(args, fmt.Sprintf("netmask:%s", url.QueryEscape(data.Netmask.ValueString())))
+	}
+	if !data.Td.IsNull() {
+		args = append(args, fmt.Sprintf("td:%s", url.QueryEscape(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Lsnclient_network_binding.Type(), clientname_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsnclient_network_binding, got error: %s", err))
 		return
@@ -205,6 +214,12 @@ func (r *LsnclientNetworkBindingResource) readLsnclientNetworkBindingFromApi(ctx
 		return
 	}
 
+	network_Name, ok := idMap["network"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'network' not found in ID string")
+		return
+	}
+
 	var dataArr []map[string]interface{}
 
 	findParams := service.FindParams{
@@ -224,61 +239,13 @@ func (r *LsnclientNetworkBindingResource) readLsnclientNetworkBindingFromApi(ctx
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding for this network.
+	// Match only on `network` (the identity within a clientname), mirroring the
+	// SDK v2 resource: the GET response does not echo `td`, so matching on td
+	// would reject every record.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check netmask
-		if idVal, ok := idMap["netmask"]; ok {
-			if val, ok := v["netmask"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["netmask"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check network
-		if idVal, ok := idMap["network"]; ok {
-			if val, ok := v["network"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["network"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check td
-		if idVal, ok := idMap["td"]; ok {
-			if val, ok := v["td"]; ok {
-				val, _ = utils.ConvertToInt64(val)
-				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
-				if val != idValInt64 {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["td"]; ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["network"].(string); ok && val == network_Name {
 			foundIndex = i
 			break
 		}
@@ -286,7 +253,7 @@ func (r *LsnclientNetworkBindingResource) readLsnclientNetworkBindingFromApi(ctx
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("lsnclient_network_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "lsnclient_network_binding not found with the provided ID attributes")
 		return
 	}
 
