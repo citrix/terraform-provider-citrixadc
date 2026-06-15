@@ -22,6 +22,7 @@ import (
 // AuthenticationvserverAuthenticationsamlidppolicyBindingResourceModel describes the resource data model.
 type AuthenticationvserverAuthenticationsamlidppolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -39,6 +40,13 @@ func (r *AuthenticationvserverAuthenticationsamlidppolicyBindingResource) Schema
 				Computed:    true,
 				Description: "The ID of the authenticationvserver_authenticationsamlidppolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -49,7 +57,6 @@ func (r *AuthenticationvserverAuthenticationsamlidppolicyBindingResource) Schema
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -64,7 +71,6 @@ func (r *AuthenticationvserverAuthenticationsamlidppolicyBindingResource) Schema
 			},
 			"nextfactor": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -87,7 +93,6 @@ func (r *AuthenticationvserverAuthenticationsamlidppolicyBindingResource) Schema
 			},
 			"secondary": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -102,6 +107,9 @@ func authenticationvserver_authenticationsamlidppolicy_bindingGetThePayloadFromt
 
 	// Create API request body from the model
 	authenticationvserver_authenticationsamlidppolicy_binding := authentication.Authenticationvserverauthenticationsamlidppolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		authenticationvserver_authenticationsamlidppolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		authenticationvserver_authenticationsamlidppolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -127,10 +135,64 @@ func authenticationvserver_authenticationsamlidppolicy_bindingGetThePayloadFromt
 	return authenticationvserver_authenticationsamlidppolicy_binding
 }
 
+// authenticationvserver_authenticationsamlidppolicy_bindingComposeId builds the
+// composite resource ID using the legacy SDK v2 key order (name,policy) so that
+// imported SDK v2 state and resource_id_mapping.json stay consistent.
+func authenticationvserver_authenticationsamlidppolicy_bindingComposeId(data *AuthenticationvserverAuthenticationsamlidppolicyBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	return strings.Join(idParts, ",")
+}
+
 func authenticationvserver_authenticationsamlidppolicy_bindingSetAttrFromGet(ctx context.Context, data *AuthenticationvserverAuthenticationsamlidppolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationsamlidppolicyBindingResourceModel {
 	tflog.Debug(ctx, "In authenticationvserver_authenticationsamlidppolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// gotopriorityexpression / bindpoint are not reliably echoed by the binding GET
+	// (the SDK v2 resource left bindpoint un-read). Preserve the plan/state value
+	// instead of nulling it so Terraform does not see an inconsistent result.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
+		data.Nextfactor = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// Preserve the composite ID (legacy name,policy order).
+	data.Id = types.StringValue(authenticationvserver_authenticationsamlidppolicy_bindingComposeId(data))
+
+	return data
+}
+
+// authenticationvserver_authenticationsamlidppolicy_bindingSetAttrFromGetForDatasource
+// faithfully copies every field from the GET response for the datasource flow,
+// which has no prior plan/state to preserve.
+func authenticationvserver_authenticationsamlidppolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationvserverAuthenticationsamlidppolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationsamlidppolicyBindingResourceModel {
+	tflog.Debug(ctx, "In authenticationvserver_authenticationsamlidppolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -169,14 +231,7 @@ func authenticationvserver_authenticationsamlidppolicy_bindingSetAttrFromGet(ctx
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(authenticationvserver_authenticationsamlidppolicy_bindingComposeId(data))
 
 	return data
 }
