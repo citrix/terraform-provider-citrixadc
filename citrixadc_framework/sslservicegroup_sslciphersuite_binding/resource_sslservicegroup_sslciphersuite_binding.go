@@ -3,6 +3,7 @@ package sslservicegroup_sslciphersuite_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -168,7 +169,9 @@ func (r *SslservicegroupSslciphersuiteBindingResource) Delete(ctx context.Contex
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["ciphername"]; ok && val != "" {
-		argsMap["ciphername"] = val
+		// URL-encode the arg value: ciphername can contain slashes/special chars
+		// and the NITRO delete helper does not encode arg values.
+		argsMap["ciphername"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Sslservicegroup_sslciphersuite_binding.Type(), servicegroupname_value, argsMap)
