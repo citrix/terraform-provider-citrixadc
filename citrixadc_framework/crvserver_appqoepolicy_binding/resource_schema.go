@@ -22,6 +22,7 @@ import (
 // CrvserverAppqoepolicyBindingResourceModel describes the resource data model.
 type CrvserverAppqoepolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *CrvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Computed:    true,
 				Description: "The ID of the crvserver_appqoepolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +66,14 @@ func (r *CrvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Description: "Invoke flag.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -94,7 +103,6 @@ func (r *CrvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 			},
 			"targetvserver": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +117,9 @@ func crvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx context.Context,
 
 	// Create API request body from the model
 	crvserver_appqoepolicy_binding := cr.Crvserverappqoepolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		crvserver_appqoepolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		crvserver_appqoepolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +148,67 @@ func crvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx context.Context,
 	return crvserver_appqoepolicy_binding
 }
 
+// crvserver_appqoepolicy_bindingSetAttrFromGet is the resource-side state setter.
+// The NITRO GET response for this binding does not faithfully echo back every
+// configured input (priority/gotopriorityexpression/bindpoint/invoke can be
+// server-overridden or omitted), so we preserve the existing plan/state value when
+// the field is absent from the response instead of nulling it (Pattern 7 / Pattern 13).
 func crvserver_appqoepolicy_bindingSetAttrFromGet(ctx context.Context, data *CrvserverAppqoepolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverAppqoepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In crvserver_appqoepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. Preserve existing value if the field is not
+	// echoed back by NITRO (do not overwrite with null).
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["targetvserver"]; ok && val != nil {
+		data.Targetvserver = types.StringValue(val.(string))
+	}
+
+	// Set ID for the resource
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+// crvserver_appqoepolicy_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (the datasource has no prior plan/state to preserve) and
+// sets the composite ID (Pattern 7 datasource split).
+func crvserver_appqoepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CrvserverAppqoepolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverAppqoepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In crvserver_appqoepolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -184,8 +252,7 @@ func crvserver_appqoepolicy_bindingSetAttrFromGet(ctx context.Context, data *Crv
 		data.Targetvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
