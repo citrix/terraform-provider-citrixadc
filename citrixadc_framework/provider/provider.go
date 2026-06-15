@@ -700,11 +700,14 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/subscriberparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/subscriberprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/subscriberradiusinterface"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemadmuserinfo"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systembackup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemcmdpolicy"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemcpuparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemextramgmtcpu"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemfile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemglobal_auditnslogpolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemglobal_auditsyslogpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemglobal_authenticationldappolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemglobal_authenticationlocalpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemglobal_authenticationpolicy_binding"
@@ -714,7 +717,13 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemgroup_nspartition_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemgroup_systemcmdpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemgroup_systemuser_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemhwerror"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemkek"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemnsbtracing"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemparameter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemrestorepoint"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemsession"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemsshkey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemuser"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemuser_nspartition_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemuser_systemcmdpolicy_binding"
@@ -1226,6 +1235,15 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		vrid_interface_binding.NewVridInterfaceBindingResource,
 		vrid_trackinterface_binding.NewVridTrackinterfaceBindingResource,
 		vridparam.NewVridparamResource,
+		systemadmuserinfo.NewSystemadmuserinfoResource,
+		systemcpuparam.NewSystemcpuparamResource,
+		systemglobal_auditsyslogpolicy_binding.NewSystemglobalAuditsyslogpolicyBindingResource,
+		systemhwerror.NewSystemhwerrorResource,
+		systemkek.NewSystemkekResource,
+		systemnsbtracing.NewSystemnsbtracingResource,
+		systemrestorepoint.NewSystemrestorepointResource,
+		systemsession.NewSystemsessionResource,
+		systemsshkey.NewSystemsshkeyResource,
 	}
 }
 
@@ -2042,6 +2060,11 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		vrid_channel_binding.VRidChannelBindingDataSource,
 		vrid_interface_binding.VRidInterfaceBindingDataSource,
 		vrid_trackinterface_binding.VRidTrackinterfaceBindingDataSource,
+		systemcpuparam.SYstemcpuparamDataSource,
+		systemglobal_auditsyslogpolicy_binding.SYstemglobalAuditsyslogpolicyBindingDataSource,
+		systemrestorepoint.SYstemrestorepointDataSource,
+		systemsession.SYstemsessionDataSource,
+		systemsshkey.SYstemsshkeyDataSource,
 	}
 }
 

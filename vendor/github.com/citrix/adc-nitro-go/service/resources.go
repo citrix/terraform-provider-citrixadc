@@ -1067,12 +1067,14 @@ const (
 	Subscriberprofile
 	Subscriberradiusinterface
 	Svcbindings
+	Systemadmuserinfo
 	Systembackup
 	Systemcmdpolicy
 	Systemcollectionparam
 	Systemcore
 	Systemcountergroup
 	Systemcounters
+	Systemcpuparam
 	Systemdatasource
 	Systementity
 	Systementitydata
@@ -1094,8 +1096,11 @@ const (
 	Systemgroup_nspartition_binding
 	Systemgroup_systemcmdpolicy_binding
 	Systemgroup_systemuser_binding
+	Systemhwerror
 	Systemkek
+	Systemnsbtracing
 	Systemparameter
+	Systemrestorepoint
 	Systemsession
 	Systemsshkey
 	Systemuser
@@ -2338,12 +2343,14 @@ var resources = []string{
 	"subscriberprofile",
 	"subscriberradiusinterface",
 	"svcbindings",
+	"systemadmuserinfo",
 	"systembackup",
 	"systemcmdpolicy",
 	"systemcollectionparam",
 	"systemcore",
 	"systemcountergroup",
 	"systemcounters",
+	"systemcpuparam",
 	"systemdatasource",
 	"systementity",
 	"systementitydata",
@@ -2365,8 +2372,11 @@ var resources = []string{
 	"systemgroup_nspartition_binding",
 	"systemgroup_systemcmdpolicy_binding",
 	"systemgroup_systemuser_binding",
+	"systemhwerror",
 	"systemkek",
+	"systemnsbtracing",
 	"systemparameter",
+	"systemrestorepoint",
 	"systemsession",
 	"systemsshkey",
 	"systemuser",

@@ -117,6 +117,28 @@ func doPolicyUrlSetPreChecks(t *testing.T) {
 	}
 }
 
+func doSystemSshKeyPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"tftest_sshkey.pub",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the disposable PUBLIC ssh key to /var/tmp so the resource's
+	// `src = "local:tftest_sshkey.pub"` import resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
 func doDnskeyPreChecks(t *testing.T) {
 	testAccPreCheck(t)
 
