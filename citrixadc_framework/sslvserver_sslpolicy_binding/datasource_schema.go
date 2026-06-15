@@ -35,7 +35,8 @@ func SslvserverSslpolicyBindingDataSourceSchema() schema.Schema {
 				Description: "The name of the SSL policy binding.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The priority of the policies bound to this SSL service",
 			},
 			"type": schema.StringAttribute{

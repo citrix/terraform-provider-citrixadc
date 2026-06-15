@@ -2278,3 +2278,19 @@ PATTERNS: 1 (PUT-where-POST), Delete-arg URL-encode (binding-family hint b).
 FILES CHANGED: citrixadc_framework/sslvserver_sslciphersuite_binding/resource_sslvserver_sslciphersuite_binding.go (NO test/doc file modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: sslvserver_sslpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:23:42Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccSslvserver_sslpolicy_binding($|_|DataSource)
+TESTS:
+  - TestAccSslvserver_sslpolicy_binding_lbvserver ...... PASS
+  - TestAccSslvserver_sslpolicy_binding_csvserver ...... PASS
+  - TestAccSslvserver_sslpolicy_bindingDataSource_basic  PASS
+BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Computed in SDK v2 -> reverted to Optional+Computed (test omits them). ID format adopts new key:value form; legacy comma form handled by ParseIdString (resource_id_mapping.json "vservername,policyname" confirmed). Create verb PUT (UpdateUnnamedResource) matches SDK v2. Attribute names/types/ForceNew(RequiresReplace) all parity.
+DATASOURCE: healthy code, but priority lookup key was Required and unconditionally filtered -> made Optional+Computed and filter now applied only when supplied (datasource test supplies vservername/policyname/type, not priority). Shared SetAttrFromGet copies all fields + sets Id, fine for datasource.
+PATTERNS: 8 (Required->Optional+Computed flag drift), 11 (resource/datasource schema flag inconsistency)
+FILES CHANGED: citrixadc_framework/sslvserver_sslpolicy_binding/resource_schema.go, citrixadc_framework/sslvserver_sslpolicy_binding/datasource_schema.go, citrixadc_framework/sslvserver_sslpolicy_binding/datasource_sslvserver_sslpolicy_binding.go, citrixadc_framework/acctests/sslvserver_sslpolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc file modified.
+BLOCKER: none
+========================================

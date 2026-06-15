@@ -57,14 +57,16 @@ func (r *SslvserverSslpolicyBindingResource) Schema(ctx context.Context, req res
 				Description: "Invoke flag. This attribute is relevant only for ADVANCED policies",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label to invoke if the current policy rule evaluates to TRUE.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

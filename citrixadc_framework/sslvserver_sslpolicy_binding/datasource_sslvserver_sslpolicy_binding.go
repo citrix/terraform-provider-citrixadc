@@ -85,16 +85,18 @@ func (d *SslvserverSslpolicyBindingDataSource) Read(ctx context.Context, req dat
 			continue
 		}
 
-		// Check priority
-		if val, ok := v["priority"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if priority_Name.IsNull() || val != priority_Name.ValueInt64() {
+		// Check priority (only when supplied as a lookup key)
+		if !priority_Name.IsNull() {
+			if val, ok := v["priority"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != priority_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !priority_Name.IsNull() {
-			match = false
-			continue
 		}
 		// Check type_Name
 		if !type_Name.IsNull() && type_Name.ValueString() != "" {

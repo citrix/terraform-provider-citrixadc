@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -88,10 +88,12 @@ func testAccCheckSslvserver_sslpolicy_bindingExist(n string, id *string) resourc
 			*id = rs.Primary.ID
 		}
 
-		idSlice := strings.Split(rs.Primary.ID, ",")
-
-		vservername := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"vservername", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		vservername := idMap["vservername"]
+		policyname := idMap["policyname"]
 
 		// Use the shared utility function to get a configured client
 		client, err := testAccGetFrameworkClient()
@@ -144,9 +146,11 @@ func testAccCheckSslvserver_sslpolicy_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		idSlice := strings.Split(rs.Primary.ID, ",")
-
-		vservername := idSlice[0]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"vservername", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		vservername := idMap["vservername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslpolicy_binding",
