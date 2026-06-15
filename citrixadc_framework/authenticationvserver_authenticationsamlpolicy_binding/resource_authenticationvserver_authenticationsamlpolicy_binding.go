@@ -3,7 +3,6 @@ package authenticationvserver_authenticationsamlpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -205,6 +204,12 @@ func (r *AuthenticationvserverAuthenticationsamlpolicyBindingResource) readAuthe
 		return
 	}
 
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return
+	}
+
 	var dataArr []map[string]interface{}
 
 	findParams := service.FindParams{
@@ -224,61 +229,12 @@ func (r *AuthenticationvserverAuthenticationsamlpolicyBindingResource) readAuthe
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding for this policy. NITRO GET only reliably echoes
+	// name/policy/priority/secondary (not groupextraction/bindpoint), so match on the discriminating
+	// policy key only - same as the SDK v2 resource did.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
 			foundIndex = i
 			break
 		}
