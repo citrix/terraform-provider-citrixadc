@@ -3,7 +3,7 @@ package authenticationvserver_authenticationcertpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,12 +69,11 @@ func (r *AuthenticationvserverAuthenticationcertpolicyBindingResource) Create(ct
 
 	tflog.Trace(ctx, "Created authenticationvserver_authenticationcertpolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// ID identity matches the SDK v2 contract and resource_id_mapping.json: name,policy.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -156,7 +155,9 @@ func (r *AuthenticationvserverAuthenticationcertpolicyBindingResource) Delete(ct
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_authenticationcertpolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Parse the parent name (and policy) from the ID (handles both the new
+	// name:...,policy:... format and the legacy SDK v2 name,policy format).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -169,18 +170,26 @@ func (r *AuthenticationvserverAuthenticationcertpolicyBindingResource) Delete(ct
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
+	// Build disambiguating delete args from state, mirroring the SDK v2 resource.
+	// Values are URL-encoded (pattern (b)) so slashy/special bindpoint values are
+	// transmitted correctly.
+	args := make([]string, 0)
+	policy_value := idMap["policy"]
+	if policy_value == "" && !data.Policy.IsNull() {
+		policy_value = data.Policy.ValueString()
 	}
-	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+	args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(policy_value)))
+	if !data.Secondary.IsNull() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+	if !data.Groupextraction.IsNull() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationcertpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_authenticationcertpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_authenticationcertpolicy_binding, got error: %s", err))
 		return
@@ -224,61 +233,17 @@ func (r *AuthenticationvserverAuthenticationcertpolicyBindingResource) readAuthe
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding with the matching policy.
+	// The binding's identity within a parent vserver is (name, policy); other
+	// attributes (groupextraction, secondary, bindpoint) are not part of the ID.
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return
+	}
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
 			foundIndex = i
 			break
 		}
