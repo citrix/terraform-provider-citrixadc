@@ -3,7 +3,6 @@ package lsnclient_nsacl_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,11 +68,13 @@ func (r *LsnclientNsaclBindingResource) Create(ctx context.Context, req resource
 
 	tflog.Trace(ctx, "Created lsnclient_nsacl_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Identity is clientname + aclname only (mirrors SDK v2 d.SetId("clientname,aclname")
+	// and resource_id_mapping.json). td is excluded - it is a default-able traffic domain
+	// that NITRO omits from the GET response, so it must not participate in the identity.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("aclname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Aclname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("aclname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Aclname.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -241,23 +242,8 @@ func (r *LsnclientNsaclBindingResource) readLsnclientNsaclBindingFromApi(ctx con
 			continue
 		}
 
-		// Check td
-		if idVal, ok := idMap["td"]; ok {
-			if val, ok := v["td"]; ok {
-				val, _ = utils.ConvertToInt64(val)
-				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
-				if val != idValInt64 {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["td"]; ok {
-			match = false
-			continue
-		}
+		// td is not part of the identity (default-able, omitted from GET) and is
+		// resolved from the matched record via SetAttrFromGet, so it is not filtered.
 		if match {
 			foundIndex = i
 			break

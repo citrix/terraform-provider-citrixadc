@@ -101,11 +101,13 @@ func lsnclient_nsacl_bindingSetAttrFromGet(ctx context.Context, data *LsnclientN
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Multiple unique attributes - comma-separated key:UrlEncode(value) pairs.
+	// Identity is clientname + aclname only (mirrors SDK v2 d.SetId("clientname,aclname")
+	// and resource_id_mapping.json). td is a default-able traffic-domain filter, not part
+	// of the identity, and NITRO omits it from the GET response when it is the default.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("aclname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Aclname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("aclname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Aclname.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

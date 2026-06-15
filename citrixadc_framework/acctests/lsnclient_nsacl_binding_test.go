@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -130,10 +131,12 @@ func testAccCheckLsnclient_nsacl_bindingExist(n string, id *string) resource.Tes
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		clientname := idSlice[0]
-		aclname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"clientname", "aclname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		clientname := idMap["clientname"]
+		aclname := idMap["aclname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsnclient_nsacl_binding",
