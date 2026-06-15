@@ -22,6 +22,7 @@ import (
 // CsvserverSpilloverpolicyBindingResourceModel describes the resource data model.
 type CsvserverSpilloverpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *CsvserverSpilloverpolicyBindingResource) Schema(ctx context.Context, re
 				Computed:    true,
 				Description: "The ID of the csvserver_spilloverpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +66,14 @@ func (r *CsvserverSpilloverpolicyBindingResource) Schema(ctx context.Context, re
 				Description: "Invoke a policy label if this policy's rule evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label to be invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -94,7 +103,6 @@ func (r *CsvserverSpilloverpolicyBindingResource) Schema(ctx context.Context, re
 			},
 			"targetlbvserver": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +117,9 @@ func csvserver_spilloverpolicy_bindingGetThePayloadFromthePlan(ctx context.Conte
 
 	// Create API request body from the model
 	csvserver_spilloverpolicy_binding := cs.Csvserverspilloverpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		csvserver_spilloverpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_spilloverpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +148,61 @@ func csvserver_spilloverpolicy_bindingGetThePayloadFromthePlan(ctx context.Conte
 	return csvserver_spilloverpolicy_binding
 }
 
+// csvserver_spilloverpolicy_bindingSetAttrFromGet is the RESOURCE-side setter. It
+// preserves the prior plan/state values for attributes that the NITRO GET array does
+// not reliably echo back (server-overridden / non-echoed inputs such as
+// gotopriorityexpression, priority, invoke, bindpoint, labelname, labeltype,
+// targetlbvserver). Only adopt a GET value when the response actually carries it; do
+// NOT null user inputs that the response omits (Pattern 7). The ID is set in Create /
+// Read (Pattern 6), not here.
 func csvserver_spilloverpolicy_bindingSetAttrFromGet(ctx context.Context, data *CsvserverSpilloverpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverSpilloverpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In csvserver_spilloverpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model - preserve existing value when the field is absent.
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
+		data.Targetlbvserver = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// csvserver_spilloverpolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. The datasource has no prior plan/state, so it faithfully copies every field
+// from the GET response and computes the ID itself (Pattern 7 datasource split).
+func csvserver_spilloverpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CsvserverSpilloverpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverSpilloverpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In csvserver_spilloverpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -184,7 +246,7 @@ func csvserver_spilloverpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Targetlbvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
