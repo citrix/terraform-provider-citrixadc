@@ -3,6 +3,7 @@ package vpnvserver_vpneula_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -168,7 +169,8 @@ func (r *VpnvserverVpneulaBindingResource) Delete(ctx context.Context, req resou
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["eula"]; ok && val != "" {
-		argsMap["eula"] = val
+		// URL-encode the delete arg value to safely handle slashy/special characters
+		argsMap["eula"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_vpneula_binding.Type(), name_value, argsMap)
