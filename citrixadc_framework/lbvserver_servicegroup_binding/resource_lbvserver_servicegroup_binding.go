@@ -68,11 +68,12 @@ func (r *LbvserverServicegroupBindingResource) Create(ctx context.Context, req r
 
 	tflog.Trace(ctx, "Created lbvserver_servicegroup_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Legacy SDK v2 ID order is "name,servicegroupname" (see resource_id_mapping.json).
+	// servicename is server-derived/optional and is NOT part of the resource identity.
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("servicename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicename.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -183,9 +184,6 @@ func (r *LbvserverServicegroupBindingResource) Delete(ctx context.Context, req r
 	if val, ok := idMap["servicegroupname"]; ok && val != "" {
 		argsMap["servicegroupname"] = val
 	}
-	if val, ok := idMap["servicename"]; ok && val != "" {
-		argsMap["servicename"] = val
-	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_servicegroup_binding.Type(), name_value, argsMap)
 	if err != nil {
@@ -236,7 +234,7 @@ func (r *LbvserverServicegroupBindingResource) readLbvserverServicegroupBindingF
 	for i, v := range dataArr {
 		match := true
 
-		// Check servicegroupname
+		// Check servicegroupname (the only identity key besides the parent name)
 		if idVal, ok := idMap["servicegroupname"]; ok {
 			if val, ok := v["servicegroupname"].(string); ok {
 				if val != idVal {
@@ -247,25 +245,6 @@ func (r *LbvserverServicegroupBindingResource) readLbvserverServicegroupBindingF
 				match = false
 				continue
 			}
-		} else if _, ok := v["servicegroupname"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check servicename
-		if idVal, ok := idMap["servicename"]; ok {
-			if val, ok := v["servicename"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["servicename"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

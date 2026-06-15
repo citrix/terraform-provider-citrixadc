@@ -43,13 +43,15 @@ func (r *LbvserverServicegroupBindingResource) Schema(ctx context.Context, req r
 				Description: "Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vserver\" or 'my vserver').",
 			},
 			"order": schema.Int64Attribute{
+				// SDK v2: Optional (no server default echoed unless set). Dropping Computed
+				// avoids an unresolved "unknown value" when the binding is created without
+				// order and the GET response omits it.
 				Optional:    true,
-				Computed:    true,
 				Description: "Order number to be assigned to the service when it is bound to the lb vserver.",
 			},
 			"servicegroupname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				// SDK v2 contract: Required + ForceNew. Also part of the resource identity.
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -61,8 +63,9 @@ func (r *LbvserverServicegroupBindingResource) Schema(ctx context.Context, req r
 				Description: "Service to bind to the virtual server.",
 			},
 			"weight": schema.Int64Attribute{
+				// weight is never echoed by the binding GET response; keep it Optional-only
+				// (no Computed) so an unset value resolves to null instead of an unknown.
 				Optional:    true,
-				Computed:    true,
 				Description: "Integer specifying the weight of the service. A larger number specifies a greater weight. Defines the capacity of the service relative to the other services in the load balancing configuration. Determines the priority given to the service in load balancing decisions.",
 			},
 		},
@@ -93,10 +96,45 @@ func lbvserver_servicegroup_bindingGetThePayloadFromthePlan(ctx context.Context,
 	return lbvserver_servicegroup_binding
 }
 
+// lbvserver_servicegroup_bindingSetAttrFromGet is the RESOURCE-side setter. It preserves
+// plan/state values for inputs the NITRO GET does not echo back (e.g. weight, and order
+// when unset), so apply does not fail with "inconsistent result after apply". The ID is set
+// exactly once in Create (and preserved in Update) — this function must not recompute it.
 func lbvserver_servicegroup_bindingSetAttrFromGet(ctx context.Context, data *LbvserverServicegroupBindingResourceModel, getResponseData map[string]interface{}) *LbvserverServicegroupBindingResourceModel {
 	tflog.Debug(ctx, "In lbvserver_servicegroup_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	// order: GET echoes it only when it was explicitly set; preserve prior value otherwise.
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
+		data.Servicegroupname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["servicename"]; ok && val != nil {
+		data.Servicename = types.StringValue(val.(string))
+	}
+	// weight: not echoed by GET; preserve the prior plan/state value.
+	if val, ok := getResponseData["weight"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Weight = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// lbvserver_servicegroup_bindingSetAttrFromGetForDatasource is the DATASOURCE-side setter.
+// A datasource has no prior plan/state to preserve, so it faithfully copies every field
+// from the GET response and sets the composite ID itself (no Create runs for a datasource).
+func lbvserver_servicegroup_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LbvserverServicegroupBindingResourceModel, getResponseData map[string]interface{}) *LbvserverServicegroupBindingResourceModel {
+	tflog.Debug(ctx, "In lbvserver_servicegroup_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
 	} else {
@@ -105,6 +143,8 @@ func lbvserver_servicegroup_bindingSetAttrFromGet(ctx context.Context, data *Lbv
 	if val, ok := getResponseData["order"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Order = types.Int64Value(intVal)
+		} else {
+			data.Order = types.Int64Null()
 		}
 	} else {
 		data.Order = types.Int64Null()
@@ -122,17 +162,17 @@ func lbvserver_servicegroup_bindingSetAttrFromGet(ctx context.Context, data *Lbv
 	if val, ok := getResponseData["weight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Weight = types.Int64Value(intVal)
+		} else {
+			data.Weight = types.Int64Null()
 		}
 	} else {
 		data.Weight = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Composite ID: legacy order "name,servicegroupname".
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("servicename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicename.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
