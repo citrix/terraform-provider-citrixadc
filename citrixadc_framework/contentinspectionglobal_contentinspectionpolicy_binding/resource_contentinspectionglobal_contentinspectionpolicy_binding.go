@@ -192,6 +192,9 @@ func (r *ContentinspectionglobalContentinspectionpolicyBindingResource) readCont
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["type"]; ok && val != "" {
 		argsMap["type"] = val
+	} else {
+		// Match SDK v2 behaviour: default bindpoint filter to REQ_DEFAULT.
+		argsMap["type"] = "REQ_DEFAULT"
 	}
 
 	findParams := service.FindParams{
