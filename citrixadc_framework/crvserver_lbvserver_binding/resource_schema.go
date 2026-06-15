@@ -33,7 +33,8 @@ func (r *CrvserverLbvserverBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the crvserver_lbvserver_binding resource.",
 			},
 			"lbvserver": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

@@ -3,6 +3,7 @@ package crvserver_lbvserver_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -166,12 +167,12 @@ func (r *CrvserverLbvserverBindingResource) Delete(ctx context.Context, req reso
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	args := make([]string, 0)
 	if val, ok := idMap["lbvserver"]; ok && val != "" {
-		argsMap["lbvserver"] = val
+		args = append(args, fmt.Sprintf("lbvserver:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_lbvserver_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_lbvserver_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_lbvserver_binding, got error: %s", err))
 		return
