@@ -3,7 +3,6 @@ package authenticationvserver_authenticationwebauthpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,12 +68,11 @@ func (r *AuthenticationvserverAuthenticationwebauthpolicyBindingResource) Create
 
 	tflog.Trace(ctx, "Created authenticationvserver_authenticationwebauthpolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Backward-compat: legacy SDK v2 ID order is "name,policy" (resource_id_mapping.json).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -169,15 +167,14 @@ func (r *AuthenticationvserverAuthenticationwebauthpolicyBindingResource) Delete
 		return
 	}
 
+	// policy is the disambiguating argument for the delete under the parent name.
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
-	}
 	if val, ok := idMap["policy"]; ok && val != "" {
 		argsMap["policy"] = val
 	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+	// Include secondary in the delete args when it is set in state, mirroring SDK v2.
+	if !data.Secondary.IsNull() && data.Secondary.ValueBool() {
+		argsMap["secondary"] = fmt.Sprintf("%v", data.Secondary.ValueBool())
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationwebauthpolicy_binding.Type(), name_value, argsMap)
@@ -224,27 +221,10 @@ func (r *AuthenticationvserverAuthenticationwebauthpolicyBindingResource) readAu
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policy (identity = name,policy).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
 
 		// Check policy
 		if idVal, ok := idMap["policy"]; ok {
@@ -257,26 +237,6 @@ func (r *AuthenticationvserverAuthenticationwebauthpolicyBindingResource) readAu
 				match = false
 				continue
 			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
