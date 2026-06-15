@@ -37,8 +37,10 @@ func (r *VpnglobalAuthenticationldappolicyBindingResource) Schema(ctx context.Co
 				Description: "The ID of the vpnglobal_authenticationldappolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// NITRO GET does not echo this attribute and there is no server-side
+				// default, so Computed would leave it "unknown after apply".
+				// Optional-only (Pattern 13 — drop spurious Computed on non-echoed input).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -103,10 +105,52 @@ func vpnglobal_authenticationldappolicy_bindingGetThePayloadFromthePlan(ctx cont
 	return vpnglobal_authenticationldappolicy_binding
 }
 
+// vpnglobal_authenticationldappolicy_bindingSetAttrFromGet is the RESOURCE setter.
+// It preserves the user-configured / prior-state values for inputs that the NITRO
+// server does not echo back (e.g. gotopriorityexpression) or may override, so the
+// post-apply state matches the plan (avoids "inconsistent result after apply").
+// Every attribute is RequiresReplace, so on a clean plan these never need updating.
+// (Pattern 7 / 13 — server-overridden / non-echoed inputs.)
 func vpnglobal_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalAuthenticationldappolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationldappolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_authenticationldappolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// gotopriorityexpression is not echoed by the NITRO GET response;
+	// preserve the existing plan/state value rather than nulling it.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	// policyname is the key; preserve the configured value when present, otherwise
+	// adopt the GET value (covers import where only the ID is known).
+	if data.Policyname.IsNull() || data.Policyname.ValueString() == "" {
+		if val, ok := getResponseData["policyname"]; ok && val != nil {
+			data.Policyname = types.StringValue(val.(string))
+		}
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
+	return data
+}
+
+// vpnglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE setter. The datasource has no prior plan/state to preserve, so it
+// faithfully copies every field from the GET response and sets the ID. (Pattern 7.)
+func vpnglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalAuthenticationldappolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationldappolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -135,8 +179,6 @@ func vpnglobal_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Contex
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
