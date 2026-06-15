@@ -439,5 +439,17 @@ BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct, us
 DATASOURCE: healthy; split setter added (SetAttrFromGetForDatasource faithfully copies GET + sets ID); datasource Read switched to it and match loop made tolerant of unsupplied optional keys.
 PATTERNS: 7 (preserve state + datasource setter split), 13 (resolve Computed to known values), 11 (resource/datasource flag consistency), 1 family (PUT add verb confirmed correct - binding uses UpdateUnnamedResource/PUT per SDK v2)
 FILES CHANGED: citrixadc_framework/authenticationvserver_authenticationtacacspolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_authenticationtacacspolicy_binding/resource_authenticationvserver_authenticationtacacspolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationtacacspolicy_binding/datasource_authenticationvserver_authenticationtacacspolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationtacacspolicy_binding/datasource_schema.go, citrixadc_framework/acctests/authenticationvserver_authenticationtacacspolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc changed
+RESOURCE: authenticationvserver_cachepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:09:11Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccAuthenticationvserver_cachepolicy_binding_basic$|TestAccAuthenticationvserverCachepolicyBindingDataSource_basic$
+TESTS:
+  - TestAccAuthenticationvserver_cachepolicy_binding_basic ............ PASS
+  - TestAccAuthenticationvserverCachepolicyBindingDataSource_basic .... PASS
+BACKWARD-COMPAT: Narrowed composite ID from 5 keys to name:policy (matches resource_id_mapping.json "name,policy" + SDK v2 d.SetId); Read now filters on policy only (SDK v2 parity); Delete switched to DeleteResourceWithArgs with url.QueryEscape'd policy/bindpoint/secondary/groupextraction args; dropped spurious Computed from non-echoed groupextraction/nextfactor/secondary (Pattern 13); kept Create as UpdateUnnamedResource (PUT) matching SDK v2; attribute names/types preserved.
+DATASOURCE: healthy; fixed Pattern 11 (groupextraction/secondary/bindpoint were Required -> Optional+Computed), Read filters on policy(+bindpoint) since secondary/groupextraction not echoed, split setter (Pattern 7) authenticationvserver_cachepolicy_bindingSetAttrFromGetForDatasource sets its own name:policy ID.
+PATTERNS: 6, 7, 11, 13
+FILES CHANGED: citrixadc_framework/authenticationvserver_cachepolicy_binding/resource_authenticationvserver_cachepolicy_binding.go, citrixadc_framework/authenticationvserver_cachepolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_cachepolicy_binding/datasource_authenticationvserver_cachepolicy_binding.go, citrixadc_framework/authenticationvserver_cachepolicy_binding/datasource_schema.go, citrixadc_framework/acctests/authenticationvserver_cachepolicy_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
