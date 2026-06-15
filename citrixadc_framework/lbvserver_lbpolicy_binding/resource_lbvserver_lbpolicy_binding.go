@@ -3,6 +3,7 @@ package lbvserver_lbpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,9 @@ func (r *LbvserverLbpolicyBindingResource) Create(ctx context.Context, req resou
 	lbvserver_lbpolicy_binding := lbvserver_lbpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_lbpolicy_binding.Type(), &lbvserver_lbpolicy_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource). Pattern 1:
+	// UpdateUnnamedResource (PUT) returns errorcode 273 "Resource already exists" on re-bind.
+	_, err := r.client.AddResource(service.Lbvserver_lbpolicy_binding.Type(), "", &lbvserver_lbpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_lbpolicy_binding, got error: %s", err))
 		return
@@ -168,7 +170,9 @@ func (r *LbvserverLbpolicyBindingResource) Delete(ctx context.Context, req resou
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		// Pattern (b): URL-encode the delete arg value so slashy/special policy names
+		// produce a valid DELETE ...?args= query (the NITRO client does not escape arg values).
+		argsMap["policyname"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_lbpolicy_binding.Type(), name_value, argsMap)

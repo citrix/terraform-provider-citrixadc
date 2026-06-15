@@ -22,6 +22,7 @@ import (
 // LbvserverLbpolicyBindingResourceModel describes the resource data model.
 type LbvserverLbpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *LbvserverLbpolicyBindingResource) Schema(ctx context.Context, req resou
 				Computed:    true,
 				Description: "The ID of the lbvserver_lbpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +66,16 @@ func (r *LbvserverLbpolicyBindingResource) Schema(ctx context.Context, req resou
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +120,9 @@ func lbvserver_lbpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, dat
 
 	// Create API request body from the model
 	lbvserver_lbpolicy_binding := lb.Lbvserverlbpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		lbvserver_lbpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		lbvserver_lbpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -141,6 +155,11 @@ func lbvserver_lbpolicy_bindingSetAttrFromGet(ctx context.Context, data *Lbvserv
 	tflog.Debug(ctx, "In lbvserver_lbpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
