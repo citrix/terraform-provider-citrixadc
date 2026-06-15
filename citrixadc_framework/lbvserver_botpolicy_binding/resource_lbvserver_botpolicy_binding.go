@@ -59,8 +59,8 @@ func (r *LbvserverBotpolicyBindingResource) Create(ctx context.Context, req reso
 	lbvserver_botpolicy_binding := lbvserver_botpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_botpolicy_binding.Type(), &lbvserver_botpolicy_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource). (Pattern 1)
+	_, err := r.client.AddResource(service.Lbvserver_botpolicy_binding.Type(), "", &lbvserver_botpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_botpolicy_binding, got error: %s", err))
 		return
