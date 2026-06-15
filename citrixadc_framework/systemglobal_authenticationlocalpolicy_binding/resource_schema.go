@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,6 +21,7 @@ import (
 // SystemglobalAuthenticationlocalpolicyBindingResourceModel describes the resource data model.
 type SystemglobalAuthenticationlocalpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Builtin                types.List   `tfsdk:"builtin"`
 	Feature                types.String `tfsdk:"feature"`
 	Globalbindtype         types.String `tfsdk:"globalbindtype"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
@@ -35,6 +37,15 @@ func (r *SystemglobalAuthenticationlocalpolicyBindingResource) Schema(ctx contex
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the systemglobal_authenticationlocalpolicy_binding resource.",
+			},
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
 			},
 			"feature": schema.StringAttribute{
 				Optional: true,
@@ -76,8 +87,7 @@ func (r *SystemglobalAuthenticationlocalpolicyBindingResource) Schema(ctx contex
 				Description: "The name of the  command policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -92,6 +102,11 @@ func systemglobal_authenticationlocalpolicy_bindingGetThePayloadFromthePlan(ctx 
 
 	// Create API request body from the model
 	systemglobal_authenticationlocalpolicy_binding := system.Systemglobalauthenticationlocalpolicybinding{}
+	if !data.Builtin.IsNull() && !data.Builtin.IsUnknown() {
+		builtinList := make([]string, 0, len(data.Builtin.Elements()))
+		data.Builtin.ElementsAs(ctx, &builtinList, false)
+		systemglobal_authenticationlocalpolicy_binding.Builtin = builtinList
+	}
 	if !data.Feature.IsNull() && !data.Feature.IsUnknown() {
 		systemglobal_authenticationlocalpolicy_binding.Feature = data.Feature.ValueString()
 	}
@@ -118,6 +133,22 @@ func systemglobal_authenticationlocalpolicy_bindingSetAttrFromGet(ctx context.Co
 	tflog.Debug(ctx, "In systemglobal_authenticationlocalpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		builtinStrs := make([]string, 0)
+		if rawList, ok := val.([]interface{}); ok {
+			for _, item := range rawList {
+				if s, ok := item.(string); ok {
+					builtinStrs = append(builtinStrs, s)
+				}
+			}
+		} else if rawList, ok := val.([]string); ok {
+			builtinStrs = append(builtinStrs, rawList...)
+		}
+		listVal, _ := types.ListValueFrom(ctx, types.StringType, builtinStrs)
+		data.Builtin = listVal
+	} else {
+		data.Builtin = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
 	} else {

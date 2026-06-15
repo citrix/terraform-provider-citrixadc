@@ -2357,5 +2357,18 @@ BACKWARD-COMPAT: attr/type/Required/ForceNew/ID-order all matched SDK v2; only f
 DATASOURCE: healthy as-is; shares SetAttrFromGet (both keys echoed by GET, no server-overrides) -> no Pattern 7 split needed.
 PATTERNS: 1
 FILES CHANGED: citrixadc_framework/systemgroup_systemuser_binding/resource_systemgroup_systemuser_binding.go, citrixadc_framework/acctests/systemgroup_systemuser_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: systemglobal_authenticationlocalpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:21:46Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccSystemglobal_authenticationlocalpolicy_binding($|_basic|DataSource)
+TESTS:
+  - TestAccSystemglobal_authenticationlocalpolicy_binding_basic ............ PASS
+  - TestAccSystemglobal_authenticationlocalpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; no secret attributes) ............................ N/A
+BACKWARD-COMPAT: re-added dropped 'builtin' (TypeList) present in SDK v2 schema + NITRO struct; priority Optional+Computed -> Required to match SDK v2 (dropped Computed, kept RequiresReplace); URL-encoded policyname in Delete args; ID format (plain policyname) and resource_id_mapping unchanged and correct; Create verb PUT (UpdateUnnamedResource) matches SDK v2.
+DATASOURCE: healthy as-is; added shared-model 'builtin' attribute (Optional+Computed) so it compiles with the resource model; lookup key policyname stays Required, priority stays Optional+Computed output.
+PATTERNS: (a) re-add dropped attr [builtin]; (b) URL-encode Delete arg; (c) Required-vs-Optional+Computed flag drift [priority]; FeatureDeveloper Pattern 8 (flag mismatch).
+FILES CHANGED: citrixadc_framework/systemglobal_authenticationlocalpolicy_binding/resource_schema.go, citrixadc_framework/systemglobal_authenticationlocalpolicy_binding/resource_systemglobal_authenticationlocalpolicy_binding.go, citrixadc_framework/systemglobal_authenticationlocalpolicy_binding/datasource_schema.go (NO test/doc files)
 BLOCKER: none
 ========================================
