@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -122,10 +123,14 @@ func testAccCheckVpnvserver_authenticationdfapolicy_bindingExist(n string, id *s
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		// ParseIdString handles both the new key:value ID format and the legacy
+		// positional name,policy format (migration ID-parse helper fix).
+		idMap, _, perr := utils.ParseIdString(bindingId, []string{"name", "policy"}, nil)
+		if perr != nil {
+			return fmt.Errorf("Error parsing ID: %v", perr)
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_authenticationdfapolicy_binding",
@@ -167,10 +172,14 @@ func testAccCheckVpnvserver_authenticationdfapolicy_bindingNotExist(n string, id
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		// ParseIdString handles both the new key:value ID format and the legacy
+		// positional name,policy format (migration ID-parse helper fix).
+		idMap, _, perr := utils.ParseIdString(id, []string{"name", "policy"}, nil)
+		if perr != nil {
+			return fmt.Errorf("Error parsing ID: %v", perr)
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_authenticationdfapolicy_binding",

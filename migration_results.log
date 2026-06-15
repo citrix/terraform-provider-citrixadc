@@ -2879,3 +2879,19 @@ PATTERNS: 6, 7, 11, 13
 FILES CHANGED: citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/resource_vpnvserver_auditsyslogpolicy_binding.go, citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/datasource_vpnvserver_auditsyslogpolicy_binding.go, citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_auditsyslogpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_authenticationdfapolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:13:15Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccVpnvserver_authenticationdfapolicy_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccVpnvserver_authenticationdfapolicy_binding_basic ............ PASS
+  - TestAccVpnvserver_authenticationdfapolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ........... N/A
+BACKWARD-COMPAT: ID realigned to legacy name,policy (dropped spurious bindpoint key, matches resource_id_mapping.json); dropped Computed from non-echoed bindpoint/gotopriorityexpression/groupextraction (Pattern 13); SetAttrFromGet now preserves plan/state for non-echoed inputs (Pattern 7); Read/Delete filter on policy per SDK v2; Delete args (policy,secondary,groupextraction,bindpoint) URL-encoded via DeleteResourceWithArgs; Create verb PUT (UpdateUnnamedResource) matches SDK v2.
+DATASOURCE: bindpoint flipped Required->Optional+Computed; added xxxSetAttrFromGetForDatasource (Pattern 7 split) and switched datasource Read to it; match loop filters on policy only.
+PATTERNS: 7, 11, 13
+FILES CHANGED: citrixadc_framework/vpnvserver_authenticationdfapolicy_binding/resource_vpnvserver_authenticationdfapolicy_binding.go, citrixadc_framework/vpnvserver_authenticationdfapolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_authenticationdfapolicy_binding/datasource_vpnvserver_authenticationdfapolicy_binding.go, citrixadc_framework/vpnvserver_authenticationdfapolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_authenticationdfapolicy_binding_test.go (ID-parse helper lines only - sanctioned). No doc modified.
+BLOCKER: none
+========================================
