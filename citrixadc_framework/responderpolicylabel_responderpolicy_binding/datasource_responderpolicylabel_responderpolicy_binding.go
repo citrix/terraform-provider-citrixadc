@@ -68,32 +68,37 @@ func (d *ResponderpolicylabelResponderpolicyBindingDataSource) Read(ctx context.
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Filter only on the keys the user supplied (non-null) — priority is optional.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check policyname
-		if val, ok := v["policyname"].(string); ok {
-			if policyname_Name.IsNull() || val != policyname_Name.ValueString() {
+		// Check policyname (only if supplied)
+		if !policyname_Name.IsNull() {
+			if val, ok := v["policyname"].(string); ok {
+				if val != policyname_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !policyname_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check priority
-		if val, ok := v["priority"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if priority_Name.IsNull() || val != priority_Name.ValueInt64() {
+		// Check priority (only if supplied)
+		if !priority_Name.IsNull() {
+			if val, ok := v["priority"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != priority_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !priority_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
@@ -107,7 +112,7 @@ func (d *ResponderpolicylabelResponderpolicyBindingDataSource) Read(ctx context.
 		return
 	}
 
-	responderpolicylabel_responderpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	responderpolicylabel_responderpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -1880,3 +1880,19 @@ PATTERNS: Constraint-1 sanctioned ID-parse helper exception (new key:value ID fo
 FILES CHANGED: citrixadc_framework/acctests/nsservicepath_nsservicefunction_binding_test.go (bindingExist helper ID-parse lines only -> utils.ParseIdString)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: responderpolicylabel_responderpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:29:13Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccResponderpolicylabel_responderpolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccResponderpolicylabel_responderpolicy_binding_basic ............ PASS
+  - TestAccResponderpolicylabel_responderpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ............. N/A
+BACKWARD-COMPAT: tfsdk name drift invoke_labelname->invokelabelname (matches SDK v2); invokelabelname & labeltype Required->Optional+Computed (SDK v2 contract); Create verb PUT->POST (AddResource, matches SDK v2); composite ID 3-key->2-key labelname,policyname (matches resource_id_mapping.json); priority dropped from ID/Read filter (taken from state for delete); delete-arg values URL-encoded; SetAttrFromGet split (resource preserves user inputs + adopts Computed server fields, datasource faithful copy + sets ID).
+DATASOURCE: healthy after re-apply of model rename + datasource setter split (Pattern 7); priority made Optional+Computed; null-key filters skipped.
+PATTERNS: 1, 7, 8, 10, 13, b, f, g
+FILES CHANGED: citrixadc_framework/responderpolicylabel_responderpolicy_binding/resource_responderpolicylabel_responderpolicy_binding.go, citrixadc_framework/responderpolicylabel_responderpolicy_binding/resource_schema.go, citrixadc_framework/responderpolicylabel_responderpolicy_binding/datasource_responderpolicylabel_responderpolicy_binding.go, citrixadc_framework/responderpolicylabel_responderpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/responderpolicylabel_responderpolicy_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================
