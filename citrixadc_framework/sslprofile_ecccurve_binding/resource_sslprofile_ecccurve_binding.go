@@ -3,10 +3,10 @@ package sslprofile_ecccurve_binding
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/url"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -45,6 +45,16 @@ func (r *SslprofileEcccurveBindingResource) Configure(ctx context.Context, req r
 	r.client = *req.ProviderData.(**service.NitroClient)
 }
 
+// ecccurveNamesFromList extracts the configured ECC curve names from the model list.
+func ecccurveNamesFromList(ctx context.Context, data *SslprofileEcccurveBindingResourceModel, diags *diag.Diagnostics) []string {
+	var names []string
+	if data.Ecccurvename.IsNull() || data.Ecccurvename.IsUnknown() {
+		return names
+	}
+	diags.Append(data.Ecccurvename.ElementsAs(ctx, &names, false)...)
+	return names
+}
+
 func (r *SslprofileEcccurveBindingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data SslprofileEcccurveBindingResourceModel
 
@@ -56,23 +66,46 @@ func (r *SslprofileEcccurveBindingResource) Create(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Creating sslprofile_ecccurve_binding resource")
-	sslprofile_ecccurve_binding := sslprofile_ecccurve_bindingGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Sslprofile_ecccurve_binding.Type(), &sslprofile_ecccurve_binding)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslprofile_ecccurve_binding, got error: %s", err))
+	name := data.Name.ValueString()
+
+	// Optionally clear pre-existing (default) ecccurve bindings on the profile.
+	if data.RemoveExistingEcccurveBinding.ValueBool() {
+		tflog.Debug(ctx, fmt.Sprintf("Removing all existing sslprofile_ecccurve_binding from %s", name))
+		existing, err := r.getExistingEcccurveBindings(name)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read existing sslprofile_ecccurve_binding, got error: %s", err))
+			return
+		}
+		for _, curve := range existing {
+			if err := r.deleteSingleEcccurveBinding(name, curve); err != nil {
+				resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to remove existing ecccurve binding %s, got error: %s", curve, err))
+				return
+			}
+		}
+	}
+
+	curves := ecccurveNamesFromList(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	for _, curve := range curves {
+		payload := ssl.Sslprofileecccurvebinding{
+			Name:         name,
+			Ecccurvename: curve,
+		}
+		// Binding resource - SDK v2 used AddResource (POST). Keep the same verb.
+		if _, err := r.client.AddResource(service.Sslprofile_ecccurve_binding.Type(), name, &payload); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslprofile_ecccurve_binding, got error: %s", err))
+			return
+		}
 	}
 
 	tflog.Trace(ctx, "Created sslprofile_ecccurve_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ecccurvename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ecccurvename.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// ID is the SSL profile name (the parent that groups all curve bindings).
+	data.Id = types.StringValue(name)
 
 	// Read the updated state back
 	r.readSslprofileEcccurveBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -94,51 +127,35 @@ func (r *SslprofileEcccurveBindingResource) Read(ctx context.Context, req resour
 	tflog.Debug(ctx, "Reading sslprofile_ecccurve_binding resource")
 
 	r.readSslprofileEcccurveBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		// Binding was removed out-of-band; drop from state.
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslprofileEcccurveBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// All attributes are RequiresReplace, so Update is a documented no-op.
 	var data, state SslprofileEcccurveBindingResourceModel
 
-	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Preserve ID from prior state
 	data.Id = state.Id
+	tflog.Debug(ctx, "Update is a no-op for sslprofile_ecccurve_binding; all attributes are RequiresReplace")
 
-	tflog.Debug(ctx, "Updating sslprofile_ecccurve_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		sslprofile_ecccurve_binding := sslprofile_ecccurve_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Sslprofile_ecccurve_binding.Type(), &sslprofile_ecccurve_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslprofile_ecccurve_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated sslprofile_ecccurve_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for sslprofile_ecccurve_binding resource, skipping update")
-	}
-
-	// Read the updated state back
 	r.readSslprofileEcccurveBindingFromApi(ctx, &data, &resp.Diagnostics)
 
-	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -153,99 +170,82 @@ func (r *SslprofileEcccurveBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting sslprofile_ecccurve_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "ecccurvename"}, nil)
-	if err != nil {
-		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+
+	name := data.Name.ValueString()
+	if name == "" {
+		// Fall back to the ID (the profile name) for imported state.
+		name = data.Id.ValueString()
+	}
+
+	curves := ecccurveNamesFromList(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	name_value, ok := idMap["name"]
-	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
-		return
-	}
-
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["ecccurvename"]; ok && val != "" {
-		argsMap["ecccurvename"] = val
-	}
-
-	err = r.client.DeleteResourceWithArgsMap(service.Sslprofile_ecccurve_binding.Type(), name_value, argsMap)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslprofile_ecccurve_binding, got error: %s", err))
-		return
+	for _, curve := range curves {
+		if err := r.deleteSingleEcccurveBinding(name, curve); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslprofile_ecccurve_binding, got error: %s", err))
+			return
+		}
 	}
 
 	tflog.Trace(ctx, "Deleted sslprofile_ecccurve_binding binding")
 }
 
-// Helper function to read sslprofile_ecccurve_binding data from API
-func (r *SslprofileEcccurveBindingResource) readSslprofileEcccurveBindingFromApi(ctx context.Context, data *SslprofileEcccurveBindingResourceModel, diags *diag.Diagnostics) {
+// deleteSingleEcccurveBinding removes one ecccurve binding from the named SSL profile.
+// The ecccurvename arg value is URL-encoded to handle any special characters.
+func (r *SslprofileEcccurveBindingResource) deleteSingleEcccurveBinding(name, ecccurvename string) error {
+	args := []string{fmt.Sprintf("ecccurvename:%s", url.QueryEscape(ecccurvename))}
+	return r.client.DeleteResourceWithArgs(service.Sslprofile_ecccurve_binding.Type(), name, args)
+}
 
-	// Case 4: Array filter with parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "ecccurvename"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
-
-	name_Name, ok := idMap["name"]
-	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
-		return
-	}
-
-	var dataArr []map[string]interface{}
-
+// getExistingEcccurveBindings returns the ecccurve names currently bound to the profile.
+func (r *SslprofileEcccurveBindingResource) getExistingEcccurveBindings(name string) ([]string, error) {
 	findParams := service.FindParams{
 		ResourceType:             service.Sslprofile_ecccurve_binding.Type(),
-		ResourceName:             name_Name,
+		ResourceName:             name,
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		return nil, err
+	}
+	var curves []string
+	for _, v := range dataArr {
+		if val, ok := v["ecccurvename"].(string); ok {
+			curves = append(curves, val)
+		}
+	}
+	return curves, nil
+}
+
+// readSslprofileEcccurveBindingFromApi reads the live ecccurve bindings for the profile
+// and stores the curve-name list back into the model. If no bindings remain, the ID is
+// cleared so callers can drop the resource from state.
+func (r *SslprofileEcccurveBindingResource) readSslprofileEcccurveBindingFromApi(ctx context.Context, data *SslprofileEcccurveBindingResourceModel, diags *diag.Diagnostics) {
+	name := data.Name.ValueString()
+	if name == "" {
+		name = data.Id.ValueString()
+	}
+
+	curves, err := r.getExistingEcccurveBindings(name)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslprofile_ecccurve_binding, got error: %s", err))
 		return
 	}
 
-	// Resource is missing
-	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "sslprofile_ecccurve_binding returned empty array.")
+	if len(curves) == 0 {
+		// No bindings left on the profile.
+		data.Id = types.StringNull()
 		return
 	}
 
-	// Iterate through results to find the one with the right id
-	foundIndex := -1
-	for i, v := range dataArr {
-		match := true
-
-		// Check ecccurvename
-		if idVal, ok := idMap["ecccurvename"]; ok {
-			if val, ok := v["ecccurvename"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ecccurvename"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
-		}
-	}
-
-	//  Resource is missing
-	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("sslprofile_ecccurve_binding not found with the provided ID attributes"))
+	listVal, d := types.ListValueFrom(ctx, types.StringType, curves)
+	diags.Append(d...)
+	if diags.HasError() {
 		return
 	}
-
-	sslprofile_ecccurve_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+	data.Ecccurvename = listVal
+	data.Name = types.StringValue(name)
+	data.Id = types.StringValue(name)
 }

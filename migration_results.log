@@ -2036,3 +2036,19 @@ PATTERNS: 1 (verb confirmed PUT), 7 (datasource setter split + preserve/resolve 
 FILES CHANGED: citrixadc_framework/servicegroup_lbmonitor_binding/resource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/resource_schema.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_schema.go, citrixadc_framework/acctests/servicegroup_lbmonitor_binding_test.go (ID-parse helper lines only - sanctioned). NO doc changed.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: sslprofile_ecccurve_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:01:54Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccSslprofile_ecccurve_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccSslprofile_ecccurve_binding_basic ........ PASS
+  - TestAccSslprofile_ecccurve_bindingDataSource_basic .. PASS
+  - TestAccSslprofile_ecccurve_binding (nitro-validation) .. PASS
+BACKWARD-COMPAT: Framework resource diverged from SDK v2 contract used by the (unmodifiable) test: it modeled ecccurvename as a single StringAttribute + added cipherpriority and lacked remove_existing_ecccurve_binding, whereas SDK v2 (and the test config) use ecccurvename as a LIST of curves bound individually + a required remove_existing_ecccurve_binding bool. Reconciled by restoring the SDK v2 schema: name (Required,RequiresReplace), ecccurvename (ListAttribute[string],Required,RequiresReplace), remove_existing_ecccurve_binding (Bool,Required,RequiresReplace); Create loops AddResource per curve (POST, matches SDK v2) after optionally clearing defaults; Delete loops DeleteResourceWithArgs with url.QueryEscape on ecccurvename; Read re-reads all live curves. ID changed to plain profile name (single composite key) so the unchanged SplitN-based test helpers parse it correctly (no test edit needed).
+DATASOURCE: healthy; the single-binding lookup (name + single ecccurvename string) was preserved by giving the datasource its own SslprofileEcccurveBindingDataSourceModel + sslprofile_ecccurve_bindingSetAttrFromGetForDatasource setter (Pattern 7 split), since the resource model is now list-based and could no longer be shared.
+PATTERNS: 1 (Create verb POST per SDK v2), 7 (datasource setter split), 8 (Required flags), 5 (no-op Update for all-RequiresReplace)
+FILES CHANGED: citrixadc_framework/sslprofile_ecccurve_binding/resource_schema.go, citrixadc_framework/sslprofile_ecccurve_binding/resource_sslprofile_ecccurve_binding.go, citrixadc_framework/sslprofile_ecccurve_binding/datasource_schema.go, citrixadc_framework/sslprofile_ecccurve_binding/datasource_sslprofile_ecccurve_binding.go (NO test/doc file changed)
+BLOCKER: none. (Initial _basic failure was ADC-state prereq errorcode 3739 'enable default ssl profile' — fixed by 'set ssl parameter -defaultProfile ENABLED' on the ADC, not a code change; unchanged test then passed.)
+========================================
