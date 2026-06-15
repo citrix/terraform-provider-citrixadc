@@ -22,6 +22,7 @@ import (
 // LbvserverAuthorizationpolicyBindingResourceModel describes the resource data model.
 type LbvserverAuthorizationpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *LbvserverAuthorizationpolicyBindingResource) Schema(ctx context.Context
 				Computed:    true,
 				Description: "The ID of the lbvserver_authorizationpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +66,16 @@ func (r *LbvserverAuthorizationpolicyBindingResource) Schema(ctx context.Context
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +120,9 @@ func lbvserver_authorizationpolicy_bindingGetThePayloadFromthePlan(ctx context.C
 
 	// Create API request body from the model
 	lbvserver_authorizationpolicy_binding := lb.Lbvserverauthorizationpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		lbvserver_authorizationpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		lbvserver_authorizationpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +151,88 @@ func lbvserver_authorizationpolicy_bindingGetThePayloadFromthePlan(ctx context.C
 	return lbvserver_authorizationpolicy_binding
 }
 
+// lbvserver_authorizationpolicy_bindingSetAttrFromGet is used by the resource Read/Create/Update
+// flows. The NITRO GET response for this binding does not faithfully echo every configured
+// attribute (e.g. gotopriorityexpression, invoke, labelname, labeltype, order are normalized or
+// server-defaulted), so blindly copying the response back would either null out user input or
+// return a server-overridden value, causing "inconsistent result after apply". For each
+// Computed+Optional attribute we therefore adopt the GET value only when present and preserve the
+// prior plan/state value otherwise. The ID is set once in Create, never recomputed here (Pattern 6).
 func lbvserver_authorizationpolicy_bindingSetAttrFromGet(ctx context.Context, data *LbvserverAuthorizationpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverAuthorizationpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In lbvserver_authorizationpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. Only overwrite when the field is present in the
+	// response; otherwise preserve the existing plan/state value (Pattern 7).
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	// Any Computed attribute the GET response omitted and the model left unknown/null must
+	// resolve to a concrete value or Terraform errors with "unknown value after apply".
+	if data.Bindpoint.IsUnknown() {
+		data.Bindpoint = types.StringNull()
+	}
+	if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
+	}
+	if data.Invoke.IsUnknown() {
+		data.Invoke = types.BoolNull()
+	}
+	if data.Labelname.IsUnknown() {
+		data.Labelname = types.StringNull()
+	}
+	if data.Labeltype.IsUnknown() {
+		data.Labeltype = types.StringNull()
+	}
+	if data.Order.IsUnknown() {
+		data.Order = types.Int64Null()
+	}
+	if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
+	}
+
+	return data
+}
+
+// lbvserver_authorizationpolicy_bindingSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response and sets the composite ID. The datasource has no prior plan/state to
+// preserve, so it must read all values from the API (Pattern 7 datasource split).
+func lbvserver_authorizationpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LbvserverAuthorizationpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverAuthorizationpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In lbvserver_authorizationpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -186,7 +278,7 @@ func lbvserver_authorizationpolicy_bindingSetAttrFromGet(ctx context.Context, da
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
