@@ -105,7 +105,7 @@ func (d *VpnvserverVpnsessionpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	vpnvserver_vpnsessionpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_vpnsessionpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

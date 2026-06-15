@@ -224,8 +224,11 @@ func (r *VpnvserverVpnsessionpolicyBindingResource) readVpnvserverVpnsessionpoli
 	for i, v := range dataArr {
 		match := true
 
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
+		// Check bindpoint. NITRO does not echo bindpoint in the GET response for this
+		// binding, so it can only be used as a discriminator when a non-empty value
+		// was actually configured (and the response happens to carry one). An empty
+		// bindpoint in the ID means "no constraint" - matching is driven by policy.
+		if idVal, ok := idMap["bindpoint"]; ok && idVal != "" {
 			if val, ok := v["bindpoint"].(string); ok {
 				if val != idVal {
 					match = false
@@ -235,9 +238,6 @@ func (r *VpnvserverVpnsessionpolicyBindingResource) readVpnvserverVpnsessionpoli
 				match = false
 				continue
 			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
 		}
 
 		// Check policy

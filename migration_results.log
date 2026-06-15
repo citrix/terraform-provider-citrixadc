@@ -3195,3 +3195,19 @@ PATTERNS: hint(b) Delete-arg URL-encode; Constraint-1 sanctioned ID-parse helper
 FILES CHANGED: citrixadc_framework/vpnvserver_vpneula_binding/resource_vpnvserver_vpneula_binding.go, citrixadc_framework/acctests/vpnvserver_vpneula_binding_test.go (ID-parse helper lines only); NO doc modified.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_vpnsessionpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:50:00Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccVpnvserver_vpnsessionpolicy_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccVpnvserver_vpnsessionpolicy_binding_basic ........ PASS
+  - TestAccVpnvserver_vpnsessionpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ... N/A
+BACKWARD-COMPAT: dropped spurious Computed from non-echoed attrs (bindpoint/gotopriorityexpression/groupextraction/secondary) so unset values stay null instead of unknown-after-apply (Pattern 13); priority kept Optional+Computed (GET returns it); resource SetAttrFromGet now preserves non-echoed plan/state inputs and no longer recomputes Id (Pattern 6/7); Create verb kept as PUT/UpdateUnnamedResource matching SDK v2; ID is new key:value composite, legacy name,policy parsed via ParseIdString (resource_id_mapping.json="name,policy").
+DATASOURCE: healthy; split a dedicated xxxSetAttrFromGetForDatasource (faithful copy + sets Id) per Pattern 7; bindpoint relaxed Required->Optional+Computed (lookup keys are name+policy).
+PATTERNS: 6, 7, 13
+FILES CHANGED: citrixadc_framework/vpnvserver_vpnsessionpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_vpnsessionpolicy_binding/resource_vpnvserver_vpnsessionpolicy_binding.go, citrixadc_framework/vpnvserver_vpnsessionpolicy_binding/datasource_schema.go, citrixadc_framework/vpnvserver_vpnsessionpolicy_binding/datasource_vpnvserver_vpnsessionpolicy_binding.go, citrixadc_framework/acctests/vpnvserver_vpnsessionpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified.
+BLOCKER: none
+========================================
