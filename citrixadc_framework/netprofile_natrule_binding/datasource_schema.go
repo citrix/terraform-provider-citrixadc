@@ -19,7 +19,8 @@ func NetprofileNatruleBindingDataSourceSchema() schema.Schema {
 				Description: "IPv4 network address on whose traffic you want the Citrix ADC to do rewrite ip prefix.",
 			},
 			"netmask": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "0",
 			},
 			"rewriteip": schema.StringAttribute{

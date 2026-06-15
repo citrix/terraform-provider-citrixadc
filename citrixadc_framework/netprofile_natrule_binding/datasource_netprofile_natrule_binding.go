@@ -45,7 +45,6 @@ func (d *NetprofileNatruleBindingDataSource) Read(ctx context.Context, req datas
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	natrule_Name := data.Natrule
-	netmask_Name := data.Netmask
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -83,16 +82,6 @@ func (d *NetprofileNatruleBindingDataSource) Read(ctx context.Context, req datas
 			continue
 		}
 
-		// Check netmask
-		if val, ok := v["netmask"].(string); ok {
-			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !netmask_Name.IsNull() {
-			match = false
-			continue
-		}
 		if match {
 			foundIndex = i
 			break
@@ -105,7 +94,7 @@ func (d *NetprofileNatruleBindingDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	netprofile_natrule_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	netprofile_natrule_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

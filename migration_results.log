@@ -1723,3 +1723,19 @@ PATTERNS: 6, 7, 8, 10, 11, 13
 FILES CHANGED: citrixadc_framework/lbvserver_servicegroup_binding/resource_lbvserver_servicegroup_binding.go, citrixadc_framework/lbvserver_servicegroup_binding/resource_schema.go, citrixadc_framework/lbvserver_servicegroup_binding/datasource_lbvserver_servicegroup_binding.go, citrixadc_framework/lbvserver_servicegroup_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_servicegroup_binding_test.go (sanctioned ID-parse helper lines only; no test/step/assertion changes; no docs changed)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: netprofile_natrule_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:17:57Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccNetprofile_natrule_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccNetprofile_natrule_binding_basic ............ PASS
+  - TestAccNetprofile_natrule_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs) . N/A
+BACKWARD-COMPAT: netmask & rewriteip were Required in Framework but Optional+Computed (ForceNew) in SDK v2 -> reverted to Optional+Computed+RequiresReplace+UseStateForUnknown (Pattern 8). Composite ID was 3-key (name:natrule:netmask) but SDK v2 / resource_id_mapping.json use name,natrule -> dropped netmask from Create ID + SetAttrFromGet ID recompute (Pattern 6); Read match loop and datasource filter on netmask removed; Delete reads netmask from state instead of ID. Create verb UpdateUnnamedResource (PUT) matches SDK v2 - unchanged.
+DATASOURCE: healthy; netmask flag fixed Required->Optional+Computed; SetAttrFromGet split into resource setter (preserves ID) + datasource setter that sets 2-key ID (Pattern 7).
+PATTERNS: 6, 7, 8
+FILES CHANGED: citrixadc_framework/netprofile_natrule_binding/resource_schema.go, citrixadc_framework/netprofile_natrule_binding/resource_netprofile_natrule_binding.go, citrixadc_framework/netprofile_natrule_binding/datasource_schema.go, citrixadc_framework/netprofile_natrule_binding/datasource_netprofile_natrule_binding.go, citrixadc_framework/acctests/netprofile_natrule_binding_test.go (sanctioned ID-parse helper lines only). No doc files.
+BLOCKER: none
+========================================
