@@ -3,10 +3,9 @@ package feoglobal_feopolicy_binding
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -68,11 +67,10 @@ func (r *FeoglobalFeopolicyBindingResource) Create(ctx context.Context, req reso
 
 	tflog.Trace(ctx, "Created feoglobal_feopolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state.
+	// Backward-compatible with SDK v2, which used the plain policyname as the ID
+	// (d.SetId(policyname)); resource_id_mapping.json legacy order is "policyname".
+	data.Id = types.StringValue(data.Policyname.ValueString())
 
 	// Read the updated state back
 	r.readFeoglobalFeopolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -153,23 +151,22 @@ func (r *FeoglobalFeopolicyBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting feoglobal_feopolicy_binding resource")
-	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Multiple unique attributes - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
-	if err != nil {
-		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
-		return
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name.
+	// ID is the plain policyname (single legacy key); read the remaining identity
+	// attributes from prior state. SDK v2 passed policyname, priority and type as
+	// delete args. URL-encode values for slashy/special policyname expressions.
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(data.Policyname.ValueString())))
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
+	}
+	if !data.Type.IsNull() && !data.Type.IsUnknown() && data.Type.ValueString() != "" {
+		args = append(args, fmt.Sprintf("type:%s", url.QueryEscape(data.Type.ValueString())))
+	} else {
+		args = append(args, "type:REQ_DEFAULT")
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
-	}
-	if val, ok := idMap["type"]; ok && val != "" {
-		argsMap["type"] = val
-	}
-
-	err = r.client.DeleteResourceWithArgsMap(service.Feoglobal_feopolicy_binding.Type(), "", argsMap)
+	err := r.client.DeleteResourceWithArgs(service.Feoglobal_feopolicy_binding.Type(), "", args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete feoglobal_feopolicy_binding, got error: %s", err))
 		return
@@ -181,25 +178,24 @@ func (r *FeoglobalFeopolicyBindingResource) Delete(ctx context.Context, req reso
 // Helper function to read feoglobal_feopolicy_binding data from API
 func (r *FeoglobalFeopolicyBindingResource) readFeoglobalFeopolicyBindingFromApi(ctx context.Context, data *FeoglobalFeopolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
+	// ID is the plain policyname (single legacy key). The type bindpoint is read
+	// from state and used as the GET filter argument (SDK v2 defaulted to REQ_DEFAULT).
+	policyname := data.Id.ValueString()
+	typeVal := data.Type.ValueString()
+	if typeVal == "" {
+		typeVal = "REQ_DEFAULT"
 	}
 
 	var dataArr []map[string]interface{}
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["type"]; ok && val != "" {
-		argsMap["type"] = val
-	}
+	argsMap["type"] = typeVal
 
 	findParams := service.FindParams{
 		ResourceType:             service.Feoglobal_feopolicy_binding.Type(),
 		ArgsMap:                  argsMap,
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read feoglobal_feopolicy_binding, got error: %s", err))
 		return
@@ -211,36 +207,10 @@ func (r *FeoglobalFeopolicyBindingResource) readFeoglobalFeopolicyBindingFromApi
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policyname
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policyname
-		if idVal, ok := idMap["policyname"]; ok {
-			if val, ok := v["policyname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policyname"].(string); ok {
-			match = false
-			continue
-		}
-		// Check type
-		if val, ok := idMap["type"]; ok && val != "" {
-			if v, ok := v["type"]; ok {
-				if v.(string) != val {
-					match = false
-				}
-			}
-		}
-
-		if match {
+		if val, ok := v["policyname"].(string); ok && val == policyname {
 			foundIndex = i
 			break
 		}
@@ -248,7 +218,7 @@ func (r *FeoglobalFeopolicyBindingResource) readFeoglobalFeopolicyBindingFromApi
 
 	// Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("feoglobal_feopolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "feoglobal_feopolicy_binding not found with the provided ID attributes")
 		return
 	}
 
