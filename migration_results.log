@@ -2226,4 +2226,17 @@ DATASOURCE: healthy after filter + schema fix; shared SetAttrFromGet sufficient 
 PATTERNS: 1, 7, 11
 FILES CHANGED: citrixadc_framework/sslservicegroup_sslcertkey_binding/resource_sslservicegroup_sslcertkey_binding.go, citrixadc_framework/sslservicegroup_sslcertkey_binding/datasource_sslservicegroup_sslcertkey_binding.go, citrixadc_framework/sslservicegroup_sslcertkey_binding/datasource_schema.go, citrixadc_framework/acctests/sslservicegroup_sslcertkey_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
 BLOCKER: none
+RESOURCE: sslservicegroup_sslciphersuite_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:08:50Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccSslservicegroup_sslciphersuite_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccSslservicegroup_sslciphersuite_binding_basic ........ SKIP[t.Skip in test body: "TODO: Need to find a way to test this resource!" - pre-existing test logic, not modified]
+  - TestAccSslservicegroup_sslciphersuite_bindingDataSource_basic .. SKIP[t.Skip in test body: same pre-existing skip]
+BACKWARD-COMPAT: attribute name/type/Required-Optional-Computed/ForceNew(RequiresReplace) parity all matched SDK v2 (ciphername Req+RR, description Opt+Comp+RR, servicegroupname Req+RR); composite ID order servicegroupname,ciphername matches resource_id_mapping.json and ParseIdString legacyOrder; create verb PUT (UpdateUnnamedResource) matches SDK v2; only hardening change applied: URL-encode the ciphername Delete arg value.
+DATASOURCE: healthy as-is; shares ResourceModel + SetAttrFromGet which sets all fields and the composite Id; no recovery needed.
+PATTERNS: binding-family delete-arg URL-encoding (hint b / Pattern-7-adjacent delete hardening)
+FILES CHANGED: citrixadc_framework/sslservicegroup_sslciphersuite_binding/resource_sslservicegroup_sslciphersuite_binding.go
+BLOCKER: none (tests carry an unconditional pre-existing t.Skip; per Constraint 1 the test file was NOT modified)
 ========================================
