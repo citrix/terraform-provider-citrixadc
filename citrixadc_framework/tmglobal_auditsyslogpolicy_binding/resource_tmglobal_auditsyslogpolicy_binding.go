@@ -3,6 +3,7 @@ package tmglobal_auditsyslogpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -150,13 +151,22 @@ func (r *TmglobalAuditsyslogpolicyBindingResource) Delete(ctx context.Context, r
 
 	tflog.Debug(ctx, "Deleting tmglobal_auditsyslogpolicy_binding resource")
 	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
-	policyname_value := data.Id.ValueString()
+	// Single unique attribute - ID is the plain value (handle both legacy and new ID formats)
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
+	policyname_value, ok := idMap["policyname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Delete arg attribute 'policyname' not found in ID")
+		return
+	}
 	args := []string{
-		fmt.Sprintf("policyname:%s", policyname_value),
+		fmt.Sprintf("policyname:%s", url.QueryEscape(policyname_value)),
 	}
 
-	err := r.client.DeleteResourceWithArgs(service.Tmglobal_auditsyslogpolicy_binding.Type(), "", args)
+	err = r.client.DeleteResourceWithArgs(service.Tmglobal_auditsyslogpolicy_binding.Type(), "", args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete tmglobal_auditsyslogpolicy_binding, got error: %s", err))
 		return

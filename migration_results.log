@@ -2436,3 +2436,19 @@ PATTERNS: 7, 8, 13 (+ Delete URL-encode)
 FILES CHANGED: citrixadc_framework/tmglobal_auditnslogpolicy_binding/resource_schema.go, citrixadc_framework/tmglobal_auditnslogpolicy_binding/resource_tmglobal_auditnslogpolicy_binding.go, citrixadc_framework/tmglobal_auditnslogpolicy_binding/datasource_tmglobal_auditnslogpolicy_binding.go (no test/doc file modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: tmglobal_auditsyslogpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:36:49Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccTmglobal_auditsyslogpolicy_binding_basic|TestAccTmglobalAuditsyslogpolicyBindingDataSource_basic
+TESTS:
+  - TestAccTmglobal_auditsyslogpolicy_binding_basic ........ PASS
+  - TestAccTmglobalAuditsyslogpolicyBindingDataSource_basic  PASS
+  - (no ephemeral tests; no secret attributes) ............ N/A
+BACKWARD-COMPAT: priority was Optional+Computed in Framework but Required in SDK v2 -> made Required (drop Computed) to honor v2 contract (flag drift c); policyname Required+RequiresReplace and gotopriorityexpression Optional+Computed+RequiresReplace already matched v2; tfsdk names, types, ForceNew->RequiresReplace all parity; ID = plain policyname matches resource_id_mapping.json "policyname" and v2 d.SetId(policyname).
+DATASOURCE: healthy as-is (single commit 27de55dde); shares SetAttrFromGet which faithfully copies + sets Id; policyname Required lookup key, priority/gotopriorityexpression Computed outputs.
+PATTERNS: 8 (Required flag correction); binding-family delete URL-encode (constraint b).
+FILES CHANGED: citrixadc_framework/tmglobal_auditsyslogpolicy_binding/resource_schema.go, citrixadc_framework/tmglobal_auditsyslogpolicy_binding/resource_tmglobal_auditsyslogpolicy_binding.go (NO test/doc files modified)
+BLOCKER: none
+========================================

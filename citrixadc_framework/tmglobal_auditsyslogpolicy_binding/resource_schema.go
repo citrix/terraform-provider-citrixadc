@@ -49,8 +49,7 @@ func (r *TmglobalAuditsyslogpolicyBindingResource) Schema(ctx context.Context, r
 				Description: "The name of the policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
