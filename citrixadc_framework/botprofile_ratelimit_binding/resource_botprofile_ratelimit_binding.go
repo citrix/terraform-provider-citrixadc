@@ -3,7 +3,7 @@ package botprofile_ratelimit_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,15 +69,12 @@ func (r *BotprofileRatelimitBindingResource) Create(ctx context.Context, req res
 
 	tflog.Trace(ctx, "Created botprofile_ratelimit_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Composite key uses the SDK v2 legacy order: name,bot_rate_limit_type
+	// (matches resource_id_mapping.json so imported legacy state still parses).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRateLimitType.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRateLimitUrl.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("bot_ratelimit:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRatelimit.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("condition:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Condition.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("cookiename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Cookiename.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("countrycode:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Countrycode.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_type:%s", utils.UrlEncode(data.BotRateLimitType.ValueString())))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -159,7 +156,10 @@ func (r *BotprofileRatelimitBindingResource) Delete(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Deleting botprofile_ratelimit_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Parent name + bot_rate_limit_type come from the composite ID (legacy order:
+	// name,bot_rate_limit_type). ParseIdString handles both the new key:value form and
+	// the legacy "name,bot_rate_limit_type" form for imported SDK v2 state.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "bot_rate_limit_type"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -172,27 +172,24 @@ func (r *BotprofileRatelimitBindingResource) Delete(ctx context.Context, req res
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build the delete args matching the SDK v2 resource: the bot_rate_limit_type
+	// discriminator plus any of the optional disambiguating args that are set in state.
+	// Slashy/special values are URL-encoded.
+	args := make([]string, 0)
 	if val, ok := idMap["bot_rate_limit_type"]; ok && val != "" {
-		argsMap["bot_rate_limit_type"] = val
+		args = append(args, fmt.Sprintf("bot_rate_limit_type:%s", url.QueryEscape(val)))
 	}
-	if val, ok := idMap["bot_rate_limit_url"]; ok && val != "" {
-		argsMap["bot_rate_limit_url"] = val
+	if !data.BotRatelimit.IsNull() && !data.BotRatelimit.IsUnknown() {
+		args = append(args, fmt.Sprintf("bot_ratelimit:%t", data.BotRatelimit.ValueBool()))
 	}
-	if val, ok := idMap["bot_ratelimit"]; ok && val != "" {
-		argsMap["bot_ratelimit"] = val
+	if !data.BotRateLimitUrl.IsNull() && !data.BotRateLimitUrl.IsUnknown() && data.BotRateLimitUrl.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bot_rate_limit_url:%s", url.QueryEscape(data.BotRateLimitUrl.ValueString())))
 	}
-	if val, ok := idMap["condition"]; ok && val != "" {
-		argsMap["condition"] = val
-	}
-	if val, ok := idMap["cookiename"]; ok && val != "" {
-		argsMap["cookiename"] = val
-	}
-	if val, ok := idMap["countrycode"]; ok && val != "" {
-		argsMap["countrycode"] = val
+	if !data.Cookiename.IsNull() && !data.Cookiename.IsUnknown() && data.Cookiename.ValueString() != "" {
+		args = append(args, fmt.Sprintf("cookiename:%s", url.QueryEscape(data.Cookiename.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Botprofile_ratelimit_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Botprofile_ratelimit_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botprofile_ratelimit_binding, got error: %s", err))
 		return
@@ -236,108 +233,18 @@ func (r *BotprofileRatelimitBindingResource) readBotprofileRatelimitBindingFromA
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching bot_rate_limit_type.
+	// The binding's identity (per SDK v2) is the parent name + bot_rate_limit_type,
+	// so only the second key needs filtering within the parent's binding array.
+	bot_rate_limit_type, ok := idMap["bot_rate_limit_type"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'bot_rate_limit_type' not found in ID string")
+		return
+	}
+
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bot_rate_limit_type
-		if idVal, ok := idMap["bot_rate_limit_type"]; ok {
-			if val, ok := v["bot_rate_limit_type"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bot_rate_limit_type"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check bot_rate_limit_url
-		if idVal, ok := idMap["bot_rate_limit_url"]; ok {
-			if val, ok := v["bot_rate_limit_url"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bot_rate_limit_url"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check bot_ratelimit
-		if idVal, ok := idMap["bot_ratelimit"]; ok {
-			if val, ok := v["bot_ratelimit"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bot_ratelimit"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check condition
-		if idVal, ok := idMap["condition"]; ok {
-			if val, ok := v["condition"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["condition"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check cookiename
-		if idVal, ok := idMap["cookiename"]; ok {
-			if val, ok := v["cookiename"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["cookiename"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check countrycode
-		if idVal, ok := idMap["countrycode"]; ok {
-			if val, ok := v["countrycode"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["countrycode"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["bot_rate_limit_type"].(string); ok && val == bot_rate_limit_type {
 			foundIndex = i
 			break
 		}

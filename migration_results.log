@@ -622,3 +622,19 @@ PATTERNS: 6 (set ID once in Create), 7 (split resource/datasource setters), 8 (d
 FILES CHANGED: citrixadc_framework/botprofile_captcha_binding/resource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/resource_schema.go, citrixadc_framework/botprofile_captcha_binding/datasource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_captcha_binding_test.go (sanctioned ID-parse helper lines only). NO docs modified.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: botprofile_ratelimit_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:54:18Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccBotprofile_ratelimit_binding_basic$|TestAccBotprofileRatelimitBindingDataSource_basic$
+TESTS:
+  - TestAccBotprofile_ratelimit_binding_basic ........ PASS
+  - TestAccBotprofileRatelimitBindingDataSource_basic  PASS
+  - (no ephemeral tests; resource has no secret attrs)
+BACKWARD-COMPAT: ID reduced from 7-key composite to legacy 2-key name,bot_rate_limit_type (matches resource_id_mapping.json); restored Optional+Computed on bot_ratelimit/rate/timeslice (SDK v2 contract; codegen wrongly made them Required); Read match loop narrowed to bot_rate_limit_type; Delete switched to DeleteResourceWithArgs with SDK v2 arg subset (bot_rate_limit_type+bot_ratelimit+bot_rate_limit_url+cookiename, url-encoded); SetAttrFromGet nulls absent fields (GET echoes all set fields) so Computed attrs stay known after apply.
+DATASOURCE: recovered Optional+Computed flags (master had them; WIP baseline d0dc3b690 regressed bot_rate_limit_url/bot_ratelimit/condition/cookiename/countrycode to Required, breaking the datasource test which sets only name/bot_rate_limit_type/cookiename); rewrote match loop to treat null filters as "don't filter"; split setter -> botprofile_ratelimit_bindingSetAttrFromGetForDatasource (copies all + sets 2-key ID).
+PATTERNS: 1(verb confirmed PUT/UpdateUnnamedResource - correct, left as-is), 6, 7, 8, 13
+FILES CHANGED: citrixadc_framework/botprofile_ratelimit_binding/resource_botprofile_ratelimit_binding.go, citrixadc_framework/botprofile_ratelimit_binding/resource_schema.go, citrixadc_framework/botprofile_ratelimit_binding/datasource_botprofile_ratelimit_binding.go, citrixadc_framework/botprofile_ratelimit_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_ratelimit_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================

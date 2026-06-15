@@ -32,23 +32,28 @@ func BotprofileRatelimitBindingDataSourceSchema() schema.Schema {
 				Description: "Rate-limiting type Following rate-limiting types are allowed:\n*SOURCE_IP - Rate-limiting based on the client IP.\n*SESSION - Rate-limiting based on the configured cookie name.\n*URL - Rate-limiting based on the configured URL.\n*GEOLOCATION - Rate-limiting based on the configured country name.\n*JA3_FINGERPRINT - Rate-limiting based on client SSL JA3 fingerprint.",
 			},
 			"bot_rate_limit_url": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "URL for the resource based rate-limiting.",
 			},
 			"bot_ratelimit": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Rate-limit binding. Maximum 30 bindings can be configured per profile for rate-limit detection. For SOURCE_IP type, only one binding can be configured, and for URL type, only one binding is allowed per URL, and for SESSION type, only one binding is allowed for a cookie name. To update the values of an existing binding, user has to first unbind that binding, and then needs to bind again with new values.",
 			},
 			"condition": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Expression to be used in a rate-limiting condition. This expression result must be a boolean value.",
 			},
 			"cookiename": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Cookie name which is used to identify the session for session rate-limiting.",
 			},
 			"countrycode": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Country name which is used for geolocation rate-limiting.",
 			},
 			"limittype": schema.StringAttribute{

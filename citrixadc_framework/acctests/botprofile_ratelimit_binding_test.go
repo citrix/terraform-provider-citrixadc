@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -127,10 +128,12 @@ func testAccCheckBotprofile_ratelimit_bindingExist(n string, id *string) resourc
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		bot_rate_limit_type := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "bot_rate_limit_type"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		bot_rate_limit_type := idMap["bot_rate_limit_type"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_ratelimit_binding",
@@ -172,10 +175,12 @@ func testAccCheckBotprofile_ratelimit_bindingNotExist(n string, id string) resou
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		bot_rate_limit_type := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "bot_rate_limit_type"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", id, err)
+		}
+		name := idMap["name"]
+		bot_rate_limit_type := idMap["bot_rate_limit_type"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_ratelimit_binding",

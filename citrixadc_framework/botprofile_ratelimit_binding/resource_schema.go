@@ -88,7 +88,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Description: "URL for the resource based rate-limiting.",
 			},
 			"bot_ratelimit": schema.BoolAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -142,14 +143,16 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Description: "Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my profile\" or 'my profile').",
 			},
 			"rate": schema.Int64Attribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Maximum number of requests that are allowed in this session in the given period time.",
 			},
 			"timeslice": schema.Int64Attribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -212,6 +215,13 @@ func botprofile_ratelimit_bindingGetThePayloadFromthePlan(ctx context.Context, d
 	return botprofile_ratelimit_binding
 }
 
+// botprofile_ratelimit_bindingSetAttrFromGet is the resource-side state setter.
+// The live binding GET echoes back every configured field (verified against the ADC),
+// so a field that is absent from the response is genuinely unset and is resolved to
+// null. All schema attributes are Optional+Computed, so a null is a valid known value
+// for the unset ones — this keeps Computed attributes known after apply (Pattern 13)
+// while staying faithful to the SDK v2 d.Set(...) behavior. The ID is set once in
+// Create (Pattern 6) and is NOT recomputed here.
 func botprofile_ratelimit_bindingSetAttrFromGet(ctx context.Context, data *BotprofileRatelimitBindingResourceModel, getResponseData map[string]interface{}) *BotprofileRatelimitBindingResourceModel {
 	tflog.Debug(ctx, "In botprofile_ratelimit_bindingSetAttrFromGet Function")
 
@@ -297,16 +307,100 @@ func botprofile_ratelimit_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 		data.Timeslice = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	return data
+}
+
+// botprofile_ratelimit_bindingSetAttrFromGetForDatasource is the datasource-side setter.
+// The datasource has no prior plan/state to preserve, so it faithfully copies every field
+// from the GET response and explicitly sets the composite ID (datasource has no Create).
+func botprofile_ratelimit_bindingSetAttrFromGetForDatasource(ctx context.Context, data *BotprofileRatelimitBindingResourceModel, getResponseData map[string]interface{}) *BotprofileRatelimitBindingResourceModel {
+	tflog.Debug(ctx, "In botprofile_ratelimit_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
+		data.BotBindComment = types.StringValue(val.(string))
+	} else {
+		data.BotBindComment = types.StringNull()
+	}
+	if val, ok := getResponseData["bot_rate_limit_action"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.BotRateLimitAction = listValue
+		} else {
+			data.BotRateLimitAction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.BotRateLimitAction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["bot_rate_limit_enabled"]; ok && val != nil {
+		data.BotRateLimitEnabled = types.StringValue(val.(string))
+	} else {
+		data.BotRateLimitEnabled = types.StringNull()
+	}
+	if val, ok := getResponseData["bot_rate_limit_type"]; ok && val != nil {
+		data.BotRateLimitType = types.StringValue(val.(string))
+	} else {
+		data.BotRateLimitType = types.StringNull()
+	}
+	if val, ok := getResponseData["bot_rate_limit_url"]; ok && val != nil {
+		data.BotRateLimitUrl = types.StringValue(val.(string))
+	} else {
+		data.BotRateLimitUrl = types.StringNull()
+	}
+	if val, ok := getResponseData["bot_ratelimit"]; ok && val != nil {
+		data.BotRatelimit = types.BoolValue(val.(bool))
+	} else {
+		data.BotRatelimit = types.BoolNull()
+	}
+	if val, ok := getResponseData["condition"]; ok && val != nil {
+		data.Condition = types.StringValue(val.(string))
+	} else {
+		data.Condition = types.StringNull()
+	}
+	if val, ok := getResponseData["cookiename"]; ok && val != nil {
+		data.Cookiename = types.StringValue(val.(string))
+	} else {
+		data.Cookiename = types.StringNull()
+	}
+	if val, ok := getResponseData["countrycode"]; ok && val != nil {
+		data.Countrycode = types.StringValue(val.(string))
+	} else {
+		data.Countrycode = types.StringNull()
+	}
+	if val, ok := getResponseData["limittype"]; ok && val != nil {
+		data.Limittype = types.StringValue(val.(string))
+	} else {
+		data.Limittype = types.StringNull()
+	}
+	if val, ok := getResponseData["logmessage"]; ok && val != nil {
+		data.Logmessage = types.StringValue(val.(string))
+	} else {
+		data.Logmessage = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else {
+		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["rate"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Rate = types.Int64Value(intVal)
+		}
+	} else {
+		data.Rate = types.Int64Null()
+	}
+	if val, ok := getResponseData["timeslice"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Timeslice = types.Int64Value(intVal)
+		}
+	} else {
+		data.Timeslice = types.Int64Null()
+	}
+
+	// Set composite ID (datasource has no Create) - matches SDK v2 legacy order name,bot_rate_limit_type
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRateLimitType.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRateLimitUrl.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("bot_ratelimit:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRatelimit.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("condition:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Condition.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("cookiename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Cookiename.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("countrycode:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Countrycode.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_type:%s", utils.UrlEncode(data.BotRateLimitType.ValueString())))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
