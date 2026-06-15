@@ -56,9 +56,11 @@ func (r *CachepolicylabelCachepolicyBindingResource) Schema(ctx context.Context,
 				Description: "Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next-lower priority.",
 			},
 			"invoke_labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Name of the policy label to invoke if the current policy rule evaluates to TRUE.",
 			},
@@ -70,9 +72,11 @@ func (r *CachepolicylabelCachepolicyBindingResource) Schema(ctx context.Context,
 				Description: "Name of the cache policy label to which to bind the policy.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Type of policy label to invoke: an unnamed label associated with a virtual server, or user-defined policy label.",
 			},
@@ -124,10 +128,62 @@ func cachepolicylabel_cachepolicy_bindingGetThePayloadFromthePlan(ctx context.Co
 	return cachepolicylabel_cachepolicy_binding
 }
 
+// cachepolicylabel_cachepolicy_bindingSetAttrFromGet is the RESOURCE-side state setter.
+// All non-identity attributes (gotopriorityexpression, invoke, invoke_labelname,
+// labeltype, priority) are RequiresReplace inputs that the NITRO GET response may not
+// echo back, or may return server-normalized values for. To avoid "inconsistent result
+// after apply"/perpetual diffs, the existing plan/state value is preserved when the GET
+// response omits the field; it is only adopted from GET when not already set in state.
+// Identity attributes (labelname, policyname) are always adopted from the GET response.
+// The ID is NOT recomputed here - it is set once in Create (and in the datasource setter).
 func cachepolicylabel_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *CachepolicylabelCachepolicyBindingResourceModel, getResponseData map[string]interface{}) *CachepolicylabelCachepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In cachepolicylabel_cachepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Identity attributes - always adopt from GET (also makes imported state usable)
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+
+	// Server-overridden / non-echoed RequiresReplace inputs:
+	// adopt from GET only when present; otherwise preserve the existing plan/state value.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	// invoke_labelname and labeltype are Optional+Computed but are NOT echoed by the
+	// NITRO GET response. Adopt from GET when present; otherwise keep the existing
+	// known state value, and fall back to a (known) null so the Computed attribute is
+	// never left unknown after apply.
+	if val, ok := getResponseData["invoke_labelname"]; ok && val != nil {
+		data.InvokeLabelname = types.StringValue(val.(string))
+	} else if data.InvokeLabelname.IsUnknown() {
+		data.InvokeLabelname = types.StringNull()
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	} else if data.Labeltype.IsUnknown() {
+		data.Labeltype = types.StringNull()
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// cachepolicylabel_cachepolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// state setter. The datasource has no prior plan/state to preserve, so it faithfully
+// copies every field from the GET response and sets the composite ID itself.
+func cachepolicylabel_cachepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CachepolicylabelCachepolicyBindingResourceModel, getResponseData map[string]interface{}) *CachepolicylabelCachepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In cachepolicylabel_cachepolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -166,7 +222,7 @@ func cachepolicylabel_cachepolicy_bindingSetAttrFromGet(ctx context.Context, dat
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("labelname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Labelname.ValueString()))))
