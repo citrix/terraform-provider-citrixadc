@@ -105,7 +105,7 @@ func (d *VpnvserverAuthenticationsamlidppolicyBindingDataSource) Read(ctx contex
 		return
 	}
 
-	vpnvserver_authenticationsamlidppolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_authenticationsamlidppolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
