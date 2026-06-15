@@ -20,7 +20,8 @@ func AuthenticationvserverRewritepolicyBindingDataSourceSchema() schema.Schema {
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupextraction": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
 			"name": schema.StringAttribute{
@@ -42,7 +43,8 @@ func AuthenticationvserverRewritepolicyBindingDataSourceSchema() schema.Schema {
 				Description: "The priority, if any, of the vpn vserver policy.",
 			},
 			"secondary": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
 		},

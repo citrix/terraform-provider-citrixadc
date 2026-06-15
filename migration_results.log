@@ -464,5 +464,18 @@ BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct, te
 DATASOURCE: healthy after fixes; relaxed groupextraction/secondary from Required to Optional+Computed (test config supplies only name+policy), added bindpoint attr, switched Read to policy-only filter + new datasource setter (Pattern 7 split).
 PATTERNS: 7, 13
 FILES CHANGED: citrixadc_framework/authenticationvserver_authenticationwebauthpolicy_binding/resource_authenticationvserver_authenticationwebauthpolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationwebauthpolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_authenticationwebauthpolicy_binding/datasource_authenticationvserver_authenticationwebauthpolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationwebauthpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/authenticationvserver_authenticationwebauthpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO docs modified.
+RESOURCE: authenticationvserver_rewritepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:11:38Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccAuthenticationvserver_rewritepolicy_binding_basic$|TestAccAuthenticationvserverRewritepolicyBindingDataSource_basic$
+TESTS:
+  - TestAccAuthenticationvserver_rewritepolicy_binding_basic ............ PASS
+  - TestAccAuthenticationvserverRewritepolicyBindingDataSource_basic .... PASS
+  - (no ephemeral tests; resource has no secret attributes) ............. N/A
+BACKWARD-COMPAT: ID reduced from spurious 5-key composite to SDK v2 name,policy (matches resource_id_mapping.json); SetAttrFromGet no longer rebuilds ID (P6) and preserves non-echoed inputs groupextraction/secondary/nextfactor (P7); dropped spurious Computed from those 3 attrs (P13); Read match simplified to policy (matches SDK v2); Delete switched to DeleteResourceWithArgs with url.QueryEscape'd args (policy/bindpoint/secondary/groupextraction).
+DATASOURCE: healthy after fix; split into ...SetAttrFromGetForDatasource (P7), sets its own name,policy ID; datasource schema groupextraction/secondary changed Required->Optional+Computed (P11) so the existing datasource test config compiles.
+PATTERNS: 6, 7, 11, 13
+FILES CHANGED: citrixadc_framework/authenticationvserver_rewritepolicy_binding/resource_authenticationvserver_rewritepolicy_binding.go, citrixadc_framework/authenticationvserver_rewritepolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_rewritepolicy_binding/datasource_authenticationvserver_rewritepolicy_binding.go, citrixadc_framework/authenticationvserver_rewritepolicy_binding/datasource_schema.go, citrixadc_framework/acctests/authenticationvserver_rewritepolicy_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================

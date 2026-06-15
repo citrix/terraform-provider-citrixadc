@@ -42,12 +42,10 @@ func (d *AuthenticationvserverRewritepolicyBindingDataSource) Read(ctx context.C
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Lookup keys: parent (name) for the GET, then filter by policy and (if set) bindpoint.
 	name_Name := data.Name.ValueString()
 	bindpoint_Name := data.Bindpoint
-	groupextraction_Name := data.Groupextraction
 	policy_Name := data.Policy
-	secondary_Name := data.Secondary
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -69,67 +67,36 @@ func (d *AuthenticationvserverRewritepolicyBindingDataSource) Read(ctx context.C
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching policy (and bindpoint if set).
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bindpoint
-		if val, ok := v["bindpoint"].(string); ok {
-			if bindpoint_Name.IsNull() || val != bindpoint_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !bindpoint_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check groupextraction
-		if val, ok := v["groupextraction"].(bool); ok {
-			if groupextraction_Name.IsNull() || val != groupextraction_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !groupextraction_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check policy
+		// Match policy
 		if val, ok := v["policy"].(string); ok {
 			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
 				continue
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
+		} else {
 			continue
 		}
 
-		// Check secondary
-		if val, ok := v["secondary"].(bool); ok {
-			if secondary_Name.IsNull() || val != secondary_Name.ValueBool() {
-				match = false
+		// Match bindpoint when supplied
+		if !bindpoint_Name.IsNull() {
+			if val, ok := v["bindpoint"].(string); !ok || val != bindpoint_Name.ValueString() {
 				continue
 			}
-		} else if !secondary_Name.IsNull() {
-			match = false
-			continue
 		}
-		if match {
-			foundIndex = i
-			break
-		}
+
+		foundIndex = i
+		break
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_rewritepolicy_binding with bindpoint %s not found", bindpoint_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_rewritepolicy_binding with policy %s not found", policy_Name))
 		return
 	}
 
-	authenticationvserver_rewritepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_rewritepolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
