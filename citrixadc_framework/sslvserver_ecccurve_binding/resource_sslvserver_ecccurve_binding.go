@@ -3,6 +3,7 @@ package sslvserver_ecccurve_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *SslvserverEcccurveBindingResource) Create(ctx context.Context, req reso
 	sslvserver_ecccurve_binding := sslvserver_ecccurve_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Sslvserver_ecccurve_binding.Type(), &sslvserver_ecccurve_binding)
+	// Binding resource - SDK v2 used AddResource (POST); preserve that contract
+	_, err := r.client.AddResource(service.Sslvserver_ecccurve_binding.Type(), "", &sslvserver_ecccurve_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslvserver_ecccurve_binding, got error: %s", err))
 		return
@@ -168,7 +169,8 @@ func (r *SslvserverEcccurveBindingResource) Delete(ctx context.Context, req reso
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["ecccurvename"]; ok && val != "" {
-		argsMap["ecccurvename"] = val
+		// URL-encode the delete arg value to match SDK v2 contract (handles slashy/special values)
+		argsMap["ecccurvename"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Sslvserver_ecccurve_binding.Type(), vservername_value, argsMap)
