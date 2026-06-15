@@ -40,8 +40,10 @@ func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) Schema(ctx contex
 				Description: "The ID of the vpnvserver_authenticationsamlidppolicy_binding resource.",
 			},
 			"bindpoint": schema.StringAttribute{
+				// Optional only (no Computed): bindpoint is not echoed back by the NITRO
+				// GET response, so a Computed flag would leave it "known after apply"
+				// forever and fail with an unknown-value error (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -56,8 +58,8 @@ func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) Schema(ctx contex
 				Description: "Next priority expression.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// Optional only (no Computed): not echoed back by NITRO GET (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -86,8 +88,8 @@ func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) Schema(ctx contex
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
+				// Optional only (no Computed): not echoed back by NITRO GET (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,52 +129,81 @@ func vpnvserver_authenticationsamlidppolicy_bindingGetThePayloadFromthePlan(ctx 
 	return vpnvserver_authenticationsamlidppolicy_binding
 }
 
+// vpnvserver_authenticationsamlidppolicy_bindingSetAttrFromGet updates the resource
+// model from a GET response while PRESERVING the prior plan/state values for the
+// attributes the NITRO server does not echo back (bindpoint, secondary,
+// groupextraction). The live GET only returns name, policy, priority and
+// gotopriorityexpression, so blindly nulling the non-echoed fields would wipe the
+// user-configured values and cause an "inconsistent result after apply" error
+// (Patterns 7 and 13). The ID is composed once in Create (name,policy) and is not
+// recomputed here (Pattern 6).
 func vpnvserver_authenticationsamlidppolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationsamlidppolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationsamlidppolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationsamlidppolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// bindpoint is not echoed back by the NITRO GET response - preserve the
+	// existing plan/state value rather than nulling it (Pattern 7).
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
-	} else {
-		data.Bindpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
-		data.Gotopriorityexpression = types.StringNull()
 	}
+	// groupextraction is not echoed back by the NITRO GET response - preserve.
 	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
 		data.Groupextraction = types.BoolValue(val.(bool))
-	} else {
-		data.Groupextraction = types.BoolNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
-	} else {
-		data.Policy = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
-		data.Priority = types.Int64Null()
+	}
+	// secondary is not echoed back by the NITRO GET response - preserve.
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	return data
+}
+
+// vpnvserver_authenticationsamlidppolicy_bindingSetAttrFromGetForDatasource faithfully
+// copies every field from the GET response and sets the datasource ID. The datasource
+// has no prior plan/state to preserve, so unlike the resource setter it must read all
+// values directly from the response (Pattern 7 datasource split).
+func vpnvserver_authenticationsamlidppolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationsamlidppolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationsamlidppolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_authenticationsamlidppolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
 	}
 	if val, ok := getResponseData["secondary"]; ok && val != nil {
 		data.Secondary = types.BoolValue(val.(bool))
-	} else {
-		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (legacy order name,policy)
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
