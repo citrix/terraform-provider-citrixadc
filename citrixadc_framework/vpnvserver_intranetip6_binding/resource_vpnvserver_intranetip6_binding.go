@@ -3,6 +3,7 @@ package vpnvserver_intranetip6_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -155,7 +156,9 @@ func (r *VpnvserverIntranetip6BindingResource) Delete(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Deleting vpnvserver_intranetip6_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ParseIdString handles both the new key:value ID format and the legacy
+	// SDK v2 positional "name,intranetip6" format.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "intranetip6"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -168,15 +171,18 @@ func (r *VpnvserverIntranetip6BindingResource) Delete(ctx context.Context, req r
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args. URL-encode the values so slashy/special characters
+	// (e.g. an intranetip6 network range like "::1/64") do not corrupt the
+	// ?args=key:value query string.
+	args := make([]string, 0)
 	if val, ok := idMap["intranetip6"]; ok && val != "" {
-		argsMap["intranetip6"] = val
+		args = append(args, fmt.Sprintf("intranetip6:%s", url.QueryEscape(val)))
 	}
 	if val, ok := idMap["numaddr"]; ok && val != "" {
-		argsMap["numaddr"] = val
+		args = append(args, fmt.Sprintf("numaddr:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_intranetip6_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_intranetip6_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_intranetip6_binding, got error: %s", err))
 		return

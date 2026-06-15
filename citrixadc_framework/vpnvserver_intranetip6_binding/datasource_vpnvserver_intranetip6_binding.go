@@ -73,27 +73,31 @@ func (d *VpnvserverIntranetip6BindingDataSource) Read(ctx context.Context, req d
 	for i, v := range dataArr {
 		match := true
 
-		// Check intranetip6
-		if val, ok := v["intranetip6"].(string); ok {
-			if intranetip6_Name.IsNull() || val != intranetip6_Name.ValueString() {
+		// Check intranetip6 (only filter when the user supplied a value)
+		if !intranetip6_Name.IsNull() {
+			if val, ok := v["intranetip6"].(string); ok {
+				if val != intranetip6_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !intranetip6_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check numaddr
-		if val, ok := v["numaddr"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if numaddr_Name.IsNull() || val != numaddr_Name.ValueInt64() {
+		// Check numaddr (optional filter; skip when the user omitted it)
+		if !numaddr_Name.IsNull() {
+			if val, ok := v["numaddr"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != numaddr_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !numaddr_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

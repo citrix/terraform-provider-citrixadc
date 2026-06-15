@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -98,10 +99,14 @@ func testAccCheckVpnvserver_intranetip6_bindingExist(n string, id *string) resou
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		intranetip6 := idSlice[1]
+		// ParseIdString handles both the new key:value ID format and the legacy
+		// SDK v2 positional "name,intranetip6" format.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "intranetip6"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		intranetip6 := idMap["intranetip6"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_intranetip6_binding",
