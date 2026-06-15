@@ -622,3 +622,19 @@ PATTERNS: 6 (set ID once in Create), 7 (split resource/datasource setters), 8 (d
 FILES CHANGED: citrixadc_framework/botprofile_captcha_binding/resource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/resource_schema.go, citrixadc_framework/botprofile_captcha_binding/datasource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_captcha_binding_test.go (sanctioned ID-parse helper lines only). NO docs modified.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: contentinspectionglobal_contentinspectionpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:59:21Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccContentinspectionglobal_contentinspectionpolicy_binding_basic|TestAcccontentinspectionglobal_contentinspectionpolicy_bindingDataSource_basic
+TESTS:
+  - TestAccContentinspectionglobal_contentinspectionpolicy_binding_basic ............ PASS
+  - TestAcccontentinspectionglobal_contentinspectionpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no x-secret-attr) ............................. N/A
+BACKWARD-COMPAT: labelname/labeltype were wrongly Required in Framework (SDK v2 + NITRO mark them optional); reverted to Optional+Computed (+UseStateForUnknown). Read now defaults bindpoint filter to REQ_DEFAULT to match SDK v2. Create verb PUT (UpdateUnnamedResource) confirmed correct vs NITRO add=PUT. ID adopts new key:value (policyname,type) format; legacy mapping "policyname" preserved for old-state parsing.
+DATASOURCE: healthy as-is (shares SetAttrFromGet, sets own Id; policyname+type Required lookup keys coherent).
+PATTERNS: 8 (Required->Optional+Computed flag correction)
+FILES CHANGED: citrixadc_framework/contentinspectionglobal_contentinspectionpolicy_binding/resource_schema.go, citrixadc_framework/contentinspectionglobal_contentinspectionpolicy_binding/resource_contentinspectionglobal_contentinspectionpolicy_binding.go, citrixadc_framework/acctests/contentinspectionglobal_contentinspectionpolicy_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================
