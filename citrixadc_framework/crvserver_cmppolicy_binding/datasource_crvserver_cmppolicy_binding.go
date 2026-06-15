@@ -93,7 +93,7 @@ func (d *CrvserverCmppolicyBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	crvserver_cmppolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	crvserver_cmppolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
