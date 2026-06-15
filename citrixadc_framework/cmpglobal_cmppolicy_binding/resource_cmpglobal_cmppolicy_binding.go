@@ -3,6 +3,7 @@ package cmpglobal_cmppolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -161,15 +162,21 @@ func (r *CmpglobalCmppolicyBindingResource) Delete(ctx context.Context, req reso
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args, URL-encoding values for slashy/special characters.
+	// deleteResourceWithArgs joins key:value directly into the URL without
+	// encoding, so we must QueryEscape the values ourselves (matches SDK v2).
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
 	}
 	if val, ok := idMap["type"]; ok && val != "" {
-		argsMap["type"] = val
+		args = append(args, fmt.Sprintf("type:%s", url.QueryEscape(val)))
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Cmpglobal_cmppolicy_binding.Type(), "", argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Cmpglobal_cmppolicy_binding.Type(), "", args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete cmpglobal_cmppolicy_binding, got error: %s", err))
 		return
@@ -190,8 +197,14 @@ func (r *CmpglobalCmppolicyBindingResource) readCmpglobalCmppolicyBindingFromApi
 
 	var dataArr []map[string]interface{}
 	var argsMap map[string]string = make(map[string]string)
+	// The unfiltered GET only returns aggregate (numpol) entries with no
+	// policyname; individual bindings are only returned when the request is
+	// filtered by the bindpoint "type". When type is not part of the ID, fall
+	// back to the NITRO default bindpoint "RES_DEFAULT" (matches SDK v2 read).
 	if val, ok := idMap["type"]; ok && val != "" {
-		argsMap["type"] = val
+		argsMap["type"] = url.QueryEscape(val)
+	} else {
+		argsMap["type"] = url.QueryEscape("RES_DEFAULT")
 	}
 
 	findParams := service.FindParams{
