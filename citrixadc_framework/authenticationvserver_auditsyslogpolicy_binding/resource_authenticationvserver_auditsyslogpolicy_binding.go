@@ -3,7 +3,7 @@ package authenticationvserver_auditsyslogpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -46,6 +46,15 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Configure(ctx co
 	r.client = *req.ProviderData.(**service.NitroClient)
 }
 
+// composeId builds the backward-compatible composite ID. The positional order
+// (name,policy) matches resource_id_mapping.json so legacy SDK v2 imports still resolve.
+func composeId(data *AuthenticationvserverAuditsyslogpolicyBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
+	return strings.Join(idParts, ",")
+}
+
 func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data AuthenticationvserverAuditsyslogpolicyBindingResourceModel
 
@@ -60,7 +69,7 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Create(ctx conte
 	authenticationvserver_auditsyslogpolicy_binding := authenticationvserver_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
+	// Binding resource - NITRO add verb is PUT for this binding -> UpdateUnnamedResource
 	err := r.client.UpdateUnnamedResource(service.Authenticationvserver_auditsyslogpolicy_binding.Type(), &authenticationvserver_auditsyslogpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationvserver_auditsyslogpolicy_binding, got error: %s", err))
@@ -70,12 +79,7 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Create(ctx conte
 	tflog.Trace(ctx, "Created authenticationvserver_auditsyslogpolicy_binding resource")
 
 	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(composeId(&data))
 
 	// Read the updated state back
 	r.readAuthenticationvserverAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -117,26 +121,9 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Update(ctx conte
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating authenticationvserver_auditsyslogpolicy_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		authenticationvserver_auditsyslogpolicy_binding := authenticationvserver_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Authenticationvserver_auditsyslogpolicy_binding.Type(), &authenticationvserver_auditsyslogpolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationvserver_auditsyslogpolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated authenticationvserver_auditsyslogpolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for authenticationvserver_auditsyslogpolicy_binding resource, skipping update")
-	}
+	// All attributes are RequiresReplace; there is no NITRO update endpoint for this
+	// binding, so Update is a documented no-op (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for authenticationvserver_auditsyslogpolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readAuthenticationvserverAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -156,7 +143,8 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Delete(ctx conte
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_auditsyslogpolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// legacyOrder name,policy matches resource_id_mapping.json so legacy IDs parse too.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -169,18 +157,23 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Delete(ctx conte
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
-	}
+	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
 	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+	// secondary/groupextraction/bindpoint are part of the binding identity on the ADC.
+	// Include them in the delete args when set (URL-encoded for slashy/special values).
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Secondary.IsNull() && data.Secondary.ValueBool() {
+		args = append(args, fmt.Sprintf("secondary:%v", data.Secondary.ValueBool()))
+	}
+	if !data.Groupextraction.IsNull() && data.Groupextraction.ValueBool() {
+		args = append(args, fmt.Sprintf("groupextraction:%v", data.Groupextraction.ValueBool()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_auditsyslogpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_auditsyslogpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_auditsyslogpolicy_binding, got error: %s", err))
 		return
@@ -192,7 +185,7 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Delete(ctx conte
 // Helper function to read authenticationvserver_auditsyslogpolicy_binding data from API
 func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) readAuthenticationvserverAuditsyslogpolicyBindingFromApi(ctx context.Context, data *AuthenticationvserverAuditsyslogpolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Array filter with parent ID - parse from ID. legacyOrder name,policy.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
@@ -204,6 +197,7 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) readAuthenticati
 		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
 		return
 	}
+	policy_value := idMap["policy"]
 
 	var dataArr []map[string]interface{}
 
@@ -224,61 +218,10 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) readAuthenticati
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding matching policy.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
 			foundIndex = i
 			break
 		}
@@ -286,7 +229,7 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) readAuthenticati
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("authenticationvserver_auditsyslogpolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "authenticationvserver_auditsyslogpolicy_binding not found with the provided ID attributes")
 		return
 	}
 

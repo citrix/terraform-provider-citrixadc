@@ -2,8 +2,6 @@ package authenticationvserver_auditsyslogpolicy_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
@@ -22,6 +20,7 @@ import (
 // AuthenticationvserverAuditsyslogpolicyBindingResourceModel describes the resource data model.
 type AuthenticationvserverAuditsyslogpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -39,9 +38,17 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Schema(ctx conte
 				Computed:    true,
 				Description: "The ID of the authenticationvserver_auditsyslogpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				// Not echoed by GET -> Optional only (Computed would stay unknown after
+				// apply since SetAttrFromGet preserves the value; Pattern 13).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -49,7 +56,6 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Schema(ctx conte
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -64,7 +70,6 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Schema(ctx conte
 			},
 			"nextfactor": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -87,7 +92,6 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Schema(ctx conte
 			},
 			"secondary": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -102,6 +106,9 @@ func authenticationvserver_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx
 
 	// Create API request body from the model
 	authenticationvserver_auditsyslogpolicy_binding := authentication.Authenticationvserverauditsyslogpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		authenticationvserver_auditsyslogpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		authenticationvserver_auditsyslogpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -127,10 +134,48 @@ func authenticationvserver_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx
 	return authenticationvserver_auditsyslogpolicy_binding
 }
 
+// authenticationvserver_auditsyslogpolicy_bindingSetAttrFromGet is the RESOURCE setter.
+// The NITRO GET response for this binding only echoes name, policy and priority. The
+// other attributes (bindpoint, gotopriorityexpression, groupextraction, nextfactor,
+// secondary) are write-only inputs that the server never returns. To avoid an
+// "inconsistent result after apply" / perpetual-diff (Pattern 7), preserve the existing
+// plan/state value for any attribute the GET does not echo back.
 func authenticationvserver_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *AuthenticationvserverAuditsyslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuditsyslogpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In authenticationvserver_auditsyslogpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Echoed by GET: name, policy, priority.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	// bindpoint, gotopriorityexpression, groupextraction, nextfactor, secondary are not
+	// echoed by the ADC -> preserve existing plan/state values (do NOT null them).
+
+	// Recompute the backward-compatible ID (name,policy positional order).
+	data.Id = types.StringValue(composeId(data))
+
+	return data
+}
+
+// authenticationvserver_auditsyslogpolicy_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE setter (Pattern 7 split). A datasource has no prior plan/state, so it must
+// faithfully copy every field the GET echoes and explicitly null the rest, then set the
+// ID itself (datasources never call Create).
+func authenticationvserver_auditsyslogpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationvserverAuditsyslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuditsyslogpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In authenticationvserver_auditsyslogpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -159,6 +204,8 @@ func authenticationvserver_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.C
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
 		}
 	} else {
 		data.Priority = types.Int64Null()
@@ -169,14 +216,7 @@ func authenticationvserver_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.C
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(composeId(data))
 
 	return data
 }
