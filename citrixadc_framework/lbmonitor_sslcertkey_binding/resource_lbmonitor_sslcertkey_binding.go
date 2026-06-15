@@ -3,7 +3,7 @@ package lbmonitor_sslcertkey_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,11 +69,12 @@ func (r *LbmonitorSslcertkeyBindingResource) Create(ctx context.Context, req res
 
 	tflog.Trace(ctx, "Created lbmonitor_sslcertkey_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Legacy SDK v2 ID order: monitorname,certkeyname (see resource_id_mapping.json).
+	// 'ca' is a binding property, not part of the identity, so it is excluded from the ID.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("monitorname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Monitorname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -155,7 +156,8 @@ func (r *LbmonitorSslcertkeyBindingResource) Delete(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Deleting lbmonitor_sslcertkey_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgsMap.
+	// Legacy SDK v2 ID order: monitorname,certkeyname (see resource_id_mapping.json).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"monitorname", "certkeyname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -169,11 +171,14 @@ func (r *LbmonitorSslcertkeyBindingResource) Delete(ctx context.Context, req res
 	}
 
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["ca"]; ok && val != "" {
-		argsMap["ca"] = val
-	}
 	if val, ok := idMap["certkeyname"]; ok && val != "" {
-		argsMap["certkeyname"] = val
+		// ParseIdString already URL-decodes; re-encode for the delete query arg.
+		argsMap["certkeyname"] = url.QueryEscape(val)
+	}
+	// 'ca' distinguishes CA-cert bindings from server-cert bindings on the same
+	// monitor; pass it only when set true (matches SDK v2 delete behavior).
+	if !data.Ca.IsNull() && !data.Ca.IsUnknown() && data.Ca.ValueBool() {
+		argsMap["ca"] = url.QueryEscape(fmt.Sprintf("%v", data.Ca.ValueBool()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbmonitor_sslcertkey_binding.Type(), monitorname_value, argsMap)
@@ -220,27 +225,11 @@ func (r *LbmonitorSslcertkeyBindingResource) readLbmonitorSslcertkeyBindingFromA
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Identity is monitorname (parent) + certkeyname; match on certkeyname here.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check ca
-		if idVal, ok := idMap["ca"]; ok {
-			if val, ok := v["ca"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ca"].(bool); ok {
-			match = false
-			continue
-		}
 
 		// Check certkeyname
 		if idVal, ok := idMap["certkeyname"]; ok {
