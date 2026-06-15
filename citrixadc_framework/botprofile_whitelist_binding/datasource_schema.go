@@ -16,7 +16,8 @@ func BotprofileWhitelistBindingDataSourceSchema() schema.Schema {
 				Description: "Any comments about this binding.",
 			},
 			"bot_whitelist": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Whitelist binding. Maximum 32 bindings can be configured per profile for Whitelist detection.",
 			},
 			"bot_whitelist_enabled": schema.StringAttribute{

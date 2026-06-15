@@ -3,7 +3,7 @@ package botprofile_whitelist_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,11 +69,13 @@ func (r *BotprofileWhitelistBindingResource) Create(ctx context.Context, req res
 
 	tflog.Trace(ctx, "Created botprofile_whitelist_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Use the SDK v2 legacy attribute order "name,bot_whitelist_value"
+	// (see resource_id_mapping.json) so the new key:value ID and any imported
+	// legacy positional ID decode identically via utils.ParseIdString.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_whitelist:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotWhitelist.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("bot_whitelist_value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotWhitelistValue.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_whitelist_value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotWhitelistValue.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -155,7 +157,9 @@ func (r *BotprofileWhitelistBindingResource) Delete(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Deleting botprofile_whitelist_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Parse name + bot_whitelist_value from the ID (handles new key:value and
+	// legacy positional "name,bot_whitelist_value" formats).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "bot_whitelist_value"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -168,15 +172,24 @@ func (r *BotprofileWhitelistBindingResource) Delete(ctx context.Context, req res
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bot_whitelist"]; ok && val != "" {
-		argsMap["bot_whitelist"] = val
-	}
-	if val, ok := idMap["bot_whitelist_value"]; ok && val != "" {
-		argsMap["bot_whitelist_value"] = val
+	botWhitelistValue, ok := idMap["bot_whitelist_value"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Attribute 'bot_whitelist_value' not found in ID")
+		return
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Botprofile_whitelist_binding.Type(), name_value, argsMap)
+	// NITRO requires BOTH bot_whitelist and bot_whitelist_value as delete args
+	// (errorcode 1093 "Argument pre-requisite missing [value, whiteList]"
+	// otherwise). bot_whitelist comes from prior state (it is not in the ID),
+	// mirroring the SDK v2 behavior. URL-encode values for slashy/special
+	// whitelist entries.
+	args := make([]string, 0, 2)
+	if !data.BotWhitelist.IsNull() && !data.BotWhitelist.IsUnknown() {
+		args = append(args, fmt.Sprintf("bot_whitelist:%t", data.BotWhitelist.ValueBool()))
+	}
+	args = append(args, fmt.Sprintf("bot_whitelist_value:%s", url.QueryEscape(botWhitelistValue)))
+
+	err = r.client.DeleteResourceWithArgs(service.Botprofile_whitelist_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botprofile_whitelist_binding, got error: %s", err))
 		return
@@ -220,44 +233,18 @@ func (r *BotprofileWhitelistBindingResource) readBotprofileWhitelistBindingFromA
 		return
 	}
 
+	// The binding under a profile is uniquely identified by bot_whitelist_value
+	// (matching the SDK v2 read, which keyed on bot_whitelist_value only).
+	botWhitelistValue, ok := idMap["bot_whitelist_value"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'bot_whitelist_value' not found in ID string")
+		return
+	}
+
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bot_whitelist
-		if idVal, ok := idMap["bot_whitelist"]; ok {
-			if val, ok := v["bot_whitelist"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bot_whitelist"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check bot_whitelist_value
-		if idVal, ok := idMap["bot_whitelist_value"]; ok {
-			if val, ok := v["bot_whitelist_value"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bot_whitelist_value"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["bot_whitelist_value"].(string); ok && val == botWhitelistValue {
 			foundIndex = i
 			break
 		}
