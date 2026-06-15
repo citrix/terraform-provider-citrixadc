@@ -19,11 +19,13 @@ func SslvserverSslcertkeyBindingDataSourceSchema() schema.Schema {
 				Description: "The name of the certificate key pair binding.",
 			},
 			"crlcheck": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
 			"ocspcheck": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The state of the OCSP check parameter. (Mandatory/Optional)",
 			},
 			"skipcaname": schema.BoolAttribute{

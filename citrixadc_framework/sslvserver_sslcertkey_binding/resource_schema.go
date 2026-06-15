@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -41,6 +42,10 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 			"ca": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				// ca participates in the binding identity and the ADC default is
+				// false; pin a default so an omitted ca is a known value at plan
+				// time (the NITRO GET does not always echo ca:false back).
+				Default: booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -54,16 +59,19 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 				Description: "The name of the certificate key pair binding.",
 			},
 			"crlcheck": schema.StringAttribute{
+				// Optional-only (no Computed): the NITRO GET does not echo a
+				// server default for crlcheck, so a Computed value could never be
+				// resolved when omitted -> "unknown value after apply". An omitted
+				// crlcheck is simply null.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
 			"ocspcheck": schema.StringAttribute{
+				// Optional-only (see crlcheck rationale).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -72,6 +80,9 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 			"skipcaname": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				// ADC default is false; pin it so an omitted skipcaname is a known
+				// value at plan time (NITRO GET does not echo skipcaname:false).
+				Default: booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -80,6 +91,9 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 			"snicert": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				// SDK v2 had Default: false on snicert. Preserve that contract so
+				// configs that omit snicert get a deterministic, known value.
+				Default: booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -126,14 +140,52 @@ func sslvserver_sslcertkey_bindingGetThePayloadFromthePlan(ctx context.Context, 
 	return sslvserver_sslcertkey_binding
 }
 
+// sslvserver_sslcertkey_bindingSetAttrFromGet is the RESOURCE-side setter. The
+// NITRO GET for a binding only echoes back fields that were actually set on the
+// bound certkey, and never returns false bools / unset strings. To avoid
+// "inconsistent result after apply" (Pattern 7) and ID-wipe (Pattern 6), it
+// preserves the existing plan/state value for any field the API omits, and it
+// does NOT recompute data.Id (the ID is set exactly once in Create).
 func sslvserver_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *SslvserverSslcertkeyBindingResourceModel, getResponseData map[string]interface{}) *SslvserverSslcertkeyBindingResourceModel {
 	tflog.Debug(ctx, "In sslvserver_sslcertkey_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model, preserving the plan/state value when the
+	// API does not echo the field back.
+	if val, ok := getResponseData["ca"]; ok && val != nil {
+		data.Ca = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["certkeyname"]; ok && val != nil {
+		data.Certkeyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["crlcheck"]; ok && val != nil {
+		data.Crlcheck = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ocspcheck"]; ok && val != nil {
+		data.Ocspcheck = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["skipcaname"]; ok && val != nil {
+		data.Skipcaname = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["snicert"]; ok && val != nil {
+		data.Snicert = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["vservername"]; ok && val != nil {
+		data.Vservername = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// sslvserver_sslcertkey_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. The datasource has no prior plan/state, so it faithfully copies every
+// field from the GET response and sets data.Id itself (Pattern 7 split).
+func sslvserver_sslcertkey_bindingSetAttrFromGetForDatasource(ctx context.Context, data *SslvserverSslcertkeyBindingResourceModel, getResponseData map[string]interface{}) *SslvserverSslcertkeyBindingResourceModel {
+	tflog.Debug(ctx, "In sslvserver_sslcertkey_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["ca"]; ok && val != nil {
 		data.Ca = types.BoolValue(val.(bool))
 	} else {
-		data.Ca = types.BoolNull()
+		data.Ca = types.BoolValue(false)
 	}
 	if val, ok := getResponseData["certkeyname"]; ok && val != nil {
 		data.Certkeyname = types.StringValue(val.(string))
@@ -158,7 +210,7 @@ func sslvserver_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Sslv
 	if val, ok := getResponseData["snicert"]; ok && val != nil {
 		data.Snicert = types.BoolValue(val.(bool))
 	} else {
-		data.Snicert = types.BoolNull()
+		data.Snicert = types.BoolValue(false)
 	}
 	if val, ok := getResponseData["vservername"]; ok && val != nil {
 		data.Vservername = types.StringValue(val.(string))
@@ -166,15 +218,14 @@ func sslvserver_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Sslv
 		data.Vservername = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (no Create to set it).
+	// Multiple unique attributes - comma-separated key:UrlEncode(value) pairs,
+	// in legacy resource_id_mapping.json order.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("crlcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Crlcheck.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ocspcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ocspcheck.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("vservername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vservername.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

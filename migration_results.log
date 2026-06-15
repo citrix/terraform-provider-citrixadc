@@ -2199,3 +2199,19 @@ PATTERNS: 1, 8, 13
 FILES CHANGED: citrixadc_framework/sslservice_sslciphersuite_binding/resource_sslservice_sslciphersuite_binding.go, citrixadc_framework/sslservice_sslciphersuite_binding/resource_schema.go, citrixadc_framework/sslservice_sslciphersuite_binding/datasource_schema.go, citrixadc_framework/acctests/sslservice_sslciphersuite_binding_test.go (sanctioned ID-parse helper lines only); NO doc files
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: sslvserver_sslcertkey_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:14:30Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccSslvserver_sslcertkey_binding($|_lb$|_cs$|DataSource$)
+TESTS:
+  - TestAccSslvserver_sslcertkey_binding_lb ........ PASS
+  - TestAccSslvserver_sslcertkey_binding_cs ........ PASS
+  - TestAccSslvserver_sslcertkey_bindingDataSource . PASS
+BACKWARD-COMPAT: SetAttrFromGet preserved omitted fields instead of nulling and stopped recomputing the ID (Patterns 6/7); split a datasource setter (Pattern 7); added Default(false) to ca/snicert/skipcaname to match SDK v2 Default + avoid unknown-after-apply; dropped spurious Computed from crlcheck/ocspcheck (no server default, RequiresReplace) (Pattern 13); rewrote Read match loop to treat absent bools/strings as zero values (SDK v2 semantics); Create ID composed in resource_id_mapping.json order (vservername,certkeyname,snicert,ca); Delete args pass certkeyname always and ca/snicert only when true (SDK v2 semantics). Create verb kept as UpdateUnnamedResource/PUT (matches SDK v2).
+DATASOURCE: healthy; switched Read to new ForDatasource setter; made crlcheck/ocspcheck Optional+Computed (were Required) so the datasource test omitting them applies.
+PATTERNS: 6, 7, 13
+FILES CHANGED: citrixadc_framework/sslvserver_sslcertkey_binding/resource_sslvserver_sslcertkey_binding.go, citrixadc_framework/sslvserver_sslcertkey_binding/resource_schema.go, citrixadc_framework/sslvserver_sslcertkey_binding/datasource_sslvserver_sslcertkey_binding.go, citrixadc_framework/sslvserver_sslcertkey_binding/datasource_schema.go, citrixadc_framework/acctests/sslvserver_sslcertkey_binding_test.go (sanctioned ID-parse helper lines only); NO doc file changed.
+BLOCKER: none
+========================================
