@@ -1473,5 +1473,18 @@ BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct + d
 DATASOURCE: healthy; split setter added (lbvserver_authorizationpolicy_bindingSetAttrFromGetForDatasource) per Pattern 7, datasource Read switched to it, bindpoint added to datasource schema.
 PATTERNS: 1, 5, 6, 7, 8
 FILES CHANGED: citrixadc_framework/lbvserver_authorizationpolicy_binding/resource_schema.go, citrixadc_framework/lbvserver_authorizationpolicy_binding/resource_lbvserver_authorizationpolicy_binding.go, citrixadc_framework/lbvserver_authorizationpolicy_binding/datasource_schema.go, citrixadc_framework/lbvserver_authorizationpolicy_binding/datasource_lbvserver_authorizationpolicy_binding.go, citrixadc_framework/acctests/lbvserver_authorizationpolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc changed)
+RESOURCE: lbvserver_analyticsprofile_binding
+STATUS:   PASS
+TIME:     2026-06-15T08:19:59Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccLbvserver_analyticsprofile_binding($|_basic|DataSource)
+TESTS:
+  - TestAccLbvserver_analyticsprofile_binding_basic ............ PASS
+  - TestAccLbvserver_analyticsprofile_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) .... N/A
+BACKWARD-COMPAT: SDK v2 schema (name, analyticsprofile both Required+ForceNew) fully preserved in Framework (Required + RequiresReplace). order attr is present in NITRO struct+metadata (codegen-included, absent in SDK v2) and kept. NITRO add verb is PUT, so Framework UpdateUnnamedResource matches; SDK v2 used AddResource but PUT is correct per doc. ID adopts new key:value format; resource_id_mapping.json entry "name,analyticsprofile" matches legacyOrder used in Read/Delete ParseIdString. No Framework Go code changes required.
+DATASOURCE: healthy as-is (shared SetAttrFromGet faithfully copies GET + recomputes Id; no Pattern-7 split needed since resource setter also copies from GET).
+PATTERNS: none (Framework code already correct; only sanctioned test ID-parse helper fix per Constraint 1)
+FILES CHANGED: citrixadc_framework/acctests/lbvserver_analyticsprofile_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
