@@ -1171,5 +1171,18 @@ BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 + NITRO st
 DATASOURCE: healthy; split setter into csvserver_appfwpolicy_bindingSetAttrFromGetForDatasource (faithfully copies GET + sets composite ID) and switched datasource Read to it (Pattern 7); added bindpoint to datasource schema for model parity.
 PATTERNS: 1, 5, 6, 7, 13
 FILES CHANGED: citrixadc_framework/csvserver_appfwpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_appfwpolicy_binding/resource_csvserver_appfwpolicy_binding.go, citrixadc_framework/csvserver_appfwpolicy_binding/datasource_csvserver_appfwpolicy_binding.go, citrixadc_framework/csvserver_appfwpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_appfwpolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
+RESOURCE: csvserver_cachepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:34:33Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccCsvserver_cachepolicy_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccCsvserver_cachepolicy_binding_basic ............ PASS
+  - TestAccCsvserver_cachepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Computed in SDK v2 -> relaxed to Optional+Computed (test config omits them); Create verb was UpdateUnnamedResource(PUT) -> AddResource(POST) to match SDK v2; types/ForceNew/name/policyname Required parity already correct.
+DATASOURCE: healthy as-is; shared SetAttrFromGet copies all GET fields (incl. server-assigned gotopriorityexpression=END) and sets composite id; no split needed (resource setter copies, not preserves).
+PATTERNS: 1 (POST-where-PUT-emitted for binding add); flag-drift Required->Optional+Computed; sanctioned ID-parse helper fix (ParseIdString in Exist check).
+FILES CHANGED: citrixadc_framework/csvserver_cachepolicy_binding/resource_schema.go, citrixadc_framework/csvserver_cachepolicy_binding/resource_csvserver_cachepolicy_binding.go, citrixadc_framework/acctests/csvserver_cachepolicy_binding_test.go (ID-parse helper lines only)
 BLOCKER: none
 ========================================

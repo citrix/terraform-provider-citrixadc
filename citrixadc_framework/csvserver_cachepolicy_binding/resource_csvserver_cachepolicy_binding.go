@@ -59,8 +59,8 @@ func (r *CsvserverCachepolicyBindingResource) Create(ctx context.Context, req re
 	csvserver_cachepolicy_binding := csvserver_cachepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_cachepolicy_binding.Type(), &csvserver_cachepolicy_binding)
+	// Binding resource - SDK v2 used AddResource (POST). NITRO add for this binding is POST. (Pattern 1)
+	_, err := r.client.AddResource(service.Csvserver_cachepolicy_binding.Type(), data.Name.ValueString(), &csvserver_cachepolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_cachepolicy_binding, got error: %s", err))
 		return
