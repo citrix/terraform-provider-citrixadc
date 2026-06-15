@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -114,11 +114,13 @@ func testAccCheckSnmptrap_snmpuser_bindingExist(n string, id *string) resource.T
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 3)
-
-		trapclass := idSlice[0]
-		trapdestination := idSlice[1]
-		username := idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"trapclass", "trapdestination", "username"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		trapclass := idMap["trapclass"]
+		trapdestination := idMap["trapdestination"]
+		username := idMap["username"]
 
 		args := make(map[string]string, 0)
 		args["trapclass"] = trapclass
