@@ -3,8 +3,6 @@ package vxlan_nsip_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -70,11 +68,7 @@ func (r *VxlanNsipBindingResource) Create(ctx context.Context, req resource.Crea
 	tflog.Trace(ctx, "Created vxlan_nsip_binding resource")
 
 	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(vxlan_nsip_bindingComposeId(&data))
 
 	// Read the updated state back
 	r.readVxlanNsipBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -116,26 +110,9 @@ func (r *VxlanNsipBindingResource) Update(ctx context.Context, req resource.Upda
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating vxlan_nsip_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		vxlan_nsip_binding := vxlan_nsip_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Vxlan_nsip_binding.Type(), &vxlan_nsip_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vxlan_nsip_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated vxlan_nsip_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for vxlan_nsip_binding resource, skipping update")
-	}
+	// No NITRO update endpoint exists for this binding; every attribute is
+	// RequiresReplace, so Update is a documented no-op (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for vxlan_nsip_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readVxlanNsipBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -155,16 +132,17 @@ func (r *VxlanNsipBindingResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	tflog.Debug(ctx, "Deleting vxlan_nsip_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgsMap.
+	// Legacy ID order: vxlanid,ipaddress.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vxlanid", "ipaddress"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
 	}
 
-	id_value, ok := idMap["id"]
+	vxlanid, ok := idMap["vxlanid"]
 	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'id' not found in ID")
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'vxlanid' not found in ID")
 		return
 	}
 
@@ -172,11 +150,12 @@ func (r *VxlanNsipBindingResource) Delete(ctx context.Context, req resource.Dele
 	if val, ok := idMap["ipaddress"]; ok && val != "" {
 		argsMap["ipaddress"] = val
 	}
-	if val, ok := idMap["netmask"]; ok && val != "" {
-		argsMap["netmask"] = val
+	// netmask is not part of the ID; include it from state when present.
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		argsMap["netmask"] = data.Netmask.ValueString()
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vxlan_nsip_binding.Type(), id_value, argsMap)
+	err = r.client.DeleteResourceWithArgsMap(service.Vxlan_nsip_binding.Type(), vxlanid, argsMap)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vxlan_nsip_binding, got error: %s", err))
 		return
@@ -188,16 +167,16 @@ func (r *VxlanNsipBindingResource) Delete(ctx context.Context, req resource.Dele
 // Helper function to read vxlan_nsip_binding data from API
 func (r *VxlanNsipBindingResource) readVxlanNsipBindingFromApi(ctx context.Context, data *VxlanNsipBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Array filter with parent ID - parse from ID. Legacy order: vxlanid,ipaddress.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vxlanid", "ipaddress"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return
 	}
 
-	id_Name, ok := idMap["id"]
+	vxlanid, ok := idMap["vxlanid"]
 	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'id' not found in ID string")
+		diags.AddError("Parse Error", "ID attribute 'vxlanid' not found in ID string")
 		return
 	}
 
@@ -205,7 +184,7 @@ func (r *VxlanNsipBindingResource) readVxlanNsipBindingFromApi(ctx context.Conte
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vxlan_nsip_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vxlanid,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
@@ -220,43 +199,11 @@ func (r *VxlanNsipBindingResource) readVxlanNsipBindingFromApi(ctx context.Conte
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right ipaddress
 	foundIndex := -1
+	ipaddress := idMap["ipaddress"]
 	for i, v := range dataArr {
-		match := true
-
-		// Check ipaddress
-		if idVal, ok := idMap["ipaddress"]; ok {
-			if val, ok := v["ipaddress"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ipaddress"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check netmask
-		if idVal, ok := idMap["netmask"]; ok {
-			if val, ok := v["netmask"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["netmask"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["ipaddress"].(string); ok && val == ipaddress {
 			foundIndex = i
 			break
 		}
@@ -264,7 +211,7 @@ func (r *VxlanNsipBindingResource) readVxlanNsipBindingFromApi(ctx context.Conte
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vxlan_nsip_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "vxlan_nsip_binding not found with the provided ID attributes")
 		return
 	}
 

@@ -21,7 +21,7 @@ import (
 // VxlanNsipBindingResourceModel describes the resource data model.
 type VxlanNsipBindingResourceModel struct {
 	Id        types.String `tfsdk:"id"`
-	Id        types.Int64  `tfsdk:"id"`
+	Vxlanid   types.Int64  `tfsdk:"vxlanid"`
 	Ipaddress types.String `tfsdk:"ipaddress"`
 	Netmask   types.String `tfsdk:"netmask"`
 }
@@ -33,8 +33,11 @@ func (r *VxlanNsipBindingResource) Schema(ctx context.Context, req resource.Sche
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the vxlan_nsip_binding resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"id": schema.Int64Attribute{
+			"vxlanid": schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
@@ -63,10 +66,11 @@ func (r *VxlanNsipBindingResource) Schema(ctx context.Context, req resource.Sche
 func vxlan_nsip_bindingGetThePayloadFromthePlan(ctx context.Context, data *VxlanNsipBindingResourceModel) network.Vxlannsipbinding {
 	tflog.Debug(ctx, "In vxlan_nsip_bindingGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
+	// Create API request body from the model.
+	// NITRO carries the vxlanid in the struct field "Id" (json:"id").
 	vxlan_nsip_binding := network.Vxlannsipbinding{}
-	if !data.Id.IsNull() && !data.Id.IsUnknown() {
-		vxlan_nsip_binding.Id = utils.IntPtr(int(data.Id.ValueInt64()))
+	if !data.Vxlanid.IsNull() && !data.Vxlanid.IsUnknown() {
+		vxlan_nsip_binding.Id = utils.IntPtr(int(data.Vxlanid.ValueInt64()))
 	}
 	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		vxlan_nsip_binding.Ipaddress = data.Ipaddress.ValueString()
@@ -78,16 +82,57 @@ func vxlan_nsip_bindingGetThePayloadFromthePlan(ctx context.Context, data *Vxlan
 	return vxlan_nsip_binding
 }
 
+// vxlan_nsip_bindingComposeId builds the composite resource ID matching the legacy
+// SDK v2 attribute order (vxlanid,ipaddress) in the new key:value format.
+func vxlan_nsip_bindingComposeId(data *VxlanNsipBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("vxlanid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vxlanid.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(data.Ipaddress.ValueString())))
+	return strings.Join(idParts, ",")
+}
+
+// vxlan_nsip_bindingSetAttrFromGet preserves the configured/state values for the
+// resource. The NITRO GET response normalizes/overrides server-side fields, so the
+// resource keeps its planned values (Pattern 7).
 func vxlan_nsip_bindingSetAttrFromGet(ctx context.Context, data *VxlanNsipBindingResourceModel, getResponseData map[string]interface{}) *VxlanNsipBindingResourceModel {
 	tflog.Debug(ctx, "In vxlan_nsip_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// vxlanid is the parent key (returned as "id" by NITRO). Only adopt the GET value
+	// when the model does not already carry it (e.g. import).
+	if data.Vxlanid.IsNull() || data.Vxlanid.IsUnknown() {
+		if val, ok := getResponseData["id"]; ok && val != nil {
+			if intVal, err := utils.ConvertToInt64(val); err == nil {
+				data.Vxlanid = types.Int64Value(intVal)
+			}
+		}
+	}
+	if data.Ipaddress.IsNull() || data.Ipaddress.IsUnknown() {
+		if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+			data.Ipaddress = types.StringValue(val.(string))
+		}
+	}
+	// netmask is server-overridable; adopt the value from GET to reflect actual state.
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	}
+
+	// Set the composite ID for the resource.
+	data.Id = types.StringValue(vxlan_nsip_bindingComposeId(data))
+
+	return data
+}
+
+// vxlan_nsip_bindingSetAttrFromGetForDatasource faithfully copies every field from the
+// GET response (the datasource has no prior plan/state to preserve) and sets the ID.
+func vxlan_nsip_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VxlanNsipBindingResourceModel, getResponseData map[string]interface{}) *VxlanNsipBindingResourceModel {
+	tflog.Debug(ctx, "In vxlan_nsip_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Id = types.Int64Value(intVal)
+			data.Vxlanid = types.Int64Value(intVal)
 		}
 	} else {
-		data.Id = types.Int64Null()
+		data.Vxlanid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
@@ -100,13 +145,7 @@ func vxlan_nsip_bindingSetAttrFromGet(ctx context.Context, data *VxlanNsipBindin
 		data.Netmask = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(vxlan_nsip_bindingComposeId(data))
 
 	return data
 }
