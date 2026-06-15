@@ -88,16 +88,18 @@ func (d *ResponderglobalResponderpolicyBindingDataSource) Read(ctx context.Conte
 			continue
 		}
 
-		// Check priority
-		if val, ok := v["priority"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if priority_Name.IsNull() || val != priority_Name.ValueInt64() {
+		// Check priority only when supplied in config
+		if !priority_Name.IsNull() && !priority_Name.IsUnknown() {
+			if val, ok := v["priority"]; ok {
+				vi, _ := utils.ConvertToInt64(val)
+				if vi != priority_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !priority_Name.IsNull() {
-			match = false
-			continue
 		}
 		// Check type_Name
 		if !type_Name.IsNull() && type_Name.ValueString() != "" {
