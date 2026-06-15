@@ -3038,3 +3038,19 @@ PATTERNS: 7, 13
 FILES CHANGED: citrixadc_framework/vpnvserver_authenticationwebauthpolicy_binding/resource_vpnvserver_authenticationwebauthpolicy_binding.go, citrixadc_framework/vpnvserver_authenticationwebauthpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_authenticationwebauthpolicy_binding/datasource_vpnvserver_authenticationwebauthpolicy_binding.go, citrixadc_framework/vpnvserver_authenticationwebauthpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_authenticationwebauthpolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc files)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_vpnclientlessaccesspolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:41:08Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccVpnvserver_vpnclientlessaccesspolicy_binding($|_basic|DataSource)
+TESTS:
+  - TestAccVpnvserver_vpnclientlessaccesspolicy_binding_basic ............ PASS
+  - TestAccVpnvserver_vpnclientlessaccesspolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ............. N/A
+BACKWARD-COMPAT: Attribute/type/Required-Optional/ForceNew parity all matched SDK v2; ID adopts new key:value (bindpoint,name,policy) form, legacy name,policy decoded via ParseIdString; datasource bindpoint relaxed Required->Optional+Computed and its filter loop made bindpoint-optional so name+policy lookup works; resource & datasource match loops hardened to only filter keys actually present (legacy-import safe). groupextraction/secondary not echoed by NITRO -> set null (Optional+Computed, no inconsistency).
+DATASOURCE: healthy as-is, fixed (bindpoint flag + filter loop). Not recovered from git.
+PATTERNS: 7 (non-echoed inputs preserved/null), 10/11 (lookup-key consistency, optional-key filtering), ID-format compatibility
+FILES CHANGED: citrixadc_framework/vpnvserver_vpnclientlessaccesspolicy_binding/resource_vpnvserver_vpnclientlessaccesspolicy_binding.go, citrixadc_framework/vpnvserver_vpnclientlessaccesspolicy_binding/datasource_schema.go, citrixadc_framework/vpnvserver_vpnclientlessaccesspolicy_binding/datasource_vpnvserver_vpnclientlessaccesspolicy_binding.go, citrixadc_framework/acctests/vpnvserver_vpnclientlessaccesspolicy_binding_test.go (sanctioned ID-parse helper lines only). No docs modified.
+BLOCKER: none
+========================================
