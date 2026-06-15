@@ -11,15 +11,18 @@ func SslservicegroupSslcertkeyBindingDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"ca": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "CA certificate.",
 			},
 			"certkeyname": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The name of the certificate bound to the SSL service group.",
 			},
 			"crlcheck": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
 			"ocspcheck": schema.StringAttribute{
@@ -32,7 +35,8 @@ func SslservicegroupSslcertkeyBindingDataSourceSchema() schema.Schema {
 				Description: "The name of the SSL service to which the SSL policy needs to be bound.",
 			},
 			"snicert": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The name of the CertKey. Use this option to bind Certkey(s) which will be used in SNI processing.",
 			},
 		},

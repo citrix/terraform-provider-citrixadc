@@ -2199,3 +2199,18 @@ PATTERNS: 1, 8, 13
 FILES CHANGED: citrixadc_framework/sslservice_sslciphersuite_binding/resource_sslservice_sslciphersuite_binding.go, citrixadc_framework/sslservice_sslciphersuite_binding/resource_schema.go, citrixadc_framework/sslservice_sslciphersuite_binding/datasource_schema.go, citrixadc_framework/acctests/sslservice_sslciphersuite_binding_test.go (sanctioned ID-parse helper lines only); NO doc files
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: sslservicegroup_sslcertkey_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:11:11Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccSslservicegroup_sslcertkey_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccSslservicegroup_sslcertkey_binding_basic ........ PASS
+  - TestAccSslservicegroup_sslcertkey_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: Create switched from UpdateUnnamedResource(PUT) to AddResource("",..)(POST) to match SDK v2 (Pattern 1); resource Read & datasource Read match loops fixed so unset/empty optional filters (crlcheck/snicert/ca) are skipped instead of rejecting records (NITRO GET does not echo crlcheck/ocspcheck); datasource schema ca/certkeyname/crlcheck/snicert changed Required->Optional+Computed (parent servicegroupname stays Required) so lookup works with partial keys (Pattern 11). Attr names/types/ForceNew(RequiresReplace) all parity with SDK v2. ID legacyOrder matches resource_id_mapping.json (servicegroupname,certkeyname,snicert,ca).
+DATASOURCE: healthy after filter + schema fix; shared SetAttrFromGet sufficient (sets ID), no split needed.
+PATTERNS: 1, 7, 11
+FILES CHANGED: citrixadc_framework/sslservicegroup_sslcertkey_binding/resource_sslservicegroup_sslcertkey_binding.go, citrixadc_framework/sslservicegroup_sslcertkey_binding/datasource_sslservicegroup_sslcertkey_binding.go, citrixadc_framework/sslservicegroup_sslcertkey_binding/datasource_schema.go, citrixadc_framework/acctests/sslservicegroup_sslcertkey_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
+BLOCKER: none
+========================================
