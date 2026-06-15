@@ -700,5 +700,17 @@ BACKWARD-COMPAT: invoke_labelname & labeltype were Required in Framework but Opt
 DATASOURCE: healthy; split a dedicated xxxSetAttrFromGetForDatasource (Pattern 7) that faithfully copies all GET fields and sets the composite ID; datasource Read now calls it.
 PATTERNS: 7, 8, 13
 FILES CHANGED: citrixadc_framework/cachepolicylabel_cachepolicy_binding/resource_schema.go, citrixadc_framework/cachepolicylabel_cachepolicy_binding/resource_cachepolicylabel_cachepolicy_binding.go, citrixadc_framework/cachepolicylabel_cachepolicy_binding/datasource_cachepolicylabel_cachepolicy_binding.go, citrixadc_framework/acctests/cachepolicylabel_cachepolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc file modified.
+RESOURCE: cmppolicylabel_cmppolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:58:34Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAcc[Cc]mppolicylabel_cmppolicy_binding
+TESTS:
+  - TestAccCmppolicylabel_cmppolicy_binding_basic ............ PASS
+  - TestAcccmppolicylabel_cmppolicy_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: invoke_labelname & labeltype were Required in Framework but Optional in SDK v2/docs -> reverted to Optional; NITRO GET never echoes them so dropped Computed (Pattern 13/7) and preserve plan/state in resource setter; kept tfsdk name invoke_labelname per published docs; ID labelname,policyname matches resource_id_mapping.json + SDK v2.
+DATASOURCE: healthy; split SetAttrFromGetForDatasource (Pattern 7) so datasource faithfully copies GET + sets composite Id.
+PATTERNS: 7, 13
+FILES CHANGED: citrixadc_framework/cmppolicylabel_cmppolicy_binding/resource_schema.go, citrixadc_framework/cmppolicylabel_cmppolicy_binding/datasource_cmppolicylabel_cmppolicy_binding.go, citrixadc_framework/acctests/cmppolicylabel_cmppolicy_binding_test.go (sanctioned ID-parse lines only)
 BLOCKER: none
 ========================================
