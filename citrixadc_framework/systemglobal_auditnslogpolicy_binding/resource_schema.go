@@ -6,9 +6,11 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,6 +22,7 @@ import (
 // SystemglobalAuditnslogpolicyBindingResourceModel describes the resource data model.
 type SystemglobalAuditnslogpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Builtin                types.List   `tfsdk:"builtin"`
 	Feature                types.String `tfsdk:"feature"`
 	Globalbindtype         types.String `tfsdk:"globalbindtype"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
@@ -35,6 +38,16 @@ func (r *SystemglobalAuditnslogpolicyBindingResource) Schema(ctx context.Context
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the systemglobal_auditnslogpolicy_binding resource.",
+			},
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				// Not Computed: NITRO GET never echoes builtin, so a Computed value
+				// would stay unknown after apply (Pattern 13 / Pattern 7).
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
 			},
 			"feature": schema.StringAttribute{
 				Optional: true,
@@ -54,7 +67,7 @@ func (r *SystemglobalAuditnslogpolicyBindingResource) Schema(ctx context.Context
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				// Not Computed: NITRO GET never echoes gotopriorityexpression.
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -62,7 +75,7 @@ func (r *SystemglobalAuditnslogpolicyBindingResource) Schema(ctx context.Context
 			},
 			"nextfactor": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				// Not Computed: NITRO GET never echoes nextfactor.
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -76,8 +89,7 @@ func (r *SystemglobalAuditnslogpolicyBindingResource) Schema(ctx context.Context
 				Description: "The name of the  command policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -92,6 +104,11 @@ func systemglobal_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.C
 
 	// Create API request body from the model
 	systemglobal_auditnslogpolicy_binding := system.Systemglobalauditnslogpolicybinding{}
+	if !data.Builtin.IsNull() && !data.Builtin.IsUnknown() {
+		builtin := make([]string, 0, len(data.Builtin.Elements()))
+		data.Builtin.ElementsAs(ctx, &builtin, false)
+		systemglobal_auditnslogpolicy_binding.Builtin = builtin
+	}
 	if !data.Feature.IsNull() && !data.Feature.IsUnknown() {
 		systemglobal_auditnslogpolicy_binding.Feature = data.Feature.ValueString()
 	}
@@ -114,10 +131,80 @@ func systemglobal_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.C
 	return systemglobal_auditnslogpolicy_binding
 }
 
+// systemglobal_auditnslogpolicy_bindingSetAttrFromGet is the RESOURCE setter.
+// The NITRO GET response for this binding only echoes back policyname, priority,
+// feature, globalbindtype (and a few read-only flags). It does NOT echo back
+// gotopriorityexpression, nextfactor or builtin. For those non-echoed,
+// Optional+Computed inputs we preserve the prior plan/state value rather than
+// nulling it (Pattern 7) so an apply that configured them does not error with
+// "inconsistent result after apply". The ID is set once in Create, not here.
 func systemglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *SystemglobalAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *SystemglobalAuditnslogpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In systemglobal_auditnslogpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// builtin: not echoed by GET - preserve existing plan/state value unless present.
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if rawList, ok := val.([]interface{}); ok {
+			elems := make([]attr.Value, 0, len(rawList))
+			for _, item := range rawList {
+				elems = append(elems, types.StringValue(fmt.Sprintf("%v", item)))
+			}
+			if listVal, diags := types.ListValue(types.StringType, elems); !diags.HasError() {
+				data.Builtin = listVal
+			}
+		}
+	}
+	// feature: server-assigned (e.g. SYSTEM), echoed by GET.
+	if val, ok := getResponseData["feature"]; ok && val != nil {
+		data.Feature = types.StringValue(val.(string))
+	}
+	// globalbindtype: server-assigned (e.g. SYSTEM_GLOBAL), echoed by GET.
+	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
+		data.Globalbindtype = types.StringValue(val.(string))
+	}
+	// gotopriorityexpression: not echoed by GET - preserve existing value.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	// nextfactor: not echoed by GET - preserve existing value.
+	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
+		data.Nextfactor = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// systemglobal_auditnslogpolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE
+// setter. The datasource has no prior plan/state to preserve, so it faithfully copies
+// every field from the GET response (nulling absent ones) and sets the ID itself
+// (Pattern 7).
+func systemglobal_auditnslogpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *SystemglobalAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *SystemglobalAuditnslogpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In systemglobal_auditnslogpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if rawList, ok := val.([]interface{}); ok {
+			elems := make([]attr.Value, 0, len(rawList))
+			for _, item := range rawList {
+				elems = append(elems, types.StringValue(fmt.Sprintf("%v", item)))
+			}
+			if listVal, diags := types.ListValue(types.StringType, elems); !diags.HasError() {
+				data.Builtin = listVal
+			} else {
+				data.Builtin = types.ListNull(types.StringType)
+			}
+		} else {
+			data.Builtin = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Builtin = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
 	} else {
@@ -151,8 +238,7 @@ func systemglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, da
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Set ID for the datasource (it has no Create) - plain single-key value.
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
