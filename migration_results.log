@@ -2751,5 +2751,18 @@ BACKWARD-COMPAT: ID format was 3-key (bindpoint:..,name:..,policy:..) but SDK v2
 DATASOURCE: healthy; split setter (SetAttrFromGetForDatasource) added per Pattern 7, datasource Read filters on policy and sets its own ID.
 PATTERNS: 7, 13, 11, 8, plus binding-family delete URL-encode (b) and ID-order (f)
 FILES CHANGED: citrixadc_framework/vpnvserver_aaapreauthenticationpolicy_binding/resource_vpnvserver_aaapreauthenticationpolicy_binding.go, citrixadc_framework/vpnvserver_aaapreauthenticationpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_aaapreauthenticationpolicy_binding/datasource_vpnvserver_aaapreauthenticationpolicy_binding.go, citrixadc_framework/vpnvserver_aaapreauthenticationpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_aaapreauthenticationpolicy_binding_test.go (sanctioned ID-parse helper lines only; NO doc files)
+RESOURCE: vpnglobal_vpneula_binding
+STATUS:   PASS
+TIME:     2026-06-15T12:49:30Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccVpnglobal_vpneula_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnglobal_vpneula_binding_basic ............ PASS
+  - TestAccVpnglobal_vpneula_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs)  N/A
+BACKWARD-COMPAT: attr names/types/Required/ForceNew/ID(plain eula) all already matched SDK v2; reconciled gotopriorityexpression (non-echoed input): preserve in resource SetAttrFromGet + dropped spurious Computed; URL-encoded eula delete arg.
+DATASOURCE: healthy; split setter -> vpnglobal_vpneula_bindingSetAttrFromGetForDatasource (faithful copy + sets Id) wired into datasource Read.
+PATTERNS: 7, 13 (+2/b delete-arg url.QueryEscape)
+FILES CHANGED: citrixadc_framework/vpnglobal_vpneula_binding/resource_vpnglobal_vpneula_binding.go, citrixadc_framework/vpnglobal_vpneula_binding/resource_schema.go, citrixadc_framework/vpnglobal_vpneula_binding/datasource_vpnglobal_vpneula_binding.go (NO test/doc file changed)
 BLOCKER: none
 ========================================

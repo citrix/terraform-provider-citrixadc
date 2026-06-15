@@ -37,8 +37,12 @@ func (r *VpnglobalVpneulaBindingResource) Schema(ctx context.Context, req resour
 				Description: "Name of the EULA bound to vpnglobal",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// gotopriorityexpression is never echoed back by the NITRO GET
+				// response for this binding, so it cannot be Computed (the value
+				// would never resolve after apply -> "unknown value" error).
+				// Keep it Optional-only; Read preserves the configured value
+				// (Pattern 13 / Pattern 7).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -69,6 +73,25 @@ func vpnglobal_vpneula_bindingSetAttrFromGet(ctx context.Context, data *Vpngloba
 	// Convert API response to model
 	if val, ok := getResponseData["eula"]; ok && val != nil {
 		data.Eula = types.StringValue(val.(string))
+	}
+	// NOTE: gotopriorityexpression is a write-only / non-echoed input. The NITRO
+	// GET response for this binding never returns it, so preserve the existing
+	// plan/state value instead of nulling it out (Pattern 7).
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Eula.ValueString()))
+
+	return data
+}
+
+// vpnglobal_vpneula_bindingSetAttrFromGetForDatasource faithfully copies the GET
+// response into the model for the datasource flow (no prior plan/state to preserve).
+func vpnglobal_vpneula_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalVpneulaBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalVpneulaBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_vpneula_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["eula"]; ok && val != nil {
+		data.Eula = types.StringValue(val.(string))
 	} else {
 		data.Eula = types.StringNull()
 	}
@@ -78,8 +101,7 @@ func vpnglobal_vpneula_bindingSetAttrFromGet(ctx context.Context, data *Vpngloba
 		data.Gotopriorityexpression = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Set ID for the datasource (no Create runs in the datasource flow)
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Eula.ValueString()))
 
 	return data

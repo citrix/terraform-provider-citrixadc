@@ -3,6 +3,7 @@ package vpnglobal_vpneula_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -153,7 +154,7 @@ func (r *VpnglobalVpneulaBindingResource) Delete(ctx context.Context, req resour
 	// Single unique attribute - ID is the plain value
 	eula_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("eula:%s", eula_value),
+		fmt.Sprintf("eula:%s", url.QueryEscape(eula_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_vpneula_binding.Type(), "", args)
