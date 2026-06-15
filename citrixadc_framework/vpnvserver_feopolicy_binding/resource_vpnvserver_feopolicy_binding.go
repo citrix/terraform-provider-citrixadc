@@ -240,9 +240,10 @@ func (r *VpnvserverFeopolicyBindingResource) readVpnvserverFeopolicyBindingFromA
 			continue
 		}
 
-		// Check policy
+		// Check policy. NITRO returns the bound policy under the key "policyname"
+		// (not "policy"), so match against that key.
 		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
+			if val, ok := v["policyname"].(string); ok {
 				if val != idVal {
 					match = false
 					continue
@@ -251,7 +252,7 @@ func (r *VpnvserverFeopolicyBindingResource) readVpnvserverFeopolicyBindingFromA
 				match = false
 				continue
 			}
-		} else if _, ok := v["policy"].(string); ok {
+		} else if _, ok := v["policyname"].(string); ok {
 			match = false
 			continue
 		}

@@ -49,7 +49,8 @@ func (r *VpnvserverFeopolicyBindingResource) Schema(ctx context.Context, req res
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				// Not Computed: the server returns a normalized default ("END") that
+				// differs from user input and is not adopted into state (Pattern 13).
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -57,7 +58,7 @@ func (r *VpnvserverFeopolicyBindingResource) Schema(ctx context.Context, req res
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
+				// Not Computed: NITRO GET does not echo this field back (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -79,7 +80,8 @@ func (r *VpnvserverFeopolicyBindingResource) Schema(ctx context.Context, req res
 			},
 			"priority": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
+				// Not Computed: priority is a user-driven input that is not adopted from
+				// the GET response into resource state (Pattern 13).
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -87,7 +89,7 @@ func (r *VpnvserverFeopolicyBindingResource) Schema(ctx context.Context, req res
 			},
 			"secondary": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
+				// Not Computed: NITRO GET does not echo this field back (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -127,10 +129,45 @@ func vpnvserver_feopolicy_bindingGetThePayloadFromthePlan(ctx context.Context, d
 	return vpnvserver_feopolicy_binding
 }
 
+// vpnvserver_feopolicy_bindingSetAttrFromGet is the RESOURCE-side state setter.
+// All attributes on this binding are RequiresReplace (none updateable), so the only
+// values that ever reach the resource state are those the user configured. The NITRO
+// GET response does NOT echo back several inputs (secondary, groupextraction) and
+// normalizes others (gotopriorityexpression returns the server default "END", priority
+// comes back as a string). To avoid "inconsistent result after apply" / perpetual
+// diffs (Pattern 7 + Pattern 13), this setter PRESERVES the user's plan/state values
+// for those non-echoed / server-overridden fields and only adopts the parent/identity
+// keys (name, policy, bindpoint) which the server reliably returns. NITRO returns the
+// bound policy under the "policyname" key (not "policy").
 func vpnvserver_feopolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverFeopolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverFeopolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_feopolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Identity keys reliably returned by the GET response.
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	// NITRO returns the policy name under "policyname".
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+
+	// gotopriorityexpression, groupextraction, secondary, priority are either not
+	// echoed by the server or server-normalized. Preserve the configured plan/state
+	// value rather than overwriting/nulling it. (No-op here — leaving data.* untouched
+	// keeps the value that was read from plan/state.)
+
+	return data
+}
+
+// vpnvserver_feopolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter (Pattern 7 split). A datasource has no prior plan/state to preserve, so it
+// faithfully copies every field the GET response returns and sets the composite ID.
+func vpnvserver_feopolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverFeopolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverFeopolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_feopolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -151,7 +188,8 @@ func vpnvserver_feopolicy_bindingSetAttrFromGet(ctx context.Context, data *Vpnvs
 	} else {
 		data.Name = types.StringNull()
 	}
-	if val, ok := getResponseData["policy"]; ok && val != nil {
+	// NITRO returns the policy name under "policyname".
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
 	} else {
 		data.Policy = types.StringNull()
