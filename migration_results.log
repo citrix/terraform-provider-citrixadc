@@ -3373,3 +3373,19 @@ PATTERNS: 7 (datasource shared-setter / non-echoed field), 13 (drop spurious ide
 FILES CHANGED: citrixadc_framework/lsnclient_nsacl_binding/resource_lsnclient_nsacl_binding.go, citrixadc_framework/lsnclient_nsacl_binding/resource_schema.go, citrixadc_framework/lsnclient_nsacl_binding/datasource_lsnclient_nsacl_binding.go, citrixadc_framework/lsnclient_nsacl_binding/datasource_schema.go, citrixadc_framework/acctests/lsnclient_nsacl_binding_test.go (sanctioned ID-parse helper lines only). NO doc changes.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lsngroup_lsnappsprofile_binding
+STATUS:   PASS
+TIME:     2026-06-15T14:52:04Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccLsngroup_lsnappsprofile_binding_basic$|TestAccLsngroup_lsnappsprofile_bindingDataSource_basic$
+TESTS:
+  - TestAccLsngroup_lsnappsprofile_binding_basic ............ PASS
+  - TestAccLsngroup_lsnappsprofile_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) . N/A
+BACKWARD-COMPAT: Framework resource already implemented in baseline and is backward-compatible (attr names appsprofilename/groupname match, types match, Create uses UpdateUnnamedResource/PUT per SDK v2, Delete uses DeleteResourceWithArgsMap with appsprofilename arg + groupname parent, ParseIdString legacy order groupname,appsprofilename matches resource_id_mapping.json). One noted flag drift: SDK v2 appsprofilename was Optional+ForceNew vs Framework Required+RequiresReplace; kept Required (it is an x-unique-attr composing the ID and tfdata marks it required; SDK v2 Optional was lax codegen and breaks ID composition if omitted). No resource/datasource code changes were needed.
+DATASOURCE: healthy as-is (shares SetAttrFromGet; both attrs are echoed by GET so no Pattern 7 split needed).
+PATTERNS: none (no code defects found); applied Constraint-1 sanctioned ID-parse helper fix in test Exist helper.
+FILES CHANGED: citrixadc_framework/acctests/lsngroup_lsnappsprofile_binding_test.go (Exist helper ID-parse lines only; no docs touched)
+BLOCKER: none
+========================================
