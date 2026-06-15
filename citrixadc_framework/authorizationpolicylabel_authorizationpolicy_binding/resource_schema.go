@@ -56,7 +56,8 @@ func (r *AuthorizationpolicylabelAuthorizationpolicyBindingResource) Schema(ctx 
 				Description: "If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then either forward the request or response to the specified virtual server or evaluate the specified policy label.",
 			},
 			"invoke_labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -70,7 +71,8 @@ func (r *AuthorizationpolicylabelAuthorizationpolicyBindingResource) Schema(ctx 
 				Description: "Name of the authorization policy label to which to bind the policy.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

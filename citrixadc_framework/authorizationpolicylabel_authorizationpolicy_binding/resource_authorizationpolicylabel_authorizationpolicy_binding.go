@@ -3,6 +3,7 @@ package authorizationpolicylabel_authorizationpolicy_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -169,6 +170,11 @@ func (r *AuthorizationpolicylabelAuthorizationpolicyBindingResource) Delete(ctx 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
 		argsMap["policyname"] = val
+	}
+	// priority disambiguates bindings that share labelname+policyname; the NITRO
+	// delete endpoint accepts it as an optional arg (matches SDK v2 delete behavior).
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		argsMap["priority"] = strconv.FormatInt(data.Priority.ValueInt64(), 10)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Authorizationpolicylabel_authorizationpolicy_binding.Type(), labelname_value, argsMap)
