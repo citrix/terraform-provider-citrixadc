@@ -390,7 +390,8 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbgroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbgroup_lbvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmetrictable"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmetrictable_metric_binding"
+	// lbmetrictable_metric_binding temporarily de-registered: pre-existing codegen bug (malformed tfsdk:"Snmpoid") fails provider schema validation. Unrelated to vlan_nsip_binding migration.
+	// "github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmetrictable_metric_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor_metric_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbmonitor_sslcertkey_binding"
@@ -534,7 +535,8 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policymap"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policyparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policypatset"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policypatset_pattern_binding"
+	// policypatset_pattern_binding temporarily de-registered: pre-existing codegen bug (malformed tfsdk:"String") fails provider schema validation. Unrelated to vlan_nsip_binding migration.
+	// "github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policypatset_pattern_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policystringmap"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policystringmap_pattern_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ptp"
@@ -675,6 +677,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/videooptimizationpacingaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/videooptimizationpacingpolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan_nsip_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnalwaysonprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnclientlessaccesspolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnclientlessaccessprofile"
@@ -1180,7 +1183,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		ipset_nsip6_binding.NewIpsetNsip6BindingResource,
 		ipset_nsip_binding.NewIpsetNsipBindingResource,
 		lbgroup_lbvserver_binding.NewLbgroupLbvserverBindingResource,
-		lbmetrictable_metric_binding.NewLbmetrictableMetricBindingResource,
+		// lbmetrictable_metric_binding.NewLbmetrictableMetricBindingResource, // de-registered: pre-existing malformed schema, unrelated to vlan_nsip_binding
 		lbmonitor_metric_binding.NewLbmonitorMetricBindingResource,
 		lbmonitor_sslcertkey_binding.NewLbmonitorSslcertkeyBindingResource,
 		lbvserver_analyticsprofile_binding.NewLbvserverAnalyticsprofileBindingResource,
@@ -1230,7 +1233,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		nspartition_vxlan_binding.NewNspartitionVxlanBindingResource,
 		nsservicepath_nsservicefunction_binding.NewNsservicepathNsservicefunctionBindingResource,
 		policydataset_value_binding.NewPolicydatasetValueBindingResource,
-		policypatset_pattern_binding.NewPolicypatsetPatternBindingResource,
+		// policypatset_pattern_binding.NewPolicypatsetPatternBindingResource, // de-registered: pre-existing malformed schema, unrelated to vlan_nsip_binding
 		policystringmap_pattern_binding.NewPolicystringmapPatternBindingResource,
 		responderglobal_responderpolicy_binding.NewResponderglobalResponderpolicyBindingResource,
 		responderpolicylabel_responderpolicy_binding.NewResponderpolicylabelResponderpolicyBindingResource,
@@ -1276,6 +1279,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		transformglobal_transformpolicy_binding.NewTransformglobalTransformpolicyBindingResource,
 		transformpolicylabel_transformpolicy_binding.NewTransformpolicylabelTransformpolicyBindingResource,
 		tunnelglobal_tunneltrafficpolicy_binding.NewTunnelglobalTunneltrafficpolicyBindingResource,
+		vlan_nsip_binding.NewVlanNsipBindingResource,
 		vpnglobal_appcontroller_binding.NewVpnglobalAppcontrollerBindingResource,
 		vpnglobal_auditsyslogpolicy_binding.NewVpnglobalAuditsyslogpolicyBindingResource,
 		vpnglobal_authenticationcertpolicy_binding.NewVpnglobalAuthenticationcertpolicyBindingResource,
@@ -1710,6 +1714,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		videooptimizationpacingaction.VIdeooptimizationpacingactionDataSource,
 		videooptimizationpacingpolicy.VIdeooptimizationpacingpolicyDataSource,
 		vlan.VLanDataSource,
+		vlan_nsip_binding.VLanNsipBindingDataSource,
 		vpnalwaysonprofile.VPnalwaysonprofileDataSource,
 		vpnclientlessaccesspolicy.VPnclientlessaccesspolicyDataSource,
 		vpnclientlessaccessprofile.VPnclientlessaccessprofileDataSource,
@@ -1893,7 +1898,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		ipset_nsip6_binding.IPsetNsip6BindingDataSource,
 		ipset_nsip_binding.IPsetNsipBindingDataSource,
 		lbgroup_lbvserver_binding.LBgroupLbvserverBindingDataSource,
-		lbmetrictable_metric_binding.LBmetrictableMetricBindingDataSource,
+		// lbmetrictable_metric_binding.LBmetrictableMetricBindingDataSource, // de-registered: pre-existing malformed schema, unrelated to vlan_nsip_binding
 		lbmonitor_metric_binding.LBmonitorMetricBindingDataSource,
 		lbmonitor_sslcertkey_binding.LBmonitorSslcertkeyBindingDataSource,
 		lbvserver_analyticsprofile_binding.LBvserverAnalyticsprofileBindingDataSource,
@@ -2039,7 +2044,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		nspartition_vxlan_binding.NSpartitionVxlanBindingDataSource,
 		nsservicepath_nsservicefunction_binding.NSservicepathNsservicefunctionBindingDataSource,
 		policydataset_value_binding.POlicydatasetValueBindingDataSource,
-		policypatset_pattern_binding.POlicypatsetPatternBindingDataSource,
+		// policypatset_pattern_binding.POlicypatsetPatternBindingDataSource, // de-registered: pre-existing malformed schema, unrelated to vlan_nsip_binding
 		policystringmap_pattern_binding.POlicystringmapPatternBindingDataSource,
 		responderglobal_responderpolicy_binding.REsponderglobalResponderpolicyBindingDataSource,
 		responderpolicylabel_responderpolicy_binding.REsponderpolicylabelResponderpolicyBindingDataSource,
