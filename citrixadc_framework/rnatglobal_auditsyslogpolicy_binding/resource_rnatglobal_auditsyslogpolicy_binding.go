@@ -3,11 +3,9 @@ package rnatglobal_auditsyslogpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -70,10 +68,8 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Create(ctx context.Context,
 	tflog.Trace(ctx, "Created rnatglobal_auditsyslogpolicy_binding resource")
 
 	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("all:%s", utils.UrlEncode(fmt.Sprintf("%v", data.All.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Single unique key (policy) - plain value ID (matches SDK v2 d.SetId(policy))
+	data.Id = types.StringValue(data.Policy.ValueString())
 
 	// Read the updated state back
 	r.readRnatglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -154,23 +150,16 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Delete(ctx context.Context,
 	}
 
 	tflog.Debug(ctx, "Deleting rnatglobal_auditsyslogpolicy_binding resource")
-	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Multiple unique attributes - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policy"}, nil)
-	if err != nil {
-		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
-		return
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name.
+	// Single unique key (policy) is the plain-value ID; "all" is an optional delete arg
+	// (matches SDK v2 deleteRnatglobal_auditsyslogpolicy_bindingFunc).
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(data.Policy.ValueString())))
+	if !data.All.IsNull() && !data.All.IsUnknown() && data.All.ValueBool() {
+		args = append(args, fmt.Sprintf("all:%v", data.All.ValueBool()))
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["all"]; ok && val != "" {
-		argsMap["all"] = val
-	}
-	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
-	}
-
-	err = r.client.DeleteResourceWithArgsMap(service.Rnatglobal_auditsyslogpolicy_binding.Type(), "", argsMap)
+	err := r.client.DeleteResourceWithArgs(service.Rnatglobal_auditsyslogpolicy_binding.Type(), "", args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete rnatglobal_auditsyslogpolicy_binding, got error: %s", err))
 		return
@@ -182,12 +171,8 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Delete(ctx context.Context,
 // Helper function to read rnatglobal_auditsyslogpolicy_binding data from API
 func (r *RnatglobalAuditsyslogpolicyBindingResource) readRnatglobalAuditsyslogpolicyBindingFromApi(ctx context.Context, data *RnatglobalAuditsyslogpolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policy"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
+	// Single unique key (policy): the ID is the plain policy value (matches SDK v2).
+	policy := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
 
@@ -195,7 +180,7 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) readRnatglobalAuditsyslogpo
 		ResourceType:             service.Rnatglobal_auditsyslogpolicy_binding.Type(),
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read rnatglobal_auditsyslogpolicy_binding, got error: %s", err))
 		return
@@ -207,45 +192,10 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) readRnatglobalAuditsyslogpo
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policy
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check all
-		if idVal, ok := idMap["all"]; ok {
-			if val, ok := v["all"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["all"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy {
 			foundIndex = i
 			break
 		}
@@ -253,7 +203,7 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) readRnatglobalAuditsyslogpo
 
 	// Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("rnatglobal_auditsyslogpolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "rnatglobal_auditsyslogpolicy_binding not found with the provided ID attributes")
 		return
 	}
 
