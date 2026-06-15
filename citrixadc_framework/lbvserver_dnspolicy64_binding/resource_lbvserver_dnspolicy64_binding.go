@@ -3,6 +3,7 @@ package lbvserver_dnspolicy64_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *LbvserverDnspolicy64BindingResource) Create(ctx context.Context, req re
 	lbvserver_dnspolicy64_binding := lbvserver_dnspolicy64_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_dnspolicy64_binding.Type(), &lbvserver_dnspolicy64_binding)
+	// NITRO add for this binding is HTTP POST (matches SDK v2 AddResource). Pattern 1.
+	_, err := r.client.AddResource(service.Lbvserver_dnspolicy64_binding.Type(), "", &lbvserver_dnspolicy64_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_dnspolicy64_binding, got error: %s", err))
 		return
@@ -166,9 +167,12 @@ func (r *LbvserverDnspolicy64BindingResource) Delete(ctx context.Context, req re
 		return
 	}
 
+	// URL-encode arg values: ParseIdString returns decoded values and the NITRO
+	// client places them raw into the args= query string, so slashy/special
+	// values must be re-encoded (matches SDK v2 url.QueryEscape). Pattern (b).
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_dnspolicy64_binding.Type(), name_value, argsMap)
