@@ -169,12 +169,24 @@ func vpnvserver_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Conte
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// ID is set once in Create / datasource Read using the legacy (name,policy) key
+	// order. SetAttrFromGet must NOT recompute it (bindpoint is a delete-arg, not an
+	// ID key — see resource_id_mapping.json "name,policy"). Recomputing it here with a
+	// 3-key bindpoint-bearing form would diverge from the legacy ID contract.
+
+	return data
+}
+
+// vpnvserver_authenticationldappolicy_bindingSetAttrFromGetForDatasource faithfully
+// copies the GET response into the model and sets the datasource ID (the datasource has
+// no Create to set it). Shares the resource setter's field-copy logic.
+func vpnvserver_authenticationldappolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationldappolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationldappolicyBindingResourceModel {
+	vpnvserver_authenticationldappolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+
+	// Compose the ID with the legacy (name,policy) key order.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
