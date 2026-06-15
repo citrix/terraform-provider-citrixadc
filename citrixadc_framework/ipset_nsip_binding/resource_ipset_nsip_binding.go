@@ -3,6 +3,7 @@ package ipset_nsip_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,9 +70,10 @@ func (r *IpsetNsipBindingResource) Create(ctx context.Context, req resource.Crea
 	tflog.Trace(ctx, "Created ipset_nsip_binding resource")
 
 	// Set ID for the resource before reading state
+	// ID attribute order matches resource_id_mapping.json legacy order: name,ipaddress
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -166,12 +168,14 @@ func (r *IpsetNsipBindingResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args, URL-encoding the value so slashy/special values
+	// (e.g. IPv6 addresses containing ':' or '%') survive the args= query string.
+	args := make([]string, 0)
 	if val, ok := idMap["ipaddress"]; ok && val != "" {
-		argsMap["ipaddress"] = val
+		args = append(args, "ipaddress:"+url.QueryEscape(val))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Ipset_nsip_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Ipset_nsip_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete ipset_nsip_binding, got error: %s", err))
 		return
