@@ -3,6 +3,7 @@ package csvserver_auditsyslogpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CsvserverAuditsyslogpolicyBindingResource) Create(ctx context.Context, 
 	csvserver_auditsyslogpolicy_binding := csvserver_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_auditsyslogpolicy_binding.Type(), &csvserver_auditsyslogpolicy_binding)
+	// Binding resource - NITRO 'add' is POST; matches the SDK v2 AddResource contract (Pattern 1)
+	_, err := r.client.AddResource(service.Csvserver_auditsyslogpolicy_binding.Type(), data.Name.ValueString(), &csvserver_auditsyslogpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_auditsyslogpolicy_binding, got error: %s", err))
 		return
@@ -166,9 +167,17 @@ func (r *CsvserverAuditsyslogpolicyBindingResource) Delete(ctx context.Context, 
 		return
 	}
 
+	// DeleteResourceWithArgsMap does NOT URL-encode arg values, so encode slashy/special
+	// values here to match the SDK v2 delete contract (Pattern: URL-encode Delete args).
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_auditsyslogpolicy_binding.Type(), name_value, argsMap)
