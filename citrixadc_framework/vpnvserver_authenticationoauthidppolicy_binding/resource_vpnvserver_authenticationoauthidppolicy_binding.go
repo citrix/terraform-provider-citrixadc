@@ -3,7 +3,7 @@ package vpnvserver_authenticationoauthidppolicy_binding
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -68,12 +68,9 @@ func (r *VpnvserverAuthenticationoauthidppolicyBindingResource) Create(ctx conte
 
 	tflog.Trace(ctx, "Created vpnvserver_authenticationoauthidppolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state.
+	// Composite of legacy unique attrs (name,policy) matching resource_id_mapping.json.
+	data.Id = types.StringValue(vpnvserver_authenticationoauthidppolicy_bindingComposeId(&data))
 
 	// Read the updated state back
 	r.readVpnvserverAuthenticationoauthidppolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -154,7 +151,8 @@ func (r *VpnvserverAuthenticationoauthidppolicyBindingResource) Delete(ctx conte
 	}
 
 	tflog.Debug(ctx, "Deleting vpnvserver_authenticationoauthidppolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Parse name from the ID (handles both new key:value and legacy comma formats).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -167,15 +165,26 @@ func (r *VpnvserverAuthenticationoauthidppolicyBindingResource) Delete(ctx conte
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
+	// Delete args come from the model (bindpoint/secondary/groupextraction are not
+	// echoed by GET so they are only available from state, not from the ID).
+	// URL-encode values so slashy/special characters survive in the query string.
+	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	} else if !data.Policy.IsNull() {
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(data.Policy.ValueString())))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Secondary.IsNull() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%t", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%t", data.Groupextraction.ValueBool()))))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_authenticationoauthidppolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_authenticationoauthidppolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_authenticationoauthidppolicy_binding, got error: %s", err))
 		return
@@ -219,43 +228,17 @@ func (r *VpnvserverAuthenticationoauthidppolicyBindingResource) readVpnvserverAu
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policy (the binding's
+	// disambiguator within the parent vpnvserver name).
+	policyId, hasPolicy := idMap["policy"]
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
+		if hasPolicy {
+			if val, ok := v["policy"].(string); ok && val == policyId {
+				foundIndex = i
+				break
 			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
+		} else {
 			foundIndex = i
 			break
 		}
