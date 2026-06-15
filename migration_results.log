@@ -234,3 +234,18 @@ PATTERNS: 7 (datasource setter split), 13 (drop Computed where no GET echo)
 FILES CHANGED: citrixadc_framework/vlan_nsip6_binding/resource_schema.go, citrixadc_framework/vlan_nsip6_binding/resource_vlan_nsip6_binding.go, citrixadc_framework/vlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vlan_nsip6_binding/datasource_vlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: authenticationvserver_authenticationtacacspolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:10:35Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccAuthenticationvserver_authenticationtacacspolicy_binding_basic|TestAccAuthenticationvserverAuthenticationtacacspolicyBindingDataSource_basic
+TESTS:
+  - TestAccAuthenticationvserver_authenticationtacacspolicy_binding_basic ........ PASS
+  - TestAccAuthenticationvserverAuthenticationtacacspolicyBindingDataSource_basic . PASS
+BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct, used by test) to model/schema/payload/datasource/delete-args; SetAttrFromGet now preserves known plan/state values and resolves unknown Computed attrs to known zero values (no "unknown value after apply"); Delete switched to DeleteResourceWithArgs with url.QueryEscape on each arg value (policy/secondary/groupextraction/bindpoint); Create now uses shared ComposeId; readFromApi match loop tolerates GET-absent boolean fields (default false); datasource groupextraction/secondary relaxed Required->Optional+Computed to match test lookup (name,policy only).
+DATASOURCE: healthy; split setter added (SetAttrFromGetForDatasource faithfully copies GET + sets ID); datasource Read switched to it and match loop made tolerant of unsupplied optional keys.
+PATTERNS: 7 (preserve state + datasource setter split), 13 (resolve Computed to known values), 11 (resource/datasource flag consistency), 1 family (PUT add verb confirmed correct - binding uses UpdateUnnamedResource/PUT per SDK v2)
+FILES CHANGED: citrixadc_framework/authenticationvserver_authenticationtacacspolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_authenticationtacacspolicy_binding/resource_authenticationvserver_authenticationtacacspolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationtacacspolicy_binding/datasource_authenticationvserver_authenticationtacacspolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationtacacspolicy_binding/datasource_schema.go, citrixadc_framework/acctests/authenticationvserver_authenticationtacacspolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc changed
+BLOCKER: none
+========================================
