@@ -3,6 +3,7 @@ package systemgroup_nspartition_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -166,12 +167,13 @@ func (r *SystemgroupNspartitionBindingResource) Delete(ctx context.Context, req 
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	args := make([]string, 0)
 	if val, ok := idMap["partitionname"]; ok && val != "" {
-		argsMap["partitionname"] = val
+		// URL-encode the arg value to safely handle slashy/special characters
+		args = append(args, fmt.Sprintf("partitionname:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Systemgroup_nspartition_binding.Type(), groupname_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Systemgroup_nspartition_binding.Type(), groupname_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete systemgroup_nspartition_binding, got error: %s", err))
 		return
