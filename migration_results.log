@@ -949,3 +949,19 @@ PATTERNS: 8 (flag correction), binding-family Delete URL-encode (b); Pattern 1 c
 FILES CHANGED: citrixadc_framework/crvserver_lbvserver_binding/resource_schema.go, citrixadc_framework/crvserver_lbvserver_binding/resource_crvserver_lbvserver_binding.go, citrixadc_framework/acctests/crvserver_lbvserver_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: lbvserver_service_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:05:23Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccLbvserver_service_binding($|_|DataSource)
+TESTS:
+  - TestAccLbvserver_service_binding_basic ............ PASS
+  - TestAccLbvserver_service_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: Adopted new key:value ID but trimmed it to 2 keys "name,servicename" to match resource_id_mapping.json + SDK v2 d.SetId (codegen had added a spurious servicegroupname key, breaking the test ID split). Reconciled ForceNew parity: SDK v2 marks servicename/weight/order ForceNew and NITRO rejects in-place re-bind (errorcode 273), so made servicename/weight/order RequiresReplace and made Update a no-op. Dropped Computed from order/servicegroupname (never echoed by GET) to fix unknown-after-apply.
+DATASOURCE: healthy after reconciliation; made servicegroupname/servicename Optional+Computed (were Required, but the test config supplies only name+servicename) and switched Read to a dedicated ForDatasource setter (Pattern 7 split).
+PATTERNS: 1, 5, 6, 7, 8, 11, 13
+FILES CHANGED: citrixadc_framework/lbvserver_service_binding/resource_lbvserver_service_binding.go, citrixadc_framework/lbvserver_service_binding/resource_schema.go, citrixadc_framework/lbvserver_service_binding/datasource_lbvserver_service_binding.go, citrixadc_framework/lbvserver_service_binding/datasource_schema.go, citrixadc_framework/acctests/lbvserver_service_binding_test.go (sanctioned ID-parse helper lines only); NO doc files changed
+BLOCKER: none
+========================================

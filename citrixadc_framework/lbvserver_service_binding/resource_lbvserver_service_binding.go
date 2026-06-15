@@ -3,6 +3,7 @@ package lbvserver_service_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -58,9 +59,11 @@ func (r *LbvserverServiceBindingResource) Create(ctx context.Context, req resour
 	tflog.Debug(ctx, "Creating lbvserver_service_binding resource")
 	lbvserver_service_binding := lbvserver_service_bindingGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_service_binding.Type(), &lbvserver_service_binding)
+	// Make API call.
+	// NITRO binding "add" is POST (idempotent) here, matching the SDK v2 resource.
+	// UpdateUnnamedResource (PUT) returns errorcode 273 "Resource already exists" on
+	// re-bind, so use AddResource (Pattern 1).
+	_, err := r.client.AddResource(service.Lbvserver_service_binding.Type(), "", &lbvserver_service_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_service_binding, got error: %s", err))
 		return
@@ -68,10 +71,11 @@ func (r *LbvserverServiceBindingResource) Create(ctx context.Context, req resour
 
 	tflog.Trace(ctx, "Created lbvserver_service_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// ID identity matches the SDK v2 contract and resource_id_mapping.json: "name,servicename".
+	// servicegroupname is a valid bind target attribute but is NOT part of the resource identity.
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("servicename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicename.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
@@ -115,40 +119,13 @@ func (r *LbvserverServiceBindingResource) Update(ctx context.Context, req resour
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating lbvserver_service_binding resource")
+	// Update is a no-op for lbvserver_service_binding: NITRO does not allow a binding
+	// to be modified in place (errorcode 273 on re-bind), so every attribute is
+	// RequiresReplace and Terraform handles changes via destroy + create (unbind +
+	// rebind), matching the SDK v2 ForceNew contract (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for lbvserver_service_binding; all attributes are RequiresReplace")
 
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-	if !data.Order.Equal(state.Order) {
-		tflog.Debug(ctx, fmt.Sprintf("order has changed for lbvserver_service_binding"))
-		hasChange = true
-	}
-	if !data.Servicename.Equal(state.Servicename) {
-		tflog.Debug(ctx, fmt.Sprintf("servicename has changed for lbvserver_service_binding"))
-		hasChange = true
-	}
-	if !data.Weight.Equal(state.Weight) {
-		tflog.Debug(ctx, fmt.Sprintf("weight has changed for lbvserver_service_binding"))
-		hasChange = true
-	}
-
-	if hasChange {
-		// Create API request body from the model
-		lbvserver_service_binding := lbvserver_service_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Lbvserver_service_binding.Type(), &lbvserver_service_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbvserver_service_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated lbvserver_service_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for lbvserver_service_binding resource, skipping update")
-	}
-
-	// Read the updated state back
+	// Read the current state back
 	r.readLbvserverServiceBindingFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -180,11 +157,15 @@ func (r *LbvserverServiceBindingResource) Delete(ctx context.Context, req resour
 	}
 
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["servicegroupname"]; ok && val != "" {
-		argsMap["servicegroupname"] = val
-	}
 	if val, ok := idMap["servicename"]; ok && val != "" {
-		argsMap["servicename"] = val
+		// URL-encode in case the servicename contains slashy/special characters.
+		argsMap["servicename"] = url.QueryEscape(val)
+	}
+	// servicegroupname is not part of the identity (ID), but is a valid alternate
+	// bind target; include it from state when present so the delete targets the
+	// correct binding.
+	if !data.Servicegroupname.IsNull() && data.Servicegroupname.ValueString() != "" {
+		argsMap["servicegroupname"] = url.QueryEscape(data.Servicegroupname.ValueString())
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_service_binding.Type(), name_value, argsMap)
@@ -231,45 +212,16 @@ func (r *LbvserverServiceBindingResource) readLbvserverServiceBindingFromApi(ctx
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the binding identity.
+	// Identity is name + servicename (per SDK v2 contract / resource_id_mapping.json).
+	servicename_id := idMap["servicename"]
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check servicegroupname
-		if idVal, ok := idMap["servicegroupname"]; ok {
-			if val, ok := v["servicegroupname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
+		if val, ok := v["servicename"].(string); ok {
+			if val == servicename_id {
+				foundIndex = i
+				break
 			}
-		} else if _, ok := v["servicegroupname"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check servicename
-		if idVal, ok := idMap["servicename"]; ok {
-			if val, ok := v["servicename"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["servicename"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
