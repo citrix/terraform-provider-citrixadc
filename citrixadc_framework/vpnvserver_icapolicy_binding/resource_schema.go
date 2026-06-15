@@ -40,8 +40,9 @@ func (r *VpnvserverIcapolicyBindingResource) Schema(ctx context.Context, req res
 				Description: "The ID of the vpnvserver_icapolicy_binding resource.",
 			},
 			"bindpoint": schema.StringAttribute{
+				// NITRO GET does not echo bindpoint; keep it a pure Optional input
+				// (no Computed) so Terraform does not expect a server-returned value.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -56,8 +57,8 @@ func (r *VpnvserverIcapolicyBindingResource) Schema(ctx context.Context, req res
 				Description: "Next priority expression.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// NITRO GET does not echo groupextraction; pure Optional input (no Computed).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -86,8 +87,8 @@ func (r *VpnvserverIcapolicyBindingResource) Schema(ctx context.Context, req res
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
+				// NITRO GET does not echo secondary; pure Optional input (no Computed).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -130,7 +131,46 @@ func vpnvserver_icapolicy_bindingGetThePayloadFromthePlan(ctx context.Context, d
 func vpnvserver_icapolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverIcapolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverIcapolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_icapolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NOTE (Pattern 7): the NITRO GET response for this binding only echoes
+	// name, policy, priority and gotopriorityexpression. The user inputs
+	// bindpoint, groupextraction and secondary are NOT returned by GET, so we
+	// must PRESERVE the prior plan/state value for those (setting them to null
+	// would cause an "inconsistent result after apply" error). All these
+	// attributes are RequiresReplace, so preserving is always correct.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	// bindpoint: not echoed by GET -> preserve existing value.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	// groupextraction, secondary: not echoed by GET -> preserve existing value.
+
+	// Set ID for the resource (legacy SDK v2 order: name,policy)
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+// vpnvserver_icapolicy_bindingSetAttrFromGetForDatasource faithfully copies all
+// fields returned by the GET response (the datasource has no prior plan/state to
+// preserve). Fields not echoed by NITRO are set to null.
+func vpnvserver_icapolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverIcapolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverIcapolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_icapolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,10 +209,8 @@ func vpnvserver_icapolicy_bindingSetAttrFromGet(ctx context.Context, data *Vpnvs
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (legacy SDK v2 order: name,policy)
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
