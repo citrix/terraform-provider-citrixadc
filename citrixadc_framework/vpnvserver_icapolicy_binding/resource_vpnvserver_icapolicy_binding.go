@@ -3,6 +3,7 @@ package vpnvserver_icapolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -68,9 +69,9 @@ func (r *VpnvserverIcapolicyBindingResource) Create(ctx context.Context, req res
 
 	tflog.Trace(ctx, "Created vpnvserver_icapolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Legacy SDK v2 ID order is name,policy (see resource_id_mapping.json).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -154,7 +155,8 @@ func (r *VpnvserverIcapolicyBindingResource) Delete(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Deleting vpnvserver_icapolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ID carries the parent (name) and the bound policy (legacy order name,policy).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -167,15 +169,24 @@ func (r *VpnvserverIcapolicyBindingResource) Delete(ctx context.Context, req res
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
+	// Build the delete args. The arg values are NOT url-encoded by the NITRO
+	// client (deleteResourceWithArgs joins them verbatim), so encode here for
+	// values that may contain slashes/special characters.
+	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%v", data.Secondary.ValueBool()))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%v", data.Groupextraction.ValueBool()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_icapolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_icapolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_icapolicy_binding, got error: %s", err))
 		return
@@ -219,26 +230,11 @@ func (r *VpnvserverIcapolicyBindingResource) readVpnvserverIcapolicyBindingFromA
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Identity is name (parent, used as FindParams.ResourceName) + policy.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
 
 		// Check policy
 		if idVal, ok := idMap["policy"]; ok {
@@ -251,9 +247,6 @@ func (r *VpnvserverIcapolicyBindingResource) readVpnvserverIcapolicyBindingFromA
 				match = false
 				continue
 			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

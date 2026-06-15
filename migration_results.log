@@ -3115,5 +3115,18 @@ BACKWARD-COMPAT: Schema parity exact vs SDK v2 (name+sharefile, both Required+Fo
 DATASOURCE: healthy as-is; shares SetAttrFromGet (both fields echoed by GET, no server-overrides), sets its own Id. No split needed, no git recovery.
 PATTERNS: 1 (verify create verb - confirmed PUT matches SDK v2), binding-family Delete URL-encode (skill pattern b)
 FILES CHANGED: citrixadc_framework/vpnvserver_sharefileserver_binding/resource_vpnvserver_sharefileserver_binding.go, citrixadc_framework/acctests/vpnvserver_sharefileserver_binding_test.go (sanctioned ID-parse helper lines only). NO doc, NO provider registration, NO SDK v2 changes.
+RESOURCE: vpnvserver_icapolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:33:42Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccVpnvserver_icapolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnvserver_icapolicy_binding_basic ............ PASS
+  - TestAccVpnvserver_icapolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: Composite ID realigned to legacy order name,policy (codegen wrongly added bindpoint -> ID, Read filter, Delete args); SDK v2 ID was name,policy per resource_id_mapping.json. Create verb kept as UpdateUnnamedResource (PUT) matching SDK v2. Dropped spurious Computed from bindpoint/groupextraction/secondary (never echoed by NITRO GET). SetAttrFromGet now preserves non-echoed inputs (bindpoint/groupextraction/secondary) to avoid inconsistent-result-after-apply. Delete rewritten to take policy from ID + bindpoint/secondary/groupextraction from state with url.QueryEscape (client does not encode delete args).
+DATASOURCE: healthy; split setter added (vpnvserver_icapolicy_bindingSetAttrFromGetForDatasource sets all fields + composite name,policy ID); datasource bindpoint changed Required->Optional+Computed (lookup keys are name+policy; GET does not return bindpoint).
+PATTERNS: 7 (preserve non-echoed inputs + datasource setter split), 13 (drop spurious Computed), 11 (resource/datasource flag consistency)
+FILES CHANGED: citrixadc_framework/vpnvserver_icapolicy_binding/resource_vpnvserver_icapolicy_binding.go, citrixadc_framework/vpnvserver_icapolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_icapolicy_binding/datasource_vpnvserver_icapolicy_binding.go, citrixadc_framework/vpnvserver_icapolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_icapolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc file modified
 BLOCKER: none
 ========================================
