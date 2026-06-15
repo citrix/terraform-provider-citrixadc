@@ -3,6 +3,7 @@ package crvserver_rewritepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CrvserverRewritepolicyBindingResource) Create(ctx context.Context, req 
 	crvserver_rewritepolicy_binding := crvserver_rewritepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Crvserver_rewritepolicy_binding.Type(), &crvserver_rewritepolicy_binding)
+	// Binding resource - matches SDK v2 which used AddResource (POST). Pattern 1.
+	_, err := r.client.AddResource(service.Crvserver_rewritepolicy_binding.Type(), "", &crvserver_rewritepolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_rewritepolicy_binding, got error: %s", err))
 		return
@@ -167,15 +168,16 @@ func (r *CrvserverRewritepolicyBindingResource) Delete(ctx context.Context, req 
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
+	// Build delete args, URL-encoding values for slashy/special characters (matches SDK v2). Pattern 7b.
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
+	}
+	if val, ok := idMap["bindpoint"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_rewritepolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_rewritepolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_rewritepolicy_binding, got error: %s", err))
 		return
