@@ -3,6 +3,7 @@ package rewritepolicylabel_rewritepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -60,8 +61,8 @@ func (r *RewritepolicylabelRewritepolicyBindingResource) Create(ctx context.Cont
 	rewritepolicylabel_rewritepolicy_binding := rewritepolicylabel_rewritepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Rewritepolicylabel_rewritepolicy_binding.Type(), &rewritepolicylabel_rewritepolicy_binding)
+	// Binding resource - NITRO `add` is HTTP POST (matches SDK v2 AddResource). Pattern 1.
+	_, err := r.client.AddResource(service.Rewritepolicylabel_rewritepolicy_binding.Type(), data.Labelname.ValueString(), &rewritepolicylabel_rewritepolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create rewritepolicylabel_rewritepolicy_binding, got error: %s", err))
 		return
@@ -116,26 +117,10 @@ func (r *RewritepolicylabelRewritepolicyBindingResource) Update(ctx context.Cont
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating rewritepolicylabel_rewritepolicy_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		rewritepolicylabel_rewritepolicy_binding := rewritepolicylabel_rewritepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Rewritepolicylabel_rewritepolicy_binding.Type(), &rewritepolicylabel_rewritepolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update rewritepolicylabel_rewritepolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated rewritepolicylabel_rewritepolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for rewritepolicylabel_rewritepolicy_binding resource, skipping update")
-	}
+	// Update is a no-op for this binding; every schema attribute is RequiresReplace,
+	// so Terraform recreates the resource instead of ever reaching a real update.
+	// There is no NITRO update endpoint for the binding. Pattern 5.
+	tflog.Debug(ctx, "Update is a no-op for rewritepolicylabel_rewritepolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readRewritepolicylabelRewritepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -168,12 +153,16 @@ func (r *RewritepolicylabelRewritepolicyBindingResource) Delete(ctx context.Cont
 		return
 	}
 
+	// URL-encode the delete arg values: ParseIdString returns decoded values, and
+	// DeleteResourceWithArgsMap does not escape them, so slashy/special values
+	// (e.g. policy names with reserved chars) would break the NITRO query. Matches
+	// the SDK v2 url.QueryEscape behavior. Pattern (b).
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
 	}
 	if val, ok := idMap["priority"]; ok && val != "" {
-		argsMap["priority"] = val
+		argsMap["priority"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Rewritepolicylabel_rewritepolicy_binding.Type(), labelname_value, argsMap)

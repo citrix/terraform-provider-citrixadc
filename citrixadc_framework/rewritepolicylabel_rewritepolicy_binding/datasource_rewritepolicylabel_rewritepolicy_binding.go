@@ -3,11 +3,13 @@ package rewritepolicylabel_rewritepolicy_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ datasource.DataSource = (*RewritepolicylabelRewritepolicyBindingDataSource)(nil)
@@ -84,16 +86,18 @@ func (d *RewritepolicylabelRewritepolicyBindingDataSource) Read(ctx context.Cont
 			continue
 		}
 
-		// Check priority
-		if val, ok := v["priority"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if priority_Name.IsNull() || val != priority_Name.ValueInt64() {
+		// Check priority - only filter when the user supplied a priority value.
+		if !priority_Name.IsNull() {
+			if val, ok := v["priority"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != priority_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !priority_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
@@ -107,7 +111,16 @@ func (d *RewritepolicylabelRewritepolicyBindingDataSource) Read(ctx context.Cont
 		return
 	}
 
-	rewritepolicylabel_rewritepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	rewritepolicylabel_rewritepolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+
+	// Datasource has no Create, so set the ID here (matches the resource ID format:
+	// comma-separated key:UrlEncode(value) pairs).
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("labelname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Labelname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("priority:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Priority.ValueInt64()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
