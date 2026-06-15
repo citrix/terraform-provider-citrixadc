@@ -59,8 +59,8 @@ func (r *SystemgroupSystemuserBindingResource) Create(ctx context.Context, req r
 	systemgroup_systemuser_binding := systemgroup_systemuser_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Systemgroup_systemuser_binding.Type(), &systemgroup_systemuser_binding)
+	// Binding resource - NITRO add is POST; SDK v2 used AddResource (Pattern 1)
+	_, err := r.client.AddResource(service.Systemgroup_systemuser_binding.Type(), "", &systemgroup_systemuser_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systemgroup_systemuser_binding, got error: %s", err))
 		return
