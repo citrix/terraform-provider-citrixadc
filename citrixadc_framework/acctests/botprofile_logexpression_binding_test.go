@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -120,10 +121,12 @@ func testAccCheckBotprofile_logexpression_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		bot_log_expression_name := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "bot_log_expression_name"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		bot_log_expression_name := idMap["bot_log_expression_name"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_logexpression_binding",

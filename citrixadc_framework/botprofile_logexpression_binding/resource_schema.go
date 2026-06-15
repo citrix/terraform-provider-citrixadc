@@ -62,14 +62,16 @@ func (r *BotprofileLogexpressionBindingResource) Schema(ctx context.Context, req
 				Description: "Name of the log expression object.",
 			},
 			"bot_log_expression_value": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Expression whose result to be logged when violation happened on the bot profile.",
 			},
 			"logexpression": schema.BoolAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
