@@ -681,6 +681,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/videooptimizationpacingaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/videooptimizationpacingpolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan_channel_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan_nsip_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnalwaysonprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnclientlessaccesspolicy"
@@ -1351,6 +1352,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		vpnvserver_vpnurlpolicy_binding.NewVpnvserverVpnurlpolicyBindingResource,
 		vxlan_srcip_binding.NewVxlanSrcipBindingResource,
 		vxlanvlanmap_vxlan_binding.NewVxlanvlanmapVxlanBindingResource,
+		vlan_channel_binding.NewVlanChannelBindingResource,
 	}
 }
 
@@ -2090,6 +2092,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		authenticationsmartaccessprofile.AUthenticationsmartaccessprofileDataSource,
 		azureapplication.AZureapplicationDataSource,
 		azurekeyvault.AZurekeyvaultDataSource,
+		vlan_channel_binding.VLanChannelBindingDataSource,
 	}
 }
 

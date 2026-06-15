@@ -3,6 +3,7 @@ package vlan_channel_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -42,21 +43,16 @@ func (d *VlanChannelBindingDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	id_Name := data.Id.ValueString()
-	ifnum_Name := data.Ifnum
-	ownergroup_Name := data.Ownergroup
-	tagged_Name := data.Tagged
-
-	var dataArr []map[string]interface{}
-	var err error
+	// Array filter with parent ID: vlanid is the parent, ifnum the bound entity.
+	vlanidName := strconv.FormatInt(data.Vlanid.ValueInt64(), 10)
+	ifnumName := data.Ifnum
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vlan_channel_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vlanidName,
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read vlan_channel_binding, got error: %s", err))
 		return
@@ -68,56 +64,24 @@ func (d *VlanChannelBindingDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right ifnum
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ifnum
 		if val, ok := v["ifnum"].(string); ok {
-			if ifnum_Name.IsNull() || val != ifnum_Name.ValueString() {
-				match = false
-				continue
+			if ifnumName.IsNull() || val == ifnumName.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !ifnum_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check ownergroup
-		if val, ok := v["ownergroup"].(string); ok {
-			if ownergroup_Name.IsNull() || val != ownergroup_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !ownergroup_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check tagged
-		if val, ok := v["tagged"].(bool); ok {
-			if tagged_Name.IsNull() || val != tagged_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !tagged_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vlan_channel_binding with ifnum %s not found", ifnum_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vlan_channel_binding with ifnum %s not found", ifnumName))
 		return
 	}
 
-	vlan_channel_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vlan_channel_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

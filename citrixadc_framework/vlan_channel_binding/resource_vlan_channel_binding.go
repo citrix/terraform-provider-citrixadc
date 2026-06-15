@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -60,7 +59,7 @@ func (r *VlanChannelBindingResource) Create(ctx context.Context, req resource.Cr
 	vlan_channel_binding := vlan_channel_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
+	// Binding resource - NITRO add verb is HTTP PUT, use UpdateUnnamedResource
 	err := r.client.UpdateUnnamedResource(service.Vlan_channel_binding.Type(), &vlan_channel_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vlan_channel_binding, got error: %s", err))
@@ -69,13 +68,8 @@ func (r *VlanChannelBindingResource) Create(ctx context.Context, req resource.Cr
 
 	tflog.Trace(ctx, "Created vlan_channel_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("tagged:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Tagged.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state (legacy order: vlanid,ifnum)
+	data.Id = types.StringValue(vlan_channel_bindingComposeId(&data))
 
 	// Read the updated state back
 	r.readVlanChannelBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -117,28 +111,11 @@ func (r *VlanChannelBindingResource) Update(ctx context.Context, req resource.Up
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating vlan_channel_binding resource")
+	// No NITRO update endpoint exists for this binding; every attribute is
+	// RequiresReplace so Terraform never reaches Update with a real change.
+	tflog.Debug(ctx, "Update is a no-op for vlan_channel_binding; all attributes are RequiresReplace")
 
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		vlan_channel_binding := vlan_channel_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Vlan_channel_binding.Type(), &vlan_channel_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vlan_channel_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated vlan_channel_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for vlan_channel_binding resource, skipping update")
-	}
-
-	// Read the updated state back
+	// Read the current state back
 	r.readVlanChannelBindingFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -156,31 +133,36 @@ func (r *VlanChannelBindingResource) Delete(ctx context.Context, req resource.De
 	}
 
 	tflog.Debug(ctx, "Deleting vlan_channel_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+
+	// Parse the parent vlan id (legacy order: vlanid,ifnum)
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vlanid", "ifnum"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
 	}
 
-	id_value, ok := idMap["id"]
+	vlanid, ok := idMap["vlanid"]
 	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'id' not found in ID")
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'vlanid' not found in ID")
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["ifnum"]; ok && val != "" {
-		argsMap["ifnum"] = val
+	// Delete args per NITRO doc: ifnum, tagged, ownergroup.
+	// Use the disambiguating values held in state (matches SDK v2 behaviour).
+	args := make([]string, 0)
+	if !data.Ifnum.IsNull() && data.Ifnum.ValueString() != "" {
+		args = append(args, fmt.Sprintf("ifnum:%s", utils.UrlEncode(data.Ifnum.ValueString())))
+	} else if val, ok := idMap["ifnum"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("ifnum:%s", utils.UrlEncode(val)))
 	}
-	if val, ok := idMap["ownergroup"]; ok && val != "" {
-		argsMap["ownergroup"] = val
+	if !data.Tagged.IsNull() {
+		args = append(args, fmt.Sprintf("tagged:%s", strconv.FormatBool(data.Tagged.ValueBool())))
 	}
-	if val, ok := idMap["tagged"]; ok && val != "" {
-		argsMap["tagged"] = val
+	if !data.Ownergroup.IsNull() && data.Ownergroup.ValueString() != "" {
+		args = append(args, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(data.Ownergroup.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vlan_channel_binding.Type(), id_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vlan_channel_binding.Type(), vlanid, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vlan_channel_binding, got error: %s", err))
 		return
@@ -192,27 +174,31 @@ func (r *VlanChannelBindingResource) Delete(ctx context.Context, req resource.De
 // Helper function to read vlan_channel_binding data from API
 func (r *VlanChannelBindingResource) readVlanChannelBindingFromApi(ctx context.Context, data *VlanChannelBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Array filter with parent ID - parse from ID (legacy order: vlanid,ifnum)
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vlanid", "ifnum"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return
 	}
 
-	id_Name, ok := idMap["id"]
+	vlanid, ok := idMap["vlanid"]
 	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'id' not found in ID string")
+		diags.AddError("Parse Error", "ID attribute 'vlanid' not found in ID string")
 		return
 	}
 
-	var dataArr []map[string]interface{}
+	ifnum, ok := idMap["ifnum"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'ifnum' not found in ID string")
+		return
+	}
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vlan_channel_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vlanid,
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vlan_channel_binding, got error: %s", err))
 		return
@@ -224,60 +210,10 @@ func (r *VlanChannelBindingResource) readVlanChannelBindingFromApi(ctx context.C
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching ifnum
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ifnum
-		if idVal, ok := idMap["ifnum"]; ok {
-			if val, ok := v["ifnum"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ifnum"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check ownergroup
-		if idVal, ok := idMap["ownergroup"]; ok {
-			if val, ok := v["ownergroup"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ownergroup"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check tagged
-		if idVal, ok := idMap["tagged"]; ok {
-			if val, ok := v["tagged"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["tagged"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["ifnum"].(string); ok && val == ifnum {
 			foundIndex = i
 			break
 		}
@@ -285,7 +221,7 @@ func (r *VlanChannelBindingResource) readVlanChannelBindingFromApi(ctx context.C
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vlan_channel_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "vlan_channel_binding not found with the provided ID attributes")
 		return
 	}
 

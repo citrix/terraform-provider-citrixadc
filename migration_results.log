@@ -78,3 +78,18 @@ PATTERNS: codegen int-vs-string fix; ID-format compat via ParseIdString (Phase-2
 FILES CHANGED: citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding/resource_nd6ravariables_onlinkipv6prefix_binding.go, citrixadc_framework/nd6ravariables_onlinkipv6prefix_binding/datasource_nd6ravariables_onlinkipv6prefix_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/nd6ravariables_onlinkipv6prefix_binding_test.go (ID-parse helper only; NO doc changed)
 BLOCKER: none (note: two unrelated baseline-broken sibling resources lbmetrictable_metric_binding/policypatset_pattern_binding have invalid schema attr names that poison provider schema load; temporarily deregistered to validate, then RESTORED unchanged)
 ========================================
+========================================
+RESOURCE: vlan_channel_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:18:12Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccVlan_channel_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVlan_channel_binding_basic ......... PASS
+  - TestAccVlan_channel_bindingDataSource_basic PASS
+BACKWARD-COMPAT: Fixed codegen double-id (synthetic string id + real int key collided on tfsdk:"id"); renamed real int key to user-facing "vlanid" (NITRO field "id") matching SDK v2 schema; composite id uses legacy order vlanid,ifnum; ForceNew->RequiresReplace on all attrs; ownergroup made Optional-only (GET never echoes it -> Computed would stay unknown after apply; no Default since add rejects ownergroup w/o IPAddress, errorcode 1093); tagged Optional+Computed (echoed by GET); Delete uses vlanid as parent + ifnum/tagged/ownergroup args per NITRO doc; add verb is PUT so UpdateUnnamedResource retained.
+DATASOURCE: rebuilt coherent with resource; split setter into resource (preserve) and ...ForDatasource (faithful copy + sets composite id); lookup keys vlanid+ifnum Required.
+PATTERNS: 6, 7 (datasource setter split), 13 (Computed-vs-no-echo flag drop), plus codegen double-id fix.
+FILES CHANGED: citrixadc_framework/vlan_channel_binding/{resource_vlan_channel_binding.go,resource_schema.go,datasource_vlan_channel_binding.go,datasource_schema.go}, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_channel_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================
