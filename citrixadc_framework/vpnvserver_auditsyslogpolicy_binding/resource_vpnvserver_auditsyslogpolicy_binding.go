@@ -3,6 +3,7 @@ package vpnvserver_auditsyslogpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -68,9 +69,11 @@ func (r *VpnvserverAuditsyslogpolicyBindingResource) Create(ctx context.Context,
 
 	tflog.Trace(ctx, "Created vpnvserver_auditsyslogpolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Composite key uses name,policy to match the SDK v2 contract and
+	// resource_id_mapping.json ("name,policy"). bindpoint is excluded — it is not
+	// echoed by NITRO GET and is not part of the legacy ID.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -167,15 +170,24 @@ func (r *VpnvserverAuditsyslogpolicyBindingResource) Delete(ctx context.Context,
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
+	// Build delete args (URL-encoded), mirroring the SDK v2 delete: policy is the
+	// disambiguating key; secondary/groupextraction/bindpoint are appended from
+	// state when set.
+	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	}
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%t", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%t", data.Groupextraction.ValueBool()))))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_auditsyslogpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_auditsyslogpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_auditsyslogpolicy_binding, got error: %s", err))
 		return
@@ -219,26 +231,13 @@ func (r *VpnvserverAuditsyslogpolicyBindingResource) readVpnvserverAuditsyslogpo
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// The binding is identified within the parent (name) array by its policy
+	// (mirrors SDK v2 read). bindpoint is not echoed by NITRO GET and is not part
+	// of the ID, so it is not used as a match key.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
 
 		// Check policy
 		if idVal, ok := idMap["policy"]; ok {
@@ -251,9 +250,6 @@ func (r *VpnvserverAuditsyslogpolicyBindingResource) readVpnvserverAuditsyslogpo
 				match = false
 				continue
 			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
