@@ -1880,3 +1880,19 @@ PATTERNS: Constraint-1 sanctioned ID-parse helper exception (new key:value ID fo
 FILES CHANGED: citrixadc_framework/acctests/nsservicepath_nsservicefunction_binding_test.go (bindingExist helper ID-parse lines only -> utils.ParseIdString)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: rnatglobal_auditsyslogpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:33:23Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccRnatglobal_auditsyslogpolicy_binding_basic$|TestAccRnatglobalAuditsyslogpolicyBindingDataSource_basic$
+TESTS:
+  - TestAccRnatglobal_auditsyslogpolicy_binding_basic ............ PASS
+  - TestAccRnatglobalAuditsyslogpolicyBindingDataSource_basic .... PASS
+  - (no ephemeral tests; resource has no secret attributes) ...... N/A
+BACKWARD-COMPAT: ID format reverted to plain-value 'policy' (single key per resource_id_mapping.json + SDK v2 d.SetId(policy)); Framework had wrongly built composite all:..,policy:.. ID (Pattern 10). Read/datasource filter now match on policy only (SDK v2 parity); Delete now uses DeleteResourceWithArgs with policy (url-encoded) + optional 'all' arg matching SDK v2. Datasource 'all' relaxed Required->Optional+Computed (Pattern 11). Attribute names/types/ForceNew(RequiresReplace) all match SDK v2; Create verb kept PUT (UpdateUnnamedResource) matching SDK v2.
+DATASOURCE: healthy after fix (over-constrained 'all' Required relaxed + filter-by-policy); shared SetAttrFromGet now sets plain policy ID so datasource ID is correct without a split.
+PATTERNS: 10, 11
+FILES CHANGED: citrixadc_framework/rnatglobal_auditsyslogpolicy_binding/resource_rnatglobal_auditsyslogpolicy_binding.go, citrixadc_framework/rnatglobal_auditsyslogpolicy_binding/resource_schema.go, citrixadc_framework/rnatglobal_auditsyslogpolicy_binding/datasource_rnatglobal_auditsyslogpolicy_binding.go, citrixadc_framework/rnatglobal_auditsyslogpolicy_binding/datasource_schema.go
+BLOCKER: none
+========================================

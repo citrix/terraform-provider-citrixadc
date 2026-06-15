@@ -2,8 +2,6 @@ package rnatglobal_auditsyslogpolicy_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
@@ -103,11 +101,8 @@ func rnatglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, dat
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("all:%s", utils.UrlEncode(fmt.Sprintf("%v", data.All.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Single unique key (policy) - plain value ID (matches SDK v2 d.SetId(policy))
+	data.Id = types.StringValue(data.Policy.ValueString())
 
 	return data
 }
