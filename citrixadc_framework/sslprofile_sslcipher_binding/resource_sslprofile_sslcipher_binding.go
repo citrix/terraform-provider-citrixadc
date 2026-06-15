@@ -3,7 +3,6 @@ package sslprofile_sslcipher_binding
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -68,11 +67,10 @@ func (r *SslprofileSslcipherBindingResource) Create(ctx context.Context, req res
 
 	tflog.Trace(ctx, "Created sslprofile_sslcipher_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ciphername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ciphername.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state (new key:UrlEncode(value)
+	// format; attribute order matches the legacy resource_id_mapping.json order
+	// "name,ciphername").
+	data.Id = types.StringValue(sslprofile_sslcipher_bindingComputeId(&data))
 
 	// Read the updated state back
 	r.readSslprofileSslcipherBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -223,29 +221,17 @@ func (r *SslprofileSslcipherBindingResource) readSslprofileSslcipherBindingFromA
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the matching cipher binding. The NITRO
+	// GET response exposes the bound cipher's name in "cipheraliasname"
+	// (there is no "ciphername" key), so match the ID's ciphername against
+	// the response's cipheraliasname.
 	foundIndex := -1
-	for i, v := range dataArr {
-		match := true
-
-		// Check ciphername
-		if idVal, ok := idMap["ciphername"]; ok {
-			if val, ok := v["ciphername"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
+	if cipherVal, ok := idMap["ciphername"]; ok {
+		for i, v := range dataArr {
+			if val, ok := v["cipheraliasname"].(string); ok && val == cipherVal {
+				foundIndex = i
+				break
 			}
-		} else if _, ok := v["ciphername"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 

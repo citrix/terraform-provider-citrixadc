@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -44,12 +45,18 @@ func (r *SslprofileSslcipherBindingResource) Schema(ctx context.Context, req res
 				Description: "The name of the cipher group/alias/individual cipheri bindings.",
 			},
 			"ciphername": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the cipher.",
 			},
 			"cipherpriority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "cipher priority",
 			},
 			"description": schema.StringAttribute{
@@ -95,19 +102,66 @@ func sslprofile_sslcipher_bindingGetThePayloadFromthePlan(ctx context.Context, d
 	return sslprofile_sslcipher_binding
 }
 
+// sslprofile_sslcipher_bindingComputeId builds the resource ID in the new
+// key:UrlEncode(value) format. The attribute order matches the legacy SDK v2
+// ID order ("name,ciphername") recorded in resource_id_mapping.json so that
+// ParseIdString decodes both legacy and new IDs consistently.
+func sslprofile_sslcipher_bindingComputeId(data *SslprofileSslcipherBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ciphername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ciphername.ValueString()))))
+	return strings.Join(idParts, ",")
+}
+
 func sslprofile_sslcipher_bindingSetAttrFromGet(ctx context.Context, data *SslprofileSslcipherBindingResourceModel, getResponseData map[string]interface{}) *SslprofileSslcipherBindingResourceModel {
 	tflog.Debug(ctx, "In sslprofile_sslcipher_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// The NITRO GET response echoes the bound cipher's name in the
+	// "cipheraliasname" field; there is no "ciphername" key in the response.
+	// "cipheraliasname" is a Computed read-back output.
 	if val, ok := getResponseData["cipheraliasname"]; ok && val != nil {
 		data.Cipheraliasname = types.StringValue(val.(string))
-	} else {
-		data.Cipheraliasname = types.StringNull()
+		// Preserve the user's "ciphername" input. The SDK v2 resource read
+		// ciphername back from cipheraliasname (d.Set("ciphername", cipheraliasname));
+		// on import (where ciphername is unset) adopt the live value so the
+		// imported resource is usable.
+		if data.Ciphername.IsNull() || data.Ciphername.ValueString() == "" {
+			data.Ciphername = types.StringValue(val.(string))
+		}
 	}
-	if val, ok := getResponseData["ciphername"]; ok && val != nil {
+	if val, ok := getResponseData["cipherpriority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Cipherpriority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["description"]; ok && val != nil {
+		data.Description = types.StringValue(val.(string))
+	} else {
+		data.Description = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+
+	// Set ID for the resource (new key:UrlEncode(value) format).
+	data.Id = types.StringValue(sslprofile_sslcipher_bindingComputeId(data))
+
+	return data
+}
+
+// sslprofile_sslcipher_bindingSetAttrFromGetForDatasource faithfully copies the
+// GET response into the model (the datasource has no prior plan/state to
+// preserve) and sets the ID itself.
+func sslprofile_sslcipher_bindingSetAttrFromGetForDatasource(ctx context.Context, data *SslprofileSslcipherBindingResourceModel, getResponseData map[string]interface{}) *SslprofileSslcipherBindingResourceModel {
+	tflog.Debug(ctx, "In sslprofile_sslcipher_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["cipheraliasname"]; ok && val != nil {
+		data.Cipheraliasname = types.StringValue(val.(string))
+		// The cipher value is returned only as cipheraliasname; mirror it into
+		// ciphername so the datasource exposes the user-facing attribute too.
 		data.Ciphername = types.StringValue(val.(string))
 	} else {
-		data.Ciphername = types.StringNull()
+		data.Cipheraliasname = types.StringNull()
 	}
 	if val, ok := getResponseData["cipherpriority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -123,16 +177,9 @@ func sslprofile_sslcipher_bindingSetAttrFromGet(ctx context.Context, data *Sslpr
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ciphername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ciphername.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(sslprofile_sslcipher_bindingComputeId(data))
 
 	return data
 }
