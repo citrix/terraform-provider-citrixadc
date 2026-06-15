@@ -2383,5 +2383,18 @@ BACKWARD-COMPAT: Framework resource already matched the SDK v2 contract (attr na
 DATASOURCE: healthy as-is (shares SetAttrFromGet; both keys echoed by GET, sets data.Id).
 PATTERNS: none required (resource was already correct); applied Constraint-1 sanctioned ID-parse helper fix.
 FILES CHANGED: citrixadc_framework/acctests/systemuser_nspartition_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: systemglobal_authenticationpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:22:58Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccSystemglobal_authenticationpolicy_binding(_basic|DataSource)$
+TESTS:
+  - TestAccSystemglobal_authenticationpolicy_binding_basic ...... PASS
+  - TestAccSystemglobal_authenticationpolicy_bindingDataSource .. PASS
+  - (no ephemeral test; resource has no secret attributes) ...... N/A
+BACKWARD-COMPAT: re-added dropped 'builtin' (TypeList in SDK v2 + NITRO struct) as ListAttribute Optional+Computed+RequiresReplace+UseStateForUnknown in resource & datasource schema, model, payload builder, and SetAttrFromGet; changed 'priority' Optional+Computed -> Required (drop Computed, keep RequiresReplace) to match SDK v2 Required contract. feature/globalbindtype/gotopriorityexpression/nextfactor kept Optional+Computed (SDK v2 parity; server-set values absorbed). ID stays single-key plain policyname (matches resource_id_mapping.json 'policyname' and SDK v2 d.SetId(policyname)). Create PUT (UpdateUnnamedResource) and Delete (DeleteResourceWithArgs policyname:value) confirmed correct vs SDK v2 and live ADC.
+DATASOURCE: healthy as-is; shared SetAttrFromGet faithfully copies GET fields and sets Id, so no Pattern-7 split needed. Added 'builtin' to datasource schema to keep shared model coherent.
+PATTERNS: (a) re-add dropped attribute; (c) Required-vs-Optional flag drift.
+FILES CHANGED: citrixadc_framework/systemglobal_authenticationpolicy_binding/resource_schema.go, citrixadc_framework/systemglobal_authenticationpolicy_binding/datasource_schema.go (NO test/doc file modified)
 BLOCKER: none
 ========================================
