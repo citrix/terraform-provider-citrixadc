@@ -594,5 +594,18 @@ BACKWARD-COMPAT: SDK v2 had bot_log_expression_value and logexpression as Option
 DATASOURCE: recovered datasource_botprofile_logexpression_binding.go + datasource_schema.go from git master (baseline regressed logexpression to Required and added a logexpression filter that broke matching when the lookup omits it). Master version filters only on bot_log_expression_name and uses shared SetAttrFromGet; all GET fields echoed except logmessage, so no Pattern 7 split needed.
 PATTERNS: 8 (Required->Optional+Computed flag correction); datasource recovery from git master (Phase 3).
 FILES CHANGED: citrixadc_framework/botprofile_logexpression_binding/resource_schema.go, citrixadc_framework/botprofile_logexpression_binding/datasource_botprofile_logexpression_binding.go, citrixadc_framework/botprofile_logexpression_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_logexpression_binding_test.go (sanctioned ID-parse helper lines only). NO doc files modified.
+RESOURCE: botpolicylabel_botpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:22:20Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccBotpolicylabel_botpolicy_binding_basic|TestAccBotpolicylabelBotpolicyBindingDataSource_basic
+TESTS:
+  - TestAccBotpolicylabel_botpolicy_binding_basic ........ PASS
+  - TestAccBotpolicylabelBotpolicyBindingDataSource_basic  PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: SDK v2 had invokelabelname (tfsdk invoke_labelname) and labeltype as Optional+Computed; Framework had them Required -> relaxed both to Optional+Computed (Pattern 8 / drift case c). ID format/order, types, ForceNew(RequiresReplace), Create verb (UpdateUnnamedResource matches SDK v2), and resource_id_mapping.json (labelname,policyname) all already consistent.
+DATASOURCE: healthy as-is; shared SetAttrFromGet copies all GET fields and sets the composite id, which is correct for the datasource - no Pattern 7 split needed.
+PATTERNS: 8 (Required->Optional+Computed flag correction)
+FILES CHANGED: citrixadc_framework/botpolicylabel_botpolicy_binding/resource_schema.go, citrixadc_framework/acctests/botpolicylabel_botpolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
 BLOCKER: none
 ========================================
