@@ -3,6 +3,7 @@ package crvserver_appfwpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CrvserverAppfwpolicyBindingResource) Create(ctx context.Context, req re
 	crvserver_appfwpolicy_binding := crvserver_appfwpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Crvserver_appfwpolicy_binding.Type(), &crvserver_appfwpolicy_binding)
+	// Binding resource - SDK v2 used AddResource (POST); NITRO add for this binding is POST.
+	_, err := r.client.AddResource(service.Crvserver_appfwpolicy_binding.Type(), "", &crvserver_appfwpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_appfwpolicy_binding, got error: %s", err))
 		return
@@ -153,7 +154,7 @@ func (r *CrvserverAppfwpolicyBindingResource) Delete(ctx context.Context, req re
 	}
 
 	tflog.Debug(ctx, "Deleting crvserver_appfwpolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policyname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -166,12 +167,21 @@ func (r *CrvserverAppfwpolicyBindingResource) Delete(ctx context.Context, req re
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args mirroring the SDK v2 resource: policyname is required to
+	// disambiguate; bindpoint and priority narrow the binding when present.
+	// URL-encode slashy/special values (e.g. bindpoint) per the SDK v2 behavior.
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", val))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_appfwpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_appfwpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_appfwpolicy_binding, got error: %s", err))
 		return
