@@ -3167,5 +3167,18 @@ BACKWARD-COMPAT: Attribute/type/Required-Optional/ForceNew parity all matched SD
 DATASOURCE: healthy as-is, fixed (bindpoint flag + filter loop). Not recovered from git.
 PATTERNS: 7 (non-echoed inputs preserved/null), 10/11 (lookup-key consistency, optional-key filtering), ID-format compatibility
 FILES CHANGED: citrixadc_framework/vpnvserver_vpnclientlessaccesspolicy_binding/resource_vpnvserver_vpnclientlessaccesspolicy_binding.go, citrixadc_framework/vpnvserver_vpnclientlessaccesspolicy_binding/datasource_schema.go, citrixadc_framework/vpnvserver_vpnclientlessaccesspolicy_binding/datasource_vpnvserver_vpnclientlessaccesspolicy_binding.go, citrixadc_framework/acctests/vpnvserver_vpnclientlessaccesspolicy_binding_test.go (sanctioned ID-parse helper lines only). No docs modified.
+RESOURCE: vpnvserver_intranetip_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:33:37Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccVpnvserver_intranetip_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVpnvserver_intranetip_binding_basic ............ PASS
+  - TestAccVpnvserver_intranetip_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs) .... N/A
+BACKWARD-COMPAT: netmask was Required in Framework but Optional+Computed in SDK v2 -> reverted to Optional+Computed (kept RequiresReplace, added UseStateForUnknown). Composite ID re-ordered to name,intranetip (matches SDK v2 d.SetId + resource_id_mapping.json) and netmask dropped from the ID identity. Read/datasource match loops no longer reject records on netmask. Create verb kept as UpdateUnnamedResource (PUT, same as SDK v2). Delete switched to DeleteResourceWithArgs with url.QueryEscape on intranetip/netmask (matches SDK v2 encoding).
+DATASOURCE: healthy; split setter applied (Pattern 7) - added vpnvserver_intranetip_bindingSetAttrFromGetForDatasource (copies all fields + sets data.Id); datasource Read no longer filters on netmask output.
+PATTERNS: 6, 7, 10, 8(flag-drift), and delete URL-encode (binding-family b)
+FILES CHANGED: citrixadc_framework/vpnvserver_intranetip_binding/resource_schema.go, citrixadc_framework/vpnvserver_intranetip_binding/resource_vpnvserver_intranetip_binding.go, citrixadc_framework/vpnvserver_intranetip_binding/datasource_schema.go, citrixadc_framework/vpnvserver_intranetip_binding/datasource_vpnvserver_intranetip_binding.go, citrixadc_framework/acctests/vpnvserver_intranetip_binding_test.go (ID-parse helper lines only - sanctioned)
 BLOCKER: none
 ========================================
