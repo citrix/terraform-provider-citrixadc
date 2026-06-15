@@ -1366,5 +1366,18 @@ BACKWARD-COMPAT: SDK v2 contract (ipaddress+name Required/ForceNew, ID order nam
 DATASOURCE: healthy as-is (GET echoes both name+ipaddress; shared SetAttrFromGet sets data.Id correctly; no Pattern 7 split needed)
 PATTERNS: binding-family (b) URL-encode Delete arg value; (f) composite ID order vs resource_id_mapping.json
 FILES CHANGED: citrixadc_framework/ipset_nsip_binding/resource_ipset_nsip_binding.go, citrixadc_framework/ipset_nsip_binding/resource_schema.go, citrixadc_framework/acctests/ipset_nsip_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: csvserver_spilloverpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:54:07Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccCsvserver_spilloverpolicy_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccCsvserver_spilloverpolicy_binding_basic ............ PASS
+  - TestAccCsvserver_spilloverpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral/secret tests; resource has no secret attrs)
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 schema + NITRO struct); labelname/labeltype Required->Optional+Computed to match SDK v2; Create verb UpdateUnnamedResource(PUT)->AddResource(POST) per SDK v2; URL-encoded delete args + added bindpoint/priority delete args; dropped spurious Computed from labelname/labeltype/targetlbvserver (not echoed by GET -> unknown-after-apply); ID stays new key:value format, resource_id_mapping.json "name,policyname" already correct.
+DATASOURCE: healthy; split setter into resource (preserve state) + ...ForDatasource (faithful copy + sets Id); added bindpoint to datasource schema.
+PATTERNS: 1, 6, 7, 13
+FILES CHANGED: citrixadc_framework/csvserver_spilloverpolicy_binding/resource_csvserver_spilloverpolicy_binding.go, citrixadc_framework/csvserver_spilloverpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_spilloverpolicy_binding/datasource_csvserver_spilloverpolicy_binding.go, citrixadc_framework/csvserver_spilloverpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_spilloverpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc changed
 BLOCKER: none
 ========================================

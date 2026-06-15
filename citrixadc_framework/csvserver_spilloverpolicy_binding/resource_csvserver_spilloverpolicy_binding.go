@@ -3,6 +3,7 @@ package csvserver_spilloverpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CsvserverSpilloverpolicyBindingResource) Create(ctx context.Context, re
 	csvserver_spilloverpolicy_binding := csvserver_spilloverpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_spilloverpolicy_binding.Type(), &csvserver_spilloverpolicy_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource), use AddResource
+	_, err := r.client.AddResource(service.Csvserver_spilloverpolicy_binding.Type(), data.Name.ValueString(), &csvserver_spilloverpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_spilloverpolicy_binding, got error: %s", err))
 		return
@@ -168,7 +169,15 @@ func (r *CsvserverSpilloverpolicyBindingResource) Delete(ctx context.Context, re
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	// Match SDK v2 delete-arg set: include bindpoint and priority when present so the
+	// correct binding is disambiguated. URL-encode slashy/special values.
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_spilloverpolicy_binding.Type(), name_value, argsMap)
