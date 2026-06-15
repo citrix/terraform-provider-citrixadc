@@ -19,7 +19,8 @@ func Rnat6Nsip6BindingDataSourceSchema() schema.Schema {
 				Description: "Nat IP Address.",
 			},
 			"ownergroup": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The owner node group in a Cluster for this rnat rule.",
 			},
 		},

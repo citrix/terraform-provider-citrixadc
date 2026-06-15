@@ -97,12 +97,12 @@ func rnat6_nsip6_bindingSetAttrFromGet(ctx context.Context, data *Rnat6Nsip6Bind
 		data.Ownergroup = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the resource.
+	// Identity is "name,natip6" (matches the SDK v2 ID and resource_id_mapping.json);
+	// ownergroup is a read-back / delete-arg attribute, not part of the identity.
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("natip6:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Natip6.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

@@ -83,15 +83,17 @@ func (d *Rnat6Nsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 			continue
 		}
 
-		// Check ownergroup
-		if val, ok := v["ownergroup"].(string); ok {
-			if ownergroup_Name.IsNull() || val != ownergroup_Name.ValueString() {
+		// Check ownergroup only when the user supplied it as an additional filter.
+		if !ownergroup_Name.IsNull() && !ownergroup_Name.IsUnknown() {
+			if val, ok := v["ownergroup"].(string); ok {
+				if val != ownergroup_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !ownergroup_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

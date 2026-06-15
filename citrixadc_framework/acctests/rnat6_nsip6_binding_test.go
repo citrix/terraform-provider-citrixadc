@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -108,10 +109,12 @@ func testAccCheckRnat6_nsip6_bindingExist(n string, id *string) resource.TestChe
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		natip6 := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "natip6"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		natip6 := idMap["natip6"]
 
 		findParams := service.FindParams{
 			ResourceType:             "rnat6_nsip6_binding",
