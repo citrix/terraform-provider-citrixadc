@@ -73,7 +73,10 @@ func (r *LsnclientNsacl6BindingResource) Create(ctx context.Context, req resourc
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("acl6name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Acl6name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	// td is optional and only part of the binding identity when set.
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	}
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -241,7 +244,9 @@ func (r *LsnclientNsacl6BindingResource) readLsnclientNsacl6BindingFromApi(ctx c
 			continue
 		}
 
-		// Check td
+		// Check td - the NITRO GET for this binding does not echo td, so only
+		// compare when the record actually carries the field (matching SDK v2,
+		// which keyed the binding solely on acl6name).
 		if idVal, ok := idMap["td"]; ok {
 			if val, ok := v["td"]; ok {
 				val, _ = utils.ConvertToInt64(val)
@@ -250,13 +255,7 @@ func (r *LsnclientNsacl6BindingResource) readLsnclientNsacl6BindingFromApi(ctx c
 					match = false
 					continue
 				}
-			} else {
-				match = false
-				continue
 			}
-		} else if _, ok := v["td"]; ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
