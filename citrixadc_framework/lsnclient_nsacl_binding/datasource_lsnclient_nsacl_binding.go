@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -46,7 +45,6 @@ func (d *LsnclientNsaclBindingDataSource) Read(ctx context.Context, req datasour
 	// Case 4: Array filter with parent ID
 	clientname_Name := data.Clientname.ValueString()
 	aclname_Name := data.Aclname
-	td_Name := data.Td
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -84,17 +82,8 @@ func (d *LsnclientNsaclBindingDataSource) Read(ctx context.Context, req datasour
 			continue
 		}
 
-		// Check td
-		if val, ok := v["td"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if td_Name.IsNull() || val != td_Name.ValueInt64() {
-				match = false
-				continue
-			}
-		} else if !td_Name.IsNull() {
-			match = false
-			continue
-		}
+		// td is not part of the identity and is omitted from the GET response when
+		// it is the default; it is resolved via SetAttrFromGet, not filtered here.
 		if match {
 			foundIndex = i
 			break

@@ -3358,5 +3358,18 @@ BACKWARD-COMPAT: SDK v2 contract was acl6name(Required,ForceNew), clientname(Req
 DATASOURCE: healthy structure; fixed two consistency bugs - td was Required (test omits it -> would fail) changed to Optional+Computed (Pattern 11); td filter rejected records when td null in config, made it filter only when td supplied. Shares SetAttrFromGet (server never returns td so no Pattern-7 split needed).
 PATTERNS: 7 (preserve non-echoed input), 11 (resource/datasource flag consistency), 13 (drop Computed where GET cannot resolve value)
 FILES CHANGED: citrixadc_framework/lsnclient_nsacl6_binding/resource_schema.go, citrixadc_framework/lsnclient_nsacl6_binding/resource_lsnclient_nsacl6_binding.go, citrixadc_framework/lsnclient_nsacl6_binding/datasource_lsnclient_nsacl6_binding.go, citrixadc_framework/lsnclient_nsacl6_binding/datasource_schema.go, citrixadc_framework/acctests/lsnclient_nsacl6_binding_test.go (sanctioned ID-parse helper lines only). NO doc files changed.
+RESOURCE: lsnclient_nsacl_binding
+STATUS:   PASS
+TIME:     2026-06-15T14:44:33Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/) [LSN-capable box only]
+TEST RUN: TestAccLsnclient_nsacl_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccLsnclient_nsacl_binding_basic ............ PASS
+  - TestAccLsnclient_nsacl_bindingDataSource_basic .. PASS
+  - (no ephemeral tests - no secret attrs) .......... N/A
+BACKWARD-COMPAT: SDK v2 schema parity OK (aclname/clientname Required+ForceNew, td Optional+Computed+ForceNew). Removed td from the composite ID and Read filter (NITRO omits td from GET when default; SDK v2 ID was clientname,aclname only) which fixed "unknown value for td after apply", "not found with provided ID attributes", and Delete errorcode 1093 (td prerequisite [td,network]). ID order aligned to resource_id_mapping.json (clientname,aclname).
+DATASOURCE: recovered/aligned with master intent - td reverted Required->Optional+Computed (baseline regression) and td filter removed from datasource Read; shared SetAttrFromGet faithfully copies fields + sets ID, so no Pattern 7 split needed.
+PATTERNS: 7 (datasource shared-setter / non-echoed field), 13 (drop spurious identity/Computed-filter behavior for server-omitted td), 16-adjacent (delete-args correctness).
+FILES CHANGED: citrixadc_framework/lsnclient_nsacl_binding/resource_lsnclient_nsacl_binding.go, citrixadc_framework/lsnclient_nsacl_binding/resource_schema.go, citrixadc_framework/lsnclient_nsacl_binding/datasource_lsnclient_nsacl_binding.go, citrixadc_framework/lsnclient_nsacl_binding/datasource_schema.go, citrixadc_framework/acctests/lsnclient_nsacl_binding_test.go (sanctioned ID-parse helper lines only). NO doc changes.
 BLOCKER: none
 ========================================
