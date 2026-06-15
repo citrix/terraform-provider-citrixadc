@@ -362,6 +362,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbvserver_lbpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbvserver_spilloverpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hanode"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/hanode_routemonitor6_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/icaaccessprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/icaaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/icaglobal_icapolicy_binding"
@@ -974,6 +975,7 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 
 func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		hanode_routemonitor6_binding.NewHanodeRoutemonitor6BindingResource,
 		bridgegroup_nsip_binding.NewBridgegroupNsipBindingResource,
 		sslcertkey.NewSslCertKeyResource,
 		sslcertkey.NewSslCertKeyUpdateResource,
@@ -1520,6 +1522,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		gslbsite.GSlbsiteDataSource,
 		gslbvserver.GSlbvserverDataSource,
 		hanode.HAnodeDataSource,
+		hanode_routemonitor6_binding.HAnodeRoutemonitor6BindingDataSource,
 		icaaccessprofile.ICaaccessprofileDataSource,
 		icaaction.ICaactionDataSource,
 		icalatencyprofile.ICalatencyprofileDataSource,
