@@ -22,6 +22,7 @@ import (
 // CsvserverAppqoepolicyBindingResourceModel describes the resource data model.
 type CsvserverAppqoepolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *CsvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Computed:    true,
 				Description: "The ID of the csvserver_appqoepolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +66,17 @@ func (r *CsvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Description: "Invoke flag.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				// Not echoed by NITRO GET for this binding -> Optional only (drop
+				// Computed) to avoid "unknown value after apply" churn (Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				// Not echoed by NITRO GET for this binding -> Optional only (Pattern 13).
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -85,16 +97,15 @@ func (r *CsvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Description: "Policies bound to this vserver.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Priority for the policy.",
 			},
 			"targetlbvserver": schema.StringAttribute{
+				// Not echoed by NITRO GET for this binding -> Optional only (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +120,9 @@ func csvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx context.Context,
 
 	// Create API request body from the model
 	csvserver_appqoepolicy_binding := cs.Csvserverappqoepolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		csvserver_appqoepolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_appqoepolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +151,60 @@ func csvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx context.Context,
 	return csvserver_appqoepolicy_binding
 }
 
+// csvserver_appqoepolicy_bindingSetAttrFromGet is the resource-side state setter.
+// It only adopts values for attributes the NITRO GET reliably echoes back. Server-side
+// inputs (bindpoint, priority, invoke, gotopriorityexpression, labelname, labeltype,
+// targetlbvserver) that may not be echoed or may be normalized are preserved from the
+// existing plan/state to avoid "inconsistent result after apply" churn (Pattern 7/13).
+// The ID is set once in Create, never recomputed here (Pattern 6).
 func csvserver_appqoepolicy_bindingSetAttrFromGet(ctx context.Context, data *CsvserverAppqoepolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAppqoepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In csvserver_appqoepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Only adopt values returned by the GET; preserve existing plan/state otherwise.
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
+		data.Targetlbvserver = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// csvserver_appqoepolicy_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (the datasource has no prior plan/state to preserve) and
+// sets the composite ID (the datasource has no Create). Pattern 7.
+func csvserver_appqoepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CsvserverAppqoepolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAppqoepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In csvserver_appqoepolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -184,7 +248,7 @@ func csvserver_appqoepolicy_bindingSetAttrFromGet(ctx context.Context, data *Csv
 		data.Targetlbvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

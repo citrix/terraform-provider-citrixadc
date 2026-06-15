@@ -1184,5 +1184,18 @@ BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Com
 DATASOURCE: healthy as-is; shared SetAttrFromGet copies all GET fields (incl. server-assigned gotopriorityexpression=END) and sets composite id; no split needed (resource setter copies, not preserves).
 PATTERNS: 1 (POST-where-PUT-emitted for binding add); flag-drift Required->Optional+Computed; sanctioned ID-parse helper fix (ParseIdString in Exist check).
 FILES CHANGED: citrixadc_framework/csvserver_cachepolicy_binding/resource_schema.go, citrixadc_framework/csvserver_cachepolicy_binding/resource_csvserver_cachepolicy_binding.go, citrixadc_framework/acctests/csvserver_cachepolicy_binding_test.go (ID-parse helper lines only)
+RESOURCE: csvserver_appqoepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:27:51Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccCsvserver_appqoepolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccCsvserver_appqoepolicy_binding_basic ............ PASS
+  - TestAccCsvserver_appqoepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 + NITRO struct + test config); labelname/labeltype flipped Required->Optional to match SDK v2 (config omits them); priority flipped Optional+Computed->Required to match SDK v2; Create verb changed UpdateUnnamedResource(PUT)->AddResource(POST) per SDK v2; Delete args now include bindpoint+priority (url-encoded) like SDK v2; dropped spurious Computed on labelname/labeltype/targetlbvserver (not echoed by NITRO GET, Pattern 13); SetAttrFromGet made state-preserving + ID set once in Create (Pattern 6); ID format new key:value, legacy "name,policyname" parsed via ParseIdString; resource_id_mapping.json already correct.
+DATASOURCE: healthy; split setter added (Pattern 7) - datasource Read now calls csvserver_appqoepolicy_bindingSetAttrFromGetForDatasource (faithful copy + sets composite Id); added bindpoint to datasource schema.
+PATTERNS: 1, 6, 7, 13
+FILES CHANGED: citrixadc_framework/csvserver_appqoepolicy_binding/resource_schema.go, citrixadc_framework/csvserver_appqoepolicy_binding/resource_csvserver_appqoepolicy_binding.go, citrixadc_framework/csvserver_appqoepolicy_binding/datasource_csvserver_appqoepolicy_binding.go, citrixadc_framework/csvserver_appqoepolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_appqoepolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc files
 BLOCKER: none
 ========================================
