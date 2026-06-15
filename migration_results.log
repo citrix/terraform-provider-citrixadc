@@ -2036,3 +2036,19 @@ PATTERNS: 1 (verb confirmed PUT), 7 (datasource setter split + preserve/resolve 
 FILES CHANGED: citrixadc_framework/servicegroup_lbmonitor_binding/resource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/resource_schema.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_schema.go, citrixadc_framework/acctests/servicegroup_lbmonitor_binding_test.go (ID-parse helper lines only - sanctioned). NO doc changed.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: sslpolicylabel_sslpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:49:39Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccSslpolicylabel_sslpolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccSslpolicylabel_sslpolicy_binding_basic ............ PASS
+  - TestAccSslpolicylabel_sslpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: tfsdk attr drift invoke_labelname->invokelabelname on resource (SDK v2 name; test config uses it); invokelabelname & labeltype Required->Optional+Computed (SDK v2 Optional+Computed); invoke is write-only non-echoed flag -> preserved in resource SetAttrFromGet (matches SDK v2 which skipped d.Set invoke); split datasource setter/model (Pattern 7) so datasource keeps invoke_labelname (test assertion) while resource uses invokelabelname; datasource priority Required->Optional+Computed and filter skips priority when null (datasource config omits it); ID adopts new key:value format, legacy order labelname,policyname preserved via ParseIdString.
+DATASOURCE: healthy; given dedicated DataSourceModel (tfsdk invoke_labelname) + dedicated ForDatasource setter (Pattern 7 split); Read filters by policyname, optional priority.
+PATTERNS: 7
+FILES CHANGED: citrixadc_framework/sslpolicylabel_sslpolicy_binding/resource_schema.go, citrixadc_framework/sslpolicylabel_sslpolicy_binding/datasource_schema.go, citrixadc_framework/sslpolicylabel_sslpolicy_binding/datasource_sslpolicylabel_sslpolicy_binding.go, citrixadc_framework/acctests/sslpolicylabel_sslpolicy_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================
