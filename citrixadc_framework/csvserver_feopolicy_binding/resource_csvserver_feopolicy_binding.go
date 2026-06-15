@@ -3,6 +3,7 @@ package csvserver_feopolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CsvserverFeopolicyBindingResource) Create(ctx context.Context, req reso
 	csvserver_feopolicy_binding := csvserver_feopolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_feopolicy_binding.Type(), &csvserver_feopolicy_binding)
+	// Binding resource - NITRO `add` is POST (matches SDK v2 AddResource)
+	_, err := r.client.AddResource(service.Csvserver_feopolicy_binding.Type(), "", &csvserver_feopolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_feopolicy_binding, got error: %s", err))
 		return
@@ -168,7 +169,15 @@ func (r *CsvserverFeopolicyBindingResource) Delete(ctx context.Context, req reso
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	// Include bindpoint/priority as delete disambiguators when set (matches SDK v2);
+	// URL-encode slashy/special values per binding-family convention.
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_feopolicy_binding.Type(), name_value, argsMap)
