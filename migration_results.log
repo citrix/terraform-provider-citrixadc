@@ -2120,5 +2120,19 @@ BACKWARD-COMPAT: GET returns the cipher value only as "cipheraliasname" (no "cip
 DATASOURCE: healthy after Pattern-7 split; added sslprofile_sslcipher_bindingSetAttrFromGetForDatasource (faithful copy + sets Id), datasource Read now calls it and filters on cipheraliasname.
 PATTERNS: 7 (SetAttrFromGet preserve + datasource split), 8 (RequiresReplace flag correction vs server reality)
 FILES CHANGED: citrixadc_framework/sslprofile_sslcipher_binding/resource_schema.go, citrixadc_framework/sslprofile_sslcipher_binding/resource_sslprofile_sslcipher_binding.go, citrixadc_framework/sslprofile_sslcipher_binding/datasource_sslprofile_sslcipher_binding.go, citrixadc_framework/acctests/sslprofile_sslcipher_binding_test.go (sanctioned ID-parse helper lines only; NO doc files)
+RESOURCE: sslcertkey_sslocspresponder_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:49:37Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccSslcertkey_sslocspresponder_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccSslcertkey_sslocspresponder_binding_basic ............ SKIP[pre-existing t.Skip in test body: "TODO: Need to find a way to test this resource!" - test logic, not modifiable per Constraint 1]
+  - TestAccSslcertkey_sslocspresponder_bindingDataSource_basic .. SKIP[pre-existing t.Skip in test body: "TODO: Datasource filtering by 'ca' attribute needs investigation" - test logic, not modifiable; the underlying datasource bug it describes was FIXED]
+  - (no ephemeral tests) ....................................... N/A
+VALIDATION: acctests both skip via t.Skip; verified full create/idempotent-plan/datasource-read/destroy lifecycle end-to-end against live ADC 10.101.132.153 via terraform apply/plan/destroy (all green, binding cleaned up).
+BACKWARD-COMPAT: certkey was Optional+Computed -> set Required (SDK v2 contract); composite ID had 3 keys (ca,certkey,ocspresponder) -> reduced to legacy 2-key certkey,ocspresponder matching resource_id_mapping.json; Create used UpdateUnnamedResource(PUT) -> AddResource(POST) per SDK v2 (Pattern 1); Delete switched to DeleteResourceWithArgs with url.QueryEscape(ocspresponder)+ca from state; "ca" dropped from ID and GET match filter (server never echoes it) and Computed dropped from "ca" (Pattern 13); SetAttrFromGet split into resource(preserve state)+datasource(copy+set Id) setters (Pattern 7); datasource "ca" Required->Optional and "ca" filter removed (fixes the documented datasource bug).
+DATASOURCE: healthy after fix - "ca" match filter removed (server omits ca), now matches on ocspresponder; uses new ForDatasource setter; "ca" made Optional.
+PATTERNS: 1, 6, 7, 13, 15(spirit: ca treated as delete-only arg, not identity)
+FILES CHANGED: citrixadc_framework/sslcertkey_sslocspresponder_binding/resource_sslcertkey_sslocspresponder_binding.go, citrixadc_framework/sslcertkey_sslocspresponder_binding/resource_schema.go, citrixadc_framework/sslcertkey_sslocspresponder_binding/datasource_sslcertkey_sslocspresponder_binding.go, citrixadc_framework/sslcertkey_sslocspresponder_binding/datasource_schema.go (NO test file, NO doc file)
 BLOCKER: none
 ========================================
