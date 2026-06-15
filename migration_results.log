@@ -219,5 +219,18 @@ BACKWARD-COMPAT: Fixed codegen duplicate Id field -> single computed string id +
 DATASOURCE: healthy after fix; added xxxSetAttrFromGetForDatasource split (Pattern 7), lookup keys hanode_id+routemonitor Required, netmask Optional+Computed output; Read keys off hanode_id and filters routemonitor.
 PATTERNS: 5 (no-op Update), 6 (ID set once, not in SetAttrFromGet), 7 (datasource setter split)
 FILES CHANGED: citrixadc_framework/hanode_routemonitor6_binding/resource_schema.go, citrixadc_framework/hanode_routemonitor6_binding/resource_hanode_routemonitor6_binding.go, citrixadc_framework/hanode_routemonitor6_binding/datasource_schema.go, citrixadc_framework/hanode_routemonitor6_binding/datasource_hanode_routemonitor6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/hanode_routemonitor6_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: vlan_nsip6_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:26:47Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccVlan_nsip6_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccVlan_nsip6_binding_basic ............ PASS
+  - TestAccVlan_nsip6_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: Codegen named the real integer key "id" (NITRO JSON field), colliding with the synthetic computed string id (duplicate struct field + duplicate schema-map key). Renamed user-facing key to "vlanid" (Int64, Required, RequiresReplace) per SDK v2 contract and the acctest HCL, mapped to NITRO "id" field in payload/GET. Kept single computed string "id". netmask/ownergroup/td: SDK v2 Optional+Computed -> Framework Optional only (GET endpoint never echoes them, so Computed caused unknown-after-apply). Type/ForceNew parity preserved (all RequiresReplace). Composite key:value ID order matches resource_id_mapping.json ("vlanid,ipaddress"); ParseIdString legacyOrder=[vlanid,ipaddress] decodes both new and legacy imports. Delete URL-encodes IPv6 ipaddress (':' and '/').
+DATASOURCE: healthy after fix; split setter into resource (preserve) vs xxxSetAttrFromGetForDatasource (full copy + sets composite Id); datasource key renamed id->vlanid (Required).
+PATTERNS: 7 (datasource setter split), 13 (drop Computed where no GET echo)
+FILES CHANGED: citrixadc_framework/vlan_nsip6_binding/resource_schema.go, citrixadc_framework/vlan_nsip6_binding/resource_vlan_nsip6_binding.go, citrixadc_framework/vlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vlan_nsip6_binding/datasource_vlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -70,13 +69,7 @@ func (r *VlanNsip6BindingResource) Create(ctx context.Context, req resource.Crea
 	tflog.Trace(ctx, "Created vlan_nsip6_binding resource")
 
 	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(vlan_nsip6_bindingComposeId(&data))
 
 	// Read the updated state back
 	r.readVlanNsip6BindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -118,26 +111,9 @@ func (r *VlanNsip6BindingResource) Update(ctx context.Context, req resource.Upda
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating vlan_nsip6_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		vlan_nsip6_binding := vlan_nsip6_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Vlan_nsip6_binding.Type(), &vlan_nsip6_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vlan_nsip6_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated vlan_nsip6_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for vlan_nsip6_binding resource, skipping update")
-	}
+	// No NITRO update endpoint for this binding; every attribute is RequiresReplace,
+	// so Update is a documented no-op.
+	tflog.Debug(ctx, "Update is a no-op for vlan_nsip6_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readVlanNsip6BindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -164,27 +140,30 @@ func (r *VlanNsip6BindingResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	id_value, ok := idMap["id"]
+	vlanid, ok := idMap["vlanid"]
 	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'id' not found in ID")
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'vlanid' not found in ID")
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args. ipaddress (IPv6, contains '/' and ':') is URL-encoded; the
+	// optional filters (netmask/ownergroup/td) come from the resolved state so a
+	// binding with a non-default value is targeted correctly.
+	args := make([]string, 0)
 	if val, ok := idMap["ipaddress"]; ok && val != "" {
-		argsMap["ipaddress"] = val
+		args = append(args, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(val)))
 	}
-	if val, ok := idMap["netmask"]; ok && val != "" {
-		argsMap["netmask"] = val
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		args = append(args, fmt.Sprintf("netmask:%s", utils.UrlEncode(data.Netmask.ValueString())))
 	}
-	if val, ok := idMap["ownergroup"]; ok && val != "" {
-		argsMap["ownergroup"] = val
+	if !data.Ownergroup.IsNull() && data.Ownergroup.ValueString() != "" {
+		args = append(args, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(data.Ownergroup.ValueString())))
 	}
-	if val, ok := idMap["td"]; ok && val != "" {
-		argsMap["td"] = val
+	if !data.Td.IsNull() {
+		args = append(args, fmt.Sprintf("td:%v", data.Td.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vlan_nsip6_binding.Type(), id_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vlan_nsip6_binding.Type(), vlanid, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vlan_nsip6_binding, got error: %s", err))
 		return
@@ -196,16 +175,16 @@ func (r *VlanNsip6BindingResource) Delete(ctx context.Context, req resource.Dele
 // Helper function to read vlan_nsip6_binding data from API
 func (r *VlanNsip6BindingResource) readVlanNsip6BindingFromApi(ctx context.Context, data *VlanNsip6BindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Array filter with parent ID - parse from ID
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vlanid", "ipaddress"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return
 	}
 
-	id_Name, ok := idMap["id"]
+	vlanid, ok := idMap["vlanid"]
 	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'id' not found in ID string")
+		diags.AddError("Parse Error", "ID attribute 'vlanid' not found in ID string")
 		return
 	}
 
@@ -213,7 +192,7 @@ func (r *VlanNsip6BindingResource) readVlanNsip6BindingFromApi(ctx context.Conte
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vlan_nsip6_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vlanid,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
@@ -228,7 +207,7 @@ func (r *VlanNsip6BindingResource) readVlanNsip6BindingFromApi(ctx context.Conte
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding matching ipaddress (and vlanid).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -238,66 +217,23 @@ func (r *VlanNsip6BindingResource) readVlanNsip6BindingFromApi(ctx context.Conte
 			if val, ok := v["ipaddress"].(string); ok {
 				if val != idVal {
 					match = false
-					continue
 				}
 			} else {
 				match = false
-				continue
 			}
-		} else if _, ok := v["ipaddress"].(string); ok {
-			match = false
-			continue
 		}
 
-		// Check netmask
-		if idVal, ok := idMap["netmask"]; ok {
-			if val, ok := v["netmask"].(string); ok {
-				if val != idVal {
+		// Check vlanid against the NITRO "id" field
+		if match {
+			if val, ok := v["id"]; ok {
+				valInt64, _ := utils.ConvertToInt64(val)
+				idValInt64, _ := strconv.ParseInt(vlanid, 10, 64)
+				if valInt64 != idValInt64 {
 					match = false
-					continue
 				}
-			} else {
-				match = false
-				continue
 			}
-		} else if _, ok := v["netmask"].(string); ok {
-			match = false
-			continue
 		}
 
-		// Check ownergroup
-		if idVal, ok := idMap["ownergroup"]; ok {
-			if val, ok := v["ownergroup"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ownergroup"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check td
-		if idVal, ok := idMap["td"]; ok {
-			if val, ok := v["td"]; ok {
-				val, _ = utils.ConvertToInt64(val)
-				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
-				if val != idValInt64 {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["td"]; ok {
-			match = false
-			continue
-		}
 		if match {
 			foundIndex = i
 			break
@@ -306,7 +242,7 @@ func (r *VlanNsip6BindingResource) readVlanNsip6BindingFromApi(ctx context.Conte
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vlan_nsip6_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "vlan_nsip6_binding not found with the provided ID attributes")
 		return
 	}
 

@@ -21,7 +21,7 @@ import (
 // VlanNsip6BindingResourceModel describes the resource data model.
 type VlanNsip6BindingResourceModel struct {
 	Id         types.String `tfsdk:"id"`
-	Id         types.Int64  `tfsdk:"id"`
+	Vlanid     types.Int64  `tfsdk:"vlanid"`
 	Ipaddress  types.String `tfsdk:"ipaddress"`
 	Netmask    types.String `tfsdk:"netmask"`
 	Ownergroup types.String `tfsdk:"ownergroup"`
@@ -36,7 +36,7 @@ func (r *VlanNsip6BindingResource) Schema(ctx context.Context, req resource.Sche
 				Computed:    true,
 				Description: "The ID of the vlan_nsip6_binding resource.",
 			},
-			"id": schema.Int64Attribute{
+			"vlanid": schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
@@ -50,9 +50,11 @@ func (r *VlanNsip6BindingResource) Schema(ctx context.Context, req resource.Sche
 				},
 				Description: "The IP address assigned to the VLAN.",
 			},
+			// netmask/ownergroup/td are Optional only (no Computed): the
+			// vlan_nsip6_binding GET endpoint never echoes them back, so a Computed
+			// flag would leave them unknown after apply ("invalid result object").
 			"netmask": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -60,7 +62,6 @@ func (r *VlanNsip6BindingResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"ownergroup": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -68,7 +69,6 @@ func (r *VlanNsip6BindingResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"td": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -81,10 +81,10 @@ func (r *VlanNsip6BindingResource) Schema(ctx context.Context, req resource.Sche
 func vlan_nsip6_bindingGetThePayloadFromthePlan(ctx context.Context, data *VlanNsip6BindingResourceModel) network.Vlannsip6binding {
 	tflog.Debug(ctx, "In vlan_nsip6_bindingGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
+	// Create API request body from the model. The NITRO field for the VLAN id is "id".
 	vlan_nsip6_binding := network.Vlannsip6binding{}
-	if !data.Id.IsNull() && !data.Id.IsUnknown() {
-		vlan_nsip6_binding.Id = utils.IntPtr(int(data.Id.ValueInt64()))
+	if !data.Vlanid.IsNull() && !data.Vlanid.IsUnknown() {
+		vlan_nsip6_binding.Id = utils.IntPtr(int(data.Vlanid.ValueInt64()))
 	}
 	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		vlan_nsip6_binding.Ipaddress = data.Ipaddress.ValueString()
@@ -102,16 +102,57 @@ func vlan_nsip6_bindingGetThePayloadFromthePlan(ctx context.Context, data *VlanN
 	return vlan_nsip6_binding
 }
 
+// vlan_nsip6_bindingComposeId builds the composite key:value ID from the model.
+// Matches the SDK v2 positional order (vlanid,ipaddress) so ParseIdString can
+// decode both the new key:value form and legacy comma-separated imports.
+func vlan_nsip6_bindingComposeId(data *VlanNsip6BindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("vlanid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vlanid.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
+	return strings.Join(idParts, ",")
+}
+
+// vlan_nsip6_bindingSetAttrFromGet updates the resource state from the GET
+// response while preserving the composite ID (set once in Create).
 func vlan_nsip6_bindingSetAttrFromGet(ctx context.Context, data *VlanNsip6BindingResourceModel, getResponseData map[string]interface{}) *VlanNsip6BindingResourceModel {
 	tflog.Debug(ctx, "In vlan_nsip6_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. The NITRO field for the VLAN id is "id".
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Id = types.Int64Value(intVal)
+			data.Vlanid = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+		data.Ipaddress = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
+		data.Ownergroup = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["td"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Td = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// vlan_nsip6_bindingSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response and sets the composite ID, since the datasource has no
+// Create to establish state.
+func vlan_nsip6_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VlanNsip6BindingResourceModel, getResponseData map[string]interface{}) *VlanNsip6BindingResourceModel {
+	tflog.Debug(ctx, "In vlan_nsip6_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["id"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Vlanid = types.Int64Value(intVal)
 		}
 	} else {
-		data.Id = types.Int64Null()
+		data.Vlanid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
@@ -136,15 +177,7 @@ func vlan_nsip6_bindingSetAttrFromGet(ctx context.Context, data *VlanNsip6Bindin
 		data.Td = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(vlan_nsip6_bindingComposeId(data))
 
 	return data
 }
