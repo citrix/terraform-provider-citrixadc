@@ -234,3 +234,19 @@ PATTERNS: 7 (datasource setter split), 13 (drop Computed where no GET echo)
 FILES CHANGED: citrixadc_framework/vlan_nsip6_binding/resource_schema.go, citrixadc_framework/vlan_nsip6_binding/resource_vlan_nsip6_binding.go, citrixadc_framework/vlan_nsip6_binding/datasource_schema.go, citrixadc_framework/vlan_nsip6_binding/datasource_vlan_nsip6_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_nsip6_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: botprofile_captcha_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:29:20Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccBotprofile_captcha_binding_basic|TestAccBotprofileCaptchaBindingDataSource_basic
+TESTS:
+  - TestAccBotprofile_captcha_binding_basic ............ PASS
+  - TestAccBotprofileCaptchaBindingDataSource_basic .... PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: dropped spurious Required on captcharesource and bot_captcha_action (SDK v2 had both Optional+Computed); fixed composite ID to legacy 2-key order name,bot_captcha_url (codegen wrongly added captcharesource into the ID); Read/Delete now key off legacy identity (name + bot_captcha_url); Delete uses DeleteResourceWithArgs with url.QueryEscape on bot_captcha_url + captcharesource arg, mirroring SDK v2.
+DATASOURCE: recovered/fixed - made captcharesource Optional+Computed (was Required, broke the datasource test which omits it), removed its match block, switched to a dedicated ForDatasource setter that copies all fields and sets the ID.
+PATTERNS: 6 (set ID once in Create), 7 (split resource/datasource setters), 8 (drop spurious Required)
+FILES CHANGED: citrixadc_framework/botprofile_captcha_binding/resource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/resource_schema.go, citrixadc_framework/botprofile_captcha_binding/datasource_botprofile_captcha_binding.go, citrixadc_framework/botprofile_captcha_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_captcha_binding_test.go (sanctioned ID-parse helper lines only). NO docs modified.
+BLOCKER: none
+========================================

@@ -55,7 +55,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 			},
 			"bot_captcha_action": schema.ListAttribute{
 				ElementType: types.StringType,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -77,7 +78,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Description: "URL for which the Captcha action, if configured under IP reputation, TPS or device fingerprint, need to be applied.",
 			},
 			"captcharesource": schema.BoolAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -189,10 +191,15 @@ func botprofile_captcha_bindingGetThePayloadFromthePlan(ctx context.Context, dat
 	return botprofile_captcha_binding
 }
 
+// botprofile_captcha_bindingSetAttrFromGet is the RESOURCE-side state setter.
+// Every attribute is Optional+Computed (or a Required identity key), so each must
+// be resolved to a KNOWN value after apply. The binding GET faithfully echoes all
+// configured/defaulted fields except bot_bind_comment; absent fields are set to a
+// known null value (matching the SDK v2 d.Set semantics). It does NOT recompute
+// the ID (the ID is set once in Create, per Pattern 6).
 func botprofile_captcha_bindingSetAttrFromGet(ctx context.Context, data *BotprofileCaptchaBindingResourceModel, getResponseData map[string]interface{}) *BotprofileCaptchaBindingResourceModel {
 	tflog.Debug(ctx, "In botprofile_captcha_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
 	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
 		data.BotBindComment = types.StringValue(val.(string))
 	} else {
@@ -270,12 +277,97 @@ func botprofile_captcha_bindingSetAttrFromGet(ctx context.Context, data *Botprof
 		data.Waittime = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	return data
+}
+
+// botprofile_captcha_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. The datasource has no prior plan/state to preserve, so it faithfully
+// copies every field from the GET response and sets the ID itself (Pattern 7).
+func botprofile_captcha_bindingSetAttrFromGetForDatasource(ctx context.Context, data *BotprofileCaptchaBindingResourceModel, getResponseData map[string]interface{}) *BotprofileCaptchaBindingResourceModel {
+	tflog.Debug(ctx, "In botprofile_captcha_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
+		data.BotBindComment = types.StringValue(val.(string))
+	} else {
+		data.BotBindComment = types.StringNull()
+	}
+	if val, ok := getResponseData["bot_captcha_action"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.BotCaptchaAction = listValue
+		} else {
+			data.BotCaptchaAction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.BotCaptchaAction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["bot_captcha_enabled"]; ok && val != nil {
+		data.BotCaptchaEnabled = types.StringValue(val.(string))
+	} else {
+		data.BotCaptchaEnabled = types.StringNull()
+	}
+	if val, ok := getResponseData["bot_captcha_url"]; ok && val != nil {
+		data.BotCaptchaUrl = types.StringValue(val.(string))
+	} else {
+		data.BotCaptchaUrl = types.StringNull()
+	}
+	if val, ok := getResponseData["captcharesource"]; ok && val != nil {
+		data.Captcharesource = types.BoolValue(val.(bool))
+	} else {
+		data.Captcharesource = types.BoolNull()
+	}
+	if val, ok := getResponseData["graceperiod"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Graceperiod = types.Int64Value(intVal)
+		}
+	} else {
+		data.Graceperiod = types.Int64Null()
+	}
+	if val, ok := getResponseData["logmessage"]; ok && val != nil {
+		data.Logmessage = types.StringValue(val.(string))
+	} else {
+		data.Logmessage = types.StringNull()
+	}
+	if val, ok := getResponseData["muteperiod"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Muteperiod = types.Int64Value(intVal)
+		}
+	} else {
+		data.Muteperiod = types.Int64Null()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else {
+		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["requestsizelimit"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Requestsizelimit = types.Int64Value(intVal)
+		}
+	} else {
+		data.Requestsizelimit = types.Int64Null()
+	}
+	if val, ok := getResponseData["retryattempts"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Retryattempts = types.Int64Value(intVal)
+		}
+	} else {
+		data.Retryattempts = types.Int64Null()
+	}
+	if val, ok := getResponseData["waittime"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Waittime = types.Int64Value(intVal)
+		}
+	} else {
+		data.Waittime = types.Int64Null()
+	}
+
+	// Set ID for the datasource (matches the resource Create ID format:
+	// legacy order name,bot_captcha_url as key:UrlEncode(value) pairs).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bot_captcha_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotCaptchaUrl.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("captcharesource:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Captcharesource.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_captcha_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotCaptchaUrl.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
