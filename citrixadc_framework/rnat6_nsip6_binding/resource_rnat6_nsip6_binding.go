@@ -3,6 +3,7 @@ package rnat6_nsip6_binding
 import (
 	"context"
 	"fmt"
+	neturl "net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -68,11 +69,12 @@ func (r *Rnat6Nsip6BindingResource) Create(ctx context.Context, req resource.Cre
 
 	tflog.Trace(ctx, "Created rnat6_nsip6_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Identity is "name,natip6" (matches the SDK v2 ID and resource_id_mapping.json).
+	// ownergroup is a delete arg / read-back attribute, not part of the identity.
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("natip6:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Natip6.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -154,7 +156,9 @@ func (r *Rnat6Nsip6BindingResource) Delete(ctx context.Context, req resource.Del
 	}
 
 	tflog.Debug(ctx, "Deleting rnat6_nsip6_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ParseIdString handles both the new "name:..,natip6:.." format and the legacy
+	// positional "name,natip6" format from imported SDK v2 state.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "natip6"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -167,15 +171,18 @@ func (r *Rnat6Nsip6BindingResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args. Values may contain ':' and '/' (e.g. IPv6 addresses), which are
+	// NITRO arg delimiters, so URL-encode each value (mirrors the SDK v2 delete args).
+	args := make([]string, 0)
 	if val, ok := idMap["natip6"]; ok && val != "" {
-		argsMap["natip6"] = val
+		args = append(args, fmt.Sprintf("natip6:%s", neturl.QueryEscape(val)))
 	}
-	if val, ok := idMap["ownergroup"]; ok && val != "" {
-		argsMap["ownergroup"] = val
+	// ownergroup is read from state (not the ID) to match the SDK v2 delete behaviour.
+	if !data.Ownergroup.IsNull() && data.Ownergroup.ValueString() != "" {
+		args = append(args, fmt.Sprintf("ownergroup:%s", neturl.QueryEscape(data.Ownergroup.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Rnat6_nsip6_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Rnat6_nsip6_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete rnat6_nsip6_binding, got error: %s", err))
 		return
@@ -224,7 +231,7 @@ func (r *Rnat6Nsip6BindingResource) readRnat6Nsip6BindingFromApi(ctx context.Con
 	for i, v := range dataArr {
 		match := true
 
-		// Check natip6
+		// Check natip6 (the identity discriminator within the parent's array).
 		if idVal, ok := idMap["natip6"]; ok {
 			if val, ok := v["natip6"].(string); ok {
 				if val != idVal {
@@ -240,21 +247,6 @@ func (r *Rnat6Nsip6BindingResource) readRnat6Nsip6BindingFromApi(ctx context.Con
 			continue
 		}
 
-		// Check ownergroup
-		if idVal, ok := idMap["ownergroup"]; ok {
-			if val, ok := v["ownergroup"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ownergroup"].(string); ok {
-			match = false
-			continue
-		}
 		if match {
 			foundIndex = i
 			break
