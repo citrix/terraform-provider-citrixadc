@@ -3,6 +3,7 @@ package lbvserver_spilloverpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *LbvserverSpilloverpolicyBindingResource) Create(ctx context.Context, re
 	lbvserver_spilloverpolicy_binding := lbvserver_spilloverpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbvserver_spilloverpolicy_binding.Type(), &lbvserver_spilloverpolicy_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource). Pattern 1.
+	_, err := r.client.AddResource(service.Lbvserver_spilloverpolicy_binding.Type(), "", &lbvserver_spilloverpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbvserver_spilloverpolicy_binding, got error: %s", err))
 		return
@@ -168,7 +169,14 @@ func (r *LbvserverSpilloverpolicyBindingResource) Delete(ctx context.Context, re
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		// URL-encode arg values for slashy/special characters (matches SDK v2).
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Lbvserver_spilloverpolicy_binding.Type(), name_value, argsMap)

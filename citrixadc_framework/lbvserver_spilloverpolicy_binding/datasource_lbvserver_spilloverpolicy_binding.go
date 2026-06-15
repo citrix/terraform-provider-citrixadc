@@ -93,7 +93,7 @@ func (d *LbvserverSpilloverpolicyBindingDataSource) Read(ctx context.Context, re
 		return
 	}
 
-	lbvserver_spilloverpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbvserver_spilloverpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
