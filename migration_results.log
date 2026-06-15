@@ -2008,5 +2008,18 @@ BACKWARD-COMPAT: Framework schema already matched SDK v2 contract (name/monitor_
 DATASOURCE: healthy as-is (shared SetAttrFromGet returns monstate/weight from GET; datasource test asserts monstate=ENABLED, weight=2 and passed; no Pattern 7 split required).
 PATTERNS: none (no codegen bug; only the sanctioned Constraint-1 ID-parse helper edit).
 FILES CHANGED: citrixadc_framework/acctests/service_lbmonitor_binding_test.go (ID-parse helper lines only). No doc modified. No resource/datasource/provider Go changes.
+RESOURCE: rewriteglobal_rewritepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:28:31Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccRewriteglobal_rewritepolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccRewriteglobal_rewritepolicy_binding_basic ............ PASS
+  - TestAccRewriteglobal_rewritepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ..... N/A
+BACKWARD-COMPAT: type Required (was Optional+Computed) to match SDK v2 + composite ID + datasource (Pattern 11); labelname/labeltype reverted Required->Optional+Computed to match SDK v2 contract (Pattern 8); Create verb PUT->POST AddResource to match SDK v2 (Pattern 1); Delete arg values url.QueryEscape'd to match SDK v2; datasource priority Required->Optional+Computed and Read filters priority only when supplied; composite ID order policyname,priority,type matches resource_id_mapping.json.
+DATASOURCE: healthy; shares SetAttrFromGet (GET echoes all fields faithfully, no Pattern 7 split needed); priority lookup made optional to match the test's policyname+type lookup.
+PATTERNS: 1, 8, 11
+FILES CHANGED: citrixadc_framework/rewriteglobal_rewritepolicy_binding/resource_schema.go, citrixadc_framework/rewriteglobal_rewritepolicy_binding/resource_rewriteglobal_rewritepolicy_binding.go, citrixadc_framework/rewriteglobal_rewritepolicy_binding/datasource_schema.go, citrixadc_framework/rewriteglobal_rewritepolicy_binding/datasource_rewriteglobal_rewritepolicy_binding.go, citrixadc_framework/acctests/rewriteglobal_rewritepolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc/provider/SDKv2 changes.
 BLOCKER: none
 ========================================
