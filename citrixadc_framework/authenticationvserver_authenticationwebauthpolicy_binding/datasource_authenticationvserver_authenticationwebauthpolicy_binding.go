@@ -42,11 +42,9 @@ func (d *AuthenticationvserverAuthenticationwebauthpolicyBindingDataSource) Read
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Lookup identity is name (parent) + policy.
 	name_Name := data.Name.ValueString()
-	groupextraction_Name := data.Groupextraction
 	policy_Name := data.Policy
-	secondary_Name := data.Secondary
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -68,21 +66,10 @@ func (d *AuthenticationvserverAuthenticationwebauthpolicyBindingDataSource) Read
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policy.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check groupextraction
-		if val, ok := v["groupextraction"].(bool); ok {
-			if groupextraction_Name.IsNull() || val != groupextraction_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !groupextraction_Name.IsNull() {
-			match = false
-			continue
-		}
 
 		// Check policy
 		if val, ok := v["policy"].(string); ok {
@@ -94,17 +81,6 @@ func (d *AuthenticationvserverAuthenticationwebauthpolicyBindingDataSource) Read
 			match = false
 			continue
 		}
-
-		// Check secondary
-		if val, ok := v["secondary"].(bool); ok {
-			if secondary_Name.IsNull() || val != secondary_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !secondary_Name.IsNull() {
-			match = false
-			continue
-		}
 		if match {
 			foundIndex = i
 			break
@@ -113,11 +89,11 @@ func (d *AuthenticationvserverAuthenticationwebauthpolicyBindingDataSource) Read
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationwebauthpolicy_binding with groupextraction %s not found", groupextraction_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationwebauthpolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	authenticationvserver_authenticationwebauthpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationwebauthpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -22,6 +22,7 @@ import (
 // AuthenticationvserverAuthenticationwebauthpolicyBindingResourceModel describes the resource data model.
 type AuthenticationvserverAuthenticationwebauthpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -39,17 +40,27 @@ func (r *AuthenticationvserverAuthenticationwebauthpolicyBindingResource) Schema
 				Computed:    true,
 				Description: "The ID of the authenticationvserver_authenticationwebauthpolicy_binding resource.",
 			},
-			"gotopriorityexpression": schema.StringAttribute{
+			"bindpoint": schema.StringAttribute{
+				// Optional only (not Computed): the GET (array) response does not echo
+				// bindpoint, so a Computed+unconfigured value can never resolve at apply
+				// time ("unknown value after apply"). See Pattern 13.
 				Optional: true,
-				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
+			},
+			"gotopriorityexpression": schema.StringAttribute{
+				// Optional only (not Computed): not echoed by GET. See Pattern 13.
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Applicable only to advance authentication policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n* If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a priority number that is numerically higher than the highest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// Optional only (not Computed): not echoed by GET. See Pattern 13.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -63,8 +74,8 @@ func (r *AuthenticationvserverAuthenticationwebauthpolicyBindingResource) Schema
 				Description: "Name of the authentication virtual server to which to bind the policy.",
 			},
 			"nextfactor": schema.StringAttribute{
+				// Optional only (not Computed): not echoed by GET. See Pattern 13.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -102,6 +113,9 @@ func authenticationvserver_authenticationwebauthpolicy_bindingGetThePayloadFromt
 
 	// Create API request body from the model
 	authenticationvserver_authenticationwebauthpolicy_binding := authentication.Authenticationvserverauthenticationwebauthpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		authenticationvserver_authenticationwebauthpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		authenticationvserver_authenticationwebauthpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -130,7 +144,57 @@ func authenticationvserver_authenticationwebauthpolicy_bindingGetThePayloadFromt
 func authenticationvserver_authenticationwebauthpolicy_bindingSetAttrFromGet(ctx context.Context, data *AuthenticationvserverAuthenticationwebauthpolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationwebauthpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In authenticationvserver_authenticationwebauthpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NOTE: this binding's GET (array) response does NOT echo back several
+	// configured inputs (bindpoint is not returned at all; gotopriorityexpression
+	// and nextfactor are also not reliably returned). For those fields we PRESERVE
+	// the existing plan/state value instead of nulling it, to avoid perpetual diffs
+	// and "inconsistent result after apply" errors (Pattern 7 / Pattern 13).
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
+		data.Nextfactor = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// Set ID for the resource.
+	// Backward-compat: legacy SDK v2 ID was "name,policy" (see resource_id_mapping.json).
+	// Keep the identity keys to name+policy so the ID stays stable and parseable.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+// Datasource setter: faithfully copy every field from the GET response and set the ID.
+// The datasource has no prior plan/state to preserve, so it must not skip fields.
+func authenticationvserver_authenticationwebauthpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationvserverAuthenticationwebauthpolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationwebauthpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In authenticationvserver_authenticationwebauthpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -169,13 +233,9 @@ func authenticationvserver_authenticationwebauthpolicy_bindingSetAttrFromGet(ctx
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

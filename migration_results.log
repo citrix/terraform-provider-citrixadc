@@ -451,5 +451,18 @@ BACKWARD-COMPAT: Narrowed composite ID from 5 keys to name:policy (matches resou
 DATASOURCE: healthy; fixed Pattern 11 (groupextraction/secondary/bindpoint were Required -> Optional+Computed), Read filters on policy(+bindpoint) since secondary/groupextraction not echoed, split setter (Pattern 7) authenticationvserver_cachepolicy_bindingSetAttrFromGetForDatasource sets its own name:policy ID.
 PATTERNS: 6, 7, 11, 13
 FILES CHANGED: citrixadc_framework/authenticationvserver_cachepolicy_binding/resource_authenticationvserver_cachepolicy_binding.go, citrixadc_framework/authenticationvserver_cachepolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_cachepolicy_binding/datasource_authenticationvserver_cachepolicy_binding.go, citrixadc_framework/authenticationvserver_cachepolicy_binding/datasource_schema.go, citrixadc_framework/acctests/authenticationvserver_cachepolicy_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: authenticationvserver_authenticationwebauthpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:08:33Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccAuthenticationvserver_authenticationwebauthpolicy_binding_basic$|TestAccAuthenticationvserverAuthenticationwebauthpolicyBindingDataSource_basic$
+TESTS:
+  - TestAccAuthenticationvserver_authenticationwebauthpolicy_binding_basic ............ PASS
+  - TestAccAuthenticationvserverAuthenticationwebauthpolicyBindingDataSource_basic .... PASS
+  - (no ephemeral test; resource has no secret attributes) ........................... N/A
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct, test sets it); narrowed composite ID from 4-key (groupextraction,name,policy,secondary) to legacy 'name:..,policy:..' matching resource_id_mapping.json + SDK v2 d.SetId; dropped spurious Computed from non-echoed Optional fields bindpoint/gotopriorityexpression/groupextraction/nextfactor (Pattern 13); kept name/policy Required+RequiresReplace, priority/secondary Optional+Computed; SetAttrFromGet now preserves non-echoed inputs instead of nulling (Pattern 7).
+DATASOURCE: healthy after fixes; relaxed groupextraction/secondary from Required to Optional+Computed (test config supplies only name+policy), added bindpoint attr, switched Read to policy-only filter + new datasource setter (Pattern 7 split).
+PATTERNS: 7, 13
+FILES CHANGED: citrixadc_framework/authenticationvserver_authenticationwebauthpolicy_binding/resource_authenticationvserver_authenticationwebauthpolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationwebauthpolicy_binding/resource_schema.go, citrixadc_framework/authenticationvserver_authenticationwebauthpolicy_binding/datasource_authenticationvserver_authenticationwebauthpolicy_binding.go, citrixadc_framework/authenticationvserver_authenticationwebauthpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/authenticationvserver_authenticationwebauthpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO docs modified.
 BLOCKER: none
 ========================================
