@@ -2,8 +2,6 @@ package feoglobal_feopolicy_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/feo"
 
@@ -102,10 +100,36 @@ func feoglobal_feopolicy_bindingGetThePayloadFromthePlan(ctx context.Context, da
 	return feoglobal_feopolicy_binding
 }
 
+// feoglobal_feopolicy_bindingSetAttrFromGet is the RESOURCE setter. The identity
+// inputs (policyname, priority, type) are RequiresReplace user inputs; we preserve
+// the values already in state/plan rather than overwriting them with the GET
+// response so the post-apply state matches the user config (avoids
+// "inconsistent result after apply"). Only the computed read-back fields
+// (globalbindtype, gotopriorityexpression) are populated from the response. The ID
+// is set exactly once in Create, so it is not recomputed here.
 func feoglobal_feopolicy_bindingSetAttrFromGet(ctx context.Context, data *FeoglobalFeopolicyBindingResourceModel, getResponseData map[string]interface{}) *FeoglobalFeopolicyBindingResourceModel {
 	tflog.Debug(ctx, "In feoglobal_feopolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Computed read-back fields - take from the GET response.
+	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
+		data.Globalbindtype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+
+	// policyname, priority and type are RequiresReplace identity inputs - preserved
+	// from prior state/plan (not overwritten by the GET response).
+
+	return data
+}
+
+// feoglobal_feopolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE setter.
+// The datasource has no prior plan/state to preserve, so it faithfully copies every
+// field from the GET response and sets the ID (plain policyname, matching Create).
+func feoglobal_feopolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *FeoglobalFeopolicyBindingResourceModel, getResponseData map[string]interface{}) *FeoglobalFeopolicyBindingResourceModel {
+	tflog.Debug(ctx, "In feoglobal_feopolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
 		data.Globalbindtype = types.StringValue(val.(string))
 	} else {
@@ -134,12 +158,8 @@ func feoglobal_feopolicy_bindingSetAttrFromGet(ctx context.Context, data *Feoglo
 		data.Type = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// ID is the plain policyname (backward-compatible with SDK v2).
+	data.Id = types.StringValue(data.Policyname.ValueString())
 
 	return data
 }
