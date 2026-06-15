@@ -2,28 +2,27 @@ package sslprofile_ecccurve_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
-
-	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // SslprofileEcccurveBindingResourceModel describes the resource data model.
+//
+// This mirrors the SDK v2 contract: ecccurvename is a LIST of curve names, each
+// of which is bound to the SSL profile as a separate NITRO binding, and
+// remove_existing_ecccurve_binding controls whether the profile's pre-existing
+// (default) ecccurve bindings are cleared first.
 type SslprofileEcccurveBindingResourceModel struct {
-	Id             types.String `tfsdk:"id"`
-	Cipherpriority types.Int64  `tfsdk:"cipherpriority"`
-	Ecccurvename   types.String `tfsdk:"ecccurvename"`
-	Name           types.String `tfsdk:"name"`
+	Id                            types.String `tfsdk:"id"`
+	Name                          types.String `tfsdk:"name"`
+	Ecccurvename                  types.List   `tfsdk:"ecccurvename"`
+	RemoveExistingEcccurveBinding types.Bool   `tfsdk:"remove_existing_ecccurve_binding"`
 }
 
 func (r *SslprofileEcccurveBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -33,21 +32,9 @@ func (r *SslprofileEcccurveBindingResource) Schema(ctx context.Context, req reso
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the sslprofile_ecccurve_binding resource.",
-			},
-			"cipherpriority": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
-				Description: "Priority of the cipher binding",
-			},
-			"ecccurvename": schema.StringAttribute{
-				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: "Named ECC curve bound to vserver/service.",
 			},
 			"name": schema.StringAttribute{
 				Required: true,
@@ -56,56 +43,21 @@ func (r *SslprofileEcccurveBindingResource) Schema(ctx context.Context, req reso
 				},
 				Description: "Name of the SSL profile.",
 			},
+			"ecccurvename": schema.ListAttribute{
+				ElementType: types.StringType,
+				Required:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Description: "Named ECC curves bound to the SSL profile.",
+			},
+			"remove_existing_ecccurve_binding": schema.BoolAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Remove existing ECC curve bindings from the SSL profile before binding the configured curves.",
+			},
 		},
 	}
-}
-
-func sslprofile_ecccurve_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslprofileEcccurveBindingResourceModel) ssl.Sslprofileecccurvebinding {
-	tflog.Debug(ctx, "In sslprofile_ecccurve_bindingGetThePayloadFromthePlan Function")
-
-	// Create API request body from the model
-	sslprofile_ecccurve_binding := ssl.Sslprofileecccurvebinding{}
-	if !data.Cipherpriority.IsNull() && !data.Cipherpriority.IsUnknown() {
-		sslprofile_ecccurve_binding.Cipherpriority = utils.IntPtr(int(data.Cipherpriority.ValueInt64()))
-	}
-	if !data.Ecccurvename.IsNull() && !data.Ecccurvename.IsUnknown() {
-		sslprofile_ecccurve_binding.Ecccurvename = data.Ecccurvename.ValueString()
-	}
-	if !data.Name.IsNull() && !data.Name.IsUnknown() {
-		sslprofile_ecccurve_binding.Name = data.Name.ValueString()
-	}
-
-	return sslprofile_ecccurve_binding
-}
-
-func sslprofile_ecccurve_bindingSetAttrFromGet(ctx context.Context, data *SslprofileEcccurveBindingResourceModel, getResponseData map[string]interface{}) *SslprofileEcccurveBindingResourceModel {
-	tflog.Debug(ctx, "In sslprofile_ecccurve_bindingSetAttrFromGet Function")
-
-	// Convert API response to model
-	if val, ok := getResponseData["cipherpriority"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Cipherpriority = types.Int64Value(intVal)
-		}
-	} else {
-		data.Cipherpriority = types.Int64Null()
-	}
-	if val, ok := getResponseData["ecccurvename"]; ok && val != nil {
-		data.Ecccurvename = types.StringValue(val.(string))
-	} else {
-		data.Ecccurvename = types.StringNull()
-	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
-	}
-
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ecccurvename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ecccurvename.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
-
-	return data
 }
