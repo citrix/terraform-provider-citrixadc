@@ -56,7 +56,8 @@ func (r *TransformpolicylabelTransformpolicyBindingResource) Schema(ctx context.
 				Description: "If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.",
 			},
 			"invoke_labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -70,7 +71,8 @@ func (r *TransformpolicylabelTransformpolicyBindingResource) Schema(ctx context.
 				Description: "Name of the URL Transformation policy label to which to bind the policy.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
