@@ -59,8 +59,8 @@ func (r *CsvserverVpnvserverBindingResource) Create(ctx context.Context, req res
 	csvserver_vpnvserver_binding := csvserver_vpnvserver_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_vpnvserver_binding.Type(), &csvserver_vpnvserver_binding)
+	// Binding resource - SDK v2 used AddResource (POST); NITRO add verb is POST
+	_, err := r.client.AddResource(service.Csvserver_vpnvserver_binding.Type(), "", &csvserver_vpnvserver_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_vpnvserver_binding, got error: %s", err))
 		return
