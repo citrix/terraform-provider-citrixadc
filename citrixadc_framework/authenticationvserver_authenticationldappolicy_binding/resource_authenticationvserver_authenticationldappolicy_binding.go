@@ -3,7 +3,7 @@ package authenticationvserver_authenticationldappolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -69,12 +69,11 @@ func (r *AuthenticationvserverAuthenticationldappolicyBindingResource) Create(ct
 
 	tflog.Trace(ctx, "Created authenticationvserver_authenticationldappolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Composite key is name,policy (matches SDK v2 d.SetId and resource_id_mapping.json).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -156,7 +155,9 @@ func (r *AuthenticationvserverAuthenticationldappolicyBindingResource) Delete(ct
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_authenticationldappolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ID carries name,policy (matches SDK v2 + resource_id_mapping.json); the other delete
+	// discriminators (secondary/groupextraction/bindpoint) come from prior state.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -168,19 +169,26 @@ func (r *AuthenticationvserverAuthenticationldappolicyBindingResource) Delete(ct
 		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
 		return
 	}
-
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
-	}
-	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
-	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Attribute 'policy' not found in ID")
+		return
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationldappolicy_binding.Type(), name_value, argsMap)
+	// URL-encode arg values for slashy/special characters (matches SDK v2 url.QueryEscape).
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(policy_value)))
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_authenticationldappolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_authenticationldappolicy_binding, got error: %s", err))
 		return
@@ -204,6 +212,11 @@ func (r *AuthenticationvserverAuthenticationldappolicyBindingResource) readAuthe
 		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
 		return
 	}
+	policy_Policy, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return
+	}
 
 	var dataArr []map[string]interface{}
 
@@ -224,61 +237,11 @@ func (r *AuthenticationvserverAuthenticationldappolicyBindingResource) readAuthe
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding for the configured policy
+	// (policy is the unique key within a vserver's bindings - matches SDK v2 behavior).
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_Policy {
 			foundIndex = i
 			break
 		}
@@ -286,7 +249,7 @@ func (r *AuthenticationvserverAuthenticationldappolicyBindingResource) readAuthe
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationldappolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "authenticationvserver_authenticationldappolicy_binding not found with the provided ID attributes")
 		return
 	}
 
