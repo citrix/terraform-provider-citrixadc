@@ -3,6 +3,7 @@ package cachepolicylabel_cachepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -153,7 +154,9 @@ func (r *CachepolicylabelCachepolicyBindingResource) Delete(ctx context.Context,
 	}
 
 	tflog.Debug(ctx, "Deleting cachepolicylabel_cachepolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ParseIdString handles both the new "labelname:...,policyname:..." form and the
+	// legacy SDK v2 "labelname,policyname" form.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"labelname", "policyname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -166,12 +169,18 @@ func (r *CachepolicylabelCachepolicyBindingResource) Delete(ctx context.Context,
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args, URL-encoding values so slashy/special characters survive
+	// (DeleteResourceWithArgs does not encode the arg values itself). Matches the
+	// SDK v2 delete which passed both policyname and priority.
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		args = append(args, fmt.Sprintf("priority:%v", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Cachepolicylabel_cachepolicy_binding.Type(), labelname_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Cachepolicylabel_cachepolicy_binding.Type(), labelname_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete cachepolicylabel_cachepolicy_binding, got error: %s", err))
 		return
