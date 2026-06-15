@@ -2239,4 +2239,17 @@ DATASOURCE: healthy as-is; shares ResourceModel + SetAttrFromGet which sets all 
 PATTERNS: binding-family delete-arg URL-encoding (hint b / Pattern-7-adjacent delete hardening)
 FILES CHANGED: citrixadc_framework/sslservicegroup_sslciphersuite_binding/resource_sslservicegroup_sslciphersuite_binding.go
 BLOCKER: none (tests carry an unconditional pre-existing t.Skip; per Constraint 1 the test file was NOT modified)
+RESOURCE: sslvserver_ecccurve_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:09:40Z
+TESTBED:  UNSPECIFIED as instructed -> tests SKIP (gated on STANDALONE_NON_DEFAULT_SSL_PROFILE); CRUD validated by running with ADC_TESTBED=STANDALONE_NON_DEFAULT_SSL_PROFILE (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccSslvserver_ecccurve_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccSslvserver_ecccurve_binding_basic ............ PASS (with gate STANDALONE_NON_DEFAULT_SSL_PROFILE) / SKIP[UNSPECIFIED gate]
+  - TestAccSslvserver_ecccurve_bindingDataSource_basic .. PASS (with gate STANDALONE_NON_DEFAULT_SSL_PROFILE) / SKIP[UNSPECIFIED gate]
+BACKWARD-COMPAT: attr/type/flag/ForceNew parity OK (ecccurvename, vservername both Required+RequiresReplace); ID legacy order vservername,ecccurvename matches resource_id_mapping.json. Fixed Create verb UpdateUnnamedResource(PUT)->AddResource("",POST) to match SDK v2 (Pattern 1); URL-encoded Delete arg value to match SDK v2 url.QueryEscape (Pattern b).
+DATASOURCE: healthy as-is; shares SetAttrFromGet (both attrs are real keys echoed by GET, no non-echoed inputs, so no Pattern 7 split needed).
+PATTERNS: 1 (create verb POST vs PUT); delete-arg URL-encode.
+FILES CHANGED: citrixadc_framework/sslvserver_ecccurve_binding/resource_sslvserver_ecccurve_binding.go, citrixadc_framework/acctests/sslvserver_ecccurve_binding_test.go (sanctioned ID-parse helper lines only). NO doc file changed.
+BLOCKER: none
 ========================================
