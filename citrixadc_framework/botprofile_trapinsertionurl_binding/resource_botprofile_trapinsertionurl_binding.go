@@ -3,6 +3,7 @@ package botprofile_trapinsertionurl_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -170,10 +171,13 @@ func (r *BotprofileTrapinsertionurlBindingResource) Delete(ctx context.Context, 
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["bot_trap_url"]; ok && val != "" {
-		argsMap["bot_trap_url"] = val
+		// URL-encode the value: bot_trap_url is a request-URL regex pattern that
+		// can contain slashes and other special characters which would otherwise
+		// break the NITRO `args=` query string.
+		argsMap["bot_trap_url"] = url.QueryEscape(val)
 	}
 	if val, ok := idMap["trapinsertionurl"]; ok && val != "" {
-		argsMap["trapinsertionurl"] = val
+		argsMap["trapinsertionurl"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Botprofile_trapinsertionurl_binding.Type(), name_value, argsMap)
@@ -225,7 +229,7 @@ func (r *BotprofileTrapinsertionurlBindingResource) readBotprofileTrapinsertionu
 	for i, v := range dataArr {
 		match := true
 
-		// Check bot_trap_url
+		// Check bot_trap_url (only when present in the ID — legacy IDs always carry it)
 		if idVal, ok := idMap["bot_trap_url"]; ok {
 			if val, ok := v["bot_trap_url"].(string); ok {
 				if val != idVal {
@@ -236,12 +240,10 @@ func (r *BotprofileTrapinsertionurlBindingResource) readBotprofileTrapinsertionu
 				match = false
 				continue
 			}
-		} else if _, ok := v["bot_trap_url"].(string); ok {
-			match = false
-			continue
 		}
 
-		// Check trapinsertionurl
+		// Check trapinsertionurl (only when present in the ID — legacy SDK v2 IDs
+		// did not include it, so skip the check for those to stay backward-compatible)
 		if idVal, ok := idMap["trapinsertionurl"]; ok {
 			if val, ok := v["trapinsertionurl"].(bool); ok {
 				idValBool, _ := strconv.ParseBool(idVal)
@@ -253,9 +255,6 @@ func (r *BotprofileTrapinsertionurlBindingResource) readBotprofileTrapinsertionu
 				match = false
 				continue
 			}
-		} else if _, ok := v["trapinsertionurl"].(bool); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

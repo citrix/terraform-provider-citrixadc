@@ -83,15 +83,19 @@ func (d *BotprofileTrapinsertionurlBindingDataSource) Read(ctx context.Context, 
 			continue
 		}
 
-		// Check trapinsertionurl
-		if val, ok := v["trapinsertionurl"].(bool); ok {
-			if trapinsertionurl_Name.IsNull() || val != trapinsertionurl_Name.ValueBool() {
+		// Check trapinsertionurl only when the user supplied it as a filter.
+		// trapinsertionurl is Optional in the datasource; an unset (null) value
+		// means "do not filter on this attribute".
+		if !trapinsertionurl_Name.IsNull() {
+			if val, ok := v["trapinsertionurl"].(bool); ok {
+				if val != trapinsertionurl_Name.ValueBool() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !trapinsertionurl_Name.IsNull() {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i
