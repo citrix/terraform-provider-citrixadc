@@ -3,6 +3,7 @@ package csvserver_botpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,9 @@ func (r *CsvserverBotpolicyBindingResource) Create(ctx context.Context, req reso
 	csvserver_botpolicy_binding := csvserver_botpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_botpolicy_binding.Type(), &csvserver_botpolicy_binding)
+	// Binding resource - NITRO 'add' for this binding is POST, so use AddResource
+	// (matching the SDK v2 resource which called AddResource).
+	_, err := r.client.AddResource(service.Csvserver_botpolicy_binding.Type(), data.Name.ValueString(), &csvserver_botpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_botpolicy_binding, got error: %s", err))
 		return
@@ -166,9 +168,18 @@ func (r *CsvserverBotpolicyBindingResource) Delete(ctx context.Context, req reso
 		return
 	}
 
+	// Delete args. URL-encode each value since they are placed verbatim into the
+	// NITRO query string (values may contain '/' or other special characters).
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	// bindpoint and priority disambiguate the binding on delete (mirrors SDK v2).
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_botpolicy_binding.Type(), name_value, argsMap)
