@@ -2724,3 +2724,19 @@ PATTERNS: 2(b)/Delete-arg URL-encode (per binding-family hint b).
 FILES CHANGED: citrixadc_framework/vpnglobal_vpnnexthopserver_binding/resource_vpnglobal_vpnnexthopserver_binding.go (NO test/doc file changed)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnglobal_vpnclientlessaccesspolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T12:50:23Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccVpnglobal_vpnclientlessaccesspolicy_binding($|_basic|DataSource)
+TESTS:
+  - TestAccVpnglobal_vpnclientlessaccesspolicy_binding_basic ............ PASS
+  - TestAccVpnglobal_vpnclientlessaccesspolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ............ N/A
+BACKWARD-COMPAT: Re-added dropped 'builtin' (TypeList, ForceNew) attr present in SDK v2 + NITRO struct (model/schema/payload/setters/datasource); server-overridden fields (globalbindtype/type/feature/gotopriorityexpression/secondary/groupextraction/builtin) preserved in resource SetAttrFromGet to avoid inconsistent-result-after-apply, mirroring SDK v2 which omitted globalbindtype/type from Read; single-key plain-value ID matches resource_id_mapping.json ("policyname") and SDK v2 d.SetId(policyname); Create verb PUT (UpdateUnnamedResource) matches SDK v2 and verified live; Delete arg value URL-encoded.
+DATASOURCE: split setter added (xxxSetAttrFromGetForDatasource faithfully copies GET incl. server-normalized values + sets Id); datasource Read switched to it; 'builtin' added to datasource schema.
+PATTERNS: 7 (server-override + datasource split), 13 (Computed-after-no-op preserve), plus task patterns (a) dropped-attr re-add, (b) URL-encode delete arg, (d) Create verb confirmed PUT, (e) server-overridden inputs preserved, (f)/(g) ID order + attr-name parity confirmed.
+FILES CHANGED: citrixadc_framework/vpnglobal_vpnclientlessaccesspolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_vpnclientlessaccesspolicy_binding/resource_vpnglobal_vpnclientlessaccesspolicy_binding.go, citrixadc_framework/vpnglobal_vpnclientlessaccesspolicy_binding/datasource_schema.go, citrixadc_framework/vpnglobal_vpnclientlessaccesspolicy_binding/datasource_vpnglobal_vpnclientlessaccesspolicy_binding.go (NO test/doc file modified)
+BLOCKER: none
+========================================
