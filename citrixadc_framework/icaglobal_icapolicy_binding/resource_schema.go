@@ -67,8 +67,7 @@ func (r *IcaglobalIcapolicyBindingResource) Schema(ctx context.Context, req reso
 				Description: "Specifies the priority of the policy.",
 			},
 			"type": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
