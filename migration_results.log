@@ -2036,3 +2036,19 @@ PATTERNS: 1 (verb confirmed PUT), 7 (datasource setter split + preserve/resolve 
 FILES CHANGED: citrixadc_framework/servicegroup_lbmonitor_binding/resource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/resource_schema.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_servicegroup_lbmonitor_binding.go, citrixadc_framework/servicegroup_lbmonitor_binding/datasource_schema.go, citrixadc_framework/acctests/servicegroup_lbmonitor_binding_test.go (ID-parse helper lines only - sanctioned). NO doc changed.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: sslcipher_sslciphersuite_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:48:32Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccSslcipher_sslciphersuite_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccSslcipher_sslciphersuite_binding_basic ......... PASS
+  - TestAccSslcipher_sslciphersuite_bindingDataSource_basic PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: ciphergroupname Optional+Computed->Required (SDK v2 Required+ForceNew); ciphername added RequiresReplace (SDK v2 ForceNew); cipherpriority added RequiresReplace (SDK v2 ForceNew); Create switched UpdateUnnamedResource(PUT)->AddResource(POST) to match SDK v2; Delete switched to DeleteResourceWithArgs with url.QueryEscape on ciphername value; Update made no-op (all attrs RequiresReplace). ID format new key:value; resource_id_mapping.json "ciphergroupname,ciphername" already correct.
+DATASOURCE: healthy as-is; shares SetAttrFromGet (GET echoes ciphergroupname/ciphername/cipherpriority/description) - no changes needed.
+PATTERNS: 1 (PUT->POST create), 5 (no-op Update), 8 (Required/Computed flag fixes), b/c/d backward-compat checklist items.
+FILES CHANGED: citrixadc_framework/sslcipher_sslciphersuite_binding/resource_schema.go, citrixadc_framework/sslcipher_sslciphersuite_binding/resource_sslcipher_sslciphersuite_binding.go, citrixadc_framework/acctests/sslcipher_sslciphersuite_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
+BLOCKER: none
+========================================
