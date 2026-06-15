@@ -3,6 +3,7 @@ package vpnglobal_vpnurl_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -149,11 +150,14 @@ func (r *VpnglobalVpnurlBindingResource) Delete(ctx context.Context, req resourc
 	}
 
 	tflog.Debug(ctx, "Deleting vpnglobal_vpnurl_binding resource")
-	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name.
+	// Single unique attribute - ID is the plain value.
+	// urlname is an intranet URL that may contain slashes/special characters; the
+	// NITRO delete arg value must be URL-encoded (the client does not encode arg
+	// values).
 	urlname_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("urlname:%s", urlname_value),
+		fmt.Sprintf("urlname:%s", url.QueryEscape(urlname_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_vpnurl_binding.Type(), "", args)
