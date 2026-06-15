@@ -127,10 +127,63 @@ func vpnvserver_responderpolicy_bindingGetThePayloadFromthePlan(ctx context.Cont
 	return vpnvserver_responderpolicy_binding
 }
 
+// vpnvserver_responderpolicy_bindingSetAttrFromGet maps the GET response onto
+// the resource model. All attributes are RequiresReplace, so the only fields the
+// server is authoritative for are the Computed-on-create ones (bindpoint,
+// gotopriorityexpression, priority). Fields that NITRO does not echo back
+// (secondary, groupextraction) are preserved from the existing state to avoid a
+// spurious "inconsistent result after apply" (Pattern 7). The ID is set once in
+// Create and is NOT recomputed here (Pattern 6).
 func vpnvserver_responderpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverResponderpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverResponderpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_responderpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Server-authoritative, always-returned Computed fields.
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else {
+		data.Gotopriorityexpression = types.StringNull()
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	} else {
+		data.Priority = types.Int64Null()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	// secondary / groupextraction are not echoed by NITRO GET. They are
+	// Computed, so they must resolve to a concrete value after apply; set them
+	// to Null when the server omits them (NITRO defaults them to false).
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	} else {
+		data.Groupextraction = types.BoolNull()
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	} else {
+		data.Secondary = types.BoolNull()
+	}
+
+	return data
+}
+
+// vpnvserver_responderpolicy_bindingSetAttrFromGetForDatasource faithfully
+// copies every field from the GET response (the datasource has no prior
+// plan/state to preserve) and sets the datasource ID (Pattern 7).
+func vpnvserver_responderpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverResponderpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverResponderpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_responderpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,10 +222,8 @@ func vpnvserver_responderpolicy_bindingSetAttrFromGet(ctx context.Context, data 
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (legacy key order name,policy).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))

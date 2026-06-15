@@ -3,6 +3,7 @@ package vpnvserver_responderpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -68,9 +69,11 @@ func (r *VpnvserverResponderpolicyBindingResource) Create(ctx context.Context, r
 
 	tflog.Trace(ctx, "Created vpnvserver_responderpolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// ID uses the legacy SDK v2 key order (name,policy). bindpoint is a
+	// server-overridden value (defaults to REQUEST and is not echoed in the
+	// user's config), so it is NOT part of the identity / import key.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -154,7 +157,10 @@ func (r *VpnvserverResponderpolicyBindingResource) Delete(ctx context.Context, r
 	}
 
 	tflog.Debug(ctx, "Deleting vpnvserver_responderpolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// The parent (name) and policy come from the ID; the remaining
+	// disambiguating args (bindpoint/secondary/groupextraction) come from
+	// state because they are server-assigned and not part of the ID.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -167,15 +173,21 @@ func (r *VpnvserverResponderpolicyBindingResource) Delete(ctx context.Context, r
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
+	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%t", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%t", data.Groupextraction.ValueBool()))))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_responderpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_responderpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_responderpolicy_binding, got error: %s", err))
 		return
@@ -219,43 +231,13 @@ func (r *VpnvserverResponderpolicyBindingResource) readVpnvserverResponderpolicy
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding with the matching policy
+	// under this parent vserver (bindpoint is server-assigned and not part of
+	// the identity).
 	foundIndex := -1
+	policyId := idMap["policy"]
 	for i, v := range dataArr {
-		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policyId {
 			foundIndex = i
 			break
 		}

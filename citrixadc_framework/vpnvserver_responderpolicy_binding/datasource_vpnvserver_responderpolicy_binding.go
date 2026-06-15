@@ -42,7 +42,8 @@ func (d *VpnvserverResponderpolicyBindingDataSource) Read(ctx context.Context, r
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Array filter with parent ID. The binding identity is name (parent) +
+	// policy; bindpoint is server-assigned and used only as an optional filter.
 	name_Name := data.Name.ValueString()
 	bindpoint_Name := data.Bindpoint
 	policy_Name := data.Policy
@@ -67,45 +68,32 @@ func (d *VpnvserverResponderpolicyBindingDataSource) Read(ctx context.Context, r
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the matching policy (and bindpoint when supplied)
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bindpoint
-		if val, ok := v["bindpoint"].(string); ok {
-			if bindpoint_Name.IsNull() || val != bindpoint_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !bindpoint_Name.IsNull() {
-			match = false
+		// Check policy (required lookup key)
+		if val, ok := v["policy"].(string); !ok || policy_Name.IsNull() || val != policy_Name.ValueString() {
 			continue
 		}
 
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
+		// Check bindpoint only when the user supplied it as an additional filter
+		if !bindpoint_Name.IsNull() && !bindpoint_Name.IsUnknown() {
+			if val, ok := v["bindpoint"].(string); !ok || val != bindpoint_Name.ValueString() {
 				continue
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
 		}
-		if match {
-			foundIndex = i
-			break
-		}
+
+		foundIndex = i
+		break
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_responderpolicy_binding with bindpoint %s not found", bindpoint_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_responderpolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	vpnvserver_responderpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_responderpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
