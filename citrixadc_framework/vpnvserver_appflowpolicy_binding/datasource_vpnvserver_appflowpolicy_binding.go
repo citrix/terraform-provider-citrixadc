@@ -67,32 +67,27 @@ func (d *VpnvserverAppflowpolicyBindingDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the supplied filter attrs.
+	// bindpoint and policy are optional filters: only apply them when the caller
+	// supplied a (known, non-null) value, otherwise match on the remaining attrs.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check bindpoint
-		if val, ok := v["bindpoint"].(string); ok {
-			if bindpoint_Name.IsNull() || val != bindpoint_Name.ValueString() {
+		// Check bindpoint (optional filter)
+		if !bindpoint_Name.IsNull() && !bindpoint_Name.IsUnknown() {
+			if val, ok := v["bindpoint"].(string); !ok || val != bindpoint_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !bindpoint_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
+		// Check policy (optional filter)
+		if match && !policy_Name.IsNull() && !policy_Name.IsUnknown() {
+			if val, ok := v["policy"].(string); !ok || val != policy_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
 		}
+
 		if match {
 			foundIndex = i
 			break
@@ -105,7 +100,7 @@ func (d *VpnvserverAppflowpolicyBindingDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	vpnvserver_appflowpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_appflowpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
