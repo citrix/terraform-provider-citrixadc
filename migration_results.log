@@ -2527,5 +2527,18 @@ BACKWARD-COMPAT: SDK v2 had invoke_labelname (invokelabelname) and labeltype as 
 DATASOURCE: healthy as-is; shares SetAttrFromGet which copies all fields + sets Id (works for datasource); no split needed (GET echoes fields, Computed flags absorb server values).
 PATTERNS: c (Required-vs-Optional+Computed flag drift); sanctioned Constraint-1 ID-parse helper edit (Exist helper -> utils.ParseIdString)
 FILES CHANGED: citrixadc_framework/transformpolicylabel_transformpolicy_binding/resource_schema.go, citrixadc_framework/acctests/transformpolicylabel_transformpolicy_binding_test.go (ID-parse helper lines only)
+RESOURCE: vpnglobal_authenticationlocalpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:45:50Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccVpnglobal_authenticationlocalpolicy_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccVpnglobal_authenticationlocalpolicy_binding_basic ............ PASS
+  - TestAccVpnglobal_authenticationlocalpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ............. N/A
+BACKWARD-COMPAT: attribute names/types/Required-Optional/ForceNew/ID format all matched SDK v2; dropped spurious Computed from gotopriorityexpression/groupextraction/priority/secondary (Optional-only, RequiresReplace); resource SetAttrFromGet now preserves planned/state values (server echoes secondary:false unbidden -> inconsistent-result fix); Delete now mirrors SDK v2 by adding URL-encoded secondary/groupextraction args. Create verb confirmed PUT (UpdateUnnamedResource) matching SDK v2.
+DATASOURCE: healthy; split into vpnglobal_authenticationlocalpolicy_bindingSetAttrFromGetForDatasource (faithfully copies GET + sets Id) and pointed datasource Read at it (Pattern 7).
+PATTERNS: 7, 13
+FILES CHANGED: citrixadc_framework/vpnglobal_authenticationlocalpolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationlocalpolicy_binding/resource_vpnglobal_authenticationlocalpolicy_binding.go, citrixadc_framework/vpnglobal_authenticationlocalpolicy_binding/datasource_vpnglobal_authenticationlocalpolicy_binding.go (NO test/doc files modified)
 BLOCKER: none
 ========================================

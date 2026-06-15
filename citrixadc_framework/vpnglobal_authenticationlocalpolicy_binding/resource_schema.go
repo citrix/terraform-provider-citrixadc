@@ -37,16 +37,18 @@ func (r *VpnglobalAuthenticationlocalpolicyBindingResource) Schema(ctx context.C
 				Description: "The ID of the vpnglobal_authenticationlocalpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// Optional-only (no Computed): user-driven input that the NITRO GET response
+				// does not echo back. A Computed flag would leave it "known after apply" and
+				// cause inconsistent-result-after-apply errors (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupextraction": schema.BoolAttribute{
+				// Optional-only (no Computed): not echoed by the NITRO GET response (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -60,16 +62,16 @@ func (r *VpnglobalAuthenticationlocalpolicyBindingResource) Schema(ctx context.C
 				Description: "The name of the policy.",
 			},
 			"priority": schema.Int64Attribute{
+				// Optional-only (no Computed): user-driven RequiresReplace input (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Integer specifying the policy's priority. The lower the priority number, the higher the policy's priority. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
+				// Optional-only (no Computed): user-driven RequiresReplace input (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -103,10 +105,41 @@ func vpnglobal_authenticationlocalpolicy_bindingGetThePayloadFromthePlan(ctx con
 	return vpnglobal_authenticationlocalpolicy_binding
 }
 
+// vpnglobal_authenticationlocalpolicy_bindingSetAttrFromGet is the RESOURCE-side state
+// setter. The NITRO GET response for this binding does NOT echo back every input
+// (notably gotopriorityexpression and groupextraction, and secondary/priority are only
+// returned when set), so this setter PRESERVES the existing plan/state value when a field
+// is absent from the response instead of nulling it. Nulling non-echoed user inputs would
+// produce inconsistent-result-after-apply errors (Pattern 7, server-overrides/non-echoed
+// inputs variant). All attributes are RequiresReplace, so preserving state is correct.
 func vpnglobal_authenticationlocalpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalAuthenticationlocalpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationlocalpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_authenticationlocalpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// All non-key attributes are Optional-only (no Computed) and RequiresReplace. For such
+	// attributes Terraform requires the post-apply value to EXACTLY equal the configured
+	// value, so the resource-side setter must NOT overwrite them from the GET response —
+	// the NITRO server echoes fields it was never asked to set (e.g. secondary:false even
+	// when the user left it null), which would trigger "inconsistent result after apply".
+	// We therefore preserve the planned/state values verbatim for every non-key attribute
+	// and only refresh the key (policyname) + ID from the response.
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
+	return data
+}
+
+// vpnglobal_authenticationlocalpolicy_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE-side setter (Pattern 7 datasource split). A datasource has no prior
+// plan/state to preserve, so it faithfully copies every field from the GET response
+// (nulling absent fields) and sets data.Id, since the datasource has no Create.
+func vpnglobal_authenticationlocalpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalAuthenticationlocalpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationlocalpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_authenticationlocalpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -135,8 +168,7 @@ func vpnglobal_authenticationlocalpolicy_bindingSetAttrFromGet(ctx context.Conte
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Datasource has no Create — set ID here (single unique attr → plain value).
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
