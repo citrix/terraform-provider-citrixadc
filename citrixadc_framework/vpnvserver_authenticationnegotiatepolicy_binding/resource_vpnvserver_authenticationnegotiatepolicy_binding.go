@@ -3,6 +3,7 @@ package vpnvserver_authenticationnegotiatepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -68,9 +69,9 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) Create(ctx cont
 
 	tflog.Trace(ctx, "Created vpnvserver_authenticationnegotiatepolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Identity is name,policy (matches SDK v2 ID and resource_id_mapping.json). bindpoint is not part of identity.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -167,15 +168,13 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) Delete(ctx cont
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["bindpoint"]; ok && val != "" {
-		argsMap["bindpoint"] = val
-	}
+	// policy is the delete disambiguator under the parent vserver name.
+	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_authenticationnegotiatepolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_authenticationnegotiatepolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_authenticationnegotiatepolicy_binding, got error: %s", err))
 		return
@@ -187,7 +186,7 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) Delete(ctx cont
 // Helper function to read vpnvserver_authenticationnegotiatepolicy_binding data from API
 func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) readVpnvserverAuthenticationnegotiatepolicyBindingFromApi(ctx context.Context, data *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Identity is name,policy. Parse the parent (name) and policy from the ID.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
@@ -197,6 +196,12 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) readVpnvserverA
 	name_Name, ok := idMap["name"]
 	if !ok {
 		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
 		return
 	}
 
@@ -219,43 +224,10 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) readVpnvserverA
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policy (identity disambiguator).
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
 			foundIndex = i
 			break
 		}

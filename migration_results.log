@@ -3010,5 +3010,18 @@ BACKWARD-COMPAT: ID composed of name,policy per resource_id_mapping.json (was bi
 DATASOURCE: healthy after fix - split setter added (xxxSetAttrFromGetForDatasource), filter on policy only, bindpoint made Optional.
 PATTERNS: 6, 7, 11, 13
 FILES CHANGED: citrixadc_framework/vpnvserver_authenticationtacacspolicy_binding/{resource_vpnvserver_authenticationtacacspolicy_binding.go,resource_schema.go,datasource_vpnvserver_authenticationtacacspolicy_binding.go,datasource_schema.go}, citrixadc_framework/acctests/vpnvserver_authenticationtacacspolicy_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: vpnvserver_authenticationnegotiatepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:12:29Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccVpnvserver_authenticationnegotiatepolicy_binding($|_basic|DataSource)
+TESTS:
+  - TestAccVpnvserver_authenticationnegotiatepolicy_binding_basic ............ PASS
+  - TestAccVpnvserver_authenticationnegotiatepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral/secret tests; resource has no secret attributes) ........... N/A
+BACKWARD-COMPAT: SDK v2 ID is name,policy (matches resource_id_mapping.json) but Framework Create/SetAttrFromGet built a 3-key id including bindpoint - fixed to name,policy. Read/Delete reworked to filter/disambiguate on policy under parent name; Delete switched to DeleteResourceWithArgs with url.QueryEscape(policy). Attribute names/types/flags (Required name+policy; Optional+Computed+ForceNew others) already matched SDK v2.
+DATASOURCE: healthy structure; bindpoint flag changed Required->Optional+Computed (test passes only name,policy); split setter (Pattern 7) so datasource faithfully copies GET + sets its own name,policy id; lookup filter made bindpoint-optional, policy-required.
+PATTERNS: 7 (split SetAttrFromGet + preserve server-normalized bindpoint), 11 (datasource flag drift), 13 (Optional+Computed resolution), plus ID-format/resource_id_mapping reconciliation.
+FILES CHANGED: citrixadc_framework/vpnvserver_authenticationnegotiatepolicy_binding/resource_vpnvserver_authenticationnegotiatepolicy_binding.go, citrixadc_framework/vpnvserver_authenticationnegotiatepolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_authenticationnegotiatepolicy_binding/datasource_vpnvserver_authenticationnegotiatepolicy_binding.go, citrixadc_framework/vpnvserver_authenticationnegotiatepolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_authenticationnegotiatepolicy_binding_test.go (sanctioned ID-parse helper lines only; NO docs)
 BLOCKER: none
 ========================================
