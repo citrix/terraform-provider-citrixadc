@@ -3,6 +3,7 @@ package csvserver_appqoepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CsvserverAppqoepolicyBindingResource) Create(ctx context.Context, req r
 	csvserver_appqoepolicy_binding := csvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Csvserver_appqoepolicy_binding.Type(), &csvserver_appqoepolicy_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource). Pattern 1.
+	_, err := r.client.AddResource(service.Csvserver_appqoepolicy_binding.Type(), data.Name.ValueString(), &csvserver_appqoepolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_appqoepolicy_binding, got error: %s", err))
 		return
@@ -166,9 +167,19 @@ func (r *CsvserverAppqoepolicyBindingResource) Delete(ctx context.Context, req r
 		return
 	}
 
+	// DeleteResourceWithArgsMap does not URL-encode arg values internally, so the
+	// values are escaped here to preserve SDK v2 backward-compat (Pattern: URL-encode
+	// Delete arg values for slashy/special values).
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	// bindpoint and priority disambiguate the binding (matches SDK v2 delete args).
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_appqoepolicy_binding.Type(), name_value, argsMap)
