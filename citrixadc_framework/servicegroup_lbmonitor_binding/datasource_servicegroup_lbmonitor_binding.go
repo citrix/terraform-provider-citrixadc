@@ -36,7 +36,7 @@ func (d *ServicegroupLbmonitorBindingDataSource) Schema(ctx context.Context, req
 }
 
 func (d *ServicegroupLbmonitorBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ServicegroupLbmonitorBindingResourceModel
+	var data ServicegroupLbmonitorBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -107,7 +107,7 @@ func (d *ServicegroupLbmonitorBindingDataSource) Read(ctx context.Context, req d
 		return
 	}
 
-	servicegroup_lbmonitor_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	servicegroup_lbmonitor_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

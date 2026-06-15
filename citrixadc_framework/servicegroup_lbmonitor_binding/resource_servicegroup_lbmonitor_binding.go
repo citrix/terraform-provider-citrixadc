@@ -3,7 +3,7 @@ package servicegroup_lbmonitor_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -70,10 +70,11 @@ func (r *ServicegroupLbmonitorBindingResource) Create(ctx context.Context, req r
 	tflog.Trace(ctx, "Created servicegroup_lbmonitor_binding resource")
 
 	// Set ID for the resource before reading state
+	// Composite ID order matches resource_id_mapping.json ("servicegroupname,monitorname")
+	// so legacy SDK v2 comma IDs (servicegroupname,monitorname) remain importable.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("monitor_name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
 	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("monitorname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -168,15 +169,17 @@ func (r *ServicegroupLbmonitorBindingResource) Delete(ctx context.Context, req r
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["monitor_name"]; ok && val != "" {
-		argsMap["monitor_name"] = val
+	// Build delete args. NITRO expects the monitor name under "monitor_name".
+	// URL-encode values to handle slashy/special characters (matches SDK v2 args).
+	args := make([]string, 0)
+	if val, ok := idMap["monitorname"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("monitor_name:%s", url.QueryEscape(val)))
 	}
-	if val, ok := idMap["port"]; ok && val != "" {
-		argsMap["port"] = val
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
+		args = append(args, fmt.Sprintf("port:%v", data.Port.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Servicegroup_lbmonitor_binding.Type(), servicegroupname_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Servicegroup_lbmonitor_binding.Type(), servicegroupname_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete servicegroup_lbmonitor_binding, got error: %s", err))
 		return
@@ -220,45 +223,17 @@ func (r *ServicegroupLbmonitorBindingResource) readServicegroupLbmonitorBindingF
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right monitor name.
+	// NITRO returns the monitor name under the "monitor_name" key; the composite ID
+	// carries it under the legacy "monitorname" key.
+	monitorname_value, ok := idMap["monitorname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'monitorname' not found in ID string")
+		return
+	}
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check monitor_name
-		if idVal, ok := idMap["monitor_name"]; ok {
-			if val, ok := v["monitor_name"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["monitor_name"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check port
-		if idVal, ok := idMap["port"]; ok {
-			if val, ok := v["port"]; ok {
-				val, _ = utils.ConvertToInt64(val)
-				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
-				if val != idValInt64 {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["port"]; ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["monitor_name"].(string); ok && val == monitorname_value {
 			foundIndex = i
 			break
 		}

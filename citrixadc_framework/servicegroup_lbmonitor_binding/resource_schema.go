@@ -25,7 +25,7 @@ type ServicegroupLbmonitorBindingResourceModel struct {
 	Customserverid   types.String `tfsdk:"customserverid"`
 	Dbsttl           types.Int64  `tfsdk:"dbsttl"`
 	Hashid           types.Int64  `tfsdk:"hashid"`
-	MonitorName      types.String `tfsdk:"monitor_name"`
+	MonitorName      types.String `tfsdk:"monitorname"`
 	Monstate         types.String `tfsdk:"monstate"`
 	Nameserver       types.String `tfsdk:"nameserver"`
 	Order            types.Int64  `tfsdk:"order"`
@@ -69,7 +69,7 @@ func (r *ServicegroupLbmonitorBindingResource) Schema(ctx context.Context, req r
 				},
 				Description: "Unique numerical identifier used by hash based load balancing methods to identify a service.",
 			},
-			"monitor_name": schema.StringAttribute{
+			"monitorname": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -254,7 +254,10 @@ func servicegroup_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data *Ser
 			data.Port = types.Int64Value(intVal)
 		}
 	} else {
-		data.Port = types.Int64Null()
+		// NITRO omits port when it is 0/default. Resolve to 0 so a user-configured
+		// "port = 0" matches and the Computed (unconfigured) case is satisfied,
+		// avoiding "inconsistent result after apply" / "still unknown" errors.
+		data.Port = types.Int64Value(0)
 	}
 	if val, ok := getResponseData["serverid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -282,11 +285,10 @@ func servicegroup_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data *Ser
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Composite ID order matches resource_id_mapping.json ("servicegroupname,monitorname").
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("monitor_name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
 	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("monitorname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
