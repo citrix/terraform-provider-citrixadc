@@ -69,8 +69,9 @@ func (r *VpnvserverAuthenticationradiuspolicyBindingResource) Create(ctx context
 	tflog.Trace(ctx, "Created vpnvserver_authenticationradiuspolicy_binding resource")
 
 	// Set ID for the resource before reading state
+	// Identity is (name, policy) matching the SDK v2 ID order in resource_id_mapping.json.
+	// bindpoint is not part of the binding identity (not echoed by GET) and is excluded.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
@@ -219,26 +220,10 @@ func (r *VpnvserverAuthenticationradiuspolicyBindingResource) readVpnvserverAuth
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id (identity: name, policy)
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bindpoint
-		if idVal, ok := idMap["bindpoint"]; ok {
-			if val, ok := v["bindpoint"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
-		}
 
 		// Check policy
 		if idVal, ok := idMap["policy"]; ok {
@@ -251,9 +236,6 @@ func (r *VpnvserverAuthenticationradiuspolicyBindingResource) readVpnvserverAuth
 				match = false
 				continue
 			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

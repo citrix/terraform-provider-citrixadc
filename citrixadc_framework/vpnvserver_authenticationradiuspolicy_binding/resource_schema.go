@@ -41,7 +41,6 @@ func (r *VpnvserverAuthenticationradiuspolicyBindingResource) Schema(ctx context
 			},
 			"bindpoint": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -49,7 +48,6 @@ func (r *VpnvserverAuthenticationradiuspolicyBindingResource) Schema(ctx context
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -57,7 +55,6 @@ func (r *VpnvserverAuthenticationradiuspolicyBindingResource) Schema(ctx context
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -130,7 +127,59 @@ func vpnvserver_authenticationradiuspolicy_bindingGetThePayloadFromthePlan(ctx c
 func vpnvserver_authenticationradiuspolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationradiuspolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationradiuspolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationradiuspolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NITRO does not echo bindpoint, gotopriorityexpression or groupextraction in the GET
+	// response for this binding. Preserve the existing plan/state value for these fields
+	// instead of nulling them, to avoid "inconsistent result after apply" / perpetual diffs
+	// (Pattern 7). Only adopt the value when the API actually returns it.
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else {
+		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	} else {
+		data.Policy = types.StringNull()
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	} else {
+		data.Priority = types.Int64Null()
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	} else {
+		data.Secondary = types.BoolNull()
+	}
+
+	// Set ID for the resource
+	// Identity is (name, policy) matching the SDK v2 ID order in resource_id_mapping.json.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+// vpnvserver_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource faithfully copies
+// every field returned by the GET response and sets the ID. Used by the datasource Read,
+// which has no prior plan/state to preserve (Pattern 7 datasource split).
+func vpnvserver_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationradiuspolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationradiuspolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
 	} else {
@@ -169,10 +218,7 @@ func vpnvserver_authenticationradiuspolicy_bindingSetAttrFromGet(ctx context.Con
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))

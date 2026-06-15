@@ -42,9 +42,8 @@ func (d *VpnvserverAuthenticationradiuspolicyBindingDataSource) Read(ctx context
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Case 4: Array filter with parent ID (identity: name, policy)
 	name_Name := data.Name.ValueString()
-	bindpoint_Name := data.Bindpoint
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -67,21 +66,10 @@ func (d *VpnvserverAuthenticationradiuspolicyBindingDataSource) Read(ctx context
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id (identity: name, policy)
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check bindpoint
-		if val, ok := v["bindpoint"].(string); ok {
-			if bindpoint_Name.IsNull() || val != bindpoint_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !bindpoint_Name.IsNull() {
-			match = false
-			continue
-		}
 
 		// Check policy
 		if val, ok := v["policy"].(string); ok {
@@ -101,11 +89,11 @@ func (d *VpnvserverAuthenticationradiuspolicyBindingDataSource) Read(ctx context
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationradiuspolicy_binding with bindpoint %s not found", bindpoint_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationradiuspolicy_binding with policy %s not found", policy_Name))
 		return
 	}
 
-	vpnvserver_authenticationradiuspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
