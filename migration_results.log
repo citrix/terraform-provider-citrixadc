@@ -949,3 +949,19 @@ PATTERNS: 8 (flag correction), binding-family Delete URL-encode (b); Pattern 1 c
 FILES CHANGED: citrixadc_framework/crvserver_lbvserver_binding/resource_schema.go, citrixadc_framework/crvserver_lbvserver_binding/resource_crvserver_lbvserver_binding.go, citrixadc_framework/acctests/crvserver_lbvserver_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: gslbvserver_gslbservicegroup_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:06:00Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccGslbvserver_gslbservicegroup_binding($|_basic|DataSource)
+TESTS:
+  - TestAccGslbvserver_gslbservicegroup_binding_basic ............ PASS
+  - TestAccGslbvserver_gslbservicegroup_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ...... N/A
+BACKWARD-COMPAT: SDK v2 had ForceNew on servicegroupname and order; Framework was missing RequiresReplace on both (tfdata wrongly marked them is_updateable:true). Added RequiresReplace to servicegroupname and order to match SDK v2 ForceNew contract. name parity OK. ID format key:value with legacy "name,servicegroupname" mapping intact; ParseIdString handles both. Create verb UpdateUnnamedResource matches SDK v2 (binding add is PUT). Update is now dead code (all attrs RequiresReplace) -> replaced with documented no-op (Pattern 5).
+DATASOURCE: healthy as-is; shares SetAttrFromGet which faithfully copies all GET fields and sets data.Id (no null-regression), so no Pattern 7 split needed. servicegroupname Required as lookup key.
+PATTERNS: 5 (no-op Update), plus ForceNew/RequiresReplace parity fix.
+FILES CHANGED: citrixadc_framework/gslbvserver_gslbservicegroup_binding/resource_schema.go, citrixadc_framework/gslbvserver_gslbservicegroup_binding/resource_gslbvserver_gslbservicegroup_binding.go, citrixadc_framework/acctests/gslbvserver_gslbservicegroup_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
+BLOCKER: none
+========================================
