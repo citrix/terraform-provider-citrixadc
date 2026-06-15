@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -36,11 +35,7 @@ func (r *SslserviceSslciphersuiteBindingResource) Schema(ctx context.Context, re
 				Description: "The ID of the sslservice_sslciphersuite_binding resource.",
 			},
 			"cipherdefaulton": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
+				Computed:    true,
 				Description: "Flag indicating whether the bound cipher was the DEFAULT cipher, bound at boot time, or any other cipher from the CLI",
 			},
 			"ciphername": schema.StringAttribute{
@@ -74,9 +69,7 @@ func sslservice_sslciphersuite_bindingGetThePayloadFromthePlan(ctx context.Conte
 
 	// Create API request body from the model
 	sslservice_sslciphersuite_binding := ssl.Sslservicesslciphersuitebinding{}
-	if !data.Cipherdefaulton.IsNull() && !data.Cipherdefaulton.IsUnknown() {
-		sslservice_sslciphersuite_binding.Cipherdefaulton = utils.IntPtr(int(data.Cipherdefaulton.ValueInt64()))
-	}
+	// cipherdefaulton is a server-returned read-only flag (Computed); never sent in the add payload.
 	if !data.Ciphername.IsNull() && !data.Ciphername.IsUnknown() {
 		sslservice_sslciphersuite_binding.Ciphername = data.Ciphername.ValueString()
 	}

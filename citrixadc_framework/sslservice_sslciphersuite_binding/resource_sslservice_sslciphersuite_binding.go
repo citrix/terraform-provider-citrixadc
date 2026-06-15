@@ -3,6 +3,7 @@ package sslservice_sslciphersuite_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *SslserviceSslciphersuiteBindingResource) Create(ctx context.Context, re
 	sslservice_sslciphersuite_binding := sslservice_sslciphersuite_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Sslservice_sslciphersuite_binding.Type(), &sslservice_sslciphersuite_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource)
+	_, err := r.client.AddResource(service.Sslservice_sslciphersuite_binding.Type(), "", &sslservice_sslciphersuite_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservice_sslciphersuite_binding, got error: %s", err))
 		return
@@ -166,12 +167,14 @@ func (r *SslserviceSslciphersuiteBindingResource) Delete(ctx context.Context, re
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// DeleteResourceWithArgs joins args verbatim into the URL query string and does NOT
+	// URL-encode the value, so encode the ciphername here (handles slashy/special cipher names).
+	args := make([]string, 0)
 	if val, ok := idMap["ciphername"]; ok && val != "" {
-		argsMap["ciphername"] = val
+		args = append(args, fmt.Sprintf("ciphername:%s", url.QueryEscape(val)))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Sslservice_sslciphersuite_binding.Type(), servicename_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Sslservice_sslciphersuite_binding.Type(), servicename_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslservice_sslciphersuite_binding, got error: %s", err))
 		return
