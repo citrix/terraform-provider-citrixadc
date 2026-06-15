@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -109,10 +110,12 @@ func testAccCheckLsngroup_pcpserver_bindingExist(n string, id *string) resource.
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		groupname := idSlice[0]
-		pcpserver := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"groupname", "pcpserver"}, nil)
+		if err != nil {
+			return err
+		}
+		groupname := idMap["groupname"]
+		pcpserver := idMap["pcpserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsngroup_pcpserver_binding",
