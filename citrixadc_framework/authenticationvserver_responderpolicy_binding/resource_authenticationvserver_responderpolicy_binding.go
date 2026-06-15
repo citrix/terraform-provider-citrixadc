@@ -3,8 +3,7 @@ package authenticationvserver_responderpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -60,7 +59,7 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Create(ctx context
 	authenticationvserver_responderpolicy_binding := authenticationvserver_responderpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
+	// Binding resource - use UpdateUnnamedResource (NITRO 'add' verb is PUT for this binding)
 	err := r.client.UpdateUnnamedResource(service.Authenticationvserver_responderpolicy_binding.Type(), &authenticationvserver_responderpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationvserver_responderpolicy_binding, got error: %s", err))
@@ -69,13 +68,9 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Create(ctx context
 
 	tflog.Trace(ctx, "Created authenticationvserver_responderpolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state.
+	// Legacy SDK v2 ID format: "name,policy" (see resource_id_mapping.json).
+	data.Id = types.StringValue(data.Name.ValueString() + "," + data.Policy.ValueString())
 
 	// Read the updated state back
 	r.readAuthenticationvserverResponderpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -117,28 +112,10 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Update(ctx context
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating authenticationvserver_responderpolicy_binding resource")
+	// No NITRO update endpoint exists for this binding; every attribute is RequiresReplace,
+	// so Terraform never reaches Update with a real change. Read back and persist (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for authenticationvserver_responderpolicy_binding; all attributes are RequiresReplace")
 
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		authenticationvserver_responderpolicy_binding := authenticationvserver_responderpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Authenticationvserver_responderpolicy_binding.Type(), &authenticationvserver_responderpolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationvserver_responderpolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated authenticationvserver_responderpolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for authenticationvserver_responderpolicy_binding resource, skipping update")
-	}
-
-	// Read the updated state back
 	r.readAuthenticationvserverResponderpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -156,7 +133,7 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Delete(ctx context
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_responderpolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Parse the ID (accepts both new key:value and legacy "name,policy" formats).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -169,18 +146,23 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Delete(ctx context
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["groupextraction"]; ok && val != "" {
-		argsMap["groupextraction"] = val
+	// Build the delete args. policy is the disambiguator; the optional discriminators are
+	// added only when set in state (mirrors the SDK v2 delete). URL-encode slashy/special values.
+	args := make([]string, 0)
+	if policy, ok := idMap["policy"]; ok && policy != "" {
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(policy)))
 	}
-	if val, ok := idMap["policy"]; ok && val != "" {
-		argsMap["policy"] = val
+	if !data.Secondary.IsNull() && data.Secondary.ValueBool() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	}
-	if val, ok := idMap["secondary"]; ok && val != "" {
-		argsMap["secondary"] = val
+	if !data.Groupextraction.IsNull() && data.Groupextraction.ValueBool() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Authenticationvserver_responderpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_responderpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_responderpolicy_binding, got error: %s", err))
 		return
@@ -192,7 +174,7 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Delete(ctx context
 // Helper function to read authenticationvserver_responderpolicy_binding data from API
 func (r *AuthenticationvserverResponderpolicyBindingResource) readAuthenticationvserverResponderpolicyBindingFromApi(ctx context.Context, data *AuthenticationvserverResponderpolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Parse the ID (accepts both new key:value and legacy "name,policy" formats).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
@@ -202,6 +184,11 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) readAuthentication
 	name_Name, ok := idMap["name"]
 	if !ok {
 		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
 		return
 	}
 
@@ -224,61 +211,10 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) readAuthentication
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policy (matches SDK v2 behaviour).
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if idVal, ok := idMap["groupextraction"]; ok {
-			if val, ok := v["groupextraction"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["groupextraction"].(bool); ok {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if idVal, ok := idMap["policy"]; ok {
-			if val, ok := v["policy"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policy"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if idVal, ok := idMap["secondary"]; ok {
-			if val, ok := v["secondary"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["secondary"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
 			foundIndex = i
 			break
 		}
@@ -286,7 +222,7 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) readAuthentication
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("authenticationvserver_responderpolicy_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "authenticationvserver_responderpolicy_binding not found with the provided ID attributes")
 		return
 	}
 
