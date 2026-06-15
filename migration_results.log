@@ -1145,5 +1145,18 @@ BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct; te
 DATASOURCE: healthy; switched to new csvserver_appflowpolicy_bindingSetAttrFromGetForDatasource (faithful copy + sets Id); added bindpoint to datasource schema (shared model).
 PATTERNS: 1, 6, 7, (b) delete URL-encode, (a) re-add dropped attr, (c) flag drift
 FILES CHANGED: citrixadc_framework/csvserver_appflowpolicy_binding/resource_csvserver_appflowpolicy_binding.go, citrixadc_framework/csvserver_appflowpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_appflowpolicy_binding/datasource_csvserver_appflowpolicy_binding.go, citrixadc_framework/csvserver_appflowpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_appflowpolicy_binding_test.go (sanctioned ID-parse helper lines only; no docs)
+RESOURCE: csvserver_botpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:44:01Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccCsvserver_botpolicy_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccCsvserver_botpolicy_binding_basic ........ PASS
+  - TestAccCsvserver_botpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes)
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct); changed labelname/labeltype from Required to Optional+Computed to match SDK v2 contract; switched Create from UpdateUnnamedResource(PUT) to AddResource(POST) matching SDK v2; URL-encoded delete args + added bindpoint/priority disambiguators; dropped spurious Computed from non-echoed inputs (bindpoint/labelname/labeltype/targetlbvserver); ID format new key:value with legacy name,policyname order preserved via ParseIdString.
+DATASOURCE: healthy; split SetAttrFromGet into resource (preserve-state) + ForDatasource (faithful copy + sets composite Id); added bindpoint to datasource schema; datasource Read now calls ForDatasource setter.
+PATTERNS: 1 (PUT->POST create), 7 (split SetAttrFromGet for datasource), 13 (drop spurious Computed on non-echoed inputs); binding-family items (a) re-add bindpoint, (b) URL-encode delete args, (c) Required->Optional flag drift.
+FILES CHANGED: citrixadc_framework/csvserver_botpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_botpolicy_binding/resource_csvserver_botpolicy_binding.go, citrixadc_framework/csvserver_botpolicy_binding/datasource_csvserver_botpolicy_binding.go, citrixadc_framework/csvserver_botpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_botpolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
 BLOCKER: none
 ========================================
