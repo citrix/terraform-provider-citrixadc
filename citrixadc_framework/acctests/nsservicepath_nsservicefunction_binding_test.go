@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -134,10 +135,12 @@ func testAccCheckNsservicepath_nsservicefunction_bindingExist(n string, id *stri
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		servicepathname := idSlice[0]
-		servicefunction := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicepathname", "servicefunction"}, nil)
+		if err != nil {
+			return err
+		}
+		servicepathname := idMap["servicepathname"]
+		servicefunction := idMap["servicefunction"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nsservicepath_nsservicefunction_binding",
