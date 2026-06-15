@@ -675,5 +675,17 @@ BACKWARD-COMPAT: SDK v2 had bot_whitelist + bot_whitelist_type as Optional+Compu
 DATASOURCE: healthy; bot_whitelist demoted Required->Optional+Computed (test does not set it); split setter botprofile_whitelist_bindingSetAttrFromGetForDatasource added (Pattern 7) since shared setter no longer sets ID.
 PATTERNS: 7, 8, 10
 FILES CHANGED: citrixadc_framework/botprofile_whitelist_binding/resource_botprofile_whitelist_binding.go, citrixadc_framework/botprofile_whitelist_binding/resource_schema.go, citrixadc_framework/botprofile_whitelist_binding/datasource_botprofile_whitelist_binding.go, citrixadc_framework/botprofile_whitelist_binding/datasource_schema.go, citrixadc_framework/acctests/botprofile_whitelist_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: cacheglobal_cachepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T05:50:31Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.154/)
+TEST RUN: TestAccCacheglobal_cachepolicy_binding_basic|TestAcccacheglobal_cachepolicy_bindingDataSource_basic
+TESTS:
+  - TestAccCacheglobal_cachepolicy_binding_basic ............ PASS
+  - TestAcccacheglobal_cachepolicy_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: type was Optional+Computed in Framework but Required in SDK v2 -> made Required; labelname/labeltype were Required in Framework but Optional+Computed in SDK v2 -> made Optional+Computed; SetAttrFromGet split (resource preserves plan/state + resolves Optional+Computed to null when not echoed; datasource copies all + sets ID); ID adopts new key:value format, resource_id_mapping.json "policy" legacy order intact; Create verb UpdateUnnamedResource (PUT) matches SDK v2; Delete policy+type args verified sufficient on live ADC (priority not required).
+DATASOURCE: healthy; switched Read to new cacheglobal_cachepolicy_bindingSetAttrFromGetForDatasource setter (Pattern 7 split).
+PATTERNS: 7, 13
+FILES CHANGED: citrixadc_framework/cacheglobal_cachepolicy_binding/resource_schema.go, citrixadc_framework/cacheglobal_cachepolicy_binding/datasource_cacheglobal_cachepolicy_binding.go, citrixadc_framework/acctests/cacheglobal_cachepolicy_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================

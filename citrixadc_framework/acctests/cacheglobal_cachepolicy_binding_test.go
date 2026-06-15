@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -98,7 +99,13 @@ func testAccCheckCacheglobal_cachepolicy_bindingExist(n string, id *string) reso
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policy := rs.Primary.ID
+		// ID-parse helper: handle both the new key:value ID format and the legacy
+		// plain-policy format produced by SDK v2.
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policy"}, nil)
+		if err != nil {
+			return err
+		}
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "cacheglobal_cachepolicy_binding",
