@@ -37,8 +37,10 @@ func (r *VpnglobalAppcontrollerBindingResource) Schema(ctx context.Context, req 
 				Description: "Configured App Controller server.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
+				// Optional only (not Computed): this is a pure user input that the
+				// NITRO GET never echoes back, so a Computed value could never be
+				// resolved at apply time ("still indicated an unknown value").
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -63,10 +65,29 @@ func vpnglobal_appcontroller_bindingGetThePayloadFromthePlan(ctx context.Context
 	return vpnglobal_appcontroller_binding
 }
 
+// vpnglobal_appcontroller_bindingSetAttrFromGet is the RESOURCE state setter.
+// It preserves user-configured / prior-state values for inputs that the NITRO GET
+// response does not echo back (gotopriorityexpression is never returned by GET on
+// this binding). It does NOT recompute data.Id — Create sets the ID exactly once.
 func vpnglobal_appcontroller_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalAppcontrollerBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAppcontrollerBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_appcontroller_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["appcontroller"]; ok && val != nil {
+		data.Appcontroller = types.StringValue(val.(string))
+	}
+	// gotopriorityexpression is NOT echoed back by NITRO GET on this binding.
+	// Preserve the existing plan/state value instead of nulling it (Pattern 7).
+
+	return data
+}
+
+// vpnglobal_appcontroller_bindingSetAttrFromGetForDatasource is the DATASOURCE setter.
+// The datasource has no prior plan/state to preserve, so it faithfully copies every
+// field from the GET response and sets the ID (the datasource has no Create).
+func vpnglobal_appcontroller_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalAppcontrollerBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAppcontrollerBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_appcontroller_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["appcontroller"]; ok && val != nil {
 		data.Appcontroller = types.StringValue(val.(string))
 	} else {
@@ -78,7 +99,7 @@ func vpnglobal_appcontroller_bindingSetAttrFromGet(ctx context.Context, data *Vp
 		data.Gotopriorityexpression = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Appcontroller.ValueString()))
 

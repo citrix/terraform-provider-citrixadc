@@ -3,9 +3,9 @@ package vpnglobal_appcontroller_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -58,8 +58,8 @@ func (r *VpnglobalAppcontrollerBindingResource) Create(ctx context.Context, req 
 	vpnglobal_appcontroller_binding := vpnglobal_appcontroller_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Vpnglobal_appcontroller_binding.Type(), &vpnglobal_appcontroller_binding)
+	// Binding resource - NITRO 'add' verb is POST (matches SDK v2 AddResource)
+	_, err := r.client.AddResource(service.Vpnglobal_appcontroller_binding.Type(), "", &vpnglobal_appcontroller_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnglobal_appcontroller_binding, got error: %s", err))
 		return
@@ -150,10 +150,13 @@ func (r *VpnglobalAppcontrollerBindingResource) Delete(ctx context.Context, req 
 
 	tflog.Debug(ctx, "Deleting vpnglobal_appcontroller_binding resource")
 	// Global binding - delete using DeleteResourceWithArgs with empty resource name
-	// Single unique attribute - ID is the plain value
+	// Single unique attribute - ID is the plain value.
+	// URL-encode the value: appcontroller is a URL with special chars (':' '/'),
+	// which the NITRO delete args= query string rejects unless escaped (matches
+	// SDK v2 url.QueryEscape). The NITRO client joins args verbatim into the URL.
 	appcontroller_value := data.Id.ValueString()
 	args := []string{
-		fmt.Sprintf("appcontroller:%s", appcontroller_value),
+		fmt.Sprintf("appcontroller:%s", url.QueryEscape(appcontroller_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_appcontroller_binding.Type(), "", args)
@@ -168,12 +171,11 @@ func (r *VpnglobalAppcontrollerBindingResource) Delete(ctx context.Context, req 
 // Helper function to read vpnglobal_appcontroller_binding data from API
 func (r *VpnglobalAppcontrollerBindingResource) readVpnglobalAppcontrollerBindingFromApi(ctx context.Context, data *VpnglobalAppcontrollerBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"appcontroller"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
+	// Single unique attribute - the ID is the plain appcontroller value.
+	// Do NOT use ParseIdString here: appcontroller values are URLs (e.g.
+	// "http://www.citrix.com") whose embedded colons make ParseIdString
+	// mis-detect the new key:value format (Pattern 10).
+	appcontrollerId := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
 
@@ -181,7 +183,7 @@ func (r *VpnglobalAppcontrollerBindingResource) readVpnglobalAppcontrollerBindin
 		ResourceType:             service.Vpnglobal_appcontroller_binding.Type(),
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnglobal_appcontroller_binding, got error: %s", err))
 		return
@@ -196,25 +198,7 @@ func (r *VpnglobalAppcontrollerBindingResource) readVpnglobalAppcontrollerBindin
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check appcontroller
-		if idVal, ok := idMap["appcontroller"]; ok {
-			if val, ok := v["appcontroller"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["appcontroller"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["appcontroller"].(string); ok && val == appcontrollerId {
 			foundIndex = i
 			break
 		}
@@ -222,7 +206,7 @@ func (r *VpnglobalAppcontrollerBindingResource) readVpnglobalAppcontrollerBindin
 
 	// Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnglobal_appcontroller_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "vpnglobal_appcontroller_binding not found with the provided ID attributes")
 		return
 	}
 

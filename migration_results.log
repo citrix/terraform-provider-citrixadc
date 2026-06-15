@@ -2565,5 +2565,17 @@ BACKWARD-COMPAT: attribute/type/Required/ForceNew/ID-format parity with SDK v2 p
 DATASOURCE: healthy; split setter added — datasource now uses xxxSetAttrFromGetForDatasource (copies all GET fields + sets Id), resource keeps xxxSetAttrFromGet (preserves non-echoed plan/state).
 PATTERNS: 6 (no Id reset in resource setter), 7 (preserve non-echoed inputs + datasource setter split), 8/13 (drop spurious Computed on non-echoed attrs), 10 (plain-value ID Read fix), binding-family (b) URL-encode Delete arg.
 FILES CHANGED: citrixadc_framework/vpnglobal_authenticationnegotiatepolicy_binding/resource_vpnglobal_authenticationnegotiatepolicy_binding.go, citrixadc_framework/vpnglobal_authenticationnegotiatepolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationnegotiatepolicy_binding/datasource_vpnglobal_authenticationnegotiatepolicy_binding.go (NO test/doc file modified)
+RESOURCE: vpnglobal_appcontroller_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:37:52Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccVpnglobal_appcontroller_binding($|_|DataSource)
+TESTS:
+  - TestAccVpnglobal_appcontroller_binding_basic .......... PASS
+  - TestAccVpnglobal_appcontroller_bindingDataSource_basic  PASS
+BACKWARD-COMPAT: Create switched UpdateUnnamedResource(PUT)->AddResource(POST) to match SDK v2 add verb; Delete arg value now url.QueryEscape'd (URL appcontroller value rejected raw by NITRO args=); Read no longer uses ParseIdString on plain slashy ID; gotopriorityexpression Computed dropped (non-echoed input). appcontroller kept Required (ID key, test always supplies).
+DATASOURCE: healthy; split setter (Pattern 7) - resource setter preserves non-echoed gotopriorityexpression + no Id recompute, new ForDatasource setter copies all + sets Id; datasource Read calls it; datasource schema gotopriorityexpression now Computed-only.
+PATTERNS: 1, 7, 10, 13
+FILES CHANGED: citrixadc_framework/vpnglobal_appcontroller_binding/resource_vpnglobal_appcontroller_binding.go, citrixadc_framework/vpnglobal_appcontroller_binding/resource_schema.go, citrixadc_framework/vpnglobal_appcontroller_binding/datasource_vpnglobal_appcontroller_binding.go, citrixadc_framework/vpnglobal_appcontroller_binding/datasource_schema.go
 BLOCKER: none
 ========================================
