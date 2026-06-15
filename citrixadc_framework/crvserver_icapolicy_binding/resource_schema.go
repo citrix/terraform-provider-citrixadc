@@ -22,6 +22,7 @@ import (
 // CrvserverIcapolicyBindingResourceModel describes the resource data model.
 type CrvserverIcapolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,9 +41,15 @@ func (r *CrvserverIcapolicyBindingResource) Schema(ctx context.Context, req reso
 				Computed:    true,
 				Description: "The ID of the crvserver_icapolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "For a rewrite policy, the bind point to which to bind the policy.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -50,21 +57,20 @@ func (r *CrvserverIcapolicyBindingResource) Schema(ctx context.Context, req reso
 			},
 			"invoke": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "Invoke a policy label if this policy's rule evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label to be invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -86,7 +92,6 @@ func (r *CrvserverIcapolicyBindingResource) Schema(ctx context.Context, req reso
 			},
 			"priority": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -94,7 +99,6 @@ func (r *CrvserverIcapolicyBindingResource) Schema(ctx context.Context, req reso
 			},
 			"targetvserver": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +113,9 @@ func crvserver_icapolicy_bindingGetThePayloadFromthePlan(ctx context.Context, da
 
 	// Create API request body from the model
 	crvserver_icapolicy_binding := cr.Crvservericapolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		crvserver_icapolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		crvserver_icapolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +144,52 @@ func crvserver_icapolicy_bindingGetThePayloadFromthePlan(ctx context.Context, da
 	return crvserver_icapolicy_binding
 }
 
+// crvserver_icapolicy_bindingSetAttrFromGet is the resource-side state setter.
+// All binding attributes are RequiresReplace (no update endpoint) and Optional-only
+// (Computed dropped per Pattern 13). The NITRO server returns server-side defaults
+// for un-configured fields (e.g. gotopriorityexpression="END", bindpoint, priority
+// renumbering) which do NOT match the user's (null) config. Adopting those would
+// trigger "inconsistent result after apply" on a non-Computed attribute. So the
+// resource setter PRESERVES the configured/plan value for every non-key attribute and
+// never overwrites it from GET (Pattern 7 server-overrides variant). The key
+// attributes name/policyname are recovered from the ID/GET only when null (import).
 func crvserver_icapolicy_bindingSetAttrFromGet(ctx context.Context, data *CrvserverIcapolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverIcapolicyBindingResourceModel {
 	tflog.Debug(ctx, "In crvserver_icapolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Non-key attributes are preserved from plan/state to stay consistent with config.
+	// Key attributes (name, policyname) are adopted from GET only when null (import).
+	if data.Name.IsNull() || data.Name.IsUnknown() {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
+	}
+	if data.Policyname.IsNull() || data.Policyname.IsUnknown() {
+		if val, ok := getResponseData["policyname"]; ok && val != nil {
+			data.Policyname = types.StringValue(val.(string))
+		}
+	}
+
+	// Set ID for the resource
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+// crvserver_icapolicy_bindingSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response (the datasource has no prior plan/state to preserve). It also
+// sets the composite ID since the datasource has no Create. (Pattern 7 datasource split.)
+func crvserver_icapolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CrvserverIcapolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverIcapolicyBindingResourceModel {
+	tflog.Debug(ctx, "In crvserver_icapolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -184,8 +233,7 @@ func crvserver_icapolicy_bindingSetAttrFromGet(ctx context.Context, data *Crvser
 		data.Targetvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))

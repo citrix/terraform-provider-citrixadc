@@ -3,6 +3,7 @@ package crvserver_icapolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CrvserverIcapolicyBindingResource) Create(ctx context.Context, req reso
 	crvserver_icapolicy_binding := crvserver_icapolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Crvserver_icapolicy_binding.Type(), &crvserver_icapolicy_binding)
+	// Binding resource - NITRO 'add' verb is POST (matches SDK v2 AddResource)
+	_, err := r.client.AddResource(service.Crvserver_icapolicy_binding.Type(), "", &crvserver_icapolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_icapolicy_binding, got error: %s", err))
 		return
@@ -114,26 +115,9 @@ func (r *CrvserverIcapolicyBindingResource) Update(ctx context.Context, req reso
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating crvserver_icapolicy_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		crvserver_icapolicy_binding := crvserver_icapolicy_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Crvserver_icapolicy_binding.Type(), &crvserver_icapolicy_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update crvserver_icapolicy_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated crvserver_icapolicy_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for crvserver_icapolicy_binding resource, skipping update")
-	}
+	// Update is a no-op for crvserver_icapolicy_binding; all attributes are
+	// RequiresReplace and NITRO exposes no update/set endpoint for this binding.
+	tflog.Debug(ctx, "Update is a no-op for crvserver_icapolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readCrvserverIcapolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -166,12 +150,20 @@ func (r *CrvserverIcapolicyBindingResource) Delete(ctx context.Context, req reso
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args. URL-encode values that may contain slashy/special chars
+	// (the NITRO client does not encode arg values). Matches SDK v2 behaviour.
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_icapolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_icapolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_icapolicy_binding, got error: %s", err))
 		return

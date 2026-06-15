@@ -871,5 +871,17 @@ BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct) to
 DATASOURCE: healthy; split setter into resource (preserve state) + ForDatasource (copy all + set composite Id); added bindpoint to datasource schema.
 PATTERNS: 1, 7, 8, 13
 FILES CHANGED: citrixadc_framework/crvserver_feopolicy_binding/resource_schema.go, citrixadc_framework/crvserver_feopolicy_binding/resource_crvserver_feopolicy_binding.go, citrixadc_framework/crvserver_feopolicy_binding/datasource_crvserver_feopolicy_binding.go, citrixadc_framework/crvserver_feopolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_feopolicy_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: crvserver_icapolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:33:52Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccCrvserver_icapolicy_binding_basic|TestAcccrvserver_icapolicy_bindingDataSource_basic
+TESTS:
+  - TestAccCrvserver_icapolicy_binding_basic ............ PASS
+  - TestAcccrvserver_icapolicy_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct); relaxed labelname/labeltype from Required to Optional+Computed to match SDK v2 contract; Create switched UpdateUnnamedResource(PUT)->AddResource(POST) per SDK v2; Delete switched to DeleteResourceWithArgs + url.QueryEscape on policyname/bindpoint values (priority added) matching SDK v2; dropped spurious Computed from all user-facing Optional attrs and preserve config in SetAttrFromGet (server returns gotopriorityexpression=END etc); ID order name,policyname matches resource_id_mapping.json.
+DATASOURCE: healthy; split out crvserver_icapolicy_bindingSetAttrFromGetForDatasource (faithful copy + sets composite ID); added bindpoint to datasource schema; Read now calls the datasource setter.
+PATTERNS: 1, 5, 7, 13
+FILES CHANGED: citrixadc_framework/crvserver_icapolicy_binding/resource_schema.go, citrixadc_framework/crvserver_icapolicy_binding/resource_crvserver_icapolicy_binding.go, citrixadc_framework/crvserver_icapolicy_binding/datasource_schema.go, citrixadc_framework/crvserver_icapolicy_binding/datasource_crvserver_icapolicy_binding.go, citrixadc_framework/acctests/crvserver_icapolicy_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
