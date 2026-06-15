@@ -72,6 +72,17 @@ func (d *BotprofileBlacklistBindingDataSource) Read(ctx context.Context, req dat
 	for i, v := range dataArr {
 		match := true
 
+		// Check bot_blacklist
+		if val, ok := v["bot_blacklist"].(bool); ok {
+			if botblacklist_Name.IsNull() || val != botblacklist_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !botblacklist_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check bot_blacklist_value
 		if val, ok := v["bot_blacklist_value"].(string); ok {
 			if botblacklistvalue_Name.IsNull() || val != botblacklistvalue_Name.ValueString() {

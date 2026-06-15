@@ -1,0 +1,60 @@
+[
+    {
+        "option_name": "ca",
+        "type": "boolean",
+        "description": [
+            "The rule for use of CRL corresponding to this CA certificate during client authentication. If crlCheck is set to Mandatory, the system will deny all SSL clients if the CRL is missing, expired - NextUpdate date is in the past, or is incomplete with remote CRL refresh enabled. If crlCheck is set to optional, the system will allow SSL clients in the above error cases.However, in any case if the client certificate is revoked in the CRL, the SSL client will be denied access."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "certkeyname",
+        "type": "string",
+        "description": [
+            "The name of the certificate bound to the monitor."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "crlcheck",
+        "type": "string",
+        "description": [
+            "The state of the CRL check parameter. (Mandatory/Optional)"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "monitorname",
+        "type": "string",
+        "description": [
+            "Name of the monitor."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "ocspcheck",
+        "type": "string",
+        "description": [
+            "The state of the OCSP check parameter. (Mandatory/Optional)"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

@@ -43,8 +43,9 @@ func (d *VxlanNsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Vxlanid.ValueInt64())
+	id_Name := data.Id.ValueString()
 	ipaddress_Name := data.Ipaddress
+	netmask_Name := data.Netmask
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -66,7 +67,7 @@ func (d *VxlanNsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	// Iterate through results to find the one with the right ipaddress
+	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -82,6 +83,16 @@ func (d *VxlanNsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 			continue
 		}
 
+		// Check netmask
+		if val, ok := v["netmask"].(string); ok {
+			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !netmask_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

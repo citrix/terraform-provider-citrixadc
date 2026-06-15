@@ -1,0 +1,108 @@
+[
+    {
+        "option_name": "alertonly",
+        "type": "string",
+        "description": [
+            "Send SNMP alert?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "as_scan_location_xmlxss",
+        "type": "string",
+        "description": [
+            "Location of XSS injection exception - XML Element or Attribute."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments about the purpose of profile, or other useful information about the profile."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "isautodeployed",
+        "type": "string",
+        "description": [
+            "Is the rule auto deployed by dynamic profile ?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "isregex_xmlxss",
+        "type": "string",
+        "description": [
+            "Is the XML XSS exempted field name a regular expression?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the profile to which to bind an exemption or rule."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "resourceid",
+        "type": "string",
+        "description": [
+            "A \"id\" that identifies the rule."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "Enabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "xmlxss",
+        "type": "string",
+        "description": [
+            "Exempt the specified URL from the XML cross-site scripting (XSS) check.",
+            "An XML cross-site scripting exemption (relaxation) consists of the following items:",
+            "* URL. URL to exempt, as a string or a PCRE-format regular expression.",
+            "* ISREGEX flag. REGEX if URL is a regular expression, NOTREGEX if URL is a fixed string.",
+            "* Location. ELEMENT if the attachment is located in an XML element, ATTRIBUTE if located in an XML attribute."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

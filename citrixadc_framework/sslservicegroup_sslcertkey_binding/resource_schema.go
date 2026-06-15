@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,59 +38,76 @@ func (r *SslservicegroupSslcertkeyBindingResource) Schema(ctx context.Context, r
 				Description: "The ID of the sslservicegroup_sslcertkey_binding resource.",
 			},
 			"ca": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "CA certificate.",
 			},
 			"certkeyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the certificate bound to the SSL service group.",
 			},
 			"crlcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
 			"ocspcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the OCSP check parameter. (Mandatory/Optional)",
 			},
 			"servicegroupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the SSL service to which the SSL policy needs to be bound.",
 			},
 			"snicert": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the CertKey. Use this option to bind Certkey(s) which will be used in SNI processing.",
 			},
 		},
 	}
 }
 
-func sslservicegroup_sslcertkey_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslservicegroupSslcertkeyBindingResourceModel) ssl.Sslservicegroupsslcertkeybinding {
-	tflog.Debug(ctx, "In sslservicegroup_sslcertkey_bindingGetThePayloadFromtheConfig Function")
+func sslservicegroup_sslcertkey_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslservicegroupSslcertkeyBindingResourceModel) ssl.Sslservicegroupsslcertkeybinding {
+	tflog.Debug(ctx, "In sslservicegroup_sslcertkey_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslservicegroup_sslcertkey_binding := ssl.Sslservicegroupsslcertkeybinding{}
-	if !data.Ca.IsNull() {
+	if !data.Ca.IsNull() && !data.Ca.IsUnknown() {
 		sslservicegroup_sslcertkey_binding.Ca = data.Ca.ValueBool()
 	}
-	if !data.Certkeyname.IsNull() {
+	if !data.Certkeyname.IsNull() && !data.Certkeyname.IsUnknown() {
 		sslservicegroup_sslcertkey_binding.Certkeyname = data.Certkeyname.ValueString()
 	}
-	if !data.Crlcheck.IsNull() {
+	if !data.Crlcheck.IsNull() && !data.Crlcheck.IsUnknown() {
 		sslservicegroup_sslcertkey_binding.Crlcheck = data.Crlcheck.ValueString()
 	}
-	if !data.Ocspcheck.IsNull() {
+	if !data.Ocspcheck.IsNull() && !data.Ocspcheck.IsUnknown() {
 		sslservicegroup_sslcertkey_binding.Ocspcheck = data.Ocspcheck.ValueString()
 	}
-	if !data.Servicegroupname.IsNull() {
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
 		sslservicegroup_sslcertkey_binding.Servicegroupname = data.Servicegroupname.ValueString()
 	}
-	if !data.Snicert.IsNull() {
+	if !data.Snicert.IsNull() && !data.Snicert.IsUnknown() {
 		sslservicegroup_sslcertkey_binding.Snicert = data.Snicert.ValueBool()
 	}
 
@@ -134,7 +154,9 @@ func sslservicegroup_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data 
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("crlcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Crlcheck.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

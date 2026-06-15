@@ -2,11 +2,14 @@ package vpnglobal_vpnintranetapplication_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -27,28 +30,33 @@ func (r *VpnglobalVpnintranetapplicationBindingResource) Schema(ctx context.Cont
 				Description: "The ID of the vpnglobal_vpnintranetapplication_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"intranetapplication": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The intranet vpn application.",
 			},
 		},
 	}
 }
 
-func vpnglobal_vpnintranetapplication_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnglobalVpnintranetapplicationBindingResourceModel) vpn.Vpnglobalvpnintranetapplicationbinding {
-	tflog.Debug(ctx, "In vpnglobal_vpnintranetapplication_bindingGetThePayloadFromtheConfig Function")
+func vpnglobal_vpnintranetapplication_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnglobalVpnintranetapplicationBindingResourceModel) vpn.Vpnglobalvpnintranetapplicationbinding {
+	tflog.Debug(ctx, "In vpnglobal_vpnintranetapplication_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnglobal_vpnintranetapplication_binding := vpn.Vpnglobalvpnintranetapplicationbinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		vpnglobal_vpnintranetapplication_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Intranetapplication.IsNull() {
+	if !data.Intranetapplication.IsNull() && !data.Intranetapplication.IsUnknown() {
 		vpnglobal_vpnintranetapplication_binding.Intranetapplication = data.Intranetapplication.ValueString()
 	}
 
@@ -71,8 +79,8 @@ func vpnglobal_vpnintranetapplication_bindingSetAttrFromGet(ctx context.Context,
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Intranetapplication.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Intranetapplication.ValueString()))
 
 	return data
 }

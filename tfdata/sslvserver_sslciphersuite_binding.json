@@ -1,0 +1,37 @@
+[
+    {
+        "option_name": "ciphername",
+        "type": "string",
+        "description": [
+            "The cipher group/alias/individual cipher configuration"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "description",
+        "type": "string",
+        "description": [
+            "The cipher suite description."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "vservername",
+        "type": "string",
+        "description": [
+            "Name of the SSL virtual server."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

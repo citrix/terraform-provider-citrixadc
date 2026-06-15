@@ -20,8 +20,7 @@ func VpnglobalIntranetip6BindingDataSourceSchema() schema.Schema {
 				Description: "The intranet ip address or range.",
 			},
 			"numaddr": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The intranet ip address or range's netmask.",
 			},
 		},

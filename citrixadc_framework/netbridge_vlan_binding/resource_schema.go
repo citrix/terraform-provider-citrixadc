@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +34,32 @@ func (r *NetbridgeVlanBindingResource) Schema(ctx context.Context, req resource.
 				Description: "The ID of the netbridge_vlan_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the network bridge.",
 			},
 			"vlan": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The VLAN that is extended by this network bridge.",
 			},
 		},
 	}
 }
 
-func netbridge_vlan_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NetbridgeVlanBindingResourceModel) network.Netbridgevlanbinding {
-	tflog.Debug(ctx, "In netbridge_vlan_bindingGetThePayloadFromtheConfig Function")
+func netbridge_vlan_bindingGetThePayloadFromthePlan(ctx context.Context, data *NetbridgeVlanBindingResourceModel) network.Netbridgevlanbinding {
+	tflog.Debug(ctx, "In netbridge_vlan_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	netbridge_vlan_binding := network.Netbridgevlanbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		netbridge_vlan_binding.Name = data.Name.ValueString()
 	}
-	if !data.Vlan.IsNull() {
+	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
 		netbridge_vlan_binding.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
 	}
 

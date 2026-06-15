@@ -44,6 +44,7 @@ func (d *VpnglobalIntranetipBindingDataSource) Read(ctx context.Context, req dat
 
 	// Case 3: Array filter without parent ID
 	intranetip_Name := data.Intranetip
+	netmask_Name := data.Netmask
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -76,6 +77,17 @@ func (d *VpnglobalIntranetipBindingDataSource) Read(ctx context.Context, req dat
 				continue
 			}
 		} else if !intranetip_Name.IsNull() {
+			match = false
+			continue
+		}
+
+		// Check netmask
+		if val, ok := v["netmask"].(string); ok {
+			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !netmask_Name.IsNull() {
 			match = false
 			continue
 		}

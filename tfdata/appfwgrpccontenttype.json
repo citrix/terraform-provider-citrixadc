@@ -1,0 +1,26 @@
+[
+    {
+        "option_name": "grpccontenttypevalue",
+        "type": "string",
+        "description": [
+            "Content type to be classified as gRPC"
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "isregex",
+        "type": "string",
+        "description": [
+            "Is gRPC content type a regular expression?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "NOTREGEX"
+    }
+]

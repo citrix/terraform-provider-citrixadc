@@ -1,0 +1,62 @@
+[
+    {
+        "option_name": "connfailover",
+        "type": "string",
+        "description": [
+            "Mode in which the connection failover feature must operate for the IPSec Alg. After a failover, established UDP connections and ESP packet flows are kept active and resumed on the secondary appliance. Recomended setting is ENABLED."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "espgatetimeout",
+        "type": "integer",
+        "description": [
+            "Timeout ESP in seconds as no ESP packets are seen after IKE negotiation"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 30
+    },
+    {
+        "option_name": "espsessiontimeout",
+        "type": "integer",
+        "description": [
+            "ESP session timeout in minutes."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 60
+    },
+    {
+        "option_name": "ikesessiontimeout",
+        "type": "integer",
+        "description": [
+            "IKE session timeout in minutes"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 60
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "The name of the ipsec alg profile"
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

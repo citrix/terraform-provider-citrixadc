@@ -1,0 +1,14 @@
+[
+    {
+        "option_name": "warm",
+        "type": "boolean",
+        "description": [
+            "Restarts the Citrix ADC software without rebooting the underlying operating system. The session terminates and you must log on to the appliance after it has restarted.",
+            "Note: This argument is required only for nCore appliances. Classic appliances ignore this argument."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

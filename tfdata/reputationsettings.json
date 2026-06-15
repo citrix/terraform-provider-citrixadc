@@ -1,0 +1,47 @@
+[
+    {
+        "option_name": "proxypassword",
+        "type": "string",
+        "description": [
+            "Password with which user logs on."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "proxyport",
+        "type": "integer",
+        "description": [
+            "Proxy server port."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "proxyserver",
+        "type": "string",
+        "description": [
+            "Proxy server IP to get Reputation data."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "proxyusername",
+        "type": "string",
+        "description": [
+            "Proxy Username"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

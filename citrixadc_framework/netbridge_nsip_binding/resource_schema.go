@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +34,43 @@ func (r *NetbridgeNsipBindingResource) Schema(ctx context.Context, req resource.
 				Description: "The ID of the netbridge_nsip_binding resource.",
 			},
 			"ipaddress": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The subnet that is extended by this network bridge.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the network bridge.",
 			},
 			"netmask": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The network mask for the subnet.",
 			},
 		},
 	}
 }
 
-func netbridge_nsip_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NetbridgeNsipBindingResourceModel) network.Netbridgensipbinding {
-	tflog.Debug(ctx, "In netbridge_nsip_bindingGetThePayloadFromtheConfig Function")
+func netbridge_nsip_bindingGetThePayloadFromthePlan(ctx context.Context, data *NetbridgeNsipBindingResourceModel) network.Netbridgensipbinding {
+	tflog.Debug(ctx, "In netbridge_nsip_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	netbridge_nsip_binding := network.Netbridgensipbinding{}
-	if !data.Ipaddress.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		netbridge_nsip_binding.Ipaddress = data.Ipaddress.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		netbridge_nsip_binding.Name = data.Name.ValueString()
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		netbridge_nsip_binding.Netmask = data.Netmask.ValueString()
 	}
 
@@ -92,6 +102,7 @@ func netbridge_nsip_bindingSetAttrFromGet(ctx context.Context, data *NetbridgeNs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

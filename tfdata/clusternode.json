@@ -1,0 +1,123 @@
+[
+    {
+        "option_name": "backplane",
+        "type": "string",
+        "description": [
+            "Interface through which the node communicates with the other nodes in the cluster. Must be specified in the three-tuple form n/c/u, where n represents the node ID and c/u refers to the interface on the appliance."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "clearnodegroupconfig",
+        "type": "string",
+        "description": [
+            "Option to remove nodegroup config"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": true
+    },
+    {
+        "option_name": "delay",
+        "type": "integer",
+        "description": [
+            "Applicable for Passive node and node becomes passive after this timeout (in minutes)"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "force",
+        "type": "boolean",
+        "description": [
+            "Node will be removed from cluster without prompting for user confirmation."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "ipaddress",
+        "type": "string",
+        "description": [
+            "Citrix ADC IP (NSIP) address of the appliance to add to the cluster. Must be an IPv4 address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "nodegroup",
+        "type": "string",
+        "description": [
+            "The default node group in a Cluster system."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "DEFAULT_NG"
+    },
+    {
+        "option_name": "nodeid",
+        "type": "integer",
+        "description": [
+            "Unique number that identifies the cluster node."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "priority",
+        "type": "integer",
+        "description": [
+            "Preference for selecting a node as the configuration coordinator. The node with the lowest priority value is selected as the configuration coordinator.",
+            "When the current configuration coordinator goes down, the node with the next lowest priority is made the new configuration coordinator. When the original node comes back up, it will preempt the new configuration coordinator and take over as the configuration coordinator.",
+            "Note: When priority is not configured for any of the nodes or if multiple nodes have the same priority, the cluster elects one of the nodes as the configuration coordinator."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 31
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "Admin state of the cluster node. The available settings function as follows:",
+            "ACTIVE - The node serves traffic.",
+            "SPARE - The node does not serve traffic unless an ACTIVE node goes down.",
+            "PASSIVE - The node does not serve traffic, unless you change its state. PASSIVE state is useful during temporary maintenance activities in which you want the node to take part in the consensus protocol but not to serve traffic."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "PASSIVE"
+    },
+    {
+        "option_name": "tunnelmode",
+        "type": "string",
+        "description": [
+            "To set the tunnel mode"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "NONE"
+    }
+]

@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +34,43 @@ func (r *VpnvserverStaserverBindingResource) Schema(ctx context.Context, req res
 				Description: "The ID of the vpnvserver_staserver_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server.",
 			},
 			"staaddresstype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of the STA server address(ipv4/v6).",
 			},
 			"staserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Configured Secure Ticketing Authority (STA) server.",
 			},
 		},
 	}
 }
 
-func vpnvserver_staserver_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnvserverStaserverBindingResourceModel) vpn.Vpnvserverstaserverbinding {
-	tflog.Debug(ctx, "In vpnvserver_staserver_bindingGetThePayloadFromtheConfig Function")
+func vpnvserver_staserver_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverStaserverBindingResourceModel) vpn.Vpnvserverstaserverbinding {
+	tflog.Debug(ctx, "In vpnvserver_staserver_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnvserver_staserver_binding := vpn.Vpnvserverstaserverbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnvserver_staserver_binding.Name = data.Name.ValueString()
 	}
-	if !data.Staaddresstype.IsNull() {
+	if !data.Staaddresstype.IsNull() && !data.Staaddresstype.IsUnknown() {
 		vpnvserver_staserver_binding.Staaddresstype = data.Staaddresstype.ValueString()
 	}
-	if !data.Staserver.IsNull() {
+	if !data.Staserver.IsNull() && !data.Staserver.IsUnknown() {
 		vpnvserver_staserver_binding.Staserver = data.Staserver.ValueString()
 	}
 

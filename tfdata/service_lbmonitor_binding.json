@@ -1,0 +1,59 @@
+[
+    {
+        "option_name": "monitor_name",
+        "type": "string",
+        "description": [
+            "The monitor Names."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "monstate",
+        "type": "string",
+        "description": [
+            "The configured state (enable/disable) of the monitor on this server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the service to which to bind a monitor."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "passive",
+        "type": "boolean",
+        "description": [
+            "Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "weight",
+        "type": "integer",
+        "description": [
+            "Weight to assign to the monitor-service binding. When a monitor is UP, the weight assigned to its binding with the service determines how much the monitor contributes toward keeping the health of the service above the value configured for the Monitor Threshold parameter."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

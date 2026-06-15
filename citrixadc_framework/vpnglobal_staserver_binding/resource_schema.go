@@ -2,11 +2,14 @@ package vpnglobal_staserver_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -28,36 +31,44 @@ func (r *VpnglobalStaserverBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the vpnglobal_staserver_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"staaddresstype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of the STA server address(ipv4/v6).",
 			},
 			"staserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Configured Secure Ticketing Authority (STA) server.",
 			},
 		},
 	}
 }
 
-func vpnglobal_staserver_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnglobalStaserverBindingResourceModel) vpn.Vpnglobalstaserverbinding {
-	tflog.Debug(ctx, "In vpnglobal_staserver_bindingGetThePayloadFromtheConfig Function")
+func vpnglobal_staserver_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnglobalStaserverBindingResourceModel) vpn.Vpnglobalstaserverbinding {
+	tflog.Debug(ctx, "In vpnglobal_staserver_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnglobal_staserver_binding := vpn.Vpnglobalstaserverbinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		vpnglobal_staserver_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Staaddresstype.IsNull() {
+	if !data.Staaddresstype.IsNull() && !data.Staaddresstype.IsUnknown() {
 		vpnglobal_staserver_binding.Staaddresstype = data.Staaddresstype.ValueString()
 	}
-	if !data.Staserver.IsNull() {
+	if !data.Staserver.IsNull() && !data.Staserver.IsUnknown() {
 		vpnglobal_staserver_binding.Staserver = data.Staserver.ValueString()
 	}
 
@@ -85,8 +96,8 @@ func vpnglobal_staserver_bindingSetAttrFromGet(ctx context.Context, data *Vpnglo
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Staserver.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Staserver.ValueString()))
 
 	return data
 }

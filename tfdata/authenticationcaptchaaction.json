@@ -1,0 +1,75 @@
+[
+    {
+        "option_name": "defaultauthenticationgroup",
+        "type": "string",
+        "description": [
+            "This is the group that is added to user sessions that match current policy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the new captcha action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.",
+            "",
+            "The following requirement applies only to the NetScaler CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "scorethreshold",
+        "type": "integer",
+        "description": [
+            "This is the score threshold value for recaptcha v3."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 5
+    },
+    {
+        "option_name": "secretkey",
+        "type": "string",
+        "description": [
+            "Secret of gateway as established at the captcha source."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "serverurl",
+        "type": "string",
+        "description": [
+            "This is the endpoint at which captcha response is validated."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "sitekey",
+        "type": "string",
+        "description": [
+            "Sitekey to identify gateway fqdn while loading captcha."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-secret-attr": true
+    }
+]

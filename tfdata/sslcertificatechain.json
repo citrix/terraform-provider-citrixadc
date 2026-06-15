@@ -1,0 +1,14 @@
+[
+    {
+        "option_name": "certkeyname",
+        "type": "string",
+        "description": [
+            "Name of the certificate-key pair."
+        ],
+        "is_get_id": true,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

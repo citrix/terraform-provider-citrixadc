@@ -1,0 +1,166 @@
+[
+    {
+        "option_name": "computedadccookieattribute",
+        "type": "string",
+        "description": [
+            "ComputedADCCookieAttribute accepts ns variable as input in form of string starting with $ (to understand how to configure ns variable, please check man add ns variable). policies can be configured to modify this variable for every transaction and the final value of the variable after policy evaluation will be appended as attribute to Citrix ADC cookie (for example: LB cookie persistence , GSLB sitepersistence, CS cookie persistence, LB group cookie persistence). Only one of ComputedADCCookieAttribute, LiteralADCCookieAttribute can be set.",
+            "",
+            "Sample usage -",
+            "             add ns variable lbvar -type TEXT(100) -scope Transaction",
+            "             add ns assignment lbassign -variable $lbvar -set \"\\\\\";SameSite=Strict\\\\\"\"",
+            "             add rewrite policy lbpol <valid policy expression> lbassign",
+            "             bind rewrite global lbpol 100 next -type RES_OVERRIDE",
+            "             add lb profile lbprof -ComputedADCCookieAttribute \"$lbvar\"",
+            "             For incoming client request, if above policy evaluates TRUE, then SameSite=Strict will be appended to ADC generated cookie"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "cookiepassphrase",
+        "type": "string",
+        "description": [
+            "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "dbslb",
+        "type": "string",
+        "description": [
+            "Enable database specific load balancing for MySQL and MSSQL service types."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "httponlycookieflag",
+        "type": "string",
+        "description": [
+            "Include the HttpOnly attribute in persistence cookies. The HttpOnly attribute limits the scope of a cookie to HTTP requests and helps mitigate the risk of cross-site scripting attacks."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "lbhashalgorithm",
+        "type": "string",
+        "description": [
+            "This option dictates the hashing algorithm used for hash based LB methods (URLHASH, DOMAINHASH, SOURCEIPHASH, DESTINATIONIPHASH, SRCIPDESTIPHASH, SRCIPSRCPORTHASH, TOKEN, USER_TOKEN, CALLIDHASH)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DEFAULT"
+    },
+    {
+        "option_name": "lbhashfingers",
+        "type": "integer",
+        "description": [
+            "This option is used to specify the number of fingers to be used in PRAC and JARH algorithms for hash based LB methods. Increasing the number of fingers might give better distribution of traffic at the expense of additional memory."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 256
+    },
+    {
+        "option_name": "lbprofilename",
+        "type": "string",
+        "description": [
+            "Name of the LB profile."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "literaladccookieattribute",
+        "type": "string",
+        "description": [
+            "String configured as LiteralADCCookieAttribute will be appended as attribute for Citrix ADC cookie (for example: LB cookie persistence , GSLB site persistence, CS cookie persistence, LB group cookie persistence).",
+            "",
+            "Sample usage -",
+            "             add lb profile lbprof -LiteralADCCookieAttribute \";SameSite=None\""
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "processlocal",
+        "type": "string",
+        "description": [
+            "By turning on this option packets destined to a vserver in a cluster will not under go any steering. Turn this option for single pa",
+            "cket request response mode or when the upstream device is performing a proper RSS for connection based distribution."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "proximityfromself",
+        "type": "string",
+        "description": [
+            "Use the ADC location instead of client IP for static proximity LB or GSLB decision."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "storemqttclientidandusername",
+        "type": "string",
+        "description": [
+            "This option allows to store the MQTT clientid and username in transactional logs"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "useencryptedpersistencecookie",
+        "type": "string",
+        "description": [
+            "Encode persistence cookie values using SHA2 hash."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "usesecuredpersistencecookie",
+        "type": "string",
+        "description": [
+            "Encode persistence cookie values using SHA2 hash."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    }
+]

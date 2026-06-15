@@ -44,7 +44,7 @@ func (d *NstrafficdomainVxlanBindingDataSource) Read(ctx context.Context, req da
 	}
 
 	// Case 4: Array filter with parent ID
-	td_Name := fmt.Sprintf("%d", data.Td.ValueInt64())
+	td_Name := data.Td.ValueString()
 	vxlan_Name := data.Vxlan
 
 	var dataArr []map[string]interface{}

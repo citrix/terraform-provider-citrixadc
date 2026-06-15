@@ -1,0 +1,37 @@
+[
+    {
+        "option_name": "ip",
+        "type": "string",
+        "description": [
+            "Subscriber IP Address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "nodeid",
+        "type": "integer",
+        "description": [
+            "Unique number that identifies the cluster node."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "vlan",
+        "type": "integer",
+        "description": [
+            "The vlan number on which the subscriber is located."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    }
+]

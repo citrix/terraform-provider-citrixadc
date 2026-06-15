@@ -10,7 +10,7 @@ func HanodeRoutemonitorBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"hanode_id": schema.Int64Attribute{
+			"id": schema.Int64Attribute{
 				Required:    true,
 				Description: "Number that uniquely identifies the local node. The ID of the local node is always 0.",
 			},

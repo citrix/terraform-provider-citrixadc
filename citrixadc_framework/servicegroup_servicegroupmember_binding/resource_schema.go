@@ -9,7 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -42,107 +44,143 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Description: "The ID of the servicegroup_servicegroupmember_binding resource.",
 			},
 			"customserverid": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("None"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The identifier for this IP:Port pair. Used when the persistency type is set to Custom Server ID.",
 			},
 			"dbsttl": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors",
 			},
 			"hashid": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.",
 			},
 			"ip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IP Address.",
 			},
 			"nameserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver",
 			},
 			"order": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Order number to be assigned to the servicegroup member",
 			},
 			"port": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Server port number.",
 			},
 			"serverid": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The  identifier for the service. This is used when the persistency type is set to Custom Server ID.",
 			},
 			"servername": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the server to which to bind the service group.",
 			},
 			"servicegroupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the service group.",
 			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Initial state of the service group.",
 			},
 			"weight": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.",
 			},
 		},
 	}
 }
 
-func servicegroup_servicegroupmember_bindingGetThePayloadFromtheConfig(ctx context.Context, data *ServicegroupServicegroupmemberBindingResourceModel) basic.Servicegroupservicegroupmemberbinding {
-	tflog.Debug(ctx, "In servicegroup_servicegroupmember_bindingGetThePayloadFromtheConfig Function")
+func servicegroup_servicegroupmember_bindingGetThePayloadFromthePlan(ctx context.Context, data *ServicegroupServicegroupmemberBindingResourceModel) basic.Servicegroupservicegroupmemberbinding {
+	tflog.Debug(ctx, "In servicegroup_servicegroupmember_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	servicegroup_servicegroupmember_binding := basic.Servicegroupservicegroupmemberbinding{}
-	if !data.Customserverid.IsNull() {
+	if !data.Customserverid.IsNull() && !data.Customserverid.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Customserverid = data.Customserverid.ValueString()
 	}
-	if !data.Dbsttl.IsNull() {
+	if !data.Dbsttl.IsNull() && !data.Dbsttl.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Dbsttl = utils.IntPtr(int(data.Dbsttl.ValueInt64()))
 	}
-	if !data.Hashid.IsNull() {
+	if !data.Hashid.IsNull() && !data.Hashid.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Hashid = utils.IntPtr(int(data.Hashid.ValueInt64()))
 	}
-	if !data.Ip.IsNull() {
+	if !data.Ip.IsNull() && !data.Ip.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Ip = data.Ip.ValueString()
 	}
-	if !data.Nameserver.IsNull() {
+	if !data.Nameserver.IsNull() && !data.Nameserver.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Nameserver = data.Nameserver.ValueString()
 	}
-	if !data.Order.IsNull() {
+	if !data.Order.IsNull() && !data.Order.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Serverid.IsNull() {
+	if !data.Serverid.IsNull() && !data.Serverid.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Serverid = utils.IntPtr(int(data.Serverid.ValueInt64()))
 	}
-	if !data.Servername.IsNull() {
+	if !data.Servername.IsNull() && !data.Servername.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Servername = data.Servername.ValueString()
 	}
-	if !data.Servicegroupname.IsNull() {
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Servicegroupname = data.Servicegroupname.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		servicegroup_servicegroupmember_binding.State = data.State.ValueString()
 	}
-	if !data.Weight.IsNull() {
+	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
 

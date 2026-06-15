@@ -9,7 +9,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -42,104 +46,143 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Description: "The ID of the botprofile_captcha_binding resource.",
 			},
 			"bot_bind_comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about this binding.",
 			},
 			"bot_captcha_action": schema.ListAttribute{
 				ElementType: types.StringType,
-				Optional:    true,
+				Required:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				Description: "One or more actions to be taken when client fails captcha challenge. Only, log action can be configured with DROP, REDIRECT or RESET action.",
 			},
 			"bot_captcha_enabled": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enable or disable the captcha binding.",
 			},
 			"bot_captcha_url": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "URL for which the Captcha action, if configured under IP reputation, TPS or device fingerprint, need to be applied.",
 			},
 			"captcharesource": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Captcha action binding. For each URL, only one binding is allowed. To update the values of an existing URL binding, user has to first unbind that binding, and then needs to bind the URL again with new values. Maximum 30 bindings can be configured per profile.",
 			},
 			"graceperiod": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(900),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Time (in seconds) duration for which no new captcha challenge is sent after current captcha challenge has been answered successfully.",
 			},
 			"logmessage": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Message to be logged for this binding.",
 			},
 			"muteperiod": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(300),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Time (in seconds) duration for which client which failed captcha need to wait until allowed to try again. The requests from this client are silently dropped during the mute period.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my profile\" or 'my profile').",
 			},
 			"requestsizelimit": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(8000),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Length of body request (in Bytes) up to (equal or less than) which captcha challenge will be provided to client. Above this length threshold the request will be dropped. This is to avoid DOS and DDOS attacks.",
 			},
 			"retryattempts": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Number of times client can retry solving the captcha.",
 			},
 			"waittime": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(15),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Wait time in seconds for which ADC needs to wait for the Captcha response. This is to avoid DOS attacks.",
 			},
 		},
 	}
 }
 
-func botprofile_captcha_bindingGetThePayloadFromtheConfig(ctx context.Context, data *BotprofileCaptchaBindingResourceModel) bot.Botprofilecaptchabinding {
-	tflog.Debug(ctx, "In botprofile_captcha_bindingGetThePayloadFromtheConfig Function")
+func botprofile_captcha_bindingGetThePayloadFromthePlan(ctx context.Context, data *BotprofileCaptchaBindingResourceModel) bot.Botprofilecaptchabinding {
+	tflog.Debug(ctx, "In botprofile_captcha_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	botprofile_captcha_binding := bot.Botprofilecaptchabinding{}
-	if !data.BotBindComment.IsNull() {
+	if !data.BotBindComment.IsNull() && !data.BotBindComment.IsUnknown() {
 		botprofile_captcha_binding.Botbindcomment = data.BotBindComment.ValueString()
 	}
-	if !data.BotCaptchaEnabled.IsNull() {
+	if !data.BotCaptchaAction.IsNull() && !data.BotCaptchaAction.IsUnknown() {
+		var bot_captcha_actionList []string
+		data.BotCaptchaAction.ElementsAs(ctx, &bot_captcha_actionList, false)
+		botprofile_captcha_binding.Botcaptchaaction = bot_captcha_actionList
+	}
+	if !data.BotCaptchaEnabled.IsNull() && !data.BotCaptchaEnabled.IsUnknown() {
 		botprofile_captcha_binding.Botcaptchaenabled = data.BotCaptchaEnabled.ValueString()
 	}
-	if !data.BotCaptchaUrl.IsNull() {
+	if !data.BotCaptchaUrl.IsNull() && !data.BotCaptchaUrl.IsUnknown() {
 		botprofile_captcha_binding.Botcaptchaurl = data.BotCaptchaUrl.ValueString()
 	}
-	if !data.Captcharesource.IsNull() {
+	if !data.Captcharesource.IsNull() && !data.Captcharesource.IsUnknown() {
 		botprofile_captcha_binding.Captcharesource = data.Captcharesource.ValueBool()
 	}
-	if !data.Graceperiod.IsNull() {
+	if !data.Graceperiod.IsNull() && !data.Graceperiod.IsUnknown() {
 		botprofile_captcha_binding.Graceperiod = utils.IntPtr(int(data.Graceperiod.ValueInt64()))
 	}
-	if !data.Logmessage.IsNull() {
+	if !data.Logmessage.IsNull() && !data.Logmessage.IsUnknown() {
 		botprofile_captcha_binding.Logmessage = data.Logmessage.ValueString()
 	}
-	if !data.Muteperiod.IsNull() {
+	if !data.Muteperiod.IsNull() && !data.Muteperiod.IsUnknown() {
 		botprofile_captcha_binding.Muteperiod = utils.IntPtr(int(data.Muteperiod.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		botprofile_captcha_binding.Name = data.Name.ValueString()
 	}
-	if !data.Requestsizelimit.IsNull() {
+	if !data.Requestsizelimit.IsNull() && !data.Requestsizelimit.IsUnknown() {
 		botprofile_captcha_binding.Requestsizelimit = utils.IntPtr(int(data.Requestsizelimit.ValueInt64()))
 	}
-	if !data.Retryattempts.IsNull() {
+	if !data.Retryattempts.IsNull() && !data.Retryattempts.IsUnknown() {
 		botprofile_captcha_binding.Retryattempts = utils.IntPtr(int(data.Retryattempts.ValueInt64()))
 	}
-	if !data.Waittime.IsNull() {
+	if !data.Waittime.IsNull() && !data.Waittime.IsUnknown() {
 		botprofile_captcha_binding.Waittime = utils.IntPtr(int(data.Waittime.ValueInt64()))
 	}
 
@@ -154,6 +197,17 @@ func botprofile_captcha_bindingSetAttrFromGet(ctx context.Context, data *Botprof
 		data.BotBindComment = types.StringValue(val.(string))
 	} else {
 		data.BotBindComment = types.StringNull()
+	}
+	if val, ok := getResponseData["bot_captcha_action"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.BotCaptchaAction = listValue
+		} else {
+			data.BotCaptchaAction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.BotCaptchaAction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["bot_captcha_enabled"]; ok && val != nil {
 		data.BotCaptchaEnabled = types.StringValue(val.(string))
@@ -220,6 +274,7 @@ func botprofile_captcha_bindingSetAttrFromGet(ctx context.Context, data *Botprof
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("bot_captcha_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotCaptchaUrl.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("captcharesource:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Captcharesource.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 

@@ -1,0 +1,13 @@
+[
+    {
+        "option_name": "force",
+        "type": "boolean",
+        "description": [
+            "Force a failover without prompting for confirmation."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

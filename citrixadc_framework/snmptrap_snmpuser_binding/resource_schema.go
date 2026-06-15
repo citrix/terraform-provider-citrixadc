@@ -9,7 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -36,57 +38,75 @@ func (r *SnmptrapSnmpuserBindingResource) Schema(ctx context.Context, req resour
 				Description: "The ID of the snmptrap_snmpuser_binding resource.",
 			},
 			"securitylevel": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("authNoPriv"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Security level of the SNMPv3 trap.",
 			},
 			"td": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
 			"trapclass": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of trap messages that the Citrix ADC sends to the trap listener: Generic or the enterprise-specific messages defined in the MIB file.",
 			},
 			"trapdestination": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IPv4 or the IPv6 address of the trap listener to which the Citrix ADC is to send SNMP trap messages.",
 			},
 			"username": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SNMP user that will send the SNMPv3 traps.",
 			},
 			"version": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("V3"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "SNMP version, which determines the format of trap messages sent to the trap listener. \nThis setting must match the setting on the trap listener. Otherwise, the listener drops the trap messages.",
 			},
 		},
 	}
 }
 
-func snmptrap_snmpuser_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SnmptrapSnmpuserBindingResourceModel) snmp.Snmptrapsnmpuserbinding {
-	tflog.Debug(ctx, "In snmptrap_snmpuser_bindingGetThePayloadFromtheConfig Function")
+func snmptrap_snmpuser_bindingGetThePayloadFromthePlan(ctx context.Context, data *SnmptrapSnmpuserBindingResourceModel) snmp.Snmptrapsnmpuserbinding {
+	tflog.Debug(ctx, "In snmptrap_snmpuser_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	snmptrap_snmpuser_binding := snmp.Snmptrapsnmpuserbinding{}
-	if !data.Securitylevel.IsNull() {
+	if !data.Securitylevel.IsNull() && !data.Securitylevel.IsUnknown() {
 		snmptrap_snmpuser_binding.Securitylevel = data.Securitylevel.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		snmptrap_snmpuser_binding.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
-	if !data.Trapclass.IsNull() {
+	if !data.Trapclass.IsNull() && !data.Trapclass.IsUnknown() {
 		snmptrap_snmpuser_binding.Trapclass = data.Trapclass.ValueString()
 	}
-	if !data.Trapdestination.IsNull() {
+	if !data.Trapdestination.IsNull() && !data.Trapdestination.IsUnknown() {
 		snmptrap_snmpuser_binding.Trapdestination = data.Trapdestination.ValueString()
 	}
-	if !data.Username.IsNull() {
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
 		snmptrap_snmpuser_binding.Username = data.Username.ValueString()
 	}
-	if !data.Version.IsNull() {
+	if !data.Version.IsNull() && !data.Version.IsUnknown() {
 		snmptrap_snmpuser_binding.Version = data.Version.ValueString()
 	}
 

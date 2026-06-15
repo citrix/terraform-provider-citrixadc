@@ -45,6 +45,7 @@ func (d *BotprofileLogexpressionBindingDataSource) Read(ctx context.Context, req
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	botlogexpressionname_Name := data.BotLogExpressionName
+	logexpression_Name := data.Logexpression
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +83,16 @@ func (d *BotprofileLogexpressionBindingDataSource) Read(ctx context.Context, req
 			continue
 		}
 
+		// Check logexpression
+		if val, ok := v["logexpression"].(bool); ok {
+			if logexpression_Name.IsNull() || val != logexpression_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !logexpression_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

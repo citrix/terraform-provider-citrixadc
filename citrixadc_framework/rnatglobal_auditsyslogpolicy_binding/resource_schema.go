@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -18,6 +22,7 @@ import (
 // RnatglobalAuditsyslogpolicyBindingResourceModel describes the resource data model.
 type RnatglobalAuditsyslogpolicyBindingResourceModel struct {
 	Id       types.String `tfsdk:"id"`
+	All      types.Bool   `tfsdk:"all"`
 	Policy   types.String `tfsdk:"policy"`
 	Priority types.Int64  `tfsdk:"priority"`
 }
@@ -30,29 +35,45 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Schema(ctx context.Context,
 				Computed:    true,
 				Description: "The ID of the rnatglobal_auditsyslogpolicy_binding resource.",
 			},
+			"all": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Remove all RNAT global config",
+			},
 			"policy": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The policy Name.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The priority of the policy.",
 			},
 		},
 	}
 }
 
-func rnatglobal_auditsyslogpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *RnatglobalAuditsyslogpolicyBindingResourceModel) network.Rnatglobalauditsyslogpolicybinding {
-	tflog.Debug(ctx, "In rnatglobal_auditsyslogpolicy_bindingGetThePayloadFromtheConfig Function")
+func rnatglobal_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *RnatglobalAuditsyslogpolicyBindingResourceModel) network.Rnatglobalauditsyslogpolicybinding {
+	tflog.Debug(ctx, "In rnatglobal_auditsyslogpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	rnatglobal_auditsyslogpolicy_binding := network.Rnatglobalauditsyslogpolicybinding{}
-	if !data.Policy.IsNull() {
+	if !data.All.IsNull() && !data.All.IsUnknown() {
+		rnatglobal_auditsyslogpolicy_binding.All = data.All.ValueBool()
+	}
+	if !data.Policy.IsNull() && !data.Policy.IsUnknown() {
 		rnatglobal_auditsyslogpolicy_binding.Policy = data.Policy.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		rnatglobal_auditsyslogpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 
@@ -63,6 +84,11 @@ func rnatglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, dat
 	tflog.Debug(ctx, "In rnatglobal_auditsyslogpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["all"]; ok && val != nil {
+		data.All = types.BoolValue(val.(bool))
+	} else {
+		data.All = types.BoolNull()
+	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
 	} else {
@@ -79,6 +105,7 @@ func rnatglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, dat
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("all:%s", utils.UrlEncode(fmt.Sprintf("%v", data.All.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 

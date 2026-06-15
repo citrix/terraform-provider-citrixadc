@@ -1,0 +1,37 @@
+[
+    {
+        "option_name": "all",
+        "type": "boolean",
+        "description": [
+            "Remove all RNAT global config"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "policy",
+        "type": "string",
+        "description": [
+            "The policy Name."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "priority",
+        "type": "integer",
+        "description": [
+            "The priority of the policy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

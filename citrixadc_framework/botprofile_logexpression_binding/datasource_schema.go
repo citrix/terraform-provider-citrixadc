@@ -30,8 +30,7 @@ func BotprofileLogexpressionBindingDataSourceSchema() schema.Schema {
 				Description: "Expression whose result to be logged when violation happened on the bot profile.",
 			},
 			"logexpression": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Log expression binding.",
 			},
 			"logmessage": schema.StringAttribute{

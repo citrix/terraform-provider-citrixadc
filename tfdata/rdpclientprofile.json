@@ -1,0 +1,248 @@
+[
+    {
+        "option_name": "addusernameinrdpfile",
+        "type": "string",
+        "description": [
+            "Add username in rdp file."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "audiocapturemode",
+        "type": "string",
+        "description": [
+            "This setting corresponds to the selections in the Remote audio area on the Local Resources tab under Options in RDC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLE"
+    },
+    {
+        "option_name": "keyboardhook",
+        "type": "string",
+        "description": [
+            "This setting corresponds to the selection in the Keyboard drop-down list on the Local Resources tab under Options in RDC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "InFullScreenMode"
+    },
+    {
+        "option_name": "multimonitorsupport",
+        "type": "string",
+        "description": [
+            "Enable/Disable Multiple Monitor Support for Remote Desktop Connection (RDC)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLE"
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "The name of the rdp profile"
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "psk",
+        "type": "string",
+        "description": [
+            "Pre shared key value"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "randomizerdpfilename",
+        "type": "string",
+        "description": [
+            "Will generate unique filename everytime rdp file is downloaded by appending output of time() function in the format <rdpfileName>_<time>.rdp. This tries to avoid the pop-up for replacement of existing rdp file during each rdp connection launch, hence providing better end-user experience."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "rdpcookievalidity",
+        "type": "integer",
+        "description": [
+            "RDP cookie validity period. RDP cookie validity time is applicable for new connection and also for any re-connection that might happen, mostly due to network disruption or during fail-over."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 60
+    },
+    {
+        "option_name": "rdpcustomparams",
+        "type": "string",
+        "description": [
+            "Option for RDP custom parameters settings (if any). Custom params needs to be separated by '&'"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "rdpfilename",
+        "type": "string",
+        "description": [
+            "RDP file name to be sent to End User"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "rdphost",
+        "type": "string",
+        "description": [
+            "Fully-qualified domain name (FQDN) of the RDP Listener."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "rdplinkattribute",
+        "type": "string",
+        "description": [
+            "Citrix Gateway allows the configuration of rdpLinkAttribute parameter which can be used to fetch a list of RDP servers(IP/FQDN) that a user can access, from an Authentication server attribute(Example: LDAP, SAML). Based on the list received, the RDP links will be generated and displayed to the user.",
+            "            Note: The Attribute mentioned in the rdpLinkAttribute should be fetched through corresponding authentication method."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "rdplistener",
+        "type": "string",
+        "description": [
+            "IP address (or) Fully-qualified domain name(FQDN) of the RDP Listener with the port in the format IP:Port (or) FQDN:Port"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "rdpurloverride",
+        "type": "string",
+        "description": [
+            "This setting determines whether the RDP parameters supplied in the vpn url override those specified in the RDP profile."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLE"
+    },
+    {
+        "option_name": "rdpvalidateclientip",
+        "type": "string",
+        "description": [
+            "This setting determines whether RDC launch is initiated by the valid client IP"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLE"
+    },
+    {
+        "option_name": "redirectclipboard",
+        "type": "string",
+        "description": [
+            "This setting corresponds to the Clipboard check box on the Local Resources tab under Options in RDC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLE"
+    },
+    {
+        "option_name": "redirectcomports",
+        "type": "string",
+        "description": [
+            "This setting corresponds to the selections for comports under More on the Local Resources tab under Options in RDC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLE"
+    },
+    {
+        "option_name": "redirectdrives",
+        "type": "string",
+        "description": [
+            "This setting corresponds to the selections for Drives under More on the Local Resources tab under Options in RDC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLE"
+    },
+    {
+        "option_name": "redirectpnpdevices",
+        "type": "string",
+        "description": [
+            "This setting corresponds to the selections for pnpdevices under More on the Local Resources tab under Options in RDC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLE"
+    },
+    {
+        "option_name": "redirectprinters",
+        "type": "string",
+        "description": [
+            "This setting corresponds to the selection in the Printers check box on the Local Resources tab under Options in RDC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLE"
+    },
+    {
+        "option_name": "videoplaybackmode",
+        "type": "string",
+        "description": [
+            "This setting determines if Remote Desktop Connection (RDC) will use RDP efficient multimedia streaming for video playback."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLE"
+    }
+]

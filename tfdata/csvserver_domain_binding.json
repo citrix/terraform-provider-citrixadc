@@ -1,0 +1,81 @@
+[
+    {
+        "option_name": "backupip",
+        "type": "string",
+        "description": [
+            "0"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "cookiedomain",
+        "type": "string",
+        "description": [
+            "0"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "cookietimeout",
+        "type": "integer",
+        "description": [
+            "0"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "domainname",
+        "type": "string",
+        "description": [
+            "Domain name for which to change the time to live (TTL) and/or backup service IP address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the content switching virtual server to which the content switching policy applies."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "sitedomainttl",
+        "type": "integer",
+        "description": [
+            "0"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "ttl",
+        "type": "integer",
+        "description": [
+            "0"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

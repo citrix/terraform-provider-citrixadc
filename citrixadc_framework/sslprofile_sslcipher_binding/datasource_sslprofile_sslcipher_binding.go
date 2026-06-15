@@ -71,8 +71,8 @@ func (d *SslprofileSslcipherBindingDataSource) Read(ctx context.Context, req dat
 	for i, v := range dataArr {
 		match := true
 
-		// Check cipheraliasname (API returns cipheraliasname instead of ciphername)
-		if val, ok := v["cipheraliasname"].(string); ok {
+		// Check ciphername
+		if val, ok := v["ciphername"].(string); ok {
 			if ciphername_Name.IsNull() || val != ciphername_Name.ValueString() {
 				match = false
 				continue

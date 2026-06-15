@@ -1,0 +1,162 @@
+[
+    {
+        "option_name": "ceaserouteradv",
+        "type": "string",
+        "description": [
+            "Cease router advertisements on this vlan."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "currhoplimit",
+        "type": "integer",
+        "description": [
+            "Current Hop limit."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 64
+    },
+    {
+        "option_name": "defaultlifetime",
+        "type": "integer",
+        "description": [
+            "Default life time, in seconds."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1800
+    },
+    {
+        "option_name": "linkmtu",
+        "type": "integer",
+        "description": [
+            "The Link MTU."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "managedaddrconfig",
+        "type": "string",
+        "description": [
+            "Value to be placed in the Managed address configuration flag field."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "maxrtadvinterval",
+        "type": "integer",
+        "description": [
+            "Maximum time allowed between unsolicited multicast RAs, in seconds."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 600
+    },
+    {
+        "option_name": "minrtadvinterval",
+        "type": "integer",
+        "description": [
+            "Minimum time interval between RA messages, in seconds."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 198
+    },
+    {
+        "option_name": "onlyunicastrtadvresponse",
+        "type": "string",
+        "description": [
+            "Send only Unicast Router Advertisements in respond to Router Solicitations."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "otheraddrconfig",
+        "type": "string",
+        "description": [
+            "Value to be placed in the Other configuration flag field."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "reachabletime",
+        "type": "integer",
+        "description": [
+            "Reachable time, in milliseconds."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "retranstime",
+        "type": "integer",
+        "description": [
+            "Retransmission time, in milliseconds."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "sendrouteradv",
+        "type": "string",
+        "description": [
+            "whether the router sends periodic RAs and responds to Router Solicitations."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "srclinklayeraddroption",
+        "type": "string",
+        "description": [
+            "Include source link layer address option in RA messages."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": true
+    },
+    {
+        "option_name": "vlan",
+        "type": "integer",
+        "description": [
+            "The VLAN number."
+        ],
+        "is_get_id": true,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

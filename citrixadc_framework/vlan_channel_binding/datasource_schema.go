@@ -10,7 +10,7 @@ func VlanChannelBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"vlanid": schema.Int64Attribute{
+			"id": schema.Int64Attribute{
 				Required:    true,
 				Description: "Specifies the virtual LAN ID.",
 			},
@@ -19,13 +19,11 @@ func VlanChannelBindingDataSourceSchema() schema.Schema {
 				Description: "The interface to be bound to the VLAN, specified in slot/port notation (for example, 1/3).",
 			},
 			"ownergroup": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The owner node group in a Cluster for this vlan.",
 			},
 			"tagged": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Make the interface an 802.1q tagged interface. Packets sent on this interface on this VLAN have an additional 4-byte 802.1q tag, which identifies the VLAN. To use 802.1q tagging, you must also configure the switch connected to the appliance's interfaces.",
 			},
 		},

@@ -50,8 +50,7 @@ func ServicegroupLbmonitorBindingDataSourceSchema() schema.Schema {
 				Description: "Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached.",
 			},
 			"port": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Port number of the service. Each service must have a unique port number.",
 			},
 			"serverid": schema.Int64Attribute{

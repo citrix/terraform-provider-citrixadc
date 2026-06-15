@@ -1,0 +1,102 @@
+[
+    {
+        "option_name": "bridgeage",
+        "type": "integer",
+        "description": [
+            "Time-out value for the bridge table entries, in seconds. The new value applies only to the entries that are dynamically learned after the new value is set. Previously existing bridge table entries expire after the previously configured time-out value."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 300
+    },
+    {
+        "option_name": "devicevlan",
+        "type": "integer",
+        "description": [
+            "The vlan on which to send multicast packets when the VXLAN tunnel endpoint is a muticast group address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "ifnum",
+        "type": "string",
+        "description": [
+            "INTERFACE  whose entries are to be removed."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "mac",
+        "type": "string",
+        "description": [
+            "The MAC address of the target."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "nodeid",
+        "type": "integer",
+        "description": [
+            "Unique number that identifies the cluster node."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "vlan",
+        "type": "integer",
+        "description": [
+            "VLAN  whose entries are to be removed."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "vni",
+        "type": "integer",
+        "description": [
+            "The VXLAN VNI Network Identifier (or VXLAN Segment ID) to use to connect to the remote VXLAN tunnel endpoint.  If omitted the value specified as vxlan will be used."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "vtep",
+        "type": "string",
+        "description": [
+            "The IP address of the destination VXLAN tunnel endpoint where the Ethernet MAC ADDRESS resides."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "vxlan",
+        "type": "integer",
+        "description": [
+            "The VXLAN to which this address is associated."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    }
+]

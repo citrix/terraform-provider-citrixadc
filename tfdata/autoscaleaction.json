@@ -1,0 +1,82 @@
+[
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "ActionScale action name."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "parameters",
+        "type": "string",
+        "description": [
+            "Parameters to use in the action"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "profilename",
+        "type": "string",
+        "description": [
+            "AutoScale profile name."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "quiettime",
+        "type": "integer",
+        "description": [
+            "Time in seconds no other policy is evaluated or action is taken"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 300
+    },
+    {
+        "option_name": "type",
+        "type": "string",
+        "description": [
+            "The type of action."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "vmdestroygraceperiod",
+        "type": "integer",
+        "description": [
+            "Time in minutes a VM is kept in inactive state before destroying"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10
+    },
+    {
+        "option_name": "vserver",
+        "type": "string",
+        "description": [
+            "Name of the vserver on which autoscale action has to be taken."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    }
+]

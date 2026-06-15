@@ -1,0 +1,117 @@
+[
+    {
+        "option_name": "alertonly",
+        "type": "string",
+        "description": [
+            "Send SNMP alert?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "as_bypass_list",
+        "type": "string",
+        "description": [
+            "Bypass List Value"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "as_bypass_list_action",
+        "type": "string",
+        "description": [
+            "Bypass List Action"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "as_bypass_list_location",
+        "type": "string",
+        "description": [
+            "Bypass List scan location"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "as_bypass_list_value_type",
+        "type": "string",
+        "description": [
+            "Bypass List value type"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "default": "literal",
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments about the purpose of profile, or other useful information about the profile."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "isautodeployed",
+        "type": "string",
+        "description": [
+            "Is the rule auto deployed by dynamic profile ?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the profile to which to bind an exemption or rule."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "resourceid",
+        "type": "string",
+        "description": [
+            "A \"id\" that identifies the rule."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "Enabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

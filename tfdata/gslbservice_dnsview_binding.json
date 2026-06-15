@@ -1,0 +1,37 @@
+[
+    {
+        "option_name": "servicename",
+        "type": "string",
+        "description": [
+            "Name of the GSLB service."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "viewip",
+        "type": "string",
+        "description": [
+            "IP address to be used for the given view"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "viewname",
+        "type": "string",
+        "description": [
+            "Name of the DNS view of the service. A DNS view is used in global server load balancing (GSLB) to return a predetermined IP address to a specific group of clients, which are identified by using a DNS policy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

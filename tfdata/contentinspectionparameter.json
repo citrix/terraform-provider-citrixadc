@@ -1,0 +1,18 @@
+[
+    {
+        "option_name": "undefaction",
+        "type": "string",
+        "description": [
+            "Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an error condition in evaluating the expression.",
+            "Available settings function as follows:",
+            "* NOINSPECTION - Do not Inspect the traffic.",
+            "* RESET - Reset the connection and notify the user's browser, so that the user can resend the request.",
+            "* DROP - Drop the message without sending a response to the user."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "\"NOINSPECTION\""
+    }
+]

@@ -1,0 +1,48 @@
+[
+    {
+        "option_name": "keyfile",
+        "type": "string",
+        "description": [
+            "Name of and, optionally, path to the input key file to be converted from PEM or DER format to PKCS#8 format. /nsconfig/ssl/ is the default path."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "keyform",
+        "type": "string",
+        "description": [
+            "Format in which the key file is stored on the appliance."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "PEM"
+    },
+    {
+        "option_name": "password",
+        "type": "string",
+        "description": [
+            "Password to assign to the file if the key is encrypted. Applies only for PEM format files."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "pkcs8file",
+        "type": "string",
+        "description": [
+            "Name for and, optionally, path to, the output file where the PKCS#8 format key file is stored. /nsconfig/ssl/ is the default path."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

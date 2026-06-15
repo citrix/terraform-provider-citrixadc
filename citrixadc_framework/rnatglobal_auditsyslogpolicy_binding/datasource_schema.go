@@ -10,6 +10,10 @@ func RnatglobalAuditsyslogpolicyBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"all": schema.BoolAttribute{
+				Required:    true,
+				Description: "Remove all RNAT global config",
+			},
 			"policy": schema.StringAttribute{
 				Required:    true,
 				Description: "The policy Name.",

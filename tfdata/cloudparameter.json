@@ -1,0 +1,90 @@
+[
+    {
+        "option_name": "activationcode",
+        "type": "string",
+        "description": [
+            "Activation code for the NGS Connector instance"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "connectorresidence",
+        "type": "string",
+        "description": [
+            "Identifies whether the connector is located Onprem, Aws or Azure"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "controllerfqdn",
+        "type": "string",
+        "description": [
+            "FQDN of the controller to which the Citrix ADC SDProxy Connects"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "controllerport",
+        "type": "integer",
+        "description": [
+            "Port number of the controller to which the Citrix ADC SDProxy connects"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "customerid",
+        "type": "string",
+        "description": [
+            "Customer ID of the citrix cloud customer"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "deployment",
+        "type": "string",
+        "description": [
+            "Describes if the customer is a Staging/Production or Dev Citrix Cloud customer"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "instanceid",
+        "type": "string",
+        "description": [
+            "Instance ID of the customer provided by Trust"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "resourcelocation",
+        "type": "string",
+        "description": [
+            "Resource Location of the customer provided by Trust"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

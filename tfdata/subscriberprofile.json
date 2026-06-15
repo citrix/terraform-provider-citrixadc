@@ -1,0 +1,70 @@
+[
+    {
+        "option_name": "ip",
+        "type": "string",
+        "description": [
+            "Subscriber ip address"
+        ],
+        "is_get_id": false,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "servicepath",
+        "type": "string",
+        "description": [
+            "Name of the servicepath to be taken for this subscriber."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "subscriberrules",
+        "type": "string[]",
+        "description": [
+            "Rules configured for this subscriber. This is similar to rules received from PCRF for dynamic subscriber sessions."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "subscriptionidtype",
+        "type": "string",
+        "description": [
+            "Subscription-Id type"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "subscriptionidvalue",
+        "type": "string",
+        "description": [
+            "Subscription-Id value"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "vlan",
+        "type": "integer",
+        "description": [
+            "The vlan number on which the subscriber is located."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-unique-attr": true
+    }
+]

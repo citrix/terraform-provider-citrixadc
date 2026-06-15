@@ -1,0 +1,94 @@
+[
+    {
+        "option_name": "gotopriorityexpression",
+        "type": "string",
+        "description": [
+            "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "invoke",
+        "type": "boolean",
+        "description": [
+            "Invoke policies bound to a virtual server or policy label."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "labelname",
+        "type": "string",
+        "description": [
+            "Name of the label invoked."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "labeltype",
+        "type": "string",
+        "description": [
+            "The invocation type."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.",
+            "",
+            "CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vserver\" or 'my vserver')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "order",
+        "type": "integer",
+        "description": [
+            "Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "policyname",
+        "type": "string",
+        "description": [
+            "Name of the policy bound to the LB vserver."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "priority",
+        "type": "integer",
+        "description": [
+            "Priority."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

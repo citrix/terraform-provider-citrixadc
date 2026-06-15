@@ -1,0 +1,74 @@
+[
+    {
+        "option_name": "addrnpi",
+        "type": "integer",
+        "description": [
+            "Numbering Plan Indicator, such as landline, data, or WAP client, used in the ESME address sent in the bind request."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "addrrange",
+        "type": "string",
+        "description": [
+            "Set of SME addresses, sent in the bind request, serviced by the ESME."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "\"\\\\d*\""
+    },
+    {
+        "option_name": "addrton",
+        "type": "integer",
+        "description": [
+            "Type of Number, such as an international number or a national number, used in the ESME address sent in the bind request."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "clientmode",
+        "type": "string",
+        "description": [
+            "Mode in which the client binds to the ADC. Applicable settings function as follows:",
+            "* TRANSCEIVER - Client can send and receive messages to and from the message center.",
+            "* TRANSMITTERONLY - Client can only send messages.",
+            "* RECEIVERONLY - Client can only receive messages."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "TRANSCEIVER"
+    },
+    {
+        "option_name": "msgqueue",
+        "type": "string",
+        "description": [
+            "Queue SMPP messages if a client that is capable of receiving the destination address messages is not available."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "msgqueuesize",
+        "type": "integer",
+        "description": [
+            "Maximum number of SMPP messages that can be queued. After the limit is reached, the Citrix ADC sends a deliver_sm_resp PDU, with an appropriate error message, to the message center."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10000
+    }
+]

@@ -1,0 +1,28 @@
+[
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the load balancing virtual server group. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Can be changed after the virtual server is created.",
+            "",
+            "CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my lbgroup\" or 'my lbgroup')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "vservername",
+        "type": "string",
+        "description": [
+            "Virtual server name."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

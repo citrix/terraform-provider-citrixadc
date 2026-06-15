@@ -1,0 +1,26 @@
+[
+    {
+        "option_name": "isregex",
+        "type": "string",
+        "description": [
+            "Is field name a regular expression?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "NOTREGEX"
+    },
+    {
+        "option_name": "xmlcontenttypevalue",
+        "type": "string",
+        "description": [
+            "Content type to be classified as XML"
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

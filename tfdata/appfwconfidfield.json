@@ -1,0 +1,63 @@
+[
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments to preserve information about the form field designation."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "fieldname",
+        "type": "string",
+        "description": [
+            "Name of the form field to designate as confidential."
+        ],
+        "is_get_id": false,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "isregex",
+        "type": "string",
+        "description": [
+            "Method of specifying the form field name. Available settings function as follows:",
+            "* REGEX. Form field is a regular expression.",
+            "* NOTREGEX. Form field is a literal string."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "NOTREGEX"
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "Enable or disable the confidential field designation."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "url",
+        "type": "string",
+        "description": [
+            "URL of the web page that contains the web form."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

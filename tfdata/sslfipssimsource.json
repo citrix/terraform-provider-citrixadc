@@ -1,0 +1,35 @@
+[
+    {
+        "option_name": "certfile",
+        "type": "string",
+        "description": [
+            "Name for and, optionally, path to the source FIPS appliance's certificate file. /nsconfig/ssl/ is the default path."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "sourcesecret",
+        "type": "string",
+        "description": [
+            "Name for and, optionally, path to the source FIPS appliance's secret data. /nsconfig/ssl/ is the default path."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "targetsecret",
+        "type": "string",
+        "description": [
+            "Name of and, optionally, path to the target FIPS appliance's secret data. /nsconfig/ssl/ is the default path."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

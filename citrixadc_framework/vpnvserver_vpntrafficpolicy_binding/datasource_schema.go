@@ -10,6 +10,10 @@ func VpnvserverVpntrafficpolicyBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"bindpoint": schema.StringAttribute{
+				Required:    true,
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

@@ -1,0 +1,80 @@
+[
+    {
+        "option_name": "gotopriorityexpression",
+        "type": "string",
+        "description": [
+            "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
+            "\to\tIf gotoPriorityExpression is not present or if it is equal to END then the policy bank evaluation ends here",
+            "\to\tElse if the gotoPriorityExpression is equal to NEXT then the next policy in the priority order is evaluated.",
+            "\to\tElse gotoPriorityExpression is evaluated. The result of gotoPriorityExpression (which has to be a number) is processed as follows:",
+            "\t\t-\tAn UNDEF event is triggered if",
+            "\t\t\t.\tgotoPriorityExpression cannot be evaluated",
+            "\t\t\t.\tgotoPriorityExpression evaluates to number which is smaller than the maximum priority in the policy bank but is not same as any policy's priority",
+            "\t\t\t.\tgotoPriorityExpression evaluates to a priority that is smaller than the current policy's priority",
+            "\t\t-\tIf the gotoPriorityExpression evaluates to the priority of the current policy then the next policy in the priority order is evaluated.",
+            "\t\t-\tIf the gotoPriorityExpression evaluates to the priority of a policy further ahead in the list then that policy will be evaluated next.",
+            "\t\tThis field is applicable only to rewrite and responder policies."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the virtual server on which to perform the binding operation."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "order",
+        "type": "integer",
+        "description": [
+            "Order number to be assigned to the service when it is bound to the lb vserver."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "policyname",
+        "type": "string",
+        "description": [
+            "Name of the policy bound to the GSLB vserver."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "priority",
+        "type": "integer",
+        "description": [
+            "Priority."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "type",
+        "type": "string",
+        "description": [
+            "The bindpoint to which the policy is bound"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

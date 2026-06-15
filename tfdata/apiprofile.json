@@ -1,0 +1,26 @@
+[
+    {
+        "option_name": "apivisibility",
+        "type": "string",
+        "description": [
+            "Enable/Disable the schema lookup for the requests/apispecs that are bounded to the API profile. The default value of this parameter is DISABLED."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the API profile to add"
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

@@ -43,8 +43,10 @@ func (d *VlanChannelBindingDataSource) Read(ctx context.Context, req datasource.
 	}
 
 	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Vlanid.ValueInt64())
+	id_Name := data.Id.ValueString()
 	ifnum_Name := data.Ifnum
+	ownergroup_Name := data.Ownergroup
+	tagged_Name := data.Tagged
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +84,27 @@ func (d *VlanChannelBindingDataSource) Read(ctx context.Context, req datasource.
 			continue
 		}
 
+		// Check ownergroup
+		if val, ok := v["ownergroup"].(string); ok {
+			if ownergroup_Name.IsNull() || val != ownergroup_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !ownergroup_Name.IsNull() {
+			match = false
+			continue
+		}
+
+		// Check tagged
+		if val, ok := v["tagged"].(bool); ok {
+			if tagged_Name.IsNull() || val != tagged_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !tagged_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

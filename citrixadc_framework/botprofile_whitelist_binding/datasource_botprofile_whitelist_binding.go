@@ -44,6 +44,7 @@ func (d *BotprofileWhitelistBindingDataSource) Read(ctx context.Context, req dat
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	botwhitelist_Name := data.BotWhitelist
 	botwhitelistvalue_Name := data.BotWhitelistValue
 
 	var dataArr []map[string]interface{}
@@ -71,6 +72,17 @@ func (d *BotprofileWhitelistBindingDataSource) Read(ctx context.Context, req dat
 	for i, v := range dataArr {
 		match := true
 
+		// Check bot_whitelist
+		if val, ok := v["bot_whitelist"].(bool); ok {
+			if botwhitelist_Name.IsNull() || val != botwhitelist_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !botwhitelist_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check bot_whitelist_value
 		if val, ok := v["bot_whitelist_value"].(string); ok {
 			if botwhitelistvalue_Name.IsNull() || val != botwhitelistvalue_Name.ValueString() {
@@ -89,7 +101,7 @@ func (d *BotprofileWhitelistBindingDataSource) Read(ctx context.Context, req dat
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("botprofile_whitelist_binding with bot_whitelist_value %s not found", botwhitelistvalue_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("botprofile_whitelist_binding with bot_whitelist %s not found", botwhitelist_Name))
 		return
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -45,6 +46,7 @@ func (d *SslpolicylabelSslpolicyBindingDataSource) Read(ctx context.Context, req
 	// Case 4: Array filter with parent ID
 	labelname_Name := data.Labelname.ValueString()
 	policyname_Name := data.Policyname
+	priority_Name := data.Priority
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +84,17 @@ func (d *SslpolicylabelSslpolicyBindingDataSource) Read(ctx context.Context, req
 			continue
 		}
 
+		// Check priority
+		if val, ok := v["priority"]; ok {
+			val, _ = utils.ConvertToInt64(val)
+			if priority_Name.IsNull() || val != priority_Name.ValueInt64() {
+				match = false
+				continue
+			}
+		} else if !priority_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

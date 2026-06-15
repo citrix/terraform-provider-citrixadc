@@ -1,0 +1,65 @@
+[
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments to preserve information about this LB policy label."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "labelname",
+        "type": "string",
+        "description": [
+            "Name for the LB policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.",
+            "",
+            "The following requirement applies only to the Citrix ADC CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my lb policy label\" or 'my lb policy label')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "newname",
+        "type": "string",
+        "description": [
+            "New name for the LB policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "policylabeltype",
+        "type": "string",
+        "description": [
+            "Protocols supported by the policylabel. Available Types are :",
+            "* HTTP - HTTP requests.",
+            "* DNS - DNS request.",
+            "* OTHERTCP - OTHERTCP request.",
+            "* SIP_UDP - SIP_UDP request.",
+            "* SIP_TCP - SIP_TCP request.",
+            "* MYSQL - MYSQL request.",
+            "* MSSQL - MSSQL request.",
+            "* ORACLE - ORACLE request.",
+            "* NAT - NAT request.",
+            "* DIAMETER - DIAMETER request.",
+            "* RADIUS - RADIUS request.",
+            "* MQTT - MQTT request.",
+            "* QUIC_BRIDGE - QUIC_BRIDGE request.",
+            "* HTTP_QUIC - HTTP_QUIC request."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "HTTP"
+    }
+]

@@ -44,6 +44,7 @@ func (d *BotprofileIpreputationBindingDataSource) Read(ctx context.Context, req 
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	botipreputation_Name := data.BotIpreputation
 	category_Name := data.Category
 
 	var dataArr []map[string]interface{}
@@ -71,6 +72,17 @@ func (d *BotprofileIpreputationBindingDataSource) Read(ctx context.Context, req 
 	for i, v := range dataArr {
 		match := true
 
+		// Check bot_ipreputation
+		if val, ok := v["bot_ipreputation"].(bool); ok {
+			if botipreputation_Name.IsNull() || val != botipreputation_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !botipreputation_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check category
 		if val, ok := v["category"].(string); ok {
 			if category_Name.IsNull() || val != category_Name.ValueString() {
@@ -89,7 +101,7 @@ func (d *BotprofileIpreputationBindingDataSource) Read(ctx context.Context, req 
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("botprofile_ipreputation_binding with category %s not found", category_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("botprofile_ipreputation_binding with bot_ipreputation %s not found", botipreputation_Name))
 		return
 	}
 

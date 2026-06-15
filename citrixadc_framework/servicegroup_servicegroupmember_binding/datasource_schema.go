@@ -26,8 +26,7 @@ func ServicegroupServicegroupmemberBindingDataSourceSchema() schema.Schema {
 				Description: "The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.",
 			},
 			"ip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "IP Address.",
 			},
 			"nameserver": schema.StringAttribute{
@@ -50,8 +49,7 @@ func ServicegroupServicegroupmemberBindingDataSourceSchema() schema.Schema {
 				Description: "The  identifier for the service. This is used when the persistency type is set to Custom Server ID.",
 			},
 			"servername": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Name of the server to which to bind the service group.",
 			},
 			"servicegroupname": schema.StringAttribute{

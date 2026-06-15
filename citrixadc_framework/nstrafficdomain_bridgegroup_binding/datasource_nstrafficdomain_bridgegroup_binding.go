@@ -44,7 +44,7 @@ func (d *NstrafficdomainBridgegroupBindingDataSource) Read(ctx context.Context, 
 	}
 
 	// Case 4: Array filter with parent ID
-	td_Name := fmt.Sprintf("%d", data.Td.ValueInt64())
+	td_Name := data.Td.ValueString()
 	bridgegroup_Name := data.Bridgegroup
 
 	var dataArr []map[string]interface{}

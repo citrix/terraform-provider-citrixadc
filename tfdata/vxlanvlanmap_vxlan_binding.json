@@ -1,0 +1,37 @@
+[
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the mapping table."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "vlan",
+        "type": "string[]",
+        "description": [
+            "The vlan id or the range of vlan ids in the on-premise network."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "vxlan",
+        "type": "integer",
+        "description": [
+            "The VXLAN assigned to the vlan inside the cloud."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

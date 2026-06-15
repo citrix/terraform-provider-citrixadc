@@ -1,0 +1,193 @@
+[
+    {
+        "option_name": "acceptancethreshold",
+        "type": "string",
+        "description": [
+            "Non-Breaching transactions to Total transactions threshold expressed in percent.",
+            "Maximum of 6 decimal places is supported."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "appflowlog",
+        "type": "string",
+        "description": [
+            "Enable/disable Appflow logging for stream identifier"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "breachthreshold",
+        "type": "integer",
+        "description": [
+            "Breaching transactions threshold calculated over interval."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "interval",
+        "type": "integer",
+        "description": [
+            "Number of minutes of data to use when calculating session statistics (number of requests, bandwidth, and response times). The interval is a moving window that keeps the most recently collected data. Older data is discarded at regular intervals."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "log",
+        "type": "string",
+        "description": [
+            "Location where objects collected on the identifier will be logged."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "NONE"
+    },
+    {
+        "option_name": "loginterval",
+        "type": "integer",
+        "description": [
+            "Time interval in minutes for logging the collected objects.",
+            "Log interval should be greater than or equal to the inteval ",
+            "of the stream identifier."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 5
+    },
+    {
+        "option_name": "loglimit",
+        "type": "integer",
+        "description": [
+            "Maximum number of objects to be logged in the log interval."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 100
+    },
+    {
+        "option_name": "maxtransactionthreshold",
+        "type": "integer",
+        "description": [
+            "Maximum per transcation value of metric. Metric to be tracked is specified by tracktransactions attribute."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "mintransactionthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum per transcation value of metric. Metric to be tracked is specified by tracktransactions attribute."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "The name of stream identifier."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "samplecount",
+        "type": "integer",
+        "description": [
+            "Size of the sample from which to select a request for evaluation. The smaller the sample count, the more accurate is the statistical data. To evaluate all requests, set the sample count to 1. However, such a low setting can result in excessive consumption of memory and processing resources."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "selectorname",
+        "type": "string",
+        "description": [
+            "Name of the selector to use with the stream identifier."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "snmptrap",
+        "type": "string",
+        "description": [
+            "Enable/disable SNMP trap for stream identifier"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "sort",
+        "type": "string",
+        "description": [
+            "Sort stored records by the specified statistics column, in descending order. Performed during data collection, the sorting enables real-time data evaluation through Citrix ADC policies (for example, compression and caching policies) that use functions such as IS_TOP(n)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "REQUESTS"
+    },
+    {
+        "option_name": "trackackonlypackets",
+        "type": "string",
+        "description": [
+            "Track ack only packets as well. This setting is applicable only when packet rate limiting is being used."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "tracktransactions",
+        "type": "string",
+        "description": [
+            "Track transactions exceeding configured threshold. Transaction tracking can be enabled for following metric: ResponseTime.",
+            "By default transaction tracking is disabled"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "NONE"
+    }
+]

@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,43 +36,54 @@ func (r *LsnclientNetworkBindingResource) Schema(ctx context.Context, req resour
 				Description: "The ID of the lsnclient_network_binding resource.",
 			},
 			"clientname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the LSN client entity. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN client is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn client1\" or 'lsn client1').",
 			},
 			"netmask": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Subnet mask for the IPv4 address specified in the Network parameter.",
 			},
 			"network": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IPv4 address(es) of the LSN subscriber(s) or subscriber network(s) on whose traffic you want the Citrix ADC to perform Large Scale NAT.",
 			},
 			"td": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "ID of the traffic domain on which this subscriber or the subscriber network (as specified by the network parameter) belongs. \nIf you do not specify an ID, the subscriber or the subscriber network becomes part of the default traffic domain.",
 			},
 		},
 	}
 }
 
-func lsnclient_network_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LsnclientNetworkBindingResourceModel) lsn.Lsnclientnetworkbinding {
-	tflog.Debug(ctx, "In lsnclient_network_bindingGetThePayloadFromtheConfig Function")
+func lsnclient_network_bindingGetThePayloadFromthePlan(ctx context.Context, data *LsnclientNetworkBindingResourceModel) lsn.Lsnclientnetworkbinding {
+	tflog.Debug(ctx, "In lsnclient_network_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lsnclient_network_binding := lsn.Lsnclientnetworkbinding{}
-	if !data.Clientname.IsNull() {
+	if !data.Clientname.IsNull() && !data.Clientname.IsUnknown() {
 		lsnclient_network_binding.Clientname = data.Clientname.ValueString()
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		lsnclient_network_binding.Netmask = data.Netmask.ValueString()
 	}
-	if !data.Network.IsNull() {
+	if !data.Network.IsNull() && !data.Network.IsUnknown() {
 		lsnclient_network_binding.Network = data.Network.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		lsnclient_network_binding.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
@@ -107,7 +121,9 @@ func lsnclient_network_bindingSetAttrFromGet(ctx context.Context, data *Lsnclien
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

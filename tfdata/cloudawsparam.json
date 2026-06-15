@@ -1,0 +1,13 @@
+[
+    {
+        "option_name": "rolearn",
+        "type": "string",
+        "description": [
+            "IAM Role ARN"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

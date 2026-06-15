@@ -1,0 +1,21 @@
+[
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "State is a session-level setting that controls the configuration shown to the user. Based on the selected option user will be able to see only the configuration created through Classic Interface (CLI/API) or Only Configurations created through Next-Gen API, Or both Classic & Next-Gen API interfaces.",
+            "",
+            "Configurations created by Nextgenapi are read-only and can only be modified via Next-Gen API REST endpoints. Configurations created by classic interfaces (CLI, NITRO) are editable for CLASSIC or ALL views. Possible values:",
+            "",
+            "- CLASSIC: Config view is limited to the configuration entities created through classic interfaces",
+            "  (CLI, NITRO). This is the default behaviour.",
+            "- NEXTGENAPI: Config view is limited to the configuration entities created through Next-Gen API Interface.",
+            "- ALL: Configurations created by both Classic and Next-Gen API interfaces are visible."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "CLASSIC"
+    }
+]

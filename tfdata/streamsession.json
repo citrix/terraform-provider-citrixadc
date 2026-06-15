@@ -1,0 +1,13 @@
+[
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the stream identifier."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

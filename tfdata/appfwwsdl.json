@@ -1,0 +1,48 @@
+[
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments to preserve information about the WSDL."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the WSDL file to remove."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "overwrite",
+        "type": "boolean",
+        "description": [
+            "Overwrite any existing WSDL of the same name."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "src",
+        "type": "string",
+        "description": [
+            "URL (protocol, host, path, and name) of the WSDL file to be imported is stored.",
+            "NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

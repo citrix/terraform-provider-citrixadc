@@ -1,0 +1,36 @@
+[
+    {
+        "option_name": "nodeid",
+        "type": "integer",
+        "description": [
+            "Unique number that identifies the cluster node."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "persistenceparameter",
+        "type": "string",
+        "description": [
+            "The persistence parameter whose persistence sessions are to be flushed."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "vserver",
+        "type": "string",
+        "description": [
+            "The name of the virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    }
+]

@@ -1,0 +1,60 @@
+[
+    {
+        "option_name": "mappolicyname",
+        "type": "string",
+        "description": [
+            "Name for the map policy. Must begin with a letter, number, or the underscore (_) character and must consist only of letters, numbers, and the hash (#), period (.), colon (:), space ( ), at (@), equals (=), hyphen (-), and underscore (_) characters.",
+            "",
+            "CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my map\" or 'my map')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "sd",
+        "type": "string",
+        "description": [
+            "Publicly known source domain name. This is the domain name with which a client request arrives at a reverse proxy virtual server for cache redirection. If you specify a source domain, you must specify a target domain."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "su",
+        "type": "string",
+        "description": [
+            "Source URL. Specify all or part of the source URL, in the following format: /[[prefix] [*]] [.suffix]."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "td",
+        "type": "string",
+        "description": [
+            "Target domain name sent to the server. The source domain name is replaced with this domain name."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "tu",
+        "type": "string",
+        "description": [
+            "Target URL. Specify the target URL in the following format: /[[prefix] [*]][.suffix]."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

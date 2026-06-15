@@ -47,11 +47,6 @@ func (d *VpnglobalSslcertkeyBindingDataSource) Read(ctx context.Context, req dat
 	certkeyname_Name := data.Certkeyname
 	userdataencryptionkey_Name := data.Userdataencryptionkey
 
-	if cacert_Name.IsNull() && certkeyname_Name.IsNull() && userdataencryptionkey_Name.IsNull() {
-		resp.Diagnostics.AddError("Client Error", "One of cacert, certkeyname or userdataencryptionkey must be set")
-		return
-	}
-
 	var dataArr []map[string]interface{}
 	var err error
 

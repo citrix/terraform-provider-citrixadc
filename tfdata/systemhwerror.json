@@ -1,0 +1,13 @@
+[
+    {
+        "option_name": "diskcheck",
+        "type": "boolean",
+        "description": [
+            "Perform only disk error checking."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

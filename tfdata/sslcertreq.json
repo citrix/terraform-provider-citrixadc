@@ -1,0 +1,191 @@
+[
+    {
+        "option_name": "challengepassword",
+        "type": "string",
+        "description": [
+            "Pass phrase, embedded in the certificate signing request that is shared only between the client or server requesting the certificate and the SSL certificate issuer (typically the certificate authority). This pass phrase can be used to authenticate a client or server that is requesting a certificate from the certificate authority."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "commonname",
+        "type": "string",
+        "description": [
+            "Fully qualified domain name for the company or web site. The common name must match the name used by DNS servers to do a DNS lookup of your server. Most browsers use this information for authenticating the server's certificate during the SSL handshake. If the server name in the URL does not match the common name as given in the server certificate, the browser terminates the SSL handshake or prompts the user with a warning message.",
+            "Do not use wildcard characters, such as asterisk (*) or question mark (?), and do not use an IP address as the common name. The common name must not contain the protocol specifier <http://> or <https://>."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "companyname",
+        "type": "string",
+        "description": [
+            "Additional name for the company or web site."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "countryname",
+        "type": "string",
+        "description": [
+            "Two letter ISO code for your country. For example, US for United States."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "digestmethod",
+        "type": "string",
+        "description": [
+            "Digest algorithm used in creating CSR"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "emailaddress",
+        "type": "string",
+        "description": [
+            "Contact person's e-mail address. This address is publically displayed as part of the certificate. Provide an e-mail address that is monitored by an administrator who can be contacted about the certificate."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "fipskeyname",
+        "type": "string",
+        "description": [
+            "Name of the FIPS key used to create the certificate signing request. FIPS keys are created inside the Hardware Security Module of the FIPS card."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "keyfile",
+        "type": "string",
+        "description": [
+            "Name of and, optionally, path to the private key used to create the certificate signing request, which then becomes part of the certificate-key pair. The private key can be either an RSA or a DSA key. The key must be present in the appliance's local storage. /nsconfig/ssl is the default path."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "keyform",
+        "type": "string",
+        "description": [
+            "Format in which the key is stored on the appliance."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "PEM"
+    },
+    {
+        "option_name": "localityname",
+        "type": "string",
+        "description": [
+            "Name of the city or town in which your organization's head office is located."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "organizationname",
+        "type": "string",
+        "description": [
+            "Name of the organization that will use this certificate. The organization name (corporation, limited partnership, university, or government agency) must be registered with some authority at the national, state, or city level. Use the legal name under which the organization is registered.",
+            "Do not abbreviate the organization name and do not use the following characters in the name:",
+            "Angle brackets (< >) tilde (~), exclamation mark, at (@), pound (#), zero (0), caret (^), asterisk (*), forward slash (/), square brackets ([ ]), question mark (?)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "organizationunitname",
+        "type": "string",
+        "description": [
+            "Name of the division or section in the organization that will use the certificate."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "pempassphrase",
+        "type": "string",
+        "description": [
+            "0"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "reqfile",
+        "type": "string",
+        "description": [
+            "Name for and, optionally, path to the certificate signing request (CSR). /nsconfig/ssl/ is the default path."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "statename",
+        "type": "string",
+        "description": [
+            "Full name of the state or province where your organization is located.",
+            "Do not abbreviate."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "subjectaltname",
+        "type": "string",
+        "description": [
+            "Subject Alternative Name (SAN) is an extension to X.509 that allows various values to be associated with a security certificate using a subjectAltName field. These values are called \"Subject Alternative Names\" (SAN). Names include:",
+            "      1. Email addresses",
+            "      2. IP addresses",
+            "      3. URIs",
+            "      4. DNS names (this is usually also provided as the Common Name RDN within the Subject field of the main certificate.)",
+            "      5. Directory names (alternative Distinguished Names to that given in the Subject)",
+            "Example:-subjectAltName \"DNS:*.example.com DNS:www.example.org\""
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

@@ -2,11 +2,13 @@ package policypatset_pattern_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -18,7 +20,7 @@ import (
 // PolicypatsetPatternBindingResourceModel describes the resource data model.
 type PolicypatsetPatternBindingResourceModel struct {
 	Id      types.String `tfsdk:"id"`
-	String  types.String `tfsdk:"string"`
+	String  types.String `tfsdk:"String"`
 	Charset types.String `tfsdk:"charset"`
 	Comment types.String `tfsdk:"comment"`
 	Feature types.String `tfsdk:"feature"`
@@ -34,18 +36,28 @@ func (r *PolicypatsetPatternBindingResource) Schema(ctx context.Context, req res
 				Computed:    true,
 				Description: "The ID of the policypatset_pattern_binding resource.",
 			},
-			"string": schema.StringAttribute{
-				Required:    true,
+			"String": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "String of characters that constitutes a pattern. For more information about the characters that can be used, refer to the character set parameter.\nNote: Minimum length for pattern sets used in rewrite actions of type REPLACE_ALL, DELETE_ALL, INSERT_AFTER_ALL, and INSERT_BEFORE_ALL, is three characters.",
 			},
 			"charset": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Character set associated with the characters in the string.\nNote: UTF-8 characters can be entered directly (if the UI supports it) or can be encoded as a sequence of hexadecimal bytes '\\xNN'. For example, the UTF-8 character '' can be encoded as '\\xC3\\xBC'.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments to preserve information about this patset or a pattern bound to this patset.",
 			},
 			"feature": schema.StringAttribute{
@@ -57,39 +69,45 @@ func (r *PolicypatsetPatternBindingResource) Schema(ctx context.Context, req res
 				Description: "The feature to be checked while applying this config",
 			},
 			"index": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The index of the string associated with the patset.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the pattern set to which to bind the string.",
 			},
 		},
 	}
 }
 
-func policypatset_pattern_bindingGetThePayloadFromtheConfig(ctx context.Context, data *PolicypatsetPatternBindingResourceModel) policy.Policypatsetpatternbinding {
-	tflog.Debug(ctx, "In policypatset_pattern_bindingGetThePayloadFromtheConfig Function")
+func policypatset_pattern_bindingGetThePayloadFromthePlan(ctx context.Context, data *PolicypatsetPatternBindingResourceModel) policy.Policypatsetpatternbinding {
+	tflog.Debug(ctx, "In policypatset_pattern_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	policypatset_pattern_binding := policy.Policypatsetpatternbinding{}
-	if !data.String.IsNull() {
+	if !data.String.IsNull() && !data.String.IsUnknown() {
 		policypatset_pattern_binding.String = data.String.ValueString()
 	}
-	if !data.Charset.IsNull() {
+	if !data.Charset.IsNull() && !data.Charset.IsUnknown() {
 		policypatset_pattern_binding.Charset = data.Charset.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		policypatset_pattern_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Feature.IsNull() {
+	if !data.Feature.IsNull() && !data.Feature.IsUnknown() {
 		policypatset_pattern_binding.Feature = data.Feature.ValueString()
 	}
-	if !data.Index.IsNull() {
+	if !data.Index.IsNull() && !data.Index.IsUnknown() {
 		policypatset_pattern_binding.Index = utils.IntPtr(int(data.Index.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		policypatset_pattern_binding.Name = data.Name.ValueString()
 	}
 
@@ -134,8 +152,8 @@ func policypatset_pattern_bindingSetAttrFromGet(ctx context.Context, data *Polic
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

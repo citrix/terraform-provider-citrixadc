@@ -1,0 +1,13 @@
+[
+    {
+        "option_name": "nonftumode",
+        "type": "string",
+        "description": [
+            "Indicates if GUI in in FTU mode or not"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

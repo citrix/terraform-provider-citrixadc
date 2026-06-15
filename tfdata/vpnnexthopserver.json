@@ -1,0 +1,69 @@
+[
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the Citrix Gateway appliance in the first DMZ."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "nexthopfqdn",
+        "type": "string",
+        "description": [
+            "FQDN of the Citrix Gateway proxy in the second DMZ."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "nexthopip",
+        "type": "string",
+        "description": [
+            "IP address of the Citrix Gateway proxy in the second DMZ."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "nexthopport",
+        "type": "integer",
+        "description": [
+            "Port number of the Citrix Gateway proxy in the second DMZ."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "resaddresstype",
+        "type": "string",
+        "description": [
+            "Address Type (IPV4/IPv6) of DNS name of nextHopServer FQDN."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "secure",
+        "type": "string",
+        "description": [
+            "Use of a secure port, such as 443, for the double-hop configuration."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

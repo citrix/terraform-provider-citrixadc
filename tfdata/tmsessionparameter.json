@@ -1,0 +1,117 @@
+[
+    {
+        "option_name": "defaultauthorizationaction",
+        "type": "string",
+        "description": [
+            "Allow or deny access to content for which there is no specific authorization policy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DENY"
+    },
+    {
+        "option_name": "homepage",
+        "type": "string",
+        "description": [
+            "Web address of the home page that a user is displayed when authentication vserver is bookmarked and used to login."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "\"None\""
+    },
+    {
+        "option_name": "httponlycookie",
+        "type": "string",
+        "description": [
+            "Allow only an HTTP session cookie, in which case the cookie cannot be accessed by scripts."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": true
+    },
+    {
+        "option_name": "kcdaccount",
+        "type": "string",
+        "description": [
+            "Kerberos constrained delegation account name"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "persistentcookie",
+        "type": "string",
+        "description": [
+            "Use persistent SSO cookies for the traffic session. A persistent cookie remains on the user device and is sent with each HTTP request. The cookie becomes stale if the session ends."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "persistentcookievalidity",
+        "type": "integer",
+        "description": [
+            "Integer specifying the number of minutes for which the persistent cookie remains valid. Can be set only if the persistence cookie setting is enabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "sesstimeout",
+        "type": "integer",
+        "description": [
+            "Session timeout, in minutes. If there is no traffic during the timeout period, the user is disconnected and must reauthenticate to access the intranet resources."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 30
+    },
+    {
+        "option_name": "sso",
+        "type": "string",
+        "description": [
+            "Log users on to all web applications automatically after they authenticate, or pass users to the web application logon page to authenticate for each application. Note that this configuration does not honor the following authentication types for security reason. BASIC, DIGEST, and NTLM (without Negotiate NTLM2 Key or Negotiate Sign Flag). Use TM TrafficAction to configure SSO for these authentication types."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "ssocredential",
+        "type": "string",
+        "description": [
+            "Use primary or secondary authentication credentials for single sign-on."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "PRIMARY"
+    },
+    {
+        "option_name": "ssodomain",
+        "type": "string",
+        "description": [
+            "Domain to use for single sign-on."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

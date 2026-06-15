@@ -3,8 +3,11 @@ package hanode_routemonitor_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,24 @@ func (r *HanodeRoutemonitorBindingResource) Create(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Creating hanode_routemonitor_binding resource")
-
-	// hanode_routemonitor_binding := hanode_routemonitor_bindingGetThePayloadFromtheConfig(ctx, &data)
+	hanode_routemonitor_binding := hanode_routemonitor_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Hanode_routemonitor_binding.Type(), &hanode_routemonitor_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create hanode_routemonitor_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("hanode_routemonitor_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Hanode_routemonitor_binding.Type(), &hanode_routemonitor_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create hanode_routemonitor_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created hanode_routemonitor_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("routemonitor:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Routemonitor.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readHanodeRoutemonitorBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +102,10 @@ func (r *HanodeRoutemonitorBindingResource) Read(ctx context.Context, req resour
 }
 
 func (r *HanodeRoutemonitorBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data HanodeRoutemonitorBindingResourceModel
+	var data, state HanodeRoutemonitorBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +113,29 @@ func (r *HanodeRoutemonitorBindingResource) Update(ctx context.Context, req reso
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating hanode_routemonitor_binding resource")
 
-	// Create API request body from the model
-	// hanode_routemonitor_binding := hanode_routemonitor_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Hanode_routemonitor_binding.Type(), &hanode_routemonitor_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update hanode_routemonitor_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		hanode_routemonitor_binding := hanode_routemonitor_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Hanode_routemonitor_binding.Type(), &hanode_routemonitor_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update hanode_routemonitor_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated hanode_routemonitor_binding resource")
+		tflog.Trace(ctx, "Updated hanode_routemonitor_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for hanode_routemonitor_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readHanodeRoutemonitorBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +155,118 @@ func (r *HanodeRoutemonitorBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting hanode_routemonitor_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"hanode_id", "routemonitor"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For hanode_routemonitor_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted hanode_routemonitor_binding resource from state")
+	id_value, ok := idMap["id"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'id' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["netmask"]; ok && val != "" {
+		argsMap["netmask"] = val
+	}
+	if val, ok := idMap["routemonitor"]; ok && val != "" {
+		argsMap["routemonitor"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Hanode_routemonitor_binding.Type(), id_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete hanode_routemonitor_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted hanode_routemonitor_binding binding")
 }
 
 // Helper function to read hanode_routemonitor_binding data from API
 func (r *HanodeRoutemonitorBindingResource) readHanodeRoutemonitorBindingFromApi(ctx context.Context, data *HanodeRoutemonitorBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Hanode_routemonitor_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"hanode_id", "routemonitor"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	id_Name, ok := idMap["id"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'id' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Hanode_routemonitor_binding.Type(),
+		ResourceName:             id_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read hanode_routemonitor_binding, got error: %s", err))
 		return
 	}
 
-	hanode_routemonitor_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "hanode_routemonitor_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check netmask
+		if idVal, ok := idMap["netmask"]; ok {
+			if val, ok := v["netmask"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["netmask"].(string); ok {
+			match = false
+			continue
+		}
+
+		// Check routemonitor
+		if idVal, ok := idMap["routemonitor"]; ok {
+			if val, ok := v["routemonitor"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["routemonitor"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("hanode_routemonitor_binding not found with the provided ID attributes"))
+		return
+	}
+
+	hanode_routemonitor_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

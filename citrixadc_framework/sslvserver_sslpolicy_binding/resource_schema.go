@@ -9,7 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -38,75 +41,96 @@ func (r *SslvserverSslpolicyBindingResource) Schema(ctx context.Context, req res
 				Description: "The ID of the sslvserver_sslpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Invoke flag. This attribute is relevant only for ADVANCED policies",
 			},
 			"labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the label to invoke if the current policy rule evaluates to TRUE.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of policy label invocation.",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the SSL policy binding.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The priority of the policies bound to this SSL service",
 			},
 			"type": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("REQUEST"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Bind point to which to bind the policy. Possible Values: REQUEST, INTERCEPT_REQ and CLIENTHELLO_REQ. These bindpoints mean:\n1. REQUEST: Policy evaluation will be done at appplication above SSL. This bindpoint is default and is used for actions based on clientauth and client cert.\n2. INTERCEPT_REQ: Policy evaluation will be done during SSL handshake to decide whether to intercept or not. Actions allowed with this type are: INTERCEPT, BYPASS and RESET.\n3. CLIENTHELLO_REQ: Policy evaluation will be done during handling of Client Hello Request. Action allowed with this type is: RESET, FORWARD and PICKCACERTGRP.",
 			},
 			"vservername": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL virtual server.",
 			},
 		},
 	}
 }
 
-func sslvserver_sslpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslvserverSslpolicyBindingResourceModel) ssl.Sslvserversslpolicybinding {
-	tflog.Debug(ctx, "In sslvserver_sslpolicy_bindingGetThePayloadFromtheConfig Function")
+func sslvserver_sslpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslvserverSslpolicyBindingResourceModel) ssl.Sslvserversslpolicybinding {
+	tflog.Debug(ctx, "In sslvserver_sslpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslvserver_sslpolicy_binding := ssl.Sslvserversslpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		sslvserver_sslpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Invoke.IsNull() {
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		sslvserver_sslpolicy_binding.Invoke = data.Invoke.ValueBool()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		sslvserver_sslpolicy_binding.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Labeltype.IsNull() {
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		sslvserver_sslpolicy_binding.Labeltype = data.Labeltype.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		sslvserver_sslpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		sslvserver_sslpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		sslvserver_sslpolicy_binding.Type = data.Type.ValueString()
 	}
-	if !data.Vservername.IsNull() {
+	if !data.Vservername.IsNull() && !data.Vservername.IsUnknown() {
 		sslvserver_sslpolicy_binding.Vservername = data.Vservername.ValueString()
 	}
 
@@ -164,6 +188,7 @@ func sslvserver_sslpolicy_bindingSetAttrFromGet(ctx context.Context, data *Sslvs
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("priority:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Priority.ValueInt64()))))
 	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("vservername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vservername.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))

@@ -10,7 +10,7 @@ func BridgegroupVlanBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"bridgegroup_id": schema.Int64Attribute{
+			"id": schema.Int64Attribute{
 				Required:    true,
 				Description: "The integer that uniquely identifies the bridge group.",
 			},

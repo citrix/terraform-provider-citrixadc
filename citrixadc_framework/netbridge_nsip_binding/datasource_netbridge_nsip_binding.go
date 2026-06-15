@@ -45,6 +45,7 @@ func (d *NetbridgeNsipBindingDataSource) Read(ctx context.Context, req datasourc
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	ipaddress_Name := data.Ipaddress
+	netmask_Name := data.Netmask
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +83,16 @@ func (d *NetbridgeNsipBindingDataSource) Read(ctx context.Context, req datasourc
 			continue
 		}
 
+		// Check netmask
+		if val, ok := v["netmask"].(string); ok {
+			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !netmask_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

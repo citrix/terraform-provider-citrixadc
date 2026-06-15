@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +34,42 @@ func (r *VpnvserverIntranetipBindingResource) Schema(ctx context.Context, req re
 				Description: "The ID of the vpnvserver_intranetip_binding resource.",
 			},
 			"intranetip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The network ID for the range of intranet IP addresses or individual intranet IP addresses to be bound to the virtual server.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server.",
 			},
 			"netmask": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The netmask of the intranet IP address or range.",
 			},
 		},
 	}
 }
 
-func vpnvserver_intranetip_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnvserverIntranetipBindingResourceModel) vpn.Vpnvserverintranetipbinding {
-	tflog.Debug(ctx, "In vpnvserver_intranetip_bindingGetThePayloadFromtheConfig Function")
+func vpnvserver_intranetip_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverIntranetipBindingResourceModel) vpn.Vpnvserverintranetipbinding {
+	tflog.Debug(ctx, "In vpnvserver_intranetip_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnvserver_intranetip_binding := vpn.Vpnvserverintranetipbinding{}
-	if !data.Intranetip.IsNull() {
+	if !data.Intranetip.IsNull() && !data.Intranetip.IsUnknown() {
 		vpnvserver_intranetip_binding.Intranetip = data.Intranetip.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnvserver_intranetip_binding.Name = data.Name.ValueString()
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		vpnvserver_intranetip_binding.Netmask = data.Netmask.ValueString()
 	}
 
@@ -92,6 +101,7 @@ func vpnvserver_intranetip_bindingSetAttrFromGet(ctx context.Context, data *Vpnv
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("intranetip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

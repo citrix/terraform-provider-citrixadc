@@ -1,0 +1,13 @@
+[
+    {
+        "option_name": "Dnssuffix",
+        "type": "string",
+        "description": [
+            "Suffix to be appended when resolving domain names that are not fully qualified."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

@@ -1,0 +1,13 @@
+[
+    {
+        "option_name": "cleanuplevel",
+        "type": "string",
+        "description": [
+            "The level of stats to be cleared. 'global' option will clear global counters only, 'all' option will clear all device counters also along with global counters. For both the cases only 'ever incrementing counters' i.e. total counters will be cleared."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

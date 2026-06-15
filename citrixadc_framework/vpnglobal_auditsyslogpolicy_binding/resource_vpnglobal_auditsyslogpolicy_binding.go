@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +55,20 @@ func (r *VpnglobalAuditsyslogpolicyBindingResource) Create(ctx context.Context, 
 	}
 
 	tflog.Debug(ctx, "Creating vpnglobal_auditsyslogpolicy_binding resource")
-
-	// vpnglobal_auditsyslogpolicy_binding := vpnglobal_auditsyslogpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	vpnglobal_auditsyslogpolicy_binding := vpnglobal_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnglobal_auditsyslogpolicy_binding.Type(), &vpnglobal_auditsyslogpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnglobal_auditsyslogpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnglobal_auditsyslogpolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Vpnglobal_auditsyslogpolicy_binding.Type(), &vpnglobal_auditsyslogpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnglobal_auditsyslogpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnglobal_auditsyslogpolicy_binding resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	// Read the updated state back
 	r.readVpnglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +96,10 @@ func (r *VpnglobalAuditsyslogpolicyBindingResource) Read(ctx context.Context, re
 }
 
 func (r *VpnglobalAuditsyslogpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnglobalAuditsyslogpolicyBindingResourceModel
+	var data, state VpnglobalAuditsyslogpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +107,29 @@ func (r *VpnglobalAuditsyslogpolicyBindingResource) Update(ctx context.Context, 
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnglobal_auditsyslogpolicy_binding resource")
 
-	// Create API request body from the model
-	// vpnglobal_auditsyslogpolicy_binding := vpnglobal_auditsyslogpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnglobal_auditsyslogpolicy_binding.Type(), &vpnglobal_auditsyslogpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnglobal_auditsyslogpolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		vpnglobal_auditsyslogpolicy_binding := vpnglobal_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Vpnglobal_auditsyslogpolicy_binding.Type(), &vpnglobal_auditsyslogpolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnglobal_auditsyslogpolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vpnglobal_auditsyslogpolicy_binding resource")
+		tflog.Trace(ctx, "Updated vpnglobal_auditsyslogpolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnglobal_auditsyslogpolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readVpnglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +149,82 @@ func (r *VpnglobalAuditsyslogpolicyBindingResource) Delete(ctx context.Context, 
 	}
 
 	tflog.Debug(ctx, "Deleting vpnglobal_auditsyslogpolicy_binding resource")
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name
+	// Single unique attribute - ID is the plain value
+	policyname_value := data.Id.ValueString()
+	args := []string{
+		fmt.Sprintf("policyname:%s", policyname_value),
+	}
 
-	// For vpnglobal_auditsyslogpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnglobal_auditsyslogpolicy_binding resource from state")
+	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_auditsyslogpolicy_binding.Type(), "", args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnglobal_auditsyslogpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnglobal_auditsyslogpolicy_binding binding")
 }
 
 // Helper function to read vpnglobal_auditsyslogpolicy_binding data from API
 func (r *VpnglobalAuditsyslogpolicyBindingResource) readVpnglobalAuditsyslogpolicyBindingFromApi(ctx context.Context, data *VpnglobalAuditsyslogpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnglobal_auditsyslogpolicy_binding.Type(), "")
+
+	// Case 3: Array filter without parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Vpnglobal_auditsyslogpolicy_binding.Type(),
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnglobal_auditsyslogpolicy_binding, got error: %s", err))
 		return
 	}
 
-	vpnglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "vpnglobal_auditsyslogpolicy_binding returned empty array")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check policyname
+		if idVal, ok := idMap["policyname"]; ok {
+			if val, ok := v["policyname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["policyname"].(string); ok {
+			match = false
+			continue
+		}
+
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("vpnglobal_auditsyslogpolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	vpnglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

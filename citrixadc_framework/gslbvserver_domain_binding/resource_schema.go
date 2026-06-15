@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -72,12 +73,14 @@ func (r *GslbvserverDomainBindingResource) Schema(ctx context.Context, req resou
 				Description: "Timeout, in minutes, for the GSLB site cookie.",
 			},
 			"domainname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Domain name for which to change the time to live (TTL) and/or backup service IP address.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server on which to perform the binding operation.",
 			},
 			"order": schema.Int64Attribute{
@@ -99,39 +102,39 @@ func (r *GslbvserverDomainBindingResource) Schema(ctx context.Context, req resou
 	}
 }
 
-func gslbvserver_domain_bindingGetThePayloadFromtheConfig(ctx context.Context, data *GslbvserverDomainBindingResourceModel) gslb.Gslbvserverdomainbinding {
-	tflog.Debug(ctx, "In gslbvserver_domain_bindingGetThePayloadFromtheConfig Function")
+func gslbvserver_domain_bindingGetThePayloadFromthePlan(ctx context.Context, data *GslbvserverDomainBindingResourceModel) gslb.Gslbvserverdomainbinding {
+	tflog.Debug(ctx, "In gslbvserver_domain_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	gslbvserver_domain_binding := gslb.Gslbvserverdomainbinding{}
-	if !data.Backupip.IsNull() {
+	if !data.Backupip.IsNull() && !data.Backupip.IsUnknown() {
 		gslbvserver_domain_binding.Backupip = data.Backupip.ValueString()
 	}
-	if !data.Backupipflag.IsNull() {
+	if !data.Backupipflag.IsNull() && !data.Backupipflag.IsUnknown() {
 		gslbvserver_domain_binding.Backupipflag = data.Backupipflag.ValueBool()
 	}
-	if !data.CookieDomain.IsNull() {
+	if !data.CookieDomain.IsNull() && !data.CookieDomain.IsUnknown() {
 		gslbvserver_domain_binding.Cookiedomain = data.CookieDomain.ValueString()
 	}
-	if !data.CookieDomainflag.IsNull() {
+	if !data.CookieDomainflag.IsNull() && !data.CookieDomainflag.IsUnknown() {
 		gslbvserver_domain_binding.Cookiedomainflag = data.CookieDomainflag.ValueBool()
 	}
-	if !data.Cookietimeout.IsNull() {
+	if !data.Cookietimeout.IsNull() && !data.Cookietimeout.IsUnknown() {
 		gslbvserver_domain_binding.Cookietimeout = utils.IntPtr(int(data.Cookietimeout.ValueInt64()))
 	}
-	if !data.Domainname.IsNull() {
+	if !data.Domainname.IsNull() && !data.Domainname.IsUnknown() {
 		gslbvserver_domain_binding.Domainname = data.Domainname.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		gslbvserver_domain_binding.Name = data.Name.ValueString()
 	}
-	if !data.Order.IsNull() {
+	if !data.Order.IsNull() && !data.Order.IsUnknown() {
 		gslbvserver_domain_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
 	}
-	if !data.Sitedomainttl.IsNull() {
+	if !data.Sitedomainttl.IsNull() && !data.Sitedomainttl.IsUnknown() {
 		gslbvserver_domain_binding.Sitedomainttl = utils.IntPtr(int(data.Sitedomainttl.ValueInt64()))
 	}
-	if !data.Ttl.IsNull() {
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		gslbvserver_domain_binding.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
 

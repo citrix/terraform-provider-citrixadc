@@ -43,7 +43,7 @@ func (d *HanodeRoutemonitorBindingDataSource) Read(ctx context.Context, req data
 	}
 
 	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Hanodeid.ValueInt64())
+	id_Name := data.Id.ValueString()
 	netmask_Name := data.Netmask
 	routemonitor_Name := data.Routemonitor
 

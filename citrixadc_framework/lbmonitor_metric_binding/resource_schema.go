@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,13 +35,11 @@ func (r *LbmonitorMetricBindingResource) Schema(ctx context.Context, req resourc
 				Description: "The ID of the lbmonitor_metric_binding resource.",
 			},
 			"metric": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Metric name in the metric table, whose setting is changed. A value zero disables the metric and it will not be used for load calculation",
 			},
 			"metricthreshold": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Threshold to be used for that metric.",
 			},
 			"metricweight": schema.Int64Attribute{
@@ -48,28 +48,31 @@ func (r *LbmonitorMetricBindingResource) Schema(ctx context.Context, req resourc
 				Description: "The weight for the specified service metric with respect to others.",
 			},
 			"monitorname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the monitor.",
 			},
 		},
 	}
 }
 
-func lbmonitor_metric_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LbmonitorMetricBindingResourceModel) lb.Lbmonitormetricbinding {
-	tflog.Debug(ctx, "In lbmonitor_metric_bindingGetThePayloadFromtheConfig Function")
+func lbmonitor_metric_bindingGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorMetricBindingResourceModel) lb.Lbmonitormetricbinding {
+	tflog.Debug(ctx, "In lbmonitor_metric_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lbmonitor_metric_binding := lb.Lbmonitormetricbinding{}
-	if !data.Metric.IsNull() {
+	if !data.Metric.IsNull() && !data.Metric.IsUnknown() {
 		lbmonitor_metric_binding.Metric = data.Metric.ValueString()
 	}
-	if !data.Metricthreshold.IsNull() {
+	if !data.Metricthreshold.IsNull() && !data.Metricthreshold.IsUnknown() {
 		lbmonitor_metric_binding.Metricthreshold = utils.IntPtr(int(data.Metricthreshold.ValueInt64()))
 	}
-	if !data.Metricweight.IsNull() {
+	if !data.Metricweight.IsNull() && !data.Metricweight.IsUnknown() {
 		lbmonitor_metric_binding.Metricweight = utils.IntPtr(int(data.Metricweight.ValueInt64()))
 	}
-	if !data.Monitorname.IsNull() {
+	if !data.Monitorname.IsNull() && !data.Monitorname.IsUnknown() {
 		lbmonitor_metric_binding.Monitorname = data.Monitorname.ValueString()
 	}
 

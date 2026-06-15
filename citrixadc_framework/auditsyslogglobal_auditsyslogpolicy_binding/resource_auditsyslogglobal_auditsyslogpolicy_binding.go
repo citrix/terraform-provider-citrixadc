@@ -3,8 +3,10 @@ package auditsyslogglobal_auditsyslogpolicy_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Create(ctx context.C
 	}
 
 	tflog.Debug(ctx, "Creating auditsyslogglobal_auditsyslogpolicy_binding resource")
-
-	// auditsyslogglobal_auditsyslogpolicy_binding := auditsyslogglobal_auditsyslogpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	auditsyslogglobal_auditsyslogpolicy_binding := auditsyslogglobal_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Auditsyslogglobal_auditsyslogpolicy_binding.Type(), &auditsyslogglobal_auditsyslogpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create auditsyslogglobal_auditsyslogpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("auditsyslogglobal_auditsyslogpolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Auditsyslogglobal_auditsyslogpolicy_binding.Type(), &auditsyslogglobal_auditsyslogpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create auditsyslogglobal_auditsyslogpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created auditsyslogglobal_auditsyslogpolicy_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("globalbindtype:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Globalbindtype.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readAuditsyslogglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Read(ctx context.Con
 }
 
 func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuditsyslogglobalAuditsyslogpolicyBindingResourceModel
+	var data, state AuditsyslogglobalAuditsyslogpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Update(ctx context.C
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating auditsyslogglobal_auditsyslogpolicy_binding resource")
 
-	// Create API request body from the model
-	// auditsyslogglobal_auditsyslogpolicy_binding := auditsyslogglobal_auditsyslogpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Auditsyslogglobal_auditsyslogpolicy_binding.Type(), &auditsyslogglobal_auditsyslogpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update auditsyslogglobal_auditsyslogpolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		auditsyslogglobal_auditsyslogpolicy_binding := auditsyslogglobal_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Auditsyslogglobal_auditsyslogpolicy_binding.Type(), &auditsyslogglobal_auditsyslogpolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update auditsyslogglobal_auditsyslogpolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated auditsyslogglobal_auditsyslogpolicy_binding resource")
+		tflog.Trace(ctx, "Updated auditsyslogglobal_auditsyslogpolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for auditsyslogglobal_auditsyslogpolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAuditsyslogglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,107 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Delete(ctx context.C
 	}
 
 	tflog.Debug(ctx, "Deleting auditsyslogglobal_auditsyslogpolicy_binding resource")
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name
+	// Multiple unique attributes - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For auditsyslogglobal_auditsyslogpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted auditsyslogglobal_auditsyslogpolicy_binding resource from state")
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["globalbindtype"]; ok && val != "" {
+		argsMap["globalbindtype"] = val
+	}
+	if val, ok := idMap["policyname"]; ok && val != "" {
+		argsMap["policyname"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Auditsyslogglobal_auditsyslogpolicy_binding.Type(), "", argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete auditsyslogglobal_auditsyslogpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted auditsyslogglobal_auditsyslogpolicy_binding binding")
 }
 
 // Helper function to read auditsyslogglobal_auditsyslogpolicy_binding data from API
 func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) readAuditsyslogglobalAuditsyslogpolicyBindingFromApi(ctx context.Context, data *AuditsyslogglobalAuditsyslogpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Auditsyslogglobal_auditsyslogpolicy_binding.Type(), "")
+
+	// Case 3: Array filter without parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Auditsyslogglobal_auditsyslogpolicy_binding.Type(),
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read auditsyslogglobal_auditsyslogpolicy_binding, got error: %s", err))
 		return
 	}
 
-	auditsyslogglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "auditsyslogglobal_auditsyslogpolicy_binding returned empty array")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check globalbindtype
+		if idVal, ok := idMap["globalbindtype"]; ok {
+			if val, ok := v["globalbindtype"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["globalbindtype"].(string); ok {
+			match = false
+			continue
+		}
+
+		// Check policyname
+		if idVal, ok := idMap["policyname"]; ok {
+			if val, ok := v["policyname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["policyname"].(string); ok {
+			match = false
+			continue
+		}
+
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("auditsyslogglobal_auditsyslogpolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	auditsyslogglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

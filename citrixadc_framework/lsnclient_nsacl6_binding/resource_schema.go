@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +35,43 @@ func (r *LsnclientNsacl6BindingResource) Schema(ctx context.Context, req resourc
 				Description: "The ID of the lsnclient_nsacl6_binding resource.",
 			},
 			"acl6name": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of any configured extended ACL6 whose action is ALLOW. The condition specified in the extended ACL6 rule is used as the condition for the LSN client.",
 			},
 			"clientname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the LSN client entity. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN client is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn client1\" or 'lsn client1').",
 			},
 			"td": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "ID of the traffic domain on which this subscriber or the subscriber network (as specified by the network parameter) belongs. \nIf you do not specify an ID, the subscriber or the subscriber network becomes part of the default traffic domain.",
 			},
 		},
 	}
 }
 
-func lsnclient_nsacl6_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LsnclientNsacl6BindingResourceModel) lsn.Lsnclientnsacl6binding {
-	tflog.Debug(ctx, "In lsnclient_nsacl6_bindingGetThePayloadFromtheConfig Function")
+func lsnclient_nsacl6_bindingGetThePayloadFromthePlan(ctx context.Context, data *LsnclientNsacl6BindingResourceModel) lsn.Lsnclientnsacl6binding {
+	tflog.Debug(ctx, "In lsnclient_nsacl6_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lsnclient_nsacl6_binding := lsn.Lsnclientnsacl6binding{}
-	if !data.Acl6name.IsNull() {
+	if !data.Acl6name.IsNull() && !data.Acl6name.IsUnknown() {
 		lsnclient_nsacl6_binding.Acl6name = data.Acl6name.ValueString()
 	}
-	if !data.Clientname.IsNull() {
+	if !data.Clientname.IsNull() && !data.Clientname.IsUnknown() {
 		lsnclient_nsacl6_binding.Clientname = data.Clientname.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		lsnclient_nsacl6_binding.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
@@ -94,6 +105,7 @@ func lsnclient_nsacl6_bindingSetAttrFromGet(ctx context.Context, data *Lsnclient
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("acl6name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Acl6name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

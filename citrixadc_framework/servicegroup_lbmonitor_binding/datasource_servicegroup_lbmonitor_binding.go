@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -45,6 +46,7 @@ func (d *ServicegroupLbmonitorBindingDataSource) Read(ctx context.Context, req d
 	// Case 4: Array filter with parent ID
 	servicegroupname_Name := data.Servicegroupname.ValueString()
 	monitorname_Name := data.MonitorName
+	port_Name := data.Port
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +84,17 @@ func (d *ServicegroupLbmonitorBindingDataSource) Read(ctx context.Context, req d
 			continue
 		}
 
+		// Check port
+		if val, ok := v["port"]; ok {
+			val, _ = utils.ConvertToInt64(val)
+			if port_Name.IsNull() || val != port_Name.ValueInt64() {
+				match = false
+				continue
+			}
+		} else if !port_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

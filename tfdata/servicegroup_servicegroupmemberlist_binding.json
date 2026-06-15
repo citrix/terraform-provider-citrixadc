@@ -1,0 +1,24 @@
+[
+    {
+        "option_name": "members",
+        "type": "object[]",
+        "description": [
+            "Desired servicegroupmember binding set. Any existing servicegroupmember which is not part of the input will be deleted or disabled based on graceful setting on servicegroup."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "servicegroupname",
+        "type": "string",
+        "description": [
+            "Name of the service group."
+        ],
+        "is_get_id": false,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

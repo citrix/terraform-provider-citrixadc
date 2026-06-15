@@ -1,0 +1,35 @@
+[
+    {
+        "option_name": "defaultauthenticationgroup",
+        "type": "string",
+        "description": [
+            "This is the default group that is chosen when the authentication succeeds in addition to extracted groups."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "groupnamefield",
+        "type": "string",
+        "description": [
+            "Client certificate field that specifies the group, in the format <field>:<subfield>."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "usernamefield",
+        "type": "string",
+        "description": [
+            "Client certificate field that contains the username, in the format <field>:<subfield>."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

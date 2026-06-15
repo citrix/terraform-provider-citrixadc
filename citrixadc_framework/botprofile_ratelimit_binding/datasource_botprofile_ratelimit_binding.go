@@ -46,6 +46,7 @@ func (d *BotprofileRatelimitBindingDataSource) Read(ctx context.Context, req dat
 	name_Name := data.Name.ValueString()
 	botratelimittype_Name := data.BotRateLimitType
 	botratelimiturl_Name := data.BotRateLimitUrl
+	botratelimit_Name := data.BotRatelimit
 	condition_Name := data.Condition
 	cookiename_Name := data.Cookiename
 	countrycode_Name := data.Countrycode
@@ -93,6 +94,17 @@ func (d *BotprofileRatelimitBindingDataSource) Read(ctx context.Context, req dat
 				continue
 			}
 		} else if !botratelimiturl_Name.IsNull() {
+			match = false
+			continue
+		}
+
+		// Check bot_ratelimit
+		if val, ok := v["bot_ratelimit"].(bool); ok {
+			if botratelimit_Name.IsNull() || val != botratelimit_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !botratelimit_Name.IsNull() {
 			match = false
 			continue
 		}

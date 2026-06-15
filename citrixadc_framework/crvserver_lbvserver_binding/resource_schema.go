@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *CrvserverLbvserverBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the crvserver_lbvserver_binding resource.",
 			},
 			"lbvserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The Default target server name.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the cache redirection virtual server to which to bind the cache redirection policy.",
 			},
 		},
 	}
 }
 
-func crvserver_lbvserver_bindingGetThePayloadFromtheConfig(ctx context.Context, data *CrvserverLbvserverBindingResourceModel) cr.Crvserverlbvserverbinding {
-	tflog.Debug(ctx, "In crvserver_lbvserver_bindingGetThePayloadFromtheConfig Function")
+func crvserver_lbvserver_bindingGetThePayloadFromthePlan(ctx context.Context, data *CrvserverLbvserverBindingResourceModel) cr.Crvserverlbvserverbinding {
+	tflog.Debug(ctx, "In crvserver_lbvserver_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	crvserver_lbvserver_binding := cr.Crvserverlbvserverbinding{}
-	if !data.Lbvserver.IsNull() {
+	if !data.Lbvserver.IsNull() && !data.Lbvserver.IsUnknown() {
 		crvserver_lbvserver_binding.Lbvserver = data.Lbvserver.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		crvserver_lbvserver_binding.Name = data.Name.ValueString()
 	}
 

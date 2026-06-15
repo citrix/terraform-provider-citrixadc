@@ -9,7 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -19,7 +22,7 @@ import (
 // VlanChannelBindingResourceModel describes the resource data model.
 type VlanChannelBindingResourceModel struct {
 	Id         types.String `tfsdk:"id"`
-	Vlanid     types.Int64  `tfsdk:"vlanid"`
+	Id         types.Int64  `tfsdk:"id"`
 	Ifnum      types.String `tfsdk:"ifnum"`
 	Ownergroup types.String `tfsdk:"ownergroup"`
 	Tagged     types.Bool   `tfsdk:"tagged"`
@@ -33,44 +36,55 @@ func (r *VlanChannelBindingResource) Schema(ctx context.Context, req resource.Sc
 				Computed:    true,
 				Description: "The ID of the vlan_channel_binding resource.",
 			},
-			"vlanid": schema.Int64Attribute{
-				Required:    true,
+			"id": schema.Int64Attribute{
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specifies the virtual LAN ID.",
 			},
 			"ifnum": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The interface to be bound to the VLAN, specified in slot/port notation (for example, 1/3).",
 			},
 			"ownergroup": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("DEFAULT_NG"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The owner node group in a Cluster for this vlan.",
 			},
 			"tagged": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Make the interface an 802.1q tagged interface. Packets sent on this interface on this VLAN have an additional 4-byte 802.1q tag, which identifies the VLAN. To use 802.1q tagging, you must also configure the switch connected to the appliance's interfaces.",
 			},
 		},
 	}
 }
 
-func vlan_channel_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VlanChannelBindingResourceModel) network.Vlanchannelbinding {
-	tflog.Debug(ctx, "In vlan_channel_bindingGetThePayloadFromtheConfig Function")
+func vlan_channel_bindingGetThePayloadFromthePlan(ctx context.Context, data *VlanChannelBindingResourceModel) network.Vlanchannelbinding {
+	tflog.Debug(ctx, "In vlan_channel_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vlan_channel_binding := network.Vlanchannelbinding{}
-	if !data.Vlanid.IsNull() {
-		vlan_channel_binding.Id = utils.IntPtr(int(data.Vlanid.ValueInt64()))
+	if !data.Id.IsNull() && !data.Id.IsUnknown() {
+		vlan_channel_binding.Id = utils.IntPtr(int(data.Id.ValueInt64()))
 	}
-	if !data.Ifnum.IsNull() {
+	if !data.Ifnum.IsNull() && !data.Ifnum.IsUnknown() {
 		vlan_channel_binding.Ifnum = data.Ifnum.ValueString()
 	}
-	if !data.Ownergroup.IsNull() {
+	if !data.Ownergroup.IsNull() && !data.Ownergroup.IsUnknown() {
 		vlan_channel_binding.Ownergroup = data.Ownergroup.ValueString()
 	}
-	if !data.Tagged.IsNull() {
+	if !data.Tagged.IsNull() && !data.Tagged.IsUnknown() {
 		vlan_channel_binding.Tagged = data.Tagged.ValueBool()
 	}
 
@@ -83,10 +97,10 @@ func vlan_channel_bindingSetAttrFromGet(ctx context.Context, data *VlanChannelBi
 	// Convert API response to model
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Vlanid = types.Int64Value(intVal)
+			data.Id = types.Int64Value(intVal)
 		}
 	} else {
-		data.Vlanid = types.Int64Null()
+		data.Id = types.Int64Null()
 	}
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
@@ -107,8 +121,10 @@ func vlan_channel_bindingSetAttrFromGet(ctx context.Context, data *VlanChannelBi
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("vlanid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vlanid.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
 	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("tagged:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Tagged.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

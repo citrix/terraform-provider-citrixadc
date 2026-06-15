@@ -1,0 +1,222 @@
+[
+    {
+        "option_name": "harqretxdelay",
+        "type": "integer",
+        "description": [
+            "HARQ retransmission delay (in ms)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "lr1coeflist",
+        "type": "string",
+        "description": [
+            "coefficients values for Label1."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "lr1probthresh",
+        "type": "number",
+        "description": [
+            "Probability threshold values for LR model to differentiate between NET1 and reset(NET2 and NET3)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "lr2coeflist",
+        "type": "string",
+        "description": [
+            "coefficients values for Label 2."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "lr2probthresh",
+        "type": "number",
+        "description": [
+            "Probability threshold values for LR model to differentiate between NET2 and NET3."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "minrttnet1",
+        "type": "integer",
+        "description": [
+            "MIN RTT (in ms) for the first network."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "minrttnet2",
+        "type": "integer",
+        "description": [
+            "MIN RTT (in ms) for the second network."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "minrttnet3",
+        "type": "integer",
+        "description": [
+            "MIN RTT (in ms) for the third network."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net1cclscale",
+        "type": "string",
+        "description": [
+            "Three congestion level scores limits corresponding to None, Low, Medium."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net1csqscale",
+        "type": "string",
+        "description": [
+            "Three signal quality level scores limits corresponding to Excellent, Good, Fair."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net1label",
+        "type": "string",
+        "description": [
+            "Name of the network label."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net1logcoef",
+        "type": "string",
+        "description": [
+            "Connection quality ranking Log coefficients of network 1."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net2cclscale",
+        "type": "string",
+        "description": [
+            "Three congestion level scores limits corresponding to None, Low, Medium."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net2csqscale",
+        "type": "string",
+        "description": [
+            "Three signal quality level scores limits corresponding to Excellent, Good, Fair."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net2label",
+        "type": "string",
+        "description": [
+            "Name of the network label 2."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net2logcoef",
+        "type": "string",
+        "description": [
+            "Connnection quality ranking Log coefficients of network 2."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net3cclscale",
+        "type": "string",
+        "description": [
+            "Three congestion level scores limits corresponding to None, Low, Medium."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net3csqscale",
+        "type": "string",
+        "description": [
+            "Three signal quality level scores limits corresponding to Excellent, Good, Fair."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net3label",
+        "type": "string",
+        "description": [
+            "Name of the network label 3."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "net3logcoef",
+        "type": "string",
+        "description": [
+            "Connection quality ranking Log coefficients of network 3."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

@@ -9,7 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,34 +35,43 @@ func (r *AuditnslogglobalAuditnslogpolicyBindingResource) Schema(ctx context.Con
 				Description: "The ID of the auditnslogglobal_auditnslogpolicy_binding resource.",
 			},
 			"globalbindtype": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("SYSTEM_GLOBAL"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "0",
 			},
 			"policyname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the audit nslog policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specifies the priority of the policy.",
 			},
 		},
 	}
 }
 
-func auditnslogglobal_auditnslogpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AuditnslogglobalAuditnslogpolicyBindingResourceModel) audit.Auditnslogglobalauditnslogpolicybinding {
-	tflog.Debug(ctx, "In auditnslogglobal_auditnslogpolicy_bindingGetThePayloadFromtheConfig Function")
+func auditnslogglobal_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AuditnslogglobalAuditnslogpolicyBindingResourceModel) audit.Auditnslogglobalauditnslogpolicybinding {
+	tflog.Debug(ctx, "In auditnslogglobal_auditnslogpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	auditnslogglobal_auditnslogpolicy_binding := audit.Auditnslogglobalauditnslogpolicybinding{}
-	if !data.Globalbindtype.IsNull() {
+	if !data.Globalbindtype.IsNull() && !data.Globalbindtype.IsUnknown() {
 		auditnslogglobal_auditnslogpolicy_binding.Globalbindtype = data.Globalbindtype.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		auditnslogglobal_auditnslogpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		auditnslogglobal_auditnslogpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 

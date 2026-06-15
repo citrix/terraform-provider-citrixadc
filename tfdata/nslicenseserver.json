@@ -1,0 +1,104 @@
+[
+    {
+        "option_name": "deviceprofilename",
+        "type": "string",
+        "description": [
+            "Device profile is created on ADM and contains the user name and password of the instance(s). ADM will use this info to add the NS for registration"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "forceupdateip",
+        "type": "boolean",
+        "description": [
+            "If this flag is used while adding the licenseserver, existing config will be overwritten. Use this flag only if you are sure that the new licenseserver has the required capacity."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "licensemode",
+        "type": "string",
+        "description": [
+            "This paramter indicates type of license customer interested while configuring add/set licenseserver"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "licenseserverip",
+        "type": "string",
+        "description": [
+            "IP address of the License server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "nodeid",
+        "type": "integer",
+        "description": [
+            "Unique number that identifies the cluster node."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "password",
+        "type": "string",
+        "description": [
+            "Password to use when authenticating with ADM Agent for LAS licensing."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "port",
+        "type": "integer",
+        "description": [
+            "License server port."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "servername",
+        "type": "string",
+        "description": [
+            "Fully qualified domain name of the License server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "username",
+        "type": "string",
+        "description": [
+            "Username to authenticate with ADM Agent for LAS licensing. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

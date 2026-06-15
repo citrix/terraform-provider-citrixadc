@@ -47,6 +47,7 @@ func (d *AuthenticationvserverRewritepolicyBindingDataSource) Read(ctx context.C
 	bindpoint_Name := data.Bindpoint
 	groupextraction_Name := data.Groupextraction
 	policy_Name := data.Policy
+	secondary_Name := data.Secondary
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -102,6 +103,17 @@ func (d *AuthenticationvserverRewritepolicyBindingDataSource) Read(ctx context.C
 				continue
 			}
 		} else if !policy_Name.IsNull() {
+			match = false
+			continue
+		}
+
+		// Check secondary
+		if val, ok := v["secondary"].(bool); ok {
+			if secondary_Name.IsNull() || val != secondary_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !secondary_Name.IsNull() {
 			match = false
 			continue
 		}

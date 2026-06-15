@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -17,9 +19,9 @@ import (
 
 // LinksetChannelBindingResourceModel describes the resource data model.
 type LinksetChannelBindingResourceModel struct {
-	Id        types.String `tfsdk:"id"`
-	Linksetid types.String `tfsdk:"linkset_id"`
-	Ifnum     types.String `tfsdk:"ifnum"`
+	Id    types.String `tfsdk:"id"`
+	Id    types.String `tfsdk:"id"`
+	Ifnum types.String `tfsdk:"ifnum"`
 }
 
 func (r *LinksetChannelBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -30,27 +32,33 @@ func (r *LinksetChannelBindingResource) Schema(ctx context.Context, req resource
 				Computed:    true,
 				Description: "The ID of the linkset_channel_binding resource.",
 			},
-			"linkset_id": schema.StringAttribute{
-				Required:    true,
+			"id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "ID of the linkset to which to bind the interfaces.",
 			},
 			"ifnum": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The interfaces to be bound to the linkset.",
 			},
 		},
 	}
 }
 
-func linkset_channel_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LinksetChannelBindingResourceModel) network.Linksetchannelbinding {
-	tflog.Debug(ctx, "In linkset_channel_bindingGetThePayloadFromtheConfig Function")
+func linkset_channel_bindingGetThePayloadFromthePlan(ctx context.Context, data *LinksetChannelBindingResourceModel) network.Linksetchannelbinding {
+	tflog.Debug(ctx, "In linkset_channel_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	linkset_channel_binding := network.Linksetchannelbinding{}
-	if !data.Linksetid.IsNull() {
-		linkset_channel_binding.Id = data.Linksetid.ValueString()
+	if !data.Id.IsNull() && !data.Id.IsUnknown() {
+		linkset_channel_binding.Id = data.Id.ValueString()
 	}
-	if !data.Ifnum.IsNull() {
+	if !data.Ifnum.IsNull() && !data.Ifnum.IsUnknown() {
 		linkset_channel_binding.Ifnum = data.Ifnum.ValueString()
 	}
 
@@ -62,9 +70,9 @@ func linkset_channel_bindingSetAttrFromGet(ctx context.Context, data *LinksetCha
 
 	// Convert API response to model
 	if val, ok := getResponseData["id"]; ok && val != nil {
-		data.Linksetid = types.StringValue(val.(string))
+		data.Id = types.StringValue(val.(string))
 	} else {
-		data.Linksetid = types.StringNull()
+		data.Id = types.StringNull()
 	}
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
@@ -75,7 +83,7 @@ func linkset_channel_bindingSetAttrFromGet(ctx context.Context, data *LinksetCha
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("linkset_id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Linksetid.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 

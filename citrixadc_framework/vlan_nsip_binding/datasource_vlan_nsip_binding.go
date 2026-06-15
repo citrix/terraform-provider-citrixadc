@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -43,8 +44,11 @@ func (d *VlanNsipBindingDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Vlanid.ValueInt64())
+	id_Name := data.Id.ValueString()
 	ipaddress_Name := data.Ipaddress
+	netmask_Name := data.Netmask
+	ownergroup_Name := data.Ownergroup
+	td_Name := data.Td
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +86,39 @@ func (d *VlanNsipBindingDataSource) Read(ctx context.Context, req datasource.Rea
 			continue
 		}
 
+		// Check netmask
+		if val, ok := v["netmask"].(string); ok {
+			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !netmask_Name.IsNull() {
+			match = false
+			continue
+		}
+
+		// Check ownergroup
+		if val, ok := v["ownergroup"].(string); ok {
+			if ownergroup_Name.IsNull() || val != ownergroup_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !ownergroup_Name.IsNull() {
+			match = false
+			continue
+		}
+
+		// Check td
+		if val, ok := v["td"]; ok {
+			val, _ = utils.ConvertToInt64(val)
+			if td_Name.IsNull() || val != td_Name.ValueInt64() {
+				match = false
+				continue
+			}
+		} else if !td_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

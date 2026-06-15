@@ -1,0 +1,334 @@
+[
+    {
+        "option_name": "advancedanalyticsstats",
+        "type": "string",
+        "description": [
+            "Disable/Enable advanace analytics stats"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "aftpallowrandomsourceport",
+        "type": "string",
+        "description": [
+            "Allow the FTP server to come from a random source port for active FTP data connections"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "cip",
+        "type": "string",
+        "description": [
+            "Enable or disable the insertion of the actual client IP address into the HTTP header request passed from the client to one, some, or all servers attached to the system. The passed address can then be accessed through a minor modification to the server.",
+            "* If the CIP header is specified, it will be used as the client IP header.",
+            "* If the CIP header is not specified, the value that has been set will be used as the client IP header."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "cipheader",
+        "type": "string",
+        "description": [
+            "Text that will be used as the client IP address header."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "cookieversion",
+        "type": "string",
+        "description": [
+            "Version of the cookie inserted by the system."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "crportrange",
+        "type": "string",
+        "description": [
+            "Port range for cache redirection services."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "exclusivequotamaxclient",
+        "type": "integer",
+        "description": [
+            "Percentage of maxClient threshold to be divided equally among PEs."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 80
+    },
+    {
+        "option_name": "exclusivequotaspillover",
+        "type": "integer",
+        "description": [
+            "Percentage of spillover threshold to be divided equally among PEs."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 80
+    },
+    {
+        "option_name": "ftpportrange",
+        "type": "string",
+        "description": [
+            "Minimum and maximum port (port range) that FTP services are allowed to use."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "grantquotamaxclient",
+        "type": "integer",
+        "description": [
+            "Percentage of shared pool value granted to PE once PE exhausts the local exclusive quota. Where shared pool is the remaining maxclient quota after distribution of exclusive quota to PEs.",
+            "",
+            "Example: In a 2 PE NetScaler system if configured maxclient is 100 and exclusive quota is 80 percent then each PE will get 40 as local exclusive quota and 20 will be in shared pool. If configured grantQuota is 20 percent, then after exhausting its local exclusive quota PE borrows from shared pool in chunks of 4 i.e. 20 percent of 20."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10
+    },
+    {
+        "option_name": "grantquotaspillover",
+        "type": "integer",
+        "description": [
+            "Percentage of shared pool value granted to PE once PE exhausts the local exclusive quota. Where shared pool is the remaining spillover quota after distribution of exclusive quota to PEs.",
+            "",
+            "Example: In a 2 PE NetScaler system if configured spillover is 100 and exclusive quota is 80 percent then each PE will get 40 as local exclusive quota and 20 will be in shared pool. If configured grantQuota is 20 percent, then after exhausting its local exclusive quota PE borrows from shared pool in chunks of 4 i.e. 20 percent of 20."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10
+    },
+    {
+        "option_name": "httpport",
+        "type": "integer[]",
+        "description": [
+            "HTTP ports on the web server. This allows the system to perform connection off-load for any client request that has a destination port matching one of these configured ports."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "icaports",
+        "type": "integer[]",
+        "description": [
+            "The ICA ports on the Web server. This allows the system to perform connection off-load for any client request that has a destination port matching one of these configured ports."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "internaluserlogin",
+        "type": "string",
+        "description": [
+            "Enables/disables the internal user from logging in to the appliance. Before disabling internal user login, you must have key-based authentication set up on the appliance. The file name for the key pair must be \"ns_comm_key\"."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "ipttl",
+        "type": "integer",
+        "description": [
+            "Set the IP Time to Live (TTL) and Hop Limit value for all outgoing packets from Citrix ADC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 255
+    },
+    {
+        "option_name": "maxconn",
+        "type": "integer",
+        "description": [
+            "Maximum number of connections that will be made from the appliance to the web server(s) attached to it. The value entered here is applied globally to all attached servers."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "maxreq",
+        "type": "integer",
+        "description": [
+            "Maximum number of requests that the system can pass on a particular connection between the appliance and a server attached to it. Setting this value to 0 allows an unlimited number of requests to be passed. This value is overridden by the maximum number of requests configured on the individual service."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "mgmthttpport",
+        "type": "integer",
+        "description": [
+            "This allow the configuration of management HTTP port."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 80
+    },
+    {
+        "option_name": "mgmthttpsport",
+        "type": "integer",
+        "description": [
+            "This allows the configuration of management HTTPS port."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 443
+    },
+    {
+        "option_name": "pmtumin",
+        "type": "integer",
+        "description": [
+            "Minimum path MTU value that Citrix ADC will process in the ICMP fragmentation needed message. If the ICMP message contains a value less than this value, then this value is used instead."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 576
+    },
+    {
+        "option_name": "pmtutimeout",
+        "type": "integer",
+        "description": [
+            "Interval, in minutes, for flushing the PMTU entries."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10
+    },
+    {
+        "option_name": "proxyprotocol",
+        "type": "string",
+        "description": [
+            "Disable/Enable v1 or v2 proxy protocol header for client info insertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "securecookie",
+        "type": "string",
+        "description": [
+            "Enable or disable secure flag for persistence cookie."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "secureicaports",
+        "type": "integer[]",
+        "description": [
+            "The Secure ICA ports on the Web server. This allows the system to perform connection off-load for any",
+            "            client request that has a destination port matching one of these configured ports."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "servicepathingressvlan",
+        "type": "integer",
+        "description": [
+            "VLAN on which the subscriber traffic arrives on the appliance."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "tcpcip",
+        "type": "string",
+        "description": [
+            "Enable or disable the insertion of the client TCP/IP header in TCP payload passed from the client to one, some, or all servers attached to the system. The passed address can then be accessed through a minor modification to the server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "timezone",
+        "type": "string",
+        "description": [
+            "Time zone for the Citrix ADC. Name of the time zone should be specified as argument."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "CoordinatedUniversalTime"
+    },
+    {
+        "option_name": "useproxyport",
+        "type": "string",
+        "description": [
+            "Enable/Disable use_proxy_port setting"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    }
+]

@@ -1,0 +1,14 @@
+[
+    {
+        "option_name": "vfautorecover",
+        "type": "string",
+        "description": [
+            "VF autorecover mode"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "default": "ENABLE"
+    }
+]

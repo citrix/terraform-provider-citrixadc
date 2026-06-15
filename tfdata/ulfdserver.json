@@ -1,0 +1,14 @@
+[
+    {
+        "option_name": "loggerip",
+        "type": "string",
+        "description": [
+            "IP address of the server where ulfd service is running."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

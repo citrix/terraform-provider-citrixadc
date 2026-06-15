@@ -1,0 +1,59 @@
+[
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Comments associated with this archive."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of tar archive"
+        ],
+        "is_get_id": false,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "src",
+        "type": "string",
+        "description": [
+            "Indicates the source of the tar archive file as a URL",
+            "of the form",
+            "",
+            "    <protocol>://<host>[:<port>][/<path>]",
+            "",
+            "<protocol> is http or https.",
+            "<host> is the DNS name or IP address of the http or https server.",
+            "<port> is the port number of the server. If omitted, the",
+            "default port for http or https will be used.",
+            "<path> is the path of the file on the server.",
+            "",
+            "Import will fail if an https server requires client",
+            "certificate authentication."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "target",
+        "type": "string",
+        "description": [
+            "Path to the file to be exported"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

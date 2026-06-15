@@ -1,0 +1,14 @@
+[
+    {
+        "option_name": "filename",
+        "type": "string",
+        "description": [
+            "Name of the restore point."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    }
+]

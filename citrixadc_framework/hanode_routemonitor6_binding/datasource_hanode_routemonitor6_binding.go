@@ -43,7 +43,8 @@ func (d *HanodeRoutemonitor6BindingDataSource) Read(ctx context.Context, req dat
 	}
 
 	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Hanodeid.ValueInt64())
+	id_Name := data.Id.ValueString()
+	netmask_Name := data.Netmask
 	routemonitor_Name := data.Routemonitor
 
 	var dataArr []map[string]interface{}
@@ -71,6 +72,17 @@ func (d *HanodeRoutemonitor6BindingDataSource) Read(ctx context.Context, req dat
 	for i, v := range dataArr {
 		match := true
 
+		// Check netmask
+		if val, ok := v["netmask"].(string); ok {
+			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !netmask_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check routemonitor
 		if val, ok := v["routemonitor"].(string); ok {
 			if routemonitor_Name.IsNull() || val != routemonitor_Name.ValueString() {
@@ -89,7 +101,7 @@ func (d *HanodeRoutemonitor6BindingDataSource) Read(ctx context.Context, req dat
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("hanode_routemonitor6_binding with routemonitor %s not found", routemonitor_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("hanode_routemonitor6_binding with netmask %s not found", netmask_Name))
 		return
 	}
 

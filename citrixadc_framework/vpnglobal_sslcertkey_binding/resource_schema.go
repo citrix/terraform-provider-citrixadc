@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,60 +37,78 @@ func (r *VpnglobalSslcertkeyBindingResource) Schema(ctx context.Context, req res
 				Description: "The ID of the vpnglobal_sslcertkey_binding resource.",
 			},
 			"cacert": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the CA certificate binding.",
 			},
 			"certkeyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "SSL certkey to use in signing tokens. Only RSA cert key is allowed",
 			},
 			"crlcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the CRL check parameter (Mandatory/Optional).",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"ocspcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the OCSP check parameter (Mandatory/Optional).",
 			},
 			"userdataencryptionkey": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Certificate to be used for encrypting user data like KB Question and Answers, Alternate Email Address, etc.",
 			},
 		},
 	}
 }
 
-func vpnglobal_sslcertkey_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnglobalSslcertkeyBindingResourceModel) vpn.Vpnglobalsslcertkeybinding {
-	tflog.Debug(ctx, "In vpnglobal_sslcertkey_bindingGetThePayloadFromtheConfig Function")
+func vpnglobal_sslcertkey_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnglobalSslcertkeyBindingResourceModel) vpn.Vpnglobalsslcertkeybinding {
+	tflog.Debug(ctx, "In vpnglobal_sslcertkey_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnglobal_sslcertkey_binding := vpn.Vpnglobalsslcertkeybinding{}
-	if !data.Cacert.IsNull() {
+	if !data.Cacert.IsNull() && !data.Cacert.IsUnknown() {
 		vpnglobal_sslcertkey_binding.Cacert = data.Cacert.ValueString()
 	}
-	if !data.Certkeyname.IsNull() {
+	if !data.Certkeyname.IsNull() && !data.Certkeyname.IsUnknown() {
 		vpnglobal_sslcertkey_binding.Certkeyname = data.Certkeyname.ValueString()
 	}
-	if !data.Crlcheck.IsNull() {
+	if !data.Crlcheck.IsNull() && !data.Crlcheck.IsUnknown() {
 		vpnglobal_sslcertkey_binding.Crlcheck = data.Crlcheck.ValueString()
 	}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		vpnglobal_sslcertkey_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Ocspcheck.IsNull() {
+	if !data.Ocspcheck.IsNull() && !data.Ocspcheck.IsUnknown() {
 		vpnglobal_sslcertkey_binding.Ocspcheck = data.Ocspcheck.ValueString()
 	}
-	if !data.Userdataencryptionkey.IsNull() {
+	if !data.Userdataencryptionkey.IsNull() && !data.Userdataencryptionkey.IsUnknown() {
 		vpnglobal_sslcertkey_binding.Userdataencryptionkey = data.Userdataencryptionkey.ValueString()
 	}
 

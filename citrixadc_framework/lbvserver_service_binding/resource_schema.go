@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -17,11 +19,12 @@ import (
 
 // LbvserverServiceBindingResourceModel describes the resource data model.
 type LbvserverServiceBindingResourceModel struct {
-	Id          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Order       types.Int64  `tfsdk:"order"`
-	Servicename types.String `tfsdk:"servicename"`
-	Weight      types.Int64  `tfsdk:"weight"`
+	Id               types.String `tfsdk:"id"`
+	Name             types.String `tfsdk:"name"`
+	Order            types.Int64  `tfsdk:"order"`
+	Servicegroupname types.String `tfsdk:"servicegroupname"`
+	Servicename      types.String `tfsdk:"servicename"`
+	Weight           types.Int64  `tfsdk:"weight"`
 }
 
 func (r *LbvserverServiceBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -33,13 +36,24 @@ func (r *LbvserverServiceBindingResource) Schema(ctx context.Context, req resour
 				Description: "The ID of the lbvserver_service_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vserver\" or 'my vserver').",
 			},
 			"order": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Order number to be assigned to the service when it is bound to the lb vserver.",
+			},
+			"servicegroupname": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Name of the service group.",
 			},
 			"servicename": schema.StringAttribute{
 				Optional:    true,
@@ -55,21 +69,24 @@ func (r *LbvserverServiceBindingResource) Schema(ctx context.Context, req resour
 	}
 }
 
-func lbvserver_service_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LbvserverServiceBindingResourceModel) lb.Lbvserverservicebinding {
-	tflog.Debug(ctx, "In lbvserver_service_bindingGetThePayloadFromtheConfig Function")
+func lbvserver_service_bindingGetThePayloadFromthePlan(ctx context.Context, data *LbvserverServiceBindingResourceModel) lb.Lbvserverservicebinding {
+	tflog.Debug(ctx, "In lbvserver_service_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lbvserver_service_binding := lb.Lbvserverservicebinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		lbvserver_service_binding.Name = data.Name.ValueString()
 	}
-	if !data.Order.IsNull() {
+	if !data.Order.IsNull() && !data.Order.IsUnknown() {
 		lbvserver_service_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
 	}
-	if !data.Servicename.IsNull() {
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
+		lbvserver_service_binding.Servicegroupname = data.Servicegroupname.ValueString()
+	}
+	if !data.Servicename.IsNull() && !data.Servicename.IsUnknown() {
 		lbvserver_service_binding.Servicename = data.Servicename.ValueString()
 	}
-	if !data.Weight.IsNull() {
+	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		lbvserver_service_binding.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
 
@@ -92,6 +109,11 @@ func lbvserver_service_bindingSetAttrFromGet(ctx context.Context, data *Lbvserve
 	} else {
 		data.Order = types.Int64Null()
 	}
+	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
+		data.Servicegroupname = types.StringValue(val.(string))
+	} else {
+		data.Servicegroupname = types.StringNull()
+	}
 	if val, ok := getResponseData["servicename"]; ok && val != nil {
 		data.Servicename = types.StringValue(val.(string))
 	} else {
@@ -109,6 +131,7 @@ func lbvserver_service_bindingSetAttrFromGet(ctx context.Context, data *Lbvserve
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("servicename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicename.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 

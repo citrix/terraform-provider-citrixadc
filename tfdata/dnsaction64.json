@@ -1,0 +1,49 @@
+[
+    {
+        "option_name": "actionname",
+        "type": "string",
+        "description": [
+            "Name of the dns64 action."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "excluderule",
+        "type": "string",
+        "description": [
+            "The expression to select the criteria for eliminating the corresponding ipv6 addresses from the response."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "mappedrule",
+        "type": "string",
+        "description": [
+            "The expression to select the criteria for ipv4 addresses to be used for synthesis.",
+            "                      Only if the mappedrule is evaluated to true the corresponding ipv4 address is used for synthesis using respective prefix,",
+            "                      otherwise the A RR is discarded"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "prefix",
+        "type": "string",
+        "description": [
+            "The dns64 prefix to be used if the after evaluating the rules"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    }
+]

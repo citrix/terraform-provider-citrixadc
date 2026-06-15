@@ -28,8 +28,7 @@ func BotprofileIpreputationBindingDataSourceSchema() schema.Schema {
 				Description: "Enabled or disabled IP-repuation binding.",
 			},
 			"bot_ipreputation": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "IP reputation binding. For each category, only one binding is allowed. To update the values of an existing binding, user has to first unbind that binding, and then needs to bind again with the new values.",
 			},
 			"category": schema.StringAttribute{

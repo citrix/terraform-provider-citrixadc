@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,41 +35,53 @@ func (r *PolicystringmapPatternBindingResource) Schema(ctx context.Context, req 
 				Description: "The ID of the policystringmap_pattern_binding resource.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Comments associated with the string map or key-value pair bound to this string map.",
 			},
 			"key": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Character string constituting the key to be bound to the string map. The key is matched against the data processed by the operation that uses the string map. The default character set is ASCII. UTF-8 characters can be included if the character set is UTF-8.  UTF-8 characters can be entered directly (if the UI supports it) or can be encoded as a sequence of hexadecimal bytes '\\xNN'. For example, the UTF-8 character '' can be encoded as '\\xC3\\xBC'.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the string map to which to bind the key-value pair.",
 			},
 			"value": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Character string constituting the value associated with the key. This value is returned when processed data matches the associated key. Refer to the key parameter for details of the value character set.",
 			},
 		},
 	}
 }
 
-func policystringmap_pattern_bindingGetThePayloadFromtheConfig(ctx context.Context, data *PolicystringmapPatternBindingResourceModel) policy.Policystringmappatternbinding {
-	tflog.Debug(ctx, "In policystringmap_pattern_bindingGetThePayloadFromtheConfig Function")
+func policystringmap_pattern_bindingGetThePayloadFromthePlan(ctx context.Context, data *PolicystringmapPatternBindingResourceModel) policy.Policystringmappatternbinding {
+	tflog.Debug(ctx, "In policystringmap_pattern_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	policystringmap_pattern_binding := policy.Policystringmappatternbinding{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		policystringmap_pattern_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Key.IsNull() {
+	if !data.Key.IsNull() && !data.Key.IsUnknown() {
 		policystringmap_pattern_binding.Key = data.Key.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		policystringmap_pattern_binding.Name = data.Name.ValueString()
 	}
-	if !data.Value.IsNull() {
+	if !data.Value.IsNull() && !data.Value.IsUnknown() {
 		policystringmap_pattern_binding.Value = data.Value.ValueString()
 	}
 

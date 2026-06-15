@@ -1,0 +1,13 @@
+[
+    {
+        "option_name": "pemode",
+        "type": "string",
+        "description": [
+            "Set PEmode to DEFAULT/CPUBOUND. Distribute the PE weights equally if PEmode is set to CPUBOUND."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

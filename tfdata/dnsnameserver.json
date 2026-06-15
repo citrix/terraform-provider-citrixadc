@@ -1,0 +1,74 @@
+[
+    {
+        "option_name": "dnsprofilename",
+        "type": "string",
+        "description": [
+            "Name of the DNS profile to be associated with the name server"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "dnsvservername",
+        "type": "string",
+        "description": [
+            "Name of a DNS virtual server. Overrides any IP address-based name servers configured on the Citrix ADC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "ip",
+        "type": "string",
+        "description": [
+            "IP address of an external name server or, if the Local parameter is set, IP address of a local DNS server (LDNS)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "local",
+        "type": "boolean",
+        "description": [
+            "Mark the IP address as one that belongs to a local recursive DNS server on the Citrix ADC. The appliance recursively resolves queries received on an IP address that is marked as being local. For recursive resolution to work, the global DNS parameter, Recursion, must also be set.",
+            "",
+            "If no name server is marked as being local, the appliance functions as a stub resolver and load balances the name servers."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "Administrative state of the name server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "type",
+        "type": "string",
+        "description": [
+            "Protocol used by the name server. UDP_TCP is not valid if the name server is a DNS virtual server configured on the appliance."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "UDP"
+    }
+]

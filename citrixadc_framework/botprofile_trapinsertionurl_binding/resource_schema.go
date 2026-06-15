@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,59 +38,75 @@ func (r *BotprofileTrapinsertionurlBindingResource) Schema(ctx context.Context, 
 				Description: "The ID of the botprofile_trapinsertionurl_binding resource.",
 			},
 			"bot_bind_comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about this binding.",
 			},
 			"bot_trap_url": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Request URL regex pattern for which Trap URL is inserted.",
 			},
 			"bot_trap_url_insertion_enabled": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enable or disable the request URL pattern.",
 			},
 			"logmessage": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Message to be logged for this binding.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my profile\" or 'my profile').",
 			},
 			"trapinsertionurl": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Bind the trap URL for the configured request URLs. Maximum 30 bindings can be configured per profile.",
 			},
 		},
 	}
 }
 
-func botprofile_trapinsertionurl_bindingGetThePayloadFromtheConfig(ctx context.Context, data *BotprofileTrapinsertionurlBindingResourceModel) bot.Botprofiletrapinsertionurlbinding {
-	tflog.Debug(ctx, "In botprofile_trapinsertionurl_bindingGetThePayloadFromtheConfig Function")
+func botprofile_trapinsertionurl_bindingGetThePayloadFromthePlan(ctx context.Context, data *BotprofileTrapinsertionurlBindingResourceModel) bot.Botprofiletrapinsertionurlbinding {
+	tflog.Debug(ctx, "In botprofile_trapinsertionurl_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	botprofile_trapinsertionurl_binding := bot.Botprofiletrapinsertionurlbinding{}
-	if !data.BotBindComment.IsNull() {
+	if !data.BotBindComment.IsNull() && !data.BotBindComment.IsUnknown() {
 		botprofile_trapinsertionurl_binding.Botbindcomment = data.BotBindComment.ValueString()
 	}
-	if !data.BotTrapUrl.IsNull() {
+	if !data.BotTrapUrl.IsNull() && !data.BotTrapUrl.IsUnknown() {
 		botprofile_trapinsertionurl_binding.Bottrapurl = data.BotTrapUrl.ValueString()
 	}
-	if !data.BotTrapUrlInsertionEnabled.IsNull() {
+	if !data.BotTrapUrlInsertionEnabled.IsNull() && !data.BotTrapUrlInsertionEnabled.IsUnknown() {
 		botprofile_trapinsertionurl_binding.Bottrapurlinsertionenabled = data.BotTrapUrlInsertionEnabled.ValueString()
 	}
-	if !data.Logmessage.IsNull() {
+	if !data.Logmessage.IsNull() && !data.Logmessage.IsUnknown() {
 		botprofile_trapinsertionurl_binding.Logmessage = data.Logmessage.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		botprofile_trapinsertionurl_binding.Name = data.Name.ValueString()
 	}
-	if !data.Trapinsertionurl.IsNull() {
+	if !data.Trapinsertionurl.IsNull() && !data.Trapinsertionurl.IsUnknown() {
 		botprofile_trapinsertionurl_binding.Trapinsertionurl = data.Trapinsertionurl.ValueBool()
 	}
 
@@ -134,6 +153,7 @@ func botprofile_trapinsertionurl_bindingSetAttrFromGet(ctx context.Context, data
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("bot_trap_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotTrapUrl.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("trapinsertionurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Trapinsertionurl.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

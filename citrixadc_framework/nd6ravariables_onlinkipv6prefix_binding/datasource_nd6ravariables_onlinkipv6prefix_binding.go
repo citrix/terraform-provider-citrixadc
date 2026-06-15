@@ -43,7 +43,7 @@ func (d *Nd6ravariablesOnlinkipv6prefixBindingDataSource) Read(ctx context.Conte
 	}
 
 	// Case 4: Array filter with parent ID
-	vlan_Name := fmt.Sprintf("%d", data.Vlan.ValueInt64())
+	vlan_Name := data.Vlan.ValueString()
 	ipv6prefix_Name := data.Ipv6prefix
 
 	var dataArr []map[string]interface{}

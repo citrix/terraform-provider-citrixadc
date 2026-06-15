@@ -44,7 +44,7 @@ func (d *BridgegroupVlanBindingDataSource) Read(ctx context.Context, req datasou
 	}
 
 	// Case 4: Array filter with parent ID
-	bridgegroup_id_Name := data.Bridgegroupid
+	id_Name := data.Id.ValueString()
 	vlan_Name := data.Vlan
 
 	var dataArr []map[string]interface{}
@@ -52,7 +52,7 @@ func (d *BridgegroupVlanBindingDataSource) Read(ctx context.Context, req datasou
 
 	findParams := service.FindParams{
 		ResourceType:             service.Bridgegroup_vlan_binding.Type(),
-		ResourceName:             fmt.Sprintf("%d", bridgegroup_id_Name.ValueInt64()),
+		ResourceName:             id_Name,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)

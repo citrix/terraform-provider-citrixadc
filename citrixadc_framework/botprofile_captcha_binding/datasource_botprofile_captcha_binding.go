@@ -45,6 +45,7 @@ func (d *BotprofileCaptchaBindingDataSource) Read(ctx context.Context, req datas
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	botcaptchaurl_Name := data.BotCaptchaUrl
+	captcharesource_Name := data.Captcharesource
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +83,16 @@ func (d *BotprofileCaptchaBindingDataSource) Read(ctx context.Context, req datas
 			continue
 		}
 
+		// Check captcharesource
+		if val, ok := v["captcharesource"].(bool); ok {
+			if captcharesource_Name.IsNull() || val != captcharesource_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !captcharesource_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

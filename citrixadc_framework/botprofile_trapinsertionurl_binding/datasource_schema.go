@@ -34,8 +34,7 @@ func BotprofileTrapinsertionurlBindingDataSourceSchema() schema.Schema {
 				Description: "Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my profile\" or 'my profile').",
 			},
 			"trapinsertionurl": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Bind the trap URL for the configured request URLs. Maximum 30 bindings can be configured per profile.",
 			},
 		},

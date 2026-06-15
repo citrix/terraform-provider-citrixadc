@@ -1,0 +1,247 @@
+[
+    {
+        "option_name": "authtimeout",
+        "type": "integer",
+        "description": [
+            "Maximum number of seconds that the Citrix ADC waits for a response from the LDAP server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 3
+    },
+    {
+        "option_name": "defaultauthenticationgroup",
+        "type": "string",
+        "description": [
+            "This is the default group that is chosen when the authentication succeeds in addition to extracted groups."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "groupattrname",
+        "type": "string",
+        "description": [
+            "Attribute name used for group extraction from the LDAP server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "groupnameidentifier",
+        "type": "string",
+        "description": [
+            "LDAP-group attribute that uniquely identifies the group. No two groups on one LDAP server can have the same group name identifier."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "groupsearchattribute",
+        "type": "string",
+        "description": [
+            "LDAP-group attribute that designates the parent group of the specified group. Use this attribute to search for a group's parent group."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "groupsearchfilter",
+        "type": "string",
+        "description": [
+            "Search-expression that can be specified for sending group-search requests to the LDAP server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "groupsearchsubattribute",
+        "type": "string",
+        "description": [
+            "LDAP-group subattribute that designates the parent group of the specified group. Use this attribute to search for a group's parent group."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "ldapbase",
+        "type": "string",
+        "description": [
+            "Base (the server and location) from which LDAP search commands should start.",
+            "If the LDAP server is running locally, the default value of base is dc=netscaler, dc=com."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "ldapbinddn",
+        "type": "string",
+        "description": [
+            "Complete distinguished name (DN) string used for binding to the LDAP server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "ldapbinddnpassword",
+        "type": "string",
+        "description": [
+            "Password for binding to the LDAP server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "ldaploginname",
+        "type": "string",
+        "description": [
+            "Name attribute that the Citrix ADC uses to query the external LDAP server or an Active Directory."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "maxnestinglevel",
+        "type": "integer",
+        "description": [
+            "Number of levels up to which the system can query nested LDAP groups."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 2
+    },
+    {
+        "option_name": "nestedgroupextraction",
+        "type": "string",
+        "description": [
+            "Queries the external LDAP server to determine whether the specified group belongs to another group."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "passwdchange",
+        "type": "string",
+        "description": [
+            "Accept password change requests."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "searchfilter",
+        "type": "string",
+        "description": [
+            "String to be combined with the default LDAP user search string to form the value to use when executing an LDAP search.",
+            "For example, the following values:",
+            "vpnallowed=true,",
+            "ldaploginame=\"\"samaccount\"\"",
+            "when combined with the user-supplied username \"\"bob\"\", yield the following LDAP search string:",
+            "\"\"(&(vpnallowed=true)(samaccount=bob)\"\""
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "sectype",
+        "type": "string",
+        "description": [
+            "Type of security used for communications between the Citrix ADC and the LDAP server. For the PLAINTEXT setting, no encryption is required."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "TLS"
+    },
+    {
+        "option_name": "serverip",
+        "type": "string",
+        "description": [
+            "IP address of your LDAP server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "serverport",
+        "type": "integer",
+        "description": [
+            "Port number on which the LDAP server listens for connections."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 389
+    },
+    {
+        "option_name": "ssonameattribute",
+        "type": "string",
+        "description": [
+            "Attribute used by the Citrix ADC to query an external LDAP server or Active Directory for an alternative username.",
+            "This alternative username is then used for single sign-on (SSO)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "subattributename",
+        "type": "string",
+        "description": [
+            "Subattribute name used for group extraction from the LDAP server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "svrtype",
+        "type": "string",
+        "description": [
+            "The type of LDAP server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "AAA_LDAP_SERVER_TYPE_DEFAULT"
+    }
+]

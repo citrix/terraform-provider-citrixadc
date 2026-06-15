@@ -44,6 +44,7 @@ func (d *LbvserverServiceBindingDataSource) Read(ctx context.Context, req dataso
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	servicegroupname_Name := data.Servicegroupname
 	servicename_Name := data.Servicename
 
 	var dataArr []map[string]interface{}
@@ -71,6 +72,17 @@ func (d *LbvserverServiceBindingDataSource) Read(ctx context.Context, req dataso
 	for i, v := range dataArr {
 		match := true
 
+		// Check servicegroupname
+		if val, ok := v["servicegroupname"].(string); ok {
+			if servicegroupname_Name.IsNull() || val != servicegroupname_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !servicegroupname_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check servicename
 		if val, ok := v["servicename"].(string); ok {
 			if servicename_Name.IsNull() || val != servicename_Name.ValueString() {
@@ -89,7 +101,7 @@ func (d *LbvserverServiceBindingDataSource) Read(ctx context.Context, req dataso
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("lbvserver_service_binding with servicename %s not found", servicename_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("lbvserver_service_binding with servicegroupname %s not found", servicegroupname_Name))
 		return
 	}
 

@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,26 +33,32 @@ func (r *IpsetNsipBindingResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The ID of the ipset_nsip_binding resource.",
 			},
 			"ipaddress": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "One or more IP addresses bound to the IP set.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the IP set to which to bind IP addresses.",
 			},
 		},
 	}
 }
 
-func ipset_nsip_bindingGetThePayloadFromtheConfig(ctx context.Context, data *IpsetNsipBindingResourceModel) network.Ipsetnsipbinding {
-	tflog.Debug(ctx, "In ipset_nsip_bindingGetThePayloadFromtheConfig Function")
+func ipset_nsip_bindingGetThePayloadFromthePlan(ctx context.Context, data *IpsetNsipBindingResourceModel) network.Ipsetnsipbinding {
+	tflog.Debug(ctx, "In ipset_nsip_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	ipset_nsip_binding := network.Ipsetnsipbinding{}
-	if !data.Ipaddress.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		ipset_nsip_binding.Ipaddress = data.Ipaddress.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		ipset_nsip_binding.Name = data.Name.ValueString()
 	}
 

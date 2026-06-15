@@ -19,8 +19,7 @@ func VpnvserverIntranetipBindingDataSourceSchema() schema.Schema {
 				Description: "Name of the virtual server.",
 			},
 			"netmask": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The netmask of the intranet IP address or range.",
 			},
 		},

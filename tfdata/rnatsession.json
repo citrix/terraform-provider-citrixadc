@@ -1,0 +1,46 @@
+[
+    {
+        "option_name": "aclname",
+        "type": "string",
+        "description": [
+            "Name of any configured extended ACL whose action is ALLOW."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "natip",
+        "type": "string",
+        "description": [
+            "The NAT IP address defined for the RNAT entry."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "netmask",
+        "type": "string",
+        "description": [
+            "Subnet mask associated with the network address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "network",
+        "type": "string",
+        "description": [
+            "IPv4 network address on whose traffic you want the Citrix ADC to do RNAT processing."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

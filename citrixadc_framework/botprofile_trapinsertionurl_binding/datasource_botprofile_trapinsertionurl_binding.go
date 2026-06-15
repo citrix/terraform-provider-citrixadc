@@ -45,6 +45,7 @@ func (d *BotprofileTrapinsertionurlBindingDataSource) Read(ctx context.Context, 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	bottrapurl_Name := data.BotTrapUrl
+	trapinsertionurl_Name := data.Trapinsertionurl
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +83,16 @@ func (d *BotprofileTrapinsertionurlBindingDataSource) Read(ctx context.Context, 
 			continue
 		}
 
+		// Check trapinsertionurl
+		if val, ok := v["trapinsertionurl"].(bool); ok {
+			if trapinsertionurl_Name.IsNull() || val != trapinsertionurl_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !trapinsertionurl_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

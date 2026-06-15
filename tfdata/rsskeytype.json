@@ -1,0 +1,14 @@
+[
+    {
+        "option_name": "rsstype",
+        "type": "string",
+        "description": [
+            "Type of RSS key, possible values are SYMMETRIC and ASYMMETRIC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "default": "ASYMMETRIC"
+    }
+]

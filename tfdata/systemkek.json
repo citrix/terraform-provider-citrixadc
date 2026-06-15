@@ -1,0 +1,17 @@
+[
+    {
+        "option_name": "level",
+        "type": "string",
+        "description": [
+            "Type of update KEK to be performed.",
+            "*basic : The level basic will backup old keys and create new keys and respond back.",
+            "*extended : The level extended will backup old keys and create new keys, update",
+            "ns.conf, nscfg.db, all ns.conf for same release, in all partitions. While doing so",
+            " will block all config changes and once done shall respond back."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

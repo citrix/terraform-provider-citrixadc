@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +35,43 @@ func (r *SslprofileEcccurveBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the sslprofile_ecccurve_binding resource.",
 			},
 			"cipherpriority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Priority of the cipher binding",
 			},
 			"ecccurvename": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Named ECC curve bound to vserver/service.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL profile.",
 			},
 		},
 	}
 }
 
-func sslprofile_ecccurve_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslprofileEcccurveBindingResourceModel) ssl.Sslprofileecccurvebinding {
-	tflog.Debug(ctx, "In sslprofile_ecccurve_bindingGetThePayloadFromtheConfig Function")
+func sslprofile_ecccurve_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslprofileEcccurveBindingResourceModel) ssl.Sslprofileecccurvebinding {
+	tflog.Debug(ctx, "In sslprofile_ecccurve_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslprofile_ecccurve_binding := ssl.Sslprofileecccurvebinding{}
-	if !data.Cipherpriority.IsNull() {
+	if !data.Cipherpriority.IsNull() && !data.Cipherpriority.IsUnknown() {
 		sslprofile_ecccurve_binding.Cipherpriority = utils.IntPtr(int(data.Cipherpriority.ValueInt64()))
 	}
-	if !data.Ecccurvename.IsNull() {
+	if !data.Ecccurvename.IsNull() && !data.Ecccurvename.IsUnknown() {
 		sslprofile_ecccurve_binding.Ecccurvename = data.Ecccurvename.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		sslprofile_ecccurve_binding.Name = data.Name.ValueString()
 	}
 

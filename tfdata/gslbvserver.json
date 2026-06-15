@@ -1,0 +1,533 @@
+[
+    {
+        "option_name": "appflowlog",
+        "type": "string",
+        "description": [
+            "Enable logging appflow flow information"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "backupip",
+        "type": "string",
+        "description": [
+            "The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "backuplbmethod",
+        "type": "string",
+        "description": [
+            "Backup load balancing method. Becomes operational if the primary load balancing method fails or cannot be used. Valid only if the primary method is based on either round-trip time (RTT) or static proximity."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "backupsessiontimeout",
+        "type": "integer",
+        "description": [
+            "A non zero value enables the feature whose minimum value is 2 minutes. The feature can be disabled by setting the value to zero. The created session is in effect for a specific client per domain."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "backupvserver",
+        "type": "string",
+        "description": [
+            "Name of the backup GSLB virtual server to which the appliance should to forward requests if the status of the primary GSLB virtual server is down or exceeds its spillover threshold."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments that you might want to associate with the GSLB virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "considereffectivestate",
+        "type": "string",
+        "description": [
+            "If the primary state of all bound GSLB services is DOWN, consider the effective states of all the GSLB services, obtained through the Metrics Exchange Protocol (MEP), when determining the state of the GSLB virtual server. To consider the effective state, set the parameter to STATE_ONLY. To disregard the effective state, set the parameter to NONE.",
+            "",
+            "The effective state of a GSLB service is the ability of the corresponding virtual server to serve traffic. The effective state of the load balancing virtual server, which is transferred to the GSLB service, is UP even if only one virtual server in the backup chain of virtual servers is in the UP state."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "NONE"
+    },
+    {
+        "option_name": "cookie_domain",
+        "type": "string",
+        "description": [
+            "The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "cookietimeout",
+        "type": "integer",
+        "description": [
+            "Timeout, in minutes, for the GSLB site cookie."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "disableprimaryondown",
+        "type": "string",
+        "description": [
+            "Continue to direct traffic to the backup chain even after the primary GSLB virtual server returns to the UP state. Used when spillover is configured for the virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "dnsrecordtype",
+        "type": "string",
+        "description": [
+            "DNS record type to associate with the GSLB virtual server's domain name."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "A"
+    },
+    {
+        "option_name": "domainname",
+        "type": "string",
+        "description": [
+            "Domain name for which to change the time to live (TTL) and/or backup service IP address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "dynamicweight",
+        "type": "string",
+        "description": [
+            "Specify if the appliance should consider the service count, service weights, or ignore both when using weight-based load balancing methods. The state of the number of services bound to the virtual server help the appliance to select the service."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "ecs",
+        "type": "string",
+        "description": [
+            "If enabled, respond with EDNS Client Subnet (ECS) option in the response for a DNS query with ECS. The ECS address will be used for persistence and spillover persistence (if enabled) instead of the LDNS address. Persistence mask is ignored if ECS is enabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "ecsaddrvalidation",
+        "type": "string",
+        "description": [
+            "Validate if ECS address is a private or unroutable address and in such cases, use the LDNS IP."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "edr",
+        "type": "string",
+        "description": [
+            "Send clients an empty DNS response when the GSLB virtual server is DOWN."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "iptype",
+        "type": "string",
+        "description": [
+            "The IP type for this GSLB vserver."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "IPV4"
+    },
+    {
+        "option_name": "lbmethod",
+        "type": "string",
+        "description": [
+            "Load balancing method for the GSLB virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "LEASTCONNECTION"
+    },
+    {
+        "option_name": "mir",
+        "type": "string",
+        "description": [
+            "Include multiple IP addresses in the DNS responses sent to clients."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the GSLB virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Can be changed after the virtual server is created.",
+            "",
+            "CLI Users:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vserver\" or 'my vserver')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "netmask",
+        "type": "string",
+        "description": [
+            "IPv4 network mask for use in the SOURCEIPHASH load balancing method."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "newname",
+        "type": "string",
+        "description": [
+            "New name for the GSLB virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "order",
+        "type": "integer",
+        "description": [
+            "Order number to be assigned to the service when it is bound to the lb vserver."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "orderthreshold",
+        "type": "integer",
+        "description": [
+            "This option is used to to specify the threshold of minimum number of services to be UP in an order, for it to be considered in Lb decision."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "persistenceid",
+        "type": "integer",
+        "description": [
+            "The persistence ID for the GSLB virtual server. The ID is a positive integer that enables GSLB sites to identify the GSLB virtual server, and is required if source IP address based or spill over based persistence is enabled on the virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "persistencetype",
+        "type": "string",
+        "description": [
+            "Use source IP address based persistence for the virtual server.",
+            "After the load balancing method selects a service for the first packet, the IP address received in response to the DNS query is used for subsequent requests from the same client."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "persistmask",
+        "type": "string",
+        "description": [
+            "The optional IPv4 network mask applied to IPv4 addresses to establish source IP address based persistence."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "rule",
+        "type": "string",
+        "description": [
+            "Expression, or name of a named expression, against which traffic is evaluated.",
+            "This field is applicable only if gslb method or gslb backup method are set to API.",
+            "The following requirements apply only to the Citrix ADC CLI:",
+            "* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.",
+            "* If the expression itself includes double quotation marks, escape the quotations by using the \\ character.",
+            "* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "\"none\""
+    },
+    {
+        "option_name": "servicegroupname",
+        "type": "string",
+        "description": [
+            "The GSLB service group name bound to the selected GSLB virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "servicename",
+        "type": "string",
+        "description": [
+            "Name of the GSLB service for which to change the weight."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "servicetype",
+        "type": "string",
+        "description": [
+            "Protocol used by services bound to the virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "sitedomainttl",
+        "type": "integer",
+        "description": [
+            "TTL, in seconds, for all internally created site domains (created when a site prefix is configured on a GSLB service) that are associated with this virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "sobackupaction",
+        "type": "string",
+        "description": [
+            "Action to be performed if spillover is to take effect, but no backup chain to spillover is usable or exists"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "somethod",
+        "type": "string",
+        "description": [
+            "Type of threshold that, when exceeded, triggers spillover. Available settings function as follows:",
+            "* CONNECTION - Spillover occurs when the number of client connections exceeds the threshold.",
+            "* DYNAMICCONNECTION - Spillover occurs when the number of client connections at the GSLB virtual server exceeds the sum of the maximum client (Max Clients) settings for bound GSLB services. Do not specify a spillover threshold for this setting, because the threshold is implied by the Max Clients settings of the bound GSLB services.",
+            "* BANDWIDTH - Spillover occurs when the bandwidth consumed by the GSLB virtual server's incoming and outgoing traffic exceeds the threshold.",
+            "* HEALTH - Spillover occurs when the percentage of weights of the GSLB services that are UP drops below the threshold. For example, if services gslbSvc1, gslbSvc2, and gslbSvc3 are bound to a virtual server, with weights 1, 2, and 3, and the spillover threshold is 50%, spillover occurs if gslbSvc1 and gslbSvc3 or gslbSvc2 and gslbSvc3 transition to DOWN.",
+            "* NONE - Spillover does not occur."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "sopersistence",
+        "type": "string",
+        "description": [
+            "If spillover occurs, maintain source IP address based persistence for both primary and backup GSLB virtual servers."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "sopersistencetimeout",
+        "type": "integer",
+        "description": [
+            "Timeout for spillover persistence, in minutes."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 2
+    },
+    {
+        "option_name": "sothreshold",
+        "type": "integer",
+        "description": [
+            "Threshold at which spillover occurs. Specify an integer for the CONNECTION spillover method, a bandwidth value in kilobits per second for the BANDWIDTH method (do not enter the units), or a percentage for the HEALTH method (do not enter the percentage symbol)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "State of the GSLB virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "timeout",
+        "type": "integer",
+        "description": [
+            "Idle time, in minutes, after which a persistence entry is cleared."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 2
+    },
+    {
+        "option_name": "toggleorder",
+        "type": "string",
+        "description": [
+            "Configure this option to toggle order preference"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ASCENDING"
+    },
+    {
+        "option_name": "tolerance",
+        "type": "integer",
+        "description": [
+            "Tolerance in milliseconds. Tolerance value is used in deciding which sites in a GSLB configuration must be considered for implementing the RTT load balancing method. The sites having the RTT value less than or equal to the sum of the lowest RTT and tolerance value are considered. NetScaler implements the round robin method of global server load balancing among these considered sites. The sites that have RTT value greater than this value are not considered. The logic is applied for each LDNS and based on the LDNS, the sites that are considered might change. For example, a site that is considered for requests coming from LDNS1 might not be considered for requests coming from LDNS2."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "ttl",
+        "type": "integer",
+        "description": [
+            "Time to live (TTL) for the domain."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "v6netmasklen",
+        "type": "integer",
+        "description": [
+            "Number of bits to consider, in an IPv6 source IP address, for creating the hash that is required by the SOURCEIPHASH load balancing method."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 128
+    },
+    {
+        "option_name": "v6persistmasklen",
+        "type": "integer",
+        "description": [
+            "Number of bits to consider in an IPv6 source IP address when creating source IP address based persistence sessions."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 128
+    },
+    {
+        "option_name": "weight",
+        "type": "integer",
+        "description": [
+            "Weight for the service."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

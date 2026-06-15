@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *SslserviceEcccurveBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the sslservice_ecccurve_binding resource.",
 			},
 			"ecccurvename": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Named ECC curve bound to service/vserver.",
 			},
 			"servicename": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL service for which to set advanced configuration.",
 			},
 		},
 	}
 }
 
-func sslservice_ecccurve_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslserviceEcccurveBindingResourceModel) ssl.Sslserviceecccurvebinding {
-	tflog.Debug(ctx, "In sslservice_ecccurve_bindingGetThePayloadFromtheConfig Function")
+func sslservice_ecccurve_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslserviceEcccurveBindingResourceModel) ssl.Sslserviceecccurvebinding {
+	tflog.Debug(ctx, "In sslservice_ecccurve_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslservice_ecccurve_binding := ssl.Sslserviceecccurvebinding{}
-	if !data.Ecccurvename.IsNull() {
+	if !data.Ecccurvename.IsNull() && !data.Ecccurvename.IsUnknown() {
 		sslservice_ecccurve_binding.Ecccurvename = data.Ecccurvename.ValueString()
 	}
-	if !data.Servicename.IsNull() {
+	if !data.Servicename.IsNull() && !data.Servicename.IsUnknown() {
 		sslservice_ecccurve_binding.Servicename = data.Servicename.ValueString()
 	}
 

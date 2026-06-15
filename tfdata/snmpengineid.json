@@ -1,0 +1,26 @@
+[
+    {
+        "option_name": "engineid",
+        "type": "string",
+        "description": [
+            "A hexadecimal value of at least 10 characters, uniquely identifying the engineid"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "ownernode",
+        "type": "integer",
+        "description": [
+            "ID of the cluster node for which you are setting the engineid"
+        ],
+        "is_get_id": true,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": -1,
+        "x-unique-attr": true
+    }
+]

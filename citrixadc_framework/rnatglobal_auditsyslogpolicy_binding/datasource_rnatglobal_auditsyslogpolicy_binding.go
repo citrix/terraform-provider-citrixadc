@@ -43,6 +43,7 @@ func (d *RnatglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context,
 	}
 
 	// Case 3: Array filter without parent ID
+	all_Name := data.All
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -69,6 +70,17 @@ func (d *RnatglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context,
 	for i, v := range dataArr {
 		match := true
 
+		// Check all
+		if val, ok := v["all"].(bool); ok {
+			if all_Name.IsNull() || val != all_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !all_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check policy
 		if val, ok := v["policy"].(string); ok {
 			if policy_Name.IsNull() || val != policy_Name.ValueString() {
@@ -88,7 +100,7 @@ func (d *RnatglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context,
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("rnatglobal_auditsyslogpolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("rnatglobal_auditsyslogpolicy_binding with all %s not found", all_Name))
 		return
 	}
 

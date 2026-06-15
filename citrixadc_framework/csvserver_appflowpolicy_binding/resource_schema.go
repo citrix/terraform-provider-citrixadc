@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -37,75 +41,96 @@ func (r *CsvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Description: "The ID of the csvserver_appflowpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Invoke flag.",
 			},
 			"labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The invocation type.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the content switching virtual server to which the content switching policy applies.",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Policies bound to this vserver.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Priority for the policy.",
 			},
 			"targetlbvserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE.\nExample: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1\nNote: Use this parameter only in case of Content Switching policy bind operations to a CS vserver",
 			},
 		},
 	}
 }
 
-func csvserver_appflowpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *CsvserverAppflowpolicyBindingResourceModel) cs.Csvserverappflowpolicybinding {
-	tflog.Debug(ctx, "In csvserver_appflowpolicy_bindingGetThePayloadFromtheConfig Function")
+func csvserver_appflowpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *CsvserverAppflowpolicyBindingResourceModel) cs.Csvserverappflowpolicybinding {
+	tflog.Debug(ctx, "In csvserver_appflowpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	csvserver_appflowpolicy_binding := cs.Csvserverappflowpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_appflowpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Invoke.IsNull() {
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		csvserver_appflowpolicy_binding.Invoke = data.Invoke.ValueBool()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		csvserver_appflowpolicy_binding.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Labeltype.IsNull() {
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		csvserver_appflowpolicy_binding.Labeltype = data.Labeltype.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		csvserver_appflowpolicy_binding.Name = data.Name.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		csvserver_appflowpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		csvserver_appflowpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Targetlbvserver.IsNull() {
+	if !data.Targetlbvserver.IsNull() && !data.Targetlbvserver.IsUnknown() {
 		csvserver_appflowpolicy_binding.Targetlbvserver = data.Targetlbvserver.ValueString()
 	}
 

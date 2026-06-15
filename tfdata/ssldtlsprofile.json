@@ -1,0 +1,122 @@
+[
+    {
+        "option_name": "helloverifyrequest",
+        "type": "string",
+        "description": [
+            "Send a Hello Verify request to validate the client."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "initialretrytimeout",
+        "type": "integer",
+        "description": [
+            "Initial time out value to retransmit the last flight sent from the NetScaler."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 3
+    },
+    {
+        "option_name": "maxbadmacignorecount",
+        "type": "integer",
+        "description": [
+            "Maximum number of bad MAC errors to ignore for a connection prior disconnect. Disabling parameter terminateSession terminates session immediately when bad MAC is detected in the connection."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 100
+    },
+    {
+        "option_name": "maxholdqlen",
+        "type": "integer",
+        "description": [
+            "Maximum number of datagrams that can be queued at DTLS layer for processing"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 32
+    },
+    {
+        "option_name": "maxpacketsize",
+        "type": "integer",
+        "description": [
+            "Maximum number of packets to reassemble. This value helps protect against a fragmented packet attack."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 120
+    },
+    {
+        "option_name": "maxrecordsize",
+        "type": "integer",
+        "description": [
+            "Maximum size of records that can be sent if PMTU is disabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1459
+    },
+    {
+        "option_name": "maxretrytime",
+        "type": "integer",
+        "description": [
+            "Wait for the specified time, in seconds, before resending the request."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 3
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the DTLS profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@),equals sign (=), and hyphen (-) characters. Cannot be changed after the profile is created."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "pmtudiscovery",
+        "type": "string",
+        "description": [
+            "Source for the maximum record size value. If ENABLED, the value is taken from the PMTU table. If DISABLED, the value is taken from the profile."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "terminatesession",
+        "type": "string",
+        "description": [
+            "Terminate the session if the message authentication code (MAC) of the client and server do not match."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    }
+]

@@ -1,0 +1,94 @@
+[
+    {
+        "option_name": "alertonly",
+        "type": "string",
+        "description": [
+            "Send SNMP alert?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments about the purpose of profile, or other useful information about the profile."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "grpc_relax_validation_action",
+        "type": "string",
+        "description": [
+            "Action to be taken for traffic matching the configured relaxation rule."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "none",
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "grpcvalidation",
+        "type": "string",
+        "description": [
+            "Exempt any gRPC method matching the given pattern from the API schema validation check. Example: bookstore.api.doc.AddBook"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "isautodeployed",
+        "type": "string",
+        "description": [
+            "Is the rule auto deployed by dynamic profile ?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the profile to which to bind an exemption or rule."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "resourceid",
+        "type": "string",
+        "description": [
+            "A \"id\" that identifies the rule."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "Enabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

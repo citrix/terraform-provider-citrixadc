@@ -1,0 +1,180 @@
+[
+    {
+        "option_name": "advertise",
+        "type": "string",
+        "description": [
+            "Advertise this route."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "cost",
+        "type": "integer",
+        "description": [
+            "Positive integer used by the routing algorithms to determine preference for this route. The lower the cost, the higher the preference."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "detail",
+        "type": "boolean",
+        "description": [
+            "To get a detailed view."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "distance",
+        "type": "integer",
+        "description": [
+            "Administrative distance of this route from the appliance."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "gateway",
+        "type": "string",
+        "description": [
+            "The gateway for this route. The value for this parameter is either an IPv6 address or null."
+        ],
+        "is_get_id": false,
+        "is_delete_id": true,
+        "is_updateable": true,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "mgmt",
+        "type": "boolean",
+        "description": [
+            "Route in management plane."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "monitor",
+        "type": "string",
+        "description": [
+            "Name of the monitor, of type ND6 or PING, configured on the Citrix ADC to monitor this route."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "msr",
+        "type": "string",
+        "description": [
+            "Monitor this route with a monitor of type ND6 or PING."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "network",
+        "type": "string",
+        "description": [
+            "IPv6 network address for which to add a route entry to the routing table of the Citrix ADC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "ownergroup",
+        "type": "string",
+        "description": [
+            "The owner node group in a Cluster for this route6. If owner node group is not specified then the route is treated as Striped route."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "DEFAULT_NG"
+    },
+    {
+        "option_name": "routetype",
+        "type": "string",
+        "description": [
+            "Type of IPv6 routes to remove from the routing table of the Citrix ADC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "td",
+        "type": "integer",
+        "description": [
+            "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "vlan",
+        "type": "integer",
+        "description": [
+            "Integer value that uniquely identifies a VLAN through which the Citrix ADC forwards the packets for this route."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "vxlan",
+        "type": "integer",
+        "description": [
+            "Integer value that uniquely identifies a VXLAN through which the Citrix ADC forwards the packets for this route."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "weight",
+        "type": "integer",
+        "description": [
+            "Positive integer used by the routing algorithms to determine preference for this route over others of equal cost. The lower the weight, the higher the preference."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    }
+]

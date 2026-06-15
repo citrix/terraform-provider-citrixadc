@@ -1,0 +1,707 @@
+[
+    {
+        "option_name": "ackaggregation",
+        "type": "string",
+        "description": [
+            "Enable or disable ACK Aggregation."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "ackonpush",
+        "type": "string",
+        "description": [
+            "Send immediate positive acknowledgement (ACK) on receipt of TCP packets with PUSH flag."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "applyadaptivetcp",
+        "type": "string",
+        "description": [
+            "Apply Adaptive TCP optimizations"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "buffersize",
+        "type": "integer",
+        "description": [
+            "TCP buffering size, in bytes."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "TCP_DEFAULT_BUFFSIZE"
+    },
+    {
+        "option_name": "burstratecontrol",
+        "type": "string",
+        "description": [
+            "TCP Burst Rate Control DISABLED/FIXED/DYNAMIC. FIXED requires a TCP rate to be set."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "clientiptcpoption",
+        "type": "string",
+        "description": [
+            "Client IP in TCP options"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "clientiptcpoptionnumber",
+        "type": "integer",
+        "description": [
+            "ClientIP TCP Option number"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "delayedack",
+        "type": "integer",
+        "description": [
+            "Timeout for TCP delayed ACK, in milliseconds."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 100
+    },
+    {
+        "option_name": "dropestconnontimeout",
+        "type": "string",
+        "description": [
+            "Silently drop tcp established connections on idle timeout"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "drophalfclosedconnontimeout",
+        "type": "string",
+        "description": [
+            "Silently drop tcp half closed connections on idle timeout"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "dsack",
+        "type": "string",
+        "description": [
+            "Enable or disable DSACK."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "dupackthresh",
+        "type": "integer",
+        "description": [
+            "TCP dupack threshold."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 3
+    },
+    {
+        "option_name": "dynamicreceivebuffering",
+        "type": "string",
+        "description": [
+            "Enable or disable dynamic receive buffering. When enabled, allows the receive buffer to be adjusted dynamically based on memory and network conditions.",
+            "Note: The buffer size argument must be set for dynamic adjustments to take place."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "ecn",
+        "type": "string",
+        "description": [
+            "Enable or disable TCP Explicit Congestion Notification."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "establishclientconn",
+        "type": "string",
+        "description": [
+            "Establishing Client Client connection on First data/ Final-ACK / Automatic"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "AUTOMATIC"
+    },
+    {
+        "option_name": "fack",
+        "type": "string",
+        "description": [
+            "Enable or disable FACK (Forward ACK)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "flavor",
+        "type": "string",
+        "description": [
+            "Set TCP congestion control algorithm."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "BIC"
+    },
+    {
+        "option_name": "frto",
+        "type": "string",
+        "description": [
+            "Enable or disable FRTO (Forward RTO-Recovery)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "hystart",
+        "type": "string",
+        "description": [
+            "Enable or disable CUBIC Hystart"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "initialcwnd",
+        "type": "integer",
+        "description": [
+            "Initial maximum upper limit on the number of TCP packets that can be outstanding on the TCP link to the server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "TCP_DEFAULT_INITIALCWND"
+    },
+    {
+        "option_name": "ka",
+        "type": "string",
+        "description": [
+            "Send periodic TCP keep-alive (KA) probes to check if peer is still up."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "kaconnidletime",
+        "type": "integer",
+        "description": [
+            "Duration, in seconds, for the connection to be idle, before sending a keep-alive (KA) probe."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "kamaxprobes",
+        "type": "integer",
+        "description": [
+            "Number of keep-alive (KA) probes to be sent when not acknowledged, before assuming the peer to be down."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "kaprobeinterval",
+        "type": "integer",
+        "description": [
+            "Time interval, in seconds, before the next keep-alive (KA) probe, if the peer does not respond."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "kaprobeupdatelastactivity",
+        "type": "string",
+        "description": [
+            "Update last activity for the connection after receiving keep-alive (KA) probes."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "maxburst",
+        "type": "integer",
+        "description": [
+            "Maximum number of TCP segments allowed in a burst."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 6
+    },
+    {
+        "option_name": "maxcwnd",
+        "type": "integer",
+        "description": [
+            "TCP Maximum Congestion Window."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 524288
+    },
+    {
+        "option_name": "maxpktpermss",
+        "type": "integer",
+        "description": [
+            "Maximum number of TCP packets allowed per maximum segment size (MSS)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "minrto",
+        "type": "integer",
+        "description": [
+            "Minimum retransmission timeout, in milliseconds, specified in 10-millisecond increments (value must yield a whole number if divided by  10)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1000
+    },
+    {
+        "option_name": "mpcapablecbit",
+        "type": "string",
+        "description": [
+            "Set C bit in MP-CAPABLE Syn-Ack sent by Citrix ADC"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "mptcp",
+        "type": "string",
+        "description": [
+            "Enable or disable Multipath TCP."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "mptcpdropdataonpreestsf",
+        "type": "string",
+        "description": [
+            "Enable or disable silently dropping the data on Pre-Established subflow. When enabled, DSS data packets are dropped silently instead of dropping the connection when data is received on pre established subflow."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "mptcpfastopen",
+        "type": "string",
+        "description": [
+            "Enable or disable Multipath TCP fastopen. When enabled, DSS data packets are accepted before receiving the third ack of SYN handshake."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "mptcpsessiontimeout",
+        "type": "integer",
+        "description": [
+            "MPTCP session timeout in seconds. If this value is not set, idle MPTCP sessions are flushed after vserver's client idle timeout."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "mss",
+        "type": "integer",
+        "description": [
+            "Maximum number of octets to allow in a TCP data segment."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "TCP_DEFAULT_CLIENT_MSS"
+    },
+    {
+        "option_name": "nagle",
+        "type": "string",
+        "description": [
+            "Enable or disable the Nagle algorithm on TCP connections."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for a TCP profile. Must begin with a letter, number, or the underscore \\(_\\) character. Other characters allowed, after the first character, are the hyphen \\(-\\), period \\(.\\), hash \\(\\#\\), space \\( \\), at \\(@\\), colon \\(:\\), and equal \\(=\\) characters. The name of a TCP profile cannot be changed after it is created.",
+            "",
+            "CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks \\(for example, \"my tcp profile\" or 'my tcp profile'\\)."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "oooqsize",
+        "type": "integer",
+        "description": [
+            "Maximum size of out-of-order packets queue. A value of 0 means no limit."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "TCP_DEFAULT_MAX_OOO_PKTS"
+    },
+    {
+        "option_name": "pktperretx",
+        "type": "integer",
+        "description": [
+            "Maximum limit on the number of packets that should be retransmitted on receiving a partial ACK."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "rateqmax",
+        "type": "integer",
+        "description": [
+            "Maximum connection queue size in bytes, when BurstRateControl is used"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "rfc5961compliance",
+        "type": "string",
+        "description": [
+            "Enable or disable RFC 5961 compliance to protect against tcp spoofing(RST/SYN/Data). When enabled, will be compliant with RFC 5961."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "rstmaxack",
+        "type": "string",
+        "description": [
+            "Enable or disable acceptance of RST that is out of window yet echoes highest ACK sequence number. Useful only in proxy mode."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "rstwindowattenuate",
+        "type": "string",
+        "description": [
+            "Enable or disable RST window attenuation to protect against spoofing. When enabled, will reply with corrective ACK when a sequence number is invalid."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "sack",
+        "type": "string",
+        "description": [
+            "Enable or disable Selective ACKnowledgement (SACK)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "sendbuffsize",
+        "type": "integer",
+        "description": [
+            "TCP Send Buffer Size"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "TCP_DEFAULT_SENDBUFFSIZE"
+    },
+    {
+        "option_name": "sendclientportintcpoption",
+        "type": "string",
+        "description": [
+            "Send Client Port number along with Client IP in TCP-Options. ClientIpTcpOption must be ENABLED"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "slowstartincr",
+        "type": "integer",
+        "description": [
+            "Multiplier that determines the rate at which slow start increases the size of the TCP transmission window after each acknowledgement of successful transmission."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 2
+    },
+    {
+        "option_name": "slowstartthreshold",
+        "type": "integer",
+        "description": [
+            "TCP Slow Start Threhsold Value."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 524288
+    },
+    {
+        "option_name": "spoofsyndrop",
+        "type": "string",
+        "description": [
+            "Enable or disable drop of invalid SYN packets to protect against spoofing. When disabled, established connections will be reset when a SYN packet is received."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "syncookie",
+        "type": "string",
+        "description": [
+            "Enable or disable the SYNCOOKIE mechanism for TCP handshake with clients. Disabling SYNCOOKIE prevents SYN attack protection on the Citrix ADC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "taillossprobe",
+        "type": "string",
+        "description": [
+            "TCP tail loss probe optimizations"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "tcpfastopen",
+        "type": "string",
+        "description": [
+            "Enable or disable TCP Fastopen. When enabled, NS can receive or send Data in SYN or SYN-ACK packets."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "tcpfastopencookiesize",
+        "type": "integer",
+        "description": [
+            "TCP FastOpen Cookie size. This accepts only even numbers. Odd number is trimmed down to nearest even number."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 8
+    },
+    {
+        "option_name": "tcpmode",
+        "type": "string",
+        "description": [
+            "TCP Optimization modes TRANSPARENT / ENDPOINT."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "TRANSPARENT"
+    },
+    {
+        "option_name": "tcprate",
+        "type": "integer",
+        "description": [
+            "TCP connection payload send rate in Kb/s"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "tcpsegoffload",
+        "type": "string",
+        "description": [
+            "Offload TCP segmentation to the NIC. If set to AUTOMATIC, TCP segmentation will be offloaded to the NIC, if the NIC supports it."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "AUTOMATIC"
+    },
+    {
+        "option_name": "timestamp",
+        "type": "string",
+        "description": [
+            "Enable or Disable TCP Timestamp option (RFC 1323)"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "ws",
+        "type": "string",
+        "description": [
+            "Enable or disable window scaling."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "wsval",
+        "type": "integer",
+        "description": [
+            "Factor used to calculate the new window size.",
+            "This argument is needed only when window scaling is enabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "TCP_DEFAULT_WSVAL"
+    }
+]

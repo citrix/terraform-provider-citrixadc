@@ -1,0 +1,100 @@
+[
+    {
+        "option_name": "context",
+        "type": "string",
+        "description": [
+            "Context for describing locations. In geographic context, qualifier labels are assigned by default in the following sequence: Continent.Country.Region.City.ISP.Organization. In custom context, the qualifiers labels can have any meaning that you designate."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "matchwildcardtoany",
+        "type": "string",
+        "description": [
+            "Indicates whether wildcard qualifiers should match any other",
+            "qualifier including non-wildcard while evaluating",
+            "location based expressions.",
+            "Possible values: Yes, No, Expression.",
+            "    Yes - Wildcard qualifiers match any other qualifiers.",
+            "    No  - Wildcard qualifiers do not match non-wildcard",
+            "          qualifiers, but match other wildcard qualifiers.",
+            "    Expression - Wildcard qualifiers in an expression",
+            "          match any qualifier in an LDNS location,",
+            "          wildcard qualifiers in the LDNS location do not match",
+            "          non-wildcard qualifiers in an expression"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "q1label",
+        "type": "string",
+        "description": [
+            "Label specifying the meaning of the first qualifier. Can be specified for custom context only."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "q2label",
+        "type": "string",
+        "description": [
+            "Label specifying the meaning of the second qualifier. Can be specified for custom context only."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "q3label",
+        "type": "string",
+        "description": [
+            "Label specifying the meaning of the third qualifier. Can be specified for custom context only."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "q4label",
+        "type": "string",
+        "description": [
+            "Label specifying the meaning of the fourth qualifier. Can be specified for custom context only."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "q5label",
+        "type": "string",
+        "description": [
+            "Label specifying the meaning of the fifth qualifier. Can be specified for custom context only."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "q6label",
+        "type": "string",
+        "description": [
+            "Label specifying the meaning of the sixth qualifier. Can be specified for custom context only."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

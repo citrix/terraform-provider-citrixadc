@@ -1,0 +1,26 @@
+[
+    {
+        "option_name": "id",
+        "type": "integer",
+        "description": [
+            "Integer value that uniquely identifies a VMAC6 address."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "ifnum",
+        "type": "string",
+        "description": [
+            "Interfaces to bind to the VMAC6, specified in (slot/port) notation (for example, 1/2).Use spaces to separate multiple entries."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +35,43 @@ func (r *LbvserverAnalyticsprofileBindingResource) Schema(ctx context.Context, r
 				Description: "The ID of the lbvserver_analyticsprofile_binding resource.",
 			},
 			"analyticsprofile": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the analytics profile bound to the LB vserver.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vserver\" or 'my vserver').",
 			},
 			"order": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.",
 			},
 		},
 	}
 }
 
-func lbvserver_analyticsprofile_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LbvserverAnalyticsprofileBindingResourceModel) lb.Lbvserveranalyticsprofilebinding {
-	tflog.Debug(ctx, "In lbvserver_analyticsprofile_bindingGetThePayloadFromtheConfig Function")
+func lbvserver_analyticsprofile_bindingGetThePayloadFromthePlan(ctx context.Context, data *LbvserverAnalyticsprofileBindingResourceModel) lb.Lbvserveranalyticsprofilebinding {
+	tflog.Debug(ctx, "In lbvserver_analyticsprofile_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lbvserver_analyticsprofile_binding := lb.Lbvserveranalyticsprofilebinding{}
-	if !data.Analyticsprofile.IsNull() {
+	if !data.Analyticsprofile.IsNull() && !data.Analyticsprofile.IsUnknown() {
 		lbvserver_analyticsprofile_binding.Analyticsprofile = data.Analyticsprofile.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		lbvserver_analyticsprofile_binding.Name = data.Name.ValueString()
 	}
-	if !data.Order.IsNull() {
+	if !data.Order.IsNull() && !data.Order.IsUnknown() {
 		lbvserver_analyticsprofile_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
 	}
 

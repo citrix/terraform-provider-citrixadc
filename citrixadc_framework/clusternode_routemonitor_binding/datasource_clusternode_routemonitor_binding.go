@@ -43,7 +43,7 @@ func (d *ClusternodeRoutemonitorBindingDataSource) Read(ctx context.Context, req
 	}
 
 	// Case 4: Array filter with parent ID
-	nodeid_Name := fmt.Sprintf("%d", data.Nodeid.ValueInt64())
+	nodeid_Name := data.Nodeid.ValueString()
 	netmask_Name := data.Netmask
 	routemonitor_Name := data.Routemonitor
 

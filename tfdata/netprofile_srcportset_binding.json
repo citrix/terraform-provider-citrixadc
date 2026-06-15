@@ -1,0 +1,26 @@
+[
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the netprofile to which to bind port ranges."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "srcportrange",
+        "type": "string",
+        "description": [
+            "When the source port range is configured and associated with the netprofile bound to a service group, Citrix ADC will choose a port from the range configured for connection establishment at the backend servers."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

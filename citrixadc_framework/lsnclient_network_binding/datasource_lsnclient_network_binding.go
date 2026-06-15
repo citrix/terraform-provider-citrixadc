@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -44,7 +45,9 @@ func (d *LsnclientNetworkBindingDataSource) Read(ctx context.Context, req dataso
 
 	// Case 4: Array filter with parent ID
 	clientname_Name := data.Clientname.ValueString()
+	netmask_Name := data.Netmask
 	network_Name := data.Network
+	td_Name := data.Td
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -71,6 +74,17 @@ func (d *LsnclientNetworkBindingDataSource) Read(ctx context.Context, req dataso
 	for i, v := range dataArr {
 		match := true
 
+		// Check netmask
+		if val, ok := v["netmask"].(string); ok {
+			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !netmask_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check network
 		if val, ok := v["network"].(string); ok {
 			if network_Name.IsNull() || val != network_Name.ValueString() {
@@ -82,6 +96,17 @@ func (d *LsnclientNetworkBindingDataSource) Read(ctx context.Context, req dataso
 			continue
 		}
 
+		// Check td
+		if val, ok := v["td"]; ok {
+			val, _ = utils.ConvertToInt64(val)
+			if td_Name.IsNull() || val != td_Name.ValueInt64() {
+				match = false
+				continue
+			}
+		} else if !td_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break
@@ -90,7 +115,7 @@ func (d *LsnclientNetworkBindingDataSource) Read(ctx context.Context, req dataso
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("lsnclient_network_binding with network %s not found", network_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("lsnclient_network_binding with netmask %s not found", netmask_Name))
 		return
 	}
 

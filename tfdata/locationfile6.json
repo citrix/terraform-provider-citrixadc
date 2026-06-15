@@ -1,0 +1,37 @@
+[
+    {
+        "option_name": "Locationfile",
+        "type": "string",
+        "description": [
+            "Name of the IPv6 location file, with or without absolute path. If the path is not included, the default path (/var/netscaler/locdb) is assumed. In a high availability setup, the static database must be stored in the same location on both NetScalers."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "format",
+        "type": "string",
+        "description": [
+            "Format of the IPv6 location file. Required for the NetScaler to identify how to read the location file."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "netscaler6"
+    },
+    {
+        "option_name": "src",
+        "type": "string",
+        "description": [
+            "URL \\(protocol, host, path, and file name\\) from where the location file will be imported.",
+            "            NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

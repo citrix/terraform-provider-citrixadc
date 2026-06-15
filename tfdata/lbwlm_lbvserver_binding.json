@@ -1,0 +1,26 @@
+[
+    {
+        "option_name": "vservername",
+        "type": "string",
+        "description": [
+            "Name of the virtual server which is to be bound to the WLM."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "wlmname",
+        "type": "string",
+        "description": [
+            "The name of the Work Load Manager."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

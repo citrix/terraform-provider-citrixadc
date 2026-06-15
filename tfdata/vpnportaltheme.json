@@ -1,0 +1,25 @@
+[
+    {
+        "option_name": "basetheme",
+        "type": "string",
+        "description": [
+            "0"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the uitheme"
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

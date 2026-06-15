@@ -46,6 +46,8 @@ func (d *SslservicegroupSslcertkeyBindingDataSource) Read(ctx context.Context, r
 	servicegroupname_Name := data.Servicegroupname.ValueString()
 	ca_Name := data.Ca
 	certkeyname_Name := data.Certkeyname
+	crlcheck_Name := data.Crlcheck
+	snicert_Name := data.Snicert
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -94,6 +96,27 @@ func (d *SslservicegroupSslcertkeyBindingDataSource) Read(ctx context.Context, r
 			continue
 		}
 
+		// Check crlcheck
+		if val, ok := v["crlcheck"].(string); ok {
+			if crlcheck_Name.IsNull() || val != crlcheck_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !crlcheck_Name.IsNull() {
+			match = false
+			continue
+		}
+
+		// Check snicert
+		if val, ok := v["snicert"].(bool); ok {
+			if snicert_Name.IsNull() || val != snicert_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !snicert_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

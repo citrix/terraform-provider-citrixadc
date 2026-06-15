@@ -11,13 +11,11 @@ func VpnglobalSslcertkeyBindingDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"cacert": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The name of the CA certificate binding.",
 			},
 			"certkeyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "SSL certkey to use in signing tokens. Only RSA cert key is allowed",
 			},
 			"crlcheck": schema.StringAttribute{
@@ -36,8 +34,7 @@ func VpnglobalSslcertkeyBindingDataSourceSchema() schema.Schema {
 				Description: "The state of the OCSP check parameter (Mandatory/Optional).",
 			},
 			"userdataencryptionkey": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Certificate to be used for encrypting user data like KB Question and Answers, Alternate Email Address, etc.",
 			},
 		},

@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +34,32 @@ func (r *NspartitionVxlanBindingResource) Schema(ctx context.Context, req resour
 				Description: "The ID of the nspartition_vxlan_binding resource.",
 			},
 			"partitionname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the Partition. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.",
 			},
 			"vxlan": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Identifier of the vxlan that is assigned to this partition.",
 			},
 		},
 	}
 }
 
-func nspartition_vxlan_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NspartitionVxlanBindingResourceModel) ns.Nspartitionvxlanbinding {
-	tflog.Debug(ctx, "In nspartition_vxlan_bindingGetThePayloadFromtheConfig Function")
+func nspartition_vxlan_bindingGetThePayloadFromthePlan(ctx context.Context, data *NspartitionVxlanBindingResourceModel) ns.Nspartitionvxlanbinding {
+	tflog.Debug(ctx, "In nspartition_vxlan_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	nspartition_vxlan_binding := ns.Nspartitionvxlanbinding{}
-	if !data.Partitionname.IsNull() {
+	if !data.Partitionname.IsNull() && !data.Partitionname.IsUnknown() {
 		nspartition_vxlan_binding.Partitionname = data.Partitionname.ValueString()
 	}
-	if !data.Vxlan.IsNull() {
+	if !data.Vxlan.IsNull() && !data.Vxlan.IsUnknown() {
 		nspartition_vxlan_binding.Vxlan = utils.IntPtr(int(data.Vxlan.ValueInt64()))
 	}
 

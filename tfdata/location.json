@@ -1,0 +1,61 @@
+[
+    {
+        "option_name": "ipfrom",
+        "type": "string",
+        "description": [
+            "First IP address in the range, in dotted decimal notation."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "ipto",
+        "type": "string",
+        "description": [
+            "Last IP address in the range, in dotted decimal notation."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "latitude",
+        "type": "integer",
+        "description": [
+            "Numerical value, in degrees, specifying the latitude of the geographical location of the IP address-range.",
+            "Note: Longitude and latitude parameters are used for selecting a service with the static proximity GSLB method. If they are not specified, selection is based on the qualifiers specified for the location."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "longitude",
+        "type": "integer",
+        "description": [
+            "Numerical value, in degrees, specifying the longitude of the geographical location of the IP address-range.",
+            "Note: Longitude and latitude parameters are used for selecting a service with the static proximity GSLB method. If they are not specified, selection is based on the qualifiers specified for the location."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "preferredlocation",
+        "type": "string",
+        "description": [
+            "String of qualifiers, in dotted notation, describing the geographical location of the IP address range. Each qualifier is more specific than the one that precedes it, as in continent.country.region.city.isp.organization. For example, \"NA.US.CA.San Jose.ATT.citrix\".",
+            "Note: A qualifier that includes a dot (.) or space ( ) must be enclosed in double quotation marks."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    }
+]

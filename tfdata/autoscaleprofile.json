@@ -1,0 +1,60 @@
+[
+    {
+        "option_name": "apikey",
+        "type": "string",
+        "description": [
+            "api key for authentication with service"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "AutoScale profile name."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "sharedsecret",
+        "type": "string",
+        "description": [
+            "shared secret for authentication with service"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "type",
+        "type": "string",
+        "description": [
+            "The type of profile."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "url",
+        "type": "string",
+        "description": [
+            "URL providing the service"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    }
+]

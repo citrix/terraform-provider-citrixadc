@@ -1,0 +1,26 @@
+[
+    {
+        "option_name": "detail",
+        "type": "boolean",
+        "description": [
+            "Show the individual hash values."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "limitidentifier",
+        "type": "string",
+        "description": [
+            "Name of the rate limit identifier for which to display the sessions."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    }
+]

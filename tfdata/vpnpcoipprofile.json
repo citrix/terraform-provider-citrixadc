@@ -1,0 +1,49 @@
+[
+    {
+        "option_name": "conserverurl",
+        "type": "string",
+        "description": [
+            "Connection server URL"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "icvverification",
+        "type": "string",
+        "description": [
+            "ICV verification for PCOIP transport packets."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "name of PCoIP profile"
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "sessionidletimeout",
+        "type": "integer",
+        "description": [
+            "PCOIP Idle Session timeout"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 180
+    }
+]

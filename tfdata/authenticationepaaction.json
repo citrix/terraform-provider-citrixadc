@@ -1,0 +1,85 @@
+[
+    {
+        "option_name": "csecexpr",
+        "type": "string",
+        "description": [
+            "it holds the ClientSecurityExpression to be sent to the client"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "defaultepagroup",
+        "type": "string",
+        "description": [
+            "This is the default group that is chosen when the EPA check succeeds."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "deletefiles",
+        "type": "string",
+        "description": [
+            "String specifying the path(s) and name(s) of the files to be deleted by the endpoint analysis (EPA) tool. Multiple files to be delimited by comma"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "deviceposture",
+        "type": "string",
+        "description": [
+            "Parameter to enable/disable device posture service scan"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "killprocess",
+        "type": "string",
+        "description": [
+            "String specifying the name of a process to be terminated by the endpoint analysis (EPA) tool. Multiple processes to be delimited by comma"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the epa action. Must begin with a",
+            "\t    letter, number, or the underscore character (_), and must consist",
+            "\t    only of letters, numbers, and the hyphen (-), period (.) pound",
+            "\t    (#), space ( ), at (@), equals (=), colon (:), and underscore",
+            "\t\t    characters. Cannot be changed after epa action is created.The following requirement applies only to the Citrix ADC CLI:If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my aaa action\" or 'my aaa action')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "quarantinegroup",
+        "type": "string",
+        "description": [
+            "This is the quarantine group that is chosen when the EPA check fails",
+            "if configured."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

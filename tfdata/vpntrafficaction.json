@@ -1,0 +1,151 @@
+[
+    {
+        "option_name": "apptimeout",
+        "type": "integer",
+        "description": [
+            "Maximum amount of time, in minutes, a user can stay logged on to the web application."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "formssoaction",
+        "type": "string",
+        "description": [
+            "Name of the form-based single sign-on profile. Form-based single sign-on allows users to log on one time to all protected applications in your network, instead of requiring them to log on separately to access each one."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "fta",
+        "type": "string",
+        "description": [
+            "Specify file type association, which is a list of file extensions that users are allowed to open."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "hdx",
+        "type": "string",
+        "description": [
+            "Provide hdx proxy to the ICA traffic"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "kcdaccount",
+        "type": "string",
+        "description": [
+            "Kerberos constrained delegation account name"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "\"Default\""
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the traffic action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after a traffic action is created.",
+            "",
+            "The following requirement applies only to the Citrix ADC CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "passwdexpression",
+        "type": "string",
+        "description": [
+            "expression that will be evaluated to obtain password for SingleSignOn"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "proxy",
+        "type": "string",
+        "description": [
+            "IP address and Port of the proxy server to be used for HTTP access for this request."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "qual",
+        "type": "string",
+        "description": [
+            "Protocol, either HTTP or TCP, to be used with the action."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "samlssoprofile",
+        "type": "string",
+        "description": [
+            "Profile to be used for doing SAML SSO to remote relying party"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "sso",
+        "type": "string",
+        "description": [
+            "Provide single sign-on to the web application.",
+            "\t    NOTE : Authentication mechanisms like Basic-authentication  require the user credentials to be sent in plaintext which is not secure if the server is running on HTTP (instead of HTTPS)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "userexpression",
+        "type": "string",
+        "description": [
+            "expression that will be evaluated to obtain username for SingleSignOn"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "wanscaler",
+        "type": "string",
+        "description": [
+            "Use the Repeater Plug-in to optimize network traffic."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

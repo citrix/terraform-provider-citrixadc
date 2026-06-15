@@ -1,0 +1,140 @@
+[
+    {
+        "option_name": "alertonly",
+        "type": "string",
+        "description": [
+            "Send SNMP alert?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "as_value_expr_json_cmd",
+        "type": "string",
+        "description": [
+            "The JSON CMD key value expression."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "as_value_type_json_cmd",
+        "type": "string",
+        "description": [
+            "Type of the relaxed JSON CMD key value"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments about the purpose of profile, or other useful information about the profile."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "isautodeployed",
+        "type": "string",
+        "description": [
+            "Is the rule auto deployed by dynamic profile ?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "iskeyregex_json_cmd",
+        "type": "string",
+        "description": [
+            "Is the key name a regular expression?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "isvalueregex_json_cmd",
+        "type": "string",
+        "description": [
+            "Is the JSON CMD key value a regular expression?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "jsoncmdurl",
+        "type": "string",
+        "description": [
+            "A regular expression that designates a URL on the Json CMD URL list for which Command injection violations are relaxed.",
+            "Enclose URLs in double quotes to ensure preservation of any embedded spaces or non-alphanumeric characters."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "keyname_json_cmd",
+        "type": "string",
+        "description": [
+            "An expression that designates a keyname on the JSON CMD URL for which Command injection violations are relaxed."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the profile to which to bind an exemption or rule."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "resourceid",
+        "type": "string",
+        "description": [
+            "A \"id\" that identifies the rule."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "Enabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

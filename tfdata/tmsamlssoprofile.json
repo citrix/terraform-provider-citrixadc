@@ -1,0 +1,893 @@
+[
+    {
+        "option_name": "assertionconsumerserviceurl",
+        "type": "string",
+        "description": [
+            "URL to which the assertion is to be sent."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "attribute1",
+        "type": "string",
+        "description": [
+            "Name of attribute1 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute10",
+        "type": "string",
+        "description": [
+            "Name of attribute10 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute10expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute10's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute10format",
+        "type": "string",
+        "description": [
+            "Format of Attribute10 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute10friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute10 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute11",
+        "type": "string",
+        "description": [
+            "Name of attribute11 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute11expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute11's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute11format",
+        "type": "string",
+        "description": [
+            "Format of Attribute11 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute11friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute11 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute12",
+        "type": "string",
+        "description": [
+            "Name of attribute12 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute12expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute12's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute12format",
+        "type": "string",
+        "description": [
+            "Format of Attribute12 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute12friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute12 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute13",
+        "type": "string",
+        "description": [
+            "Name of attribute13 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute13expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute13's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute13format",
+        "type": "string",
+        "description": [
+            "Format of Attribute13 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute13friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute13 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute14",
+        "type": "string",
+        "description": [
+            "Name of attribute14 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute14expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute14's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute14format",
+        "type": "string",
+        "description": [
+            "Format of Attribute14 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute14friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute14 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute15",
+        "type": "string",
+        "description": [
+            "Name of attribute15 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute15expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute15's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute15format",
+        "type": "string",
+        "description": [
+            "Format of Attribute15 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute15friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute15 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute16",
+        "type": "string",
+        "description": [
+            "Name of attribute16 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute16expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute16's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute16format",
+        "type": "string",
+        "description": [
+            "Format of Attribute16 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute16friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute16 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute1expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute1's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute1format",
+        "type": "string",
+        "description": [
+            "Format of Attribute1 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute1friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute1 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute2",
+        "type": "string",
+        "description": [
+            "Name of attribute2 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute2expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute2's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute2format",
+        "type": "string",
+        "description": [
+            "Format of Attribute2 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute2friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute2 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute3",
+        "type": "string",
+        "description": [
+            "Name of attribute3 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute3expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute3's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute3format",
+        "type": "string",
+        "description": [
+            "Format of Attribute3 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute3friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute3 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute4",
+        "type": "string",
+        "description": [
+            "Name of attribute4 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute4expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute4's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute4format",
+        "type": "string",
+        "description": [
+            "Format of Attribute4 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute4friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute4 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute5",
+        "type": "string",
+        "description": [
+            "Name of attribute5 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute5expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute5's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute5format",
+        "type": "string",
+        "description": [
+            "Format of Attribute5 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute5friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute5 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute6",
+        "type": "string",
+        "description": [
+            "Name of attribute6 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute6expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute6's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute6format",
+        "type": "string",
+        "description": [
+            "Format of Attribute6 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute6friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute6 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute7",
+        "type": "string",
+        "description": [
+            "Name of attribute7 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute7expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute7's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute7format",
+        "type": "string",
+        "description": [
+            "Format of Attribute7 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute7friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute7 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute8",
+        "type": "string",
+        "description": [
+            "Name of attribute8 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute8expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute8's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute8format",
+        "type": "string",
+        "description": [
+            "Format of Attribute8 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute8friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute8 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute9",
+        "type": "string",
+        "description": [
+            "Name of attribute9 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute9expr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain attribute9's value to be sent in Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute9format",
+        "type": "string",
+        "description": [
+            "Format of Attribute9 to be sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute9friendlyname",
+        "type": "string",
+        "description": [
+            "User-Friendly Name of attribute9 that needs to be sent in SAML Assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "audience",
+        "type": "string",
+        "description": [
+            "Audience for which assertion sent by IdP is applicable. This is typically entity name or url that represents ServiceProvider"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "digestmethod",
+        "type": "string",
+        "description": [
+            "Algorithm to be used to compute/verify digest for SAML transactions"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "SHA256"
+    },
+    {
+        "option_name": "encryptassertion",
+        "type": "string",
+        "description": [
+            "Option to encrypt assertion when Citrix ADC sends one."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "encryptionalgorithm",
+        "type": "string",
+        "description": [
+            "Algorithm to be used to encrypt SAML assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "AES256"
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the new saml single sign-on profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an SSO action is created.",
+            "",
+            "The following requirement applies only to the Citrix ADC CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "nameidexpr",
+        "type": "string",
+        "description": [
+            "Expression that will be evaluated to obtain NameIdentifier to be sent in assertion"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "nameidformat",
+        "type": "string",
+        "description": [
+            "Format of Name Identifier sent in Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "transient"
+    },
+    {
+        "option_name": "relaystaterule",
+        "type": "string",
+        "description": [
+            "Expression to extract relaystate to be sent along with assertion. Evaluation of this expression should return TEXT content. This is typically a targ",
+            "et url to which user is redirected after the recipient validates SAML token"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "samlissuername",
+        "type": "string",
+        "description": [
+            "The name to be used in requests sent from\tCitrix ADC to IdP to uniquely identify Citrix ADC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "samlsigningcertname",
+        "type": "string",
+        "description": [
+            "Name of the SSL certificate that is used to Sign Assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "samlspcertname",
+        "type": "string",
+        "description": [
+            "Name of the SSL certificate of peer/receving party using which Assertion is encrypted."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "sendpassword",
+        "type": "string",
+        "description": [
+            "Option to send password in assertion."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "signassertion",
+        "type": "string",
+        "description": [
+            "Option to sign portions of assertion when Citrix ADC IDP sends one. Based on the user selection, either Assertion or Response or Both or none can be signed"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ASSERTION"
+    },
+    {
+        "option_name": "signaturealg",
+        "type": "string",
+        "description": [
+            "Algorithm to be used to sign/verify SAML transactions"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "RSA-SHA256"
+    },
+    {
+        "option_name": "skewtime",
+        "type": "integer",
+        "description": [
+            "This option specifies the number of minutes on either side of current time that the assertion would be valid. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 5
+    }
+]

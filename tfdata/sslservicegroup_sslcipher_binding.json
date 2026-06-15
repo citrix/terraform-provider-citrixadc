@@ -1,0 +1,48 @@
+[
+    {
+        "option_name": "cipheraliasname",
+        "type": "string",
+        "description": [
+            "The name of the cipher group/alias/name configured for the SSL service group."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "ciphername",
+        "type": "string",
+        "description": [
+            "A cipher-suite can consist of an individual cipher name, the system predefined cipher-alias name, or user defined cipher-group name."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "description",
+        "type": "string",
+        "description": [
+            "The description of the cipher."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "servicegroupname",
+        "type": "string",
+        "description": [
+            "The name of the SSL service to which the SSL policy needs to be bound."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

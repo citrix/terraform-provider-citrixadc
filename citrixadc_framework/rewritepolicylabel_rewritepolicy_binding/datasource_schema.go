@@ -39,8 +39,7 @@ func RewritepolicylabelRewritepolicyBindingDataSourceSchema() schema.Schema {
 				Description: "Name of the rewrite policy to bind to the policy label.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Specifies the priority of the policy.",
 			},
 		},

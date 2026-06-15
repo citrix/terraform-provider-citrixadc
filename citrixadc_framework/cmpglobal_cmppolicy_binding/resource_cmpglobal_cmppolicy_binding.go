@@ -3,8 +3,10 @@ package cmpglobal_cmppolicy_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *CmpglobalCmppolicyBindingResource) Create(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Creating cmpglobal_cmppolicy_binding resource")
-
-	// cmpglobal_cmppolicy_binding := cmpglobal_cmppolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	cmpglobal_cmppolicy_binding := cmpglobal_cmppolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Cmpglobal_cmppolicy_binding.Type(), &cmpglobal_cmppolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cmpglobal_cmppolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("cmpglobal_cmppolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Cmpglobal_cmppolicy_binding.Type(), &cmpglobal_cmppolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cmpglobal_cmppolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created cmpglobal_cmppolicy_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readCmpglobalCmppolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *CmpglobalCmppolicyBindingResource) Read(ctx context.Context, req resour
 }
 
 func (r *CmpglobalCmppolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CmpglobalCmppolicyBindingResourceModel
+	var data, state CmpglobalCmppolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *CmpglobalCmppolicyBindingResource) Update(ctx context.Context, req reso
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating cmpglobal_cmppolicy_binding resource")
 
-	// Create API request body from the model
-	// cmpglobal_cmppolicy_binding := cmpglobal_cmppolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Cmpglobal_cmppolicy_binding.Type(), &cmpglobal_cmppolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cmpglobal_cmppolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		cmpglobal_cmppolicy_binding := cmpglobal_cmppolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Cmpglobal_cmppolicy_binding.Type(), &cmpglobal_cmppolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cmpglobal_cmppolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated cmpglobal_cmppolicy_binding resource")
+		tflog.Trace(ctx, "Updated cmpglobal_cmppolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for cmpglobal_cmppolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readCmpglobalCmppolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,104 @@ func (r *CmpglobalCmppolicyBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting cmpglobal_cmppolicy_binding resource")
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name
+	// Multiple unique attributes - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For cmpglobal_cmppolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted cmpglobal_cmppolicy_binding resource from state")
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["policyname"]; ok && val != "" {
+		argsMap["policyname"] = val
+	}
+	if val, ok := idMap["type"]; ok && val != "" {
+		argsMap["type"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Cmpglobal_cmppolicy_binding.Type(), "", argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete cmpglobal_cmppolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted cmpglobal_cmppolicy_binding binding")
 }
 
 // Helper function to read cmpglobal_cmppolicy_binding data from API
 func (r *CmpglobalCmppolicyBindingResource) readCmpglobalCmppolicyBindingFromApi(ctx context.Context, data *CmpglobalCmppolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Cmpglobal_cmppolicy_binding.Type(), "")
+
+	// Case 3: Array filter without parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	var dataArr []map[string]interface{}
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["type"]; ok && val != "" {
+		argsMap["type"] = val
+	}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Cmpglobal_cmppolicy_binding.Type(),
+		ArgsMap:                  argsMap,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read cmpglobal_cmppolicy_binding, got error: %s", err))
 		return
 	}
 
-	cmpglobal_cmppolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "cmpglobal_cmppolicy_binding returned empty array")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check policyname
+		if idVal, ok := idMap["policyname"]; ok {
+			if val, ok := v["policyname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["policyname"].(string); ok {
+			match = false
+			continue
+		}
+		// Check type
+		if val, ok := idMap["type"]; ok && val != "" {
+			if v, ok := v["type"]; ok {
+				if v.(string) != val {
+					match = false
+				}
+			}
+		}
+
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("cmpglobal_cmppolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	cmpglobal_cmppolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

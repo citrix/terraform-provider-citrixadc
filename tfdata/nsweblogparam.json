@@ -1,0 +1,36 @@
+[
+    {
+        "option_name": "buffersizemb",
+        "type": "integer",
+        "description": [
+            "Buffer size, in MB, allocated for log transaction data on the system. The maximum value is limited to the memory available on the system."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 16
+    },
+    {
+        "option_name": "customreqhdrs",
+        "type": "string[]",
+        "description": [
+            "Name(s) of HTTP request headers whose values should be exported by the Web Logging feature."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "customrsphdrs",
+        "type": "string[]",
+        "description": [
+            "Name(s) of HTTP response headers whose values should be exported by the Web Logging feature."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

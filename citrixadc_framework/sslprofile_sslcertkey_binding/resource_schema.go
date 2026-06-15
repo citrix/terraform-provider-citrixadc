@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +35,43 @@ func (r *SslprofileSslcertkeyBindingResource) Schema(ctx context.Context, req re
 				Description: "The ID of the sslprofile_sslcertkey_binding resource.",
 			},
 			"cipherpriority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Priority of the cipher binding",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL profile.",
 			},
 			"sslicacertkey": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The certkey (CA certificate + private key) to be used for SSL interception.",
 			},
 		},
 	}
 }
 
-func sslprofile_sslcertkey_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslprofileSslcertkeyBindingResourceModel) ssl.Sslprofilesslcertkeybinding {
-	tflog.Debug(ctx, "In sslprofile_sslcertkey_bindingGetThePayloadFromtheConfig Function")
+func sslprofile_sslcertkey_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslprofileSslcertkeyBindingResourceModel) ssl.Sslprofilesslcertkeybinding {
+	tflog.Debug(ctx, "In sslprofile_sslcertkey_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslprofile_sslcertkey_binding := ssl.Sslprofilesslcertkeybinding{}
-	if !data.Cipherpriority.IsNull() {
+	if !data.Cipherpriority.IsNull() && !data.Cipherpriority.IsUnknown() {
 		sslprofile_sslcertkey_binding.Cipherpriority = utils.IntPtr(int(data.Cipherpriority.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		sslprofile_sslcertkey_binding.Name = data.Name.ValueString()
 	}
-	if !data.Sslicacertkey.IsNull() {
+	if !data.Sslicacertkey.IsNull() && !data.Sslicacertkey.IsUnknown() {
 		sslprofile_sslcertkey_binding.Sslicacertkey = data.Sslicacertkey.ValueString()
 	}
 

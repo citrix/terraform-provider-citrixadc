@@ -1,0 +1,71 @@
+[
+    {
+        "option_name": "fipsfw",
+        "type": "string",
+        "description": [
+            "Path to the FIPS firmware file."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "hsmlabel",
+        "type": "string",
+        "description": [
+            "Label to identify the Hardware Security Module (HSM)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "inithsm",
+        "type": "string",
+        "description": [
+            "FIPS initialization level. The appliance currently supports Level-2 (FIPS 140-2)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "oldsopassword",
+        "type": "string",
+        "description": [
+            "Old password for the security officer."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "sopassword",
+        "type": "string",
+        "description": [
+            "Security officer password that will be in effect after you have configured the HSM."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "userpassword",
+        "type": "string",
+        "description": [
+            "The Hardware Security Module's (HSM) User password."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-secret-attr": true
+    }
+]

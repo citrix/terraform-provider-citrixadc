@@ -1,0 +1,47 @@
+[
+    {
+        "option_name": "allowdtls12",
+        "type": "string",
+        "description": [
+            "Enables DTLS1.2 for client connections on CGS"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "allowedudtversion",
+        "type": "string",
+        "description": [
+            "Enables the required UDT version to EDT connections in the CGS deployment"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "V4"
+    },
+    {
+        "option_name": "blockonallowedngstktprof",
+        "type": "string",
+        "description": [
+            "Enables blocking connections authenticated with a ticket createdby by an entity not whitelisted in allowedngstktprofile"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "csvserverticketingdecouple",
+        "type": "string",
+        "description": [
+            "Enables Decoupling CSVSERVER state from Ticketing Service state in the CGS deployment"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

@@ -1,0 +1,38 @@
+[
+    {
+        "option_name": "azureapplication",
+        "type": "string",
+        "description": [
+            "Name of the Azure Application object created on the ADC appliance. This object will be used for authentication with Azure Active Directory"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "azurevaultname",
+        "type": "string",
+        "description": [
+            "Name of the Key Vault configured in Azure cloud using either the Azure CLI or the Azure portal (GUI) with complete domain name. Example: Test.vault.azure.net."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the Key Vault. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the Key Vault is created.",
+            "",
+            "CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my keyvault\" or 'my keyvault')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

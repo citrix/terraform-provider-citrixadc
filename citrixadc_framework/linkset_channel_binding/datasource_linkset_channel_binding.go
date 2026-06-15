@@ -43,7 +43,7 @@ func (d *LinksetChannelBindingDataSource) Read(ctx context.Context, req datasour
 	}
 
 	// Case 4: Array filter with parent ID
-	linksetid_Name := data.Linksetid.ValueString()
+	id_Name := data.Id.ValueString()
 	ifnum_Name := data.Ifnum
 
 	var dataArr []map[string]interface{}
@@ -51,7 +51,7 @@ func (d *LinksetChannelBindingDataSource) Read(ctx context.Context, req datasour
 
 	findParams := service.FindParams{
 		ResourceType:             service.Linkset_channel_binding.Type(),
-		ResourceName:             linksetid_Name,
+		ResourceName:             id_Name,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)

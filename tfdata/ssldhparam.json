@@ -1,0 +1,36 @@
+[
+    {
+        "option_name": "bits",
+        "type": "integer",
+        "description": [
+            "Size, in bits, of the DH key being generated."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "dhfile",
+        "type": "string",
+        "description": [
+            "Name of and, optionally, path to the DH key file. /nsconfig/ssl/ is the default path."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "gen",
+        "type": "string",
+        "description": [
+            "Random number required for generating the DH key. Required as part of the DH key generation algorithm."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 2
+    }
+]

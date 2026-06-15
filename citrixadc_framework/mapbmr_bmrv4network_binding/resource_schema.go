@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,34 +34,43 @@ func (r *MapbmrBmrv4networkBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the mapbmr_bmrv4network_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the Basic Mapping Rule. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the  MAP Basic Mapping Rule is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"add network MapBmr bmr1 -natprefix 2005::/64 -EAbitLength 16 -psidoffset 6 -portsharingratio 8\" ).\n			The Basic Mapping Rule information allows a MAP BR to determine source IPv4 address from the IPv6 packet sent from MAP CE device.\n			Also it allows to determine destination IPv6 address of MAP CE before sending packets to MAP CE",
 			},
 			"netmask": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Subnet mask for the IPv4 address specified in the Network parameter.",
 			},
 			"network": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IPv4 NAT address range of Customer Edge (CE).",
 			},
 		},
 	}
 }
 
-func mapbmr_bmrv4network_bindingGetThePayloadFromtheConfig(ctx context.Context, data *MapbmrBmrv4networkBindingResourceModel) network.Mapbmrbmrv4networkbinding {
-	tflog.Debug(ctx, "In mapbmr_bmrv4network_bindingGetThePayloadFromtheConfig Function")
+func mapbmr_bmrv4network_bindingGetThePayloadFromthePlan(ctx context.Context, data *MapbmrBmrv4networkBindingResourceModel) network.Mapbmrbmrv4networkbinding {
+	tflog.Debug(ctx, "In mapbmr_bmrv4network_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	mapbmr_bmrv4network_binding := network.Mapbmrbmrv4networkbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		mapbmr_bmrv4network_binding.Name = data.Name.ValueString()
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		mapbmr_bmrv4network_binding.Netmask = data.Netmask.ValueString()
 	}
-	if !data.Network.IsNull() {
+	if !data.Network.IsNull() && !data.Network.IsUnknown() {
 		mapbmr_bmrv4network_binding.Network = data.Network.ValueString()
 	}
 
@@ -90,6 +101,7 @@ func mapbmr_bmrv4network_bindingSetAttrFromGet(ctx context.Context, data *Mapbmr
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("netmask:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Netmask.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 

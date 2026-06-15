@@ -9,8 +9,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -45,120 +48,164 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Description: "The ID of the botprofile_ratelimit_binding resource.",
 			},
 			"bot_bind_comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about this binding.",
 			},
 			"bot_rate_limit_action": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				Description: "One or more actions to be taken when the current rate becomes more than the configured rate. Only LOG action can be combined with DROP, REDIRECT, RESPOND_STATUS_TOO_MANY_REQUESTS or RESET action.",
 			},
 			"bot_rate_limit_enabled": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enable or disable rate-limit binding.",
 			},
 			"bot_rate_limit_type": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Rate-limiting type Following rate-limiting types are allowed:\n*SOURCE_IP - Rate-limiting based on the client IP.\n*SESSION - Rate-limiting based on the configured cookie name.\n*URL - Rate-limiting based on the configured URL.\n*GEOLOCATION - Rate-limiting based on the configured country name.\n*JA3_FINGERPRINT - Rate-limiting based on client SSL JA3 fingerprint.",
 			},
 			"bot_rate_limit_url": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "URL for the resource based rate-limiting.",
 			},
 			"bot_ratelimit": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Rate-limit binding. Maximum 30 bindings can be configured per profile for rate-limit detection. For SOURCE_IP type, only one binding can be configured, and for URL type, only one binding is allowed per URL, and for SESSION type, only one binding is allowed for a cookie name. To update the values of an existing binding, user has to first unbind that binding, and then needs to bind again with new values.",
 			},
 			"condition": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression to be used in a rate-limiting condition. This expression result must be a boolean value.",
 			},
 			"cookiename": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Cookie name which is used to identify the session for session rate-limiting.",
 			},
 			"countrycode": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Country name which is used for geolocation rate-limiting.",
 			},
 			"limittype": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("BURSTY"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Rate-Limiting traffic Type",
 			},
 			"logmessage": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Message to be logged for this binding.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my profile\" or 'my profile').",
 			},
 			"rate": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Maximum number of requests that are allowed in this session in the given period time.",
 			},
 			"timeslice": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(1000),
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Time interval during which requests are tracked to check if they cross the given rate.",
 			},
 		},
 	}
 }
 
-func botprofile_ratelimit_bindingGetThePayloadFromtheConfig(ctx context.Context, data *BotprofileRatelimitBindingResourceModel) bot.Botprofileratelimitbinding {
-	tflog.Debug(ctx, "In botprofile_ratelimit_bindingGetThePayloadFromtheConfig Function")
+func botprofile_ratelimit_bindingGetThePayloadFromthePlan(ctx context.Context, data *BotprofileRatelimitBindingResourceModel) bot.Botprofileratelimitbinding {
+	tflog.Debug(ctx, "In botprofile_ratelimit_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	botprofile_ratelimit_binding := bot.Botprofileratelimitbinding{}
-	if !data.BotBindComment.IsNull() {
+	if !data.BotBindComment.IsNull() && !data.BotBindComment.IsUnknown() {
 		botprofile_ratelimit_binding.Botbindcomment = data.BotBindComment.ValueString()
 	}
-	if !data.BotRateLimitEnabled.IsNull() {
+	if !data.BotRateLimitAction.IsNull() && !data.BotRateLimitAction.IsUnknown() {
+		var bot_rate_limit_actionList []string
+		data.BotRateLimitAction.ElementsAs(ctx, &bot_rate_limit_actionList, false)
+		botprofile_ratelimit_binding.Botratelimitaction = bot_rate_limit_actionList
+	}
+	if !data.BotRateLimitEnabled.IsNull() && !data.BotRateLimitEnabled.IsUnknown() {
 		botprofile_ratelimit_binding.Botratelimitenabled = data.BotRateLimitEnabled.ValueString()
 	}
-	if !data.BotRateLimitType.IsNull() {
+	if !data.BotRateLimitType.IsNull() && !data.BotRateLimitType.IsUnknown() {
 		botprofile_ratelimit_binding.Botratelimittype = data.BotRateLimitType.ValueString()
 	}
-	if !data.BotRateLimitUrl.IsNull() {
+	if !data.BotRateLimitUrl.IsNull() && !data.BotRateLimitUrl.IsUnknown() {
 		botprofile_ratelimit_binding.Botratelimiturl = data.BotRateLimitUrl.ValueString()
 	}
-	if !data.BotRatelimit.IsNull() {
+	if !data.BotRatelimit.IsNull() && !data.BotRatelimit.IsUnknown() {
 		botprofile_ratelimit_binding.Botratelimit = data.BotRatelimit.ValueBool()
 	}
-	if !data.Condition.IsNull() {
+	if !data.Condition.IsNull() && !data.Condition.IsUnknown() {
 		botprofile_ratelimit_binding.Condition = data.Condition.ValueString()
 	}
-	if !data.Cookiename.IsNull() {
+	if !data.Cookiename.IsNull() && !data.Cookiename.IsUnknown() {
 		botprofile_ratelimit_binding.Cookiename = data.Cookiename.ValueString()
 	}
-	if !data.Countrycode.IsNull() {
+	if !data.Countrycode.IsNull() && !data.Countrycode.IsUnknown() {
 		botprofile_ratelimit_binding.Countrycode = data.Countrycode.ValueString()
 	}
-	if !data.Limittype.IsNull() {
+	if !data.Limittype.IsNull() && !data.Limittype.IsUnknown() {
 		botprofile_ratelimit_binding.Limittype = data.Limittype.ValueString()
 	}
-	if !data.Logmessage.IsNull() {
+	if !data.Logmessage.IsNull() && !data.Logmessage.IsUnknown() {
 		botprofile_ratelimit_binding.Logmessage = data.Logmessage.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		botprofile_ratelimit_binding.Name = data.Name.ValueString()
 	}
-	if !data.Rate.IsNull() {
+	if !data.Rate.IsNull() && !data.Rate.IsUnknown() {
 		botprofile_ratelimit_binding.Rate = utils.IntPtr(int(data.Rate.ValueInt64()))
 	}
-	if !data.Timeslice.IsNull() {
+	if !data.Timeslice.IsNull() && !data.Timeslice.IsUnknown() {
 		botprofile_ratelimit_binding.Timeslice = utils.IntPtr(int(data.Timeslice.ValueInt64()))
 	}
 
@@ -173,6 +220,17 @@ func botprofile_ratelimit_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 		data.BotBindComment = types.StringValue(val.(string))
 	} else {
 		data.BotBindComment = types.StringNull()
+	}
+	if val, ok := getResponseData["bot_rate_limit_action"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.BotRateLimitAction = listValue
+		} else {
+			data.BotRateLimitAction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.BotRateLimitAction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["bot_rate_limit_enabled"]; ok && val != nil {
 		data.BotRateLimitEnabled = types.StringValue(val.(string))
@@ -244,6 +302,7 @@ func botprofile_ratelimit_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRateLimitType.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRateLimitUrl.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_ratelimit:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotRatelimit.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("condition:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Condition.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("cookiename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Cookiename.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("countrycode:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Countrycode.ValueString()))))

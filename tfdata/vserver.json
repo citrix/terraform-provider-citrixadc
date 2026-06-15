@@ -1,0 +1,115 @@
+[
+    {
+        "option_name": "backupvserver",
+        "type": "string",
+        "description": [
+            "The name of the backup virtual server for this virtual server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "cacheable",
+        "type": "string",
+        "description": [
+            "Use this option to specify whether a virtual server (used for load balancing or content switching) routes requests to the cache redirection virtual server before sending it to the configured servers."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "clttimeout",
+        "type": "integer",
+        "description": [
+            "The timeout value in seconds for idle client connection"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "The name of the virtual server to be removed."
+        ],
+        "is_get_id": false,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "pushvserver",
+        "type": "string",
+        "description": [
+            "The lb vserver of type PUSH/SSL_PUSH to which server pushes the updates received on the client facing non-push lb vserver."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "redirecturl",
+        "type": "string",
+        "description": [
+            "The URL where traffic is redirected if the virtual server in the system becomes unavailable."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "somethod",
+        "type": "string",
+        "description": [
+            "The spillover factor. The system will use this value to determine if it should send traffic to the backupvserver when the main virtual server reaches the spillover threshold."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "sopersistence",
+        "type": "string",
+        "description": [
+            "The state of the spillover persistence."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "sopersistencetimeout",
+        "type": "integer",
+        "description": [
+            "The spillover persistence entry timeout."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 2
+    },
+    {
+        "option_name": "sothreshold",
+        "type": "integer",
+        "description": [
+            "The spillver threshold value."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

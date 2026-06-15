@@ -44,8 +44,10 @@ func (r *SslserviceSslciphersuiteBindingResource) Schema(ctx context.Context, re
 				Description: "Flag indicating whether the bound cipher was the DEFAULT cipher, bound at boot time, or any other cipher from the CLI",
 			},
 			"ciphername": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The cipher group/alias/individual cipher configuration",
 			},
 			"description": schema.StringAttribute{
@@ -57,28 +59,31 @@ func (r *SslserviceSslciphersuiteBindingResource) Schema(ctx context.Context, re
 				Description: "The cipher suite description.",
 			},
 			"servicename": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL service for which to set advanced configuration.",
 			},
 		},
 	}
 }
 
-func sslservice_sslciphersuite_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslserviceSslciphersuiteBindingResourceModel) ssl.Sslservicesslciphersuitebinding {
-	tflog.Debug(ctx, "In sslservice_sslciphersuite_bindingGetThePayloadFromtheConfig Function")
+func sslservice_sslciphersuite_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslserviceSslciphersuiteBindingResourceModel) ssl.Sslservicesslciphersuitebinding {
+	tflog.Debug(ctx, "In sslservice_sslciphersuite_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslservice_sslciphersuite_binding := ssl.Sslservicesslciphersuitebinding{}
-	if !data.Cipherdefaulton.IsNull() {
+	if !data.Cipherdefaulton.IsNull() && !data.Cipherdefaulton.IsUnknown() {
 		sslservice_sslciphersuite_binding.Cipherdefaulton = utils.IntPtr(int(data.Cipherdefaulton.ValueInt64()))
 	}
-	if !data.Ciphername.IsNull() {
+	if !data.Ciphername.IsNull() && !data.Ciphername.IsUnknown() {
 		sslservice_sslciphersuite_binding.Ciphername = data.Ciphername.ValueString()
 	}
-	if !data.Description.IsNull() {
+	if !data.Description.IsNull() && !data.Description.IsUnknown() {
 		sslservice_sslciphersuite_binding.Description = data.Description.ValueString()
 	}
-	if !data.Servicename.IsNull() {
+	if !data.Servicename.IsNull() && !data.Servicename.IsUnknown() {
 		sslservice_sslciphersuite_binding.Servicename = data.Servicename.ValueString()
 	}
 

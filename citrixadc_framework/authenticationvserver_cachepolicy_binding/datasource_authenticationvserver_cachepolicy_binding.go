@@ -45,7 +45,9 @@ func (d *AuthenticationvserverCachepolicyBindingDataSource) Read(ctx context.Con
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	bindpoint_Name := data.Bindpoint
+	groupextraction_Name := data.Groupextraction
 	policy_Name := data.Policy
+	secondary_Name := data.Secondary
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -83,6 +85,17 @@ func (d *AuthenticationvserverCachepolicyBindingDataSource) Read(ctx context.Con
 			continue
 		}
 
+		// Check groupextraction
+		if val, ok := v["groupextraction"].(bool); ok {
+			if groupextraction_Name.IsNull() || val != groupextraction_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !groupextraction_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check policy
 		if val, ok := v["policy"].(string); ok {
 			if policy_Name.IsNull() || val != policy_Name.ValueString() {
@@ -90,6 +103,17 @@ func (d *AuthenticationvserverCachepolicyBindingDataSource) Read(ctx context.Con
 				continue
 			}
 		} else if !policy_Name.IsNull() {
+			match = false
+			continue
+		}
+
+		// Check secondary
+		if val, ok := v["secondary"].(bool); ok {
+			if secondary_Name.IsNull() || val != secondary_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !secondary_Name.IsNull() {
 			match = false
 			continue
 		}

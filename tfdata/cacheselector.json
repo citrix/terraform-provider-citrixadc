@@ -1,0 +1,25 @@
+[
+    {
+        "option_name": "rule",
+        "type": "string[]",
+        "description": [
+            "One or multiple PIXL expressions for evaluating an HTTP request or response."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "selectorname",
+        "type": "string",
+        "description": [
+            "Name for the selector.  Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

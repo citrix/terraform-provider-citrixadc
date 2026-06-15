@@ -1,0 +1,69 @@
+[
+    {
+        "option_name": "action",
+        "type": "string",
+        "description": [
+            "The autoscale profile associated with the policy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Comments associated with this autoscale policy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "logaction",
+        "type": "string",
+        "description": [
+            "The log action associated with the autoscale policy"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "The name of the autoscale policy."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "newname",
+        "type": "string",
+        "description": [
+            "The new name of the autoscale policy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "rule",
+        "type": "string",
+        "description": [
+            "The rule associated with the policy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    }
+]

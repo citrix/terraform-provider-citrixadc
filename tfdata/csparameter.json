@@ -1,0 +1,14 @@
+[
+    {
+        "option_name": "stateupdate",
+        "type": "string",
+        "description": [
+            "Specifies whether the virtual server checks the attached load balancing server for state information."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    }
+]

@@ -1,0 +1,108 @@
+[
+    {
+        "option_name": "content",
+        "type": "string",
+        "description": [
+            "Content to be delivered to the user. \"$code\" string within the content will be replaced with the actual one-time-code to be sent."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "defaultauthenticationgroup",
+        "type": "string",
+        "description": [
+            "This is the group that is added to user sessions that match current IdP policy. It can be used in policies to identify relying party trust."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "emailaddress",
+        "type": "string",
+        "description": [
+            "An optional expression that yields user's email. When not configured, user's default mail address would be used. When configured, result of this expression is used as destination email address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the new email action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.",
+            "",
+            "The following requirement applies only to the Citrix ADC CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "password",
+        "type": "string",
+        "description": [
+            "Password/Clientsecret to use when authenticating to the server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "serverurl",
+        "type": "string",
+        "description": [
+            "Address of the server that delivers the message. It is fully qualified fqdn such as http(s):// or smtp(s):// for http and smtp protocols respectively. For SMTP, the port number is mandatory like smtps://smtp.example.com:25."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "timeout",
+        "type": "integer",
+        "description": [
+            "Time after which the code expires."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 180
+    },
+    {
+        "option_name": "type",
+        "type": "string",
+        "description": [
+            "Type of the email action. Default type is SMTP."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "SMTP"
+    },
+    {
+        "option_name": "username",
+        "type": "string",
+        "description": [
+            "Username/Clientid/EmailID to be used to authenticate to the server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    }
+]

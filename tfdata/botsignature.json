@@ -1,0 +1,48 @@
+[
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments to preserve information about the signature file object."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name to assign to the bot signature file object on the Citrix ADC."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "overwrite",
+        "type": "boolean",
+        "description": [
+            "Overwrites the existing file"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "src",
+        "type": "string",
+        "description": [
+            "Local path to and name of, or URL (protocol, host, path, and file name) for, the file in which to store the imported signature file.",
+            "NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

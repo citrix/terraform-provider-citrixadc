@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -34,51 +38,65 @@ func (r *ServiceLbmonitorBindingResource) Schema(ctx context.Context, req resour
 				Description: "The ID of the service_lbmonitor_binding resource.",
 			},
 			"monitor_name": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The monitor Names.",
 			},
 			"monstate": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The configured state (enable/disable) of the monitor on this server.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the service to which to bind a monitor.",
 			},
 			"passive": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached.",
 			},
 			"weight": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Weight to assign to the monitor-service binding. When a monitor is UP, the weight assigned to its binding with the service determines how much the monitor contributes toward keeping the health of the service above the value configured for the Monitor Threshold parameter.",
 			},
 		},
 	}
 }
 
-func service_lbmonitor_bindingGetThePayloadFromtheConfig(ctx context.Context, data *ServiceLbmonitorBindingResourceModel) basic.Servicelbmonitorbinding {
-	tflog.Debug(ctx, "In service_lbmonitor_bindingGetThePayloadFromtheConfig Function")
+func service_lbmonitor_bindingGetThePayloadFromthePlan(ctx context.Context, data *ServiceLbmonitorBindingResourceModel) basic.Servicelbmonitorbinding {
+	tflog.Debug(ctx, "In service_lbmonitor_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	service_lbmonitor_binding := basic.Servicelbmonitorbinding{}
-	if !data.MonitorName.IsNull() {
+	if !data.MonitorName.IsNull() && !data.MonitorName.IsUnknown() {
 		service_lbmonitor_binding.Monitorname = data.MonitorName.ValueString()
 	}
-	if !data.Monstate.IsNull() {
+	if !data.Monstate.IsNull() && !data.Monstate.IsUnknown() {
 		service_lbmonitor_binding.Monstate = data.Monstate.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		service_lbmonitor_binding.Name = data.Name.ValueString()
 	}
-	if !data.Passive.IsNull() {
+	if !data.Passive.IsNull() && !data.Passive.IsUnknown() {
 		service_lbmonitor_binding.Passive = data.Passive.ValueBool()
 	}
-	if !data.Weight.IsNull() {
+	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		service_lbmonitor_binding.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
 

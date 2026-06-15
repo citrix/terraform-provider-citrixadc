@@ -1,0 +1,26 @@
+[
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "The name of the network bridge."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "tunnel",
+        "type": "string",
+        "description": [
+            "The name of the tunnel that is a part of this bridge."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

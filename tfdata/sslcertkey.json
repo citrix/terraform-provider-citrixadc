@@ -1,0 +1,187 @@
+[
+    {
+        "option_name": "bundle",
+        "type": "string",
+        "description": [
+            "Parse the certificate chain as a single file after linking the server certificate to its issuer's certificate within the file."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "cert",
+        "type": "string",
+        "description": [
+            "Name of and, optionally, path to the X509 certificate file that is used to form the certificate-key pair. The certificate file should be present on the appliance's hard-disk drive or solid-state drive. Storing a certificate in any location other than the default might cause inconsistency in a high availability setup. /nsconfig/ssl/ is the default path."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "certkey",
+        "type": "string",
+        "description": [
+            "Name for the certificate and private-key pair. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the certificate-key pair is created.",
+            "",
+            "The following requirement applies only to the Citrix ADC CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cert\" or 'my cert')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "deletecertkeyfilesonremoval",
+        "type": "string",
+        "description": [
+            "This option is used to automatically delete certificate/key files from physical device when the added certkey is removed. When deleteCertKeyFilesOnRemoval option is used at rm certkey command, it overwrites the deleteCertKeyFilesOnRemoval setting used at add/set certkey command"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "deletefromdevice",
+        "type": "boolean",
+        "description": [
+            "Delete cert/key file from file system."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "expirymonitor",
+        "type": "string",
+        "description": [
+            "Issue an alert when the certificate is about to expire."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "fipskey",
+        "type": "string",
+        "description": [
+            "Name of the FIPS key that was created inside the Hardware Security Module (HSM) of a FIPS appliance, or a key that was imported into the HSM."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "hsmkey",
+        "type": "string",
+        "description": [
+            "Name of the HSM key that was created in the External Hardware Security Module (HSM) of a FIPS appliance."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "inform",
+        "type": "string",
+        "description": [
+            "Input format of the certificate and the private-key files. The three formats supported by the appliance are:",
+            "PEM - Privacy Enhanced Mail",
+            "DER - Distinguished Encoding Rule",
+            "PFX - Personal Information Exchange"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "PEM"
+    },
+    {
+        "option_name": "key",
+        "type": "string",
+        "description": [
+            "Name of and, optionally, path to the private-key file that is used to form the certificate-key pair. The certificate file should be present on the appliance's hard-disk drive or solid-state drive. Storing a certificate in any location other than the default might cause inconsistency in a high availability setup. /nsconfig/ssl/ is the default path."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "linkcertkeyname",
+        "type": "string",
+        "description": [
+            "Name of the Certificate Authority certificate-key pair to which to link a certificate-key pair."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "nodomaincheck",
+        "type": "boolean",
+        "description": [
+            "Override the check for matching domain names during a certificate update operation."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "notificationperiod",
+        "type": "integer",
+        "description": [
+            "Time, in number of days, before certificate expiration, at which to generate an alert that the certificate is about to expire."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "ocspstaplingcache",
+        "type": "boolean",
+        "description": [
+            "Clear cached ocspStapling response in certkey."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "passplain",
+        "type": "string",
+        "description": [
+            "Pass phrase used to encrypt the private-key. Required when adding an encrypted private-key in PEM format."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "password",
+        "type": "boolean",
+        "description": [
+            "Passphrase that was used to encrypt the private-key. Use this option to load encrypted private-keys in PEM format."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

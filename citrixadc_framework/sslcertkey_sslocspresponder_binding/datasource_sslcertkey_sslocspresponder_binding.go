@@ -44,6 +44,7 @@ func (d *SslcertkeySslocspresponderBindingDataSource) Read(ctx context.Context, 
 
 	// Case 4: Array filter with parent ID
 	certkey_Name := data.Certkey.ValueString()
+	ca_Name := data.Ca
 	ocspresponder_Name := data.Ocspresponder
 
 	var dataArr []map[string]interface{}
@@ -71,6 +72,17 @@ func (d *SslcertkeySslocspresponderBindingDataSource) Read(ctx context.Context, 
 	for i, v := range dataArr {
 		match := true
 
+		// Check ca
+		if val, ok := v["ca"].(bool); ok {
+			if ca_Name.IsNull() || val != ca_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !ca_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check ocspresponder
 		if val, ok := v["ocspresponder"].(string); ok {
 			if ocspresponder_Name.IsNull() || val != ocspresponder_Name.ValueString() {
@@ -89,7 +101,7 @@ func (d *SslcertkeySslocspresponderBindingDataSource) Read(ctx context.Context, 
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("sslcertkey_sslocspresponder_binding with ocspresponder %s not found", ocspresponder_Name.ValueString()))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("sslcertkey_sslocspresponder_binding with ca %s not found", ca_Name))
 		return
 	}
 

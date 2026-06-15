@@ -45,6 +45,7 @@ func (d *Rnat6Nsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	natip6_Name := data.Natip6
+	ownergroup_Name := data.Ownergroup
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +83,16 @@ func (d *Rnat6Nsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 			continue
 		}
 
+		// Check ownergroup
+		if val, ok := v["ownergroup"].(string); ok {
+			if ownergroup_Name.IsNull() || val != ownergroup_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !ownergroup_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

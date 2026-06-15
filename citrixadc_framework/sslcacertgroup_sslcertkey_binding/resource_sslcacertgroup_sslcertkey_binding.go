@@ -3,8 +3,10 @@ package sslcacertgroup_sslcertkey_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *SslcacertgroupSslcertkeyBindingResource) Create(ctx context.Context, re
 	}
 
 	tflog.Debug(ctx, "Creating sslcacertgroup_sslcertkey_binding resource")
-
-	// sslcacertgroup_sslcertkey_binding := sslcacertgroup_sslcertkey_bindingGetThePayloadFromtheConfig(ctx, &data)
+	sslcacertgroup_sslcertkey_binding := sslcacertgroup_sslcertkey_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslcacertgroup_sslcertkey_binding.Type(), &sslcacertgroup_sslcertkey_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslcacertgroup_sslcertkey_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslcacertgroup_sslcertkey_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Sslcacertgroup_sslcertkey_binding.Type(), &sslcacertgroup_sslcertkey_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslcacertgroup_sslcertkey_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created sslcacertgroup_sslcertkey_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("cacertgroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Cacertgroupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readSslcacertgroupSslcertkeyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *SslcacertgroupSslcertkeyBindingResource) Read(ctx context.Context, req 
 }
 
 func (r *SslcacertgroupSslcertkeyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslcacertgroupSslcertkeyBindingResourceModel
+	var data, state SslcacertgroupSslcertkeyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *SslcacertgroupSslcertkeyBindingResource) Update(ctx context.Context, re
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslcacertgroup_sslcertkey_binding resource")
 
-	// Create API request body from the model
-	// sslcacertgroup_sslcertkey_binding := sslcacertgroup_sslcertkey_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslcacertgroup_sslcertkey_binding.Type(), &sslcacertgroup_sslcertkey_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslcacertgroup_sslcertkey_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		sslcacertgroup_sslcertkey_binding := sslcacertgroup_sslcertkey_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Sslcacertgroup_sslcertkey_binding.Type(), &sslcacertgroup_sslcertkey_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslcacertgroup_sslcertkey_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated sslcacertgroup_sslcertkey_binding resource")
+		tflog.Trace(ctx, "Updated sslcacertgroup_sslcertkey_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for sslcacertgroup_sslcertkey_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readSslcacertgroupSslcertkeyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,99 @@ func (r *SslcacertgroupSslcertkeyBindingResource) Delete(ctx context.Context, re
 	}
 
 	tflog.Debug(ctx, "Deleting sslcacertgroup_sslcertkey_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"cacertgroupname", "certkeyname"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For sslcacertgroup_sslcertkey_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslcacertgroup_sslcertkey_binding resource from state")
+	cacertgroupname_value, ok := idMap["cacertgroupname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'cacertgroupname' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["certkeyname"]; ok && val != "" {
+		argsMap["certkeyname"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Sslcacertgroup_sslcertkey_binding.Type(), cacertgroupname_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslcacertgroup_sslcertkey_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted sslcacertgroup_sslcertkey_binding binding")
 }
 
 // Helper function to read sslcacertgroup_sslcertkey_binding data from API
 func (r *SslcacertgroupSslcertkeyBindingResource) readSslcacertgroupSslcertkeyBindingFromApi(ctx context.Context, data *SslcacertgroupSslcertkeyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslcacertgroup_sslcertkey_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"cacertgroupname", "certkeyname"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	cacertgroupname_Name, ok := idMap["cacertgroupname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'cacertgroupname' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Sslcacertgroup_sslcertkey_binding.Type(),
+		ResourceName:             cacertgroupname_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslcacertgroup_sslcertkey_binding, got error: %s", err))
 		return
 	}
 
-	sslcacertgroup_sslcertkey_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "sslcacertgroup_sslcertkey_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check certkeyname
+		if idVal, ok := idMap["certkeyname"]; ok {
+			if val, ok := v["certkeyname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["certkeyname"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("sslcacertgroup_sslcertkey_binding not found with the provided ID attributes"))
+		return
+	}
+
+	sslcacertgroup_sslcertkey_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

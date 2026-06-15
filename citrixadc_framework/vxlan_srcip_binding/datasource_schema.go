@@ -10,7 +10,7 @@ func VxlanSrcipBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"vxlanid": schema.Int64Attribute{
+			"id": schema.Int64Attribute{
 				Required:    true,
 				Description: "A positive integer, which is also called VXLAN Network Identifier (VNI), that uniquely identifies a VXLAN.",
 			},

@@ -17,8 +17,7 @@ func BotprofileTpsBindingDataSourceSchema() schema.Schema {
 				Description: "Any comments about this binding.",
 			},
 			"bot_tps": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "TPS binding. For each type only binding can be configured. To  update the values of an existing binding, user has to first unbind that binding, and then needs to bind again with new values.",
 			},
 			"bot_tps_action": schema.ListAttribute{

@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -36,67 +39,87 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 				Description: "The ID of the sslvserver_sslcertkey_binding resource.",
 			},
 			"ca": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "CA certificate.",
 			},
 			"certkeyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the certificate key pair binding.",
 			},
 			"crlcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
 			"ocspcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the OCSP check parameter. (Mandatory/Optional)",
 			},
 			"skipcaname": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "The flag is used to indicate whether this particular CA certificate's CA_Name needs to be sent to the SSL client while requesting for client certificate in a SSL handshake",
 			},
 			"snicert": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the CertKey. Use this option to bind Certkey(s) which will be used in SNI processing.",
 			},
 			"vservername": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL virtual server.",
 			},
 		},
 	}
 }
 
-func sslvserver_sslcertkey_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslvserverSslcertkeyBindingResourceModel) ssl.Sslvserversslcertkeybinding {
-	tflog.Debug(ctx, "In sslvserver_sslcertkey_bindingGetThePayloadFromtheConfig Function")
+func sslvserver_sslcertkey_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslvserverSslcertkeyBindingResourceModel) ssl.Sslvserversslcertkeybinding {
+	tflog.Debug(ctx, "In sslvserver_sslcertkey_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslvserver_sslcertkey_binding := ssl.Sslvserversslcertkeybinding{}
-	if !data.Ca.IsNull() {
+	if !data.Ca.IsNull() && !data.Ca.IsUnknown() {
 		sslvserver_sslcertkey_binding.Ca = data.Ca.ValueBool()
 	}
-	if !data.Certkeyname.IsNull() {
+	if !data.Certkeyname.IsNull() && !data.Certkeyname.IsUnknown() {
 		sslvserver_sslcertkey_binding.Certkeyname = data.Certkeyname.ValueString()
 	}
-	if !data.Crlcheck.IsNull() {
+	if !data.Crlcheck.IsNull() && !data.Crlcheck.IsUnknown() {
 		sslvserver_sslcertkey_binding.Crlcheck = data.Crlcheck.ValueString()
 	}
-	if !data.Ocspcheck.IsNull() {
+	if !data.Ocspcheck.IsNull() && !data.Ocspcheck.IsUnknown() {
 		sslvserver_sslcertkey_binding.Ocspcheck = data.Ocspcheck.ValueString()
 	}
-	if !data.Skipcaname.IsNull() {
+	if !data.Skipcaname.IsNull() && !data.Skipcaname.IsUnknown() {
 		sslvserver_sslcertkey_binding.Skipcaname = data.Skipcaname.ValueBool()
 	}
-	if !data.Snicert.IsNull() {
+	if !data.Snicert.IsNull() && !data.Snicert.IsUnknown() {
 		sslvserver_sslcertkey_binding.Snicert = data.Snicert.ValueBool()
 	}
-	if !data.Vservername.IsNull() {
+	if !data.Vservername.IsNull() && !data.Vservername.IsUnknown() {
 		sslvserver_sslcertkey_binding.Vservername = data.Vservername.ValueString()
 	}
 

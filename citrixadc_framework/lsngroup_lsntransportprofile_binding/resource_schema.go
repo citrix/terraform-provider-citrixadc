@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *LsngroupLsntransportprofileBindingResource) Schema(ctx context.Context,
 				Description: "The ID of the lsngroup_lsntransportprofile_binding resource.",
 			},
 			"groupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the LSN group. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN group is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn group1\" or 'lsn group1').",
 			},
 			"transportprofilename": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the LSN transport profile to bind to the specified LSN group. Bind a profile for each protocol for which you want to specify settings.\n\nBy default, one LSN transport profile with default settings for TCP, UDP, and ICMP protocols is bound to an LSN group during its creation. This profile is called a default transport.\n\nAn LSN transport profile that you bind to an LSN group overrides the default LSN transport profile for that protocol.",
 			},
 		},
 	}
 }
 
-func lsngroup_lsntransportprofile_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LsngroupLsntransportprofileBindingResourceModel) lsn.Lsngrouplsntransportprofilebinding {
-	tflog.Debug(ctx, "In lsngroup_lsntransportprofile_bindingGetThePayloadFromtheConfig Function")
+func lsngroup_lsntransportprofile_bindingGetThePayloadFromthePlan(ctx context.Context, data *LsngroupLsntransportprofileBindingResourceModel) lsn.Lsngrouplsntransportprofilebinding {
+	tflog.Debug(ctx, "In lsngroup_lsntransportprofile_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lsngroup_lsntransportprofile_binding := lsn.Lsngrouplsntransportprofilebinding{}
-	if !data.Groupname.IsNull() {
+	if !data.Groupname.IsNull() && !data.Groupname.IsUnknown() {
 		lsngroup_lsntransportprofile_binding.Groupname = data.Groupname.ValueString()
 	}
-	if !data.Transportprofilename.IsNull() {
+	if !data.Transportprofilename.IsNull() && !data.Transportprofilename.IsUnknown() {
 		lsngroup_lsntransportprofile_binding.Transportprofilename = data.Transportprofilename.ValueString()
 	}
 

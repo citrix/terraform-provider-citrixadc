@@ -1,0 +1,14 @@
+[
+    {
+        "option_name": "id",
+        "type": "string",
+        "description": [
+            "Unique identifier for the linkset. Must be of the form LS/x, where x can be an integer from 1 to 32."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

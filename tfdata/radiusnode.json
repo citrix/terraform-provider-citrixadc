@@ -1,0 +1,27 @@
+[
+    {
+        "option_name": "nodeprefix",
+        "type": "string",
+        "description": [
+            "IP address/IP prefix of radius node in CIDR format"
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "radkey",
+        "type": "string",
+        "description": [
+            "The key shared between the RADIUS server and clients.",
+            "      Required for NetScaler to communicate with the RADIUS nodes."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-secret-attr": true
+    }
+]

@@ -1,0 +1,36 @@
+[
+    {
+        "option_name": "all",
+        "type": "boolean",
+        "description": [
+            "Flush all the ECS subnets from the DNS cache."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "ecssubnet",
+        "type": "string",
+        "description": [
+            "ECS Subnet."
+        ],
+        "is_get_id": true,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "nodeid",
+        "type": "integer",
+        "description": [
+            "Unique number that identifies the cluster node."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

@@ -1,0 +1,90 @@
+[
+    {
+        "option_name": "dropfrag",
+        "type": "string",
+        "description": [
+            "Drop any IP packet that requires fragmentation before it is sent through the tunnel."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "dropfragcputhreshold",
+        "type": "integer",
+        "description": [
+            "Threshold value, as a percentage of CPU usage, at which to drop packets that require fragmentation to use the IP tunnel. Applies only if dropFragparameter is set to NO. The default value, 0, specifies that this parameter is not set."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "enablestrictrx",
+        "type": "string",
+        "description": [
+            "Strict PBR check for IPSec packets received through tunnel"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "enablestricttx",
+        "type": "string",
+        "description": [
+            "Strict PBR check for packets to be sent IPSec protected"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "mac",
+        "type": "string",
+        "description": [
+            "The shared MAC used for shared IP between cluster nodes/HA peers"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "srcip",
+        "type": "string",
+        "description": [
+            "Common source-IP address for all tunnels. For a specific tunnel, this global setting is overridden if you have specified another source IP address. Must be a MIP or SNIP address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "srciproundrobin",
+        "type": "string",
+        "description": [
+            "Use a different source IP address for each new session through a particular IP tunnel, as determined by round robin selection of one of the SNIP addresses. This setting is ignored if a common global source IP address has been specified for all the IP tunnels. This setting does not apply to a tunnel for which a source IP address has been specified."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "useclientsourceip",
+        "type": "string",
+        "description": [
+            "Use client source IP as source IP for outer tunnel IP header"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

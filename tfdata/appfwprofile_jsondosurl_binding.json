@@ -1,0 +1,233 @@
+[
+    {
+        "option_name": "alertonly",
+        "type": "string",
+        "description": [
+            "Send SNMP alert?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments about the purpose of profile, or other useful information about the profile."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "isautodeployed",
+        "type": "string",
+        "description": [
+            "Is the rule auto deployed by dynamic profile ?"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "jsondosurl",
+        "type": "string",
+        "description": [
+            "The URL on which we need to enforce the specified JSON denial-of-service (JSONDoS) attack protections.",
+            "An JSON DoS configuration consists of the following items:",
+            "* URL. PCRE-format regular expression for the URL.",
+            "* Maximum-document-length-check toggle.  ON to enable this check, OFF to disable it.",
+            "* Maximum document length. Positive integer representing the maximum length of the JSON document.",
+            "* Maximum-container-depth-check toggle. ON to enable, OFF to disable.",
+            " * Maximum container depth. Positive integer representing the maximum container depth of the JSON document.",
+            "* Maximum-object-key-count-check toggle. ON to enable, OFF to disable.",
+            "* Maximum object key count. Positive integer representing the maximum allowed number of keys in any of the  JSON object.",
+            "* Maximum-object-key-length-check toggle. ON to enable, OFF to disable.",
+            "* Maximum object key length. Positive integer representing the maximum allowed length of key in any of the  JSON object.",
+            "* Maximum-array-value-count-check toggle. ON to enable, OFF to disable.",
+            "* Maximum array value count. Positive integer representing the maximum allowed number of values in any of the JSON array.",
+            "* Maximum-string-length-check toggle. ON to enable, OFF to disable.",
+            "* Maximum string length. Positive integer representing the maximum length of string in JSON."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "jsonmaxarraylength",
+        "type": "integer",
+        "description": [
+            "Maximum array length in the any of JSON object. This check protects against arrays having large lengths."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 10000
+    },
+    {
+        "option_name": "jsonmaxarraylengthcheck",
+        "type": "string",
+        "description": [
+            "State if JSON Max array value count check is ON or OFF."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "jsonmaxcontainerdepth",
+        "type": "integer",
+        "description": [
+            "Maximum allowed nesting depth  of JSON document. JSON allows one to nest the containers (object and array) in any order to any depth. This check protects against documents that have excessive depth of hierarchy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 5
+    },
+    {
+        "option_name": "jsonmaxcontainerdepthcheck",
+        "type": "string",
+        "description": [
+            "State if JSON Max depth check is ON or OFF."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "jsonmaxdocumentlength",
+        "type": "integer",
+        "description": [
+            "Maximum document length of JSON document, in bytes."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 20000000
+    },
+    {
+        "option_name": "jsonmaxdocumentlengthcheck",
+        "type": "string",
+        "description": [
+            "State if JSON Max document length check is ON or OFF."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "jsonmaxobjectkeycount",
+        "type": "integer",
+        "description": [
+            "Maximum key count in the any of JSON object. This check protects against objects that have large number of keys."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 10000
+    },
+    {
+        "option_name": "jsonmaxobjectkeycountcheck",
+        "type": "string",
+        "description": [
+            "State if JSON Max object key count check is ON or OFF."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "jsonmaxobjectkeylength",
+        "type": "integer",
+        "description": [
+            "Maximum key length in the any of JSON object. This check protects against objects that have large keys."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 128
+    },
+    {
+        "option_name": "jsonmaxobjectkeylengthcheck",
+        "type": "string",
+        "description": [
+            "State if JSON Max object key length check is ON or OFF."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "jsonmaxstringlength",
+        "type": "integer",
+        "description": [
+            "Maximum string length in the JSON. This check protects against strings that have large length."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 1000000
+    },
+    {
+        "option_name": "jsonmaxstringlengthcheck",
+        "type": "string",
+        "description": [
+            "State if JSON Max string value count check is ON or OFF."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the profile to which to bind an exemption or rule."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "resourceid",
+        "type": "string",
+        "description": [
+            "A \"id\" that identifies the rule."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "Enabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

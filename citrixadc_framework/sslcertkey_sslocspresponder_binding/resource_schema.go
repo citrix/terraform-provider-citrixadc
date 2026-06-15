@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -43,39 +45,47 @@ func (r *SslcertkeySslocspresponderBindingResource) Schema(ctx context.Context, 
 				Description: "The certificate-key pair being unbound is a Certificate Authority (CA) certificate. If you choose this option, the certificate-key pair is unbound from the list of CA certificates that were bound to the specified SSL virtual server or SSL service.",
 			},
 			"certkey": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the certificate-key pair.",
 			},
 			"ocspresponder": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "OCSP responders bound to this certkey",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "ocsp priority",
 			},
 		},
 	}
 }
 
-func sslcertkey_sslocspresponder_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslcertkeySslocspresponderBindingResourceModel) ssl.Sslcertkeysslocspresponderbinding {
-	tflog.Debug(ctx, "In sslcertkey_sslocspresponder_bindingGetThePayloadFromtheConfig Function")
+func sslcertkey_sslocspresponder_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslcertkeySslocspresponderBindingResourceModel) ssl.Sslcertkeysslocspresponderbinding {
+	tflog.Debug(ctx, "In sslcertkey_sslocspresponder_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslcertkey_sslocspresponder_binding := ssl.Sslcertkeysslocspresponderbinding{}
-	if !data.Ca.IsNull() {
+	if !data.Ca.IsNull() && !data.Ca.IsUnknown() {
 		sslcertkey_sslocspresponder_binding.Ca = data.Ca.ValueBool()
 	}
-	if !data.Certkey.IsNull() {
+	if !data.Certkey.IsNull() && !data.Certkey.IsUnknown() {
 		sslcertkey_sslocspresponder_binding.Certkey = data.Certkey.ValueString()
 	}
-	if !data.Ocspresponder.IsNull() {
+	if !data.Ocspresponder.IsNull() && !data.Ocspresponder.IsUnknown() {
 		sslcertkey_sslocspresponder_binding.Ocspresponder = data.Ocspresponder.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		sslcertkey_sslocspresponder_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 
@@ -112,6 +122,7 @@ func sslcertkey_sslocspresponder_bindingSetAttrFromGet(ctx context.Context, data
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("certkey:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkey.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("ocspresponder:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ocspresponder.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))

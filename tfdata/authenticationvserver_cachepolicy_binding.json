@@ -1,0 +1,95 @@
+[
+    {
+        "option_name": "bindpoint",
+        "type": "string",
+        "description": [
+            "Bindpoint to which the policy is bound."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "gotopriorityexpression",
+        "type": "string",
+        "description": [
+            "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "groupextraction",
+        "type": "boolean",
+        "description": [
+            "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the authentication virtual server to which to bind the policy."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "nextfactor",
+        "type": "string",
+        "description": [
+            "Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "policy",
+        "type": "string",
+        "description": [
+            "The name of the policy, if any, bound to the authentication vserver."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "priority",
+        "type": "integer",
+        "description": [
+            "The priority, if any, of the vpn vserver policy."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "secondary",
+        "type": "boolean",
+        "description": [
+            "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    }
+]

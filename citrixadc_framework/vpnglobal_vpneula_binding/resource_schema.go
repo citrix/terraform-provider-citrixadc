@@ -2,11 +2,14 @@ package vpnglobal_vpneula_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -27,28 +30,33 @@ func (r *VpnglobalVpneulaBindingResource) Schema(ctx context.Context, req resour
 				Description: "The ID of the vpnglobal_vpneula_binding resource.",
 			},
 			"eula": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the EULA bound to vpnglobal",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 		},
 	}
 }
 
-func vpnglobal_vpneula_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnglobalVpneulaBindingResourceModel) vpn.Vpnglobalvpneulabinding {
-	tflog.Debug(ctx, "In vpnglobal_vpneula_bindingGetThePayloadFromtheConfig Function")
+func vpnglobal_vpneula_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnglobalVpneulaBindingResourceModel) vpn.Vpnglobalvpneulabinding {
+	tflog.Debug(ctx, "In vpnglobal_vpneula_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnglobal_vpneula_binding := vpn.Vpnglobalvpneulabinding{}
-	if !data.Eula.IsNull() {
+	if !data.Eula.IsNull() && !data.Eula.IsUnknown() {
 		vpnglobal_vpneula_binding.Eula = data.Eula.ValueString()
 	}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		vpnglobal_vpneula_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
 
@@ -71,8 +79,8 @@ func vpnglobal_vpneula_bindingSetAttrFromGet(ctx context.Context, data *Vpngloba
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Eula.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Eula.ValueString()))
 
 	return data
 }

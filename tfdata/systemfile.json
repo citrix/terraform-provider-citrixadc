@@ -1,0 +1,49 @@
+[
+    {
+        "option_name": "filecontent",
+        "type": "string",
+        "description": [
+            "file content in Base64 format."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "fileencoding",
+        "type": "string",
+        "description": [
+            "encoding type of the file content."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "\"BASE64\""
+    },
+    {
+        "option_name": "filelocation",
+        "type": "string",
+        "description": [
+            "location of the file on Citrix ADC."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "filename",
+        "type": "string",
+        "description": [
+            "Name of the file. It should not include filepath."
+        ],
+        "is_get_id": false,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

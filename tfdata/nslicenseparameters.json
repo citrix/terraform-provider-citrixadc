@@ -1,0 +1,62 @@
+[
+    {
+        "option_name": "alert1gracetimeout",
+        "type": "integer",
+        "description": [
+            "If ADC remains in grace for the configured hours then first grace alert will be raised"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 6
+    },
+    {
+        "option_name": "alert2gracetimeout",
+        "type": "integer",
+        "description": [
+            "If ADC remains in grace for the configured hours then major grace alert will be raised"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 240
+    },
+    {
+        "option_name": "heartbeatinterval",
+        "type": "integer",
+        "description": [
+            "Heartbeat between ADC and Licenseserver is configurable and applicable in case of pooled licensing"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 280
+    },
+    {
+        "option_name": "inventoryrefreshinterval",
+        "type": "integer",
+        "description": [
+            "Inventory refresh interval between ADC and Licenseserver is configurable and applicable in case of pooled licensing"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 360
+    },
+    {
+        "option_name": "licenseexpiryalerttime",
+        "type": "integer",
+        "description": [
+            "If ADC license contract expiry date is nearer then GUI/SNMP license expiry alert will be raised"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 30
+    }
+]

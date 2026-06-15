@@ -1,0 +1,158 @@
+[
+    {
+        "option_name": "encalgo",
+        "type": "string[]",
+        "description": [
+            "Type of encryption algorithm (Note: Selection of AES enables AES128)"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "hashalgo",
+        "type": "string[]",
+        "description": [
+            "Type of hashing algorithm"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "ikeretryinterval",
+        "type": "integer",
+        "description": [
+            "IKE retry interval for bringing up the connection"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "ikeversion",
+        "type": "string",
+        "description": [
+            "IKE Protocol Version"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "lifetime",
+        "type": "integer",
+        "description": [
+            "Lifetime of IKE SA in seconds. Lifetime of IPSec SA will be (lifetime of IKE SA/8)"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "livenesscheckinterval",
+        "type": "integer",
+        "description": [
+            "Number of seconds after which a notify payload is sent to check the liveliness of the peer. Additional retries are done as per retransmit interval setting. Zero value disables liveliness checks."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "The name of the ipsec profile"
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "peerpublickey",
+        "type": "string",
+        "description": [
+            "Peer public key file path"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "perfectforwardsecrecy",
+        "type": "string",
+        "description": [
+            "Enable/Disable PFS."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "privatekey",
+        "type": "string",
+        "description": [
+            "Private key file path"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "psk",
+        "type": "string",
+        "description": [
+            "Pre shared key value"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "publickey",
+        "type": "string",
+        "description": [
+            "Public key file path"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "replaywindowsize",
+        "type": "integer",
+        "description": [
+            "IPSec Replay window size for the data traffic"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "retransmissiontime",
+        "type": "integer",
+        "description": [
+            "The interval in seconds to retry sending the IKE messages to peer, three consecutive attempts are done with doubled interval after every failure."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

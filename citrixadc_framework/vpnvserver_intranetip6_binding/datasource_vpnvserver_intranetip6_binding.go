@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -45,6 +46,7 @@ func (d *VpnvserverIntranetip6BindingDataSource) Read(ctx context.Context, req d
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	intranetip6_Name := data.Intranetip6
+	numaddr_Name := data.Numaddr
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +84,17 @@ func (d *VpnvserverIntranetip6BindingDataSource) Read(ctx context.Context, req d
 			continue
 		}
 
+		// Check numaddr
+		if val, ok := v["numaddr"]; ok {
+			val, _ = utils.ConvertToInt64(val)
+			if numaddr_Name.IsNull() || val != numaddr_Name.ValueInt64() {
+				match = false
+				continue
+			}
+		} else if !numaddr_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

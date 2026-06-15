@@ -1,0 +1,71 @@
+[
+    {
+        "option_name": "hsmkeyname",
+        "type": "string",
+        "description": [
+            "0"
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "hsmtype",
+        "type": "string",
+        "description": [
+            "Type of HSM."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "THALES"
+    },
+    {
+        "option_name": "key",
+        "type": "string",
+        "description": [
+            "Name of the key. optionally, for Thales, path to the HSM key file; /var/opt/nfast/kmdata/local/ is the default path. Applies when HSMTYPE is THALES or KEYVAULT."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "keystore",
+        "type": "string",
+        "description": [
+            "Name of keystore object representing HSM where key is stored. For example, name of keyvault object or azurekeyvault authentication object. Applies only to KEYVAULT type HSM."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "password",
+        "type": "string",
+        "description": [
+            "Password for a partition. Applies only to SafeNet HSM."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "serialnum",
+        "type": "string",
+        "description": [
+            "Serial number of the partition on which the key is present. Applies only to SafeNet HSM."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

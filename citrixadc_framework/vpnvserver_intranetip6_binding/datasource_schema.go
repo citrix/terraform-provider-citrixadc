@@ -19,8 +19,7 @@ func VpnvserverIntranetip6BindingDataSourceSchema() schema.Schema {
 				Description: "Name of the virtual server.",
 			},
 			"numaddr": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The number of ipv6 addresses",
 			},
 		},

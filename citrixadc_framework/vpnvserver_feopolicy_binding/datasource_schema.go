@@ -10,6 +10,10 @@ func VpnvserverFeopolicyBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"bindpoint": schema.StringAttribute{
+				Required:    true,
+				Description: "Bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

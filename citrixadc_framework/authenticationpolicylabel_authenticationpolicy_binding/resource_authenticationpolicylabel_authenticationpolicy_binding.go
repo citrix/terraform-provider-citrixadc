@@ -3,8 +3,10 @@ package authenticationpolicylabel_authenticationpolicy_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *AuthenticationpolicylabelAuthenticationpolicyBindingResource) Create(ct
 	}
 
 	tflog.Debug(ctx, "Creating authenticationpolicylabel_authenticationpolicy_binding resource")
-
-	// authenticationpolicylabel_authenticationpolicy_binding := authenticationpolicylabel_authenticationpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	authenticationpolicylabel_authenticationpolicy_binding := authenticationpolicylabel_authenticationpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationpolicylabel_authenticationpolicy_binding.Type(), &authenticationpolicylabel_authenticationpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationpolicylabel_authenticationpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationpolicylabel_authenticationpolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Authenticationpolicylabel_authenticationpolicy_binding.Type(), &authenticationpolicylabel_authenticationpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationpolicylabel_authenticationpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationpolicylabel_authenticationpolicy_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("labelname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Labelname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readAuthenticationpolicylabelAuthenticationpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *AuthenticationpolicylabelAuthenticationpolicyBindingResource) Read(ctx 
 }
 
 func (r *AuthenticationpolicylabelAuthenticationpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationpolicylabelAuthenticationpolicyBindingResourceModel
+	var data, state AuthenticationpolicylabelAuthenticationpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *AuthenticationpolicylabelAuthenticationpolicyBindingResource) Update(ct
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationpolicylabel_authenticationpolicy_binding resource")
 
-	// Create API request body from the model
-	// authenticationpolicylabel_authenticationpolicy_binding := authenticationpolicylabel_authenticationpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationpolicylabel_authenticationpolicy_binding.Type(), &authenticationpolicylabel_authenticationpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationpolicylabel_authenticationpolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		authenticationpolicylabel_authenticationpolicy_binding := authenticationpolicylabel_authenticationpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Authenticationpolicylabel_authenticationpolicy_binding.Type(), &authenticationpolicylabel_authenticationpolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationpolicylabel_authenticationpolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationpolicylabel_authenticationpolicy_binding resource")
+		tflog.Trace(ctx, "Updated authenticationpolicylabel_authenticationpolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for authenticationpolicylabel_authenticationpolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAuthenticationpolicylabelAuthenticationpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,99 @@ func (r *AuthenticationpolicylabelAuthenticationpolicyBindingResource) Delete(ct
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationpolicylabel_authenticationpolicy_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"labelname", "policyname"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For authenticationpolicylabel_authenticationpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationpolicylabel_authenticationpolicy_binding resource from state")
+	labelname_value, ok := idMap["labelname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'labelname' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["policyname"]; ok && val != "" {
+		argsMap["policyname"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Authenticationpolicylabel_authenticationpolicy_binding.Type(), labelname_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationpolicylabel_authenticationpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted authenticationpolicylabel_authenticationpolicy_binding binding")
 }
 
 // Helper function to read authenticationpolicylabel_authenticationpolicy_binding data from API
 func (r *AuthenticationpolicylabelAuthenticationpolicyBindingResource) readAuthenticationpolicylabelAuthenticationpolicyBindingFromApi(ctx context.Context, data *AuthenticationpolicylabelAuthenticationpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationpolicylabel_authenticationpolicy_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"labelname", "policyname"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	labelname_Name, ok := idMap["labelname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'labelname' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Authenticationpolicylabel_authenticationpolicy_binding.Type(),
+		ResourceName:             labelname_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationpolicylabel_authenticationpolicy_binding, got error: %s", err))
 		return
 	}
 
-	authenticationpolicylabel_authenticationpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "authenticationpolicylabel_authenticationpolicy_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check policyname
+		if idVal, ok := idMap["policyname"]; ok {
+			if val, ok := v["policyname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["policyname"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("authenticationpolicylabel_authenticationpolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	authenticationpolicylabel_authenticationpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

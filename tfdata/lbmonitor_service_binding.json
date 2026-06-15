@@ -1,0 +1,82 @@
+[
+    {
+        "option_name": "dup_state",
+        "type": "string",
+        "description": [
+            "State of the monitor. The state setting for a monitor of a given type affects all monitors of that type. For example, if an HTTP monitor is enabled, all HTTP monitors on the appliance are (or remain) enabled. If an HTTP monitor is disabled, all HTTP monitors on the appliance are disabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "dup_weight",
+        "type": "integer",
+        "description": [
+            "Weight to assign to the binding between the monitor and service."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "monitorname",
+        "type": "string",
+        "description": [
+            "Name of the monitor."
+        ],
+        "is_get_id": false,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "servicegroupname",
+        "type": "string",
+        "description": [
+            "Name of the service group."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "servicename",
+        "type": "string",
+        "description": [
+            "Name of the service or service group."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "State of the monitor. The state setting for a monitor of a given type affects all monitors of that type. For example, if an HTTP monitor is enabled, all HTTP monitors on the appliance are (or remain) enabled. If an HTTP monitor is disabled, all HTTP monitors on the appliance are disabled."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "weight",
+        "type": "integer",
+        "description": [
+            "Weight to assign to the binding between the monitor and service."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

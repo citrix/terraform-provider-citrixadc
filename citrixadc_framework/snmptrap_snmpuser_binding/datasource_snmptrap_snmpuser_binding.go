@@ -53,24 +53,8 @@ func (d *SnmptrapSnmpuserBindingDataSource) Read(ctx context.Context, req dataso
 	var dataArr []map[string]interface{}
 	var err error
 
-	// Build ArgsMap with required parameters for binding
-	argsMap := make(map[string]string)
-	if !trapclass_Name.IsNull() {
-		argsMap["trapclass"] = trapclass_Name.ValueString()
-	}
-	if !trapdestination_Name.IsNull() {
-		argsMap["trapdestination"] = trapdestination_Name.ValueString()
-	}
-	if !version_Name.IsNull() {
-		argsMap["version"] = version_Name.ValueString()
-	}
-	if !td_Name.IsNull() {
-		argsMap["td"] = fmt.Sprintf("%d", td_Name.ValueInt64())
-	}
-
 	findParams := service.FindParams{
 		ResourceType:             service.Snmptrap_snmpuser_binding.Type(),
-		ArgsMap:                  argsMap,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)

@@ -1,0 +1,14 @@
+[
+    {
+        "option_name": "viewname",
+        "type": "string",
+        "description": [
+            "Name for the DNS view."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

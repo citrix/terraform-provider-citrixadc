@@ -3,7 +3,6 @@ package vpnglobal_appcontroller_binding
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -72,8 +71,7 @@ func (d *VpnglobalAppcontrollerBindingDataSource) Read(ctx context.Context, req 
 
 		// Check appcontroller
 		if val, ok := v["appcontroller"].(string); ok {
-			appcontroller, _ := url.QueryUnescape(appcontroller_Name.ValueString())
-			if appcontroller_Name.IsNull() || val != appcontroller {
+			if appcontroller_Name.IsNull() || val != appcontroller_Name.ValueString() {
 				match = false
 				continue
 			}

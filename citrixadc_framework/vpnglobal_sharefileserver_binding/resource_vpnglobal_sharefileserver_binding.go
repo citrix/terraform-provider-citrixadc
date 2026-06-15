@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +55,20 @@ func (r *VpnglobalSharefileserverBindingResource) Create(ctx context.Context, re
 	}
 
 	tflog.Debug(ctx, "Creating vpnglobal_sharefileserver_binding resource")
-
-	// vpnglobal_sharefileserver_binding := vpnglobal_sharefileserver_bindingGetThePayloadFromtheConfig(ctx, &data)
+	vpnglobal_sharefileserver_binding := vpnglobal_sharefileserver_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnglobal_sharefileserver_binding.Type(), &vpnglobal_sharefileserver_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnglobal_sharefileserver_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnglobal_sharefileserver_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Vpnglobal_sharefileserver_binding.Type(), &vpnglobal_sharefileserver_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnglobal_sharefileserver_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnglobal_sharefileserver_binding resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Sharefile.ValueString()))
 
 	// Read the updated state back
 	r.readVpnglobalSharefileserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +96,10 @@ func (r *VpnglobalSharefileserverBindingResource) Read(ctx context.Context, req 
 }
 
 func (r *VpnglobalSharefileserverBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnglobalSharefileserverBindingResourceModel
+	var data, state VpnglobalSharefileserverBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +107,29 @@ func (r *VpnglobalSharefileserverBindingResource) Update(ctx context.Context, re
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnglobal_sharefileserver_binding resource")
 
-	// Create API request body from the model
-	// vpnglobal_sharefileserver_binding := vpnglobal_sharefileserver_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnglobal_sharefileserver_binding.Type(), &vpnglobal_sharefileserver_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnglobal_sharefileserver_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		vpnglobal_sharefileserver_binding := vpnglobal_sharefileserver_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Vpnglobal_sharefileserver_binding.Type(), &vpnglobal_sharefileserver_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnglobal_sharefileserver_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vpnglobal_sharefileserver_binding resource")
+		tflog.Trace(ctx, "Updated vpnglobal_sharefileserver_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnglobal_sharefileserver_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readVpnglobalSharefileserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +149,82 @@ func (r *VpnglobalSharefileserverBindingResource) Delete(ctx context.Context, re
 	}
 
 	tflog.Debug(ctx, "Deleting vpnglobal_sharefileserver_binding resource")
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name
+	// Single unique attribute - ID is the plain value
+	sharefile_value := data.Id.ValueString()
+	args := []string{
+		fmt.Sprintf("sharefile:%s", sharefile_value),
+	}
 
-	// For vpnglobal_sharefileserver_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnglobal_sharefileserver_binding resource from state")
+	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_sharefileserver_binding.Type(), "", args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnglobal_sharefileserver_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnglobal_sharefileserver_binding binding")
 }
 
 // Helper function to read vpnglobal_sharefileserver_binding data from API
 func (r *VpnglobalSharefileserverBindingResource) readVpnglobalSharefileserverBindingFromApi(ctx context.Context, data *VpnglobalSharefileserverBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnglobal_sharefileserver_binding.Type(), "")
+
+	// Case 3: Array filter without parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"sharefile"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Vpnglobal_sharefileserver_binding.Type(),
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnglobal_sharefileserver_binding, got error: %s", err))
 		return
 	}
 
-	vpnglobal_sharefileserver_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "vpnglobal_sharefileserver_binding returned empty array")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check sharefile
+		if idVal, ok := idMap["sharefile"]; ok {
+			if val, ok := v["sharefile"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["sharefile"].(string); ok {
+			match = false
+			continue
+		}
+
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("vpnglobal_sharefileserver_binding not found with the provided ID attributes"))
+		return
+	}
+
+	vpnglobal_sharefileserver_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +34,36 @@ func (r *GslbserviceDnsviewBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the gslbservice_dnsview_binding resource.",
 			},
 			"servicename": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the GSLB service.",
 			},
 			"viewip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "IP address to be used for the given view",
 			},
 			"viewname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Name of the DNS view of the service. A DNS view is used in global server load balancing (GSLB) to return a predetermined IP address to a specific group of clients, which are identified by using a DNS policy.",
 			},
 		},
 	}
 }
 
-func gslbservice_dnsview_bindingGetThePayloadFromtheConfig(ctx context.Context, data *GslbserviceDnsviewBindingResourceModel) gslb.Gslbservicednsviewbinding {
-	tflog.Debug(ctx, "In gslbservice_dnsview_bindingGetThePayloadFromtheConfig Function")
+func gslbservice_dnsview_bindingGetThePayloadFromthePlan(ctx context.Context, data *GslbserviceDnsviewBindingResourceModel) gslb.Gslbservicednsviewbinding {
+	tflog.Debug(ctx, "In gslbservice_dnsview_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	gslbservice_dnsview_binding := gslb.Gslbservicednsviewbinding{}
-	if !data.Servicename.IsNull() {
+	if !data.Servicename.IsNull() && !data.Servicename.IsUnknown() {
 		gslbservice_dnsview_binding.Servicename = data.Servicename.ValueString()
 	}
-	if !data.Viewip.IsNull() {
+	if !data.Viewip.IsNull() && !data.Viewip.IsUnknown() {
 		gslbservice_dnsview_binding.Viewip = data.Viewip.ValueString()
 	}
-	if !data.Viewname.IsNull() {
+	if !data.Viewname.IsNull() && !data.Viewname.IsUnknown() {
 		gslbservice_dnsview_binding.Viewname = data.Viewname.ValueString()
 	}
 

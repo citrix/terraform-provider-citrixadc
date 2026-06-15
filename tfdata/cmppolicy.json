@@ -1,0 +1,60 @@
+[
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the HTTP compression policy. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.",
+            "Can be changed after the policy is created.",
+            "",
+            "The following requirement applies only to the Citrix ADC CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cmp policy\" or 'my cmp policy')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "newname",
+        "type": "string",
+        "description": [
+            "New name for the compression policy. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.",
+            "Choose a name that reflects the function that the policy performs.",
+            "",
+            "The following requirement applies only to the Citrix ADC CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cmp policy\" or 'my cmp policy')."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "resaction",
+        "type": "string",
+        "description": [
+            "The built-in or user-defined compression action to apply to the response when the policy matches a request or response."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "rule",
+        "type": "string",
+        "description": [
+            "Expression that determines which HTTP requests or responses match the compression policy.",
+            "",
+            "The following requirements apply only to the Citrix ADC CLI:",
+            "* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.",
+            "* If the expression itself includes double quotation marks, escape the quotations by using the \\ character.",
+            "* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    }
+]

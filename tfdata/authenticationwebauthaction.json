@@ -1,0 +1,261 @@
+[
+    {
+        "option_name": "attribute1",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute1 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute10",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute10 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute11",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute11 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute12",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute12 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute13",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute13 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute14",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute14 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute15",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute15 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute16",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute16 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute2",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute2 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute3",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute3 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute4",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute4 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute5",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute5 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute6",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute6 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute7",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute7 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute8",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute8 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "attribute9",
+        "type": "string",
+        "description": [
+            "Expression that would be evaluated to extract attribute9 from the webauth response"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "defaultauthenticationgroup",
+        "type": "string",
+        "description": [
+            "This is the default group that is chosen when the authentication succeeds in addition to extracted groups."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "fullreqexpr",
+        "type": "string",
+        "description": [
+            "Exact HTTP request, in the form of an expression, which the Citrix ADC sends to the authentication server.",
+            "The Citrix ADC does not check the validity of this request. One must manually validate the request."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the Web Authentication action.",
+            "Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the profile is created.",
+            "",
+            "The following requirement applies only to the Citrix ADC CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication action\" or 'my authentication action')."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "scheme",
+        "type": "string",
+        "description": [
+            "Type of scheme for the web server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "serverip",
+        "type": "string",
+        "description": [
+            "IP address of the web server to be used for authentication."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "serverport",
+        "type": "integer",
+        "description": [
+            "Port on which the web server accepts connections."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "successrule",
+        "type": "string",
+        "description": [
+            "Expression, that checks to see if authentication is successful."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    }
+]

@@ -2,13 +2,14 @@ package systemglobal_authenticationldappolicy_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -45,57 +46,68 @@ func (r *SystemglobalAuthenticationldappolicyBindingResource) Schema(ctx context
 			},
 			"globalbindtype": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("SYSTEM_GLOBAL"),
 				Description: "0",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only to advance authentication policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.",
 			},
 			"nextfactor": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "On success invoke label. Applicable for advanced authentication policy binding",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the  command policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The priority of the command policy.",
 			},
 		},
 	}
 }
 
-func systemglobal_authenticationldappolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SystemglobalAuthenticationldappolicyBindingResourceModel) system.Systemglobalauthenticationldappolicybinding {
-	tflog.Debug(ctx, "In systemglobal_authenticationldappolicy_bindingGetThePayloadFromtheConfig Function")
+func systemglobal_authenticationldappolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *SystemglobalAuthenticationldappolicyBindingResourceModel) system.Systemglobalauthenticationldappolicybinding {
+	tflog.Debug(ctx, "In systemglobal_authenticationldappolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	systemglobal_authenticationldappolicy_binding := system.Systemglobalauthenticationldappolicybinding{}
-	if !data.Feature.IsNull() {
+	if !data.Feature.IsNull() && !data.Feature.IsUnknown() {
 		systemglobal_authenticationldappolicy_binding.Feature = data.Feature.ValueString()
 	}
-	if !data.Globalbindtype.IsNull() {
+	if !data.Globalbindtype.IsNull() && !data.Globalbindtype.IsUnknown() {
 		systemglobal_authenticationldappolicy_binding.Globalbindtype = data.Globalbindtype.ValueString()
 	}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		systemglobal_authenticationldappolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Nextfactor.IsNull() {
+	if !data.Nextfactor.IsNull() && !data.Nextfactor.IsUnknown() {
 		systemglobal_authenticationldappolicy_binding.Nextfactor = data.Nextfactor.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		systemglobal_authenticationldappolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		systemglobal_authenticationldappolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 
@@ -140,8 +152,8 @@ func systemglobal_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Con
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Policyname.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
 }

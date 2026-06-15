@@ -1,0 +1,72 @@
+[
+    {
+        "option_name": "capturesslhandshakepolicies",
+        "type": "string",
+        "description": [
+            "Set it to yes if need to capture the SSL handshake policies"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "detail",
+        "type": "string",
+        "description": [
+            "Show detailed information of the captured records"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "all",
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "filterexpr",
+        "type": "string",
+        "description": [
+            "Policy tracing filter expression. For example: http.req.url.startswith(\"/this\")."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "nodeid",
+        "type": "integer",
+        "description": [
+            "Unique number that identifies the cluster node."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "protocoltype",
+        "type": "string",
+        "description": [
+            "protocol type for which policy records needs to be collected"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "HTTP"
+    },
+    {
+        "option_name": "transactionid",
+        "type": "string",
+        "description": [
+            "Unique ID to identify the current transaction"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    }
+]

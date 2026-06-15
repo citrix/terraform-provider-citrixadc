@@ -1,0 +1,62 @@
+[
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "The name of the ssllogprofile."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "ssllogclauth",
+        "type": "string",
+        "description": [
+            "log all SSL ClAuth events."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "ssllogclauthfailures",
+        "type": "string",
+        "description": [
+            "log all SSL ClAuth error events."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "sslloghs",
+        "type": "string",
+        "description": [
+            "log all SSL HS events."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "sslloghsfailures",
+        "type": "string",
+        "description": [
+            "log all SSL HS error events."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    }
+]

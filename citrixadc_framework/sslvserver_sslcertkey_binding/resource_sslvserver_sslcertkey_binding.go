@@ -3,8 +3,11 @@ package sslvserver_sslcertkey_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,27 @@ func (r *SslvserverSslcertkeyBindingResource) Create(ctx context.Context, req re
 	}
 
 	tflog.Debug(ctx, "Creating sslvserver_sslcertkey_binding resource")
-
-	// sslvserver_sslcertkey_binding := sslvserver_sslcertkey_bindingGetThePayloadFromtheConfig(ctx, &data)
+	sslvserver_sslcertkey_binding := sslvserver_sslcertkey_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslvserver_sslcertkey_binding.Type(), &sslvserver_sslcertkey_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslvserver_sslcertkey_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslvserver_sslcertkey_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Sslvserver_sslcertkey_binding.Type(), &sslvserver_sslcertkey_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslvserver_sslcertkey_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created sslvserver_sslcertkey_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("crlcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Crlcheck.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ocspcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ocspcheck.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("vservername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vservername.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readSslvserverSslcertkeyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +105,10 @@ func (r *SslvserverSslcertkeyBindingResource) Read(ctx context.Context, req reso
 }
 
 func (r *SslvserverSslcertkeyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslvserverSslcertkeyBindingResourceModel
+	var data, state SslvserverSslcertkeyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +116,29 @@ func (r *SslvserverSslcertkeyBindingResource) Update(ctx context.Context, req re
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslvserver_sslcertkey_binding resource")
 
-	// Create API request body from the model
-	// sslvserver_sslcertkey_binding := sslvserver_sslcertkey_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslvserver_sslcertkey_binding.Type(), &sslvserver_sslcertkey_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslvserver_sslcertkey_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		sslvserver_sslcertkey_binding := sslvserver_sslcertkey_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Sslvserver_sslcertkey_binding.Type(), &sslvserver_sslcertkey_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslvserver_sslcertkey_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated sslvserver_sslcertkey_binding resource")
+		tflog.Trace(ctx, "Updated sslvserver_sslcertkey_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for sslvserver_sslcertkey_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readSslvserverSslcertkeyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +158,177 @@ func (r *SslvserverSslcertkeyBindingResource) Delete(ctx context.Context, req re
 	}
 
 	tflog.Debug(ctx, "Deleting sslvserver_sslcertkey_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vservername", "certkeyname", "snicert", "ca"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For sslvserver_sslcertkey_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslvserver_sslcertkey_binding resource from state")
+	vservername_value, ok := idMap["vservername"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'vservername' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["ca"]; ok && val != "" {
+		argsMap["ca"] = val
+	}
+	if val, ok := idMap["certkeyname"]; ok && val != "" {
+		argsMap["certkeyname"] = val
+	}
+	if val, ok := idMap["crlcheck"]; ok && val != "" {
+		argsMap["crlcheck"] = val
+	}
+	if val, ok := idMap["ocspcheck"]; ok && val != "" {
+		argsMap["ocspcheck"] = val
+	}
+	if val, ok := idMap["snicert"]; ok && val != "" {
+		argsMap["snicert"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Sslvserver_sslcertkey_binding.Type(), vservername_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslvserver_sslcertkey_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted sslvserver_sslcertkey_binding binding")
 }
 
 // Helper function to read sslvserver_sslcertkey_binding data from API
 func (r *SslvserverSslcertkeyBindingResource) readSslvserverSslcertkeyBindingFromApi(ctx context.Context, data *SslvserverSslcertkeyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslvserver_sslcertkey_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vservername", "certkeyname", "snicert", "ca"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	vservername_Name, ok := idMap["vservername"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'vservername' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Sslvserver_sslcertkey_binding.Type(),
+		ResourceName:             vservername_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslvserver_sslcertkey_binding, got error: %s", err))
 		return
 	}
 
-	sslvserver_sslcertkey_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "sslvserver_sslcertkey_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check ca
+		if idVal, ok := idMap["ca"]; ok {
+			if val, ok := v["ca"].(bool); ok {
+				idValBool, _ := strconv.ParseBool(idVal)
+				if val != idValBool {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["ca"].(bool); ok {
+			match = false
+			continue
+		}
+
+		// Check certkeyname
+		if idVal, ok := idMap["certkeyname"]; ok {
+			if val, ok := v["certkeyname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["certkeyname"].(string); ok {
+			match = false
+			continue
+		}
+
+		// Check crlcheck
+		if idVal, ok := idMap["crlcheck"]; ok {
+			if val, ok := v["crlcheck"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["crlcheck"].(string); ok {
+			match = false
+			continue
+		}
+
+		// Check ocspcheck
+		if idVal, ok := idMap["ocspcheck"]; ok {
+			if val, ok := v["ocspcheck"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["ocspcheck"].(string); ok {
+			match = false
+			continue
+		}
+
+		// Check snicert
+		if idVal, ok := idMap["snicert"]; ok {
+			if val, ok := v["snicert"].(bool); ok {
+				idValBool, _ := strconv.ParseBool(idVal)
+				if val != idValBool {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["snicert"].(bool); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("sslvserver_sslcertkey_binding not found with the provided ID attributes"))
+		return
+	}
+
+	sslvserver_sslcertkey_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

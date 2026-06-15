@@ -1,0 +1,304 @@
+[
+    {
+        "option_name": "accounting",
+        "type": "string",
+        "description": [
+            "Whether the RADIUS server is currently accepting accounting messages."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "authentication",
+        "type": "string",
+        "description": [
+            "Configure the RADIUS server state to accept or refuse authentication messages."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": true
+    },
+    {
+        "option_name": "authservretry",
+        "type": "integer",
+        "description": [
+            "Number of retry by the Citrix ADC before getting response from the RADIUS server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 3
+    },
+    {
+        "option_name": "authtimeout",
+        "type": "integer",
+        "description": [
+            "Number of seconds the Citrix ADC waits for a response from the RADIUS server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 3
+    },
+    {
+        "option_name": "callingstationid",
+        "type": "string",
+        "description": [
+            "Send Calling-Station-ID of the client to the RADIUS server. IP Address of the client is sent as its Calling-Station-ID."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "defaultauthenticationgroup",
+        "type": "string",
+        "description": [
+            "This is the default group that is chosen when the authentication succeeds in addition to extracted groups."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "ipattributetype",
+        "type": "integer",
+        "description": [
+            "Remote IP address attribute type in a RADIUS response."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "ipvendorid",
+        "type": "integer",
+        "description": [
+            "Vendor ID of the intranet IP attribute in the RADIUS response.",
+            "NOTE: A value of 0 indicates that the attribute is not vendor encoded."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "messageauthenticator",
+        "type": "string",
+        "description": [
+            "Control whether the Message-Authenticator attribute is included in a RADIUS Access-Request packet."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": true
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the RADIUS action.",
+            "Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the RADIUS action is added."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "passencoding",
+        "type": "string",
+        "description": [
+            "Encoding type for passwords in RADIUS packets that the Citrix ADC sends to the RADIUS server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "pap"
+    },
+    {
+        "option_name": "pwdattributetype",
+        "type": "integer",
+        "description": [
+            "Vendor-specific password attribute type in a RADIUS response."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "pwdvendorid",
+        "type": "integer",
+        "description": [
+            "Vendor ID of the attribute, in the RADIUS response, used to extract the user password."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "radattributetype",
+        "type": "integer",
+        "description": [
+            "RADIUS attribute type, used for RADIUS group extraction."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "radgroupseparator",
+        "type": "string",
+        "description": [
+            "RADIUS group separator string",
+            "The group separator delimits group names within a RADIUS attribute for RADIUS group extraction."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "radgroupsprefix",
+        "type": "string",
+        "description": [
+            "RADIUS groups prefix string.",
+            "This groups prefix precedes the group names within a RADIUS attribute for RADIUS group extraction."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "radkey",
+        "type": "string",
+        "description": [
+            "Key shared between the RADIUS server and the Citrix ADC.",
+            "Required to allow the Citrix ADC to communicate with the RADIUS server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "radnasid",
+        "type": "string",
+        "description": [
+            "If configured, this string is sent to the RADIUS server as the Network Access Server ID (NASID)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "radnasip",
+        "type": "string",
+        "description": [
+            "If enabled, the Citrix ADC IP address (NSIP) is sent to the RADIUS server as the  Network Access Server IP (NASIP) address.",
+            "The RADIUS protocol defines the meaning and use of the NASIP address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "radvendorid",
+        "type": "integer",
+        "description": [
+            "RADIUS vendor ID attribute, used for RADIUS group extraction."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "serverip",
+        "type": "string",
+        "description": [
+            "IP address assigned to the RADIUS server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "servername",
+        "type": "string",
+        "description": [
+            "RADIUS server name as a FQDN.  Mutually exclusive with RADIUS IP address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "serverport",
+        "type": "integer",
+        "description": [
+            "Port number on which the RADIUS server listens for connections."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "targetlbvserver",
+        "type": "string",
+        "description": [
+            "If transport mode is TLS, specify the name of LB vserver to associate. The LB vserver needs to be of type TCP and service associated needs to be SSL_TCP"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "transport",
+        "type": "string",
+        "description": [
+            "Transport mode to RADIUS server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "UDP"
+    },
+    {
+        "option_name": "tunnelendpointclientip",
+        "type": "string",
+        "description": [
+            "Send Tunnel Endpoint Client IP address to the RADIUS server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    }
+]

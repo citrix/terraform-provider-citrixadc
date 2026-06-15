@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -36,67 +39,87 @@ func (r *SslserviceSslcertkeyBindingResource) Schema(ctx context.Context, req re
 				Description: "The ID of the sslservice_sslcertkey_binding resource.",
 			},
 			"ca": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "CA certificate.",
 			},
 			"certkeyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The certificate key pair binding.",
 			},
 			"crlcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
 			"ocspcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Rule to use for the OCSP responder associated with the CA certificate during client authentication. If MANDATORY is specified, deny all SSL clients if the OCSP check fails because of connectivity issues with the remote OCSP server, or any other reason that prevents the OCSP check. With the OPTIONAL setting, allow SSL clients even if the OCSP check fails except when the client certificate is revoked.",
 			},
 			"servicename": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL service for which to set advanced configuration.",
 			},
 			"skipcaname": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "The flag is used to indicate whether this particular CA certificate's CA_Name needs to be sent to the SSL client while requesting      for client certificate in a SSL handshake",
 			},
 			"snicert": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the CertKey. Use this option to bind Certkey(s) which will be used in SNI processing.",
 			},
 		},
 	}
 }
 
-func sslservice_sslcertkey_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslserviceSslcertkeyBindingResourceModel) ssl.Sslservicesslcertkeybinding {
-	tflog.Debug(ctx, "In sslservice_sslcertkey_bindingGetThePayloadFromtheConfig Function")
+func sslservice_sslcertkey_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslserviceSslcertkeyBindingResourceModel) ssl.Sslservicesslcertkeybinding {
+	tflog.Debug(ctx, "In sslservice_sslcertkey_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslservice_sslcertkey_binding := ssl.Sslservicesslcertkeybinding{}
-	if !data.Ca.IsNull() {
+	if !data.Ca.IsNull() && !data.Ca.IsUnknown() {
 		sslservice_sslcertkey_binding.Ca = data.Ca.ValueBool()
 	}
-	if !data.Certkeyname.IsNull() {
+	if !data.Certkeyname.IsNull() && !data.Certkeyname.IsUnknown() {
 		sslservice_sslcertkey_binding.Certkeyname = data.Certkeyname.ValueString()
 	}
-	if !data.Crlcheck.IsNull() {
+	if !data.Crlcheck.IsNull() && !data.Crlcheck.IsUnknown() {
 		sslservice_sslcertkey_binding.Crlcheck = data.Crlcheck.ValueString()
 	}
-	if !data.Ocspcheck.IsNull() {
+	if !data.Ocspcheck.IsNull() && !data.Ocspcheck.IsUnknown() {
 		sslservice_sslcertkey_binding.Ocspcheck = data.Ocspcheck.ValueString()
 	}
-	if !data.Servicename.IsNull() {
+	if !data.Servicename.IsNull() && !data.Servicename.IsUnknown() {
 		sslservice_sslcertkey_binding.Servicename = data.Servicename.ValueString()
 	}
-	if !data.Skipcaname.IsNull() {
+	if !data.Skipcaname.IsNull() && !data.Skipcaname.IsUnknown() {
 		sslservice_sslcertkey_binding.Skipcaname = data.Skipcaname.ValueBool()
 	}
-	if !data.Snicert.IsNull() {
+	if !data.Snicert.IsNull() && !data.Snicert.IsUnknown() {
 		sslservice_sslcertkey_binding.Snicert = data.Snicert.ValueBool()
 	}
 
@@ -148,7 +171,9 @@ func sslservice_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Ssls
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("crlcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Crlcheck.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("servicename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicename.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

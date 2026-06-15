@@ -1,0 +1,128 @@
+[
+    {
+        "option_name": "actualurl",
+        "type": "string",
+        "description": [
+            "Web address for the bookmark link."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "applicationtype",
+        "type": "string",
+        "description": [
+            "The type of application this VPN URL represents. Possible values are CVPN/SaaS/VPN"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "clientlessaccess",
+        "type": "string",
+        "description": [
+            "If clientless access to the resource hosting the link is allowed, also use clientless access for the bookmarked web address in the Secure Client Access based session. Allows single sign-on and other HTTP processing on NetScaler Gateway for HTTPS resources."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "comment",
+        "type": "string",
+        "description": [
+            "Any comments associated with the bookmark link."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "iconurl",
+        "type": "string",
+        "description": [
+            "URL to fetch icon file for displaying this resource."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "linkname",
+        "type": "string",
+        "description": [
+            "Description of the bookmark link. The description appears in the Access Interface."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name of the bookmark link."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "newname",
+        "type": "string",
+        "description": [
+            "New name for the vpn urlAction.",
+            "Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.",
+            "",
+            "The following requirement applies only to the NetScaler CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vpnurl action\" or 'my vpnurl action')."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "samlssoprofile",
+        "type": "string",
+        "description": [
+            "Profile to be used for doing SAML SSO"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "ssotype",
+        "type": "string",
+        "description": [
+            "Single sign on type for unified gateway"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "vservername",
+        "type": "string",
+        "description": [
+            "Name of the associated vserver to handle selfAuth SSO"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

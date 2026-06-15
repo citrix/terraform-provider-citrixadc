@@ -1,0 +1,61 @@
+[
+    {
+        "option_name": "nat64fragheader",
+        "type": "string",
+        "description": [
+            "When disabled, translator will not insert IPv6 fragmentation header for non fragmented IPv4 packets"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "nat64ignoretos",
+        "type": "string",
+        "description": [
+            "Ignore TOS."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "nat64v6mtu",
+        "type": "integer",
+        "description": [
+            "MTU setting for the IPv6 side. If the incoming IPv4 packet greater than this, either fragment or send icmp need fragmentation error."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1280
+    },
+    {
+        "option_name": "nat64zerochecksum",
+        "type": "string",
+        "description": [
+            "Calculate checksum for UDP packets with zero checksum"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "td",
+        "type": "integer",
+        "description": [
+            "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0."
+        ],
+        "is_get_id": true,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    }
+]

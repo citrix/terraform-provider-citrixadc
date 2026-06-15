@@ -44,7 +44,7 @@ func (d *BridgegroupNsip6BindingDataSource) Read(ctx context.Context, req dataso
 	}
 
 	// Case 4: Array filter with parent ID
-	bridgegroup_id_Name := data.Bridgegroupid
+	id_Name := data.Id.ValueString()
 	ipaddress_Name := data.Ipaddress
 	netmask_Name := data.Netmask
 	ownergroup_Name := data.Ownergroup
@@ -55,7 +55,7 @@ func (d *BridgegroupNsip6BindingDataSource) Read(ctx context.Context, req dataso
 
 	findParams := service.FindParams{
 		ResourceType:             service.Bridgegroup_nsip6_binding.Type(),
-		ResourceName:             fmt.Sprintf("%d", bridgegroup_id_Name.ValueInt64()),
+		ResourceName:             id_Name,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)

@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -34,51 +37,65 @@ func (r *LbmonitorSslcertkeyBindingResource) Schema(ctx context.Context, req res
 				Description: "The ID of the lbmonitor_sslcertkey_binding resource.",
 			},
 			"ca": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "The rule for use of CRL corresponding to this CA certificate during client authentication. If crlCheck is set to Mandatory, the system will deny all SSL clients if the CRL is missing, expired - NextUpdate date is in the past, or is incomplete with remote CRL refresh enabled. If crlCheck is set to optional, the system will allow SSL clients in the above error cases.However, in any case if the client certificate is revoked in the CRL, the SSL client will be denied access.",
 			},
 			"certkeyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the certificate bound to the monitor.",
 			},
 			"crlcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
 			"monitorname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the monitor.",
 			},
 			"ocspcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the OCSP check parameter. (Mandatory/Optional)",
 			},
 		},
 	}
 }
 
-func lbmonitor_sslcertkey_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LbmonitorSslcertkeyBindingResourceModel) lb.Lbmonitorsslcertkeybinding {
-	tflog.Debug(ctx, "In lbmonitor_sslcertkey_bindingGetThePayloadFromtheConfig Function")
+func lbmonitor_sslcertkey_bindingGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorSslcertkeyBindingResourceModel) lb.Lbmonitorsslcertkeybinding {
+	tflog.Debug(ctx, "In lbmonitor_sslcertkey_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lbmonitor_sslcertkey_binding := lb.Lbmonitorsslcertkeybinding{}
-	if !data.Ca.IsNull() {
+	if !data.Ca.IsNull() && !data.Ca.IsUnknown() {
 		lbmonitor_sslcertkey_binding.Ca = data.Ca.ValueBool()
 	}
-	if !data.Certkeyname.IsNull() {
+	if !data.Certkeyname.IsNull() && !data.Certkeyname.IsUnknown() {
 		lbmonitor_sslcertkey_binding.Certkeyname = data.Certkeyname.ValueString()
 	}
-	if !data.Crlcheck.IsNull() {
+	if !data.Crlcheck.IsNull() && !data.Crlcheck.IsUnknown() {
 		lbmonitor_sslcertkey_binding.Crlcheck = data.Crlcheck.ValueString()
 	}
-	if !data.Monitorname.IsNull() {
+	if !data.Monitorname.IsNull() && !data.Monitorname.IsUnknown() {
 		lbmonitor_sslcertkey_binding.Monitorname = data.Monitorname.ValueString()
 	}
-	if !data.Ocspcheck.IsNull() {
+	if !data.Ocspcheck.IsNull() && !data.Ocspcheck.IsUnknown() {
 		lbmonitor_sslcertkey_binding.Ocspcheck = data.Ocspcheck.ValueString()
 	}
 

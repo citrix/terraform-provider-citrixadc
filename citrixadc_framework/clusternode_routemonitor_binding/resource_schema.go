@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,34 +35,43 @@ func (r *ClusternodeRoutemonitorBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the clusternode_routemonitor_binding resource.",
 			},
 			"netmask": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The netmask.",
 			},
 			"nodeid": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "A number that uniquely identifies the cluster node.",
 			},
 			"routemonitor": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The IP address (IPv4 or IPv6).",
 			},
 		},
 	}
 }
 
-func clusternode_routemonitor_bindingGetThePayloadFromtheConfig(ctx context.Context, data *ClusternodeRoutemonitorBindingResourceModel) cluster.Clusternoderoutemonitorbinding {
-	tflog.Debug(ctx, "In clusternode_routemonitor_bindingGetThePayloadFromtheConfig Function")
+func clusternode_routemonitor_bindingGetThePayloadFromthePlan(ctx context.Context, data *ClusternodeRoutemonitorBindingResourceModel) cluster.Clusternoderoutemonitorbinding {
+	tflog.Debug(ctx, "In clusternode_routemonitor_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	clusternode_routemonitor_binding := cluster.Clusternoderoutemonitorbinding{}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		clusternode_routemonitor_binding.Netmask = data.Netmask.ValueString()
 	}
-	if !data.Nodeid.IsNull() {
+	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
 		clusternode_routemonitor_binding.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
 	}
-	if !data.Routemonitor.IsNull() {
+	if !data.Routemonitor.IsNull() && !data.Routemonitor.IsUnknown() {
 		clusternode_routemonitor_binding.Routemonitor = data.Routemonitor.ValueString()
 	}
 

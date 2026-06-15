@@ -49,11 +49,6 @@ func (d *ServicegroupServicegroupmemberBindingDataSource) Read(ctx context.Conte
 	port_Name := data.Port
 	servername_Name := data.Servername
 
-	if data.Ip.IsNull() && data.Servername.IsNull() {
-		resp.Diagnostics.AddError("Configuration Error", "Either 'ip' or 'servername' must be specified to read servicegroup_servicegroupmember_binding resource")
-		return
-	}
-
 	var dataArr []map[string]interface{}
 	var err error
 
@@ -80,16 +75,14 @@ func (d *ServicegroupServicegroupmemberBindingDataSource) Read(ctx context.Conte
 		match := true
 
 		// Check ip
-		if !ip_Name.IsNull() {
-			if val, ok := v["ip"].(string); ok {
-				if ip_Name.IsNull() || val != ip_Name.ValueString() {
-					match = false
-					continue
-				}
-			} else if !ip_Name.IsNull() {
+		if val, ok := v["ip"].(string); ok {
+			if ip_Name.IsNull() || val != ip_Name.ValueString() {
 				match = false
 				continue
 			}
+		} else if !ip_Name.IsNull() {
+			match = false
+			continue
 		}
 
 		// Check port
@@ -105,16 +98,14 @@ func (d *ServicegroupServicegroupmemberBindingDataSource) Read(ctx context.Conte
 		}
 
 		// Check servername
-		if !servername_Name.IsNull() {
-			if val, ok := v["servername"].(string); ok {
-				if servername_Name.IsNull() || val != servername_Name.ValueString() {
-					match = false
-					continue
-				}
-			} else if !servername_Name.IsNull() {
+		if val, ok := v["servername"].(string); ok {
+			if servername_Name.IsNull() || val != servername_Name.ValueString() {
 				match = false
 				continue
 			}
+		} else if !servername_Name.IsNull() {
+			match = false
+			continue
 		}
 		if match {
 			foundIndex = i

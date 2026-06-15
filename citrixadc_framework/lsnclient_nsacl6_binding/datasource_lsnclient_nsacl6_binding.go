@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -45,6 +46,7 @@ func (d *LsnclientNsacl6BindingDataSource) Read(ctx context.Context, req datasou
 	// Case 4: Array filter with parent ID
 	clientname_Name := data.Clientname.ValueString()
 	acl6name_Name := data.Acl6name
+	td_Name := data.Td
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +84,17 @@ func (d *LsnclientNsacl6BindingDataSource) Read(ctx context.Context, req datasou
 			continue
 		}
 
+		// Check td
+		if val, ok := v["td"]; ok {
+			val, _ = utils.ConvertToInt64(val)
+			if td_Name.IsNull() || val != td_Name.ValueInt64() {
+				match = false
+				continue
+			}
+		} else if !td_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

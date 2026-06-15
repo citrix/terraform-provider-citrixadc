@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *LsnappsprofileLsnappsattributesBindingResource) Schema(ctx context.Cont
 				Description: "The ID of the lsnappsprofile_lsnappsattributes_binding resource.",
 			},
 			"appsattributesname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the LSN application port ATTRIBUTES command to bind to the specified LSN Appsprofile. Properties of the Appsprofile will be applicable to this APPSATTRIBUTES",
 			},
 			"appsprofilename": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the LSN application profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN application profile is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn application profile1\" or 'lsn application profile1').",
 			},
 		},
 	}
 }
 
-func lsnappsprofile_lsnappsattributes_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LsnappsprofileLsnappsattributesBindingResourceModel) lsn.Lsnappsprofilelsnappsattributesbinding {
-	tflog.Debug(ctx, "In lsnappsprofile_lsnappsattributes_bindingGetThePayloadFromtheConfig Function")
+func lsnappsprofile_lsnappsattributes_bindingGetThePayloadFromthePlan(ctx context.Context, data *LsnappsprofileLsnappsattributesBindingResourceModel) lsn.Lsnappsprofilelsnappsattributesbinding {
+	tflog.Debug(ctx, "In lsnappsprofile_lsnappsattributes_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lsnappsprofile_lsnappsattributes_binding := lsn.Lsnappsprofilelsnappsattributesbinding{}
-	if !data.Appsattributesname.IsNull() {
+	if !data.Appsattributesname.IsNull() && !data.Appsattributesname.IsUnknown() {
 		lsnappsprofile_lsnappsattributes_binding.Appsattributesname = data.Appsattributesname.ValueString()
 	}
-	if !data.Appsprofilename.IsNull() {
+	if !data.Appsprofilename.IsNull() && !data.Appsprofilename.IsUnknown() {
 		lsnappsprofile_lsnappsattributes_binding.Appsprofilename = data.Appsprofilename.ValueString()
 	}
 

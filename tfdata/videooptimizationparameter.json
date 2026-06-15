@@ -1,0 +1,24 @@
+[
+    {
+        "option_name": "quicpacingrate",
+        "type": "integer",
+        "description": [
+            "QUIC Video Pacing Rate (Kbps)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "randomsamplingpercentage",
+        "type": "number",
+        "description": [
+            "Random Sampling Percentage."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

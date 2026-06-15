@@ -44,8 +44,7 @@ func (r *SslprofileSslcipherBindingResource) Schema(ctx context.Context, req res
 				Description: "The name of the cipher group/alias/individual cipheri bindings.",
 			},
 			"ciphername": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Name of the cipher.",
 			},
 			"cipherpriority": schema.Int64Attribute{
@@ -62,31 +61,34 @@ func (r *SslprofileSslcipherBindingResource) Schema(ctx context.Context, req res
 				Description: "The cipher suite description.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL profile.",
 			},
 		},
 	}
 }
 
-func sslprofile_sslcipher_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslprofileSslcipherBindingResourceModel) ssl.Sslprofilesslcipherbinding {
-	tflog.Debug(ctx, "In sslprofile_sslcipher_bindingGetThePayloadFromtheConfig Function")
+func sslprofile_sslcipher_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslprofileSslcipherBindingResourceModel) ssl.Sslprofilesslcipherbinding {
+	tflog.Debug(ctx, "In sslprofile_sslcipher_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslprofile_sslcipher_binding := ssl.Sslprofilesslcipherbinding{}
-	if !data.Cipheraliasname.IsNull() {
+	if !data.Cipheraliasname.IsNull() && !data.Cipheraliasname.IsUnknown() {
 		sslprofile_sslcipher_binding.Cipheraliasname = data.Cipheraliasname.ValueString()
 	}
-	if !data.Ciphername.IsNull() {
+	if !data.Ciphername.IsNull() && !data.Ciphername.IsUnknown() {
 		sslprofile_sslcipher_binding.Ciphername = data.Ciphername.ValueString()
 	}
-	if !data.Cipherpriority.IsNull() {
+	if !data.Cipherpriority.IsNull() && !data.Cipherpriority.IsUnknown() {
 		sslprofile_sslcipher_binding.Cipherpriority = utils.IntPtr(int(data.Cipherpriority.ValueInt64()))
 	}
-	if !data.Description.IsNull() {
+	if !data.Description.IsNull() && !data.Description.IsUnknown() {
 		sslprofile_sslcipher_binding.Description = data.Description.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		sslprofile_sslcipher_binding.Name = data.Name.ValueString()
 	}
 

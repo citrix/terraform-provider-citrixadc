@@ -1,0 +1,140 @@
+[
+    {
+        "option_name": "customserverid",
+        "type": "string",
+        "description": [
+            "The identifier for this IP:Port pair. Used when the persistency type is set to Custom Server ID."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "\"None\""
+    },
+    {
+        "option_name": "dbsttl",
+        "type": "integer",
+        "description": [
+            "Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "hashid",
+        "type": "integer",
+        "description": [
+            "The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "ip",
+        "type": "string",
+        "description": [
+            "IP Address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "nameserver",
+        "type": "string",
+        "description": [
+            "Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "order",
+        "type": "integer",
+        "description": [
+            "Order number to be assigned to the servicegroup member"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "port",
+        "type": "integer",
+        "description": [
+            "Server port number."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "serverid",
+        "type": "integer",
+        "description": [
+            "The  identifier for the service. This is used when the persistency type is set to Custom Server ID."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "servername",
+        "type": "string",
+        "description": [
+            "Name of the server to which to bind the service group."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "servicegroupname",
+        "type": "string",
+        "description": [
+            "Name of the service group."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "state",
+        "type": "string",
+        "description": [
+            "Initial state of the service group."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "weight",
+        "type": "integer",
+        "description": [
+            "Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

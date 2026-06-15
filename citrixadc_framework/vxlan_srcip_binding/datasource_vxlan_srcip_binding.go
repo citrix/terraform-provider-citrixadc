@@ -43,7 +43,7 @@ func (d *VxlanSrcipBindingDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Vxlanid.ValueInt64())
+	id_Name := data.Id.ValueString()
 	srcip_Name := data.Srcip
 
 	var dataArr []map[string]interface{}

@@ -1,0 +1,13 @@
+[
+    {
+        "option_name": "feature",
+        "type": "string[]",
+        "description": [
+            "Feature to be enabled. Multiple features can be specified by providing a blank space between each feature."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

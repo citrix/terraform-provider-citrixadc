@@ -44,6 +44,7 @@ func (d *BotprofileTpsBindingDataSource) Read(ctx context.Context, req datasourc
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	bottps_Name := data.BotTps
 	bottpstype_Name := data.BotTpsType
 
 	var dataArr []map[string]interface{}
@@ -71,6 +72,17 @@ func (d *BotprofileTpsBindingDataSource) Read(ctx context.Context, req datasourc
 	for i, v := range dataArr {
 		match := true
 
+		// Check bot_tps
+		if val, ok := v["bot_tps"].(bool); ok {
+			if bottps_Name.IsNull() || val != bottps_Name.ValueBool() {
+				match = false
+				continue
+			}
+		} else if !bottps_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check bot_tps_type
 		if val, ok := v["bot_tps_type"].(string); ok {
 			if bottpstype_Name.IsNull() || val != bottpstype_Name.ValueString() {
@@ -89,7 +101,7 @@ func (d *BotprofileTpsBindingDataSource) Read(ctx context.Context, req datasourc
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("botprofile_tps_binding with bot_tps_type %s not found", bottpstype_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("botprofile_tps_binding with bot_tps %s not found", bottps_Name))
 		return
 	}
 

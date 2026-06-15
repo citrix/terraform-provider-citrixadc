@@ -1,0 +1,48 @@
+[
+    {
+        "option_name": "httpdmaxclients",
+        "type": "integer",
+        "description": [
+            "This enables setting the HTTPD Max Clients value in the httpd.conf file. You can configure either Max Clients or Max Request Workers. The allowable range is from a minimum of 1 to a maximum of 255"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "httpdmaxreqworkers",
+        "type": "integer",
+        "description": [
+            "This enables setting the HTTPD Max Request Workers value in the httpd.conf file. You can configure either Max Clients or Max Request Workers. The allowable range is from a minimum of 1 to a maximum of 255"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "mgmthttpport",
+        "type": "integer",
+        "description": [
+            "This allow the configuration of management HTTP port."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 80
+    },
+    {
+        "option_name": "mgmthttpsport",
+        "type": "integer",
+        "description": [
+            "This allows the configuration of management HTTPS port."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 443
+    }
+]

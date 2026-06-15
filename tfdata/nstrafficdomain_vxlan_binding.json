@@ -1,0 +1,26 @@
+[
+    {
+        "option_name": "td",
+        "type": "integer",
+        "description": [
+            "Integer value that uniquely identifies a traffic domain."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "vxlan",
+        "type": "integer",
+        "description": [
+            "ID of the VXLAN to bind to this traffic domain. More than one VXLAN can be bound to a traffic domain, but the same VXLAN cannot be a part of multiple traffic domains."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    }
+]

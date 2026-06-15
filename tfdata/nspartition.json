@@ -1,0 +1,95 @@
+[
+    {
+        "option_name": "force",
+        "type": "boolean",
+        "description": [
+            "Switches to new admin partition without prompt for saving configuration. Configuration will not be saved"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "maxbandwidth",
+        "type": "integer",
+        "description": [
+            "Maximum bandwidth, in Kbps, that the partition can consume. A zero value indicates the bandwidth is unrestricted on the partition and it can consume up to the system limits."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10240
+    },
+    {
+        "option_name": "maxconn",
+        "type": "integer",
+        "description": [
+            "Maximum number of concurrent connections that can be open in the partition. A zero value indicates no limit on number of open connections."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1024
+    },
+    {
+        "option_name": "maxmemlimit",
+        "type": "integer",
+        "description": [
+            "Maximum memory, in megabytes, allocated to the partition.  A zero value indicates the memory is unlimited on the partition and it can consume up to the system limits."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10
+    },
+    {
+        "option_name": "minbandwidth",
+        "type": "integer",
+        "description": [
+            "Minimum bandwidth, in Kbps, that the partition can consume. A zero value indicates the bandwidth is unrestricted on the partition and it can consume up to the system limits"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10240
+    },
+    {
+        "option_name": "partitionmac",
+        "type": "string",
+        "description": [
+            "Special MAC address for the partition which is used for communication over shared vlans in this partition. If not specified, the MAC address is auto-generated."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "partitionname",
+        "type": "string",
+        "description": [
+            "Name of the Partition. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "save",
+        "type": "boolean",
+        "description": [
+            "Switches to new admin partition without prompt for saving configuration. Configuration will be saved"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    }
+]

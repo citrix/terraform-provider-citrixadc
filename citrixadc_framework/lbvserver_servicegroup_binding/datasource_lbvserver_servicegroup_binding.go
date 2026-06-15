@@ -45,6 +45,7 @@ func (d *LbvserverServicegroupBindingDataSource) Read(ctx context.Context, req d
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	servicegroupname_Name := data.Servicegroupname
+	servicename_Name := data.Servicename
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +83,16 @@ func (d *LbvserverServicegroupBindingDataSource) Read(ctx context.Context, req d
 			continue
 		}
 
+		// Check servicename
+		if val, ok := v["servicename"].(string); ok {
+			if servicename_Name.IsNull() || val != servicename_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !servicename_Name.IsNull() {
+			match = false
+			continue
+		}
 		if match {
 			foundIndex = i
 			break

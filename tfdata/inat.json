@@ -1,0 +1,151 @@
+[
+    {
+        "option_name": "connfailover",
+        "type": "string",
+        "description": [
+            "Synchronize connection information with the secondary appliance in a high availability (HA) pair. That is, synchronize all connection-related information for the INAT session"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "ftp",
+        "type": "string",
+        "description": [
+            "Enable the FTP protocol on the server for transferring files between the client and the server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "mode",
+        "type": "string",
+        "description": [
+            "Stateless translation."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "name",
+        "type": "string",
+        "description": [
+            "Name for the Inbound NAT (INAT) entry. Leading character must be a number or letter. Other characters allowed, after the first character, are @ _ - . (period) : (colon) # and space ( )."
+        ],
+        "is_get_id": true,
+        "is_delete_id": true,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "privateip",
+        "type": "string",
+        "description": [
+            "IP address of the server to which the packet is sent by the Citrix ADC. Can be an IPv4 or IPv6 address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": true
+    },
+    {
+        "option_name": "proxyip",
+        "type": "string",
+        "description": [
+            "Unique IP address used as the source IP address in packets sent to the server. Must be a MIP or SNIP address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "publicip",
+        "type": "string",
+        "description": [
+            "Public IP address of packets received on the Citrix ADC. Can be aNetScaler-owned VIP or VIP6 address."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true
+    },
+    {
+        "option_name": "tcpproxy",
+        "type": "string",
+        "description": [
+            "Enable TCP proxy, which enables the Citrix ADC to optimize the RNAT TCP traffic by using Layer 4 features."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "td",
+        "type": "integer",
+        "description": [
+            "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "tftp",
+        "type": "string",
+        "description": [
+            "To enable/disable TFTP (Default DISABLED)."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "useproxyport",
+        "type": "string",
+        "description": [
+            "Enable the Citrix ADC to proxy the source port of packets before sending the packets to the server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ENABLED"
+    },
+    {
+        "option_name": "usip",
+        "type": "string",
+        "description": [
+            "Enable the Citrix ADC to retain the source IP address of packets before sending the packets to the server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "usnip",
+        "type": "string",
+        "description": [
+            "Enable the Citrix ADC to use a SNIP address as the source IP address of packets before sending the packets to the server."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

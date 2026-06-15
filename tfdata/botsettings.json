@@ -1,0 +1,181 @@
+[
+    {
+        "option_name": "defaultnonintrusiveprofile",
+        "type": "string",
+        "description": [
+            "Profile to use when the feature is not enabled but feature is licensed. NonIntrusive checks will be disabled and IPRep cronjob(24 Hours) will be removed if this is set to BOT_BYPASS."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "BOT_STATS"
+    },
+    {
+        "option_name": "defaultprofile",
+        "type": "string",
+        "description": [
+            "Profile to use when a connection does not match any policy. Default setting is \" \", which sends unmatched connections back to the Citrix ADC without attempting to filter them further."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "dfprequestlimit",
+        "type": "integer",
+        "description": [
+            "Number of requests to allow without bot session cookie if device fingerprint is enabled"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "javascriptname",
+        "type": "string",
+        "description": [
+            "Name of the JavaScript that the Bot Management feature  uses in response.",
+            "Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.",
+            "",
+            "The following requirement applies only to the Citrix ADC CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cookie name\" or 'my cookie name')."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "proxypassword",
+        "type": "string",
+        "description": [
+            "Password with which user logs on."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "x-secret-attr": true
+    },
+    {
+        "option_name": "proxyport",
+        "type": "integer",
+        "description": [
+            "Proxy Server Port to get updated signatures from AWS."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 8080
+    },
+    {
+        "option_name": "proxyserver",
+        "type": "string",
+        "description": [
+            "Proxy Server IP to get updated signatures from AWS."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "proxyusername",
+        "type": "string",
+        "description": [
+            "Proxy Username"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "sessioncookiename",
+        "type": "string",
+        "description": [
+            "Name of the SessionCookie that the Bot Management feature uses for tracking.",
+            "Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.",
+            "",
+            "The following requirement applies only to the Citrix ADC CLI:",
+            "If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cookie name\" or 'my cookie name')."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "sessiontimeout",
+        "type": "integer",
+        "description": [
+            "Timeout, in seconds, after which a user session is terminated."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "signatureautoupdate",
+        "type": "string",
+        "description": [
+            "Flag used to enable/disable bot auto update signatures"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "signatureurl",
+        "type": "string",
+        "description": [
+            "URL to download the bot signature mapping file from server"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "https://nsbotsignatures.s3.amazonaws.com/BotSignatureMapping.json"
+    },
+    {
+        "option_name": "trapurlautogenerate",
+        "type": "string",
+        "description": [
+            "Enable/disable trap URL auto generation. When enabled, trap URL is updated within the configured interval."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "trapurlinterval",
+        "type": "integer",
+        "description": [
+            "Time in seconds after which trap URL is updated."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 3600
+    },
+    {
+        "option_name": "trapurllength",
+        "type": "integer",
+        "description": [
+            "Length of the auto-generated trap URL."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 32
+    }
+]

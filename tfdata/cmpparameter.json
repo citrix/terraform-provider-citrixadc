@@ -1,0 +1,193 @@
+[
+    {
+        "option_name": "addvaryheader",
+        "type": "string",
+        "description": [
+            "Control insertion of the Vary header in HTTP responses compressed by Citrix ADC. Intermediate caches store different versions of the response for different values of the headers present in the Vary response header."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "cmpbypasspct",
+        "type": "integer",
+        "description": [
+            "Citrix ADC CPU threshold after which compression is not performed. Range: 0 - 100"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 100
+    },
+    {
+        "option_name": "cmplevel",
+        "type": "string",
+        "description": [
+            "Specify a compression level. Available settings function as follows:",
+            " * Optimal - Corresponds to a gzip GZIP level of 5-7.",
+            " * Best speed - Corresponds to a gzip level of 1.",
+            " * Best compression - Corresponds to a gzip level of 9."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "optimal"
+    },
+    {
+        "option_name": "cmponpush",
+        "type": "string",
+        "description": [
+            "Citrix ADC does not wait for the quantum to be filled before starting to compress data. Upon receipt of a packet with a PUSH flag, the appliance immediately begins compression of the accumulated packets."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "externalcache",
+        "type": "string",
+        "description": [
+            "Enable insertion of  Cache-Control: private response directive to indicate response message is intended for a single user and must not be cached by a shared or proxy cache."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "heurexpiry",
+        "type": "string",
+        "description": [
+            "Heuristic basefile expiry."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false
+    },
+    {
+        "option_name": "heurexpiryhistwt",
+        "type": "integer",
+        "description": [
+            "For heuristic basefile expiry, weightage to be given to historical delta compression ratio, specified as percentage.  For example, to give 25% weightage to historical ratio (and therefore 75% weightage to the ratio for current delta compression transaction), specify 25."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 50
+    },
+    {
+        "option_name": "heurexpirythres",
+        "type": "integer",
+        "description": [
+            "Threshold compression ratio for heuristic basefile expiry, multiplied by 100. For example, to set the threshold ratio to 1.25, specify 125."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": false,
+        "default": 100
+    },
+    {
+        "option_name": "minressize",
+        "type": "integer",
+        "description": [
+            "Smallest response size, in bytes, to be compressed."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "policytype",
+        "type": "string",
+        "description": [
+            "Type of the policy. The only possible value is ADVANCED"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "ADVANCED"
+    },
+    {
+        "option_name": "quantumsize",
+        "type": "integer",
+        "description": [
+            "Minimum quantum of data to be filled before compression begins."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 57344
+    },
+    {
+        "option_name": "randomgzipfilename",
+        "type": "string",
+        "description": [
+            "Control the addition of a random filename of random length in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": "DISABLED"
+    },
+    {
+        "option_name": "randomgzipfilenamemaxlength",
+        "type": "integer",
+        "description": [
+            "Maximum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 63
+    },
+    {
+        "option_name": "randomgzipfilenameminlength",
+        "type": "integer",
+        "description": [
+            "Minimum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 8
+    },
+    {
+        "option_name": "servercmp",
+        "type": "string",
+        "description": [
+            "Allow the server to send compressed data to the Citrix ADC. With the default setting, the Citrix ADC appliance handles all compression."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": true
+    },
+    {
+        "option_name": "varyheadervalue",
+        "type": "string",
+        "description": [
+            "The value of the HTTP Vary header for compressed responses. If this argument is not specified, a default value of \"Accept-Encoding\" will be used."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

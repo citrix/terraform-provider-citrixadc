@@ -44,6 +44,7 @@ func (d *MapbmrBmrv4networkBindingDataSource) Read(ctx context.Context, req data
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	netmask_Name := data.Netmask
 	network_Name := data.Network
 
 	var dataArr []map[string]interface{}
@@ -71,6 +72,17 @@ func (d *MapbmrBmrv4networkBindingDataSource) Read(ctx context.Context, req data
 	for i, v := range dataArr {
 		match := true
 
+		// Check netmask
+		if val, ok := v["netmask"].(string); ok {
+			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !netmask_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check network
 		if val, ok := v["network"].(string); ok {
 			if network_Name.IsNull() || val != network_Name.ValueString() {
@@ -89,7 +101,7 @@ func (d *MapbmrBmrv4networkBindingDataSource) Read(ctx context.Context, req data
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("mapbmr_bmrv4network_binding with network %s not found", network_Name.ValueString()))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("mapbmr_bmrv4network_binding with netmask %s not found", netmask_Name))
 		return
 	}
 

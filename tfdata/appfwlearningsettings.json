@@ -1,0 +1,363 @@
+[
+    {
+        "option_name": "contenttypeautodeploygraceperiod",
+        "type": "integer",
+        "description": [
+            "The number of minutes after the threshold hit alert the learned rule will be deployed"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10080
+    },
+    {
+        "option_name": "contenttypeminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum threshold to learn Content Type information."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "contenttypepercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum threshold in percent to learn Content Type information."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "cookieconsistencyautodeploygraceperiod",
+        "type": "integer",
+        "description": [
+            "The number of minutes after the threshold hit alert the learned rule will be deployed"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10080
+    },
+    {
+        "option_name": "cookieconsistencyminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum number of application firewall sessions that the learning engine must observe to learn cookies."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "cookieconsistencypercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum percentage of application firewall sessions that must contain a particular cookie pattern for the learning engine to learn that cookie."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "creditcardnumberminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum threshold to learn Credit Card information."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "creditcardnumberpercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum threshold in percent to learn Credit Card information."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "crosssitescriptingautodeploygraceperiod",
+        "type": "integer",
+        "description": [
+            "The number of minutes after the threshold hit alert the learned rule will be deployed"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10080
+    },
+    {
+        "option_name": "crosssitescriptingminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum number of application firewall sessions that the learning engine must observe to learn HTML cross-site scripting patterns."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "crosssitescriptingpercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum percentage of application firewall sessions that must contain a particular cross-site scripting pattern for the learning engine to learn that cross-site scripting pattern."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "csrftagautodeploygraceperiod",
+        "type": "integer",
+        "description": [
+            "The number of minutes after the threshold hit alert the learned rule will be deployed"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10080
+    },
+    {
+        "option_name": "csrftagminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum number of application firewall sessions that the learning engine must observe to learn cross-site request forgery (CSRF) tags."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "csrftagpercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum percentage of application firewall sessions that must contain a particular CSRF tag for the learning engine to learn that CSRF tag."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "fieldconsistencyautodeploygraceperiod",
+        "type": "integer",
+        "description": [
+            "The number of minutes after the threshold hit alert the learned rule will be deployed"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10080
+    },
+    {
+        "option_name": "fieldconsistencyminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum number of application firewall sessions that the learning engine must observe to learn field consistency information."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "fieldconsistencypercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum percentage of application firewall sessions that must contain a particular field consistency pattern for the learning engine to learn that field consistency pattern."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "fieldformatautodeploygraceperiod",
+        "type": "integer",
+        "description": [
+            "The number of minutes after the threshold hit alert the learned rule will be deployed"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10080
+    },
+    {
+        "option_name": "fieldformatminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum number of application firewall sessions that the learning engine must observe to learn field formats."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "fieldformatpercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum percentage of application firewall sessions that must contain a particular web form field pattern for the learning engine to recommend a field format for that form field."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "profilename",
+        "type": "string",
+        "description": [
+            "Name of the profile."
+        ],
+        "is_get_id": true,
+        "is_delete_id": false,
+        "is_updateable": false,
+        "is_required": true,
+        "x-unique-attr": true
+    },
+    {
+        "option_name": "sqlinjectionautodeploygraceperiod",
+        "type": "integer",
+        "description": [
+            "The number of minutes after the threshold hit alert the learned rule will be deployed"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10080
+    },
+    {
+        "option_name": "sqlinjectionminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum number of application firewall sessions that the learning engine must observe to learn HTML SQL injection patterns."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "sqlinjectionpercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum percentage of application firewall sessions that must contain a particular HTML SQL injection pattern for the learning engine to learn that HTML SQL injection pattern."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "starturlautodeploygraceperiod",
+        "type": "integer",
+        "description": [
+            "The number of minutes after the threshold hit alert the learned rule will be deployed"
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 10080
+    },
+    {
+        "option_name": "starturlminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum number of application firewall sessions that the learning engine must observe to learn start URLs."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "starturlpercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum percentage of application firewall sessions that must contain a particular start URL pattern for the learning engine to learn that start URL."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "xmlattachmentminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum number of application firewall sessions that the learning engine must observe to learn XML attachment patterns."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "xmlattachmentpercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum percentage of application firewall sessions that must contain a particular XML attachment pattern for the learning engine to learn that XML attachment pattern."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    },
+    {
+        "option_name": "xmlwsiminthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum number of application firewall sessions that the learning engine must observe to learn web services interoperability (WSI) information."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false,
+        "default": 1
+    },
+    {
+        "option_name": "xmlwsipercentthreshold",
+        "type": "integer",
+        "description": [
+            "Minimum percentage of application firewall sessions that must contain a particular pattern for the learning engine to learn a web services interoperability (WSI) pattern."
+        ],
+        "is_get_id": false,
+        "is_delete_id": false,
+        "is_updateable": true,
+        "is_required": false
+    }
+]

@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -36,67 +40,87 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Schema(ctx context
 				Description: "The ID of the authenticationvserver_responderpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupextraction": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the authentication virtual server to which to bind the policy.",
 			},
 			"nextfactor": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor",
 			},
 			"policy": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the policy, if any, bound to the authentication vserver.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The priority, if any, of the vpn vserver policy.",
 			},
 			"secondary": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
 		},
 	}
 }
 
-func authenticationvserver_responderpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationvserverResponderpolicyBindingResourceModel) authentication.Authenticationvserverresponderpolicybinding {
-	tflog.Debug(ctx, "In authenticationvserver_responderpolicy_bindingGetThePayloadFromtheConfig Function")
+func authenticationvserver_responderpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationvserverResponderpolicyBindingResourceModel) authentication.Authenticationvserverresponderpolicybinding {
+	tflog.Debug(ctx, "In authenticationvserver_responderpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationvserver_responderpolicy_binding := authentication.Authenticationvserverresponderpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		authenticationvserver_responderpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Groupextraction.IsNull() {
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
 		authenticationvserver_responderpolicy_binding.Groupextraction = data.Groupextraction.ValueBool()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationvserver_responderpolicy_binding.Name = data.Name.ValueString()
 	}
-	if !data.Nextfactor.IsNull() {
+	if !data.Nextfactor.IsNull() && !data.Nextfactor.IsUnknown() {
 		authenticationvserver_responderpolicy_binding.Nextfactor = data.Nextfactor.ValueString()
 	}
-	if !data.Policy.IsNull() {
+	if !data.Policy.IsNull() && !data.Policy.IsUnknown() {
 		authenticationvserver_responderpolicy_binding.Policy = data.Policy.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		authenticationvserver_responderpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Secondary.IsNull() {
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
 		authenticationvserver_responderpolicy_binding.Secondary = data.Secondary.ValueBool()
 	}
 
@@ -148,8 +172,10 @@ func authenticationvserver_responderpolicy_bindingSetAttrFromGet(ctx context.Con
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
