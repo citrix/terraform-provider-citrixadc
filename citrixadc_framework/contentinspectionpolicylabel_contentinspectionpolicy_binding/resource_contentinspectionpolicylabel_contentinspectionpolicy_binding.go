@@ -170,6 +170,10 @@ func (r *ContentinspectionpolicylabelContentinspectionpolicyBindingResource) Del
 	if val, ok := idMap["policyname"]; ok && val != "" {
 		argsMap["policyname"] = val
 	}
+	// SDK v2 contract: delete args include priority to disambiguate the binding.
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		argsMap["priority"] = fmt.Sprintf("%d", data.Priority.ValueInt64())
+	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Contentinspectionpolicylabel_contentinspectionpolicy_binding.Type(), labelname_value, argsMap)
 	if err != nil {
