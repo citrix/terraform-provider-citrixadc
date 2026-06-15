@@ -82,9 +82,10 @@ func ipset_nsip_bindingSetAttrFromGet(ctx context.Context, data *IpsetNsipBindin
 
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// ID attribute order matches resource_id_mapping.json legacy order: name,ipaddress
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

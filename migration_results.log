@@ -1263,3 +1263,19 @@ PATTERNS: 6, 7, 8, 13
 FILES CHANGED: citrixadc_framework/csvserver_cspolicy_binding/resource_schema.go, citrixadc_framework/csvserver_cspolicy_binding/datasource_csvserver_cspolicy_binding.go, citrixadc_framework/csvserver_cspolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_cspolicy_binding_test.go (ID-parse helper lines only)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: ipset_nsip_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:57:42Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccIpset_nsip_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccIpset_nsip_binding_basic .......... PASS
+  - TestAccIpset_nsip_bindingDataSource_basic  PASS
+  - (no ephemeral tests; no secret attributes)
+BACKWARD-COMPAT: SDK v2 contract (ipaddress+name Required/ForceNew, ID order name,ipaddress) preserved; aligned new key:value ID composition order to resource_id_mapping.json (name,ipaddress) in Create and SetAttrFromGet; URL-encoded the ipaddress Delete arg value (DeleteResourceWithArgs + url.QueryEscape) for slashy/IPv6-safe deletes. Attribute names/types/Required/RequiresReplace all already matched.
+DATASOURCE: healthy as-is (GET echoes both name+ipaddress; shared SetAttrFromGet sets data.Id correctly; no Pattern 7 split needed)
+PATTERNS: binding-family (b) URL-encode Delete arg value; (f) composite ID order vs resource_id_mapping.json
+FILES CHANGED: citrixadc_framework/ipset_nsip_binding/resource_ipset_nsip_binding.go, citrixadc_framework/ipset_nsip_binding/resource_schema.go, citrixadc_framework/acctests/ipset_nsip_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
+========================================
