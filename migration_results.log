@@ -1105,3 +1105,19 @@ PATTERNS: 8 (Required/Optional flag correction).
 FILES CHANGED: citrixadc_framework/icaglobal_icapolicy_binding/resource_schema.go, citrixadc_framework/acctests/icaglobal_icapolicy_binding_test.go (sanctioned ID-parse helper line only). No doc modified.
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: csvserver_analyticsprofile_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:21:52Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccCsvserver_analyticsprofile_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccCsvserver_analyticsprofile_binding_basic ......... PASS
+  - TestAccCsvserver_analyticsprofile_bindingDataSource_basic PASS
+  - (no ephemeral test; resource has no secret attributes) .. N/A
+BACKWARD-COMPAT: attribute/type/Required/ForceNew parity all match SDK v2; ID format adopts new key:value form with resource_id_mapping.json "name,analyticsprofile" matching v2 positional order; ParseIdString handles legacy import. No resource/datasource Go changes needed.
+DATASOURCE: healthy as-is (shares ResourceModel + SetAttrFromGet; both name+analyticsprofile returned by GET so ID recompute is stable).
+PATTERNS: none (generated Framework code was already correct; only sanctioned test ID-parse helper fix applied)
+FILES CHANGED: citrixadc_framework/acctests/csvserver_analyticsprofile_binding_test.go (sanctioned ID-parse helper lines only - no test logic/assertions changed)
+BLOCKER: none
+========================================
