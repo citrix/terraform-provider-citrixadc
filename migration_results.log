@@ -1894,5 +1894,18 @@ BACKWARD-COMPAT: Attr names/types/Required-Optional/ForceNew all match SDK v2 (n
 DATASOURCE: healthy; simplified match loop to value-only and made endrange Optional+Computed (was Required) for consistency with resource. Shares SetAttrFromGet (sets its own ID) - works for datasource.
 PATTERNS: 7 (datasource setter/match consistency), 13 (Computed on server-assigned index/endrange tolerated), 1 (verified PUT verb is correct)
 FILES CHANGED: citrixadc_framework/policydataset_value_binding/resource_policydataset_value_binding.go, citrixadc_framework/policydataset_value_binding/datasource_policydataset_value_binding.go, citrixadc_framework/policydataset_value_binding/datasource_schema.go, citrixadc_framework/acctests/policydataset_value_binding_test.go (sanctioned ID-parse helper only); NO doc, NO SDK v2, NO provider registration changes
+RESOURCE: rewritepolicylabel_rewritepolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T09:38:22Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.121/)
+TEST RUN: TestAccRewritepolicylabel_rewritepolicy_binding($|_basic|DataSource_basic)
+TESTS:
+  - TestAccRewritepolicylabel_rewritepolicy_binding_basic ........ PASS
+  - TestAccRewritepolicylabel_rewritepolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ...... N/A
+BACKWARD-COMPAT: tfsdk name drift fixed (invoke_labelname -> invokelabelname to match SDK v2); reverted invokelabelname & labeltype from Required back to Optional+Computed (SDK v2 contract); Create verb changed UpdateUnnamedResource(PUT)->AddResource(POST) per SDK v2; Update made documented no-op (all attrs RequiresReplace); SetAttrFromGet no longer recomputes Id; Delete args URL-encoded; ID format key:value with legacy order labelname,policyname.
+DATASOURCE: healthy; updated to call split ForDatasource setter, sets own Id, priority made Optional+Computed (test omits it), null-priority no longer over-filters, invokelabelname attr renamed.
+PATTERNS: 1 (POST vs PUT), 5 (no-op Update), 6 (Id not recomputed in setter), 7 (split datasource setter), 8 (Required->Optional+Computed flag fix), plus delete-arg URL-encoding.
+FILES CHANGED: citrixadc_framework/rewritepolicylabel_rewritepolicy_binding/resource_rewritepolicylabel_rewritepolicy_binding.go, citrixadc_framework/rewritepolicylabel_rewritepolicy_binding/resource_schema.go, citrixadc_framework/rewritepolicylabel_rewritepolicy_binding/datasource_rewritepolicylabel_rewritepolicy_binding.go, citrixadc_framework/rewritepolicylabel_rewritepolicy_binding/datasource_schema.go, citrixadc_framework/acctests/rewritepolicylabel_rewritepolicy_binding_test.go (ID-parse helper lines only - sanctioned). No docs changed.
 BLOCKER: none
 ========================================
