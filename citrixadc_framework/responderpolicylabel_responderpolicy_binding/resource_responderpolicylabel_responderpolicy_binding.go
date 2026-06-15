@@ -3,7 +3,7 @@ package responderpolicylabel_responderpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -60,8 +60,8 @@ func (r *ResponderpolicylabelResponderpolicyBindingResource) Create(ctx context.
 	responderpolicylabel_responderpolicy_binding := responderpolicylabel_responderpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Responderpolicylabel_responderpolicy_binding.Type(), &responderpolicylabel_responderpolicy_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource). Pattern 1.
+	_, err := r.client.AddResource(service.Responderpolicylabel_responderpolicy_binding.Type(), "", &responderpolicylabel_responderpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create responderpolicylabel_responderpolicy_binding, got error: %s", err))
 		return
@@ -69,11 +69,11 @@ func (r *ResponderpolicylabelResponderpolicyBindingResource) Create(ctx context.
 
 	tflog.Trace(ctx, "Created responderpolicylabel_responderpolicy_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Legacy 2-key composite (labelname, policyname) matching resource_id_mapping.json.
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("labelname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Labelname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("priority:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Priority.ValueInt64()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -169,11 +169,16 @@ func (r *ResponderpolicylabelResponderpolicyBindingResource) Delete(ctx context.
 	}
 
 	var argsMap map[string]string = make(map[string]string)
+	// URL-encode delete-arg values (Pattern b): policyname/priority may contain
+	// slashes or special characters, and DeleteResourceWithArgsMap passes them verbatim
+	// into the URL. Matches the SDK v2 url.QueryEscape behavior.
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		argsMap["policyname"] = url.QueryEscape(val)
 	}
-	if val, ok := idMap["priority"]; ok && val != "" {
-		argsMap["priority"] = val
+	// priority is not part of the ID; take it from prior state to disambiguate the
+	// binding (matches SDK v2, which sent priority as an optional delete arg).
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Responderpolicylabel_responderpolicy_binding.Type(), labelname_value, argsMap)
@@ -220,7 +225,8 @@ func (r *ResponderpolicylabelResponderpolicyBindingResource) readResponderpolicy
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Identity is (labelname, policyname); filter on policyname (matches SDK v2).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -236,27 +242,6 @@ func (r *ResponderpolicylabelResponderpolicyBindingResource) readResponderpolicy
 				match = false
 				continue
 			}
-		} else if _, ok := v["policyname"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check priority
-		if idVal, ok := idMap["priority"]; ok {
-			if val, ok := v["priority"]; ok {
-				val, _ = utils.ConvertToInt64(val)
-				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
-				if val != idValInt64 {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["priority"]; ok {
-			match = false
-			continue
 		}
 		if match {
 			foundIndex = i

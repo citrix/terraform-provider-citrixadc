@@ -20,7 +20,7 @@ func ResponderpolicylabelResponderpolicyBindingDataSourceSchema() schema.Schema 
 				Computed:    true,
 				Description: "If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label and evaluate the specified policy label.",
 			},
-			"invoke_labelname": schema.StringAttribute{
+			"invokelabelname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "* If labelType is policylabel, name of the policy label to invoke.\n* If labelType is reqvserver or resvserver, name of the virtual server.",
@@ -39,7 +39,8 @@ func ResponderpolicylabelResponderpolicyBindingDataSourceSchema() schema.Schema 
 				Description: "Name of the responder policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Specifies the priority of the policy.",
 			},
 		},
