@@ -142,5 +142,18 @@ BACKWARD-COMPAT: Fixed codegen double-id (synthetic string id + real int key col
 DATASOURCE: rebuilt coherent with resource; split setter into resource (preserve) and ...ForDatasource (faithful copy + sets composite id); lookup keys vlanid+ifnum Required.
 PATTERNS: 6, 7 (datasource setter split), 13 (Computed-vs-no-echo flag drop), plus codegen double-id fix.
 FILES CHANGED: citrixadc_framework/vlan_channel_binding/{resource_vlan_channel_binding.go,resource_schema.go,datasource_vlan_channel_binding.go,datasource_schema.go}, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_channel_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: vlan_interface_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:17:58Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccVlan_interface_binding($|_basic|DataSource)
+TESTS:
+  - TestAccVlan_interface_binding_basic ............ PASS
+  - TestAccVlan_interface_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs) ... N/A
+BACKWARD-COMPAT: Codegen declared the integer key as "id" (colliding with the synthetic computed string id) -> renamed to user-facing "vlanid" (TypeInt/Required/RequiresReplace) matching SDK v2; the synthetic composite string id remains "id". Composite ID format set to "vlanid:<v>,ifnum:<v>" matching resource_id_mapping.json order "vlanid,ifnum"; Read/Delete use ParseIdString(legacyOrder=[vlanid,ifnum]). Delete mirrors SDK v2: DeleteResourceWithArgs(type, vlanid, ["ifnum:"+UrlEncode(ifnum)]) (URL-encodes slashy ifnum like 1/1; ArgsMap does not encode). ownergroup made Optional-only (dropped Computed): GET does not echo it on standalone and sending DEFAULT_NG triggers errorcode 1093 (requires IPAddress); matches SDK v2 (sent only when configured). tagged kept Optional+Computed (GET echoes it).
+DATASOURCE: healthy; split setter added (vlan_interface_bindingSetAttrFromGetForDatasource) per Pattern 7; lookup keys vlanid+ifnum Required, ownergroup/tagged Optional+Computed; sets composite id.
+PATTERNS: 7 (datasource setter split + preserve state), 13 (drop Computed on non-GET-echoed ownergroup)
+FILES CHANGED: citrixadc_framework/vlan_interface_binding/resource_schema.go, citrixadc_framework/vlan_interface_binding/resource_vlan_interface_binding.go, citrixadc_framework/vlan_interface_binding/datasource_schema.go, citrixadc_framework/vlan_interface_binding/datasource_vlan_interface_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_interface_binding_test.go (sanctioned ID-parse helper lines only)
 BLOCKER: none
 ========================================
