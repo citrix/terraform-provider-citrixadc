@@ -2724,3 +2724,19 @@ PATTERNS: 2(b)/Delete-arg URL-encode (per binding-family hint b).
 FILES CHANGED: citrixadc_framework/vpnglobal_vpnnexthopserver_binding/resource_vpnglobal_vpnnexthopserver_binding.go (NO test/doc file changed)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: vpnvserver_auditsyslogpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T12:59:24Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccVpnvserver_auditsyslogpolicy_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccVpnvserver_auditsyslogpolicy_binding_basic ............ PASS
+  - TestAccVpnvserver_auditsyslogpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral test; resource has no secret attributes) ....... N/A
+BACKWARD-COMPAT: ID reverted to name,policy composite (matches SDK v2 d.SetId + resource_id_mapping.json "name,policy"); dropped bindpoint from composite ID; dropped spurious Computed from bindpoint/gotopriorityexpression/groupextraction/secondary (not echoed by NITRO GET -> Pattern 13); SetAttrFromGet now preserves non-echoed user inputs and no longer recomputes Id (Patterns 6/7); Delete switched to DeleteResourceWithArgs with url.QueryEscape mirroring SDK v2; Read match filters on policy only.
+DATASOURCE: healthy as-is; split into xxxSetAttrFromGetForDatasource (Pattern 7), wired into datasource Read, sets data.Id; bindpoint datasource flag corrected Required->Optional+Computed (Pattern 11).
+PATTERNS: 6, 7, 11, 13
+FILES CHANGED: citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/resource_vpnvserver_auditsyslogpolicy_binding.go, citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/datasource_vpnvserver_auditsyslogpolicy_binding.go, citrixadc_framework/vpnvserver_auditsyslogpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_auditsyslogpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc modified
+BLOCKER: none
+========================================
