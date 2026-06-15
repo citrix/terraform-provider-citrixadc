@@ -155,5 +155,18 @@ BACKWARD-COMPAT: Codegen declared the integer key as "id" (colliding with the sy
 DATASOURCE: healthy; split setter added (vlan_interface_bindingSetAttrFromGetForDatasource) per Pattern 7; lookup keys vlanid+ifnum Required, ownergroup/tagged Optional+Computed; sets composite id.
 PATTERNS: 7 (datasource setter split + preserve state), 13 (drop Computed on non-GET-echoed ownergroup)
 FILES CHANGED: citrixadc_framework/vlan_interface_binding/resource_schema.go, citrixadc_framework/vlan_interface_binding/resource_vlan_interface_binding.go, citrixadc_framework/vlan_interface_binding/datasource_schema.go, citrixadc_framework/vlan_interface_binding/datasource_vlan_interface_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/vlan_interface_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: clusternode_routemonitor_binding
+STATUS:   PASS
+TIME:     2026-06-15T04:14:53Z
+TESTBED:  CLUSTER (NS_URL: http://10.101.132.133/)
+TEST RUN: TestAccClusternode_routemonitor_binding_basic|TestAccclusternode_routemonitor_bindingDataSource_basic
+TESTS:
+  - TestAccClusternode_routemonitor_binding_basic ............ PASS
+  - TestAccclusternode_routemonitor_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) .. N/A
+BACKWARD-COMPAT: netmask flag reconciled Optional+Computed -> Required (SDK v2 Required+ForceNew); nodeid/routemonitor parity OK (Required + RequiresReplace match ForceNew); ID stays new 3-key key:value form, legacy nodeid,routemonitor decode via resource_id_mapping.json + ParseIdString; delete args (nodeid parent + netmask/routemonitor) preserved.
+DATASOURCE: healthy as-is; fixed codegen int-vs-string call (data.Nodeid.ValueString() -> strconv.FormatInt(data.Nodeid.ValueInt64(),10)); shared SetAttrFromGet faithfully copies GET + sets Id, no split needed.
+PATTERNS: 8 (flag correction)
+FILES CHANGED: citrixadc_framework/clusternode_routemonitor_binding/resource_schema.go, citrixadc_framework/clusternode_routemonitor_binding/resource_clusternode_routemonitor_binding.go, citrixadc_framework/clusternode_routemonitor_binding/datasource_clusternode_routemonitor_binding.go, citrixadc_framework/provider/provider.go, citrixadc_framework/acctests/clusternode_routemonitor_binding_test.go (ID-parse helper lines only, sanctioned)
 BLOCKER: none
 ========================================

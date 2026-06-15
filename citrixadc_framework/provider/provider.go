@@ -247,6 +247,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/channel"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusterinstance"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternode"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternode_routemonitor_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternodegroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternodegroup_authenticationvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternodegroup_clusternode_binding"
@@ -981,6 +982,7 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		bridgegroup_nsip6_binding.NewBridgegroupNsip6BindingResource,
+		clusternode_routemonitor_binding.NewClusternodeRoutemonitorBindingResource,
 		bridgegroup_nsip_binding.NewBridgegroupNsipBindingResource,
 		bridgegroup_vlan_binding.NewBridgegroupVlanBindingResource,
 		sslcertkey.NewSslCertKeyResource,
@@ -1480,6 +1482,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		channel.CHannelDataSource,
 		clusterinstance.CLusterinstanceDataSource,
 		clusternode.CLusternodeDataSource,
+		clusternode_routemonitor_binding.CLusternodeRoutemonitorBindingDataSource,
 		clusternodegroup.CLusternodegroupDataSource,
 		cmpaction.CMpactionDataSource,
 		cmpparameter.CMpparameterDataSource,

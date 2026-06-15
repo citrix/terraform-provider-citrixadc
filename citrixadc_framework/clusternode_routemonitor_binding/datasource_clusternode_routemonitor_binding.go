@@ -3,6 +3,7 @@ package clusternode_routemonitor_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -43,7 +44,7 @@ func (d *ClusternodeRoutemonitorBindingDataSource) Read(ctx context.Context, req
 	}
 
 	// Case 4: Array filter with parent ID
-	nodeid_Name := data.Nodeid.ValueString()
+	nodeid_Name := strconv.FormatInt(data.Nodeid.ValueInt64(), 10)
 	netmask_Name := data.Netmask
 	routemonitor_Name := data.Routemonitor
 

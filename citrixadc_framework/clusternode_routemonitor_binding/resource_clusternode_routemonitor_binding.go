@@ -3,7 +3,6 @@ package clusternode_routemonitor_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
