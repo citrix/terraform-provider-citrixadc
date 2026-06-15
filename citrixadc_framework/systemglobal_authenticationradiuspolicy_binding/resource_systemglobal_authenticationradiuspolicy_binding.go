@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -168,14 +167,12 @@ func (r *SystemglobalAuthenticationradiuspolicyBindingResource) Delete(ctx conte
 // Helper function to read systemglobal_authenticationradiuspolicy_binding data from API
 func (r *SystemglobalAuthenticationradiuspolicyBindingResource) readSystemglobalAuthenticationradiuspolicyBindingFromApi(ctx context.Context, data *SystemglobalAuthenticationradiuspolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
+	// Single unique attribute -> the ID is the plain policyname value (ParseIdString also accepts
+	// a legacy SDK v2 plain value, so the ID is used directly here per Pattern 10).
+	policyname := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
+	var err error
 
 	findParams := service.FindParams{
 		ResourceType:             service.Systemglobal_authenticationradiuspolicy_binding.Type(),
@@ -196,25 +193,7 @@ func (r *SystemglobalAuthenticationradiuspolicyBindingResource) readSystemglobal
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policyname
-		if idVal, ok := idMap["policyname"]; ok {
-			if val, ok := v["policyname"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["policyname"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["policyname"].(string); ok && val == policyname {
 			foundIndex = i
 			break
 		}

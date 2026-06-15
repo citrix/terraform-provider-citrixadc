@@ -92,7 +92,7 @@ func (d *SystemglobalAuthenticationradiuspolicyBindingDataSource) Read(ctx conte
 		return
 	}
 
-	systemglobal_authenticationradiuspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	systemglobal_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

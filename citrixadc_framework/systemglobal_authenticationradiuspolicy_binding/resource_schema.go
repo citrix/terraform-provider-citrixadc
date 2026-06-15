@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,6 +21,7 @@ import (
 // SystemglobalAuthenticationradiuspolicyBindingResourceModel describes the resource data model.
 type SystemglobalAuthenticationradiuspolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Builtin                types.List   `tfsdk:"builtin"`
 	Feature                types.String `tfsdk:"feature"`
 	Globalbindtype         types.String `tfsdk:"globalbindtype"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
@@ -35,6 +37,15 @@ func (r *SystemglobalAuthenticationradiuspolicyBindingResource) Schema(ctx conte
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the systemglobal_authenticationradiuspolicy_binding resource.",
+			},
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
 			},
 			"feature": schema.StringAttribute{
 				Optional: true,
@@ -76,8 +87,7 @@ func (r *SystemglobalAuthenticationradiuspolicyBindingResource) Schema(ctx conte
 				Description: "The name of the  command policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -92,6 +102,11 @@ func systemglobal_authenticationradiuspolicy_bindingGetThePayloadFromthePlan(ctx
 
 	// Create API request body from the model
 	systemglobal_authenticationradiuspolicy_binding := system.Systemglobalauthenticationradiuspolicybinding{}
+	if !data.Builtin.IsNull() && !data.Builtin.IsUnknown() {
+		builtin := make([]string, 0, len(data.Builtin.Elements()))
+		data.Builtin.ElementsAs(ctx, &builtin, false)
+		systemglobal_authenticationradiuspolicy_binding.Builtin = builtin
+	}
 	if !data.Feature.IsNull() && !data.Feature.IsUnknown() {
 		systemglobal_authenticationradiuspolicy_binding.Feature = data.Feature.ValueString()
 	}
@@ -114,35 +129,71 @@ func systemglobal_authenticationradiuspolicy_bindingGetThePayloadFromthePlan(ctx
 	return systemglobal_authenticationradiuspolicy_binding
 }
 
+// systemglobal_authenticationradiuspolicy_bindingSetAttrFromGet is the RESOURCE-side state setter.
+// The NITRO GET for this binding does not faithfully echo every configured input (priority,
+// gotopriorityexpression, feature, builtin, etc. are server-overridden or non-echoed), so to avoid
+// "inconsistent result after apply" we preserve the values already present in the model (plan/state)
+// and only resolve a Computed attribute from the GET response when the model has no value.
 func systemglobal_authenticationradiuspolicy_bindingSetAttrFromGet(ctx context.Context, data *SystemglobalAuthenticationradiuspolicyBindingResourceModel, getResponseData map[string]interface{}) *SystemglobalAuthenticationradiuspolicyBindingResourceModel {
 	tflog.Debug(ctx, "In systemglobal_authenticationradiuspolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["feature"]; ok && val != nil {
-		data.Feature = types.StringValue(val.(string))
-	} else {
-		data.Feature = types.StringNull()
+	// policyname is the key; adopt the GET value only if the model does not already hold it
+	// (covers import, where state carries only the ID).
+	if data.Policyname.IsNull() || data.Policyname.IsUnknown() {
+		if val, ok := getResponseData["policyname"]; ok && val != nil {
+			data.Policyname = types.StringValue(fmt.Sprintf("%v", val))
+		}
 	}
-	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
-		data.Globalbindtype = types.StringValue(val.(string))
-	} else {
-		data.Globalbindtype = types.StringNull()
+
+	// builtin is Optional+Computed and may be null in the plan but returned by GET. Resolve it from
+	// the GET response when the model has no value so the Computed attribute is never left unknown.
+	if data.Builtin.IsNull() || data.Builtin.IsUnknown() {
+		data.Builtin = builtinFromGet(ctx, getResponseData)
 	}
-	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
-		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
-		data.Gotopriorityexpression = types.StringNull()
+
+	// The remaining Optional+Computed attributes are resolved from the GET response only when the
+	// model has no value; otherwise the configured/state value is preserved to keep the apply
+	// consistent.
+	if data.Feature.IsNull() || data.Feature.IsUnknown() {
+		data.Feature = stringFromGet(getResponseData, "feature")
 	}
-	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
-		data.Nextfactor = types.StringValue(val.(string))
-	} else {
-		data.Nextfactor = types.StringNull()
+	if data.Globalbindtype.IsNull() || data.Globalbindtype.IsUnknown() {
+		data.Globalbindtype = stringFromGet(getResponseData, "globalbindtype")
 	}
-	if val, ok := getResponseData["policyname"]; ok && val != nil {
-		data.Policyname = types.StringValue(val.(string))
-	} else {
-		data.Policyname = types.StringNull()
+	if data.Gotopriorityexpression.IsNull() || data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = stringFromGet(getResponseData, "gotopriorityexpression")
 	}
+	if data.Nextfactor.IsNull() || data.Nextfactor.IsUnknown() {
+		data.Nextfactor = stringFromGet(getResponseData, "nextfactor")
+	}
+
+	// priority is Required (user-driven); keep the configured value. On import it is resolved from GET.
+	if data.Priority.IsNull() || data.Priority.IsUnknown() {
+		if val, ok := getResponseData["priority"]; ok && val != nil {
+			if intVal, err := utils.ConvertToInt64(val); err == nil {
+				data.Priority = types.Int64Value(intVal)
+			}
+		}
+	}
+
+	// Set ID for the resource (single unique attribute -> plain value).
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
+	return data
+}
+
+// systemglobal_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. Datasources have no prior plan/state to preserve, so this faithfully copies every field
+// from the GET response and sets the ID.
+func systemglobal_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *SystemglobalAuthenticationradiuspolicyBindingResourceModel, getResponseData map[string]interface{}) *SystemglobalAuthenticationradiuspolicyBindingResourceModel {
+	tflog.Debug(ctx, "In systemglobal_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource Function")
+
+	data.Builtin = builtinFromGet(ctx, getResponseData)
+	data.Feature = stringFromGet(getResponseData, "feature")
+	data.Globalbindtype = stringFromGet(getResponseData, "globalbindtype")
+	data.Gotopriorityexpression = stringFromGet(getResponseData, "gotopriorityexpression")
+	data.Nextfactor = stringFromGet(getResponseData, "nextfactor")
+	data.Policyname = stringFromGet(getResponseData, "policyname")
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
@@ -151,9 +202,29 @@ func systemglobal_authenticationradiuspolicy_bindingSetAttrFromGet(ctx context.C
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
+	// Set ID for the datasource (single unique attribute -> plain value).
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
+}
+
+func stringFromGet(getResponseData map[string]interface{}, key string) types.String {
+	if val, ok := getResponseData[key]; ok && val != nil {
+		return types.StringValue(fmt.Sprintf("%v", val))
+	}
+	return types.StringNull()
+}
+
+func builtinFromGet(ctx context.Context, getResponseData map[string]interface{}) types.List {
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if listVal, ok := val.([]interface{}); ok {
+			strs := make([]string, 0, len(listVal))
+			for _, e := range listVal {
+				strs = append(strs, fmt.Sprintf("%v", e))
+			}
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, strs)
+			return listValue
+		}
+	}
+	return types.ListNull(types.StringType)
 }

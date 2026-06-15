@@ -2278,3 +2278,19 @@ PATTERNS: 1 (PUT-where-POST), Delete-arg URL-encode (binding-family hint b).
 FILES CHANGED: citrixadc_framework/sslvserver_sslciphersuite_binding/resource_sslvserver_sslciphersuite_binding.go (NO test/doc file modified)
 BLOCKER: none
 ========================================
+========================================
+RESOURCE: systemglobal_authenticationradiuspolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:23:35Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccSystemglobal_authenticationradiuspolicy_binding($|_basic|DataSource)
+TESTS:
+  - TestAccSystemglobal_authenticationradiuspolicy_binding_basic ........ PASS
+  - TestAccSystemglobal_authenticationradiuspolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ............. N/A
+BACKWARD-COMPAT: re-added dropped 'builtin' list attr (SDK v2 + NITRO struct, Optional+Computed+RequiresReplace); restored 'priority' to Required (SDK v2 contract; was Optional+Computed); fixed Read to use plain-value ID directly (Pattern 10) instead of ParseIdString match loop; resource SetAttrFromGet now preserves plan/state for server-overridden/non-echoed fields (Pattern 7/13). ID format = plain policyname matches resource_id_mapping.json ("policyname"). Create verb kept as UpdateUnnamedResource (PUT) matching SDK v2.
+DATASOURCE: healthy; added 'builtin' to datasource schema to match shared model; split setter -> calls new SetAttrFromGetForDatasource (Pattern 7).
+PATTERNS: 7, 10, 13
+FILES CHANGED: citrixadc_framework/systemglobal_authenticationradiuspolicy_binding/resource_schema.go, citrixadc_framework/systemglobal_authenticationradiuspolicy_binding/resource_systemglobal_authenticationradiuspolicy_binding.go, citrixadc_framework/systemglobal_authenticationradiuspolicy_binding/datasource_schema.go, citrixadc_framework/systemglobal_authenticationradiuspolicy_binding/datasource_systemglobal_authenticationradiuspolicy_binding.go (NO test/doc file modified)
+BLOCKER: none
+========================================
