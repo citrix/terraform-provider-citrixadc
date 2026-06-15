@@ -3,6 +3,7 @@ package crvserver_feopolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CrvserverFeopolicyBindingResource) Create(ctx context.Context, req reso
 	crvserver_feopolicy_binding := crvserver_feopolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Crvserver_feopolicy_binding.Type(), &crvserver_feopolicy_binding)
+	// Binding resource - NITRO `add` is POST; matches SDK v2 AddResource (Pattern 1)
+	_, err := r.client.AddResource(service.Crvserver_feopolicy_binding.Type(), "", &crvserver_feopolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_feopolicy_binding, got error: %s", err))
 		return
@@ -153,7 +154,7 @@ func (r *CrvserverFeopolicyBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting crvserver_feopolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs (matches SDK v2)
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policyname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -166,12 +167,19 @@ func (r *CrvserverFeopolicyBindingResource) Delete(ctx context.Context, req reso
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
+	}
+	// bindpoint can contain slashy/special characters - URL-encode (binding-family pattern)
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Priority.IsNull() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_feopolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_feopolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_feopolicy_binding, got error: %s", err))
 		return

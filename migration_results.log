@@ -858,4 +858,18 @@ DATASOURCE: healthy as-is; added 'bindpoint' to shared model + datasource schema
 PATTERNS: 1 (PUT->POST create), 5 (no-op Update), 8 (Required->Optional+Computed flag drift), plus binding-family dropped-attribute re-add and Delete URL-encode.
 FILES CHANGED: citrixadc_framework/crvserver_cspolicy_binding/resource_schema.go, citrixadc_framework/crvserver_cspolicy_binding/resource_crvserver_cspolicy_binding.go, citrixadc_framework/crvserver_cspolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_cspolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
 BLOCKER: Datasource acceptance test depends on sibling Framework resource citrixadc_lbvserver_service_binding, which has a genuine (non-flaky, reproduces on 2 clean boxes) unknown-value-after-apply migration bug. That resource is outside this migration's scope (Constraint 3); fixing it belongs to its own migration task. The crvserver_cspolicy_binding resource itself is fully migrated and its basic test passes.
+RESOURCE: crvserver_feopolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:28:22Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAccCrvserver_feopolicy_binding_basic|TestAcccrvserver_feopolicy_bindingDataSource_basic
+TESTS:
+  - TestAccCrvserver_feopolicy_binding_basic ............ PASS
+  - TestAcccrvserver_feopolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs) .. N/A
+BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct) to model/schema/payload/datasource; changed Create from UpdateUnnamedResource(PUT) to AddResource("",..)(POST) to match SDK v2; Delete switched to DeleteResourceWithArgs with URL-encoded policyname/bindpoint/priority args (matches SDK v2); flag drift: labelname/labeltype changed Required->Optional+Computed (SDK v2 had Optional+Computed; test omits them); dropped spurious Computed from non-echoed invoke/labelname/labeltype/targetvserver (server GET returns only name/policyname/priority/gotopriorityexpression/bindpoint); ID format kept new key:value composite, resource_id_mapping.json 'name,policyname' matches.
+DATASOURCE: healthy; split setter into resource (preserve state) + ForDatasource (copy all + set composite Id); added bindpoint to datasource schema.
+PATTERNS: 1, 7, 8, 13
+FILES CHANGED: citrixadc_framework/crvserver_feopolicy_binding/resource_schema.go, citrixadc_framework/crvserver_feopolicy_binding/resource_crvserver_feopolicy_binding.go, citrixadc_framework/crvserver_feopolicy_binding/datasource_crvserver_feopolicy_binding.go, citrixadc_framework/crvserver_feopolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_feopolicy_binding_test.go (sanctioned ID-parse helper lines only)
+BLOCKER: none
 ========================================

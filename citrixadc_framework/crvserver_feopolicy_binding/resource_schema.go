@@ -22,6 +22,7 @@ import (
 // CrvserverFeopolicyBindingResourceModel describes the resource data model.
 type CrvserverFeopolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,14 @@ func (r *CrvserverFeopolicyBindingResource) Schema(ctx context.Context, req reso
 				Computed:    true,
 				Description: "The ID of the crvserver_feopolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -50,21 +59,20 @@ func (r *CrvserverFeopolicyBindingResource) Schema(ctx context.Context, req reso
 			},
 			"invoke": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "Invoke a policy label if this policy's rule evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label to be invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -94,7 +102,6 @@ func (r *CrvserverFeopolicyBindingResource) Schema(ctx context.Context, req reso
 			},
 			"targetvserver": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +116,9 @@ func crvserver_feopolicy_bindingGetThePayloadFromthePlan(ctx context.Context, da
 
 	// Create API request body from the model
 	crvserver_feopolicy_binding := cr.Crvserverfeopolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		crvserver_feopolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		crvserver_feopolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +147,58 @@ func crvserver_feopolicy_bindingGetThePayloadFromthePlan(ctx context.Context, da
 	return crvserver_feopolicy_binding
 }
 
+// crvserver_feopolicy_bindingSetAttrFromGet is the RESOURCE-side state setter.
+// All attributes are RequiresReplace (no NITRO update endpoint for this binding), so the
+// plan/state value is authoritative. We faithfully reflect the GET response into the
+// Computed attributes the server echoes; the ID is set once in Create and is NOT
+// recomputed here (Pattern 6/13).
 func crvserver_feopolicy_bindingSetAttrFromGet(ctx context.Context, data *CrvserverFeopolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverFeopolicyBindingResourceModel {
 	tflog.Debug(ctx, "In crvserver_feopolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["targetvserver"]; ok && val != nil {
+		data.Targetvserver = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// crvserver_feopolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side setter.
+// The datasource has no prior plan/state, so it faithfully copies every field from the
+// GET response (Null when absent) and sets the composite ID itself (Pattern 7 split).
+func crvserver_feopolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CrvserverFeopolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverFeopolicyBindingResourceModel {
+	tflog.Debug(ctx, "In crvserver_feopolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -184,7 +242,7 @@ func crvserver_feopolicy_bindingSetAttrFromGet(ctx context.Context, data *Crvser
 		data.Targetvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create to set it)
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
