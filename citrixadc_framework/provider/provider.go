@@ -681,6 +681,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/videooptimizationpacingaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/videooptimizationpacingpolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan_nsip6_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vlan_nsip_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnalwaysonprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/vpnclientlessaccesspolicy"
@@ -1288,6 +1289,7 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		transformglobal_transformpolicy_binding.NewTransformglobalTransformpolicyBindingResource,
 		transformpolicylabel_transformpolicy_binding.NewTransformpolicylabelTransformpolicyBindingResource,
 		tunnelglobal_tunneltrafficpolicy_binding.NewTunnelglobalTunneltrafficpolicyBindingResource,
+		vlan_nsip6_binding.NewVlanNsip6BindingResource,
 		vlan_nsip_binding.NewVlanNsipBindingResource,
 		vpnglobal_appcontroller_binding.NewVpnglobalAppcontrollerBindingResource,
 		vpnglobal_auditsyslogpolicy_binding.NewVpnglobalAuditsyslogpolicyBindingResource,
@@ -1726,6 +1728,7 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		videooptimizationpacingaction.VIdeooptimizationpacingactionDataSource,
 		videooptimizationpacingpolicy.VIdeooptimizationpacingpolicyDataSource,
 		vlan.VLanDataSource,
+		vlan_nsip6_binding.VLanNsip6BindingDataSource,
 		vlan_nsip_binding.VLanNsipBindingDataSource,
 		vpnalwaysonprofile.VPnalwaysonprofileDataSource,
 		vpnclientlessaccesspolicy.VPnclientlessaccesspolicyDataSource,
