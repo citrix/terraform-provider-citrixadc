@@ -42,11 +42,10 @@ func (d *AuthenticationvserverAuthenticationoauthidppolicyBindingDataSource) Rea
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Array filter with parent ID. Look up by parent name, then match the policy
+	// discriminator (matches the resource Read behaviour).
 	name_Name := data.Name.ValueString()
-	groupextraction_Name := data.Groupextraction
 	policy_Name := data.Policy
-	secondary_Name := data.Secondary
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -68,56 +67,24 @@ func (d *AuthenticationvserverAuthenticationoauthidppolicyBindingDataSource) Rea
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policy
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check groupextraction
-		if val, ok := v["groupextraction"].(bool); ok {
-			if groupextraction_Name.IsNull() || val != groupextraction_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !groupextraction_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check policy
 		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
+			if !policy_Name.IsNull() && val == policy_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check secondary
-		if val, ok := v["secondary"].(bool); ok {
-			if secondary_Name.IsNull() || val != secondary_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !secondary_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationoauthidppolicy_binding with groupextraction %s not found", groupextraction_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationoauthidppolicy_binding with policy %s not found", policy_Name))
 		return
 	}
 
-	authenticationvserver_authenticationoauthidppolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationoauthidppolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
