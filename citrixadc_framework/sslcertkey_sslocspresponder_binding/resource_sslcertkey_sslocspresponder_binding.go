@@ -3,6 +3,7 @@ package sslcertkey_sslocspresponder_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -60,8 +61,9 @@ func (r *SslcertkeySslocspresponderBindingResource) Create(ctx context.Context, 
 	sslcertkey_sslocspresponder_binding := sslcertkey_sslocspresponder_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Sslcertkey_sslocspresponder_binding.Type(), &sslcertkey_sslocspresponder_binding)
+	// Binding resource - NITRO "add" for this binding is a POST (matches the SDK v2
+	// implementation which used AddResource). Pattern 1.
+	_, err := r.client.AddResource(service.Sslcertkey_sslocspresponder_binding.Type(), "", &sslcertkey_sslocspresponder_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslcertkey_sslocspresponder_binding, got error: %s", err))
 		return
@@ -69,11 +71,13 @@ func (r *SslcertkeySslocspresponderBindingResource) Create(ctx context.Context, 
 
 	tflog.Trace(ctx, "Created sslcertkey_sslocspresponder_binding resource")
 
-	// Set ID for the resource before reading state
+	// Set ID for the resource before reading state.
+	// Legacy-compatible composite key order: certkey,ocspresponder (see
+	// resource_id_mapping.json). "ca" is a delete-disambiguation arg, not an identity
+	// attribute, so it is NOT part of the ID.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
-	idParts = append(idParts, fmt.Sprintf("certkey:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkey.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ocspresponder:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ocspresponder.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("certkey:%s", utils.UrlEncode(data.Certkey.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("ocspresponder:%s", utils.UrlEncode(data.Ocspresponder.ValueString())))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
@@ -155,7 +159,8 @@ func (r *SslcertkeySslocspresponderBindingResource) Delete(ctx context.Context, 
 	}
 
 	tflog.Debug(ctx, "Deleting sslcertkey_sslocspresponder_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// The composite ID is certkey,ocspresponder (legacy order). "ca" comes from state.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"certkey", "ocspresponder"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -168,15 +173,16 @@ func (r *SslcertkeySslocspresponderBindingResource) Delete(ctx context.Context, 
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["ca"]; ok && val != "" {
-		argsMap["ca"] = val
-	}
+	args := make([]string, 0)
 	if val, ok := idMap["ocspresponder"]; ok && val != "" {
-		argsMap["ocspresponder"] = val
+		// URL-encode the arg value to handle slashy/special characters.
+		args = append(args, fmt.Sprintf("ocspresponder:%s", url.QueryEscape(val)))
+	}
+	if !data.Ca.IsNull() && !data.Ca.IsUnknown() {
+		args = append(args, fmt.Sprintf("ca:%s", strconv.FormatBool(data.Ca.ValueBool())))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Sslcertkey_sslocspresponder_binding.Type(), certkey_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Sslcertkey_sslocspresponder_binding.Type(), certkey_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslcertkey_sslocspresponder_binding, got error: %s", err))
 		return
@@ -220,27 +226,12 @@ func (r *SslcertkeySslocspresponderBindingResource) readSslcertkeySslocsprespond
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Match on ocspresponder only - "ca" is never returned by the NITRO GET response
+	// for this binding, so it cannot be used as a filter (it is a delete-only arg).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check ca
-		if idVal, ok := idMap["ca"]; ok {
-			if val, ok := v["ca"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ca"].(bool); ok {
-			match = false
-			continue
-		}
 
 		// Check ocspresponder
 		if idVal, ok := idMap["ocspresponder"]; ok {

@@ -44,7 +44,6 @@ func (d *SslcertkeySslocspresponderBindingDataSource) Read(ctx context.Context, 
 
 	// Case 4: Array filter with parent ID
 	certkey_Name := data.Certkey.ValueString()
-	ca_Name := data.Ca
 	ocspresponder_Name := data.Ocspresponder
 
 	var dataArr []map[string]interface{}
@@ -67,21 +66,12 @@ func (d *SslcertkeySslocspresponderBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Match on ocspresponder only - "ca" is never returned by the NITRO GET response
+	// for this binding (it is a delete-only arg), so it cannot be used as a filter.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check ca
-		if val, ok := v["ca"].(bool); ok {
-			if ca_Name.IsNull() || val != ca_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !ca_Name.IsNull() {
-			match = false
-			continue
-		}
 
 		// Check ocspresponder
 		if val, ok := v["ocspresponder"].(string); ok {
@@ -101,11 +91,11 @@ func (d *SslcertkeySslocspresponderBindingDataSource) Read(ctx context.Context, 
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("sslcertkey_sslocspresponder_binding with ca %s not found", ca_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("sslcertkey_sslocspresponder_binding with ocspresponder %s not found", ocspresponder_Name.ValueString()))
 		return
 	}
 
-	sslcertkey_sslocspresponder_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	sslcertkey_sslocspresponder_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
