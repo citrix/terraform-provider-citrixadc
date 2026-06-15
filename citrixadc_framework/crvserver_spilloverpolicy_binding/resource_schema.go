@@ -2,8 +2,6 @@ package crvserver_spilloverpolicy_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cr"
 
@@ -22,6 +20,7 @@ import (
 // CrvserverSpilloverpolicyBindingResourceModel describes the resource data model.
 type CrvserverSpilloverpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,11 +39,21 @@ func (r *CrvserverSpilloverpolicyBindingResource) Schema(ctx context.Context, re
 				Computed:    true,
 				Description: "The ID of the crvserver_spilloverpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -53,20 +62,25 @@ func (r *CrvserverSpilloverpolicyBindingResource) Schema(ctx context.Context, re
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Invoke a policy label if this policy's rule evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Name of the label to be invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Type of label to be invoked.",
 			},
@@ -89,6 +103,7 @@ func (r *CrvserverSpilloverpolicyBindingResource) Schema(ctx context.Context, re
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
 				},
 				Description: "The priority for the policy.",
 			},
@@ -97,6 +112,7 @@ func (r *CrvserverSpilloverpolicyBindingResource) Schema(ctx context.Context, re
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.",
 			},
@@ -109,6 +125,9 @@ func crvserver_spilloverpolicy_bindingGetThePayloadFromthePlan(ctx context.Conte
 
 	// Create API request body from the model
 	crvserver_spilloverpolicy_binding := cr.Crvserverspilloverpolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		crvserver_spilloverpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		crvserver_spilloverpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,10 +156,91 @@ func crvserver_spilloverpolicy_bindingGetThePayloadFromthePlan(ctx context.Conte
 	return crvserver_spilloverpolicy_binding
 }
 
+// crvserver_spilloverpolicy_bindingSetAttrFromGet is the RESOURCE-side state setter.
+// Every schema attribute is RequiresReplace (this binding has no NITRO update endpoint),
+// and the GET response does not reliably echo back all configured inputs (the server may
+// normalize or omit gotopriorityexpression/invoke/priority/targetvserver/bindpoint). To
+// avoid "inconsistent result after apply" churn (Pattern 7/13) we preserve the existing
+// plan/state value and only adopt the GET value when the model field is currently
+// null/unknown (e.g. an import where state carries only the ID).
 func crvserver_spilloverpolicy_bindingSetAttrFromGet(ctx context.Context, data *CrvserverSpilloverpolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverSpilloverpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In crvserver_spilloverpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	if data.Bindpoint.IsNull() || data.Bindpoint.IsUnknown() {
+		if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+			data.Bindpoint = types.StringValue(val.(string))
+		} else {
+			data.Bindpoint = types.StringNull()
+		}
+	}
+	if data.Gotopriorityexpression.IsNull() || data.Gotopriorityexpression.IsUnknown() {
+		if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+			data.Gotopriorityexpression = types.StringValue(val.(string))
+		} else {
+			data.Gotopriorityexpression = types.StringNull()
+		}
+	}
+	if data.Invoke.IsNull() || data.Invoke.IsUnknown() {
+		if val, ok := getResponseData["invoke"]; ok && val != nil {
+			data.Invoke = types.BoolValue(val.(bool))
+		} else {
+			data.Invoke = types.BoolNull()
+		}
+	}
+	if data.Labelname.IsNull() || data.Labelname.IsUnknown() {
+		if val, ok := getResponseData["labelname"]; ok && val != nil {
+			data.Labelname = types.StringValue(val.(string))
+		} else {
+			data.Labelname = types.StringNull()
+		}
+	}
+	if data.Labeltype.IsNull() || data.Labeltype.IsUnknown() {
+		if val, ok := getResponseData["labeltype"]; ok && val != nil {
+			data.Labeltype = types.StringValue(val.(string))
+		} else {
+			data.Labeltype = types.StringNull()
+		}
+	}
+	// name and policyname are the identity keys; RequiresReplace and always present.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if data.Priority.IsNull() || data.Priority.IsUnknown() {
+		if val, ok := getResponseData["priority"]; ok && val != nil {
+			if intVal, err := utils.ConvertToInt64(val); err == nil {
+				data.Priority = types.Int64Value(intVal)
+			} else {
+				data.Priority = types.Int64Null()
+			}
+		} else {
+			data.Priority = types.Int64Null()
+		}
+	}
+	if data.Targetvserver.IsNull() || data.Targetvserver.IsUnknown() {
+		if val, ok := getResponseData["targetvserver"]; ok && val != nil {
+			data.Targetvserver = types.StringValue(val.(string))
+		} else {
+			data.Targetvserver = types.StringNull()
+		}
+	}
+
+	return data
+}
+
+// crvserver_spilloverpolicy_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (the datasource has no prior plan/state to preserve) and
+// sets the composite ID (Pattern 7 datasource split).
+func crvserver_spilloverpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CrvserverSpilloverpolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverSpilloverpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In crvserver_spilloverpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -174,6 +274,8 @@ func crvserver_spilloverpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
+		} else {
+			data.Priority = types.Int64Null()
 		}
 	} else {
 		data.Priority = types.Int64Null()
@@ -184,12 +286,8 @@ func crvserver_spilloverpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Targetvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the datasource (it has no Create).
+	data.Id = types.StringValue("name:" + utils.UrlEncode(data.Name.ValueString()) + ",policyname:" + utils.UrlEncode(data.Policyname.ValueString()))
 
 	return data
 }

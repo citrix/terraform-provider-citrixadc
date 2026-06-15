@@ -910,5 +910,17 @@ BACKWARD-COMPAT: labelname/labeltype were Required in Framework but Optional+Com
 DATASOURCE: healthy as-is; shares faithful SetAttrFromGet setter (no Pattern 7 split needed since resource setter was not changed to preserve-state).
 PATTERNS: 1 (PUT->POST Create), 7b/url-encode Delete args, 8 (Required->Optional+Computed flag fix).
 FILES CHANGED: citrixadc_framework/crvserver_rewritepolicy_binding/resource_schema.go, citrixadc_framework/crvserver_rewritepolicy_binding/resource_crvserver_rewritepolicy_binding.go, citrixadc_framework/acctests/crvserver_rewritepolicy_binding_test.go (sanctioned ID-parse lines + utils import only; NO doc files)
+RESOURCE: crvserver_spilloverpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T06:38:53Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.155/)
+TEST RUN: TestAcc[Cc]rvserver_spilloverpolicy_binding(_basic|DataSource_basic)
+TESTS:
+  - TestAccCrvserver_spilloverpolicy_binding_basic ............ PASS
+  - TestAcccrvserver_spilloverpolicy_bindingDataSource_basic .. PASS
+BACKWARD-COMPAT: Re-added dropped 'bindpoint' attr (present in SDK v2 + NITRO struct + test); changed labelname/labeltype from Required to Optional+Computed to match SDK v2 contract (test omits them); Create switched UpdateUnnamedResource(PUT) -> AddResource(POST) to match SDK v2; Delete now sends URL-encoded bindpoint + priority args (DeleteResourceWithArgs) matching SDK v2; SetAttrFromGet now preserves plan/state (no null/ID-recompute churn); ID stays new key:value format, ParseIdString handles legacy comma form; id_mapping name,policyname already correct.
+DATASOURCE: healthy; switched Read to new crvserver_spilloverpolicy_bindingSetAttrFromGetForDatasource (Pattern 7 split) and added bindpoint to datasource schema.
+PATTERNS: 1, 6, 7, 8, 13
+FILES CHANGED: citrixadc_framework/crvserver_spilloverpolicy_binding/resource_schema.go, citrixadc_framework/crvserver_spilloverpolicy_binding/resource_crvserver_spilloverpolicy_binding.go, citrixadc_framework/crvserver_spilloverpolicy_binding/datasource_crvserver_spilloverpolicy_binding.go, citrixadc_framework/crvserver_spilloverpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/crvserver_spilloverpolicy_binding_test.go (sanctioned ID-parse lines only)
 BLOCKER: none
 ========================================

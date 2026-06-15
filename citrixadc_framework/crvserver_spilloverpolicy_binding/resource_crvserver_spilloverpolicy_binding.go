@@ -3,6 +3,7 @@ package crvserver_spilloverpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,8 +60,8 @@ func (r *CrvserverSpilloverpolicyBindingResource) Create(ctx context.Context, re
 	crvserver_spilloverpolicy_binding := crvserver_spilloverpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Crvserver_spilloverpolicy_binding.Type(), &crvserver_spilloverpolicy_binding)
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource), Pattern 1.
+	_, err := r.client.AddResource(service.Crvserver_spilloverpolicy_binding.Type(), "", &crvserver_spilloverpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_spilloverpolicy_binding, got error: %s", err))
 		return
@@ -153,7 +154,8 @@ func (r *CrvserverSpilloverpolicyBindingResource) Delete(ctx context.Context, re
 	}
 
 	tflog.Debug(ctx, "Deleting crvserver_spilloverpolicy_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Parse the parent name (handles both new key:value and legacy comma IDs).
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policyname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -166,12 +168,21 @@ func (r *CrvserverSpilloverpolicyBindingResource) Delete(ctx context.Context, re
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
+	// Build delete args. policyname disambiguates the binding; bindpoint/priority
+	// further disambiguate when multiple policies are bound at the same priority.
+	// URL-encode slashy/special values (matches the SDK v2 resource), Pattern (b).
+	args := make([]string, 0)
 	if val, ok := idMap["policyname"]; ok && val != "" {
-		argsMap["policyname"] = val
+		args = append(args, fmt.Sprintf("policyname:%s", val))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Crvserver_spilloverpolicy_binding.Type(), name_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_spilloverpolicy_binding.Type(), name_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_spilloverpolicy_binding, got error: %s", err))
 		return
