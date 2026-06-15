@@ -59,8 +59,8 @@ func (r *CrvserverCachepolicyBindingResource) Create(ctx context.Context, req re
 	crvserver_cachepolicy_binding := crvserver_cachepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Crvserver_cachepolicy_binding.Type(), &crvserver_cachepolicy_binding)
+	// Binding resource - NITRO add is POST; match SDK v2 which used AddResource (Pattern 1)
+	_, err := r.client.AddResource(service.Crvserver_cachepolicy_binding.Type(), "", &crvserver_cachepolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_cachepolicy_binding, got error: %s", err))
 		return

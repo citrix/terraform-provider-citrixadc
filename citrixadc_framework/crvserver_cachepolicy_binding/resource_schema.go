@@ -22,6 +22,7 @@ import (
 // CrvserverCachepolicyBindingResourceModel describes the resource data model.
 type CrvserverCachepolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -40,6 +41,16 @@ func (r *CrvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				Computed:    true,
 				Description: "The ID of the crvserver_cachepolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				// Present in SDK v2 + NITRO struct; re-added during migration.
+				// Not echoed by the binding GET response; keep Optional-only so an unset
+				// value resolves to null instead of remaining unknown after apply (Pattern 13).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -57,14 +68,18 @@ func (r *CrvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				Description: "Invoke flag.",
 			},
 			"labelname": schema.StringAttribute{
-				Required: true,
+				// SDK v2 had this Optional+Computed; not echoed by binding GET.
+				// Optional-only (Pattern 13) — backward-compat flag drift fix.
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Required: true,
+				// SDK v2 had this Optional+Computed; not echoed by binding GET.
+				// Optional-only (Pattern 13) — backward-compat flag drift fix.
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -93,8 +108,8 @@ func (r *CrvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				Description: "The priority for the policy.",
 			},
 			"targetvserver": schema.StringAttribute{
+				// Not echoed by the binding GET response; Optional-only (Pattern 13).
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,6 +124,9 @@ func crvserver_cachepolicy_bindingGetThePayloadFromthePlan(ctx context.Context, 
 
 	// Create API request body from the model
 	crvserver_cachepolicy_binding := cr.Crvservercachepolicybinding{}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		crvserver_cachepolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		crvserver_cachepolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -137,12 +155,65 @@ func crvserver_cachepolicy_bindingGetThePayloadFromthePlan(ctx context.Context, 
 	return crvserver_cachepolicy_binding
 }
 
+// crvserver_cachepolicy_bindingSetAttrFromGet is the RESOURCE state setter. It preserves
+// the user-configured/identity values (name, policyname) instead of blindly copying the
+// GET response, because the binding GET array entries do not reliably echo every input
+// (the parent "name" is the query key and may be absent in entries; server may normalize
+// or default priority/gotopriorityexpression). All attributes here are RequiresReplace,
+// so the values come from the plan and must round-trip unchanged. Does NOT recompute the
+// ID — the ID is set exactly once in Create (Pattern 6).
 func crvserver_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *CrvserverCachepolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverCachepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In crvserver_cachepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Identity attributes: keep the plan/state value (GET array entries may omit "name").
+	if val, ok := getResponseData["name"]; ok && val != nil && data.Name.IsNull() {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil && data.Policyname.IsNull() {
+		data.Policyname = types.StringValue(val.(string))
+	}
+
+	// Optional+Computed attributes: adopt the GET value when present, else preserve plan.
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
-		data.Gotopriorityexpression = types.StringValue(val.(string))
+		data.Gotopriorityexpression = types.StringValue(fmt.Sprintf("%v", val))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["targetvserver"]; ok && val != nil {
+		data.Targetvserver = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// crvserver_cachepolicy_bindingSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response (the datasource has no prior plan/state to preserve) and sets the
+// composite ID itself, since the datasource never calls Create (Pattern 7 split).
+func crvserver_cachepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CrvserverCachepolicyBindingResourceModel, getResponseData map[string]interface{}) *CrvserverCachepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In crvserver_cachepolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(fmt.Sprintf("%v", val))
 	} else {
 		data.Gotopriorityexpression = types.StringNull()
 	}
@@ -163,13 +234,9 @@ func crvserver_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *Crvs
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
-	} else {
-		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -184,7 +251,7 @@ func crvserver_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *Crvs
 		data.Targetvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create runs for datasources).
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
