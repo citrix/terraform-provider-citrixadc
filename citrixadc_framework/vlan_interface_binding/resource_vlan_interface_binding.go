@@ -3,8 +3,6 @@ package vlan_interface_binding
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -60,7 +58,7 @@ func (r *VlanInterfaceBindingResource) Create(ctx context.Context, req resource.
 	vlan_interface_binding := vlan_interface_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
+	// Binding resource - use UpdateUnnamedResource (NITRO add for this binding is PUT)
 	err := r.client.UpdateUnnamedResource(service.Vlan_interface_binding.Type(), &vlan_interface_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vlan_interface_binding, got error: %s", err))
@@ -69,13 +67,8 @@ func (r *VlanInterfaceBindingResource) Create(ctx context.Context, req resource.
 
 	tflog.Trace(ctx, "Created vlan_interface_binding resource")
 
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Id.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("tagged:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Tagged.ValueBool()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state (vlanid:..,ifnum:..)
+	data.Id = types.StringValue(vlanInterfaceBindingComposeId(&data))
 
 	// Read the updated state back
 	r.readVlanInterfaceBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -114,29 +107,11 @@ func (r *VlanInterfaceBindingResource) Update(ctx context.Context, req resource.
 		return
 	}
 
-	// Preserve ID from prior state
+	// Preserve ID from prior state. All attributes are RequiresReplace, so this
+	// Update is a documented no-op (NITRO has no update endpoint for this binding).
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating vlan_interface_binding resource")
-
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		vlan_interface_binding := vlan_interface_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Vlan_interface_binding.Type(), &vlan_interface_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vlan_interface_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated vlan_interface_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for vlan_interface_binding resource, skipping update")
-	}
+	tflog.Debug(ctx, "Update is a no-op for vlan_interface_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readVlanInterfaceBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -156,31 +131,29 @@ func (r *VlanInterfaceBindingResource) Delete(ctx context.Context, req resource.
 	}
 
 	tflog.Debug(ctx, "Deleting vlan_interface_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs
+
+	// Parse the ID (handles both new "vlanid:..,ifnum:.." and legacy "vlanid,ifnum")
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vlanid", "ifnum"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
 	}
 
-	id_value, ok := idMap["id"]
+	vlanid, ok := idMap["vlanid"]
 	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'id' not found in ID")
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'vlanid' not found in ID")
+		return
+	}
+	ifnum, ok := idMap["ifnum"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Bound attribute 'ifnum' not found in ID")
 		return
 	}
 
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["ifnum"]; ok && val != "" {
-		argsMap["ifnum"] = val
-	}
-	if val, ok := idMap["ownergroup"]; ok && val != "" {
-		argsMap["ownergroup"] = val
-	}
-	if val, ok := idMap["tagged"]; ok && val != "" {
-		argsMap["tagged"] = val
-	}
-
-	err = r.client.DeleteResourceWithArgsMap(service.Vlan_interface_binding.Type(), id_value, argsMap)
+	// Mirror the SDK v2 contract: delete the binding identified by vlanid with the
+	// single ifnum arg, URL-encoding the value (ifnum may contain a slash, e.g. "1/1").
+	args := []string{fmt.Sprintf("ifnum:%s", utils.UrlEncode(ifnum))}
+	err = r.client.DeleteResourceWithArgs(service.Vlan_interface_binding.Type(), vlanid, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vlan_interface_binding, got error: %s", err))
 		return
@@ -192,16 +165,21 @@ func (r *VlanInterfaceBindingResource) Delete(ctx context.Context, req resource.
 // Helper function to read vlan_interface_binding data from API
 func (r *VlanInterfaceBindingResource) readVlanInterfaceBindingFromApi(ctx context.Context, data *VlanInterfaceBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Case 4: Array filter with parent ID - parse from ID
+	// Array filter with parent ID - parse from ID
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vlanid", "ifnum"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return
 	}
 
-	id_Name, ok := idMap["id"]
+	vlanid, ok := idMap["vlanid"]
 	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'id' not found in ID string")
+		diags.AddError("Parse Error", "ID attribute 'vlanid' not found in ID string")
+		return
+	}
+	ifnum, ok := idMap["ifnum"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'ifnum' not found in ID string")
 		return
 	}
 
@@ -209,7 +187,7 @@ func (r *VlanInterfaceBindingResource) readVlanInterfaceBindingFromApi(ctx conte
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vlan_interface_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vlanid,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
@@ -224,60 +202,10 @@ func (r *VlanInterfaceBindingResource) readVlanInterfaceBindingFromApi(ctx conte
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right ifnum
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ifnum
-		if idVal, ok := idMap["ifnum"]; ok {
-			if val, ok := v["ifnum"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ifnum"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check ownergroup
-		if idVal, ok := idMap["ownergroup"]; ok {
-			if val, ok := v["ownergroup"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["ownergroup"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check tagged
-		if idVal, ok := idMap["tagged"]; ok {
-			if val, ok := v["tagged"].(bool); ok {
-				idValBool, _ := strconv.ParseBool(idVal)
-				if val != idValBool {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["tagged"].(bool); ok {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["ifnum"].(string); ok && val == ifnum {
 			foundIndex = i
 			break
 		}
@@ -285,7 +213,7 @@ func (r *VlanInterfaceBindingResource) readVlanInterfaceBindingFromApi(ctx conte
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vlan_interface_binding not found with the provided ID attributes"))
+		diags.AddError("Client Error", "vlan_interface_binding not found with the provided ID attributes")
 		return
 	}
 

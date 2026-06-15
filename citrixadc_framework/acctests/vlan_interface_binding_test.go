@@ -18,10 +18,10 @@ package citrixadc
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -93,10 +93,12 @@ func testAccCheckVlan_interface_bindingExist(n string, id *string) resource.Test
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		idSlice := strings.SplitN(rs.Primary.ID, ",", 2)
-
-		vlanid := idSlice[0]
-		ifnum := idSlice[1]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"vlanid", "ifnum"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", rs.Primary.ID, err)
+		}
+		vlanid := idMap["vlanid"]
+		ifnum := idMap["ifnum"]
 
 		log.Printf("[DEBUG] citrixadc-provider: Reading vlan_interface_binding state %s", rs.Primary.ID)
 		findParams := service.FindParams{
@@ -143,10 +145,12 @@ func testAccCheckVlan_interface_bindingNotExist(bindingId string) resource.TestC
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		vlanid := idSlice[0]
-		ifnum := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"vlanid", "ifnum"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		vlanid := idMap["vlanid"]
+		ifnum := idMap["ifnum"]
 
 		log.Printf("[DEBUG] citrixadc-provider: Reading vlan_interface_binding state %s", bindingId)
 		findParams := service.FindParams{
