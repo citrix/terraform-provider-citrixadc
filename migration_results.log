@@ -1158,5 +1158,18 @@ BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (in SDK v2 + NITRO struct); c
 DATASOURCE: healthy; split SetAttrFromGet into resource (preserve-state) + ForDatasource (faithful copy + sets composite Id); added bindpoint to datasource schema; datasource Read now calls ForDatasource setter.
 PATTERNS: 1 (PUT->POST create), 7 (split SetAttrFromGet for datasource), 13 (drop spurious Computed on non-echoed inputs); binding-family items (a) re-add bindpoint, (b) URL-encode delete args, (c) Required->Optional flag drift.
 FILES CHANGED: citrixadc_framework/csvserver_botpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_botpolicy_binding/resource_csvserver_botpolicy_binding.go, citrixadc_framework/csvserver_botpolicy_binding/datasource_csvserver_botpolicy_binding.go, citrixadc_framework/csvserver_botpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_botpolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
+RESOURCE: csvserver_appfwpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T07:27:39Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.152/)
+TEST RUN: TestAccCsvserver_appfwpolicy_binding(_basic|DataSource_basic)$
+TESTS:
+  - TestAccCsvserver_appfwpolicy_binding_basic ........ PASS
+  - TestAccCsvserver_appfwpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attrs) ... N/A
+BACKWARD-COMPAT: re-added dropped 'bindpoint' attr (present in SDK v2 + NITRO struct); changed Create PUT->POST (UpdateUnnamedResource->AddResource, Pattern 1) matching SDK v2; reconciled labelname/labeltype Required->Optional (SDK v2 had Optional+Computed, then dropped Computed per Pattern 13); preserved server-overridden/non-echoed inputs in resource SetAttrFromGet (Pattern 7); dropped spurious Computed from labelname/labeltype/targetlbvserver (Pattern 13); removed ID recompute from setter (Pattern 6); Update made documented no-op (Pattern 5). ID format new key:value, legacy order name,policyname matches resource_id_mapping.json.
+DATASOURCE: healthy; split setter into csvserver_appfwpolicy_bindingSetAttrFromGetForDatasource (faithfully copies GET + sets composite ID) and switched datasource Read to it (Pattern 7); added bindpoint to datasource schema for model parity.
+PATTERNS: 1, 5, 6, 7, 13
+FILES CHANGED: citrixadc_framework/csvserver_appfwpolicy_binding/resource_schema.go, citrixadc_framework/csvserver_appfwpolicy_binding/resource_csvserver_appfwpolicy_binding.go, citrixadc_framework/csvserver_appfwpolicy_binding/datasource_csvserver_appfwpolicy_binding.go, citrixadc_framework/csvserver_appfwpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/csvserver_appfwpolicy_binding_test.go (sanctioned ID-parse helper lines only). NO doc modified.
 BLOCKER: none
 ========================================
