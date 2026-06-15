@@ -2619,5 +2619,18 @@ BACKWARD-COMPAT: SDK v2 ID is plain certkeyname (d.SetId(certkeyname)) and resou
 DATASOURCE: healthy; split into vpnglobal_sslcertkey_bindingSetAttrFromGetForDatasource (faithfully copies GET + sets plain certkeyname Id) so datasource is unaffected by the resource preserve-state setter (Pattern 7 split); datasource schema fixed so only certkeyname is Required (cacert/userdataencryptionkey were wrongly Required -> Optional+Computed lookup outputs).
 PATTERNS: 10 (plain-value single-key ID), 7 (split setter + preserve state), 13 (drop Computed from Optional inputs after no GET echo), 5 (no-op Update), b (url-encode delete arg values)
 FILES CHANGED: citrixadc_framework/vpnglobal_sslcertkey_binding/resource_schema.go, citrixadc_framework/vpnglobal_sslcertkey_binding/resource_vpnglobal_sslcertkey_binding.go, citrixadc_framework/vpnglobal_sslcertkey_binding/datasource_schema.go, citrixadc_framework/vpnglobal_sslcertkey_binding/datasource_vpnglobal_sslcertkey_binding.go (NO test/doc files modified)
+RESOURCE: vpnglobal_authenticationtacacspolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T10:53:52Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.151/)
+TEST RUN: TestAccVpnglobal_authenticationtacacspolicy_binding($|_basic$|DataSource_basic$)
+TESTS:
+  - TestAccVpnglobal_authenticationtacacspolicy_binding_basic ............ PASS
+  - TestAccVpnglobal_authenticationtacacspolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral test; resource has no secret attribute) ............... N/A
+BACKWARD-COMPAT: Attribute name/type/Required-Optional/ForceNew parity all matched SDK v2; ID is plain policyname matching resource_id_mapping.json; Create verb (UpdateUnnamedResource/PUT) matches SDK v2. Fix: dropped spurious Computed from gotopriorityexpression/priority/secondary/groupextraction (Pattern 13) because NITRO GET does not echo groupextraction/gotopriorityexpression (and omits secondary when false), which caused "inconsistent result after apply" / perpetual diffs.
+DATASOURCE: healthy; split setter per Pattern 7 (resource setter preserves non-echoed plan/state, new datasource setter faithfully copies GET + sets Id); datasource Read switched to new setter.
+PATTERNS: 7, 13 (Delete arg URL-encoded per binding-family sub-task b)
+FILES CHANGED: citrixadc_framework/vpnglobal_authenticationtacacspolicy_binding/resource_schema.go, citrixadc_framework/vpnglobal_authenticationtacacspolicy_binding/resource_vpnglobal_authenticationtacacspolicy_binding.go, citrixadc_framework/vpnglobal_authenticationtacacspolicy_binding/datasource_vpnglobal_authenticationtacacspolicy_binding.go (NO test/doc file modified)
 BLOCKER: none
 ========================================

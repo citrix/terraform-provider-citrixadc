@@ -3,6 +3,7 @@ package vpnglobal_authenticationtacacspolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -152,8 +153,10 @@ func (r *VpnglobalAuthenticationtacacspolicyBindingResource) Delete(ctx context.
 	// Global binding - delete using DeleteResourceWithArgs with empty resource name
 	// Single unique attribute - ID is the plain value
 	policyname_value := data.Id.ValueString()
+	// URL-encode the policyname value so slashy/special characters survive as a
+	// NITRO delete arg (matches the SDK v2 resource's url.QueryEscape behavior).
 	args := []string{
-		fmt.Sprintf("policyname:%s", policyname_value),
+		fmt.Sprintf("policyname:%s", url.QueryEscape(policyname_value)),
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_authenticationtacacspolicy_binding.Type(), "", args)
