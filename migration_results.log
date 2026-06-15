@@ -2971,5 +2971,18 @@ BACKWARD-COMPAT: ID format reverted from 3-key (bindpoint:,name:,policy:) to leg
 DATASOURCE: healthy after fix; bindpoint Required->Optional+Computed (test looks up by name+policy only); split setter SetAttrFromGetForDatasource added (Pattern 7) and wired into datasource Read; match loop now keys on policy.
 PATTERNS: 7, 13
 FILES CHANGED: citrixadc_framework/vpnvserver_authenticationlocalpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_authenticationlocalpolicy_binding/resource_vpnvserver_authenticationlocalpolicy_binding.go, citrixadc_framework/vpnvserver_authenticationlocalpolicy_binding/datasource_schema.go, citrixadc_framework/vpnvserver_authenticationlocalpolicy_binding/datasource_vpnvserver_authenticationlocalpolicy_binding.go, citrixadc_framework/acctests/vpnvserver_authenticationlocalpolicy_binding_test.go (sanctioned ID-parse helper lines only)
+RESOURCE: vpnvserver_authenticationsamlpolicy_binding
+STATUS:   PASS
+TIME:     2026-06-15T13:21:41Z
+TESTBED:  UNSPECIFIED (NS_URL: http://10.101.132.153/)
+TEST RUN: TestAccVpnvserver_authenticationsamlpolicy_binding($|_|DataSource)
+TESTS:
+  - TestAccVpnvserver_authenticationsamlpolicy_binding_basic ............ PASS
+  - TestAccVpnvserver_authenticationsamlpolicy_bindingDataSource_basic .. PASS
+  - (no ephemeral tests; resource has no secret attributes) ............ N/A
+BACKWARD-COMPAT: Framework ID was 3-part (bindpoint:name:policy); reconciled to legacy 2-part name:enc,policy:enc order matching resource_id_mapping.json/SDK v2. Dropped spurious Computed from bindpoint/gotopriorityexpression/groupextraction/priority/secondary (all RequiresReplace, server-overridden) to avoid inconsistent-result-after-apply. Resource SetAttrFromGet now preserves plan/state for non-echoed/server-normalized inputs (mirrors SDK v2 read that skipped bindpoint). Delete switched to DeleteResourceWithArgs with url.QueryEscape'd policy/secondary/groupextraction/bindpoint args (matches NITRO delete args + SDK v2). Create verb UpdateUnnamedResource confirmed correct (NITRO add = PUT). name/policy kept Required per SDK v2 contract.
+DATASOURCE: healthy; split setter into resource (preserve) + xxxSetAttrFromGetForDatasource (faithful copy); datasource Read now calls the datasource setter; datasource bindpoint relaxed Required->Optional+Computed (lookup keys are name+policy only); match loop simplified to policy.
+PATTERNS: 7 (preserve-state + datasource setter split), 13 (drop spurious Computed on RequiresReplace attrs), plus ID-format/legacy-order reconciliation and URL-encoded delete args.
+FILES CHANGED: citrixadc_framework/vpnvserver_authenticationsamlpolicy_binding/resource_schema.go, citrixadc_framework/vpnvserver_authenticationsamlpolicy_binding/resource_vpnvserver_authenticationsamlpolicy_binding.go, citrixadc_framework/vpnvserver_authenticationsamlpolicy_binding/datasource_vpnvserver_authenticationsamlpolicy_binding.go, citrixadc_framework/vpnvserver_authenticationsamlpolicy_binding/datasource_schema.go, citrixadc_framework/acctests/vpnvserver_authenticationsamlpolicy_binding_test.go (sanctioned ID-parse helper lines only); NO doc files changed.
 BLOCKER: none
 ========================================

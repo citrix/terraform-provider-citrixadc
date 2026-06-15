@@ -42,9 +42,8 @@ func (d *VpnvserverAuthenticationsamlpolicyBindingDataSource) Read(ctx context.C
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Case 4: Array filter with parent ID. Lookup keys are name (parent) + policy (bound entity).
 	name_Name := data.Name.ValueString()
-	bindpoint_Name := data.Bindpoint
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -67,33 +66,10 @@ func (d *VpnvserverAuthenticationsamlpolicyBindingDataSource) Read(ctx context.C
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policy.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bindpoint
-		if val, ok := v["bindpoint"].(string); ok {
-			if bindpoint_Name.IsNull() || val != bindpoint_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !bindpoint_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && !policy_Name.IsNull() && val == policy_Name.ValueString() {
 			foundIndex = i
 			break
 		}
@@ -101,11 +77,11 @@ func (d *VpnvserverAuthenticationsamlpolicyBindingDataSource) Read(ctx context.C
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationsamlpolicy_binding with bindpoint %s not found", bindpoint_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationsamlpolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	vpnvserver_authenticationsamlpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_authenticationsamlpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
