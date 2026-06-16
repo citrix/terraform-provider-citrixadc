@@ -36,7 +36,7 @@ resource "citrixadc_crvserver_icapolicy_binding" "crvserver_icapolicy_binding" {
 * `invoke` - (Optional) Invoke a policy label if this policy's rule evaluates to TRUE (valid only for default-syntax policies such as application firewall, transform, integrated cache, rewrite, responder, and content switching).
 * `labelname` - (Optional) Name of the label to be invoked.
 * `labeltype` - (Optional) Type of label to be invoked.
-* `policyname` - (Optional) Policies bound to this vserver.
+* `policyname` - (Required) Policies bound to this vserver.
 * `priority` - (Optional) The priority for the policy.
 * `targetvserver` - (Optional) Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.
 
@@ -45,13 +45,13 @@ resource "citrixadc_crvserver_icapolicy_binding" "crvserver_icapolicy_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the crvserver_icapolicy_binding. It has the same value as the `name` attribute.
+* `id` - The id of the crvserver_icapolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
 
 
 ## Import
 
-A crvserver_icapolicy_binding can be imported using its name, e.g.
+A crvserver_icapolicy_binding can be imported using the concatenation of its `name` and `policyname` separated by a comma, e.g.
 
 ```shell
-terraform import citrixadc_crvserver_icapolicy_binding.crvserver_icapolicy_binding my_v,tf_icapolicyserver
+terraform import citrixadc_crvserver_icapolicy_binding.crvserver_icapolicy_binding my_vserver,tf_icapolicy
 ```

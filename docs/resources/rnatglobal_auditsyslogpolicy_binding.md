@@ -34,7 +34,7 @@ resource "citrixadc_rnatglobal_auditsyslogpolicy_binding" "tf_binding" {
 ## Argument Reference
 
 * `policy` - (Required) The policy Name.
-* `all` - (Optional) Remove all RNAT global config
+* `all` - (Optional) Remove all RNAT global config.
 * `priority` - (Optional) The priority of the policy.
 
 

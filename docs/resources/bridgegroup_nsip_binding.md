@@ -41,7 +41,7 @@ resource "citrixadc_bridgegroup_nsip_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the bridgegroup_nsip_binding. It is the concatenation of `bridgegroup_id` and `ipaddress` attributes separated by comma.
+* `id` - The id of the bridgegroup_nsip_binding. It is the concatenation of the `bridgegroup_id` and `ipaddress` attributes separated by a comma.
 
 
 ## Import

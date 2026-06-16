@@ -35,7 +35,8 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_authenticationoauthidppolicy_binding. It is a system-generated identifier.
+* `id` - The id of the vpnvserver_authenticationoauthidppolicy_binding. It is the concatenation of the `name` and `policy` attributes separated by a comma.
+* `bindpoint` - Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
 * `gotopriorityexpression` - Next priority expression.
 * `groupextraction` - Binds the authentication policy to a tertiary chain which will be used only for group extraction. The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.
 * `priority` - Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.

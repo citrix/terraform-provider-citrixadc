@@ -36,6 +36,7 @@ output "weight" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the lbvserver_servicegroup_binding. It is a system-generated identifier.
+* `id` - The id of the lbvserver_servicegroup_binding. It is the concatenation of the `name` and `servicegroupname` attributes separated by a comma.
+* `servicename` - Service to bind to the virtual server.
 * `order` - Order number to be assigned to the service when it is bound to the lb vserver.
 * `weight` - Integer specifying the weight of the service. A larger number specifies a greater weight. Defines the capacity of the service relative to the other services in the load balancing configuration. Determines the priority given to the service in load balancing decisions.

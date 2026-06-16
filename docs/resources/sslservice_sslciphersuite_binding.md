@@ -88,13 +88,14 @@ resource "citrixadc_sslcipher" "tfAccsslcipher" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslservice_sslciphersuite_binding. t is the concatenation of the `servicename` and `ciphername` attributes separated by a comma.
+* `id` - The id of the sslservice_sslciphersuite_binding. It is the concatenation of the `servicename` and `ciphername` attributes separated by a comma.
+* `cipherdefaulton` - Flag indicating whether the bound cipher was the DEFAULT cipher, bound at boot time, or any other cipher from the CLI.
 
 
 ## Import
 
-A sslservice_sslciphersuite_binding can be imported using its id, e.g.
+A sslservice_sslciphersuite_binding can be imported using its id, which is the concatenation of the `servicename` and `ciphername` attributes separated by a comma, e.g.
 
 ```shell
-terraform import citrixadc_sslservice_sslciphersuite_binding.tf_sslservice_sslciphersuite_binding tf_sslservice_sslciphersuite_binding
+terraform import citrixadc_sslservice_sslciphersuite_binding.tf_sslservice_sslcipher_binding tf_service,tfAccsslcipher
 ```

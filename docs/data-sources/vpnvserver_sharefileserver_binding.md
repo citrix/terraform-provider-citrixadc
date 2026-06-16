@@ -6,7 +6,7 @@ subcategory: "VPN"
 
 The vpnvserver_sharefileserver_binding data source allows you to retrieve information about a ShareFile server binding to a VPN virtual server.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_vpnvserver_sharefileserver_binding" "tf_bind" {

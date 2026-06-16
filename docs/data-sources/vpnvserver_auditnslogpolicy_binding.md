@@ -6,7 +6,7 @@ subcategory: "VPN"
 
 The vpnvserver_auditnslogpolicy_binding data source allows you to retrieve information about a specific vpnvserver_auditnslogpolicy_binding.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_vpnvserver_auditnslogpolicy_binding" "tf_bind" {
@@ -32,7 +32,8 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_auditnslogpolicy_binding. It has the value of the parent vpnvserver `name` and binding `policy` attributes separated by a comma. Example: `tf_vpnvserver,tf_auditnslogpolicy`.
+* `id` - The id of the vpnvserver_auditnslogpolicy_binding. It is the concatenation of the `name` and `policy` attributes separated by a comma.
+* `bindpoint` - Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
 * `gotopriorityexpression` - Applicable only to advance vpn session policy. Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE. Specify one of the following values: NEXT - Evaluate the policy with the next higher priority number. END - End policy evaluation. An expression that evaluates to a number. If you specify an expression, the number to which it evaluates determines the next policy to evaluate.
 * `groupextraction` - Binds the authentication policy to a tertiary chain which will be used only for group extraction. The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.
 * `priority` - Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.

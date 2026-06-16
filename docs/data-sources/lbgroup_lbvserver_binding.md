@@ -6,7 +6,7 @@ subcategory: "Load Balancing"
 
 The lbgroup_lbvserver_binding data source allows you to retrieve information about a specific binding between a load balancing group and a virtual server.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_lbgroup_lbvserver_binding" "tf_lbvserverbinding" {

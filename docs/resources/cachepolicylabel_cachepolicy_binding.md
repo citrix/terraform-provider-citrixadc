@@ -33,12 +33,12 @@ resource "citrixadc_cachepolicylabel_cachepolicy_binding" "tf_policylabel_cachep
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the cachepolicylabel_cachepolicy_binding. It has the same value as the `name` attribute.
+* `id` - The id of the cachepolicylabel_cachepolicy_binding. It is the concatenation of `labelname` and `policyname` attributes separated by a comma.
 
 
 ## Import
 
-A cachepolicylabel_cachepolicy_bindingcan be imported using its name, e.g.
+A cachepolicylabel_cachepolicy_binding can be imported using its name, e.g.
 
 ```shell
 terraform import citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding my_cachepolicylabel,my_cachepolicy

@@ -33,15 +33,15 @@ resource "citrixadc_nspartition_vxlan_binding" "tf_binding" {
 
 ## Argument Reference
 
-* `vxlan` - (Required) Identifier of the vxlan that is assigned to this partition. Minimum value =  1 Maximum value =  16777215
 * `partitionname` - (Required) Name of the Partition. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Minimum length =  1
+* `vxlan` - (Required) Identifier of the vxlan that is assigned to this partition. Minimum value =  1 Maximum value =  16777215
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the nspartition_vxlan_binding. It ids concatenation of `partitionname` and `vxlan` attributes separated by comma.
+* `id` - The id of the nspartition_vxlan_binding. It is the concatenation of `partitionname` and `vxlan` attributes separated by a comma.
 
 
 ## Import

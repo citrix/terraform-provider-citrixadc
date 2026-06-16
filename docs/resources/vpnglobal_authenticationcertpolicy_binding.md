@@ -4,7 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnglobal_authenticationcertpolicy_binding
 
-The vpnglobal_authenticationcertpolicy_binding resource is used to bind authenticationcertpolicy to vpnglobal configuration..
+The vpnglobal_authenticationcertpolicy_binding resource is used to bind authentication certpolicy to global configuration.
 
 
 ## Example usage

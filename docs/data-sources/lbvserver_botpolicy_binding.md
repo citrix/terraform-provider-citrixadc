@@ -36,10 +36,11 @@ output "invoke" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the lbvserver_botpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the lbvserver_botpolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `priority` - Priority.
+* `bindpoint` - The bindpoint to which the policy is bound.
 * `invoke` - Invoke policies bound to a virtual server or policy label.
 * `labelname` - Name of the label invoked.
 * `labeltype` - The invocation type.
-* `order` - Integer specifying the order of the service.
+* `order` - Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.

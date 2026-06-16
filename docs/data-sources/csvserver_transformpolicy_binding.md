@@ -6,7 +6,7 @@ subcategory: "Content Switching"
 
 The csvserver_transformpolicy_binding data source allows you to retrieve information about the binding between a content switching virtual server and a transform policy.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_csvserver_transformpolicy_binding" "tf_binding" {
@@ -31,6 +31,7 @@ output "targetlbvserver" {
 
 * `name` - (Required) Name of the content switching virtual server to which the content switching policy applies.
 * `policyname` - (Required) Policies bound to this vserver.
+* `bindpoint` - (Optional) The bindpoint to which the policy is bound. Possible values: [ REQUEST, RESPONSE, ICA_REQUEST, OTHERTCP_REQUEST ]
 
 ## Attribute Reference
 
@@ -42,4 +43,4 @@ In addition to the arguments, the following attributes are available:
 * `labelname` - Name of the label invoked.
 * `labeltype` - The invocation type.
 * `targetlbvserver` - Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE. Example: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1. Note: Use this parameter only in case of Content Switching policy bind operations to a CS vserver.
-* `id` - The id of the csvserver_transformpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the csvserver_transformpolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.

@@ -6,7 +6,7 @@ subcategory: "Network"
 
 The vxlan_nsip_binding data source allows you to retrieve information about the binding between a VXLAN and an NSIP (NetScaler IP).
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_vxlan_nsip_binding" "tf_binding" {

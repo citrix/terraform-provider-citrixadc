@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Resource: netbridge_nsip6_binding
 
-The netbridge_nsip6_binding resource is used to create netbridge_nsip6_binding.
+The netbridge_nsip6_binding resource is used to bind an IPv6 subnet (nsip6) to a network bridge.
 
 
 ## Example usage
@@ -28,12 +28,12 @@ resource "citrixadc_netbridge_nsip6_binding" "tf_netbridge_nsip6_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the netbridge_nsip6_binding. It has the same value as the `name` and `ipaddress`attributes separated by a comma.
+* `id` - The id of the netbridge_nsip6_binding. It is the concatenation of `name` and `ipaddress` attributes separated by a comma.
 
 
 ## Import
 
-A netbridge_nsip6_binding can be imported using its name, e.g.
+A netbridge_nsip6_binding can be imported using its id, e.g.
 
 ```shell
 terraform import citrixadc_netbridge_nsip6_binding.tf_netbridge_nsip6_binding my_netbridge,dea:97c5:d381:e72b::/64

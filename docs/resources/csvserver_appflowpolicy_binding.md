@@ -4,20 +4,17 @@ subcategory: "Content Switching"
 
 # Resource: csvserver_appflowpolicy_binding
 
-The csvserver_appflowpolicy_binding resource is used to add AppFlow policies to csvserver.
+The csvserver_appflowpolicy_binding resource is used to bind an AppFlow policy to a content switching virtual server.
 
 
 ## Example usage
 
 ```hcl
 resource "citrixadc_csvserver_appflowpolicy_binding" "tf_csvserver_appflowpolicy_binding" {
-	name = "tf_csvserver"
-	policyname = "tf_appflowpolicy"
-	labelname = citrixadc_csvserver.demo_csvserver.name
-	gotopriorityexpression = "END"
-	invoke = true
-	labeltype = "reqvserver"
-	priority = 1
+  name       = "tf_csvserver"
+  policyname = "tf_appflowpolicy"
+  priority   = 100
+  bindpoint  = "REQUEST"
 }
 ```
 
@@ -25,14 +22,14 @@ resource "citrixadc_csvserver_appflowpolicy_binding" "tf_csvserver_appflowpolicy
 ## Argument Reference
 
 * `name` - (Required) Name of the content switching virtual server to which the content switching policy applies.
-* `policyname` - (Required) Name of the policy bound to the CS vserver.
-* `priority` - (Optional) Priority.
-* `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated ifl the current policy rule evaluates to TRUE.
-* `bindpoint` - (Optional) The bindpoint to which the policy is bound. Possible values: [REQUEST, RESPONSE, ICA_REQUEST, OTHERTCP_REQUEST]
-* `invoke` - (Optional) Invoke policies bound to a virtual server or policy label.
+* `policyname` - (Required) Policies bound to this vserver.
+* `bindpoint` - (Optional) Bind point at which policy needs to be bound. Note: Content switching policies are evaluated only at request time. Possible values: [ REQUEST, RESPONSE, ICA_REQUEST, OTHERTCP_REQUEST ]
+* `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `invoke` - (Optional) Invoke flag.
 * `labeltype` - (Optional) The invocation type. Possible values: [ reqvserver, resvserver, policylabel ]
 * `labelname` - (Optional) Name of the label invoked.
-* `targetlbvserver` - (Optional) Name of the Load Balancing virtual server to which the content is switched.
+* `priority` - (Optional) Priority for the policy.
+* `targetlbvserver` - (Optional) Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE. Example: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1. Note: Use this parameter only in case of Content Switching policy bind operations to a CS vserver.
 
 
 ## Attribute Reference

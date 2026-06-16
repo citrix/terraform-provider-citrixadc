@@ -1,5 +1,5 @@
 ---
-subcategory: "Vpn"
+subcategory: "Authentication"
 ---
 
 # Resource: authenticationvserver_cachepolicy_binding
@@ -30,7 +30,7 @@ resource "citrixadc_authenticationvserver_cachepolicy_binding" "tf_binding" {
 
 * `name` - (Required) Name of the authentication virtual server to which to bind the policy.
 * `policy` - (Required) The name of the policy, if any, bound to the authentication vserver.
-* `bindpoint` - (Optional) Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
+* `bindpoint` - (Optional) Bindpoint to which the policy is bound.
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `groupextraction` - (Optional) Applicable only while bindind classic authentication policy as advance authentication policy use nFactor
 * `nextfactor` - (Optional) Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor

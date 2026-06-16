@@ -7,7 +7,7 @@ subcategory: "Network"
 The mapdomain_mapbmr_binding data source allows you to retrieve information about a binding between a MAP domain and a Basic Mapping Rule (BMR).
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_mapdomain_mapbmr_binding" "tf_binding" {

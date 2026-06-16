@@ -1,5 +1,5 @@
 ---
-subcategory: "sslcipher_sslciphersuite_binding"
+subcategory: "SSL"
 ---
 
 # Data Source: sslcipher_sslciphersuite_binding

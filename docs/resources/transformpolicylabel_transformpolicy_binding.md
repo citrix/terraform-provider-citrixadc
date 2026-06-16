@@ -43,7 +43,7 @@ resource "citrixadc_transformpolicylabel_transformpolicy_binding" "transformpoli
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the transformpolicylabel_transformpolicy_binding. It has the same value as the `labelname,policyname` attribute.
+* `id` - The id of the transformpolicylabel_transformpolicy_binding. It is the concatenation of the `labelname` and `policyname` attributes separated by a comma.
 
 
 ## Import

@@ -2,9 +2,9 @@
 subcategory: "SSL"
 ---
 
-# Resource: sslprofile_sslcertkey_binding
+# Resource: sslprofile\_sslcertkey\_binding
 
-The sslprofile_sslcertkey_binding resource is used to create bindings between sslprofile and sslcertkey.
+The sslprofile\_sslcertkey\_binding resource is used to bind an SSL certificate key to an SSL profile.
 
 
 ## Example usage
@@ -13,31 +13,30 @@ The sslprofile_sslcertkey_binding resource is used to create bindings between ss
 resource "citrixadc_sslprofile" "tf_sslprofile" {
   name = "tfUnit_sslprofile-hello"
 
-  // `ecccurvebindings` is REQUIRED attribute.
-  // The default ecccurvebindings will be DELETED and only the explicitly given ecccurvebindings will be retained
-  // To unbind all the ecccurvebindings, an empty list `[]` is to be assinged to `ecccurvebindings` attribute
+  // `ecccurvebindings` is a REQUIRED attribute.
+  // The default ecccurvebindings will be DELETED and only the explicitly given ecccurvebindings will be retained.
+  // To unbind all the ecccurvebindings, an empty list `[]` is to be assigned to the `ecccurvebindings` attribute.
   ecccurvebindings = ["P_256"]
-  sslinterception = "ENABLED"
-
+  sslinterception  = "ENABLED"
 }
 
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
-	certkey = "tf_sslcertkey"
-	cert = "/nsconfig/ssl/ns-root.cert"
-	key = "/nsconfig/ssl/ns-root.key"
+  certkey = "tf_sslcertkey"
+  cert    = "/nsconfig/ssl/ns-root.cert"
+  key     = "/nsconfig/ssl/ns-root.key"
 }
-  
-resource "citrixadc_sslprofile_sslcertkey_binding" "demo_sslprofile_sslcertkey_binding" {
-	name = citrixadc_sslprofile.tf_sslprofile.name
-	sslicacertkey = citrixadc_sslcertkey.tf_sslcertkey.certkey 
+
+resource "citrixadc_sslprofile_sslcertkey_binding" "tf_binding" {
+  name          = citrixadc_sslprofile.tf_sslprofile.name
+  sslicacertkey = citrixadc_sslcertkey.tf_sslcertkey.certkey
 }
 ```
 
 
 ## Argument Reference
 
-* `sslicacertkey` - (Required) The certkey (CA certificate + private key) to be used for SSL interception.
 * `name` - (Required) Name of the SSL profile.
+* `sslicacertkey` - (Required) The certkey (CA certificate + private key) to be used for SSL interception.
 * `cipherpriority` - (Optional) Priority of the cipher binding.
 
 
@@ -45,13 +44,13 @@ resource "citrixadc_sslprofile_sslcertkey_binding" "demo_sslprofile_sslcertkey_b
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslprofile_sslcertkey_binding. IIt has is the conatenation of the `name` and `sslicacertkey` attributes.
+* `id` - The id of the sslprofile\_sslcertkey\_binding. It is the concatenation of the `name` and `sslicacertkey` attributes separated by a comma.
 
 
 ## Import
 
-A sslprofile_sslcertkey_binding can be imported using its id, e.g.
+A sslprofile\_sslcertkey\_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_sslprofile_sslcertkey_binding.tf_sslprofile_sslcertkey_binding tf_sslprofile_sslcertkey_binding
+terraform import citrixadc_sslprofile_sslcertkey_binding.tf_binding tfUnit_sslprofile-hello,tf_sslcertkey
 ```

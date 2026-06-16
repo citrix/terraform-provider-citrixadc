@@ -6,7 +6,7 @@ subcategory: "Compression"
 
 The cmppolicylabel_cmppolicy_binding data source allows you to retrieve information about a specific cmppolicy binding to cmppolicylabel configuration.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_cmppolicylabel_cmppolicy_binding" "tf_cmppolicylabel_cmppolicy_binding" {
@@ -38,7 +38,7 @@ In addition to the arguments, the following attributes are available:
 
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `priority` - Specifies the priority of the policy.
-* `id` - The id of the cmppolicylabel_cmppolicy_binding. It is a system-generated identifier.
+* `id` - The id of the cmppolicylabel_cmppolicy_binding. It is the concatenation of `labelname` and `policyname` attributes separated by a comma.
 * `invoke` - Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next higher priority number in the original label.
 * `invoke_labelname` - Name of the label to invoke if the current policy evaluates to TRUE.
 * `labeltype` - Type of policy label invocation.

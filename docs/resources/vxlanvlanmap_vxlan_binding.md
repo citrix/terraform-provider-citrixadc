@@ -29,9 +29,9 @@ resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
   name = "tf_vxlanvlanmp"
 }
 resource "citrixadc_vxlanvlanmap_vxlan_binding" "tf_binding" {
-  name = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+  name  = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
   vxlan = citrixadc_vxlan.tf_vxlan.vxlanid
-  vlan = [citrixadc_vlan.tf_vlan.vlanid,citrixadc_vlan.tf_vlan1.vlanid]
+  vlan  = [citrixadc_vlan.tf_vlan.vlanid, citrixadc_vlan.tf_vlan1.vlanid]
 }
 ```
 
@@ -47,7 +47,7 @@ resource "citrixadc_vxlanvlanmap_vxlan_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vxlanvlanmap_vxlan_binding. It is the concatenation of `name`  and `vxlan` attributes seperated by comma.
+* `id` - The id of the vxlanvlanmap_vxlan_binding. It is the concatenation of the `name` and `vxlan` attributes separated by a comma.
 
 
 ## Import

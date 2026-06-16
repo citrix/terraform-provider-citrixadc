@@ -32,8 +32,9 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
+* `bindpoint` - Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
 * `gotopriorityexpression` - Next priority expression.
 * `groupextraction` - Binds the authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.
 * `priority` - Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.
 * `secondary` - Binds the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only via a primary authentication method but also via a secondary authentication method. User groups are aggregated across both. The user name must be exactly the same for both authentication methods, but they can require different passwords.
-* `id` - The id of the vpnvserver_vpnurlpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the vpnvserver_vpnurlpolicy_binding. It is the concatenation of the `name` and `policy` attributes separated by a comma.

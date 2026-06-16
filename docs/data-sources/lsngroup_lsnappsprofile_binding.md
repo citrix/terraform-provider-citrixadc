@@ -6,7 +6,7 @@ subcategory: "LSN"
 
 The lsngroup_lsnappsprofile_binding data source allows you to retrieve information about an LSN group to LSN application profile binding.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_lsngroup_lsnappsprofile_binding" "tf_binding" {

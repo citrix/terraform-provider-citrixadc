@@ -23,8 +23,7 @@ resource "citrixadc_crvserver_cachepolicy_binding" "crvserver_cachepolicy_bindin
   name       = citrixadc_crvserver.crvserver.name
   policyname = "tf_cachepolicy"
   priority   = 10
-  bindpoint =  "REQUEST"
-
+  bindpoint  = "REQUEST"
 }
 ```
 
@@ -37,7 +36,7 @@ resource "citrixadc_crvserver_cachepolicy_binding" "crvserver_cachepolicy_bindin
 * `invoke` - (Optional) Invoke flag.
 * `labelname` - (Optional) Name of the label invoked.
 * `labeltype` - (Optional) The invocation type.
-* `policyname` - (Optional) Policies bound to this vserver.
+* `policyname` - (Required) Policies bound to this vserver.
 * `priority` - (Optional) The priority for the policy.
 * `targetvserver` - (Optional) Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.
 
@@ -46,7 +45,7 @@ resource "citrixadc_crvserver_cachepolicy_binding" "crvserver_cachepolicy_bindin
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the crvserver_cachepolicy_binding. It has the same value as the `name` attribute.
+* `id` - The id of the crvserver_cachepolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
 
 
 ## Import

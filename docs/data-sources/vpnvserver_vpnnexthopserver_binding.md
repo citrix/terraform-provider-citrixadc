@@ -32,4 +32,4 @@ output "nexthopserver" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_vpnnexthopserver_binding. It is a system-generated identifier.
+* `id` - The id of the vpnvserver_vpnnexthopserver_binding. It is the concatenation of the `name` and `nexthopserver` attributes separated by a comma.

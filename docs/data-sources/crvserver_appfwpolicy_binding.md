@@ -6,7 +6,7 @@ subcategory: "Cache Redirection"
 
 The crvserver_appfwpolicy_binding data source allows you to retrieve information about a specific binding between a cache redirection virtual server and an application firewall policy.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_crvserver_appfwpolicy_binding" "crvserver_appfwpolicy_binding" {
@@ -36,7 +36,8 @@ output "priority" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the crvserver_appfwpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the crvserver_appfwpolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
+* `bindpoint` - The bindpoint to which the policy is bound.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - Invoke flag.
 * `labelname` - Name of the label invoked.

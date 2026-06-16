@@ -1,5 +1,5 @@
 ---
-subcategory: "AUTHORIZATION"
+subcategory: "Authorization"
 ---
 
 # Resource: authorizationpolicylabel_authorizationpolicy_binding
@@ -42,7 +42,7 @@ resource "citrixadc_authorizationpolicylabel_authorizationpolicy_binding" "autho
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the authorizationpolicylabel_authorizationpolicy_binding. It has the same value as the `labelname,policyname` attribute.
+* `id` - The id of the authorizationpolicylabel_authorizationpolicy_binding. It is the concatenation of `labelname` and `policyname` attributes separated by a comma.
 
 
 ## Import

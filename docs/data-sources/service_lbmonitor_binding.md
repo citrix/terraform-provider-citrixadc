@@ -35,7 +35,7 @@ output "weight" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the service_lbmonitor_binding. It is a system-generated identifier.
+* `id` - The id of the service_lbmonitor_binding. It is the concatenation of `name` and `monitor_name` attributes separated by comma.
 * `monstate` - The configured state (enable/disable) of the monitor on this server.
 * `passive` - Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached.
 * `weight` - Weight to assign to the monitor-service binding. When a monitor is UP, the weight assigned to its binding with the service determines how much the monitor contributes toward keeping the health of the service above the value configured for the Monitor Threshold parameter.

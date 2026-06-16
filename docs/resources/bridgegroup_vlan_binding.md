@@ -44,5 +44,5 @@ In addition to the arguments, the following attributes are available:
 A bridgegroup_vlan_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_bridgegroup_vlan_binding.tf_csaction 2,20
+terraform import citrixadc_bridgegroup_vlan_binding.tf_binding 2,20
 ```

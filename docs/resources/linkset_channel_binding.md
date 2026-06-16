@@ -10,19 +10,18 @@ The linkset_channel_binding resource is used to create linkset_channel_binding.
 ## Example usage
 
 ```hcl
-esource "citrixadc_linkset_channel_binding" "tf_linkset_channel_binding" {
-	linkset_id = citrixadc_linkset.tf_linkset.linkset_id
-	ifnum      = citrixadc_channel.tf_channel.channel_id
-  }
-  
-  
-  resource "citrixadc_linkset" "tf_linkset"{
-	  linkset_id = "LS/3"
-  }
-  
-  resource "citrixadc_channel" "tf_channel"{
-	  channel_id = "0/LA/2"
-  }
+resource "citrixadc_linkset_channel_binding" "tf_linkset_channel_binding" {
+  linkset_id = citrixadc_linkset.tf_linkset.linkset_id
+  ifnum      = citrixadc_channel.tf_channel.channel_id
+}
+
+resource "citrixadc_linkset" "tf_linkset" {
+  linkset_id = "LS/3"
+}
+
+resource "citrixadc_channel" "tf_channel" {
+  channel_id = "0/LA/2"
+}
 ```
 
 

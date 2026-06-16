@@ -6,7 +6,7 @@ subcategory: "SSL"
 
 The sslcacertgroup_sslcertkey_binding data source allows you to retrieve information about the binding between an SSL CA certificate group and an SSL certificate key.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_sslcacertgroup_sslcertkey_binding" "sslcacertgroup_sslcertkey_binding_demo" {
@@ -34,4 +34,4 @@ In addition to the arguments, the following attributes are available:
 
 * `crlcheck` - The state of the CRL check parameter. (Mandatory/Optional)
 * `ocspcheck` - The state of the OCSP check parameter. (Mandatory/Optional)
-* `id` - The id of the sslcacertgroup_sslcertkey_binding. It is a system-generated identifier.
+* `id` - The id of the sslcacertgroup_sslcertkey_binding. It is the concatenation of the `cacertgroupname` and `certkeyname` attributes separated by a comma.

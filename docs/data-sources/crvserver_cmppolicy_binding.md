@@ -36,7 +36,8 @@ output "priority" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the crvserver_cmppolicy_binding. It is a system-generated identifier.
+* `id` - The id of the crvserver_cmppolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
+* `bindpoint` - The bindpoint to which the policy is bound.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - Invoke flag.
 * `priority` - The priority for the policy.

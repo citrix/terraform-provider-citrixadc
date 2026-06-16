@@ -7,7 +7,7 @@ subcategory: "VPN"
 The vpnvserver_vpnclientlessaccesspolicy_binding data source allows you to retrieve information about the binding between a VPN virtual server and a VPN clientless access policy.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding" "tf_bind" {
@@ -20,7 +20,7 @@ output "priority" {
 }
 
 output "bindpoint" {
-  value = data.citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding.tf_bind.gotopriorityexpression
+  value = data.citrixadc_vpnvserver_vpnclientlessaccesspolicy_binding.tf_bind.bindpoint
 }
 ```
 
@@ -35,7 +35,8 @@ output "bindpoint" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_vpnclientlessaccesspolicy_binding. It is the concatenation of `name` and `policy` attributes separated by comma.
+* `id` - The id of the vpnvserver_vpnclientlessaccesspolicy_binding. It is the concatenation of the `name` and `policy` attributes separated by a comma.
+* `bindpoint` - Bindpoint to which the policy is bound.
 * `gotopriorityexpression` - Next priority expression.
 * `groupextraction` - Binds the authentication policy to a tertiary chain which will be used only for group extraction. The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.
 * `priority` - Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.

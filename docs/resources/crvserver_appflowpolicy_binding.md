@@ -11,18 +11,22 @@ The crvserver_appflowpolicy_binding resource is used to create CRvserver Appflow
 
 ```hcl
 resource "citrixadc_crvserver" "crvserver" {
-    name = "my_vserver"
-    servicetype = "HTTP"
-    arp = "OFF"
+  name        = "my_vserver"
+  servicetype = "HTTP"
+  arp         = "OFF"
 }
+
+resource "citrixadc_appflowpolicy" "demo_appflowpolicy" {
+  name       = "demo_appflowpolicy"
+  rule       = "true"
+  action     = "AF_ACTION_DEFAULT"
+}
+
 resource "citrixadc_crvserver_appflowpolicy_binding" "crvserver_appflowpolicy_binding" {
-	name = citrixadc_crvserver.crvserver.name
-	policyname = "tf_appflowpolicy"
-	gotopriorityexpression = "END"
-    labelname = citrixadc_crvserver.crvserver.name
-	invoke = true
-	labeltype = "reqvserver"
-	priority = 1
+  name                   = citrixadc_crvserver.crvserver.name
+  policyname             = citrixadc_appflowpolicy.demo_appflowpolicy.name
+  priority               = 1
+  gotopriorityexpression = "END"
 }
 ```
 
@@ -35,7 +39,7 @@ resource "citrixadc_crvserver_appflowpolicy_binding" "crvserver_appflowpolicy_bi
 * `invoke` - (Optional) Invoke flag.
 * `labelname` - (Optional) Name of the label invoked.
 * `labeltype` - (Optional) The invocation type.
-* `policyname` - (Optional) Policies bound to this vserver.
+* `policyname` - (Required) Policies bound to this vserver.
 * `priority` - (Optional) The priority for the policy.
 * `targetvserver` - (Optional) Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.
 
@@ -44,13 +48,13 @@ resource "citrixadc_crvserver_appflowpolicy_binding" "crvserver_appflowpolicy_bi
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the crvserver_appflowpolicy_binding. It has the same value as the `name` attribute.
+* `id` - The id of the crvserver_appflowpolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
 
 
 ## Import
 
-A crvserver_appflowpolicy_binding can be imported using its name, e.g.
+A crvserver_appflowpolicy_binding can be imported using the concatenation of the `name` and `policyname` attributes separated by a comma, e.g.
 
 ```shell
-terraform import citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding my_vserver,tf_appflowpolicy
+terraform import citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding my_vserver,demo_appflowpolicy
 ```

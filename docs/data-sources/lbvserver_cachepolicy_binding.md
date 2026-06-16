@@ -9,18 +9,18 @@ The lbvserver_cachepolicy_binding data source allows you to retrieve information
 ## Example Usage
 
 ```terraform
-data "citrixadc_lbvserver_cachepolicy_binding" "tf_citrixadc_lbvserver_cachepolicy_binding" {
+data "citrixadc_lbvserver_cachepolicy_binding" "tf_bind" {
   name       = "tf_lbvserver"
   policyname = "tf_cachepolicy"
   bindpoint  = "REQUEST"
 }
 
 output "gotopriorityexpression" {
-  value = data.citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding.gotopriorityexpression
+  value = data.citrixadc_lbvserver_cachepolicy_binding.tf_bind.gotopriorityexpression
 }
 
 output "labeltype" {
-  value = data.citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding.labeltype
+  value = data.citrixadc_lbvserver_cachepolicy_binding.tf_bind.labeltype
 }
 ```
 

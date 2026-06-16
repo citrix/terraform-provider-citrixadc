@@ -36,7 +36,7 @@ resource "citrixadc_nstrafficdomain_vlan_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the nstrafficdomain_vlan_binding. It is the concatenation of `td` and `vlan` separated by comma ",".
+* `id` - The id of the nstrafficdomain_vlan_binding. It is the concatenation of `td` and `vlan` attributes separated by comma.
 
 
 ## Import

@@ -34,4 +34,4 @@ output "binding_netmask" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the binding.
+* `id` - The id of the hanode_routemonitor_binding. It is the concatenation of `hanode_id` and `routemonitor` attributes separated by a comma.

@@ -31,7 +31,7 @@ output "ownergroup" {
 
 * `name` - (Required) Name of the RNAT6 rule to which to bind NAT IPs.
 * `natip6` - (Required) Nat IP Address.
-* `ownergroup` - (Optional) The owner node group in a Cluster for this rnat rule.
+* `ownergroup` - (Optional) The owner node group in a Cluster for this rnat rule. Defaults to `"DEFAULT_NG"`.
 
 ## Attribute Reference
 

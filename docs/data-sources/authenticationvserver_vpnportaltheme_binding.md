@@ -32,4 +32,4 @@ output "portaltheme" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the authenticationvserver_vpnportaltheme_binding. It is a system-generated identifier.
+* `id` - The id of the authenticationvserver_vpnportaltheme_binding. It is the concatenation of `name` and `portaltheme` attributes separated by a comma.

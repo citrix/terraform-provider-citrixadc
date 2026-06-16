@@ -11,7 +11,7 @@ The ipset_nsip_binding resource is used to create ipset_nsip_binding.
 
 ```hcl
 resource "citrixadc_ipset_nsip_binding" "tf_ipset_nsip_binding" {
-  name    = citrixadc_ipset.tf_ipset.name
+  name      = citrixadc_ipset.tf_ipset.name
   ipaddress = citrixadc_nsip.tf_nsip.ipaddress
 }
 ```
@@ -19,15 +19,15 @@ resource "citrixadc_ipset_nsip_binding" "tf_ipset_nsip_binding" {
 
 ## Argument Reference
 
-* `ipaddress` - (Required) One or more IP addresses bound to the IP set. Minimum length =  1
-* `name` - (Required) Name of the IP set to which to bind IP addresses. Minimum length =  1
+* `ipaddress` - (Required) One or more IP addresses bound to the IP set.
+* `name` - (Required) Name of the IP set to which to bind IP addresses.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the ipset_nsip_binding. It has the same value as the `name`and `ipaddress` attributes separated by a comma.
+* `id` - The id of the ipset_nsip_binding. It is the concatenation of the `name` and `ipaddress` attributes separated by a comma.
 
 
 ## Import

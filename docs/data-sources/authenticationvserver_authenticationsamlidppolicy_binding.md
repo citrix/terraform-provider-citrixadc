@@ -32,9 +32,10 @@ output "secondary" {
 
 In addition to the arguments, the following attributes are available:
 
+* `bindpoint` - Bind point to which to bind the policy.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `groupextraction` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor
 * `nextfactor` - On success invoke label.
 * `priority` - The priority, if any, of the vpn vserver policy.
 * `secondary` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor
-* `id` - The id of the authenticationvserver_authenticationsamlidppolicy_binding. It is a system-generated identifier.
+* `id` - The id of the authenticationvserver_authenticationsamlidppolicy_binding. It is the concatenation of `name` and `policy` attributes separated by a comma.

@@ -24,9 +24,9 @@ resource "citrixadc_lbmetrictable_metric_binding" "tf_bind" {
 
 ## Argument Reference
 
-* `metric` - (Required) Name of the metric for which to change the SNMP OID. Minimum length =  1
-* `Snmpoid` - (Required) New SNMP OID of the metric. Minimum length =  1
-* `metrictable` - (Required) Name of the metric table. Minimum length =  1 Maximum length =  31
+* `metric` - (Required) Name of the metric for which to change the SNMP OID.
+* `metrictable` - (Required) Name of the metric table.
+* `snmpoid` - (Required) New SNMP OID of the metric.
 
 
 ## Attribute Reference

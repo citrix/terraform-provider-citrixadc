@@ -35,7 +35,7 @@ resource "citrixadc_systemgroup_systemuser_binding" "tf_bind" {
 ## Argument Reference
 
 * `username` - (Required) The system user.
-* `groupname` - (Required) Name of the system group. Minimum length =  1
+* `groupname` - (Required) Name of the system group.
 
 
 ## Attribute Reference

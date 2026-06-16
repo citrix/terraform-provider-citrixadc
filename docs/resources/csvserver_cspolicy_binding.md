@@ -40,15 +40,15 @@ resource "citrixadc_csvserver_cspolicy_binding" "tf_csvscspolbind" {
 
 ## Argument Reference
 
-* `policyname` - (Optional) Policies bound to this vserver.
-* `targetlbvserver` - (Optional) target vserver name.
+* `name` - (Required) Name of the content switching virtual server to which the content switching policy applies.
+* `policyname` - (Required) Policies bound to this vserver.
+* `targetlbvserver` - (Optional) Target vserver name.
 * `priority` - (Optional) Priority for the policy.
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `bindpoint` - (Optional) The bindpoint to which the policy is bound. Possible values: [ REQUEST, RESPONSE, ICA_REQUEST, OTHERTCP_REQUEST ]
 * `invoke` - (Optional) Invoke flag.
 * `labeltype` - (Optional) The invocation type. Possible values: [ reqvserver, resvserver, policylabel ]
 * `labelname` - (Optional) Name of the label invoked.
-* `name` - (Optional) Name of the content switching virtual server to which the content switching policy applies.
 
 
 ## Attribute Reference

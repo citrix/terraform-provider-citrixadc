@@ -6,7 +6,7 @@ subcategory: "Cluster"
 
 This data source retrieves information about a specific cluster node to route monitor binding. Route monitors help track network routes associated with cluster nodes for high availability and routing decisions.
 
-## Example Usage
+## Example usage
 
 ```hcl
 data "citrixadc_clusternode_routemonitor_binding" "tf_clusternode_routemonitor_binding" {
@@ -26,4 +26,4 @@ data "citrixadc_clusternode_routemonitor_binding" "tf_clusternode_routemonitor_b
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the binding. It is the concatenation of `nodeid`, `routemonitor`, and `netmask` attributes separated by comma.
+* `id` - The id of the binding. It is the concatenation of the `nodeid` and `routemonitor` attributes separated by a comma.
