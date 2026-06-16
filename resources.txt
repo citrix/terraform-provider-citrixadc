@@ -1,2 +1,0 @@
-vpnglobal_vpntrafficpolicy_binding
-systemglobal_authenticationtacacspolicy_binding
