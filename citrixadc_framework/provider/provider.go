@@ -1373,6 +1373,8 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		vxlan_srcip_binding.NewVxlanSrcipBindingResource,
 		vxlanvlanmap_vxlan_binding.NewVxlanvlanmapVxlanBindingResource,
 		vlan_channel_binding.NewVlanChannelBindingResource,
+		systemglobal_authenticationtacacspolicy_binding.NewSystemglobalAuthenticationtacacspolicyBindingResource,
+		vpnglobal_vpntrafficpolicy_binding.NewVpnglobalVpntrafficpolicyBindingResource,
 	}
 }
 

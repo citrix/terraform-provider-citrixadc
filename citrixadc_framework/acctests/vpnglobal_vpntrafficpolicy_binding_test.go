@@ -38,7 +38,7 @@ const testAccVpnglobal_vpntrafficpolicy_binding_basic = `
 		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
 		action = citrixadc_vpntrafficaction.foo.name
 	}
-	resource "citrixadc_vpngobal_vpntrafficpolicy_binding" "tf_bind" {
+	resource "citrixadc_vpnglobal_vpntrafficpolicy_binding" "tf_bind" {
 		policyname = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
 		priority   = 20
 	}
@@ -69,15 +69,15 @@ func TestAccVpnglobal_vpntrafficpolicy_binding_basic(t *testing.T) {
 			{
 				Config: testAccVpnglobal_vpntrafficpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnglobal_vpntrafficpolicy_bindingExist("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", nil),
-					resource.TestCheckResourceAttr("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", "policyname", "tf_vpntrafficpolicy"),
-					resource.TestCheckResourceAttr("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", "priority", "20"),
+					testAccCheckVpnglobal_vpntrafficpolicy_bindingExist("citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", "policyname", "tf_vpntrafficpolicy"),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", "priority", "20"),
 				),
 			},
 			{
 				Config: testAccVpnglobal_vpntrafficpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnglobal_vpntrafficpolicy_bindingNotExist("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", "policyname"),
+					testAccCheckVpnglobal_vpntrafficpolicy_bindingNotExist("citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", "policyname"),
 				),
 			},
 		},
@@ -217,14 +217,14 @@ const testAccVpnglobal_vpntrafficpolicy_bindingDataSource_basic = `
 		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
 		action = citrixadc_vpntrafficaction.foo.name
 	}
-	resource "citrixadc_vpngobal_vpntrafficpolicy_binding" "tf_bind" {
+	resource "citrixadc_vpnglobal_vpntrafficpolicy_binding" "tf_bind" {
 		policyname = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
 		priority   = 20
 	}
 
 	data "citrixadc_vpnglobal_vpntrafficpolicy_binding" "tf_bind" {
-		policyname = citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind.policyname
-		depends_on = [citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind]
+		policyname = citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind.policyname
+		depends_on = [citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind]
 	}
 `
 
