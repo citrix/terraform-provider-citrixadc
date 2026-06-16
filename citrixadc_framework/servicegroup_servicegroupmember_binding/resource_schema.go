@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -21,6 +23,7 @@ import (
 // ServicegroupServicegroupmemberBindingResourceModel describes the resource data model.
 type ServicegroupServicegroupmemberBindingResourceModel struct {
 	Id               types.String `tfsdk:"id"`
+	DisableRead      types.Bool   `tfsdk:"disable_read"`
 	Customserverid   types.String `tfsdk:"customserverid"`
 	Dbsttl           types.Int64  `tfsdk:"dbsttl"`
 	Hashid           types.Int64  `tfsdk:"hashid"`
@@ -42,6 +45,20 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the servicegroup_servicegroupmember_binding resource.",
+			},
+			"disable_read": schema.BoolAttribute{
+				// Synthetic, non-NITRO convenience flag preserved from the SDK v2
+				// resource for backward compatibility. When true, the provider skips
+				// reading this binding back from the ADC during refresh (some bindings
+				// cannot be reliably read). It is never sent in any NITRO payload.
+				// Mirrors SDK v2: Optional + Default(false) + ForceNew.
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Skip reading the resource attributes from the NetScaler during refresh. Useful for bindings that cannot be reliably read back.",
 			},
 			"customserverid": schema.StringAttribute{
 				Optional: true,
@@ -95,8 +112,14 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Description: "Order number to be assigned to the servicegroup member",
 			},
 			"port": schema.Int64Attribute{
+				// "port" is NOT Computed: the NITRO GET response only echoes "port"
+				// for ip/port-based members, never for servername-only members. With
+				// Computed set, a config that omits port (servername binding) leaves
+				// the value unknown after apply ("still indicated an unknown value",
+				// Pattern 13). Dropping Computed makes the configured value (or null)
+				// authoritative; SetAttrFromGet still adopts the echoed value when
+				// present, which matches the configured port for ip/port members.
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -334,6 +357,10 @@ func servicegroup_servicegroupmember_bindingSetAttrFromGetForDatasource(ctx cont
 	} else {
 		data.Weight = types.Int64Null()
 	}
+
+	// disable_read is a resource-only convenience flag with no datasource meaning;
+	// give it a known value so the shared model is fully populated.
+	data.DisableRead = types.BoolValue(false)
 
 	// Set ID for the datasource (no Create to set it).
 	idParts := []string{}

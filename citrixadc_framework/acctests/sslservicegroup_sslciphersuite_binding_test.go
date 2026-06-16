@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -82,7 +83,9 @@ resource "citrixadc_gslbsite" "site_local" {
 `
 
 func TestAccSslservicegroup_sslciphersuite_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -131,10 +134,12 @@ func testAccCheckSslservicegroup_sslciphersuite_bindingExist(n string, id *strin
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		servicegroupname := idSlice[0]
-		ciphername := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "ciphername"}, nil)
+		if err != nil {
+			return err
+		}
+		servicegroupname := idMap["servicegroupname"]
+		ciphername := idMap["ciphername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservicegroup_sslciphersuite_binding",
@@ -176,10 +181,12 @@ func testAccCheckSslservicegroup_sslciphersuite_bindingNotExist(n string, id str
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		servicegroupname := idSlice[0]
-		ciphername := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"servicegroupname", "ciphername"}, nil)
+		if err != nil {
+			return err
+		}
+		servicegroupname := idMap["servicegroupname"]
+		ciphername := idMap["ciphername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservicegroup_sslciphersuite_binding",
@@ -226,7 +233,13 @@ func testAccCheckSslservicegroup_sslciphersuite_bindingDestroy(s *terraform.Stat
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Sslservicegroup_sslciphersuite_binding.Type(), rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"servicegroupname", "ciphername"}, nil)
+		if err != nil {
+			return err
+		}
+		servicegroupname := idMap["servicegroupname"]
+
+		_, err = client.FindResource(service.Sslservicegroup_sslciphersuite_binding.Type(), servicegroupname)
 		if err == nil {
 			return fmt.Errorf("sslservicegroup_sslciphersuite_binding %s still exists", rs.Primary.ID)
 		}
@@ -274,7 +287,9 @@ data "citrixadc_sslservicegroup_sslciphersuite_binding" "tf_sslservicegroup_sslc
 `
 
 func TestAccSslservicegroup_sslciphersuite_bindingDataSource_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

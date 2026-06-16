@@ -21,25 +21,37 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLsnappsprofile_port_binding_basic = `
 
-resource "citrixadc_lsnappsprofile_port_binding" "tf_lsnappsprofile_port_binding" {
-	appsprofilename = "my_lsn_profile"
-	lsnport         = "80"
+	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
+		appsprofilename   = "my_lsn_appsprofile"
+		transportprotocol = "TCP"
+		mapping           = "ENDPOINT-INDEPENDENT"
 	}
+
+resource "citrixadc_lsnappsprofile_port_binding" "tf_lsnappsprofile_port_binding" {
+	appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+	lsnport         = "80"
+}
   
 `
 
 const testAccLsnappsprofile_port_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
+		appsprofilename   = "my_lsn_appsprofile"
+		transportprotocol = "TCP"
+		mapping           = "ENDPOINT-INDEPENDENT"
+	}
+
+
 `
 
 func TestAccLsnappsprofile_port_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -59,6 +71,39 @@ func TestAccLsnappsprofile_port_binding_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// getLsnappsprofilePortBindingsForTest reads lsnappsprofile_port_binding members via
+// the aggregate lsnappsprofile_binding endpoint (this ADC firmware has no direct GET
+// for lsnappsprofile_port_binding) and returns the nested member array. Mirrors the
+// resource's getLsnappsprofilePortBindings helper.
+func getLsnappsprofilePortBindingsForTest(client *service.NitroClient, appsprofilename string) ([]map[string]interface{}, error) {
+	findParams := service.FindParams{
+		ResourceType:             "lsnappsprofile_binding",
+		ResourceName:             appsprofilename,
+		ResourceMissingErrorCode: 258,
+	}
+	aggArr, err := client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]map[string]interface{}, 0)
+	for _, agg := range aggArr {
+		nested, ok := agg["lsnappsprofile_port_binding"]
+		if !ok || nested == nil {
+			continue
+		}
+		nestedArr, ok := nested.([]interface{})
+		if !ok {
+			continue
+		}
+		for _, nn := range nestedArr {
+			if m, ok := nn.(map[string]interface{}); ok {
+				result = append(result, m)
+			}
+		}
+	}
+	return result, nil
 }
 
 func testAccCheckLsnappsprofile_port_bindingExist(n string, id *string) resource.TestCheckFunc {
@@ -88,17 +133,16 @@ func testAccCheckLsnappsprofile_port_bindingExist(n string, id *string) resource
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		appsprofilename := idSlice[0]
-		lsnport := idSlice[1]
-
-		findParams := service.FindParams{
-			ResourceType:             "lsnappsprofile_port_binding",
-			ResourceName:             appsprofilename,
-			ResourceMissingErrorCode: 258,
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"appsprofilename", "lsnport"}, nil)
+		if err != nil {
+			return err
 		}
-		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		appsprofilename := idMap["appsprofilename"]
+		lsnport := idMap["lsnport"]
+
+		// No direct GET for lsnappsprofile_port_binding on this firmware; read via the
+		// aggregate lsnappsprofile_binding endpoint (mirrors the resource getter).
+		dataArr, err := getLsnappsprofilePortBindingsForTest(client, appsprofilename)
 
 		// Unexpected error
 		if err != nil {
@@ -108,7 +152,7 @@ func testAccCheckLsnappsprofile_port_bindingExist(n string, id *string) resource
 		// Iterate through results to find the one with the matching lsnport
 		found := false
 		for _, v := range dataArr {
-			if v["lsnport"].(string) == lsnport {
+			if portVal, ok := v["lsnport"].(string); ok && portVal == lsnport {
 				found = true
 				break
 			}
@@ -133,17 +177,16 @@ func testAccCheckLsnappsprofile_port_bindingNotExist(n string, id string) resour
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		appsprofilename := idSlice[0]
-		lsnport := idSlice[1]
-
-		findParams := service.FindParams{
-			ResourceType:             "lsnappsprofile_port_binding",
-			ResourceName:             appsprofilename,
-			ResourceMissingErrorCode: 258,
+		idMap, _, err := utils.ParseIdString(id, []string{"appsprofilename", "lsnport"}, nil)
+		if err != nil {
+			return err
 		}
-		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		appsprofilename := idMap["appsprofilename"]
+		lsnport := idMap["lsnport"]
+
+		// No direct GET for lsnappsprofile_port_binding on this firmware; read via the
+		// aggregate lsnappsprofile_binding endpoint (mirrors the resource getter).
+		dataArr, err := getLsnappsprofilePortBindingsForTest(client, appsprofilename)
 
 		// Unexpected error
 		if err != nil {
@@ -153,7 +196,7 @@ func testAccCheckLsnappsprofile_port_bindingNotExist(n string, id string) resour
 		// Iterate through results to hopefully not find the one with the matching lsnport
 		found := false
 		for _, v := range dataArr {
-			if v["lsnport"].(string) == lsnport {
+			if portVal, ok := v["lsnport"].(string); ok && portVal == lsnport {
 				found = true
 				break
 			}
@@ -183,9 +226,23 @@ func testAccCheckLsnappsprofile_port_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource("lsnappsprofile_port_binding", rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("lsnappsprofile_port_binding %s still exists", rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"appsprofilename", "lsnport"}, nil)
+		if err != nil {
+			return err
+		}
+		appsprofilename := idMap["appsprofilename"]
+		lsnport := idMap["lsnport"]
+
+		// No direct GET for lsnappsprofile_port_binding; query the aggregate endpoint.
+		// If the parent appsprofile is gone the query errors -> the binding is destroyed.
+		dataArr, err := getLsnappsprofilePortBindingsForTest(client, appsprofilename)
+		if err != nil {
+			continue
+		}
+		for _, v := range dataArr {
+			if portVal, ok := v["lsnport"].(string); ok && portVal == lsnport {
+				return fmt.Errorf("lsnappsprofile_port_binding %s still exists", rs.Primary.ID)
+			}
 		}
 
 	}

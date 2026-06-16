@@ -155,7 +155,6 @@ resource "citrixadc_server" "tf_server" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_server_no_port(t *testing.T) {
-	t.Skip("TODO: Read error")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -275,7 +274,6 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_mixed_bindings(t *testing.T) {
-	t.Skip("TODO:")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -358,7 +356,10 @@ func testAccCheckServicegroup_servicegroupmember_bindingExist(n string, id *stri
 		foundIndex := -1
 		for i, v := range dataArr {
 			if port != 0 {
-				portEqual := int(v["port"].(float64)) == port
+				portEqual := false
+				if pv, ok := v["port"].(float64); ok {
+					portEqual = int(pv) == port
+				}
 				servernameEqual := v["servername"] == servername
 				if servernameEqual && portEqual {
 					foundIndex = i
@@ -418,7 +419,10 @@ func testAccCheckServicegroup_servicegroupmember_binding_not_exists(bindingId st
 		foundIndex := -1
 		for i, v := range dataArr {
 			if port != 0 {
-				portEqual := int(v["port"].(float64)) == port
+				portEqual := false
+				if pv, ok := v["port"].(float64); ok {
+					portEqual = int(pv) == port
+				}
 				servernameEqual := v["servername"] == servername
 				if servernameEqual && portEqual {
 					foundIndex = i

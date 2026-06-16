@@ -10,6 +10,10 @@ func ServicegroupServicegroupmemberBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"disable_read": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Skip reading the resource attributes from the NetScaler during refresh (resource-only flag; always reported false for the data source).",
+			},
 			"customserverid": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

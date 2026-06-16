@@ -87,8 +87,14 @@ func (r *ServicegroupServicegroupmemberBindingResource) Create(ctx context.Conte
 	}
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
-	// Read the updated state back
-	r.readServicegroupServicegroupmemberBindingFromApi(ctx, &data, &resp.Diagnostics)
+	// Read the updated state back, unless disable_read is set (mirrors SDK v2,
+	// which skips the read when disable_read is true). When skipping, resolve any
+	// unknown Computed attributes to null so all values are known after apply.
+	if data.DisableRead.ValueBool() {
+		servicegroup_servicegroupmember_bindingResolveUnknownComputed(&data)
+	} else {
+		r.readServicegroupServicegroupmemberBindingFromApi(ctx, &data, &resp.Diagnostics)
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -105,6 +111,14 @@ func (r *ServicegroupServicegroupmemberBindingResource) Read(ctx context.Context
 	}
 
 	tflog.Debug(ctx, "Reading servicegroup_servicegroupmember_binding resource")
+
+	// disable_read (synthetic SDK v2 flag): when true, skip querying the ADC and
+	// preserve the prior state unchanged (mirrors SDK v2's early return in Read).
+	if data.DisableRead.ValueBool() {
+		tflog.Debug(ctx, "disable_read is true; skipping API read and preserving prior state")
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+		return
+	}
 
 	r.readServicegroupServicegroupmemberBindingFromApi(ctx, &data, &resp.Diagnostics)
 
@@ -148,8 +162,14 @@ func (r *ServicegroupServicegroupmemberBindingResource) Update(ctx context.Conte
 		tflog.Debug(ctx, "No changes detected for servicegroup_servicegroupmember_binding resource, skipping update")
 	}
 
-	// Read the updated state back
-	r.readServicegroupServicegroupmemberBindingFromApi(ctx, &data, &resp.Diagnostics)
+	// Read the updated state back, unless disable_read is set (mirrors SDK v2,
+	// which skips the read when disable_read is true). When skipping, resolve any
+	// unknown Computed attributes to null so all values are known after apply.
+	if data.DisableRead.ValueBool() {
+		servicegroup_servicegroupmember_bindingResolveUnknownComputed(&data)
+	} else {
+		r.readServicegroupServicegroupmemberBindingFromApi(ctx, &data, &resp.Diagnostics)
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -279,4 +299,43 @@ func (r *ServicegroupServicegroupmemberBindingResource) readServicegroupServiceg
 	}
 
 	servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+}
+
+// servicegroup_servicegroupmember_bindingResolveUnknownComputed sets any unknown
+// Computed attribute to null. Used on the disable_read path where we skip the API
+// read but Terraform still requires every value to be known after apply.
+func servicegroup_servicegroupmember_bindingResolveUnknownComputed(data *ServicegroupServicegroupmemberBindingResourceModel) {
+	if data.Customserverid.IsUnknown() {
+		data.Customserverid = types.StringNull()
+	}
+	if data.Dbsttl.IsUnknown() {
+		data.Dbsttl = types.Int64Null()
+	}
+	if data.Hashid.IsUnknown() {
+		data.Hashid = types.Int64Null()
+	}
+	if data.Ip.IsUnknown() {
+		data.Ip = types.StringNull()
+	}
+	if data.Nameserver.IsUnknown() {
+		data.Nameserver = types.StringNull()
+	}
+	if data.Order.IsUnknown() {
+		data.Order = types.Int64Null()
+	}
+	if data.Port.IsUnknown() {
+		data.Port = types.Int64Null()
+	}
+	if data.Serverid.IsUnknown() {
+		data.Serverid = types.Int64Null()
+	}
+	if data.Servername.IsUnknown() {
+		data.Servername = types.StringNull()
+	}
+	if data.State.IsUnknown() {
+		data.State = types.StringNull()
+	}
+	if data.Weight.IsUnknown() {
+		data.Weight = types.Int64Null()
+	}
 }

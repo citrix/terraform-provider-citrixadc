@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -28,8 +28,8 @@ import (
 const testAccSslcertkey_sslocspresponder_binding_basic = `
 	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 		certkey            = "tf_sslcertkey"
-		cert               = "/nsconfig/ssl/certificate1.crt"
-		key                = "/nsconfig/ssl/key1.pem"
+		cert               = "/nsconfig/ssl/rootcert2.cert"
+		key                = "/nsconfig/ssl/rootcert2.key"
 		notificationperiod = 40
 		expirymonitor      = "ENABLED"
 	}
@@ -48,8 +48,8 @@ const testAccSslcertkey_sslocspresponder_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 		certkey            = "tf_sslcertkey"
-		cert               = "/nsconfig/ssl/certificate1.crt"
-		key                = "/nsconfig/ssl/key1.pem"
+		cert               = "/nsconfig/ssl/rootcert2.cert"
+		key                = "/nsconfig/ssl/rootcert2.key"
 		notificationperiod = 40
 		expirymonitor      = "ENABLED"
 	}
@@ -60,9 +60,8 @@ const testAccSslcertkey_sslocspresponder_binding_basic_step2 = `
 `
 
 func TestAccSslcertkey_sslocspresponder_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslcertkey_sslocspresponder_bindingDestroy,
 		Steps: []resource.TestStep{
@@ -109,10 +108,13 @@ func testAccCheckSslcertkey_sslocspresponder_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"certkey", "ocspresponder"}, nil)
+		if err != nil {
+			return err
+		}
 
-		certkey := idSlice[0]
-		ocspresponder := idSlice[1]
+		certkey := idMap["certkey"]
+		ocspresponder := idMap["ocspresponder"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslcertkey_sslocspresponder_binding",
@@ -151,13 +153,13 @@ func testAccCheckSslcertkey_sslocspresponder_bindingNotExist(n string, id string
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"certkey", "ocspresponder"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
 
-		certkey := idSlice[0]
-		ocspresponder := idSlice[1]
+		certkey := idMap["certkey"]
+		ocspresponder := idMap["ocspresponder"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslcertkey_sslocspresponder_binding",
@@ -191,8 +193,8 @@ func testAccCheckSslcertkey_sslocspresponder_bindingNotExist(n string, id string
 const testAccSslcertkey_sslocspresponder_bindingDataSource_basic = `
 	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 		certkey = "tf_sslcertkey"
-		cert    = "/nsconfig/ssl/ns-root.cert"
-		key     = "/nsconfig/ssl/ns-root.key"
+		cert    = "/nsconfig/ssl/rootcert2.cert"
+		key     = "/nsconfig/ssl/rootcert2.key"
 	}
 	resource "citrixadc_sslocspresponder" "tf_sslocspresponder" {
 		name = "tf_sslocspresponder"
@@ -227,7 +229,13 @@ func testAccCheckSslcertkey_sslocspresponder_bindingDestroy(s *terraform.State) 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Sslcertkey_sslocspresponder_binding.Type(), rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"certkey", "ocspresponder"}, nil)
+		if err != nil {
+			return err
+		}
+		certkey := idMap["certkey"]
+
+		_, err = client.FindResource(service.Sslcertkey_sslocspresponder_binding.Type(), certkey)
 		if err == nil {
 			return fmt.Errorf("sslcertkey_sslocspresponder_binding %s still exists", rs.Primary.ID)
 		}
@@ -238,9 +246,8 @@ func testAccCheckSslcertkey_sslocspresponder_bindingDestroy(s *terraform.State) 
 }
 
 func TestAccSslcertkey_sslocspresponder_bindingDataSource_basic(t *testing.T) {
-	t.Skip("TODO: Datasource filtering by 'ca' attribute needs investigation - binding resource created but datasource cannot find it")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
