@@ -534,15 +534,22 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/netprofile_srcportset_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsacl"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsacl6"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsacls6"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsappflowcollector"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsappflowparam"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsaptlicense"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsassignment"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nscapacity"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nscentralmanagementserver"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nschannelparam"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsconfig"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsconsoleloginprompt"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nscqaparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsdhcpparams"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsdiameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsencryptionkey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsencryptionparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsextension"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsfeature"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nshmackey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nshostname"
@@ -551,12 +558,17 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsicapprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsip"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsip6"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nskeymanagerproxy"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslaslicense"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslaslicense_offline"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslicense"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslicenseparameters"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslicenseproxyserver"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslicenseserver"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslimitidentifier"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslimitselector"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nslimitsessions"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsmgmtparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsmode"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nspartition"
@@ -573,11 +585,14 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nssimpleacl"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nssimpleacl6"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsspparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nsstats"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nssurgeq"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstcpbufparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstcpparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstcpprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstimeout"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstimer"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstimer_autoscalepolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstrafficdomain"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstrafficdomain_bridgegroup_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/nstrafficdomain_vlan_binding"
@@ -1244,6 +1259,23 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		systemrestorepoint.NewSystemrestorepointResource,
 		systemsession.NewSystemsessionResource,
 		systemsshkey.NewSystemsshkeyResource,
+		nsacls6.NewNsacls6Resource,
+		nsappflowparam.NewNsappflowparamResource,
+		nsaptlicense.NewNsaptlicenseResource,
+		nscentralmanagementserver.NewNscentralmanagementserverResource,
+		nschannelparam.NewNschannelparamResource,
+		nsconfig.NewNsconfigSaveResource,
+		nsconfig.NewNsconfigClearResource,
+		nsconfig.NewNsconfigUpdateResource,
+		nsextension.NewNsextensionResource,
+		nskeymanagerproxy.NewNskeymanagerproxyResource,
+		nslaslicense.NewNslaslicenseResource,
+		nslimitselector.NewNslimitselectorResource,
+		nslimitsessions.NewNslimitsessionsResource,
+		nsmgmtparam.NewNsmgmtparamResource,
+		nsstats.NewNsstatsResource,
+		nssurgeq.NewNssurgeqResource,
+		nstimer_autoscalepolicy_binding.NewNstimerAutoscalepolicyBindingResource,
 	}
 }
 
@@ -2065,6 +2097,16 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		systemrestorepoint.SYstemrestorepointDataSource,
 		systemsession.SYstemsessionDataSource,
 		systemsshkey.SYstemsshkeyDataSource,
+		nsappflowparam.NSappflowparamDataSource,
+		nsaptlicense.NSaptlicenseDataSource,
+		nscentralmanagementserver.NScentralmanagementserverDataSource,
+		nschannelparam.NSchannelparamDataSource,
+		nsconfig.NSconfigDataSource,
+		nsextension.NSextensionDataSource,
+		nskeymanagerproxy.NSkeymanagerproxyDataSource,
+		nslimitselector.NSlimitselectorDataSource,
+		nslimitsessions.NSlimitsessionsDataSource,
+		nsmgmtparam.NSmgmtparamDataSource,
 	}
 }
 

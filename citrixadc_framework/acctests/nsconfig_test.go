@@ -16,54 +16,30 @@ limitations under the License.
 package citrixadc
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const testAccNsconfigClear_basic = `
-	resource "citrixadc_nsconfig_clear" "foo" {
-		force = false
-		level = "full"
-		timestamp = "2024-06-01T12:00:00"
+// nsconfig is a singleton that always exists on the appliance, so the datasource
+// needs no resource dependency.
+const testAccNsconfigDataSource_basic = `
+	data "citrixadc_nsconfig" "tf_nsconfig" {
 	}
 `
 
-func TestAccNsconfigClear_basic(t *testing.T) {
+func TestAccNsconfigDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNsconfigClear_basic,
+				Config: testAccNsconfigDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNsconfigClearExist("citrixadc_nsconfig_clear.foo", nil),
+					resource.TestCheckResourceAttr("data.citrixadc_nsconfig.tf_nsconfig", "id", "nsconfig-config"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsconfig.tf_nsconfig", "ipaddress"),
 				),
 			},
 		},
 	})
-}
-
-func testAccCheckNsconfigClearExist(n string, id *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No NsConfigClear is set")
-		}
-
-		if id != nil {
-			if *id != "" && *id != rs.Primary.ID {
-				return fmt.Errorf("Resource ID has changed!")
-			}
-
-			*id = rs.Primary.ID
-		}
-		return nil
-	}
 }

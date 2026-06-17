@@ -778,7 +778,10 @@ const (
 	Nsaptlicense
 	Nsassignment
 	Nscapacity
+	Nscentralmanagementserver
+	Nschannelparam
 	Nsconfig
+	Nsconfigview
 	Nsconnectiontable
 	Nsconsoleloginprompt
 	Nscqaparam
@@ -800,6 +803,8 @@ const (
 	Nsicapprofile
 	Nsip
 	Nsip6
+	Nskeymanagerproxy
+	Nslaslicense
 	Nslaslicense_offline
 	Nslicense
 	Nslicenseparameters
@@ -810,6 +815,7 @@ const (
 	Nslimitidentifier_nslimitsessions_binding
 	Nslimitselector
 	Nslimitsessions
+	Nsmgmtparam
 	Nsmode
 	Nsparam
 	Nspartition
@@ -2054,7 +2060,10 @@ var resources = []string{
 	"nsaptlicense",
 	"nsassignment",
 	"nscapacity",
+	"nscentralmanagementserver",
+	"nschannelparam",
 	"nsconfig",
+	"nsconfigview",
 	"nsconnectiontable",
 	"nsconsoleloginprompt",
 	"nscqaparam",
@@ -2076,6 +2085,8 @@ var resources = []string{
 	"nsicapprofile",
 	"nsip",
 	"nsip6",
+	"nskeymanagerproxy",
+	"nslaslicense",
 	"nslaslicense_offline",
 	"nslicense",
 	"nslicenseparameters",
@@ -2086,6 +2097,7 @@ var resources = []string{
 	"nslimitidentifier_nslimitsessions_binding",
 	"nslimitselector",
 	"nslimitsessions",
+	"nsmgmtparam",
 	"nsmode",
 	"nsparam",
 	"nspartition",

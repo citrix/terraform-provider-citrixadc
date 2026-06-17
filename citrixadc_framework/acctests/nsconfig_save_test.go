@@ -166,7 +166,11 @@ func testAccSaveRaceSetup(t *testing.T) {
 		nsconfig := ns.Nsconfig{}
 		err := client.ActOnResource("nsconfig", &nsconfig, "save")
 		if err != nil {
-			t.Fatalf("do_save error: %s", err.Error())
+			// This save runs in a separate goroutine to deliberately race with the
+			// resource-driven save (to provoke NITRO errorcode 293). Calling
+			// t.Fatalf here is unsafe (it would Goexit the wrong goroutine), so log
+			// the error instead; the test resource validates the actual outcome.
+			t.Logf("do_save error: %s", err.Error())
 		}
 		t.Log("end of save")
 	}
