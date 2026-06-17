@@ -24,7 +24,7 @@ type CmppolicylabelCmppolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
-	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+	InvokeLabelname        types.String `tfsdk:"invokelabelname"`
 	Labelname              types.String `tfsdk:"labelname"`
 	Labeltype              types.String `tfsdk:"labeltype"`
 	Policyname             types.String `tfsdk:"policyname"`
@@ -55,7 +55,7 @@ func (r *CmppolicylabelCmppolicyBindingResource) Schema(ctx context.Context, req
 				},
 				Description: "Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next higher priority number in the original label.",
 			},
-			"invoke_labelname": schema.StringAttribute{
+			"invokelabelname": schema.StringAttribute{
 				// NITRO GET does not echo this field back, so it cannot be Computed
 				// (would stay unknown after apply). Pure user input -> Optional only.
 				Optional: true,
@@ -130,7 +130,7 @@ func cmppolicylabel_cmppolicy_bindingGetThePayloadFromthePlan(ctx context.Contex
 
 // cmppolicylabel_cmppolicy_bindingSetAttrFromGet updates the resource state from the
 // GET response. The NITRO GET for this binding does NOT echo back labeltype or
-// invoke_labelname, so those (Optional+Computed) fields are preserved from the prior
+// invokelabelname, so those (Optional+Computed) fields are preserved from the prior
 // plan/state instead of being nulled (Pattern 7) to avoid "inconsistent result after
 // apply". Fields that ARE returned by GET (gotopriorityexpression, invoke, priority,
 // labelname, policyname) are set from the response.
@@ -148,7 +148,7 @@ func cmppolicylabel_cmppolicy_bindingSetAttrFromGet(ctx context.Context, data *C
 	} else {
 		data.Invoke = types.BoolNull()
 	}
-	// invoke_labelname is not echoed back by the NITRO GET response; preserve the
+	// invokelabelname is not echoed back by the NITRO GET response; preserve the
 	// existing plan/state value (Pattern 7) instead of nulling it.
 	if val, ok := getResponseData["invoke_labelname"]; ok && val != nil {
 		data.InvokeLabelname = types.StringValue(val.(string))

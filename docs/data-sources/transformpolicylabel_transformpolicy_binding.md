@@ -38,7 +38,7 @@ In addition to the arguments, the following attributes are available:
 
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
-* `invoke_labelname` - Name of the policy label.
+* `invokelabelname` - Name of the policy label.
 * `labeltype` - Type of invocation. Available settings function as follows:
   * reqvserver - Forward the request to the specified request virtual server.
   * policylabel - Invoke the specified policy label.

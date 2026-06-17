@@ -119,7 +119,7 @@ func (r *GslbvserverDomainBindingResource) Update(ctx context.Context, req resou
 	tflog.Debug(ctx, "Updating gslbvserver_domain_binding resource")
 
 	// Check if there are any changes in the in-place-updateable attributes.
-	// backupip / cookie_domain / backupipflag / cookie_domainflag / domainname / order are
+	// backupip / cookiedomain / backupipflag / cookiedomainflag / domainname / order are
 	// all RequiresReplace, so they never reach Update.
 	hasChange := false
 	if !data.Cookietimeout.Equal(state.Cookietimeout) {
@@ -245,7 +245,7 @@ func (r *GslbvserverDomainBindingResource) readGslbvserverDomainBindingFromApi(c
 	}
 
 	// Iterate through results to find the one matching domainname (the per-record unique key
-	// under the parent name; backupipflag/cookie_domainflag are not real keys).
+	// under the parent name; backupipflag/cookiedomainflag are not real keys).
 	foundIndex := -1
 	for i, v := range dataArr {
 		if val, ok := v["domainname"].(string); ok && val == domainname_Name {

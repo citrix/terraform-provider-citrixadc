@@ -15,21 +15,3 @@ tf.log
 .terraform.lock.hcl
 terraform-provider-citrixadc
 
-# Codegen tooling, agent config, and scratch files — not part of the provider build
-.claude/
-CLAUDE.md
-NEW_TYPE_MAPPING.md
-__pycache__/
-**/__pycache__/
-code_generation.log
-framework_resources.txt
-generate_all.py
-jinja_templates/
-nitro_rest/
-resource_id_mapping.json
-resource_module_mapping.py
-resources.txt
-sdkv2_resource_bindings.txt
-sdkv2_resources.txt
-tfdata/
-update_resources_go.py

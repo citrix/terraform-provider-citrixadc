@@ -24,7 +24,7 @@ type CachepolicylabelCachepolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
-	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+	InvokeLabelname        types.String `tfsdk:"invokelabelname"`
 	Labelname              types.String `tfsdk:"labelname"`
 	Labeltype              types.String `tfsdk:"labeltype"`
 	Policyname             types.String `tfsdk:"policyname"`
@@ -55,7 +55,7 @@ func (r *CachepolicylabelCachepolicyBindingResource) Schema(ctx context.Context,
 				},
 				Description: "Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next-lower priority.",
 			},
-			"invoke_labelname": schema.StringAttribute{
+			"invokelabelname": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -129,7 +129,7 @@ func cachepolicylabel_cachepolicy_bindingGetThePayloadFromthePlan(ctx context.Co
 }
 
 // cachepolicylabel_cachepolicy_bindingSetAttrFromGet is the RESOURCE-side state setter.
-// All non-identity attributes (gotopriorityexpression, invoke, invoke_labelname,
+// All non-identity attributes (gotopriorityexpression, invoke, invokelabelname,
 // labeltype, priority) are RequiresReplace inputs that the NITRO GET response may not
 // echo back, or may return server-normalized values for. To avoid "inconsistent result
 // after apply"/perpetual diffs, the existing plan/state value is preserved when the GET
@@ -155,7 +155,7 @@ func cachepolicylabel_cachepolicy_bindingSetAttrFromGet(ctx context.Context, dat
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
 		data.Invoke = types.BoolValue(val.(bool))
 	}
-	// invoke_labelname and labeltype are Optional+Computed but are NOT echoed by the
+	// invokelabelname and labeltype are Optional+Computed but are NOT echoed by the
 	// NITRO GET response. Adopt from GET when present; otherwise keep the existing
 	// known state value, and fall back to a (known) null so the Computed attribute is
 	// never left unknown after apply.

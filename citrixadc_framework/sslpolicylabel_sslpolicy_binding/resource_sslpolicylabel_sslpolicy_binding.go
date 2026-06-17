@@ -254,10 +254,13 @@ func (r *SslpolicylabelSslpolicyBindingResource) readSslpolicylabelSslpolicyBind
 				match = false
 				continue
 			}
-		} else if _, ok := v["priority"]; ok {
-			match = false
-			continue
 		}
+		// priority is intentionally NOT a match discriminator. Legacy SDK v2 IDs are
+		// 2-key (labelname,policyname) with no priority, while NITRO always returns
+		// priority for a bound policy; rejecting records that have priority when the
+		// ID lacks it broke refresh/import of pre-migration state. (labelname,
+		// policyname) already uniquely identifies the binding, so priority is compared
+		// only when the ID carries it (new key:value IDs).
 		if match {
 			foundIndex = i
 			break

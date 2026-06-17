@@ -279,7 +279,7 @@ func TestAccSslpolicylabel_sslpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "priority", "56"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "gotopriorityexpression", "END"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "labeltype", "policylabel"),
-					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "invoke_labelname", "ssl_pol_label"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "invokelabelname", "ssl_pol_label"),
 				),
 			},
 		},

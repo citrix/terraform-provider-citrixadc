@@ -36,5 +36,5 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the sslpolicylabel_sslpolicy_binding. It is the concatenation of the `labelname` and `policyname` attributes separated by a comma.
 * `priority` - Specifies the priority of the policy.
 * `invoke` - Invoke policies bound to a policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.
-* `invoke_labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
+* `invokelabelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
 * `labeltype` - Type of policy label invocation. Possible values: [ vserver, service, policylabel ]

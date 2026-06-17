@@ -133,7 +133,7 @@ func contentinspectionpolicylabel_contentinspectionpolicy_bindingGetThePayloadFr
 // the RESOURCE-side state setter. The NITRO GET for this binding echoes back
 // labelname, policyname, priority, gotopriorityexpression and invoke (the
 // server may override gotopriorityexpression to "END" — adopt it). It does NOT
-// echo invokelabelname (invoke_labelname) or labeltype, so for those we PRESERVE
+// echo invokelabelname (invokelabelname) or labeltype, so for those we PRESERVE
 // the existing plan/state value rather than nulling it (Pattern 7 / pattern (e)).
 // The ID is NOT recomputed here — Create sets it once (Pattern 6).
 func contentinspectionpolicylabel_contentinspectionpolicy_bindingSetAttrFromGet(ctx context.Context, data *ContentinspectionpolicylabelContentinspectionpolicyBindingResourceModel, getResponseData map[string]interface{}) *ContentinspectionpolicylabelContentinspectionpolicyBindingResourceModel {

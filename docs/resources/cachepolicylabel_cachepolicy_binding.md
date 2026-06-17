@@ -25,7 +25,7 @@ resource "citrixadc_cachepolicylabel_cachepolicy_binding" "tf_policylabel_cachep
 * `labelname` - (Required) Name of the cache policy label to which to bind the policy.
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - (Optional) Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next-lower priority.
-* `invoke_labelname` - (Optional) Name of the policy label to invoke if the current policy rule evaluates to TRUE.
+* `invokelabelname` - (Optional) Name of the policy label to invoke if the current policy rule evaluates to TRUE.
 * `labeltype` - (Optional) Type of policy label to invoke: an unnamed label associated with a virtual server, or user-defined policy label.
 
 

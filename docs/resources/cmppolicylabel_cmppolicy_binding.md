@@ -32,7 +32,7 @@ resource "citrixadc_cmppolicy" "tf_cmppolicy" {
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - (Optional) Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next higher priority number in the original label.
 * `labeltype` - (Optional) Type of policy label invocation. Possible values: [ reqvserver, resvserver, policylabel ]
-* `invoke_labelname` - (Optional) Name of the label to invoke if the current policy evaluates to TRUE.
+* `invokelabelname` - (Optional) Name of the label to invoke if the current policy evaluates to TRUE.
 
 
 ## Attribute Reference

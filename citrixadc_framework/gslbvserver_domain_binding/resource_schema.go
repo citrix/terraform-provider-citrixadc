@@ -24,8 +24,8 @@ type GslbvserverDomainBindingResourceModel struct {
 	Id               types.String `tfsdk:"id"`
 	Backupip         types.String `tfsdk:"backupip"`
 	Backupipflag     types.Bool   `tfsdk:"backupipflag"`
-	CookieDomain     types.String `tfsdk:"cookie_domain"`
-	CookieDomainflag types.Bool   `tfsdk:"cookie_domainflag"`
+	CookieDomain     types.String `tfsdk:"cookiedomain"`
+	CookieDomainflag types.Bool   `tfsdk:"cookiedomainflag"`
 	Cookietimeout    types.Int64  `tfsdk:"cookietimeout"`
 	Domainname       types.String `tfsdk:"domainname"`
 	Name             types.String `tfsdk:"name"`
@@ -59,14 +59,14 @@ func (r *GslbvserverDomainBindingResource) Schema(ctx context.Context, req resou
 				},
 				Description: "The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.",
 			},
-			"cookie_domain": schema.StringAttribute{
+			"cookiedomain": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.",
 			},
-			"cookie_domainflag": schema.BoolAttribute{
+			"cookiedomainflag": schema.BoolAttribute{
 				// GET-response-only flag; not accepted by the NITRO bind payload (errorcode 278).
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
@@ -124,7 +124,7 @@ func gslbvserver_domain_bindingGetThePayloadFromthePlan(ctx context.Context, dat
 	if !data.Backupip.IsNull() && !data.Backupip.IsUnknown() {
 		gslbvserver_domain_binding.Backupip = data.Backupip.ValueString()
 	}
-	// backupipflag and cookie_domainflag are GET-response-only flags; the NITRO add/bind
+	// backupipflag and cookiedomainflag are GET-response-only flags; the NITRO add/bind
 	// endpoint rejects them with errorcode 278 ("Invalid argument"). They are never sent
 	// in the payload. (Pattern 15)
 	if !data.CookieDomain.IsNull() && !data.CookieDomain.IsUnknown() {
@@ -153,19 +153,19 @@ func gslbvserver_domain_bindingGetThePayloadFromthePlan(ctx context.Context, dat
 
 // gslbvserver_domain_bindingSetAttrFromGet is used by the resource Read/Create/Update.
 // It preserves the existing plan/state values for write-only / server-non-echoed inputs
-// (backupipflag, cookie_domainflag, order) and never recomputes the ID — the ID is set
+// (backupipflag, cookiedomainflag, order) and never recomputes the ID — the ID is set
 // exactly once in Create. (Pattern 6 / Pattern 7 / Pattern 13)
 func gslbvserver_domain_bindingSetAttrFromGet(ctx context.Context, data *GslbvserverDomainBindingResourceModel, getResponseData map[string]interface{}) *GslbvserverDomainBindingResourceModel {
 	tflog.Debug(ctx, "In gslbvserver_domain_bindingSetAttrFromGet Function")
 
 	// Convert API response to model.
-	// backupipflag / cookie_domainflag / order are write-only inputs the GET does not
+	// backupipflag / cookiedomainflag / order are write-only inputs the GET does not
 	// echo back reliably; preserve the configured plan/state value to avoid
 	// "inconsistent result after apply" churn.
 	if val, ok := getResponseData["backupip"]; ok && val != nil {
 		data.Backupip = types.StringValue(val.(string))
 	}
-	if val, ok := getResponseData["cookie_domain"]; ok && val != nil {
+	if val, ok := getResponseData["cookiedomain"]; ok && val != nil {
 		data.CookieDomain = types.StringValue(val.(string))
 	}
 	if val, ok := getResponseData["cookietimeout"]; ok && val != nil {
@@ -211,12 +211,12 @@ func gslbvserver_domain_bindingSetAttrFromGetForDatasource(ctx context.Context, 
 	} else {
 		data.Backupipflag = types.BoolNull()
 	}
-	if val, ok := getResponseData["cookie_domain"]; ok && val != nil {
+	if val, ok := getResponseData["cookiedomain"]; ok && val != nil {
 		data.CookieDomain = types.StringValue(val.(string))
 	} else {
 		data.CookieDomain = types.StringNull()
 	}
-	if val, ok := getResponseData["cookie_domainflag"]; ok && val != nil {
+	if val, ok := getResponseData["cookiedomainflag"]; ok && val != nil {
 		data.CookieDomainflag = types.BoolValue(val.(bool))
 	} else {
 		data.CookieDomainflag = types.BoolNull()

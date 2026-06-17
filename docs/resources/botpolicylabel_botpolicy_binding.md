@@ -34,7 +34,7 @@ resource "citrixadc_botpolicylabel_botpolicy_binding" "tf_binding" {
 * `priority` - (Required) Specifies the priority of the policy.
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - (Optional) If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label and evaluate the specified policy label.
-* `invoke_labelname` - (Optional) If labelType is policylabel, name of the policy label to invoke. If labelType is vserver, name of the virtual server.
+* `invokelabelname` - (Optional) If labelType is policylabel, name of the policy label to invoke. If labelType is vserver, name of the virtual server.
 * `labeltype` - (Optional) Type of policy label to invoke. Available settings function as follows: * vserver - Invoke an unnamed policy label associated with a virtual server. * policylabel - Invoke a user-defined policy label.
 
 

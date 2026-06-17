@@ -13,12 +13,12 @@ import (
 
 // SslpolicylabelSslpolicyBindingDataSourceModel describes the datasource data model.
 // It mirrors the resource model but exposes the invoke label name under the
-// datasource-facing attribute name "invoke_labelname".
+// datasource-facing attribute name "invokelabelname".
 type SslpolicylabelSslpolicyBindingDataSourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
-	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+	InvokeLabelname        types.String `tfsdk:"invokelabelname"`
 	Labelname              types.String `tfsdk:"labelname"`
 	Labeltype              types.String `tfsdk:"labeltype"`
 	Policyname             types.String `tfsdk:"policyname"`
@@ -41,7 +41,7 @@ func SslpolicylabelSslpolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Invoke policies bound to a policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.",
 			},
-			"invoke_labelname": schema.StringAttribute{
+			"invokelabelname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of the label to invoke if the current policy rule evaluates to TRUE.",

@@ -28,7 +28,7 @@ type AppfwprofileFileuploadtypeBindingResourceModel struct {
 	Fileuploadtype            types.String `tfsdk:"fileuploadtype"`
 	Isautodeployed            types.String `tfsdk:"isautodeployed"`
 	Isnameregex               types.String `tfsdk:"isnameregex"`
-	IsregexFileuploadtypesUrl types.String `tfsdk:"isregex_fileuploadtypes_url"`
+	IsregexFileuploadtypesUrl types.String `tfsdk:"isregexfileuploadtypesurl"`
 	Name                      types.String `tfsdk:"name"`
 	Resourceid                types.String `tfsdk:"resourceid"`
 	Ruletype                  types.String `tfsdk:"ruletype"`
@@ -97,7 +97,7 @@ func (r *AppfwprofileFileuploadtypeBindingResource) Schema(ctx context.Context, 
 				},
 				Description: "Is field name a regular expression?",
 			},
-			"isregex_fileuploadtypes_url": schema.StringAttribute{
+			"isregexfileuploadtypesurl": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -232,7 +232,7 @@ func appfwprofile_fileuploadtype_bindingSetAttrFromGet(ctx context.Context, data
 	} else {
 		data.Isnameregex = types.StringNull()
 	}
-	if val, ok := getResponseData["isregex_fileuploadtypes_url"]; ok && val != nil {
+	if val, ok := getResponseData["isregexfileuploadtypesurl"]; ok && val != nil {
 		data.IsregexFileuploadtypesUrl = types.StringValue(val.(string))
 	} else {
 		data.IsregexFileuploadtypesUrl = types.StringNull()

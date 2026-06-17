@@ -38,7 +38,7 @@ In addition to the arguments, the following attributes are available:
 * `priority` - Specifies the priority of the policy.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label and evaluate the specified policy label.
-* `invoke_labelname` - If labelType is policylabel, name of the policy label to invoke. If labelType is vserver, name of the virtual server.
+* `invokelabelname` - If labelType is policylabel, name of the policy label to invoke. If labelType is vserver, name of the virtual server.
 * `labeltype` - Type of policy label to invoke. Available settings function as follows:
   * vserver - Invoke an unnamed policy label associated with a virtual server.
   * policylabel - Invoke a user-defined policy label.

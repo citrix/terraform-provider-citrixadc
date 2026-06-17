@@ -34,7 +34,7 @@ resource "citrixadc_transformpolicylabel_transformpolicy_binding" "transformpoli
 * `priority` - (Required) Specifies the priority of the policy.
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - (Optional) If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
-* `invoke_labelname` - (Optional) Name of the policy label.
+* `invokelabelname` - (Optional) Name of the policy label.
 * `labeltype` - (Optional) Type of invocation. Available settings function as follows: * reqvserver - Forward the request to the specified request virtual server. * policylabel - Invoke the specified policy label.
 
 
