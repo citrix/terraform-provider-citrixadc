@@ -1,3 +1,38 @@
+## 2.2.1 (June 30, 2026)
+
+FEATURES
+* **New Resource**: Support for creating and managing citrixadc_apiprofile.
+* **New Resource**: Support for creating and managing citrixadc_apispec.
+* **New Resource**: Support for creating and managing citrixadc_apispecfile.
+* **New Resource**: Support for creating and managing citrixadc_appfwarchive.
+* **New Resource**: Support for creating and managing citrixadc_appfwarchive_export.
+* **New Resource**: Support for creating and managing citrixadc_appfwgrpccontenttype.
+* **New Resource**: Support for creating and managing citrixadc_appfwgrpcwebjsoncontenttype.
+* **New Resource**: Support for creating and managing citrixadc_appfwgrpcwebtextcontenttype.
+* **New Resource**: Support for creating and managing citrixadc_appfwprotofile.
+* **New Resource**: Support for creating and managing citrixadc_authenticationadfsproxyprofile.
+* **New Resource**: Support for creating and managing citrixadc_authenticationazurekeyvault.
+* **New Resource**: Support for creating and managing citrixadc_authenticationprotecteduseraction.
+* **New Resource**: Support for creating and managing citrixadc_authenticationsmartaccesspolicy.
+* **New Resource**: Support for creating and managing citrixadc_authenticationsmartaccessprofile.
+* **New Resource**: Support for creating and managing citrixadc_azureapplication.
+* **New Resource**: Support for creating and managing citrixadc_azurekeyvault.
+* **provider**: Added ephemeral (write-only) support for secret/password attributes across resources: aaakcdaccount, aaaldapparams, aaaradiusparams, aaassoprofile, aaatacacsparams, aaauser, analyticsprofile, appflowparam, appfwsettings, auditsyslogaction, authenticationadfsproxyprofile, authenticationazurekeyvault, authenticationcaptchaaction, authenticationdfaaction, authenticationemailaction, authenticationnegotiateaction, authenticationoauthaction, authenticationoauthidpprofile, authenticationpushservice, autoscaleprofile, azureapplication, botsettings, dbuser, dnskey, gslbsite, ipsecprofile, lbmonitor, lbprofile, nsencryptionkey, nsencryptionparams, nshmackey, radiusnode, rdpclientprofile, rdpserverprofile, reputationsettings, smppuser, sslcert, sslcertreq, sslcrl, sslecdsakey, sslhsmkey, sslprofile and sslrsakey.
+
+ENHANCEMENTS
+* **provider**: Added Mend security scanning checks for the provider.
+* **documentation**: Updated documentation for FEO resources (feoaction, feoparameter, feopolicy) and for ephemeral attribute usage.
+
+BUG FIXES
+* **citrixadc_systemfile**: Updated systemfile schema and fixed content decoding/encoding issues. [#1402]
+
+EXAMPLE USECASES
+* **New Usecase**: Added example to form an HA pair between two NetScaler ADCs and deploy LB configuration on the auto-detected primary node.
+* **New Usecase**: Added example for forming a three-node cluster.
+
+[#1402]: https://github.com/citrix/terraform-provider-citrixadc/issues/1402
+
+
 ## 2.2.0 (May 01, 2026)
 
 FEATURES
