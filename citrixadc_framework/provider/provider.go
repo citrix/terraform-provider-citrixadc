@@ -30,6 +30,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudallowedngsticketprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudawsparam"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudcredential"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudngsparameter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudparameter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudparaminternal"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudtunnelparameter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudtunnelvserver"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_aaapreauthenticationpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_authenticationnegotiateaction_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaagroup"
@@ -1332,6 +1341,15 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		sslvserver_sslcertkeybundle_binding.NewSslvserverSslcertkeybundleBindingResource,
 		sslvserver_sslcipher_binding.NewSslvserverSslcipherBindingResource,
 		sslwrapkey.NewSslwrapkeyResource,
+		cloudallowedngsticketprofile.NewCloudallowedngsticketprofileResource,
+		cloudawsparam.NewCloudawsparamResource,
+		cloudcredential.NewCloudcredentialResource,
+		cloudngsparameter.NewCloudngsparameterResource,
+		cloudparameter.NewCloudparameterResource,
+		cloudparaminternal.NewCloudparaminternalResource,
+		cloudprofile.NewCloudprofileResource,
+		cloudtunnelparameter.NewCloudtunnelparameterResource,
+		cloudtunnelvserver.NewCloudtunnelvserverResource,
 	}
 }
 
@@ -2185,6 +2203,14 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		sslvserver_sslcertkeybundle_binding.SSlvserverSslcertkeybundleBindingDataSource,
 		sslvserver_sslcipher_binding.SSlvserverSslcipherBindingDataSource,
 		sslwrapkey.SSlwrapkeyDataSource,
+		cloudallowedngsticketprofile.CLoudallowedngsticketprofileDataSource,
+		cloudawsparam.CLoudawsparamDataSource,
+		cloudngsparameter.CLoudngsparameterDataSource,
+		cloudparameter.CLoudparameterDataSource,
+		cloudparaminternal.CLoudparaminternalDataSource,
+		cloudprofile.CLoudprofileDataSource,
+		cloudtunnelparameter.CLoudtunnelparameterDataSource,
+		cloudtunnelvserver.CLoudtunnelvserverDataSource,
 	}
 }
 

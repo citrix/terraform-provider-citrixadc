@@ -1328,6 +1328,15 @@ const (
 	Wisite_binding
 	Wisite_farmname_binding
 	Wisite_translationinternalip_binding
+	Cloudallowedngsticketprofile
+	Cloudawsparam
+	Cloudcredential
+	Cloudngsparameter
+	Cloudparameter
+	Cloudparaminternal
+	Cloudprofile
+	Cloudtunnelparameter
+	Cloudtunnelvserver
 )
 
 var resources = []string{
@@ -2621,4 +2630,13 @@ var resources = []string{
 	"wisite_binding",
 	"wisite_farmname_binding",
 	"wisite_translationinternalip_binding",
+	"cloudallowedngsticketprofile",
+	"cloudawsparam",
+	"cloudcredential",
+	"cloudngsparameter",
+	"cloudparameter",
+	"cloudparaminternal",
+	"cloudprofile",
+	"cloudtunnelparameter",
+	"cloudtunnelvserver",
 }

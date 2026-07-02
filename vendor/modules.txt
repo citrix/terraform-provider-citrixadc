@@ -48,6 +48,8 @@ github.com/citrix/adc-nitro-go/resource/config/azure
 github.com/citrix/adc-nitro-go/resource/config/basic
 github.com/citrix/adc-nitro-go/resource/config/bot
 github.com/citrix/adc-nitro-go/resource/config/cache
+github.com/citrix/adc-nitro-go/resource/config/cloud
+github.com/citrix/adc-nitro-go/resource/config/cloudtunnel
 github.com/citrix/adc-nitro-go/resource/config/cluster
 github.com/citrix/adc-nitro-go/resource/config/cmp
 github.com/citrix/adc-nitro-go/resource/config/contentinspection
