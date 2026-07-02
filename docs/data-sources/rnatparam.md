@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Data Source: rnatparam
 
-The rnatparam data source allows you to retrieve information about RNAT parameters configuration.
+The rnatparam data source allows you to retrieve the global Reverse Network Address Translation (RNAT) parameters configuration from the Citrix ADC. This is a singleton data source, so no lookup argument is required.
 
 ## Example Usage
 
@@ -31,4 +31,4 @@ The following attributes are available:
 
 * `srcippersistency` - Enable source ip persistency, which enables the Citrix ADC to use the RNAT ips using source ip. Possible values: `ENABLED`, `DISABLED`.
 * `tcpproxy` - Enable TCP proxy, which enables the Citrix ADC to optimize the RNAT TCP traffic by using Layer 4 features. Possible values: `ENABLED`, `DISABLED`.
-* `id` - The id of the rnatparam resource.
+* `id` - The id of the rnatparam data source. It is a fixed synthetic string with the value `"rnatparam-config"`.

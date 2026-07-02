@@ -394,6 +394,15 @@ const (
 	Channel_binding
 	Channel_interface_binding
 	Ci
+	Cloudallowedngsticketprofile
+	Cloudawsparam
+	Cloudcredential
+	Cloudngsparameter
+	Cloudparameter
+	Cloudparaminternal
+	Cloudprofile
+	Cloudtunnelparameter
+	Cloudtunnelvserver
 	Cluster
 	Clusterfiles
 	Clusterinstance
@@ -507,6 +516,7 @@ const (
 	Dnsaction
 	Dnsaction64
 	Dnsaddrec
+	Dnscaarec
 	Dnscnamerec
 	Dnsglobal_binding
 	Dnsglobal_dnspolicy_binding
@@ -533,6 +543,7 @@ const (
 	Dnsptrrec
 	Dnssoarec
 	Dnssrvrec
+	Dnssubnetcache
 	Dnssuffix
 	Dnstxtrec
 	Dnsview
@@ -627,6 +638,8 @@ const (
 	Iptunnel
 	Iptunnelparam
 	Ipv6
+	Kafkacluster
+	Kafkacluster_servicegroup_binding
 	L2param
 	L3param
 	L4param
@@ -887,6 +900,8 @@ const (
 	Protocolhttpband
 	Ptp
 	Quicbridgeprofile
+	Quicparam
+	Quicprofile
 	Radiusnode
 	Rdpclientprofile
 	Rdpserverprofile
@@ -928,9 +943,11 @@ const (
 	Rnat6_binding
 	Rnat6_nsip6_binding
 	Rnat_nsip_binding
+	Rnat_retainsourceportset_binding
 	Rnatglobal_auditsyslogpolicy_binding
 	Rnatglobal_binding
 	Rnatparam
+	Rnatsession
 	Route
 	Route6
 	Routerdynamicrouting
@@ -1075,6 +1092,7 @@ const (
 	Sslvserver_sslpolicy_binding
 	Sslwrapkey
 	Streamidentifier
+	Streamidentifier_analyticsprofile_binding
 	Streamidentifier_binding
 	Streamidentifier_streamsession_binding
 	Streamselector
@@ -1328,15 +1346,6 @@ const (
 	Wisite_binding
 	Wisite_farmname_binding
 	Wisite_translationinternalip_binding
-	Cloudallowedngsticketprofile
-	Cloudawsparam
-	Cloudcredential
-	Cloudngsparameter
-	Cloudparameter
-	Cloudparaminternal
-	Cloudprofile
-	Cloudtunnelparameter
-	Cloudtunnelvserver
 )
 
 var resources = []string{
@@ -1696,6 +1705,15 @@ var resources = []string{
 	"channel_binding",
 	"channel_interface_binding",
 	"ci",
+	"cloudallowedngsticketprofile",
+	"cloudawsparam",
+	"cloudcredential",
+	"cloudngsparameter",
+	"cloudparameter",
+	"cloudparaminternal",
+	"cloudprofile",
+	"cloudtunnelparameter",
+	"cloudtunnelvserver",
 	"cluster",
 	"clusterfiles",
 	"clusterinstance",
@@ -1809,6 +1827,7 @@ var resources = []string{
 	"dnsaction",
 	"dnsaction64",
 	"dnsaddrec",
+	"dnscaarec",
 	"dnscnamerec",
 	"dnsglobal_binding",
 	"dnsglobal_dnspolicy_binding",
@@ -1835,6 +1854,7 @@ var resources = []string{
 	"dnsptrrec",
 	"dnssoarec",
 	"dnssrvrec",
+	"dnssubnetcache",
 	"dnssuffix",
 	"dnstxtrec",
 	"dnsview",
@@ -1929,6 +1949,8 @@ var resources = []string{
 	"iptunnel",
 	"iptunnelparam",
 	"ipv6",
+	"kafkacluster",
+	"kafkacluster_servicegroup_binding",
 	"l2param",
 	"l3param",
 	"l4param",
@@ -2189,6 +2211,8 @@ var resources = []string{
 	"protocolhttpband",
 	"ptp",
 	"quicbridgeprofile",
+	"quicparam",
+	"quicprofile",
 	"radiusnode",
 	"rdpclientprofile",
 	"rdpserverprofile",
@@ -2230,9 +2254,11 @@ var resources = []string{
 	"rnat6_binding",
 	"rnat6_nsip6_binding",
 	"rnat_nsip_binding",
+	"rnat_retainsourceportset_binding",
 	"rnatglobal_auditsyslogpolicy_binding",
 	"rnatglobal_binding",
 	"rnatparam",
+	"rnatsession",
 	"route",
 	"route6",
 	"routerdynamicrouting",
@@ -2377,6 +2403,7 @@ var resources = []string{
 	"sslvserver_sslpolicy_binding",
 	"sslwrapkey",
 	"streamidentifier",
+	"streamidentifier_analyticsprofile_binding",
 	"streamidentifier_binding",
 	"streamidentifier_streamsession_binding",
 	"streamselector",
@@ -2630,13 +2657,4 @@ var resources = []string{
 	"wisite_binding",
 	"wisite_farmname_binding",
 	"wisite_translationinternalip_binding",
-	"cloudallowedngsticketprofile",
-	"cloudawsparam",
-	"cloudcredential",
-	"cloudngsparameter",
-	"cloudparameter",
-	"cloudparaminternal",
-	"cloudprofile",
-	"cloudtunnelparameter",
-	"cloudtunnelvserver",
 }

@@ -30,6 +30,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnscaarec"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnsproxyrecords"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnssubnetcache"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/kafkacluster"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/kafkacluster_servicegroup_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/protocolhttpband"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/quicparam"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/quicprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnat_retainsourceportset_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnatsession"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/streamidentifier_analyticsprofile_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/streamsession"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudallowedngsticketprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudawsparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudcredential"
@@ -1350,6 +1362,20 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		cloudprofile.NewCloudprofileResource,
 		cloudtunnelparameter.NewCloudtunnelparameterResource,
 		cloudtunnelvserver.NewCloudtunnelvserverResource,
+		dnscaarec.NewDnscaarecResource,
+		dnsproxyrecords.NewDnsproxyrecordsResource,
+		dnssubnetcache.NewDnssubnetcacheResource,
+		kafkacluster.NewKafkaclusterResource,
+		kafkacluster_servicegroup_binding.NewKafkaclusterServicegroupBindingResource,
+		protocolhttpband.NewProtocolhttpbandResource,
+		quicparam.NewQuicparamResource,
+		quicprofile.NewQuicprofileResource,
+		rnat_retainsourceportset_binding.NewRnatRetainsourceportsetBindingResource,
+		rnatglobal_auditsyslogpolicy_binding.NewRnatglobalAuditsyslogpolicyBindingResource,
+		rnatparam.NewRnatparamResource,
+		rnatsession.NewRnatsessionResource,
+		streamidentifier_analyticsprofile_binding.NewStreamidentifierAnalyticsprofileBindingResource,
+		streamsession.NewStreamsessionResource,
 	}
 }
 
@@ -2211,6 +2237,13 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		cloudprofile.CLoudprofileDataSource,
 		cloudtunnelparameter.CLoudtunnelparameterDataSource,
 		cloudtunnelvserver.CLoudtunnelvserverDataSource,
+		dnscaarec.DNscaarecDataSource,
+		kafkacluster.KAfkaclusterDataSource,
+		kafkacluster_servicegroup_binding.KAfkaclusterServicegroupBindingDataSource,
+		quicparam.QUicparamDataSource,
+		quicprofile.QUicprofileDataSource,
+		rnat_retainsourceportset_binding.RNatRetainsourceportsetBindingDataSource,
+		streamidentifier_analyticsprofile_binding.STreamidentifierAnalyticsprofileBindingDataSource,
 	}
 }
 

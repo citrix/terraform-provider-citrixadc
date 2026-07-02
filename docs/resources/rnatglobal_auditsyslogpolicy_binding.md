@@ -4,14 +4,14 @@ subcategory: "Network"
 
 # Resource: rnatglobal_auditsyslogpolicy_binding
 
-The rnatglobal_auditsyslogpolicy_binding resource is used to bind auditsyslog policy to rnat global configuration.
+Binds an audit syslog policy to the global RNAT (Reverse Network Address Translation) configuration on the Citrix ADC. Binding a syslog policy at the RNAT global scope lets the appliance evaluate that policy against RNAT traffic and forward the resulting audit events to a syslog server, so you can log RNAT activity centrally without attaching the policy to an individual entity. The RNAT global object is a singleton, so the binding is keyed solely by the policy name.
 
 
 ## Example usage
 
 ```hcl
-resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
-  name       = "tf_syslogaction"
+resource "citrixadc_auditsyslogaction" "syslogaction1" {
+  name       = "syslogaction1"
   serverip   = "10.78.60.33"
   serverport = 514
   loglevel = [
@@ -19,36 +19,38 @@ resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
     "NOTICE",
   ]
 }
-resource "citrixadc_auditsyslogpolicy" "tf_policy" {
-  name   = "tf_auditsyslogpolicy"
+
+resource "citrixadc_auditsyslogpolicy" "syslogpol1" {
+  name   = "syslogpol1"
   rule   = "ns_true"
-  action = citrixadc_auditsyslogaction.tf_syslogaction.name
+  action = citrixadc_auditsyslogaction.syslogaction1.name
 }
-resource "citrixadc_rnatglobal_auditsyslogpolicy_binding" "tf_binding" {
-  policy   = citrixadc_auditsyslogpolicy.tf_policy.name
-  priority = 50
+
+resource "citrixadc_rnatglobal_auditsyslogpolicy_binding" "rnat_syslog" {
+  policy   = citrixadc_auditsyslogpolicy.syslogpol1.name
+  priority = 100
 }
 ```
 
 
 ## Argument Reference
 
-* `policy` - (Required) The policy Name.
-* `all` - (Optional) Remove all RNAT global config
-* `priority` - (Optional) The priority of the policy.
+* `policy` - (Required) The name of the audit syslog policy to bind to the RNAT global configuration. This is the binding key. Maximum length = 31. Changing this value forces a new binding to be created.
+* `priority` - (Optional, Computed) The priority assigned to the policy at the RNAT global scope. Policies are evaluated in ascending order of priority. Minimum value = 0. Maximum value = 4294967295. Changing this value forces a new binding to be created.
+* `all` - (Optional, Computed) A delete-only flag. When set to `true`, deleting this resource removes all RNAT global bindings rather than just this policy binding. It is not sent as part of the bind (create) payload and only affects the unbind (delete) operation. Changing this value forces a new binding to be created.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the rnatglobal_auditsyslogpolicy_binding. It has the same value as the `policy` attribute.
+* `id` - The id of the rnatglobal_auditsyslogpolicy_binding. It has the same value as the `policy` attribute (the RNAT global object is a singleton, so no parent name is part of the id).
 
 
 ## Import
 
-A rnatglobal_auditsyslogpolicy_binding can be imported using its policy, e.g.
+A rnatglobal_auditsyslogpolicy_binding can be imported using its `policy`, e.g.
 
 ```shell
-terraform import citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding tf_auditsyslogpolicy
+terraform import citrixadc_rnatglobal_auditsyslogpolicy_binding.rnat_syslog syslogpol1
 ```
