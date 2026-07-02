@@ -2,8 +2,8 @@ package streamidentifier_analyticsprofile_binding
 
 import (
 	"context"
-	"strings"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/stream"
 
@@ -19,9 +19,9 @@ import (
 
 // StreamidentifierAnalyticsprofileBindingResourceModel describes the resource data model.
 type StreamidentifierAnalyticsprofileBindingResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id               types.String `tfsdk:"id"`
 	Analyticsprofile types.String `tfsdk:"analyticsprofile"`
-	Name types.String `tfsdk:"name"`
+	Name             types.String `tfsdk:"name"`
 }
 
 func (r *StreamidentifierAnalyticsprofileBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -33,14 +33,14 @@ func (r *StreamidentifierAnalyticsprofileBindingResource) Schema(ctx context.Con
 				Description: "The ID of the streamidentifier_analyticsprofile_binding resource.",
 			},
 			"analyticsprofile": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the analytics profile.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

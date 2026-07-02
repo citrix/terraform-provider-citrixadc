@@ -10,17 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 )
 
 // CloudcredentialResourceModel describes the resource data model.
 type CloudcredentialResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	Applicationid types.String `tfsdk:"applicationid"`
-	Applicationsecret types.String `tfsdk:"applicationsecret"`
-	ApplicationsecretWo types.String `tfsdk:"applicationsecret_wo"`
-	ApplicationsecretWoVersion types.Int64 `tfsdk:"applicationsecret_wo_version"`
-	Tenantidentifier types.String `tfsdk:"tenantidentifier"`
+	Id                         types.String `tfsdk:"id"`
+	Applicationid              types.String `tfsdk:"applicationid"`
+	Applicationsecret          types.String `tfsdk:"applicationsecret"`
+	ApplicationsecretWo        types.String `tfsdk:"applicationsecret_wo"`
+	ApplicationsecretWoVersion types.Int64  `tfsdk:"applicationsecret_wo_version"`
+	Tenantidentifier           types.String `tfsdk:"tenantidentifier"`
 }
 
 func (r *CloudcredentialResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -37,13 +36,13 @@ func (r *CloudcredentialResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"applicationsecret": schema.StringAttribute{
 				Optional:    true,
-				Sensitive:    true,
+				Sensitive:   true,
 				Description: "Application Secret of the Credentials.",
 			},
 			"applicationsecret_wo": schema.StringAttribute{
 				Optional:    true,
-				Sensitive:    true,
-				WriteOnly:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
 				Description: "Application Secret of the Credentials.",
 			},
 			"applicationsecret_wo_version": schema.Int64Attribute{

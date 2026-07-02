@@ -14,9 +14,9 @@ import (
 
 // RnatparamResourceModel describes the resource data model.
 type RnatparamResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id               types.String `tfsdk:"id"`
 	Srcippersistency types.String `tfsdk:"srcippersistency"`
-	Tcpproxy types.String `tfsdk:"tcpproxy"`
+	Tcpproxy         types.String `tfsdk:"tcpproxy"`
 }
 
 func (r *RnatparamResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

@@ -9,12 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 )
 
 // CloudawsparamResourceModel describes the resource data model.
 type CloudawsparamResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id      types.String `tfsdk:"id"`
 	Rolearn types.String `tfsdk:"rolearn"`
 }
 

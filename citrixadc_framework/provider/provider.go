@@ -30,27 +30,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaacertparams"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnscaarec"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnsproxyrecords"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnssubnetcache"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/kafkacluster"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/kafkacluster_servicegroup_binding"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/protocolhttpband"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/quicparam"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/quicprofile"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnat_retainsourceportset_binding"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnatsession"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/streamidentifier_analyticsprofile_binding"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/streamsession"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudallowedngsticketprofile"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudawsparam"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudcredential"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudngsparameter"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudparameter"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudparaminternal"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudprofile"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudtunnelparameter"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudtunnelvserver"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_aaapreauthenticationpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaaglobal_authenticationnegotiateaction_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/aaagroup"
@@ -166,6 +145,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwxmlcontenttype"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwxmlerrorpage"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appfwxmlschema"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/application"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appqoeaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appqoecustomresp"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/appqoeparameter"
@@ -259,6 +239,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botprofile_blacklist_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botprofile_captcha_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botprofile_ipreputation_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botprofile_kmdetectionexpr_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botprofile_logexpression_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botprofile_ratelimit_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/botprofile_tps_binding"
@@ -274,13 +255,24 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cachecontentgroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cacheforwardproxy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cacheglobal_cachepolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cacheobject"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cacheparameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cachepolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cachepolicylabel"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cachepolicylabel_cachepolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cacheselector"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/callhome"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/channel"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/channel_interface_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudallowedngsticketprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudawsparam"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudcredential"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudngsparameter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudparameter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudparaminternal"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudtunnelparameter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudtunnelvserver"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusterfiles"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusterinstance"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternode"
@@ -363,6 +355,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnsaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnsaction64"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnsaddrec"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnscaarec"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnscnamerec"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnsglobal_dnspolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnskey"
@@ -376,18 +369,22 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnspolicylabel"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnspolicylabel_dnspolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnsprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnsproxyrecords"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnsptrrec"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnssoarec"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnssrvrec"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnssubnetcache"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnssuffix"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnstxtrec"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnsview"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dnszone"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/endpointinfo"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/extendedmemoryparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/feoaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/feoglobal_feopolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/feoparameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/feopolicy"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/filesystemencryption"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/fis"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/fis_channel_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/fis_interface_binding"
@@ -427,6 +424,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ip6tunnel"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ip6tunnelparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ipsecalgprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ipsecalgsession"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ipsecparameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ipsecprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ipset"
@@ -435,6 +433,8 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/iptunnel"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/iptunnelparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ipv6"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/kafkacluster"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/kafkacluster_servicegroup_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/l2param"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/l3param"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/l4param"
@@ -488,6 +488,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/linkset"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/linkset_channel_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/linkset_interface_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lldpneighbors"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lldpparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/location"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/locationfile"
@@ -640,10 +641,14 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policystringmap_pattern_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policytracing"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/policyurlset"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/protocolhttpband"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ptp"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/quicbridgeprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/quicparam"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/quicprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/radiusnode"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rdpclientprofile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rdpconnections"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rdpserverprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/reputationsettings"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/responderaction"
@@ -663,8 +668,10 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnat6"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnat6_nsip6_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnat_nsip_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnat_retainsourceportset_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnatglobal_auditsyslogpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnatparam"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rnatsession"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/route"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/route6"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/routerdynamicrouting"
@@ -757,11 +764,14 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslvserver_sslpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslwrapkey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/streamidentifier"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/streamidentifier_analyticsprofile_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/streamselector"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/streamsession"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/subscribergxinterface"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/subscriberparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/subscriberprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/subscriberradiusinterface"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/subscribersessions"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemadmuserinfo"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systembackup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/systemcmdpolicy"
@@ -792,6 +802,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/tmformssoaction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/tmglobal_auditnslogpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/tmglobal_auditsyslogpolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/tmglobal_tmsessionpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/tmglobal_tmtrafficpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/tmsamlssoprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/tmsessionaction"
@@ -1376,6 +1387,17 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		rnatsession.NewRnatsessionResource,
 		streamidentifier_analyticsprofile_binding.NewStreamidentifierAnalyticsprofileBindingResource,
 		streamsession.NewStreamsessionResource,
+		application.NewApplicationResource,
+		botprofile_kmdetectionexpr_binding.NewBotprofileKmdetectionexprBindingResource,
+		cacheobject.NewCacheobjectResource,
+		callhome.NewCallhomeResource,
+		endpointinfo.NewEndpointinfoResource,
+		filesystemencryption.NewFilesystemencryptionResource,
+		ipsecalgsession.NewIpsecalgsessionResource,
+		lldpneighbors.NewLldpneighborsResource,
+		rdpconnections.NewRdpconnectionsResource,
+		subscribersessions.NewSubscribersessionsResource,
+		tmglobal_tmsessionpolicy_binding.NewTmglobalTmsessionpolicyBindingResource,
 	}
 }
 
@@ -2244,6 +2266,16 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		quicprofile.QUicprofileDataSource,
 		rnat_retainsourceportset_binding.RNatRetainsourceportsetBindingDataSource,
 		streamidentifier_analyticsprofile_binding.STreamidentifierAnalyticsprofileBindingDataSource,
+		botprofile_kmdetectionexpr_binding.BOtprofileKmdetectionexprBindingDataSource,
+		cacheobject.CAcheobjectDataSource,
+		callhome.CAllhomeDataSource,
+		endpointinfo.ENdpointinfoDataSource,
+		filesystemencryption.FIlesystemencryptionDataSource,
+		ipsecalgsession.IPsecalgsessionDataSource,
+		lldpneighbors.LLdpneighborsDataSource,
+		rdpconnections.RDpconnectionsDataSource,
+		subscribersessions.SUbscribersessionsDataSource,
+		tmglobal_tmsessionpolicy_binding.TMglobalTmsessionpolicyBindingDataSource,
 	}
 }
 

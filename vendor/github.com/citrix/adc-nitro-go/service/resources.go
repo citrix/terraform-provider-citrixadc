@@ -359,6 +359,7 @@ const (
 	Botprofile_blacklist_binding
 	Botprofile_captcha_binding
 	Botprofile_ipreputation_binding
+	Botprofile_kmdetectionexpr_binding
 	Botprofile_logexpression_binding
 	Botprofile_ratelimit_binding
 	Botprofile_tps_binding
@@ -555,11 +556,13 @@ const (
 	Dnszone_dnskey_binding
 	Dnszone_domain_binding
 	Dospolicy
+	Endpointinfo
 	Extendedmemoryparam
 	Feoaction
 	Feoglobal_feopolicy_binding
 	Feoparameter
 	Feopolicy
+	Filesystemencryption
 	Filteraction
 	Filterglobal_binding
 	Filterglobal_filterpolicy_binding
@@ -629,6 +632,7 @@ const (
 	Ip6tunnel
 	Ip6tunnelparam
 	Ipsecalgprofile
+	Ipsecalgsession
 	Ipsecparameter
 	Ipsecprofile
 	Ipset
@@ -711,6 +715,7 @@ const (
 	Linkset_binding
 	Linkset_channel_binding
 	Linkset_interface_binding
+	Lldpneighbors
 	Lldpparam
 	Location
 	Locationdata
@@ -904,6 +909,7 @@ const (
 	Quicprofile
 	Radiusnode
 	Rdpclientprofile
+	Rdpconnections
 	Rdpserverprofile
 	Reboot
 	Reporting
@@ -1101,6 +1107,7 @@ const (
 	Subscriberparam
 	Subscriberprofile
 	Subscriberradiusinterface
+	Subscribersessions
 	Svcbindings
 	Systemadmuserinfo
 	Systembackup
@@ -1186,6 +1193,7 @@ const (
 	Tunneltrafficpolicy
 	Tunneltrafficpolicy_binding
 	Tunneltrafficpolicy_tunnelglobal_binding
+	Ulfdserver
 	Userprotocol
 	Uservserver
 	Videooptimizationdetectionaction
@@ -1670,6 +1678,7 @@ var resources = []string{
 	"botprofile_blacklist_binding",
 	"botprofile_captcha_binding",
 	"botprofile_ipreputation_binding",
+	"botprofile_kmdetectionexpr_binding",
 	"botprofile_logexpression_binding",
 	"botprofile_ratelimit_binding",
 	"botprofile_tps_binding",
@@ -1866,11 +1875,13 @@ var resources = []string{
 	"dnszone_dnskey_binding",
 	"dnszone_domain_binding",
 	"dospolicy",
+	"endpointinfo",
 	"extendedmemoryparam",
 	"feoaction",
 	"feoglobal_feopolicy_binding",
 	"feoparameter",
 	"feopolicy",
+	"filesystemencryption",
 	"filteraction",
 	"filterglobal_binding",
 	"filterglobal_filterpolicy_binding",
@@ -1940,6 +1951,7 @@ var resources = []string{
 	"ip6tunnel",
 	"ip6tunnelparam",
 	"ipsecalgprofile",
+	"ipsecalgsession",
 	"ipsecparameter",
 	"ipsecprofile",
 	"ipset",
@@ -2022,6 +2034,7 @@ var resources = []string{
 	"linkset_binding",
 	"linkset_channel_binding",
 	"linkset_interface_binding",
+	"lldpneighbors",
 	"lldpparam",
 	"location",
 	"locationdata",
@@ -2215,6 +2228,7 @@ var resources = []string{
 	"quicprofile",
 	"radiusnode",
 	"rdpclientprofile",
+	"rdpconnections",
 	"rdpserverprofile",
 	"reboot",
 	"reporting",
@@ -2412,6 +2426,7 @@ var resources = []string{
 	"subscriberparam",
 	"subscriberprofile",
 	"subscriberradiusinterface",
+	"subscribersessions",
 	"svcbindings",
 	"systemadmuserinfo",
 	"systembackup",
@@ -2497,6 +2512,7 @@ var resources = []string{
 	"tunneltrafficpolicy",
 	"tunneltrafficpolicy_binding",
 	"tunneltrafficpolicy_tunnelglobal_binding",
+	"ulfdserver",
 	"userprotocol",
 	"uservserver",
 	"videooptimizationdetectionaction",

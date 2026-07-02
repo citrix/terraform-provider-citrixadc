@@ -18,11 +18,11 @@ import (
 
 // CloudtunnelvserverResourceModel describes the resource data model.
 type CloudtunnelvserverResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	Listenpolicy types.String `tfsdk:"listenpolicy"`
-	Listenpriority types.Int64 `tfsdk:"listenpriority"`
-	Name types.String `tfsdk:"name"`
-	Servicetype types.String `tfsdk:"servicetype"`
+	Id             types.String `tfsdk:"id"`
+	Listenpolicy   types.String `tfsdk:"listenpolicy"`
+	Listenpriority types.Int64  `tfsdk:"listenpriority"`
+	Name           types.String `tfsdk:"name"`
+	Servicetype    types.String `tfsdk:"servicetype"`
 }
 
 func (r *CloudtunnelvserverResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -44,14 +44,14 @@ func (r *CloudtunnelvserverResource) Schema(ctx context.Context, req resource.Sc
 				Description: "Integer specifying the priority of the listen policy. A higher number specifies a lower priority. If a request matches the listen policies of more than one virtual server, the virtual server whose listen policy has the highest priority (the lowest priority number) accepts the request.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name for the Cloud Tunnel virtual server. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space,colon (:), at (@), equals (=), and hyphen (-) characters.\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example,\n\"my server\" or 'my server').",
 			},
 			"servicetype": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

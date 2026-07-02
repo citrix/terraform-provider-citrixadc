@@ -11,12 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 )
 
 // StreamsessionResourceModel describes the resource data model.
 type StreamsessionResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id   types.String `tfsdk:"id"`
 	Name types.String `tfsdk:"name"`
 }
 

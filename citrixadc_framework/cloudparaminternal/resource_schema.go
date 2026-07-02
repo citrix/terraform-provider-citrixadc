@@ -9,12 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 )
 
 // CloudparaminternalResourceModel describes the resource data model.
 type CloudparaminternalResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id         types.String `tfsdk:"id"`
 	Nonftumode types.String `tfsdk:"nonftumode"`
 }
 

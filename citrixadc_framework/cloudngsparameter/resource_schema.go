@@ -9,15 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 )
 
 // CloudngsparameterResourceModel describes the resource data model.
 type CloudngsparameterResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	Allowdtls12 types.String `tfsdk:"allowdtls12"`
-	Allowedudtversion types.String `tfsdk:"allowedudtversion"`
-	Blockonallowedngstktprof types.String `tfsdk:"blockonallowedngstktprof"`
+	Id                         types.String `tfsdk:"id"`
+	Allowdtls12                types.String `tfsdk:"allowdtls12"`
+	Allowedudtversion          types.String `tfsdk:"allowedudtversion"`
+	Blockonallowedngstktprof   types.String `tfsdk:"blockonallowedngstktprof"`
 	Csvserverticketingdecouple types.String `tfsdk:"csvserverticketingdecouple"`
 }
 

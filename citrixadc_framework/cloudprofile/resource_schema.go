@@ -8,9 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -19,21 +19,21 @@ import (
 
 // CloudprofileResourceModel describes the resource data model.
 type CloudprofileResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	Azurepollperiod types.Int64 `tfsdk:"azurepollperiod"`
-	Azuretagname types.String `tfsdk:"azuretagname"`
-	Azuretagvalue types.String `tfsdk:"azuretagvalue"`
+	Id                       types.String `tfsdk:"id"`
+	Azurepollperiod          types.Int64  `tfsdk:"azurepollperiod"`
+	Azuretagname             types.String `tfsdk:"azuretagname"`
+	Azuretagvalue            types.String `tfsdk:"azuretagvalue"`
 	Boundservicegroupsvctype types.String `tfsdk:"boundservicegroupsvctype"`
-	Delay types.Int64 `tfsdk:"delay"`
-	Graceful types.String `tfsdk:"graceful"`
-	Ipaddress types.String `tfsdk:"ipaddress"`
-	Name types.String `tfsdk:"name"`
-	Port types.Int64 `tfsdk:"port"`
-	Servicegroupname types.String `tfsdk:"servicegroupname"`
-	Servicetype types.String `tfsdk:"servicetype"`
-	Type types.String `tfsdk:"type"`
-	Vservername types.String `tfsdk:"vservername"`
-	Vsvrbindsvcport types.Int64 `tfsdk:"vsvrbindsvcport"`
+	Delay                    types.Int64  `tfsdk:"delay"`
+	Graceful                 types.String `tfsdk:"graceful"`
+	Ipaddress                types.String `tfsdk:"ipaddress"`
+	Name                     types.String `tfsdk:"name"`
+	Port                     types.Int64  `tfsdk:"port"`
+	Servicegroupname         types.String `tfsdk:"servicegroupname"`
+	Servicetype              types.String `tfsdk:"servicetype"`
+	Type                     types.String `tfsdk:"type"`
+	Vservername              types.String `tfsdk:"vservername"`
+	Vsvrbindsvcport          types.Int64  `tfsdk:"vsvrbindsvcport"`
 }
 
 func (r *CloudprofileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -45,103 +45,103 @@ func (r *CloudprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "The ID of the cloudprofile resource.",
 			},
 			"azurepollperiod": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Azure polling period (in seconds)",
 			},
 			"azuretagname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Azure tag name",
 			},
 			"azuretagvalue": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Azure tag value",
 			},
 			"boundservicegroupsvctype": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "The type of bound service",
 			},
 			"delay": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Time, in seconds, after which all the services configured on the server are disabled.",
 			},
 			"graceful": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Indicates graceful shutdown of the service. System will wait for all outstanding connections to this service to be closed before disabling the service.",
 			},
 			"ipaddress": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "IPv4 or IPv6 address to assign to the virtual server.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name for the Cloud profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the profile is created.",
 			},
 			"port": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Port number for the virtual server.",
 			},
 			"servicegroupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "servicegroups bind to this server",
 			},
 			"servicetype": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Protocol used by the service (also called the service type).",
 			},
 			"type": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Type of cloud profile that you want to create, Vserver or based on Azure Tags",
 			},
 			"vservername": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vserver\" or 'my vserver').",
 			},
 			"vsvrbindsvcport": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},

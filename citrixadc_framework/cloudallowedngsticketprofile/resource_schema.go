@@ -12,14 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 )
 
 // CloudallowedngsticketprofileResourceModel describes the resource data model.
 type CloudallowedngsticketprofileResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id      types.String `tfsdk:"id"`
 	Creator types.String `tfsdk:"creator"`
-	Name types.String `tfsdk:"name"`
+	Name    types.String `tfsdk:"name"`
 }
 
 func (r *CloudallowedngsticketprofileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -35,7 +34,7 @@ func (r *CloudallowedngsticketprofileResource) Schema(ctx context.Context, req r
 				Description: "Created name for allowed tickets",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

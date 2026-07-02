@@ -12,12 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 )
 
 // KafkaclusterResourceModel describes the resource data model.
 type KafkaclusterResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	Id   types.String `tfsdk:"id"`
 	Name types.String `tfsdk:"name"`
 }
 
@@ -30,7 +29,7 @@ func (r *KafkaclusterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "The ID of the kafkacluster resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

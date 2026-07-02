@@ -16,8 +16,8 @@ import (
 
 // QuicparamResourceModel describes the resource data model.
 type QuicparamResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	Quicsecrettimeout types.Int64 `tfsdk:"quicsecrettimeout"`
+	Id                types.String `tfsdk:"id"`
+	Quicsecrettimeout types.Int64  `tfsdk:"quicsecrettimeout"`
 }
 
 func (r *QuicparamResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

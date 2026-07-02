@@ -2,8 +2,8 @@ package rnat_retainsourceportset_binding
 
 import (
 	"context"
-	"strings"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
@@ -19,8 +19,8 @@ import (
 
 // RnatRetainsourceportsetBindingResourceModel describes the resource data model.
 type RnatRetainsourceportsetBindingResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+	Id                    types.String `tfsdk:"id"`
+	Name                  types.String `tfsdk:"name"`
 	Retainsourceportrange types.String `tfsdk:"retainsourceportrange"`
 }
 
@@ -33,14 +33,14 @@ func (r *RnatRetainsourceportsetBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the rnat_retainsourceportset_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the RNAT rule to which to bind NAT IPs.",
 			},
 			"retainsourceportrange": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

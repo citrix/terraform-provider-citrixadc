@@ -18,25 +18,25 @@ import (
 
 // QuicprofileResourceModel describes the resource data model.
 type QuicprofileResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	Ackdelayexponent types.Int64 `tfsdk:"ackdelayexponent"`
-	Activeconnectionidlimit types.Int64 `tfsdk:"activeconnectionidlimit"`
-	Activeconnectionmigration types.String `tfsdk:"activeconnectionmigration"`
-	Congestionctrlalgorithm types.String `tfsdk:"congestionctrlalgorithm"`
-	Initialmaxdata types.Int64 `tfsdk:"initialmaxdata"`
-	Initialmaxstreamdatabidilocal types.Int64 `tfsdk:"initialmaxstreamdatabidilocal"`
-	Initialmaxstreamdatabidiremote types.Int64 `tfsdk:"initialmaxstreamdatabidiremote"`
-	Initialmaxstreamdatauni types.Int64 `tfsdk:"initialmaxstreamdatauni"`
-	Initialmaxstreamsbidi types.Int64 `tfsdk:"initialmaxstreamsbidi"`
-	Initialmaxstreamsuni types.Int64 `tfsdk:"initialmaxstreamsuni"`
-	Maxackdelay types.Int64 `tfsdk:"maxackdelay"`
-	Maxidletimeout types.Int64 `tfsdk:"maxidletimeout"`
-	Maxudpdatagramsperburst types.Int64 `tfsdk:"maxudpdatagramsperburst"`
-	Maxudppayloadsize types.Int64 `tfsdk:"maxudppayloadsize"`
-	Name types.String `tfsdk:"name"`
-	Newtokenvalidityperiod types.Int64 `tfsdk:"newtokenvalidityperiod"`
-	Retrytokenvalidityperiod types.Int64 `tfsdk:"retrytokenvalidityperiod"`
-	Statelessaddressvalidation types.String `tfsdk:"statelessaddressvalidation"`
+	Id                             types.String `tfsdk:"id"`
+	Ackdelayexponent               types.Int64  `tfsdk:"ackdelayexponent"`
+	Activeconnectionidlimit        types.Int64  `tfsdk:"activeconnectionidlimit"`
+	Activeconnectionmigration      types.String `tfsdk:"activeconnectionmigration"`
+	Congestionctrlalgorithm        types.String `tfsdk:"congestionctrlalgorithm"`
+	Initialmaxdata                 types.Int64  `tfsdk:"initialmaxdata"`
+	Initialmaxstreamdatabidilocal  types.Int64  `tfsdk:"initialmaxstreamdatabidilocal"`
+	Initialmaxstreamdatabidiremote types.Int64  `tfsdk:"initialmaxstreamdatabidiremote"`
+	Initialmaxstreamdatauni        types.Int64  `tfsdk:"initialmaxstreamdatauni"`
+	Initialmaxstreamsbidi          types.Int64  `tfsdk:"initialmaxstreamsbidi"`
+	Initialmaxstreamsuni           types.Int64  `tfsdk:"initialmaxstreamsuni"`
+	Maxackdelay                    types.Int64  `tfsdk:"maxackdelay"`
+	Maxidletimeout                 types.Int64  `tfsdk:"maxidletimeout"`
+	Maxudpdatagramsperburst        types.Int64  `tfsdk:"maxudpdatagramsperburst"`
+	Maxudppayloadsize              types.Int64  `tfsdk:"maxudppayloadsize"`
+	Name                           types.String `tfsdk:"name"`
+	Newtokenvalidityperiod         types.Int64  `tfsdk:"newtokenvalidityperiod"`
+	Retrytokenvalidityperiod       types.Int64  `tfsdk:"retrytokenvalidityperiod"`
+	Statelessaddressvalidation     types.String `tfsdk:"statelessaddressvalidation"`
 }
 
 func (r *QuicprofileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -118,7 +118,7 @@ func (r *QuicprofileResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "An integer value advertised by the Citrix ADC to the remote QUIC endpoint, specifying the size of the largest UDP datagram payload, in bytes, that the Citrix ADC is willing to receive on a QUIC connection.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
