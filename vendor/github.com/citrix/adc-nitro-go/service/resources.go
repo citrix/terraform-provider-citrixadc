@@ -977,19 +977,23 @@ const (
 	Spilloverpolicy_gslbvserver_binding
 	Spilloverpolicy_lbvserver_binding
 	Sslaction
+	Sslcacertbundle
 	Sslcacertgroup
 	Sslcacertgroup_sslcertkey_binding
 	Sslcert
+	Sslcertbundle
 	Sslcertchain
 	Sslcertchain_binding
 	Sslcertchain_sslcertkey_binding
 	Sslcertfile
+	Sslcertificatechain
 	Sslcertkey
 	Sslcertkey_binding
 	Sslcertkey_crldistribution_binding
 	Sslcertkey_service_binding
 	Sslcertkey_sslocspresponder_binding
 	Sslcertkey_sslvserver_binding
+	Sslcertkeybundle
 	Sslcertlink
 	Sslcertreq
 	Sslcipher
@@ -1010,12 +1014,14 @@ const (
 	Ssldsakey
 	Ssldtlsprofile
 	Sslecdsakey
+	Sslechconfig
 	Sslfips
 	Sslfipskey
 	Sslfipssimsource
 	Sslfipssimtarget
 	Sslglobal_binding
 	Sslglobal_sslpolicy_binding
+	Sslhpkekey
 	Sslhsmkey
 	Sslkeyfile
 	Ssllogprofile
@@ -1040,11 +1046,13 @@ const (
 	Sslprofile_sslcertkey_binding
 	Sslprofile_sslcipher_binding
 	Sslprofile_sslciphersuite_binding
+	Sslprofile_sslechconfig_binding
 	Sslprofile_sslvserver_binding
 	Sslrsakey
 	Sslservice
 	Sslservice_binding
 	Sslservice_ecccurve_binding
+	Sslservice_sslcacertbundle_binding
 	Sslservice_sslcertkey_binding
 	Sslservice_sslcipher_binding
 	Sslservice_sslciphersuite_binding
@@ -1052,13 +1060,16 @@ const (
 	Sslservicegroup
 	Sslservicegroup_binding
 	Sslservicegroup_ecccurve_binding
+	Sslservicegroup_sslcacertbundle_binding
 	Sslservicegroup_sslcertkey_binding
 	Sslservicegroup_sslcipher_binding
 	Sslservicegroup_sslciphersuite_binding
 	Sslvserver
 	Sslvserver_binding
 	Sslvserver_ecccurve_binding
+	Sslvserver_sslcacertbundle_binding
 	Sslvserver_sslcertkey_binding
+	Sslvserver_sslcertkeybundle_binding
 	Sslvserver_sslcipher_binding
 	Sslvserver_sslciphersuite_binding
 	Sslvserver_sslpolicy_binding
@@ -2259,19 +2270,23 @@ var resources = []string{
 	"spilloverpolicy_gslbvserver_binding",
 	"spilloverpolicy_lbvserver_binding",
 	"sslaction",
+	"sslcacertbundle",
 	"sslcacertgroup",
 	"sslcacertgroup_sslcertkey_binding",
 	"sslcert",
+	"sslcertbundle",
 	"sslcertchain",
 	"sslcertchain_binding",
 	"sslcertchain_sslcertkey_binding",
 	"sslcertfile",
+	"sslcertificatechain",
 	"sslcertkey",
 	"sslcertkey_binding",
 	"sslcertkey_crldistribution_binding",
 	"sslcertkey_service_binding",
 	"sslcertkey_sslocspresponder_binding",
 	"sslcertkey_sslvserver_binding",
+	"sslcertkeybundle",
 	"sslcertlink",
 	"sslcertreq",
 	"sslcipher",
@@ -2292,12 +2307,14 @@ var resources = []string{
 	"ssldsakey",
 	"ssldtlsprofile",
 	"sslecdsakey",
+	"sslechconfig",
 	"sslfips",
 	"sslfipskey",
 	"sslfipssimsource",
 	"sslfipssimtarget",
 	"sslglobal_binding",
 	"sslglobal_sslpolicy_binding",
+	"sslhpkekey",
 	"sslhsmkey",
 	"sslkeyfile",
 	"ssllogprofile",
@@ -2322,11 +2339,13 @@ var resources = []string{
 	"sslprofile_sslcertkey_binding",
 	"sslprofile_sslcipher_binding",
 	"sslprofile_sslciphersuite_binding",
+	"sslprofile_sslechconfig_binding",
 	"sslprofile_sslvserver_binding",
 	"sslrsakey",
 	"sslservice",
 	"sslservice_binding",
 	"sslservice_ecccurve_binding",
+	"sslservice_sslcacertbundle_binding",
 	"sslservice_sslcertkey_binding",
 	"sslservice_sslcipher_binding",
 	"sslservice_sslciphersuite_binding",
@@ -2334,13 +2353,16 @@ var resources = []string{
 	"sslservicegroup",
 	"sslservicegroup_binding",
 	"sslservicegroup_ecccurve_binding",
+	"sslservicegroup_sslcacertbundle_binding",
 	"sslservicegroup_sslcertkey_binding",
 	"sslservicegroup_sslcipher_binding",
 	"sslservicegroup_sslciphersuite_binding",
 	"sslvserver",
 	"sslvserver_binding",
 	"sslvserver_ecccurve_binding",
+	"sslvserver_sslcacertbundle_binding",
 	"sslvserver_sslcertkey_binding",
+	"sslvserver_sslcertkeybundle_binding",
 	"sslvserver_sslcipher_binding",
 	"sslvserver_sslciphersuite_binding",
 	"sslvserver_sslpolicy_binding",

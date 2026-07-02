@@ -671,23 +671,38 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/spilloveraction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/spilloverpolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslaction"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcacertbundle"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcacertgroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcacertgroup_sslcertkey_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcert"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertbundle"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertfile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertificatechain"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertkey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertkey_sslocspresponder_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertkeybundle"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcertreq"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcipher"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcipher_sslciphersuite_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcrl"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslcrlfile"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ssldhfile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ssldtlsprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslecdsakey"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslechconfig"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslfips"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslfipskey"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslfipssimsource"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslfipssimtarget"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslglobal_sslpolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslhpkekey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslhsmkey"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslkeyfile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/ssllogprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslocspresponder"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslparameter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslpkcs12"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslpkcs8"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslpolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslpolicylabel"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslpolicylabel_sslpolicy_binding"
@@ -695,20 +710,31 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslprofile_ecccurve_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslprofile_sslcertkey_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslprofile_sslcipher_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslprofile_sslciphersuite_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslprofile_sslechconfig_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslrsakey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservice"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservice_ecccurve_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservice_sslcacertbundle_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservice_sslcertkey_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservice_sslcipher_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservice_sslciphersuite_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservice_sslpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservicegroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservicegroup_ecccurve_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservicegroup_sslcacertbundle_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservicegroup_sslcertkey_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservicegroup_sslcipher_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslservicegroup_sslciphersuite_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslvserver"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslvserver_ecccurve_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslvserver_sslcacertbundle_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslvserver_sslcertkey_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslvserver_sslcertkeybundle_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslvserver_sslcipher_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslvserver_sslciphersuite_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslvserver_sslpolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/sslwrapkey"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/streamidentifier"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/streamselector"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/subscribergxinterface"
@@ -1276,6 +1302,36 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		nsstats.NewNsstatsResource,
 		nssurgeq.NewNssurgeqResource,
 		nstimer_autoscalepolicy_binding.NewNstimerAutoscalepolicyBindingResource,
+		sslcacertbundle.NewSslcacertbundleResource,
+		sslcertbundle.NewSslcertbundleResource,
+		sslcertificatechain.NewSslcertificatechainResource,
+		sslcertkeybundle.NewSslcertkeybundleResource,
+		sslcrlfile.NewSslcrlfileResource,
+		ssldhfile.NewSsldhfileResource,
+		sslechconfig.NewSslechconfigResource,
+		sslfips.NewSslfipsResource,
+		sslfipssimsource.NewSslfipssimsourceResource,
+		sslfipssimtarget.NewSslfipssimtargetResource,
+		sslglobal_sslpolicy_binding.NewSslglobalSslpolicyBindingResource,
+		sslhpkekey.NewSslhpkekeyResource,
+		sslkeyfile.NewSslkeyfileResource,
+		sslpkcs12.NewSslpkcs12Resource,
+		sslpkcs8.NewSslpkcs8Resource,
+		sslprofile_sslciphersuite_binding.NewSslprofileSslciphersuiteBindingResource,
+		sslprofile_sslechconfig_binding.NewSslprofileSslechconfigBindingResource,
+		sslservice_sslcacertbundle_binding.NewSslserviceSslcacertbundleBindingResource,
+		sslservice_sslcipher_binding.NewSslserviceSslcipherBindingResource,
+		sslservice_sslpolicy_binding.NewSslserviceSslpolicyBindingResource,
+		sslservicegroup.NewSslservicegroupResource,
+		sslservicegroup_ecccurve_binding.NewSslservicegroupEcccurveBindingResource,
+		sslservicegroup_sslcacertbundle_binding.NewSslservicegroupSslcacertbundleBindingResource,
+		sslservicegroup_sslcertkey_binding.NewSslservicegroupSslcertkeyBindingResource,
+		sslservicegroup_sslcipher_binding.NewSslservicegroupSslcipherBindingResource,
+		sslservicegroup_sslciphersuite_binding.NewSslservicegroupSslciphersuiteBindingResource,
+		sslvserver_sslcacertbundle_binding.NewSslvserverSslcacertbundleBindingResource,
+		sslvserver_sslcertkeybundle_binding.NewSslvserverSslcertkeybundleBindingResource,
+		sslvserver_sslcipher_binding.NewSslvserverSslcipherBindingResource,
+		sslwrapkey.NewSslwrapkeyResource,
 	}
 }
 
@@ -2107,6 +2163,28 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		nslimitselector.NSlimitselectorDataSource,
 		nslimitsessions.NSlimitsessionsDataSource,
 		nsmgmtparam.NSmgmtparamDataSource,
+		sslcacertbundle.SSlcacertbundleDataSource,
+		sslcertbundle.SSlcertbundleDataSource,
+		sslcertificatechain.SSlcertificatechainDataSource,
+		sslcertkeybundle.SSlcertkeybundleDataSource,
+		sslcrlfile.SSlcrlfileDataSource,
+		ssldhfile.SSldhfileDataSource,
+		sslechconfig.SSlechconfigDataSource,
+		sslfips.SSlfipsDataSource,
+		sslglobal_sslpolicy_binding.SSlglobalSslpolicyBindingDataSource,
+		sslhpkekey.SSlhpkekeyDataSource,
+		sslkeyfile.SSlkeyfileDataSource,
+		sslprofile_sslciphersuite_binding.SSlprofileSslciphersuiteBindingDataSource,
+		sslprofile_sslechconfig_binding.SSlprofileSslechconfigBindingDataSource,
+		sslservice_sslcacertbundle_binding.SSlserviceSslcacertbundleBindingDataSource,
+		sslservice_sslcipher_binding.SSlserviceSslcipherBindingDataSource,
+		sslservice_sslpolicy_binding.SSlserviceSslpolicyBindingDataSource,
+		sslservicegroup_sslcacertbundle_binding.SSlservicegroupSslcacertbundleBindingDataSource,
+		sslservicegroup_sslcipher_binding.SSlservicegroupSslcipherBindingDataSource,
+		sslvserver_sslcacertbundle_binding.SSlvserverSslcacertbundleBindingDataSource,
+		sslvserver_sslcertkeybundle_binding.SSlvserverSslcertkeybundleBindingDataSource,
+		sslvserver_sslcipher_binding.SSlvserverSslcipherBindingDataSource,
+		sslwrapkey.SSlwrapkeyDataSource,
 	}
 }
 
