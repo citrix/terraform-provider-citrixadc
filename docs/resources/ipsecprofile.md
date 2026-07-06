@@ -38,7 +38,7 @@ resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
 
 ### Using psk_wo (write-only/ephemeral - NOT persisted in state)
 
-The `psk_wo` attribute provides an ephemeral path for the pre-shared key. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the key changes, increment `psk_wo_version`.
+The `psk_wo` attribute provides an ephemeral path for the pre-shared key. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the key, increment `psk_wo_version`; because the pre-shared key is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "ipsecprofile_psk" {
@@ -61,7 +61,7 @@ resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
   name           = "my_ipsecprofile"
   ikeversion     = "V2"
   psk_wo         = var.ipsecprofile_psk
-  psk_wo_version = 2  # Bumped to trigger update
+  psk_wo_version = 2  # Bumped: forces destroy & recreate
 }
 ```
 
@@ -75,7 +75,7 @@ resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
 * `lifetime` - (Optional) Lifetime of IKE SA in seconds. Lifetime of IPSec SA will be (lifetime of IKE SA/8). Minimum value =  480 Maximum value =  31536000
 * `psk` - (Optional, Sensitive) Pre shared key value. The value is persisted in Terraform state (encrypted). See also `psk_wo` for an ephemeral alternative.
 * `psk_wo` - (Optional, Sensitive, WriteOnly) Same as `psk`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `psk_wo_version`. If both `psk` and `psk_wo` are set, `psk_wo` takes precedence.
-* `psk_wo_version` - (Optional) An integer version tracker for `psk_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
+* `psk_wo_version` - (Optional) An integer version tracker for `psk_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed. Note: this secret is immutable on the ADC, so changing `psk_wo_version` (or `psk`/`psk_wo`) forces the resource to be **destroyed and recreated** rather than updated in place. Defaults to `1`.
 * `publickey` - (Optional) Public key file path.
 * `privatekey` - (Optional) Private key file path.
 * `peerpublickey` - (Optional) Peer public key file path.

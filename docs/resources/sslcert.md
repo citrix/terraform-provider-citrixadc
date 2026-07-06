@@ -49,7 +49,7 @@ resource "citrixadc_sslcert" "tf_sslcert" {
 
 ### Using pempassphrase_wo (write-only/ephemeral - NOT persisted in state)
 
-The `pempassphrase_wo` attribute provides an ephemeral path for the PEM pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `pempassphrase_wo_version`.
+The `pempassphrase_wo` attribute provides an ephemeral path for the PEM pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `pempassphrase_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "sslcert_pempassphrase" {
@@ -77,7 +77,7 @@ resource "citrixadc_sslcert" "tf_sslcert" {
 * `keyform` - (Optional) Format in which the key is stored on the appliance. Possible values: [ DER, PEM ]
 * `pempassphrase` - (Optional, Sensitive) Pass phrase used to encrypt the private key. The value is persisted in Terraform state (encrypted). See also `pempassphrase_wo` for an ephemeral alternative. Minimum length =  1 Maximum length =  31
 * `pempassphrase_wo` - (Optional, Sensitive, WriteOnly) Same as `pempassphrase`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `pempassphrase_wo_version`. If both `pempassphrase` and `pempassphrase_wo` are set, `pempassphrase_wo` takes precedence.
-* `pempassphrase_wo_version` - (Optional) An integer version tracker for `pempassphrase_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
+* `pempassphrase_wo_version` - (Optional) An integer version tracker for `pempassphrase_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed. Note: this secret is immutable on the ADC, so changing `pempassphrase_wo_version` (or `pempassphrase`/`pempassphrase_wo`) forces the resource to be **destroyed and recreated** rather than updated in place. Defaults to `1`.
 * `days` - (Optional) Number of days for which the certificate will be valid, beginning with the time and day (system time) of creation. Minimum value =  1 Maximum value =  3650
 * `subjectaltname` - (Optional) Subject Alternative Name (SAN) is an extension to X.509 that allows various values to be associated with a security certificate using a subjectAltName field. These values are called "Subject Alternative Names" (SAN). Names include: 1. Email addresses 2. IP addresses 3. URIs 4. DNS names (This is usually also provided as the Common Name RDN within the Subject field of the main certificate.) 5. directory names (alternative Distinguished Names to that given in the Subject). Minimum length =  1
 * `certform` - (Optional) Format in which the certificate is stored on the appliance. Possible values: [ DER, PEM ]

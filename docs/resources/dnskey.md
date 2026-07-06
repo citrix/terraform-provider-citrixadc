@@ -42,7 +42,7 @@ resource "citrixadc_dnskey" "example" {
 
 ### Using password_wo (write-only/ephemeral - NOT persisted in state)
 
-The `password_wo` attribute provides an ephemeral path for the passphrase used to read the encrypted public/private DNS keys. The value is sent to the Citrix ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `password_wo_version`.
+The `password_wo` attribute provides an ephemeral path for the passphrase used to read the encrypted public/private DNS keys. The value is sent to the Citrix ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `password_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "dnskey_password" {
@@ -67,7 +67,7 @@ resource "citrixadc_dnskey" "example" {
   publickey           = "/nsconfig/dns/demo.key"
   privatekey          = "/nsconfig/dns/demo.private"
   password_wo         = var.dnskey_password
-  password_wo_version = 2  # Bumped to trigger update
+  password_wo_version = 2  # Bumped: forces destroy & recreate
 }
 ```
 
@@ -86,7 +86,7 @@ resource "citrixadc_dnskey" "example" {
 * `notificationperiod` - (Optional) Time at which to generate notification of key expiration, specified as number of days, hours, or minutes before expiry. Must be less than the expiry period. The notification is an SNMP trap sent to an SNMP manager. To enable the appliance to send the trap, enable the DNSKEY-EXPIRY SNMP alarm. In case autorollover option is enabled, rollover for successor key will be initiated at this time. No notification trap will be sent. Defaults to `7`.
 * `password` - (Optional, Sensitive) Passphrase for reading the encrypted public/private DNS keys. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative.
 * `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence.
-* `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
+* `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed. Note: this secret is immutable on the ADC, so changing `password_wo_version` (or `password`/`password_wo`) forces the resource to be **destroyed and recreated** rather than updated in place. Defaults to `1`.
 * `revoke` - (Optional) Revoke the key. Note: This operation is non-reversible.
 * `rollovermethod` - (Optional) Method used for automatic rollover. Key type: ZSK, Method: PrePublication or DoubleSignature. Key type: KSK, Method: DoubleRRSet.
 * `src` - (Optional) URL (protocol, host, path, and file name) from where the DNS key file will be imported. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.

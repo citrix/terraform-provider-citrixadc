@@ -40,7 +40,7 @@ resource "citrixadc_azureapplication" "tf_azureapplication" {
 
 ### Using clientsecret_wo (write-only/ephemeral - NOT persisted in state)
 
-The `clientsecret_wo` attribute provides an ephemeral path for the Azure application client secret. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the client secret value changes, increment `clientsecret_wo_version`.
+The `clientsecret_wo` attribute provides an ephemeral path for the Azure application client secret. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the client secret, increment `clientsecret_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "azureapplication_clientsecret" {
@@ -65,7 +65,7 @@ resource "citrixadc_azureapplication" "tf_azureapplication" {
   name                    = "my_azure_app"
   clientid                = "11111111-2222-3333-4444-555555555555"
   clientsecret_wo         = var.azureapplication_clientsecret
-  clientsecret_wo_version = 2  # Bumped to trigger update
+  clientsecret_wo_version = 2  # Bumped: forces destroy & recreate
   tenantid                = "66666666-7777-8888-9999-000000000000"
   vaultresource           = "vault.azure.net"
 }
@@ -79,7 +79,7 @@ resource "citrixadc_azureapplication" "tf_azureapplication" {
 * `clientid` - (Optional) Application ID that is generated when an application is created in Azure Active Directory using either the Azure CLI or the Azure portal (GUI).
 * `clientsecret` - (Optional, Sensitive) Password for the application configured in Azure Active Directory. The password is specified in the Azure CLI or generated in the Azure portal (GUI). The value is persisted in Terraform state (encrypted). See also `clientsecret_wo` for an ephemeral alternative.
 * `clientsecret_wo` - (Optional, Sensitive, WriteOnly) Same as `clientsecret`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `clientsecret_wo_version`. If both `clientsecret` and `clientsecret_wo` are set, `clientsecret_wo` takes precedence.
-* `clientsecret_wo_version` - (Optional) An integer version tracker for `clientsecret_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the client secret has changed and trigger an update. Defaults to `1`.
+* `clientsecret_wo_version` - (Optional) An integer version tracker for `clientsecret_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed. Note: this secret is immutable on the ADC, so changing `clientsecret_wo_version` (or `clientsecret`/`clientsecret_wo`) forces the resource to be **destroyed and recreated** rather than updated in place. Defaults to `1`.
 * `tenantid` - (Optional) ID of the directory inside Azure Active Directory in which the application was created.
 * `tokenendpoint` - (Optional) URL from where the access token can be obtained. If the token end point is not specified, the default value is `https://login.microsoftonline.com/<tenant id>`.
 

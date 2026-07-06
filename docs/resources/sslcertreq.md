@@ -41,7 +41,7 @@ resource "citrixadc_sslcertreq" "tf_sslcertreq" {
 
 ### Using pempassphrase_wo (write-only/ephemeral - NOT persisted in state)
 
-The `pempassphrase_wo` attribute provides an ephemeral path for the PEM pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `pempassphrase_wo_version`.
+The `pempassphrase_wo` attribute provides an ephemeral path for the PEM pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `pempassphrase_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "sslcertreq_pempassphrase" {
@@ -80,7 +80,7 @@ resource "citrixadc_sslcertreq" "tf_sslcertreq" {
 
 ### Using challengepassword_wo (write-only/ephemeral - NOT persisted in state)
 
-The `challengepassword_wo` attribute provides an ephemeral path for the challenge password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `challengepassword_wo_version`.
+The `challengepassword_wo` attribute provides an ephemeral path for the challenge password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `challengepassword_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "sslcertreq_challengepassword" {
@@ -112,14 +112,14 @@ resource "citrixadc_sslcertreq" "tf_sslcertreq" {
 * `keyform` - (Optional) Format in which the key is stored on the appliance. Possible values: [ DER, PEM ]
 * `pempassphrase` - (Optional, Sensitive) Pass phrase used to encrypt the private key. The value is persisted in Terraform state (encrypted). See also `pempassphrase_wo` for an ephemeral alternative. Minimum length =  1 Maximum length =  31
 * `pempassphrase_wo` - (Optional, Sensitive, WriteOnly) Same as `pempassphrase`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `pempassphrase_wo_version`. If both `pempassphrase` and `pempassphrase_wo` are set, `pempassphrase_wo` takes precedence.
-* `pempassphrase_wo_version` - (Optional) An integer version tracker for `pempassphrase_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
+* `pempassphrase_wo_version` - (Optional) An integer version tracker for `pempassphrase_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed. Note: this secret is immutable on the ADC, so changing `pempassphrase_wo_version` (or `pempassphrase`/`pempassphrase_wo`) forces the resource to be **destroyed and recreated** rather than updated in place. Defaults to `1`.
 * `organizationunitname` - (Optional) Name of the division or section in the organization that will use the certificate. Minimum length =  1
 * `localityname` - (Optional) Name of the city or town in which your organization's head office is located. Minimum length =  1
 * `commonname` - (Optional) Fully qualified domain name for the company or web site. The common name must match the name used by DNS servers to do a DNS lookup of your server. Most browsers use this information for authenticating the server's certificate during the SSL handshake. If the server name in the URL does not match the common name as given in the server certificate, the browser terminates the SSL handshake or prompts the user with a warning message. Do not use wildcard characters, such as asterisk (*) or question mark (?), and do not use an IP address as the common name. The common name must not contain the protocol specifier <http://> or <https://>. Minimum length =  1
 * `emailaddress` - (Optional) Contact person's e-mail address. This address is publically displayed as part of the certificate. Provide an e-mail address that is monitored by an administrator who can be contacted about the certificate. Minimum length =  1
 * `challengepassword` - (Optional, Sensitive) Pass phrase, embedded in the certificate signing request that is shared only between the client or server requesting the certificate and the SSL certificate issuer (typically the certificate authority). This pass phrase can be used to authenticate a client or server that is requesting a certificate from the certificate authority. The value is persisted in Terraform state (encrypted). See also `challengepassword_wo` for an ephemeral alternative. Minimum length =  4
 * `challengepassword_wo` - (Optional, Sensitive, WriteOnly) Same as `challengepassword`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `challengepassword_wo_version`. If both `challengepassword` and `challengepassword_wo` are set, `challengepassword_wo` takes precedence.
-* `challengepassword_wo_version` - (Optional) An integer version tracker for `challengepassword_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
+* `challengepassword_wo_version` - (Optional) An integer version tracker for `challengepassword_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed. Note: this secret is immutable on the ADC, so changing `challengepassword_wo_version` (or `challengepassword`/`challengepassword_wo`) forces the resource to be **destroyed and recreated** rather than updated in place. Defaults to `1`.
 * `companyname` - (Optional) Additional name for the company or web site. Minimum length =  1
 * `digestmethod` - (Optional) Digest algorithm used in creating CSR. Possible values: [ SHA1, SHA256 ]
 
