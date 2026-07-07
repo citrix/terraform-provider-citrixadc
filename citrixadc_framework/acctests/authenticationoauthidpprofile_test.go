@@ -223,6 +223,31 @@ func TestAccAuthenticationoauthidpprofile_clientsecret_backward_compat(t *testin
 	})
 }
 
+func TestAccAuthenticationoauthidpprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationoauthidpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationoauthidpprofile_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthidpprofileExist("citrixadc_authenticationoauthidpprofile.tf_idpprofile", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationoauthidpprofile_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthidpprofileExist("citrixadc_authenticationoauthidpprofile.tf_idpprofile", nil),
+				),
+			},
+		},
+	})
+}
+
 // Test ephemeral path: using clientsecret_wo (WriteOnly attribute) with version tracker
 const testAccAuthenticationoauthidpprofile_clientsecret_wo_step1 = `
 

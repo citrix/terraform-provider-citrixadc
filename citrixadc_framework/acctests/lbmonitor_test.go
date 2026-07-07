@@ -842,6 +842,107 @@ resource "citrixadc_lbmonitor" "tf_lbmonitor_secureargs_wo" {
 }
 `
 
+// ============================================================
+// SDK v2 -> Plugin Framework state upgrade (backward compatibility)
+//
+// In v2.2.0 (and earlier) citrixadc_lbmonitor was an SDK v2 resource that stored
+// its state id as the bare monitorname (d.SetId(monitorname)). In v2.2.1 it was
+// migrated to the Plugin Framework, which stores a self-describing composite id
+// ("monitorname:<name>,type:<type>"). This test proves that the current
+// (framework) provider can read a resource whose state was written by the old
+// SDK provider WITHOUT the "cannot parse legacy ID ... no attribute order
+// provided" error, and that the id is transparently normalized to the new format.
+// ============================================================
+
+const testAccLbmonitor_upgrade_basic = `
+resource "citrixadc_lbmonitor" "upgrade" {
+  monitorname = "tf_test_lbmonitor_upgrade"
+  type        = "HTTP"
+}
+`
+
+func TestAccLbmonitor_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the monitor with the last SDK-v2 provider release
+			// (v2.2.0). It writes state with the legacy bare-monitorname id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbmonitor_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.upgrade", nil),
+					// Legacy format: id is exactly the monitorname (no "key:value" pairs).
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbmonitor.upgrade", "id", "tf_test_lbmonitor_upgrade"),
+				),
+			},
+			// Step 2: same config, now served by the CURRENT (framework) provider.
+			// Terraform refreshes the legacy-id state through the new provider's
+			// Read (exercising ParseIdString with the legacy attr order) and then
+			// plans/applies. The step fails automatically if Read returns the
+			// parse error. We also assert the id is upgraded to the new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbmonitor_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.upgrade", nil),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbmonitor.upgrade", "id",
+						"monitorname:tf_test_lbmonitor_upgrade,type:HTTP"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccLbmonitor_legacyIdImport is a registry-INDEPENDENT backward-compatibility
+// test. It imports an existing monitor using the LEGACY bare-"monitorname" id that
+// the SDK v2 provider stored (d.SetId(monitorname)), which drives ParseIdString's
+// legacy-format path in Read. Before the fix this failed with
+// "cannot parse legacy ID ... no attribute order provided". Unlike
+// TestAccLbmonitor_sdkv2StateUpgrade this needs NO external provider download, so it
+// runs in environments without Terraform Registry access (only a live ADC required).
+func TestAccLbmonitor_legacyIdImport(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.upgrade", nil),
+				),
+			},
+			{
+				// Import with the legacy bare-monitorname id (no "key:value" pairs).
+				ResourceName:      "citrixadc_lbmonitor.upgrade",
+				ImportState:       true,
+				ImportStateId:     "tf_test_lbmonitor_upgrade",
+				ImportStateVerify: false,
+				ImportStateCheck: func(states []*terraform.InstanceState) error {
+					if len(states) != 1 {
+						return fmt.Errorf("expected 1 imported state, got %d", len(states))
+					}
+					got := states[0].ID
+					want := "monitorname:tf_test_lbmonitor_upgrade,type:HTTP"
+					if got != want {
+						return fmt.Errorf("legacy id not normalized on import: got %q, want %q", got, want)
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
 func TestAccLbmonitor_secureargs_wo_ephemeral(t *testing.T) {
 	t.Setenv("TF_VAR_lbmonitor_secureargs_wo", "secret1=val1")
 	t.Setenv("TF_VAR_lbmonitor_secureargs_wo_2", "secret2=val2")

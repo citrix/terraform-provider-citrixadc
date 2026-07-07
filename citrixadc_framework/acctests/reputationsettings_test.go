@@ -252,3 +252,28 @@ func TestAccReputationsettings_proxypassword_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccReputationsettings_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccReputationsettings_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccReputationsettings_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
+				),
+			},
+		},
+	})
+}

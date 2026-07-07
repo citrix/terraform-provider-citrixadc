@@ -250,6 +250,31 @@ func TestAccAaaldapparams_ldapbinddnpassword_wo_ephemeral(t *testing.T) {
 	})
 }
 
+func TestAccAaaldapparams_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaaldapparams_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaldapparamsExist("citrixadc_aaaldapparams.tf_aaaldapparams", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaaldapparams_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaldapparamsExist("citrixadc_aaaldapparams.tf_aaaldapparams", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAaaldapparamsDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

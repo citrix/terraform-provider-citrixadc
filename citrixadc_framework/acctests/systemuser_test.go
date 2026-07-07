@@ -289,3 +289,28 @@ func TestAccSystemuser_password_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSystemuser_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSystemuser_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuserExist("citrixadc_systemuser.tf_user", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemuser_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuserExist("citrixadc_systemuser.tf_user", nil),
+				),
+			},
+		},
+	})
+}

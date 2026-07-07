@@ -272,3 +272,28 @@ func TestAccAaassoprofileDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaassoprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaassoprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaassoprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaassoprofileExist("citrixadc_aaassoprofile.tf_aaassoprofile", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaassoprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaassoprofileExist("citrixadc_aaassoprofile.tf_aaassoprofile", nil),
+				),
+			},
+		},
+	})
+}

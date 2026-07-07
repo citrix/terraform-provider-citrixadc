@@ -136,3 +136,28 @@ func TestAccSslrsakey_password_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslrsakey_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of keyfile at ADC!")
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslrsakey_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslrsakeyExist("citrixadc_sslrsakey.tf_sslrsakey", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslrsakey_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslrsakeyExist("citrixadc_sslrsakey.tf_sslrsakey", nil),
+				),
+			},
+		},
+	})
+}

@@ -246,6 +246,31 @@ func TestAccIpsecprofile_psk_backward_compat(t *testing.T) {
 	})
 }
 
+func TestAccIpsecprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIpsecprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccIpsecprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecprofileExist("citrixadc_ipsecprofile.tf_ipsecprofile", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIpsecprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecprofileExist("citrixadc_ipsecprofile.tf_ipsecprofile", nil),
+				),
+			},
+		},
+	})
+}
+
 const testAccIpsecprofile_psk_wo_step1 = `
 
 variable "ipsecprofile_psk_wo" {

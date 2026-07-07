@@ -210,6 +210,31 @@ func TestAccSmppuser_password_backward_compat(t *testing.T) {
 	})
 }
 
+func TestAccSmppuser_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSmppuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSmppuser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmppuserExist("citrixadc_smppuser.tf_smppuser", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSmppuser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmppuserExist("citrixadc_smppuser.tf_smppuser", nil),
+				),
+			},
+		},
+	})
+}
+
 // Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
 const testAccSmppuser_password_wo_step1 = `
 	variable "smppuser_password_wo" {

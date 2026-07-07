@@ -324,3 +324,28 @@ func TestAccGslbsite_sitepassword_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccGslbsite_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbsiteDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccGslbsite_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbsiteExist("citrixadc_gslbsite.foo", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbsite_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbsiteExist("citrixadc_gslbsite.foo", nil),
+				),
+			},
+		},
+	})
+}
