@@ -251,3 +251,31 @@ resource "citrixadc_cluster" "tf_cluster" {
 	}
 }
 `
+
+func TestAccCluster_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCluster_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExist("citrixadc_cluster.tf_cluster", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCluster_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExist("citrixadc_cluster.tf_cluster", nil),
+				),
+			},
+		},
+	})
+}

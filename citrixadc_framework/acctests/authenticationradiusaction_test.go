@@ -277,6 +277,31 @@ func TestAccAuthenticationradiusaction_radkey_wo_ephemeral(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationradiusaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationradiusactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationradiusaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationradiusactionExist("citrixadc_authenticationradiusaction.tf_radiusaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationradiusaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationradiusactionExist("citrixadc_authenticationradiusaction.tf_radiusaction", nil),
+				),
+			},
+		},
+	})
+}
+
 const testAccAuthenticationradiusactionDataSource_basic = `
 
 	resource "citrixadc_authenticationradiusaction" "tf_radiusaction_ds" {

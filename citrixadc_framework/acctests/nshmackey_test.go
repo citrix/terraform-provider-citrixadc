@@ -280,3 +280,28 @@ func TestAccNshmackey_keyvalue_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNshmackey_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNshmackeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNshmackey_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshmackeyExist("citrixadc_nshmackey.tf_nshmackey", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNshmackey_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshmackeyExist("citrixadc_nshmackey.tf_nshmackey", nil),
+				),
+			},
+		},
+	})
+}

@@ -280,3 +280,28 @@ func TestAccAaaradiusparams_radkey_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaaradiusparams_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaaradiusparams_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaradiusparamsExist("citrixadc_aaaradiusparams.tf_aaaradiusparams", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaaradiusparams_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaradiusparamsExist("citrixadc_aaaradiusparams.tf_aaaradiusparams", nil),
+				),
+			},
+		},
+	})
+}

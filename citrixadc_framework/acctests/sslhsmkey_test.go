@@ -207,6 +207,34 @@ func TestAccSslhsmkey_password_backward_compat(t *testing.T) {
 	})
 }
 
+func TestAccSslhsmkey_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslhsmkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslhsmkey_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslhsmkeyExist("citrixadc_sslhsmkey.tf_hsmkey1", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslhsmkey_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslhsmkeyExist("citrixadc_sslhsmkey.tf_hsmkey1", nil),
+				),
+			},
+		},
+	})
+}
+
 // Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
 const testAccSslhsmkey_password_wo_step1 = `
 	variable "sslhsmkey_password_wo" {

@@ -309,3 +309,28 @@ func TestAccLbprofile_cookiepassphrase_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLbprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbprofileExist("citrixadc_lbprofile.tf_lbprofile", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbprofileExist("citrixadc_lbprofile.tf_lbprofile", nil),
+				),
+			},
+		},
+	})
+}

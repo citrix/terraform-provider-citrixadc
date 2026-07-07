@@ -598,7 +598,7 @@ func (r *LbmonitorResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting lbmonitor resource")
 	// Binding with parent - delete using DeleteResourceWithArgs
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), nil, nil)
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"monitorname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
@@ -628,7 +628,7 @@ func (r *LbmonitorResource) Delete(ctx context.Context, req resource.DeleteReque
 func (r *LbmonitorResource) readLbmonitorFromApi(ctx context.Context, data *LbmonitorResourceModel, diags *diag.Diagnostics) {
 
 	// Case 4: Array filter with parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), nil, nil)
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"monitorname"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
 		return

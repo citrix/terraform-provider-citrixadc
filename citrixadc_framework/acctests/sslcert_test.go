@@ -141,3 +141,27 @@ func TestAccSslcert_pempassphrase_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslcert_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { doSslcertkeyPreChecks(t) },
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslcert_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertExist("citrixadc_sslcert.tf_sslcert_ephem", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslcert_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertExist("citrixadc_sslcert.tf_sslcert_ephem", nil),
+				),
+			},
+		},
+	})
+}

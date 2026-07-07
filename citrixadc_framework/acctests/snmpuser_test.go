@@ -335,3 +335,28 @@ data "citrixadc_snmpuser" "tf_snmpuser_ds" {
 	depends_on = [citrixadc_snmpuser.tf_snmpuser_ds]
 }
 `
+
+func TestAccSnmpuser_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSnmpuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSnmpuser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSnmpuser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+				),
+			},
+		},
+	})
+}

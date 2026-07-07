@@ -265,3 +265,28 @@ func TestAccDbuser_password_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDbuser_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDbuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDbuser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDbuser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser", nil),
+				),
+			},
+		},
+	})
+}

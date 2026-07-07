@@ -313,6 +313,31 @@ func TestAccSslprofile_sessionticketkeydata_backward_compat(t *testing.T) {
 	})
 }
 
+func TestAccSslprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslprofile_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslprofile_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
+				),
+			},
+		},
+	})
+}
+
 // Test ephemeral path: using sessionticketkeydata_wo (WriteOnly attribute) with version tracker
 const testAccSslprofile_sessionticketkeydata_wo_step1 = `
 	variable "sslprofile_sessionticketkeydata_wo" {

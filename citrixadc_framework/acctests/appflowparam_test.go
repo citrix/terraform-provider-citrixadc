@@ -278,3 +278,28 @@ func TestAccAppflowparam_analyticsauthtoken_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppflowparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppflowparam_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowparamExist("citrixadc_appflowparam.tf_appflowparam", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppflowparam_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowparamExist("citrixadc_appflowparam.tf_appflowparam", nil),
+				),
+			},
+		},
+	})
+}

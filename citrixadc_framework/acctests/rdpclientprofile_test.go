@@ -285,3 +285,28 @@ func TestAccRdpclientprofile_psk_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccRdpclientprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRdpclientprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRdpclientprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpclientprofileExist("citrixadc_rdpclientprofile.tf_rdpclientprofile", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRdpclientprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpclientprofileExist("citrixadc_rdpclientprofile.tf_rdpclientprofile", nil),
+				),
+			},
+		},
+	})
+}

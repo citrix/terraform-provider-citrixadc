@@ -199,6 +199,31 @@ func TestAccSslcrl_password_backward_compat(t *testing.T) {
 	})
 }
 
+func TestAccSslcrl_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslcrlDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslcrl_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslcrl_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl", nil),
+				),
+			},
+		},
+	})
+}
+
 // Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
 const testAccSslcrl_password_wo_step1 = `
 	variable "sslcrl_password_wo" {

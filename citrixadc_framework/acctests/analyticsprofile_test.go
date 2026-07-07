@@ -288,3 +288,28 @@ func TestAccAnalyticsprofile_analyticsauthtoken_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAnalyticsprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAnalyticsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAnalyticsprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyticsprofileExist("citrixadc_analyticsprofile.tf_analyticsprofile", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAnalyticsprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyticsprofileExist("citrixadc_analyticsprofile.tf_analyticsprofile", nil),
+				),
+			},
+		},
+	})
+}

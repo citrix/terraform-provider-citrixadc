@@ -245,6 +245,31 @@ func TestAccAaauser_password_wo_ephemeral(t *testing.T) {
 	})
 }
 
+func TestAccAaauser_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaauserDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaauser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauserExist("citrixadc_aaauser.tf_aaauser", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaauser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauserExist("citrixadc_aaauser.tf_aaauser", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAaauserDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
