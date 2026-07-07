@@ -91,7 +91,8 @@ func vpnglobal_staserver_bindingSetAttrFromGet(ctx context.Context, data *Vpnglo
 		data.Staserver = types.StringValue(val.(string))
 	}
 
-	// ID is set once in Create (single unique attribute - plain value); do not recompute here.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Staserver.ValueString()))
 
 	return data
 }

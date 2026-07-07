@@ -192,6 +192,12 @@ func authenticationvserver_authenticationpolicy_bindingSetAttrFromGet(ctx contex
 		data.Secondary = types.BoolNull()
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

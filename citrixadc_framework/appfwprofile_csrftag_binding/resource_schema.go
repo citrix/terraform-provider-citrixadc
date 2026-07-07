@@ -190,6 +190,13 @@ func appfwprofile_csrftag_bindingSetAttrFromGet(ctx context.Context, data *Appfw
 		data.State = types.StringNull()
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("csrfformactionurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Csrfformactionurl.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("csrftag:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Csrftag.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

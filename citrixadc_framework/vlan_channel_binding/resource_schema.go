@@ -126,6 +126,9 @@ func vlan_channel_bindingSetAttrFromGet(ctx context.Context, data *VlanChannelBi
 		data.Tagged = types.BoolValue(val.(bool))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(vlan_channel_bindingComposeId(data))
+
 	return data
 }
 

@@ -173,6 +173,14 @@ func sslvserver_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Sslv
 		data.Vservername = types.StringValue(val.(string))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("vservername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vservername.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

@@ -264,6 +264,9 @@ func appfwprofile_jsoncmdurl_bindingSetAttrFromGet(ctx context.Context, data *Ap
 		data.State = types.StringNull()
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(buildAppfwprofileJsoncmdurlBindingId(data))
+
 	return data
 }
 

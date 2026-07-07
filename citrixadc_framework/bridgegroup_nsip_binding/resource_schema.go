@@ -145,6 +145,11 @@ func bridgegroup_nsip_bindingSetAttrFromGet(ctx context.Context, data *Bridgegro
 		}
 	}
 
+	// Set ID for the resource before reading state.
+	// Composite ID uses the legacy attribute order (bridgegroup_id,ipaddress).
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(bridgegroupNsipBindingComputeId(data))
+
 	return data
 }
 

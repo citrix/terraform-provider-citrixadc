@@ -156,8 +156,11 @@ func vpnvserver_authenticationtacacspolicy_bindingSetAttrFromGet(ctx context.Con
 	// overwritten here - they are not returned by NITRO and must keep the
 	// configured plan/state value.
 
-	// ID is composed once in Create (name,policy per resource_id_mapping.json);
-	// do not recompute it here (Pattern 6).
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

@@ -211,7 +211,12 @@ func appfwprofile_xmlxss_bindingSetAttrFromGet(ctx context.Context, data *Appfwp
 		data.Xmlxss = types.StringNull()
 	}
 
-	// ID is set once in Create (and preserved across Read/Update); do not recompute here.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("as_scan_location_xmlxss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsScanLocationXmlxss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("xmlxss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Xmlxss.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

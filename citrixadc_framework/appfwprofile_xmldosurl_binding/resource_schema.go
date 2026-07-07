@@ -771,6 +771,12 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	data.Xmlminfilesizecheck = adopt(data.Xmlminfilesizecheck, "xmlminfilesizecheck")
 	data.Xmlsoaparraycheck = adopt(data.Xmlsoaparraycheck, "xmlsoaparraycheck")
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("xmldosurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Xmldosurl.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

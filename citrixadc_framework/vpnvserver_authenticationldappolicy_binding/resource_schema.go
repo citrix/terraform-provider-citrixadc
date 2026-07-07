@@ -169,10 +169,11 @@ func vpnvserver_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Conte
 		data.Secondary = types.BoolNull()
 	}
 
-	// ID is set once in Create / datasource Read using the legacy (name,policy) key
-	// order. SetAttrFromGet must NOT recompute it (bindpoint is a delete-arg, not an
-	// ID key — see resource_id_mapping.json "name,policy"). Recomputing it here with a
-	// 3-key bindpoint-bearing form would diverge from the legacy ID contract.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString())))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

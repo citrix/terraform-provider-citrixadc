@@ -140,6 +140,9 @@ func bridgegroup_nsip6_bindingSetAttrFromGet(ctx context.Context, data *Bridgegr
 		}
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(bridgegroup_nsip6_bindingComposeId(data))
+
 	return data
 }
 

@@ -97,6 +97,12 @@ func vpnvserver_intranetip_bindingSetAttrFromGet(ctx context.Context, data *Vpnv
 		data.Netmask = types.StringValue(val.(string))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("intranetip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

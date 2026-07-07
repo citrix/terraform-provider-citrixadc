@@ -135,7 +135,8 @@ func vpnglobal_authenticationcertpolicy_bindingSetAttrFromGet(ctx context.Contex
 		data.Secondary = types.BoolValue(val.(bool))
 	}
 
-	// ID is set once in Create (plain policyname value); do not recompute here.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
 }

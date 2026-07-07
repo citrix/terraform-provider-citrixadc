@@ -169,7 +169,11 @@ func authenticationvserver_rewritepolicy_bindingSetAttrFromGet(ctx context.Conte
 	// groupextraction, secondary, nextfactor are NOT echoed by GET — preserve the
 	// existing plan/state value (do not null them).
 
-	// ID is set once in Create — do not recompute here (Pattern 6).
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 	return data
 }
 

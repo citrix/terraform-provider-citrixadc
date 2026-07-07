@@ -154,6 +154,9 @@ func tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGet(ctx context.Context,
 	// globalbindtype, gotopriorityexpression and type are non-echoed inputs - preserve
 	// whatever the plan/state already holds (do not overwrite or null them out).
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(data.Policyname.ValueString())
+
 	return data
 }
 

@@ -183,10 +183,11 @@ func botprofile_whitelist_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 		data.Name = types.StringNull()
 	}
 
-	// ID is set once in Create (and preserved through Read/Update). Do not
-	// recompute it here. The ID format matches the SDK v2 legacy order
-	// "name,bot_whitelist_value" (see resource_id_mapping.json) so imported
-	// legacy state resolves via utils.ParseIdString.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_whitelist_value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotWhitelistValue.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

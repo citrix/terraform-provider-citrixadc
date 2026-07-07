@@ -2,6 +2,8 @@ package lsnclient_network_binding
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 
@@ -117,8 +119,11 @@ func lsnclient_network_bindingSetAttrFromGet(ctx context.Context, data *Lsnclien
 		}
 	}
 
-	// ID is composed in Create from the legacy identity keys (clientname,network);
-	// do not recompute it here.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

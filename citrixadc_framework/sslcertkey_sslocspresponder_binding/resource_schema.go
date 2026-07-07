@@ -118,6 +118,12 @@ func sslcertkey_sslocspresponder_bindingSetAttrFromGet(ctx context.Context, data
 		}
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("certkey:%s", utils.UrlEncode(data.Certkey.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("ocspresponder:%s", utils.UrlEncode(data.Ocspresponder.ValueString())))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

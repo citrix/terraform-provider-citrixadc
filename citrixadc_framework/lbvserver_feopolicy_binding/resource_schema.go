@@ -208,6 +208,12 @@ func lbvserver_feopolicy_bindingSetAttrFromGet(ctx context.Context, data *Lbvser
 		data.Labeltype = types.StringNull()
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

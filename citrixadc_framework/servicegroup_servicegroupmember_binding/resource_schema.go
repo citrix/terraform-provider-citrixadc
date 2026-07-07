@@ -275,6 +275,19 @@ func servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx context.Context, 
 		}
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	effectiveServername := data.Servername.ValueString()
+	if effectiveServername == "" {
+		effectiveServername = data.Ip.ValueString()
+	}
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(data.Servicegroupname.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("servername:%s", utils.UrlEncode(effectiveServername)))
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
+		idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
+	}
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

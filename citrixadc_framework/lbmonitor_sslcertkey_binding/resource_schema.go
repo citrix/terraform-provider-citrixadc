@@ -128,6 +128,12 @@ func lbmonitor_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Lbmon
 	// user never configured. Adopting that would trip "inconsistent result after
 	// apply" for non-CA bindings. Preserve the existing plan/state value. (Pattern 7)
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("monitorname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Monitorname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

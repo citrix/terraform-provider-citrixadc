@@ -163,6 +163,9 @@ func vpnvserver_authenticationwebauthpolicy_bindingSetAttrFromGet(ctx context.Co
 	// bindpoint, gotopriorityexpression, groupextraction are NOT echoed by the GET
 	// response — preserve the plan/state values already in `data`.
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(vpnvserver_authenticationwebauthpolicy_bindingComposeId(data.Name.ValueString(), data.Policy.ValueString()))
+
 	return data
 }
 

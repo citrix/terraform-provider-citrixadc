@@ -2,6 +2,8 @@ package crvserver_spilloverpolicy_binding
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cr"
 
@@ -226,6 +228,12 @@ func crvserver_spilloverpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 			data.Targetvserver = types.StringNull()
 		}
 	}
+
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

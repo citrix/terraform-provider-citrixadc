@@ -79,6 +79,9 @@ func vpnglobal_appcontroller_bindingSetAttrFromGet(ctx context.Context, data *Vp
 	// gotopriorityexpression is NOT echoed back by NITRO GET on this binding.
 	// Preserve the existing plan/state value instead of nulling it (Pattern 7).
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Appcontroller.ValueString()))
+
 	return data
 }
 

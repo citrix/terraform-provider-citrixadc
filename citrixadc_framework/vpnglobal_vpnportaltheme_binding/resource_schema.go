@@ -82,6 +82,9 @@ func vpnglobal_vpnportaltheme_bindingSetAttrFromGet(ctx context.Context, data *V
 		data.Portaltheme = types.StringValue(val.(string))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Portaltheme.ValueString()))
+
 	return data
 }
 

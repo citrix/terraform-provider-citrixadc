@@ -242,6 +242,16 @@ func appfwprofile_sqlinjection_bindingSetAttrFromGet(ctx context.Context, data *
 	data.State = adopt(data.State, "state")
 	data.Ruletype = adopt(data.Ruletype, "ruletype")
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("as_scan_location_sql:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsScanLocationSql.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_value_expr_sql:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueExprSql.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_value_type_sql:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueTypeSql.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("formactionurl_sql:%s", utils.UrlEncode(fmt.Sprintf("%v", data.FormactionurlSql.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("sqlinjection:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Sqlinjection.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

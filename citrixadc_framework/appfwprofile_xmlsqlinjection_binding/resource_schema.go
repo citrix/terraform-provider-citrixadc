@@ -211,7 +211,12 @@ func appfwprofile_xmlsqlinjection_bindingSetAttrFromGet(ctx context.Context, dat
 		data.Xmlsqlinjection = types.StringNull()
 	}
 
-	// ID is set once in Create (and preserved across Read/Update); do not recompute here.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("as_scan_location_xmlsql:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsScanLocationXmlsql.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("xmlsqlinjection:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Xmlsqlinjection.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

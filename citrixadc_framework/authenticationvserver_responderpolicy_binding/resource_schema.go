@@ -173,7 +173,8 @@ func authenticationvserver_responderpolicy_bindingSetAttrFromGet(ctx context.Con
 		data.Secondary = types.BoolValue(val.(bool))
 	}
 
-	// ID is set once in Create (legacy "name,policy" composite). Do not recompute here.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(data.Name.ValueString() + "," + data.Policy.ValueString())
 	return data
 }
 

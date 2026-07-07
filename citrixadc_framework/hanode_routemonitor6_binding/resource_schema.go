@@ -97,6 +97,9 @@ func hanode_routemonitor6_bindingSetAttrFromGet(ctx context.Context, data *Hanod
 		data.Routemonitor = types.StringValue(fmt.Sprintf("%v", val))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(hanode_routemonitor6_bindingComposeId(data))
+
 	return data
 }
 

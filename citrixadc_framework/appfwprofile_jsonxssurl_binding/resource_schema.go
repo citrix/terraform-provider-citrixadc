@@ -262,6 +262,21 @@ func appfwprofile_jsonxssurl_bindingSetAttrFromGet(ctx context.Context, data *Ap
 		data.State = types.StringNull()
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("jsonxssurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Jsonxssurl.ValueString()))))
+	if !data.KeynameJsonXss.IsNull() && data.KeynameJsonXss.ValueString() != "" {
+		idParts = append(idParts, fmt.Sprintf("keyname_json_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.KeynameJsonXss.ValueString()))))
+	}
+	if !data.AsValueTypeJsonXss.IsNull() && data.AsValueTypeJsonXss.ValueString() != "" {
+		idParts = append(idParts, fmt.Sprintf("as_value_type_json_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueTypeJsonXss.ValueString()))))
+	}
+	if !data.AsValueExprJsonXss.IsNull() && data.AsValueExprJsonXss.ValueString() != "" {
+		idParts = append(idParts, fmt.Sprintf("as_value_expr_json_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueExprJsonXss.ValueString()))))
+	}
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

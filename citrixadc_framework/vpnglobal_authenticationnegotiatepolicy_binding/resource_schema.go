@@ -129,6 +129,9 @@ func vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.C
 		data.Secondary = types.BoolValue(val.(bool))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
 	return data
 }
 

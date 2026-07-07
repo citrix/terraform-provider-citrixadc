@@ -126,6 +126,10 @@ func vpnglobal_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Vpngl
 		}
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	// SDK v2 contract: ID is the plain certkeyname value (d.SetId(certkeyname)).
+	data.Id = types.StringValue(data.Certkeyname.ValueString())
+
 	return data
 }
 

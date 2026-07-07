@@ -2,6 +2,8 @@ package rewritepolicylabel_rewritepolicy_binding
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
 
@@ -171,6 +173,13 @@ func rewritepolicylabel_rewritepolicy_bindingSetAttrFromGet(ctx context.Context,
 	} else {
 		data.Priority = types.Int64Null()
 	}
+
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("labelname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Labelname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("priority:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Priority.ValueInt64()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

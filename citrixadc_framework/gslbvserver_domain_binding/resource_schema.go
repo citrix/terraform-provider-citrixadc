@@ -190,7 +190,12 @@ func gslbvserver_domain_bindingSetAttrFromGet(ctx context.Context, data *Gslbvse
 		}
 	}
 
-	// ID is set once in Create; do not recompute it here.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("domainname:%s", utils.UrlEncode(data.Domainname.ValueString())))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

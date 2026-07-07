@@ -164,6 +164,14 @@ func authenticationvserver_authenticationsamlpolicy_bindingSetAttrFromGet(ctx co
 	// Preserve the configured plan/state values (do not null them) for backward-compat with the
 	// SDK v2 resource, which likewise never overwrote bindpoint from the GET response.
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

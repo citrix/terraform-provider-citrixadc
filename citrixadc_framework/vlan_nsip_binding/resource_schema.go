@@ -143,6 +143,9 @@ func vlan_nsip_bindingSetAttrFromGet(ctx context.Context, data *VlanNsipBindingR
 		}
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(buildVlanNsipBindingId(data))
+
 	return data
 }
 

@@ -262,6 +262,21 @@ func appfwprofile_jsonsqlurl_bindingSetAttrFromGet(ctx context.Context, data *Ap
 		data.State = types.StringNull()
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("jsonsqlurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Jsonsqlurl.ValueString()))))
+	if !data.KeynameJsonSql.IsNull() && data.KeynameJsonSql.ValueString() != "" {
+		idParts = append(idParts, fmt.Sprintf("keyname_json_sql:%s", utils.UrlEncode(fmt.Sprintf("%v", data.KeynameJsonSql.ValueString()))))
+	}
+	if !data.AsValueTypeJsonSql.IsNull() && data.AsValueTypeJsonSql.ValueString() != "" {
+		idParts = append(idParts, fmt.Sprintf("as_value_type_json_sql:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueTypeJsonSql.ValueString()))))
+	}
+	if !data.AsValueExprJsonSql.IsNull() && data.AsValueExprJsonSql.ValueString() != "" {
+		idParts = append(idParts, fmt.Sprintf("as_value_expr_json_sql:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueExprJsonSql.ValueString()))))
+	}
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

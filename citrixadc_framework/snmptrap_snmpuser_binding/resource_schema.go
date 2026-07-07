@@ -149,6 +149,15 @@ func snmptrap_snmpuser_bindingSetAttrFromGet(ctx context.Context, data *Snmptrap
 		data.Version = types.StringValue(val.(string))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("td:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Td.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("trapclass:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Trapclass.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("trapdestination:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Trapdestination.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("username:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Username.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("version:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Version.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

@@ -307,6 +307,12 @@ func botprofile_ratelimit_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 		data.Timeslice = types.Int64Null()
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("bot_rate_limit_type:%s", utils.UrlEncode(data.BotRateLimitType.ValueString())))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

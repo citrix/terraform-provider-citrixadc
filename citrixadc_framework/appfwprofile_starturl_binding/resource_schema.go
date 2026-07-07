@@ -167,6 +167,12 @@ func appfwprofile_starturl_bindingSetAttrFromGet(ctx context.Context, data *Appf
 		data.State = types.StringValue(val.(string))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("starturl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Starturl.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

@@ -152,7 +152,12 @@ func vpnvserver_vpntrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data
 		data.Policy = types.StringValue(val.(string))
 	}
 
-	// ID is fixed in Create; do not recompute it here.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	// Composite ID uses the legacy SDK v2 key order: name,policy
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 	return data
 }
 

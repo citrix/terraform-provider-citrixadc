@@ -277,6 +277,12 @@ func botprofile_captcha_bindingSetAttrFromGet(ctx context.Context, data *Botprof
 		data.Waittime = types.Int64Null()
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_captcha_url:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotCaptchaUrl.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

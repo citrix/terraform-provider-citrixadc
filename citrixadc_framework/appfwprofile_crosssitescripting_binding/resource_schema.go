@@ -242,6 +242,16 @@ func appfwprofile_crosssitescripting_bindingSetAttrFromGet(ctx context.Context, 
 	data.State = adopt(data.State, "state")
 	data.Ruletype = adopt(data.Ruletype, "ruletype")
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("as_scan_location_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsScanLocationXss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_value_expr_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueExprXss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("as_value_type_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsValueTypeXss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("crosssitescripting:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Crosssitescripting.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("formactionurl_xss:%s", utils.UrlEncode(fmt.Sprintf("%v", data.FormactionurlXss.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 

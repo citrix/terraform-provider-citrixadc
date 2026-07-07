@@ -97,6 +97,9 @@ func tmglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 		}
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
 	return data
 }
 

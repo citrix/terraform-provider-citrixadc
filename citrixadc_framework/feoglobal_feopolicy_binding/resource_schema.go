@@ -121,6 +121,9 @@ func feoglobal_feopolicy_bindingSetAttrFromGet(ctx context.Context, data *Feoglo
 	// policyname, priority and type are RequiresReplace identity inputs - preserved
 	// from prior state/plan (not overwritten by the GET response).
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	data.Id = types.StringValue(data.Policyname.ValueString())
+
 	return data
 }
 

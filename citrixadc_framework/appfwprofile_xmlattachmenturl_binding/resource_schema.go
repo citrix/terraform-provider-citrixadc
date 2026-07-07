@@ -227,6 +227,12 @@ func appfwprofile_xmlattachmenturl_bindingSetAttrFromGet(ctx context.Context, da
 	}
 	data.Xmlmaxattachmentsizecheck = adopt(data.Xmlmaxattachmentsizecheck, "xmlmaxattachmentsizecheck")
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("xmlattachmenturl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Xmlattachmenturl.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	return data
 }
 
