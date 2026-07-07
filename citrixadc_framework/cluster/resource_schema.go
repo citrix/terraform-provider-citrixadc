@@ -36,7 +36,8 @@ func (r *ClusterResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Description: "Cluster IP address to which to add the node.",
 			},
 			"password": schema.StringAttribute{
-				Required: true,
+				Required:  true,
+				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -59,26 +60,4 @@ func clusterGetThePayloadFromtheConfig(ctx context.Context, data *ClusterResourc
 	}
 
 	return cluster
-}
-
-func clusterSetAttrFromGet(ctx context.Context, data *ClusterResourceModel, getResponseData map[string]interface{}) *ClusterResourceModel {
-	tflog.Debug(ctx, "In clusterSetAttrFromGet Function")
-
-	// Convert API response to model
-	if val, ok := getResponseData["clip"]; ok && val != nil {
-		data.Clip = types.StringValue(val.(string))
-	} else {
-		data.Clip = types.StringNull()
-	}
-	if val, ok := getResponseData["password"]; ok && val != nil {
-		data.Password = types.StringValue(val.(string))
-	} else {
-		data.Password = types.StringNull()
-	}
-
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Clip.ValueString())
-
-	return data
 }
