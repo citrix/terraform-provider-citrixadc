@@ -166,7 +166,7 @@ func testAccSaveRaceSetup(t *testing.T) {
 		nsconfig := ns.Nsconfig{}
 		err := client.ActOnResource("nsconfig", &nsconfig, "save")
 		if err != nil {
-			t.Fatalf("do_save error: %s", err.Error())
+			t.Errorf("do_save error: %s", err.Error())
 		}
 		t.Log("end of save")
 	}
