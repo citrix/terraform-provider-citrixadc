@@ -155,6 +155,11 @@ func NshttpprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Maximum number of incoming RST_STREAM frames allowed in HTTP/2 connection per minute",
 			},
+			"http2smallwndtimeout": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Timeout (in seconds) for HTTP/2 small-window stalled streams. Required to mitigate CVE-2026-13474.",
+			},
 			"http2maxsettingsframespermin": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
