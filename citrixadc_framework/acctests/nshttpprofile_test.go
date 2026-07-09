@@ -41,6 +41,7 @@ const testAccNshttpprofile_add = `
 		maxduplicateheaderfields = 10
 		passprotocolupgrade = "DISABLED"
 		http2extendedconnect = "DISABLED"
+		http2smallwndtimeout = 30
 	}
 `
 const testAccNshttpprofile_update = `
@@ -60,6 +61,7 @@ const testAccNshttpprofile_update = `
 		maxduplicateheaderfields = 12
 		passprotocolupgrade = "ENABLED"
 		http2extendedconnect = "ENABLED"
+		http2smallwndtimeout = 60
 	}
 `
 
@@ -88,6 +90,7 @@ func TestAccNshttpprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "maxduplicateheaderfields", "10"),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "passprotocolupgrade", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http2extendedconnect", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http2smallwndtimeout", "30"),
 				),
 			},
 			{
@@ -109,6 +112,7 @@ func TestAccNshttpprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "maxduplicateheaderfields", "12"),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "passprotocolupgrade", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http2extendedconnect", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http2smallwndtimeout", "60"),
 				),
 			},
 		},
