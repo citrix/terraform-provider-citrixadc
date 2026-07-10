@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -75,7 +76,12 @@ func (r *AppflowparamResource) Create(ctx context.Context, req resource.CreateRe
 	data.Id = types.StringValue("appflowparam-config")
 
 	// Read the updated state back
-	r.readAppflowparamFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppflowparamFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appflowparam not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -93,7 +99,14 @@ func (r *AppflowparamResource) Read(ctx context.Context, req resource.ReadReques
 
 	tflog.Debug(ctx, "Reading appflowparam resource")
 
-	r.readAppflowparamFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppflowparamFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -349,7 +362,12 @@ func (r *AppflowparamResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// Read the updated state back
-	r.readAppflowparamFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppflowparamFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appflowparam not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -371,7 +389,7 @@ func (r *AppflowparamResource) Delete(ctx context.Context, req resource.DeleteRe
 }
 
 // Helper function to read appflowparam data from API
-func (r *AppflowparamResource) readAppflowparamFromApi(ctx context.Context, data *AppflowparamResourceModel, diags *diag.Diagnostics) {
+func (r *AppflowparamResource) readAppflowparamFromApi(ctx context.Context, data *AppflowparamResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
@@ -379,10 +397,14 @@ func (r *AppflowparamResource) readAppflowparamFromApi(ctx context.Context, data
 
 	getResponseData, err = r.client.FindResource(service.Appflowparam.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appflowparam, got error: %s", err))
-		return
+		return false
 	}
 
 	appflowparamSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

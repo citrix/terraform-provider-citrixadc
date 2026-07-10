@@ -71,6 +71,21 @@ func nsencryptionparamsGetThePayloadFromthePlan(ctx context.Context, data *Nsenc
 	return nsencryptionparams
 }
 
+func nsencryptionparamsGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *NsencryptionparamsResourceModel) ns.Nsencryptionparams {
+	tflog.Debug(ctx, "In nsencryptionparamsGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model
+	nsencryptionparams := ns.Nsencryptionparams{}
+	if !data.Keyvalue.IsNull() && !data.Keyvalue.IsUnknown() {
+		nsencryptionparams.Keyvalue = data.Keyvalue.ValueString()
+	}
+	if !data.Method.IsNull() && !data.Method.IsUnknown() {
+		nsencryptionparams.Method = data.Method.ValueString()
+	}
+
+	return nsencryptionparams
+}
+
 func nsencryptionparamsGetThePayloadFromtheConfig(ctx context.Context, data *NsencryptionparamsResourceModel, payload *ns.Nsencryptionparams) {
 	tflog.Debug(ctx, "In nsencryptionparamsGetThePayloadFromtheConfig Function")
 

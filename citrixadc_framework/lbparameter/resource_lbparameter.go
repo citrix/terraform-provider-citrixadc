@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -75,7 +76,12 @@ func (r *LbparameterResource) Create(ctx context.Context, req resource.CreateReq
 	data.Id = types.StringValue("lbparameter-config")
 
 	// Read the updated state back
-	r.readLbparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbparameterFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbparameter not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -93,7 +99,14 @@ func (r *LbparameterResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading lbparameter resource")
 
-	r.readLbparameterFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLbparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -237,7 +250,12 @@ func (r *LbparameterResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	// Read the updated state back
-	r.readLbparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbparameterFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbparameter not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -259,7 +277,7 @@ func (r *LbparameterResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 // Helper function to read lbparameter data from API
-func (r *LbparameterResource) readLbparameterFromApi(ctx context.Context, data *LbparameterResourceModel, diags *diag.Diagnostics) {
+func (r *LbparameterResource) readLbparameterFromApi(ctx context.Context, data *LbparameterResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
@@ -267,10 +285,14 @@ func (r *LbparameterResource) readLbparameterFromApi(ctx context.Context, data *
 
 	getResponseData, err = r.client.FindResource(service.Lbparameter.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbparameter, got error: %s", err))
-		return
+		return false
 	}
 
 	lbparameterSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

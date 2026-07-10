@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -94,7 +95,12 @@ func (r *RadiusnodeResource) Create(ctx context.Context, req resource.CreateRequ
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Nodeprefix.ValueString()))
 
 	// Read the updated state back
-	r.readRadiusnodeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readRadiusnodeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "radiusnode not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -112,7 +118,14 @@ func (r *RadiusnodeResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading radiusnode resource")
 
-	r.readRadiusnodeFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readRadiusnodeFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -169,7 +182,12 @@ func (r *RadiusnodeResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Read the updated state back
-	r.readRadiusnodeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readRadiusnodeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "radiusnode not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -198,7 +216,7 @@ func (r *RadiusnodeResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 // Helper function to read radiusnode data from API
-func (r *RadiusnodeResource) readRadiusnodeFromApi(ctx context.Context, data *RadiusnodeResourceModel, diags *diag.Diagnostics) {
+func (r *RadiusnodeResource) readRadiusnodeFromApi(ctx context.Context, data *RadiusnodeResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	nodeprefix_Name := data.Id.ValueString()
@@ -208,10 +226,15 @@ func (r *RadiusnodeResource) readRadiusnodeFromApi(ctx context.Context, data *Ra
 
 	getResponseData, err = r.client.FindResource(service.Radiusnode.Type(), nodeprefix_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read radiusnode, got error: %s", err))
-		return
+		return false
 	}
 
 	radiusnodeSetAttrFromGet(ctx, data, getResponseData)
+
+	return true
 
 }

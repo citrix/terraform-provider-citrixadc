@@ -150,6 +150,47 @@ func aaakcdaccountGetThePayloadFromthePlan(ctx context.Context, data *Aaakcdacco
 	return aaakcdaccount
 }
 
+func aaakcdaccountGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AaakcdaccountResourceModel) aaa.Aaakcdaccount {
+	tflog.Debug(ctx, "In aaakcdaccountGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields
+	aaakcdaccount := aaa.Aaakcdaccount{}
+	if !data.Cacert.IsNull() && !data.Cacert.IsUnknown() {
+		aaakcdaccount.Cacert = data.Cacert.ValueString()
+	}
+	if !data.Delegateduser.IsNull() && !data.Delegateduser.IsUnknown() {
+		aaakcdaccount.Delegateduser = data.Delegateduser.ValueString()
+	}
+	if !data.Enterpriserealm.IsNull() && !data.Enterpriserealm.IsUnknown() {
+		aaakcdaccount.Enterpriserealm = data.Enterpriserealm.ValueString()
+	}
+	if !data.Kcdaccount.IsNull() && !data.Kcdaccount.IsUnknown() {
+		aaakcdaccount.Kcdaccount = data.Kcdaccount.ValueString()
+	}
+	if !data.Kcdpassword.IsNull() && !data.Kcdpassword.IsUnknown() {
+		aaakcdaccount.Kcdpassword = data.Kcdpassword.ValueString()
+	}
+	// Skip write-only attribute: kcdpassword_wo
+	// Skip version tracker attribute: kcdpassword_wo_version
+	if !data.Keytab.IsNull() && !data.Keytab.IsUnknown() {
+		aaakcdaccount.Keytab = data.Keytab.ValueString()
+	}
+	if !data.Realmstr.IsNull() && !data.Realmstr.IsUnknown() {
+		aaakcdaccount.Realmstr = data.Realmstr.ValueString()
+	}
+	if !data.Servicespn.IsNull() && !data.Servicespn.IsUnknown() {
+		aaakcdaccount.Servicespn = data.Servicespn.ValueString()
+	}
+	if !data.Usercert.IsNull() && !data.Usercert.IsUnknown() {
+		aaakcdaccount.Usercert = data.Usercert.ValueString()
+	}
+	if !data.Userrealm.IsNull() && !data.Userrealm.IsUnknown() {
+		aaakcdaccount.Userrealm = data.Userrealm.ValueString()
+	}
+
+	return aaakcdaccount
+}
+
 func aaakcdaccountGetThePayloadFromtheConfig(ctx context.Context, data *AaakcdaccountResourceModel, payload *aaa.Aaakcdaccount) {
 	tflog.Debug(ctx, "In aaakcdaccountGetThePayloadFromtheConfig Function")
 

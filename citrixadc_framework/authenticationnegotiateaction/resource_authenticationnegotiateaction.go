@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *AuthenticationnegotiateactionResource) Create(ctx context.Context, req 
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationnegotiateactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationnegotiateactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationnegotiateaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *AuthenticationnegotiateactionResource) Read(ctx context.Context, req re
 
 	tflog.Debug(ctx, "Reading authenticationnegotiateaction resource")
 
-	r.readAuthenticationnegotiateactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationnegotiateactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -175,7 +188,12 @@ func (r *AuthenticationnegotiateactionResource) Update(ctx context.Context, req 
 	}
 
 	// Read the updated state back
-	r.readAuthenticationnegotiateactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationnegotiateactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationnegotiateaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -204,7 +222,7 @@ func (r *AuthenticationnegotiateactionResource) Delete(ctx context.Context, req 
 }
 
 // Helper function to read authenticationnegotiateaction data from API
-func (r *AuthenticationnegotiateactionResource) readAuthenticationnegotiateactionFromApi(ctx context.Context, data *AuthenticationnegotiateactionResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationnegotiateactionResource) readAuthenticationnegotiateactionFromApi(ctx context.Context, data *AuthenticationnegotiateactionResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -214,10 +232,14 @@ func (r *AuthenticationnegotiateactionResource) readAuthenticationnegotiateactio
 
 	getResponseData, err = r.client.FindResource(service.Authenticationnegotiateaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationnegotiateaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationnegotiateactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

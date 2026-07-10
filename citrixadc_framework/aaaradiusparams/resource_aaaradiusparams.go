@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -93,7 +94,12 @@ func (r *AaaradiusparamsResource) Create(ctx context.Context, req resource.Creat
 	data.Id = types.StringValue("aaaradiusparams-config")
 
 	// Read the updated state back
-	r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaaradiusparams not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -111,7 +117,14 @@ func (r *AaaradiusparamsResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading aaaradiusparams resource")
 
-	r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -234,7 +247,7 @@ func (r *AaaradiusparamsResource) Update(ctx context.Context, req resource.Updat
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		aaaradiusparams := aaaradiusparamsGetThePayloadFromthePlan(ctx, &data)
+		aaaradiusparams := aaaradiusparamsGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		aaaradiusparamsGetThePayloadFromtheConfig(ctx, &config, &aaaradiusparams)
 		// Make API call
@@ -251,7 +264,12 @@ func (r *AaaradiusparamsResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	// Read the updated state back
-	r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaaradiusparams not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -273,7 +291,7 @@ func (r *AaaradiusparamsResource) Delete(ctx context.Context, req resource.Delet
 }
 
 // Helper function to read aaaradiusparams data from API
-func (r *AaaradiusparamsResource) readAaaradiusparamsFromApi(ctx context.Context, data *AaaradiusparamsResourceModel, diags *diag.Diagnostics) {
+func (r *AaaradiusparamsResource) readAaaradiusparamsFromApi(ctx context.Context, data *AaaradiusparamsResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
@@ -281,10 +299,14 @@ func (r *AaaradiusparamsResource) readAaaradiusparamsFromApi(ctx context.Context
 
 	getResponseData, err = r.client.FindResource(service.Aaaradiusparams.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaaradiusparams, got error: %s", err))
-		return
+		return false
 	}
 
 	aaaradiusparamsSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -140,6 +140,44 @@ func authenticationemailactionGetThePayloadFromthePlan(ctx context.Context, data
 	return authenticationemailaction
 }
 
+func authenticationemailactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AuthenticationemailactionResourceModel) authentication.Authenticationemailaction {
+	tflog.Debug(ctx, "In authenticationemailactionGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model
+	authenticationemailaction := authentication.Authenticationemailaction{}
+	if !data.Content.IsNull() && !data.Content.IsUnknown() {
+		authenticationemailaction.Content = data.Content.ValueString()
+	}
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
+		authenticationemailaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
+	}
+	if !data.Emailaddress.IsNull() && !data.Emailaddress.IsUnknown() {
+		authenticationemailaction.Emailaddress = data.Emailaddress.ValueString()
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		authenticationemailaction.Name = data.Name.ValueString()
+	}
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
+		authenticationemailaction.Password = data.Password.ValueString()
+	}
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Serverurl.IsNull() && !data.Serverurl.IsUnknown() {
+		authenticationemailaction.Serverurl = data.Serverurl.ValueString()
+	}
+	if !data.Timeout.IsNull() && !data.Timeout.IsUnknown() {
+		authenticationemailaction.Timeout = utils.IntPtr(int(data.Timeout.ValueInt64()))
+	}
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
+		authenticationemailaction.Type = data.Type.ValueString()
+	}
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
+		authenticationemailaction.Username = data.Username.ValueString()
+	}
+
+	return authenticationemailaction
+}
+
 func authenticationemailactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationemailactionResourceModel, payload *authentication.Authenticationemailaction) {
 	tflog.Debug(ctx, "In authenticationemailactionGetThePayloadFromtheConfig Function")
 

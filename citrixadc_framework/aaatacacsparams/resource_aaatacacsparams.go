@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -75,7 +76,12 @@ func (r *AaatacacsparamsResource) Create(ctx context.Context, req resource.Creat
 	data.Id = types.StringValue("aaatacacsparams-config")
 
 	// Read the updated state back
-	r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaatacacsparams not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -93,7 +99,14 @@ func (r *AaatacacsparamsResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading aaatacacsparams resource")
 
-	r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -181,7 +194,12 @@ func (r *AaatacacsparamsResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	// Read the updated state back
-	r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaatacacsparams not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -203,7 +221,7 @@ func (r *AaatacacsparamsResource) Delete(ctx context.Context, req resource.Delet
 }
 
 // Helper function to read aaatacacsparams data from API
-func (r *AaatacacsparamsResource) readAaatacacsparamsFromApi(ctx context.Context, data *AaatacacsparamsResourceModel, diags *diag.Diagnostics) {
+func (r *AaatacacsparamsResource) readAaatacacsparamsFromApi(ctx context.Context, data *AaatacacsparamsResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
@@ -211,10 +229,14 @@ func (r *AaatacacsparamsResource) readAaatacacsparamsFromApi(ctx context.Context
 
 	getResponseData, err = r.client.FindResource(service.Aaatacacsparams.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaatacacsparams, got error: %s", err))
-		return
+		return false
 	}
 
 	aaatacacsparamsSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

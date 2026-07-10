@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -94,7 +95,12 @@ func (r *AuthenticationemailactionResource) Create(ctx context.Context, req reso
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationemailactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationemailactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationemailaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -112,7 +118,14 @@ func (r *AuthenticationemailactionResource) Read(ctx context.Context, req resour
 
 	tflog.Debug(ctx, "Reading authenticationemailaction resource")
 
-	r.readAuthenticationemailactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationemailactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -179,7 +192,7 @@ func (r *AuthenticationemailactionResource) Update(ctx context.Context, req reso
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		authenticationemailaction := authenticationemailactionGetThePayloadFromthePlan(ctx, &data)
+		authenticationemailaction := authenticationemailactionGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		authenticationemailactionGetThePayloadFromtheConfig(ctx, &config, &authenticationemailaction)
 		// Make API call
@@ -197,7 +210,12 @@ func (r *AuthenticationemailactionResource) Update(ctx context.Context, req reso
 	}
 
 	// Read the updated state back
-	r.readAuthenticationemailactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationemailactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationemailaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -226,7 +244,7 @@ func (r *AuthenticationemailactionResource) Delete(ctx context.Context, req reso
 }
 
 // Helper function to read authenticationemailaction data from API
-func (r *AuthenticationemailactionResource) readAuthenticationemailactionFromApi(ctx context.Context, data *AuthenticationemailactionResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationemailactionResource) readAuthenticationemailactionFromApi(ctx context.Context, data *AuthenticationemailactionResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -236,10 +254,14 @@ func (r *AuthenticationemailactionResource) readAuthenticationemailactionFromApi
 
 	getResponseData, err = r.client.FindResource(service.Authenticationemailaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationemailaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationemailactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -94,6 +94,27 @@ func nshmackeyGetThePayloadFromthePlan(ctx context.Context, data *NshmackeyResou
 	return nshmackey
 }
 
+func nshmackeyGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *NshmackeyResourceModel) ns.Nshmackey {
+	tflog.Debug(ctx, "In nshmackeyGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model
+	nshmackey := ns.Nshmackey{}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		nshmackey.Comment = data.Comment.ValueString()
+	}
+	if !data.Digest.IsNull() && !data.Digest.IsUnknown() {
+		nshmackey.Digest = data.Digest.ValueString()
+	}
+	if !data.Keyvalue.IsNull() && !data.Keyvalue.IsUnknown() {
+		nshmackey.Keyvalue = data.Keyvalue.ValueString()
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		nshmackey.Name = data.Name.ValueString()
+	}
+
+	return nshmackey
+}
+
 func nshmackeyGetThePayloadFromtheConfig(ctx context.Context, data *NshmackeyResourceModel, payload *ns.Nshmackey) {
 	tflog.Debug(ctx, "In nshmackeyGetThePayloadFromtheConfig Function")
 

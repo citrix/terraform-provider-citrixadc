@@ -90,6 +90,23 @@ func aaauserGetThePayloadFromthePlan(ctx context.Context, data *AaauserResourceM
 	return aaauser
 }
 
+func aaauserGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AaauserResourceModel) aaa.Aaauser {
+	tflog.Debug(ctx, "In aaauserGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model (updatable fields only)
+	aaauser := aaa.Aaauser{}
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
+		aaauser.Password = data.Password.ValueString()
+	}
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
+		aaauser.Username = data.Username.ValueString()
+	}
+
+	return aaauser
+}
+
 func aaauserGetThePayloadFromtheConfig(ctx context.Context, data *AaauserResourceModel, payload *aaa.Aaauser) {
 	tflog.Debug(ctx, "In aaauserGetThePayloadFromtheConfig Function")
 

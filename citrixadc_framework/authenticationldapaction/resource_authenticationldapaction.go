@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *AuthenticationldapactionResource) Create(ctx context.Context, req resou
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationldapactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationldapactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationldapaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *AuthenticationldapactionResource) Read(ctx context.Context, req resourc
 
 	tflog.Debug(ctx, "Reading authenticationldapaction resource")
 
-	r.readAuthenticationldapactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationldapactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -363,7 +376,12 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 	}
 
 	// Read the updated state back
-	r.readAuthenticationldapactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationldapactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationldapaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -392,7 +410,7 @@ func (r *AuthenticationldapactionResource) Delete(ctx context.Context, req resou
 }
 
 // Helper function to read authenticationldapaction data from API
-func (r *AuthenticationldapactionResource) readAuthenticationldapactionFromApi(ctx context.Context, data *AuthenticationldapactionResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationldapactionResource) readAuthenticationldapactionFromApi(ctx context.Context, data *AuthenticationldapactionResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -402,10 +420,14 @@ func (r *AuthenticationldapactionResource) readAuthenticationldapactionFromApi(c
 
 	getResponseData, err = r.client.FindResource(service.Authenticationldapaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationldapaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationldapactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

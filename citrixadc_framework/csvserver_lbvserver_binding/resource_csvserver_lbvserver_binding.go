@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -70,7 +71,12 @@ func (r *CsvserverLbvserverBindingResource) Create(ctx context.Context, req reso
 	data.Id = types.StringValue(bindingId)
 
 	// Read the updated state back
-	r.readCsvserverLbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readCsvserverLbvserverBindingFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "csvserver_lbvserver_binding not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,7 +94,14 @@ func (r *CsvserverLbvserverBindingResource) Read(ctx context.Context, req resour
 
 	tflog.Debug(ctx, "Reading csvserver_lbvserver_binding resource")
 
-	r.readCsvserverLbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readCsvserverLbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -145,7 +158,7 @@ func (r *CsvserverLbvserverBindingResource) Delete(ctx context.Context, req reso
 }
 
 // Helper function to read csvserver_lbvserver_binding data from API
-func (r *CsvserverLbvserverBindingResource) readCsvserverLbvserverBindingFromApi(ctx context.Context, data *CsvserverLbvserverBindingResourceModel, diags *diag.Diagnostics) {
+func (r *CsvserverLbvserverBindingResource) readCsvserverLbvserverBindingFromApi(ctx context.Context, data *CsvserverLbvserverBindingResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 4: Array filter with parent ID - parse from ID
 	bindingId := data.Id.ValueString()
@@ -163,14 +176,16 @@ func (r *CsvserverLbvserverBindingResource) readCsvserverLbvserverBindingFromApi
 	}
 	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read csvserver_lbvserver_binding, got error: %s", err))
-		return
+		return false
 	}
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "csvserver_lbvserver_binding returned empty array.")
-		return
+		return false
 	}
 
 	// Iterate through results to find the one with the right id
@@ -196,9 +211,9 @@ func (r *CsvserverLbvserverBindingResource) readCsvserverLbvserverBindingFromApi
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("csvserver_lbvserver_binding not found with the provided ID attributes"))
-		return
+		return false
 	}
 
 	csvserver_lbvserver_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+	return true
 }

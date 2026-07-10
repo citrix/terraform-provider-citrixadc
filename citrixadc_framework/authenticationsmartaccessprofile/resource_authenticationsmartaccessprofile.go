@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -71,7 +72,12 @@ func (r *AuthenticationsmartaccessprofileResource) Create(ctx context.Context, r
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationsmartaccessprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationsmartaccessprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationsmartaccessprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -89,7 +95,14 @@ func (r *AuthenticationsmartaccessprofileResource) Read(ctx context.Context, req
 
 	tflog.Debug(ctx, "Reading authenticationsmartaccessprofile resource")
 
-	r.readAuthenticationsmartaccessprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationsmartaccessprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -141,7 +154,12 @@ func (r *AuthenticationsmartaccessprofileResource) Update(ctx context.Context, r
 	}
 
 	// Read the updated state back
-	r.readAuthenticationsmartaccessprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationsmartaccessprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationsmartaccessprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -170,7 +188,7 @@ func (r *AuthenticationsmartaccessprofileResource) Delete(ctx context.Context, r
 }
 
 // Helper function to read authenticationsmartaccessprofile data from API
-func (r *AuthenticationsmartaccessprofileResource) readAuthenticationsmartaccessprofileFromApi(ctx context.Context, data *AuthenticationsmartaccessprofileResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationsmartaccessprofileResource) readAuthenticationsmartaccessprofileFromApi(ctx context.Context, data *AuthenticationsmartaccessprofileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -180,10 +198,14 @@ func (r *AuthenticationsmartaccessprofileResource) readAuthenticationsmartaccess
 
 	getResponseData, err = r.client.FindResource(service.Authenticationsmartaccessprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationsmartaccessprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationsmartaccessprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }
