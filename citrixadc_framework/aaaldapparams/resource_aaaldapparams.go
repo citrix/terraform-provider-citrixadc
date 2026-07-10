@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -75,7 +76,12 @@ func (r *AaaldapparamsResource) Create(ctx context.Context, req resource.CreateR
 	data.Id = types.StringValue("aaaldapparams-config")
 
 	// Read the updated state back
-	r.readAaaldapparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaaldapparamsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaaldapparams not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -93,7 +99,14 @@ func (r *AaaldapparamsResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading aaaldapparams resource")
 
-	r.readAaaldapparamsFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAaaldapparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -229,7 +242,12 @@ func (r *AaaldapparamsResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	// Read the updated state back
-	r.readAaaldapparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaaldapparamsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaaldapparams not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -251,7 +269,7 @@ func (r *AaaldapparamsResource) Delete(ctx context.Context, req resource.DeleteR
 }
 
 // Helper function to read aaaldapparams data from API
-func (r *AaaldapparamsResource) readAaaldapparamsFromApi(ctx context.Context, data *AaaldapparamsResourceModel, diags *diag.Diagnostics) {
+func (r *AaaldapparamsResource) readAaaldapparamsFromApi(ctx context.Context, data *AaaldapparamsResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
@@ -259,10 +277,14 @@ func (r *AaaldapparamsResource) readAaaldapparamsFromApi(ctx context.Context, da
 
 	getResponseData, err = r.client.FindResource(service.Aaaldapparams.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaaldapparams, got error: %s", err))
-		return
+		return false
 	}
 
 	aaaldapparamsSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

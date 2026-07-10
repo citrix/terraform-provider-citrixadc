@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -94,7 +95,12 @@ func (r *AuthenticationradiusactionResource) Create(ctx context.Context, req res
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationradiusaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -112,7 +118,14 @@ func (r *AuthenticationradiusactionResource) Read(ctx context.Context, req resou
 
 	tflog.Debug(ctx, "Reading authenticationradiusaction resource")
 
-	r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -265,7 +278,12 @@ func (r *AuthenticationradiusactionResource) Update(ctx context.Context, req res
 	}
 
 	// Read the updated state back
-	r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationradiusaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -294,7 +312,7 @@ func (r *AuthenticationradiusactionResource) Delete(ctx context.Context, req res
 }
 
 // Helper function to read authenticationradiusaction data from API
-func (r *AuthenticationradiusactionResource) readAuthenticationradiusactionFromApi(ctx context.Context, data *AuthenticationradiusactionResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationradiusactionResource) readAuthenticationradiusactionFromApi(ctx context.Context, data *AuthenticationradiusactionResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -304,10 +322,14 @@ func (r *AuthenticationradiusactionResource) readAuthenticationradiusactionFromA
 
 	getResponseData, err = r.client.FindResource(service.Authenticationradiusaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationradiusaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationradiusactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

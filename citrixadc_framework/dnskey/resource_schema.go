@@ -255,6 +255,42 @@ func dnskeyGetThePayloadFromthePlan(ctx context.Context, data *DnskeyResourceMod
 	return dnskey
 }
 
+func dnskeyGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *DnskeyResourceModel) dns.Dnskey {
+	tflog.Debug(ctx, "In dnskeyGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model
+	dnskey := dns.Dnskey{}
+	if !data.Autorollover.IsNull() && !data.Autorollover.IsUnknown() {
+		dnskey.Autorollover = data.Autorollover.ValueString()
+	}
+	if !data.Expires.IsNull() && !data.Expires.IsUnknown() {
+		dnskey.Expires = utils.IntPtr(int(data.Expires.ValueInt64()))
+	}
+	if !data.Keyname.IsNull() && !data.Keyname.IsUnknown() {
+		dnskey.Keyname = data.Keyname.ValueString()
+	}
+	if !data.Notificationperiod.IsNull() && !data.Notificationperiod.IsUnknown() {
+		dnskey.Notificationperiod = utils.IntPtr(int(data.Notificationperiod.ValueInt64()))
+	}
+	if !data.Revoke.IsNull() && !data.Revoke.IsUnknown() {
+		dnskey.Revoke = data.Revoke.ValueBool()
+	}
+	if !data.Rollovermethod.IsNull() && !data.Rollovermethod.IsUnknown() {
+		dnskey.Rollovermethod = data.Rollovermethod.ValueString()
+	}
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
+		dnskey.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
+	}
+	if !data.Units1.IsNull() && !data.Units1.IsUnknown() {
+		dnskey.Units1 = data.Units1.ValueString()
+	}
+	if !data.Units2.IsNull() && !data.Units2.IsUnknown() {
+		dnskey.Units2 = data.Units2.ValueString()
+	}
+
+	return dnskey
+}
+
 func dnskeyGetThePayloadFromtheConfig(ctx context.Context, data *DnskeyResourceModel, payload *dns.Dnskey) {
 	tflog.Debug(ctx, "In dnskeyGetThePayloadFromtheConfig Function")
 

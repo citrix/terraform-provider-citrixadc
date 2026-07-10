@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *SslhsmkeyResource) Create(ctx context.Context, req resource.CreateReque
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Hsmkeyname.ValueString()))
 
 	// Read the updated state back
-	r.readSslhsmkeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslhsmkeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslhsmkey not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *SslhsmkeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading sslhsmkey resource")
 
-	r.readSslhsmkeyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSslhsmkeyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -151,7 +164,12 @@ func (r *SslhsmkeyResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Read the updated state back
-	r.readSslhsmkeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslhsmkeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslhsmkey not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -168,9 +186,28 @@ func (r *SslhsmkeyResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	tflog.Debug(ctx, "Deleting sslhsmkey resource")
-	// Named resource - delete using DeleteResource
+	// Named resource - delete using DeleteResourceWithArgsMap.
+	// sslhsmkey delete requires the HSM identification args (hsmtype/key/keystore/
+	// password/serialnum), matching the SDKv2 behavior. A bare DeleteResource omits
+	// them, which can cause the delete to fail or misidentify the key.
 	hsmkeyname_value := data.Hsmkeyname.ValueString()
-	err := r.client.DeleteResource(service.Sslhsmkey.Type(), hsmkeyname_value)
+	argsMap := make(map[string]string)
+	if !data.Hsmtype.IsNull() && data.Hsmtype.ValueString() != "" {
+		argsMap["hsmtype"] = data.Hsmtype.ValueString()
+	}
+	if !data.Key.IsNull() && data.Key.ValueString() != "" {
+		argsMap["key"] = data.Key.ValueString()
+	}
+	if !data.Keystore.IsNull() && data.Keystore.ValueString() != "" {
+		argsMap["keystore"] = data.Keystore.ValueString()
+	}
+	if !data.Password.IsNull() && data.Password.ValueString() != "" {
+		argsMap["password"] = data.Password.ValueString()
+	}
+	if !data.Serialnum.IsNull() && data.Serialnum.ValueString() != "" {
+		argsMap["serialnum"] = data.Serialnum.ValueString()
+	}
+	err := r.client.DeleteResourceWithArgsMap(service.Sslhsmkey.Type(), hsmkeyname_value, argsMap)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslhsmkey, got error: %s", err))
 		return
@@ -180,7 +217,7 @@ func (r *SslhsmkeyResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 // Helper function to read sslhsmkey data from API
-func (r *SslhsmkeyResource) readSslhsmkeyFromApi(ctx context.Context, data *SslhsmkeyResourceModel, diags *diag.Diagnostics) {
+func (r *SslhsmkeyResource) readSslhsmkeyFromApi(ctx context.Context, data *SslhsmkeyResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	hsmkeyname_Name := data.Id.ValueString()
@@ -190,10 +227,14 @@ func (r *SslhsmkeyResource) readSslhsmkeyFromApi(ctx context.Context, data *Sslh
 
 	getResponseData, err = r.client.FindResource(service.Sslhsmkey.Type(), hsmkeyname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslhsmkey, got error: %s", err))
-		return
+		return false
 	}
 
 	sslhsmkeySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

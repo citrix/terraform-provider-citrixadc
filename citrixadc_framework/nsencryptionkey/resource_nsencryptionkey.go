@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *NsencryptionkeyResource) Create(ctx context.Context, req resource.Creat
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readNsencryptionkeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsencryptionkeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsencryptionkey not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *NsencryptionkeyResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading nsencryptionkey resource")
 
-	r.readNsencryptionkeyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNsencryptionkeyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -167,7 +180,12 @@ func (r *NsencryptionkeyResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	// Read the updated state back
-	r.readNsencryptionkeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsencryptionkeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsencryptionkey not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -196,7 +214,7 @@ func (r *NsencryptionkeyResource) Delete(ctx context.Context, req resource.Delet
 }
 
 // Helper function to read nsencryptionkey data from API
-func (r *NsencryptionkeyResource) readNsencryptionkeyFromApi(ctx context.Context, data *NsencryptionkeyResourceModel, diags *diag.Diagnostics) {
+func (r *NsencryptionkeyResource) readNsencryptionkeyFromApi(ctx context.Context, data *NsencryptionkeyResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -206,10 +224,14 @@ func (r *NsencryptionkeyResource) readNsencryptionkeyFromApi(ctx context.Context
 
 	getResponseData, err = r.client.FindResource(service.Nsencryptionkey.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nsencryptionkey, got error: %s", err))
-		return
+		return false
 	}
 
 	nsencryptionkeySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

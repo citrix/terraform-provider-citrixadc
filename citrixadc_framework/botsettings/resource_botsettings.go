@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -75,7 +76,12 @@ func (r *BotsettingsResource) Create(ctx context.Context, req resource.CreateReq
 	data.Id = types.StringValue("botsettings-config")
 
 	// Read the updated state back
-	r.readBotsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBotsettingsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "botsettings not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -93,7 +99,14 @@ func (r *BotsettingsResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading botsettings resource")
 
-	r.readBotsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readBotsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -205,7 +218,12 @@ func (r *BotsettingsResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	// Read the updated state back
-	r.readBotsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBotsettingsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "botsettings not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -227,7 +245,7 @@ func (r *BotsettingsResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 // Helper function to read botsettings data from API
-func (r *BotsettingsResource) readBotsettingsFromApi(ctx context.Context, data *BotsettingsResourceModel, diags *diag.Diagnostics) {
+func (r *BotsettingsResource) readBotsettingsFromApi(ctx context.Context, data *BotsettingsResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
@@ -235,10 +253,14 @@ func (r *BotsettingsResource) readBotsettingsFromApi(ctx context.Context, data *
 
 	getResponseData, err = r.client.FindResource(service.Botsettings.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read botsettings, got error: %s", err))
-		return
+		return false
 	}
 
 	botsettingsSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -70,7 +71,12 @@ func (r *AppfwarchiveResource) Create(ctx context.Context, req resource.CreateRe
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAppfwarchiveFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwarchiveFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwarchive not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,7 +94,14 @@ func (r *AppfwarchiveResource) Read(ctx context.Context, req resource.ReadReques
 
 	tflog.Debug(ctx, "Reading appfwarchive resource")
 
-	r.readAppfwarchiveFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwarchiveFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -111,7 +124,12 @@ func (r *AppfwarchiveResource) Update(ctx context.Context, req resource.UpdateRe
 	data.Id = state.Id
 	tflog.Debug(ctx, "Update is a no-op for appfwarchive; NITRO has no update endpoint and all attributes are RequiresReplace")
 
-	r.readAppfwarchiveFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwarchiveFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwarchive not found immediately after update")
+		}
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -145,7 +163,7 @@ func (r *AppfwarchiveResource) Delete(ctx context.Context, req resource.DeleteRe
 // listing. We treat a successful, non-empty GET as confirmation that the
 // resource exists, and leave the user-supplied plan/state values untouched
 // (see appfwarchiveSetAttrFromGet for details).
-func (r *AppfwarchiveResource) readAppfwarchiveFromApi(ctx context.Context, data *AppfwarchiveResourceModel, diags *diag.Diagnostics) {
+func (r *AppfwarchiveResource) readAppfwarchiveFromApi(ctx context.Context, data *AppfwarchiveResourceModel, diags *diag.Diagnostics) bool {
 
 	findParams := service.FindParams{
 		ResourceType:             service.Appfwarchive.Type(),
@@ -153,17 +171,20 @@ func (r *AppfwarchiveResource) readAppfwarchiveFromApi(ctx context.Context, data
 	}
 	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwarchive, got error: %s", err))
-		return
+		return false
 	}
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "appfwarchive returned empty array")
-		return
+		return false
 	}
 
 	// The response carries no identifying fields; pass the first entry so that
 	// any future response fields can be honoured, but preserve plan/state values.
 	appfwarchiveSetAttrFromGet(ctx, data, dataArr[0])
+	return true
 }

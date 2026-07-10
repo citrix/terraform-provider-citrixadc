@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -70,7 +71,12 @@ func (r *AppfwprotofileResource) Create(ctx context.Context, req resource.Create
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAppfwprotofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwprotofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwprotofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,7 +94,14 @@ func (r *AppfwprotofileResource) Read(ctx context.Context, req resource.ReadRequ
 
 	tflog.Debug(ctx, "Reading appfwprotofile resource")
 
-	r.readAppfwprotofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwprotofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -113,7 +126,12 @@ func (r *AppfwprotofileResource) Update(ctx context.Context, req resource.Update
 	data.Id = state.Id
 	tflog.Debug(ctx, "Update is a no-op for appfwprotofile; NITRO has no compatible update endpoint and all attributes are RequiresReplace")
 
-	r.readAppfwprotofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwprotofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwprotofile not found immediately after update")
+		}
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -146,7 +164,7 @@ func (r *AppfwprotofileResource) Delete(ctx context.Context, req resource.Delete
 // The user-supplied write-only inputs `comment` and `overwrite` are NEVER
 // returned, so touching them here would null them on every Read and cause a
 // perpetual diff. Preserve the existing plan/state values for those inputs.
-func (r *AppfwprotofileResource) readAppfwprotofileFromApi(ctx context.Context, data *AppfwprotofileResourceModel, diags *diag.Diagnostics) {
+func (r *AppfwprotofileResource) readAppfwprotofileFromApi(ctx context.Context, data *AppfwprotofileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -156,10 +174,15 @@ func (r *AppfwprotofileResource) readAppfwprotofileFromApi(ctx context.Context, 
 
 	getResponseData, err = r.client.FindResource(service.Appfwprotofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwprotofile, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwprotofileSetAttrFromGet(ctx, data, getResponseData)
+
+	return true
 
 }

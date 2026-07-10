@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *LbprofileResource) Create(ctx context.Context, req resource.CreateReque
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Lbprofilename.ValueString()))
 
 	// Read the updated state back
-	r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *LbprofileResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading lbprofile resource")
 
-	r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -195,7 +208,12 @@ func (r *LbprofileResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Read the updated state back
-	r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -224,7 +242,7 @@ func (r *LbprofileResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 // Helper function to read lbprofile data from API
-func (r *LbprofileResource) readLbprofileFromApi(ctx context.Context, data *LbprofileResourceModel, diags *diag.Diagnostics) {
+func (r *LbprofileResource) readLbprofileFromApi(ctx context.Context, data *LbprofileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	lbprofilename_Name := data.Id.ValueString()
@@ -234,10 +252,14 @@ func (r *LbprofileResource) readLbprofileFromApi(ctx context.Context, data *Lbpr
 
 	getResponseData, err = r.client.FindResource(service.Lbprofile.Type(), lbprofilename_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	lbprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

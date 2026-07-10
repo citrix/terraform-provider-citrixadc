@@ -3,6 +3,7 @@ package systemuser
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
@@ -55,14 +56,62 @@ func (r *SystemuserResource) ValidateConfig(ctx context.Context, req resource.Va
 		return
 	}
 
-	// Validate that either password or password_wo is specified
-	if data.Password.IsNull() && data.PasswordWo.IsNull() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Missing Required Attribute",
-			"Either \"password\" or \"password_wo\" must be specified.",
-		)
+	// A secret was supplied via either path — configuration is valid.
+	if !data.Password.IsNull() || !data.PasswordWo.IsNull() {
+		return
 	}
+
+	// No local password was provided. That is legitimate for certain users, so do
+	// not require one when:
+	//  - the username is not yet known (computed/interpolated) — cannot judge here
+	//  - the username is nsroot — its password must be managed via
+	//    "citrixadc_change_password", and this resource rejects a password for it
+	//  - the user authenticates externally (externalauth = ENABLED) — no local password
+	//
+	// Note: ValidateConfig also runs during offline "terraform validate", where the
+	// provider client is not configured, so we rely only on config values here. The
+	// non-nsroot provider login user is handled in Create/Update where the client is
+	// available.
+	if data.Username.IsUnknown() {
+		return
+	}
+	if data.Username.ValueString() == "nsroot" {
+		return
+	}
+	if data.Externalauth.IsUnknown() || strings.EqualFold(data.Externalauth.ValueString(), "ENABLED") {
+		return
+	}
+
+	resp.Diagnostics.AddAttributeError(
+		path.Root("password"),
+		"Missing Required Attribute",
+		"Either \"password\" or \"password_wo\" must be specified for a local (non-external-auth) system user.",
+	)
+}
+
+// hasLocalPassword reports whether a non-empty local password was supplied via
+// either the persisted "password" attribute or the write-only "password_wo".
+func (r *SystemuserResource) hasLocalPassword(data *SystemuserResourceModel, config *SystemuserResourceModel) bool {
+	if !data.Password.IsNull() && data.Password.ValueString() != "" {
+		return true
+	}
+	if !config.PasswordWo.IsNull() && config.PasswordWo.ValueString() != "" {
+		return true
+	}
+	return false
+}
+
+// isPasswordExempt reports whether the given user legitimately needs no local
+// password: the provider's login user, nsroot, or an external-auth user. Unlike
+// ValidateConfig, this can consult the configured client for the login user.
+func (r *SystemuserResource) isPasswordExempt(username string, externalauth types.String) bool {
+	if username == "nsroot" || username == r.client.GetUsername() {
+		return true
+	}
+	if strings.EqualFold(externalauth.ValueString(), "ENABLED") {
+		return true
+	}
+	return false
 }
 
 func (r *SystemuserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -93,6 +142,18 @@ func (r *SystemuserResource) Create(ctx context.Context, req resource.CreateRequ
 			)
 			return
 		}
+	}
+
+	// Require a local password for regular local users. nsroot, the provider's
+	// login user, and external-auth users legitimately have no local password.
+	// This complements ValidateConfig, which cannot see the (dynamic) login user.
+	if !r.hasLocalPassword(&data, &config) && !r.isPasswordExempt(username_value, data.Externalauth) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Missing Required Attribute",
+			"Either \"password\" or \"password_wo\" must be specified for a local system user.",
+		)
+		return
 	}
 
 	// Get payload from plan (regular attributes)
@@ -130,7 +191,12 @@ func (r *SystemuserResource) Create(ctx context.Context, req resource.CreateRequ
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Username.ValueString()))
 
 	// Read the updated state back
-	r.readSystemuserFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSystemuserFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "systemuser not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -148,7 +214,14 @@ func (r *SystemuserResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading systemuser resource")
 
-	r.readSystemuserFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSystemuserFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -170,6 +243,34 @@ func (r *SystemuserResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Preserve ID from prior state
 	data.Id = state.Id
+
+	username_value := data.Username.ValueString()
+
+	// nsroot guard: block password changes for admin/login user via this resource,
+	// mirroring the same guard in Create so the admin password cannot be changed
+	// through this resource on a subsequent apply.
+	if username_value == r.client.GetUsername() || username_value == "nsroot" {
+		hasPassword := (!data.Password.IsNull() && data.Password.ValueString() != "") ||
+			(!config.PasswordWo.IsNull() && config.PasswordWo.ValueString() != "")
+		if hasPassword {
+			resp.Diagnostics.AddError(
+				"Invalid Configuration",
+				"It seems you are trying to change the password of the Admin user. If so, please use the resource \"citrixadc_change_password\".",
+			)
+			return
+		}
+	}
+
+	// Require a local password for regular local users. nsroot, the provider's
+	// login user, and external-auth users legitimately have no local password.
+	if !r.hasLocalPassword(&data, &config) && !r.isPasswordExempt(username_value, data.Externalauth) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Missing Required Attribute",
+			"Either \"password\" or \"password_wo\" must be specified for a local system user.",
+		)
+		return
+	}
 
 	tflog.Debug(ctx, "Updating systemuser resource")
 
@@ -238,7 +339,12 @@ func (r *SystemuserResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Read the updated state back
-	r.readSystemuserFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSystemuserFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "systemuser not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -274,7 +380,7 @@ func (r *SystemuserResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 // Helper function to read systemuser data from API
-func (r *SystemuserResource) readSystemuserFromApi(ctx context.Context, data *SystemuserResourceModel, diags *diag.Diagnostics) {
+func (r *SystemuserResource) readSystemuserFromApi(ctx context.Context, data *SystemuserResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	username_Name := data.Id.ValueString()
@@ -284,8 +390,11 @@ func (r *SystemuserResource) readSystemuserFromApi(ctx context.Context, data *Sy
 
 	getResponseData, err = r.client.FindResource(service.Systemuser.Type(), username_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read systemuser, got error: %s", err))
-		return
+		return false
 	}
 
 	systemuserSetAttrFromGet(ctx, data, getResponseData)
@@ -294,6 +403,7 @@ func (r *SystemuserResource) readSystemuserFromApi(ctx context.Context, data *Sy
 	if !data.Cmdpolicybinding.IsNull() {
 		r.readCmdpolicyBindings(ctx, data, diags)
 	}
+	return true
 }
 
 // readCmdpolicyBindings reads the current cmdpolicy bindings from the API and sets them in state.

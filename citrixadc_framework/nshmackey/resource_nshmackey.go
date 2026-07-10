@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *NshmackeyResource) Create(ctx context.Context, req resource.CreateReque
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readNshmackeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNshmackeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nshmackey not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *NshmackeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading nshmackey resource")
 
-	r.readNshmackeyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNshmackeyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -141,7 +154,7 @@ func (r *NshmackeyResource) Update(ctx context.Context, req resource.UpdateReque
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		nshmackey := nshmackeyGetThePayloadFromthePlan(ctx, &data)
+		nshmackey := nshmackeyGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		nshmackeyGetThePayloadFromtheConfig(ctx, &config, &nshmackey)
 		// Make API call
@@ -159,7 +172,12 @@ func (r *NshmackeyResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Read the updated state back
-	r.readNshmackeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNshmackeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nshmackey not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -188,7 +206,7 @@ func (r *NshmackeyResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 // Helper function to read nshmackey data from API
-func (r *NshmackeyResource) readNshmackeyFromApi(ctx context.Context, data *NshmackeyResourceModel, diags *diag.Diagnostics) {
+func (r *NshmackeyResource) readNshmackeyFromApi(ctx context.Context, data *NshmackeyResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -198,10 +216,14 @@ func (r *NshmackeyResource) readNshmackeyFromApi(ctx context.Context, data *Nshm
 
 	getResponseData, err = r.client.FindResource(service.Nshmackey.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nshmackey, got error: %s", err))
-		return
+		return false
 	}
 
 	nshmackeySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

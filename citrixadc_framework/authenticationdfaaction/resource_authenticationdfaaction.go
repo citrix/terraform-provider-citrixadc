@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -94,7 +95,12 @@ func (r *AuthenticationdfaactionResource) Create(ctx context.Context, req resour
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationdfaactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationdfaactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationdfaaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -112,7 +118,14 @@ func (r *AuthenticationdfaactionResource) Read(ctx context.Context, req resource
 
 	tflog.Debug(ctx, "Reading authenticationdfaaction resource")
 
-	r.readAuthenticationdfaactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationdfaactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -181,7 +194,12 @@ func (r *AuthenticationdfaactionResource) Update(ctx context.Context, req resour
 	}
 
 	// Read the updated state back
-	r.readAuthenticationdfaactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationdfaactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationdfaaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -210,7 +228,7 @@ func (r *AuthenticationdfaactionResource) Delete(ctx context.Context, req resour
 }
 
 // Helper function to read authenticationdfaaction data from API
-func (r *AuthenticationdfaactionResource) readAuthenticationdfaactionFromApi(ctx context.Context, data *AuthenticationdfaactionResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationdfaactionResource) readAuthenticationdfaactionFromApi(ctx context.Context, data *AuthenticationdfaactionResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -220,10 +238,14 @@ func (r *AuthenticationdfaactionResource) readAuthenticationdfaactionFromApi(ctx
 
 	getResponseData, err = r.client.FindResource(service.Authenticationdfaaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationdfaaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationdfaactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

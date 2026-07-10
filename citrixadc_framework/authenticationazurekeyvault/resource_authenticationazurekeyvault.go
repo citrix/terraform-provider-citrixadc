@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -94,7 +95,12 @@ func (r *AuthenticationazurekeyvaultResource) Create(ctx context.Context, req re
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationazurekeyvault not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -112,7 +118,14 @@ func (r *AuthenticationazurekeyvaultResource) Read(ctx context.Context, req reso
 
 	tflog.Debug(ctx, "Reading authenticationazurekeyvault resource")
 
-	r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -209,7 +222,12 @@ func (r *AuthenticationazurekeyvaultResource) Update(ctx context.Context, req re
 	}
 
 	// Read the updated state back
-	r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationazurekeyvault not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -238,7 +256,7 @@ func (r *AuthenticationazurekeyvaultResource) Delete(ctx context.Context, req re
 }
 
 // Helper function to read authenticationazurekeyvault data from API
-func (r *AuthenticationazurekeyvaultResource) readAuthenticationazurekeyvaultFromApi(ctx context.Context, data *AuthenticationazurekeyvaultResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationazurekeyvaultResource) readAuthenticationazurekeyvaultFromApi(ctx context.Context, data *AuthenticationazurekeyvaultResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -248,10 +266,14 @@ func (r *AuthenticationazurekeyvaultResource) readAuthenticationazurekeyvaultFro
 
 	getResponseData, err = r.client.FindResource(service.Authenticationazurekeyvault.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationazurekeyvault, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationazurekeyvaultSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

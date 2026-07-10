@@ -220,6 +220,47 @@ func gslbsiteGetThePayloadFromthePlan(ctx context.Context, data *GslbsiteResourc
 	return gslbsite
 }
 
+func gslbsiteGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *GslbsiteResourceModel) gslb.Gslbsite {
+	tflog.Debug(ctx, "In gslbsiteGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields
+	gslbsite := gslb.Gslbsite{}
+	if !data.Backupparentlist.IsNull() && !data.Backupparentlist.IsUnknown() {
+		var backupparentlistList []string
+		data.Backupparentlist.ElementsAs(ctx, &backupparentlistList, false)
+		gslbsite.Backupparentlist = backupparentlistList
+	}
+	if !data.Metricexchange.IsNull() && !data.Metricexchange.IsUnknown() {
+		gslbsite.Metricexchange = data.Metricexchange.ValueString()
+	}
+	if !data.Naptrreplacementsuffix.IsNull() && !data.Naptrreplacementsuffix.IsUnknown() {
+		gslbsite.Naptrreplacementsuffix = data.Naptrreplacementsuffix.ValueString()
+	}
+	if !data.Nwmetricexchange.IsNull() && !data.Nwmetricexchange.IsUnknown() {
+		gslbsite.Nwmetricexchange = data.Nwmetricexchange.ValueString()
+	}
+	if !data.Parentsite.IsNull() && !data.Parentsite.IsUnknown() {
+		gslbsite.Parentsite = data.Parentsite.ValueString()
+	}
+	if !data.Publicip.IsNull() && !data.Publicip.IsUnknown() {
+		gslbsite.Publicip = data.Publicip.ValueString()
+	}
+	if !data.Sessionexchange.IsNull() && !data.Sessionexchange.IsUnknown() {
+		gslbsite.Sessionexchange = data.Sessionexchange.ValueString()
+	}
+	if !data.Siteipaddress.IsNull() && !data.Siteipaddress.IsUnknown() {
+		gslbsite.Siteipaddress = data.Siteipaddress.ValueString()
+	}
+	if !data.Sitename.IsNull() && !data.Sitename.IsUnknown() {
+		gslbsite.Sitename = data.Sitename.ValueString()
+	}
+	if !data.Triggermonitor.IsNull() && !data.Triggermonitor.IsUnknown() {
+		gslbsite.Triggermonitor = data.Triggermonitor.ValueString()
+	}
+
+	return gslbsite
+}
+
 func gslbsiteGetThePayloadFromtheConfig(ctx context.Context, data *GslbsiteResourceModel, payload *gslb.Gslbsite) {
 	tflog.Debug(ctx, "In gslbsiteGetThePayloadFromtheConfig Function")
 

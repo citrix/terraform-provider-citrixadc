@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *DnskeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Keyname.ValueString()))
 
 	// Read the updated state back
-	r.readDnskeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnskeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnskey not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *DnskeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	tflog.Debug(ctx, "Reading dnskey resource")
 
-	r.readDnskeyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnskeyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -165,7 +178,7 @@ func (r *DnskeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		dnskey := dnskeyGetThePayloadFromthePlan(ctx, &data)
+		dnskey := dnskeyGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		dnskeyGetThePayloadFromtheConfig(ctx, &config, &dnskey)
 		// Make API call
@@ -183,7 +196,12 @@ func (r *DnskeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	// Read the updated state back
-	r.readDnskeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnskeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnskey not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -212,7 +230,7 @@ func (r *DnskeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 // Helper function to read dnskey data from API
-func (r *DnskeyResource) readDnskeyFromApi(ctx context.Context, data *DnskeyResourceModel, diags *diag.Diagnostics) {
+func (r *DnskeyResource) readDnskeyFromApi(ctx context.Context, data *DnskeyResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	keyname_Name := data.Id.ValueString()
@@ -222,10 +240,14 @@ func (r *DnskeyResource) readDnskeyFromApi(ctx context.Context, data *DnskeyReso
 
 	getResponseData, err = r.client.FindResource(service.Dnskey.Type(), keyname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnskey, got error: %s", err))
-		return
+		return false
 	}
 
 	dnskeySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

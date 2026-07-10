@@ -121,6 +121,31 @@ func autoscaleprofileGetThePayloadFromthePlan(ctx context.Context, data *Autosca
 	return autoscaleprofile
 }
 
+func autoscaleprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AutoscaleprofileResourceModel) autoscale.Autoscaleprofile {
+	tflog.Debug(ctx, "In autoscaleprofileGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model
+	autoscaleprofile := autoscale.Autoscaleprofile{}
+	if !data.Apikey.IsNull() && !data.Apikey.IsUnknown() {
+		autoscaleprofile.Apikey = data.Apikey.ValueString()
+	}
+	// Skip write-only attribute: apikey_wo
+	// Skip version tracker attribute: apikey_wo_version
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		autoscaleprofile.Name = data.Name.ValueString()
+	}
+	if !data.Sharedsecret.IsNull() && !data.Sharedsecret.IsUnknown() {
+		autoscaleprofile.Sharedsecret = data.Sharedsecret.ValueString()
+	}
+	// Skip write-only attribute: sharedsecret_wo
+	// Skip version tracker attribute: sharedsecret_wo_version
+	if !data.Url.IsNull() && !data.Url.IsUnknown() {
+		autoscaleprofile.Url = data.Url.ValueString()
+	}
+
+	return autoscaleprofile
+}
+
 func autoscaleprofileGetThePayloadFromtheConfig(ctx context.Context, data *AutoscaleprofileResourceModel, payload *autoscale.Autoscaleprofile) {
 	tflog.Debug(ctx, "In autoscaleprofileGetThePayloadFromtheConfig Function")
 

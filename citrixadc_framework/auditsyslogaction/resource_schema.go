@@ -34,7 +34,7 @@ type AuditsyslogactionResourceModel struct {
 	Httpendpointurl        types.String `tfsdk:"httpendpointurl"`
 	Lbvservername          types.String `tfsdk:"lbvservername"`
 	Logfacility            types.String `tfsdk:"logfacility"`
-	Loglevel               types.List   `tfsdk:"loglevel"`
+	Loglevel               types.Set    `tfsdk:"loglevel"`
 	Lsn                    types.String `tfsdk:"lsn"`
 	Managementlog          types.List   `tfsdk:"managementlog"`
 	Maxlogdatasizetohold   types.Int64  `tfsdk:"maxlogdatasizetohold"`
@@ -137,7 +137,7 @@ func (r *AuditsyslogactionResource) Schema(ctx context.Context, req resource.Sch
 				Computed:    true,
 				Description: "Facility value, as defined in RFC 3164, assigned to the log message.\nLog facility values are numbers 0 to 7 (LOCAL0 through LOCAL7). Each number indicates where a specific message originated from, such as the Citrix ADC itself, the VPN, or external.",
 			},
-			"loglevel": schema.ListAttribute{
+			"loglevel": schema.SetAttribute{
 				ElementType: types.StringType,
 				Required:    true,
 				Description: "Audit log level, which specifies the types of events to log.\nAvailable values function as follows:\n* ALL - All events.\n* EMERGENCY - Events that indicate an immediate crisis on the server.\n* ALERT - Events that might require action.\n* CRITICAL - Events that indicate an imminent server crisis.\n* ERROR - Events that indicate some type of error.\n* WARNING - Events that require action in the near future.\n* NOTICE - Events that the administrator should know about.\n* INFORMATIONAL - All but low-level events.\n* DEBUG - All events, in extreme detail.\n* NONE - No events.",
@@ -449,13 +449,13 @@ func auditsyslogactionSetAttrFromGet(ctx context.Context, data *Auditsyslogactio
 	if val, ok := getResponseData["loglevel"]; ok && val != nil {
 		if sliceVal, ok := val.([]interface{}); ok {
 			stringList := utils.ToStringList(sliceVal)
-			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
-			data.Loglevel = listValue
+			setValue, _ := types.SetValueFrom(ctx, types.StringType, stringList)
+			data.Loglevel = setValue
 		} else {
-			data.Loglevel = types.ListNull(types.StringType)
+			data.Loglevel = types.SetNull(types.StringType)
 		}
 	} else {
-		data.Loglevel = types.ListNull(types.StringType)
+		data.Loglevel = types.SetNull(types.StringType)
 	}
 	if val, ok := getResponseData["lsn"]; ok && val != nil {
 		data.Lsn = types.StringValue(val.(string))

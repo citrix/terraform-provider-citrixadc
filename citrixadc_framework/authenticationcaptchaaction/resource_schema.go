@@ -131,6 +131,37 @@ func authenticationcaptchaactionGetThePayloadFromthePlan(ctx context.Context, da
 	return authenticationcaptchaaction
 }
 
+func authenticationcaptchaactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AuthenticationcaptchaactionResourceModel) authentication.Authenticationcaptchaaction {
+	tflog.Debug(ctx, "In authenticationcaptchaactionGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model
+	authenticationcaptchaaction := authentication.Authenticationcaptchaaction{}
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
+		authenticationcaptchaaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		authenticationcaptchaaction.Name = data.Name.ValueString()
+	}
+	if !data.Scorethreshold.IsNull() && !data.Scorethreshold.IsUnknown() {
+		authenticationcaptchaaction.Scorethreshold = utils.IntPtr(int(data.Scorethreshold.ValueInt64()))
+	}
+	if !data.Secretkey.IsNull() && !data.Secretkey.IsUnknown() {
+		authenticationcaptchaaction.Secretkey = data.Secretkey.ValueString()
+	}
+	// Skip write-only attribute: secretkey_wo
+	// Skip version tracker attribute: secretkey_wo_version
+	if !data.Serverurl.IsNull() && !data.Serverurl.IsUnknown() {
+		authenticationcaptchaaction.Serverurl = data.Serverurl.ValueString()
+	}
+	if !data.Sitekey.IsNull() && !data.Sitekey.IsUnknown() {
+		authenticationcaptchaaction.Sitekey = data.Sitekey.ValueString()
+	}
+	// Skip write-only attribute: sitekey_wo
+	// Skip version tracker attribute: sitekey_wo_version
+
+	return authenticationcaptchaaction
+}
+
 func authenticationcaptchaactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationcaptchaactionResourceModel, payload *authentication.Authenticationcaptchaaction) {
 	tflog.Debug(ctx, "In authenticationcaptchaactionGetThePayloadFromtheConfig Function")
 

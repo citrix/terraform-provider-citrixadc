@@ -80,7 +80,7 @@ func AuditsyslogactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Facility value, as defined in RFC 3164, assigned to the log message.\nLog facility values are numbers 0 to 7 (LOCAL0 through LOCAL7). Each number indicates where a specific message originated from, such as the Citrix ADC itself, the VPN, or external.",
 			},
-			"loglevel": schema.ListAttribute{
+			"loglevel": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,

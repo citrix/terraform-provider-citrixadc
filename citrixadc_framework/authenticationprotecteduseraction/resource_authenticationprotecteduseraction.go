@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -71,7 +72,12 @@ func (r *AuthenticationprotecteduseractionResource) Create(ctx context.Context, 
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationprotecteduseractionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationprotecteduseractionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationprotecteduseraction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -89,7 +95,14 @@ func (r *AuthenticationprotecteduseractionResource) Read(ctx context.Context, re
 
 	tflog.Debug(ctx, "Reading authenticationprotecteduseraction resource")
 
-	r.readAuthenticationprotecteduseractionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationprotecteduseractionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -141,7 +154,12 @@ func (r *AuthenticationprotecteduseractionResource) Update(ctx context.Context, 
 	}
 
 	// Read the updated state back
-	r.readAuthenticationprotecteduseractionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationprotecteduseractionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationprotecteduseraction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -170,7 +188,7 @@ func (r *AuthenticationprotecteduseractionResource) Delete(ctx context.Context, 
 }
 
 // Helper function to read authenticationprotecteduseraction data from API
-func (r *AuthenticationprotecteduseractionResource) readAuthenticationprotecteduseractionFromApi(ctx context.Context, data *AuthenticationprotecteduseractionResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationprotecteduseractionResource) readAuthenticationprotecteduseractionFromApi(ctx context.Context, data *AuthenticationprotecteduseractionResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -180,10 +198,14 @@ func (r *AuthenticationprotecteduseractionResource) readAuthenticationprotectedu
 
 	getResponseData, err = r.client.FindResource(service.Authenticationprotecteduseraction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationprotecteduseraction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationprotecteduseractionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

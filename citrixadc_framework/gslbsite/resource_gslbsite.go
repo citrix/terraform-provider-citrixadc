@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *GslbsiteResource) Create(ctx context.Context, req resource.CreateReques
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Sitename.ValueString()))
 
 	// Read the updated state back
-	r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "gslbsite not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *GslbsiteResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading gslbsite resource")
 
-	r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -169,7 +182,7 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		gslbsite := gslbsiteGetThePayloadFromthePlan(ctx, &data)
+		gslbsite := gslbsiteGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		gslbsiteGetThePayloadFromtheConfig(ctx, &config, &gslbsite)
 		// Make API call
@@ -187,7 +200,12 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	// Read the updated state back
-	r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "gslbsite not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -216,7 +234,7 @@ func (r *GslbsiteResource) Delete(ctx context.Context, req resource.DeleteReques
 }
 
 // Helper function to read gslbsite data from API
-func (r *GslbsiteResource) readGslbsiteFromApi(ctx context.Context, data *GslbsiteResourceModel, diags *diag.Diagnostics) {
+func (r *GslbsiteResource) readGslbsiteFromApi(ctx context.Context, data *GslbsiteResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	sitename_Name := data.Id.ValueString()
@@ -226,10 +244,14 @@ func (r *GslbsiteResource) readGslbsiteFromApi(ctx context.Context, data *Gslbsi
 
 	getResponseData, err = r.client.FindResource(service.Gslbsite.Type(), sitename_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read gslbsite, got error: %s", err))
-		return
+		return false
 	}
 
 	gslbsiteSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }
