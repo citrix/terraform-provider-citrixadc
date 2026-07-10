@@ -44,6 +44,7 @@ func (d *BotprofileIpreputationBindingDataSource) Read(ctx context.Context, req 
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	botipreputation_Name := data.BotIpreputation
 	category_Name := data.Category
 
 	var dataArr []map[string]interface{}
@@ -66,20 +67,37 @@ func (d *BotprofileIpreputationBindingDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// The lookup keys are name (parent) + category; bot_ipreputation is only
+	// used as an additional filter when the caller supplies it.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check category
-		if val, ok := v["category"].(string); ok {
-			if category_Name.IsNull() || val != category_Name.ValueString() {
+		// Check bot_ipreputation only when provided in the datasource config
+		if !botipreputation_Name.IsNull() && !botipreputation_Name.IsUnknown() {
+			if val, ok := v["bot_ipreputation"].(bool); ok {
+				if val != botipreputation_Name.ValueBool() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !category_Name.IsNull() {
-			match = false
-			continue
+		}
+
+		// Check category
+		if !category_Name.IsNull() && !category_Name.IsUnknown() {
+			if val, ok := v["category"].(string); ok {
+				if val != category_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
 		}
 		if match {
 			foundIndex = i
@@ -89,7 +107,7 @@ func (d *BotprofileIpreputationBindingDataSource) Read(ctx context.Context, req 
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("botprofile_ipreputation_binding with category %s not found", category_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("botprofile_ipreputation_binding with bot_ipreputation %s not found", botipreputation_Name))
 		return
 	}
 

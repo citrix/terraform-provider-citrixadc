@@ -45,6 +45,7 @@ func (d *BotprofileTrapinsertionurlBindingDataSource) Read(ctx context.Context, 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	bottrapurl_Name := data.BotTrapUrl
+	trapinsertionurl_Name := data.Trapinsertionurl
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +83,20 @@ func (d *BotprofileTrapinsertionurlBindingDataSource) Read(ctx context.Context, 
 			continue
 		}
 
+		// Check trapinsertionurl only when the user supplied it as a filter.
+		// trapinsertionurl is Optional in the datasource; an unset (null) value
+		// means "do not filter on this attribute".
+		if !trapinsertionurl_Name.IsNull() {
+			if val, ok := v["trapinsertionurl"].(bool); ok {
+				if val != trapinsertionurl_Name.ValueBool() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
 		if match {
 			foundIndex = i
 			break

@@ -6,7 +6,7 @@ subcategory: "Bot"
 
 The botprofile_captcha_binding data source allows you to retrieve information about the bindings between botprofile and captcha URLs.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_botprofile_captcha_binding" "tf_binding" {

@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -157,10 +157,12 @@ func testAccCheckAaauser_vpntrafficpolicy_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		username := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"username", "policy"}, nil)
+		if err != nil {
+			return err
+		}
+		username := idMap["username"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "aaauser_vpntrafficpolicy_binding",
@@ -199,13 +201,12 @@ func testAccCheckAaauser_vpntrafficpolicy_bindingNotExist(n string, id string) r
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"username", "policy"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		username := idSlice[0]
-		policy := idSlice[1]
+		username := idMap["username"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "aaauser_vpntrafficpolicy_binding",

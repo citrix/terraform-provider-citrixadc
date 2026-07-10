@@ -9,7 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,55 +35,106 @@ func (r *VlanChannelBindingResource) Schema(ctx context.Context, req resource.Sc
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the vlan_channel_binding resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"vlanid": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specifies the virtual LAN ID.",
 			},
 			"ifnum": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The interface to be bound to the VLAN, specified in slot/port notation (for example, 1/3).",
 			},
 			"ownergroup": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("DEFAULT_NG"),
+				// Optional only (no Computed): the binding GET response does not
+				// echo ownergroup back, so a Computed flag would leave the value
+				// perpetually unknown after apply.
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The owner node group in a Cluster for this vlan.",
 			},
 			"tagged": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Make the interface an 802.1q tagged interface. Packets sent on this interface on this VLAN have an additional 4-byte 802.1q tag, which identifies the VLAN. To use 802.1q tagging, you must also configure the switch connected to the appliance's interfaces.",
 			},
 		},
 	}
 }
 
-func vlan_channel_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VlanChannelBindingResourceModel) network.Vlanchannelbinding {
-	tflog.Debug(ctx, "In vlan_channel_bindingGetThePayloadFromtheConfig Function")
+func vlan_channel_bindingGetThePayloadFromthePlan(ctx context.Context, data *VlanChannelBindingResourceModel) network.Vlanchannelbinding {
+	tflog.Debug(ctx, "In vlan_channel_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vlan_channel_binding := network.Vlanchannelbinding{}
-	if !data.Vlanid.IsNull() {
+	if !data.Vlanid.IsNull() && !data.Vlanid.IsUnknown() {
 		vlan_channel_binding.Id = utils.IntPtr(int(data.Vlanid.ValueInt64()))
 	}
-	if !data.Ifnum.IsNull() {
+	if !data.Ifnum.IsNull() && !data.Ifnum.IsUnknown() {
 		vlan_channel_binding.Ifnum = data.Ifnum.ValueString()
 	}
-	if !data.Ownergroup.IsNull() {
+	if !data.Ownergroup.IsNull() && !data.Ownergroup.IsUnknown() {
 		vlan_channel_binding.Ownergroup = data.Ownergroup.ValueString()
 	}
-	if !data.Tagged.IsNull() {
+	if !data.Tagged.IsNull() && !data.Tagged.IsUnknown() {
 		vlan_channel_binding.Tagged = data.Tagged.ValueBool()
 	}
 
 	return vlan_channel_binding
 }
 
+// vlan_channel_bindingComposeId builds the composite resource ID using the
+// legacy SDK v2 attribute order (vlanid,ifnum) in the new key:value form.
+func vlan_channel_bindingComposeId(data *VlanChannelBindingResourceModel) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("vlanid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vlanid.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(data.Ifnum.ValueString())))
+	return strings.Join(idParts, ",")
+}
+
+// vlan_channel_bindingSetAttrFromGet is the resource-side state setter. It
+// preserves the synthetic Id (set once in Create) and refreshes the
+// server-managed fields from the GET response.
 func vlan_channel_bindingSetAttrFromGet(ctx context.Context, data *VlanChannelBindingResourceModel, getResponseData map[string]interface{}) *VlanChannelBindingResourceModel {
 	tflog.Debug(ctx, "In vlan_channel_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["id"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Vlanid = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["ifnum"]; ok && val != nil {
+		data.Ifnum = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
+		data.Ownergroup = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["tagged"]; ok && val != nil {
+		data.Tagged = types.BoolValue(val.(bool))
+	}
+
+	return data
+}
+
+// vlan_channel_bindingSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response and sets the synthetic Id, for use by the datasource
+// which has no Create to seed the ID.
+func vlan_channel_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VlanChannelBindingResourceModel, getResponseData map[string]interface{}) *VlanChannelBindingResourceModel {
+	tflog.Debug(ctx, "In vlan_channel_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlanid = types.Int64Value(intVal)
@@ -104,12 +158,7 @@ func vlan_channel_bindingSetAttrFromGet(ctx context.Context, data *VlanChannelBi
 		data.Tagged = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("vlanid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vlanid.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(vlan_channel_bindingComposeId(data))
 
 	return data
 }

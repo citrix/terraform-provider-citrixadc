@@ -39,4 +39,5 @@ In addition to the arguments, the following attributes are available:
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - Is the rule auto deployed by dynamic profile?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

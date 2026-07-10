@@ -32,17 +32,17 @@ output "weight" {
 ## Argument Reference
 
 * `servicegroupname` - (Required) Name of the service group.
-* `ip` - (Optional) IP Address. Either IP Address or servername is required.
-* `port` - (Required) Server port number.
-* `servername` - (Optional) Name of the server to which to bind the service group. Either IP Address or servername is required.
+* `ip` - (Optional) IP Address. Either `ip` or `servername` is required.
+* `port` - (Optional) Server port number.
+* `servername` - (Optional) Name of the server to which to bind the service group. Either `ip` or `servername` is required.
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the servicegroup_servicegroupmember_binding. It is a system-generated identifier.
+* `id` - The id of the servicegroup_servicegroupmember_binding. It is the concatenation of the `servicegroupname`, the `ip` or `servername`, and the `port` attributes separated by a comma.
 * `customserverid` - The identifier for this IP:Port pair. Used when the persistency type is set to Custom Server ID.
-* `dbsttl` - Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors.
+* `dbsttl` - Specify the TTL for DNS record for domain based service. The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors.
 * `hashid` - The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.
 * `nameserver` - Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver.
 * `order` - Order number to be assigned to the servicegroup member.

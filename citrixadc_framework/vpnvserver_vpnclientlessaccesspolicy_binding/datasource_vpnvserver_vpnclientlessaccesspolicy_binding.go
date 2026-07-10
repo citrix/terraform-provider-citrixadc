@@ -44,6 +44,7 @@ func (d *VpnvserverVpnclientlessaccesspolicyBindingDataSource) Read(ctx context.
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	bindpoint_Name := data.Bindpoint
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -71,15 +72,30 @@ func (d *VpnvserverVpnclientlessaccesspolicyBindingDataSource) Read(ctx context.
 	for i, v := range dataArr {
 		match := true
 
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
+		// Check bindpoint (only filter when the user supplied it; primary lookup is name+policy)
+		if !bindpoint_Name.IsNull() && !bindpoint_Name.IsUnknown() {
+			if val, ok := v["bindpoint"].(string); ok {
+				if val != bindpoint_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
+		}
+
+		// Check policy
+		if !policy_Name.IsNull() && !policy_Name.IsUnknown() {
+			if val, ok := v["policy"].(string); ok {
+				if val != policy_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
 		}
 		if match {
 			foundIndex = i
@@ -89,7 +105,7 @@ func (d *VpnvserverVpnclientlessaccesspolicyBindingDataSource) Read(ctx context.
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_vpnclientlessaccesspolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_vpnclientlessaccesspolicy_binding with bindpoint %s not found", bindpoint_Name))
 		return
 	}
 

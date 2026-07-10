@@ -42,7 +42,7 @@ func (d *VpnvserverVpnurlpolicyBindingDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Lookup keys: parent name (GET filter) + policy (disambiguator).
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -66,7 +66,7 @@ func (d *VpnvserverVpnurlpolicyBindingDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policy
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -89,11 +89,11 @@ func (d *VpnvserverVpnurlpolicyBindingDataSource) Read(ctx context.Context, req 
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_vpnurlpolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_vpnurlpolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	vpnvserver_vpnurlpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_vpnurlpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

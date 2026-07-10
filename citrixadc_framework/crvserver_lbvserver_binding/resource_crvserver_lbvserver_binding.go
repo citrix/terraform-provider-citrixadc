@@ -3,8 +3,11 @@ package crvserver_lbvserver_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,23 @@ func (r *CrvserverLbvserverBindingResource) Create(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Creating crvserver_lbvserver_binding resource")
-
-	// crvserver_lbvserver_binding := crvserver_lbvserver_bindingGetThePayloadFromtheConfig(ctx, &data)
+	crvserver_lbvserver_binding := crvserver_lbvserver_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Crvserver_lbvserver_binding.Type(), &crvserver_lbvserver_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_lbvserver_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("crvserver_lbvserver_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Crvserver_lbvserver_binding.Type(), &crvserver_lbvserver_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_lbvserver_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created crvserver_lbvserver_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("lbvserver:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Lbvserver.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readCrvserverLbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +101,10 @@ func (r *CrvserverLbvserverBindingResource) Read(ctx context.Context, req resour
 }
 
 func (r *CrvserverLbvserverBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CrvserverLbvserverBindingResourceModel
+	var data, state CrvserverLbvserverBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +112,29 @@ func (r *CrvserverLbvserverBindingResource) Update(ctx context.Context, req reso
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating crvserver_lbvserver_binding resource")
 
-	// Create API request body from the model
-	// crvserver_lbvserver_binding := crvserver_lbvserver_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Crvserver_lbvserver_binding.Type(), &crvserver_lbvserver_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update crvserver_lbvserver_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		crvserver_lbvserver_binding := crvserver_lbvserver_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Crvserver_lbvserver_binding.Type(), &crvserver_lbvserver_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update crvserver_lbvserver_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated crvserver_lbvserver_binding resource")
+		tflog.Trace(ctx, "Updated crvserver_lbvserver_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for crvserver_lbvserver_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readCrvserverLbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +154,99 @@ func (r *CrvserverLbvserverBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting crvserver_lbvserver_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "lbvserver"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For crvserver_lbvserver_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted crvserver_lbvserver_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	args := make([]string, 0)
+	if val, ok := idMap["lbvserver"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("lbvserver:%s", url.QueryEscape(val)))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_lbvserver_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_lbvserver_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted crvserver_lbvserver_binding binding")
 }
 
 // Helper function to read crvserver_lbvserver_binding data from API
 func (r *CrvserverLbvserverBindingResource) readCrvserverLbvserverBindingFromApi(ctx context.Context, data *CrvserverLbvserverBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Crvserver_lbvserver_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "lbvserver"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Crvserver_lbvserver_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read crvserver_lbvserver_binding, got error: %s", err))
 		return
 	}
 
-	crvserver_lbvserver_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "crvserver_lbvserver_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check lbvserver
+		if idVal, ok := idMap["lbvserver"]; ok {
+			if val, ok := v["lbvserver"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["lbvserver"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("crvserver_lbvserver_binding not found with the provided ID attributes"))
+		return
+	}
+
+	crvserver_lbvserver_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

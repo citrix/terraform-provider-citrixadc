@@ -42,10 +42,12 @@ func (d *AuthenticationvserverCachepolicyBindingDataSource) Read(ctx context.Con
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Array filter with parent ID. The lookup keys are name (parent) + policy. bindpoint
+	// is an optional additional filter. secondary/groupextraction are NOT echoed by the
+	// NITRO GET response, so they cannot be used as filters.
 	name_Name := data.Name.ValueString()
-	bindpoint_Name := data.Bindpoint
 	policy_Name := data.Policy
+	bindpoint_Name := data.Bindpoint
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -67,45 +69,30 @@ func (d *AuthenticationvserverCachepolicyBindingDataSource) Read(ctx context.Con
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the matching binding (policy, and bindpoint if set).
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check bindpoint
-		if val, ok := v["bindpoint"].(string); ok {
-			if bindpoint_Name.IsNull() || val != bindpoint_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !bindpoint_Name.IsNull() {
-			match = false
+		// Check policy (required lookup key)
+		if val, ok := v["policy"].(string); !ok || policy_Name.IsNull() || val != policy_Name.ValueString() {
 			continue
 		}
-
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
+		// Check bindpoint only when the caller supplied it
+		if !bindpoint_Name.IsNull() && !bindpoint_Name.IsUnknown() {
+			if val, ok := v["bindpoint"].(string); !ok || val != bindpoint_Name.ValueString() {
 				continue
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
 		}
-		if match {
-			foundIndex = i
-			break
-		}
+		foundIndex = i
+		break
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_cachepolicy_binding with bindpoint %s not found", bindpoint_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_cachepolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	authenticationvserver_cachepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_cachepolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

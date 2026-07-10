@@ -3,8 +3,11 @@ package botprofile_ipreputation_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,24 @@ func (r *BotprofileIpreputationBindingResource) Create(ctx context.Context, req 
 	}
 
 	tflog.Debug(ctx, "Creating botprofile_ipreputation_binding resource")
-
-	// botprofile_ipreputation_binding := botprofile_ipreputation_bindingGetThePayloadFromtheConfig(ctx, &data)
+	botprofile_ipreputation_binding := botprofile_ipreputation_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botprofile_ipreputation_binding.Type(), &botprofile_ipreputation_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botprofile_ipreputation_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("botprofile_ipreputation_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Botprofile_ipreputation_binding.Type(), &botprofile_ipreputation_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botprofile_ipreputation_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created botprofile_ipreputation_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("bot_ipreputation:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotIpreputation.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("category:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Category.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readBotprofileIpreputationBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +102,10 @@ func (r *BotprofileIpreputationBindingResource) Read(ctx context.Context, req re
 }
 
 func (r *BotprofileIpreputationBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BotprofileIpreputationBindingResourceModel
+	var data, state BotprofileIpreputationBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +113,29 @@ func (r *BotprofileIpreputationBindingResource) Update(ctx context.Context, req 
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating botprofile_ipreputation_binding resource")
 
-	// Create API request body from the model
-	// botprofile_ipreputation_binding := botprofile_ipreputation_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botprofile_ipreputation_binding.Type(), &botprofile_ipreputation_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botprofile_ipreputation_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		botprofile_ipreputation_binding := botprofile_ipreputation_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Botprofile_ipreputation_binding.Type(), &botprofile_ipreputation_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botprofile_ipreputation_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated botprofile_ipreputation_binding resource")
+		tflog.Trace(ctx, "Updated botprofile_ipreputation_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for botprofile_ipreputation_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readBotprofileIpreputationBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +155,119 @@ func (r *BotprofileIpreputationBindingResource) Delete(ctx context.Context, req 
 	}
 
 	tflog.Debug(ctx, "Deleting botprofile_ipreputation_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "category"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For botprofile_ipreputation_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted botprofile_ipreputation_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["bot_ipreputation"]; ok && val != "" {
+		argsMap["bot_ipreputation"] = val
+	}
+	if val, ok := idMap["category"]; ok && val != "" {
+		argsMap["category"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Botprofile_ipreputation_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botprofile_ipreputation_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted botprofile_ipreputation_binding binding")
 }
 
 // Helper function to read botprofile_ipreputation_binding data from API
 func (r *BotprofileIpreputationBindingResource) readBotprofileIpreputationBindingFromApi(ctx context.Context, data *BotprofileIpreputationBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Botprofile_ipreputation_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "category"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Botprofile_ipreputation_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read botprofile_ipreputation_binding, got error: %s", err))
 		return
 	}
 
-	botprofile_ipreputation_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "botprofile_ipreputation_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check bot_ipreputation
+		if idVal, ok := idMap["bot_ipreputation"]; ok {
+			if val, ok := v["bot_ipreputation"].(bool); ok {
+				idValBool, _ := strconv.ParseBool(idVal)
+				if val != idValBool {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["bot_ipreputation"].(bool); ok {
+			match = false
+			continue
+		}
+
+		// Check category
+		if idVal, ok := idMap["category"]; ok {
+			if val, ok := v["category"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["category"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("botprofile_ipreputation_binding not found with the provided ID attributes"))
+		return
+	}
+
+	botprofile_ipreputation_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

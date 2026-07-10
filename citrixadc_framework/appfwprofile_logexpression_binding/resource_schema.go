@@ -28,6 +28,7 @@ type AppfwprofileLogexpressionBindingResourceModel struct {
 	Name            types.String `tfsdk:"name"`
 	Resourceid      types.String `tfsdk:"resourceid"`
 	State           types.String `tfsdk:"state"`
+	Ruletype        types.String `tfsdk:"ruletype"`
 }
 
 func (r *AppfwprofileLogexpressionBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -47,122 +48,164 @@ func (r *AppfwprofileLogexpressionBindingResource) Schema(ctx context.Context, r
 				Description: "Send SNMP alert?",
 			},
 			"as_logexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "LogExpression to log when violation happened on appfw profile",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"logexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of LogExpression object.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
+			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
 			},
 		},
 	}
 }
 
-func appfwprofile_logexpression_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileLogexpressionBindingResourceModel) appfw.Appfwprofilelogexpressionbinding {
-	tflog.Debug(ctx, "In appfwprofile_logexpression_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_logexpression_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileLogexpressionBindingResourceModel) appfw.Appfwprofilelogexpressionbinding {
+	tflog.Debug(ctx, "In appfwprofile_logexpression_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_logexpression_binding := appfw.Appfwprofilelogexpressionbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_logexpression_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.AsLogexpression.IsNull() {
+	if !data.AsLogexpression.IsNull() && !data.AsLogexpression.IsUnknown() {
 		appfwprofile_logexpression_binding.Aslogexpression = data.AsLogexpression.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_logexpression_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_logexpression_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.Logexpression.IsNull() {
+	if !data.Logexpression.IsNull() && !data.Logexpression.IsUnknown() {
 		appfwprofile_logexpression_binding.Logexpression = data.Logexpression.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_logexpression_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_logexpression_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_logexpression_binding.State = data.State.ValueString()
+	}
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_logexpression_binding.Ruletype = data.Ruletype.ValueString()
 	}
 
 	return appfwprofile_logexpression_binding
 }
 
+// appfwprofile_logexpression_bindingSetAttrFromGet is the RESOURCE-side setter.
+// All attributes are RequiresReplace (no update endpoint) and the NITRO server may
+// echo server-defaulted/normalized values for fields like alertonly and
+// isautodeployed (the SDK v2 resource explicitly did NOT write those back). To avoid
+// "inconsistent result after apply" we adopt the GET value only when the model field
+// is currently null/unknown (e.g. import); otherwise we preserve the configured
+// plan/state value. The ID is set once in Create and is preserved here.
 func appfwprofile_logexpression_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileLogexpressionBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileLogexpressionBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_logexpression_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["alertonly"]; ok && val != nil {
-		data.Alertonly = types.StringValue(val.(string))
-	} else {
-		data.Alertonly = types.StringNull()
-	}
-	if val, ok := getResponseData["as_logexpression"]; ok && val != nil {
-		data.AsLogexpression = types.StringValue(val.(string))
-	} else {
-		data.AsLogexpression = types.StringNull()
-	}
-	if val, ok := getResponseData["comment"]; ok && val != nil {
-		data.Comment = types.StringValue(val.(string))
-	} else {
-		data.Comment = types.StringNull()
-	}
-	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
-		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
-		data.Isautodeployed = types.StringNull()
-	}
-	if val, ok := getResponseData["logexpression"]; ok && val != nil {
-		data.Logexpression = types.StringValue(val.(string))
-	} else {
-		data.Logexpression = types.StringNull()
-	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
-	}
-	if val, ok := getResponseData["resourceid"]; ok && val != nil {
-		data.Resourceid = types.StringValue(val.(string))
-	} else {
-		data.Resourceid = types.StringNull()
-	}
-	if val, ok := getResponseData["state"]; ok && val != nil {
-		data.State = types.StringValue(val.(string))
-	} else {
-		data.State = types.StringNull()
+	adopt := func(cur types.String, key string) types.String {
+		if !cur.IsNull() && !cur.IsUnknown() {
+			return cur
+		}
+		if val, ok := getResponseData[key]; ok && val != nil {
+			return types.StringValue(val.(string))
+		}
+		return types.StringNull()
 	}
 
-	// Set ID for the resource
+	data.Alertonly = adopt(data.Alertonly, "alertonly")
+	data.AsLogexpression = adopt(data.AsLogexpression, "as_logexpression")
+	data.Comment = adopt(data.Comment, "comment")
+	data.Isautodeployed = adopt(data.Isautodeployed, "isautodeployed")
+	data.Logexpression = adopt(data.Logexpression, "logexpression")
+	data.Name = adopt(data.Name, "name")
+	data.Resourceid = adopt(data.Resourceid, "resourceid")
+	data.State = adopt(data.State, "state")
+	data.Ruletype = adopt(data.Ruletype, "ruletype")
+
+	return data
+}
+
+// appfwprofile_logexpression_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE-side setter: it faithfully copies every field from the GET response
+// (the datasource has no prior plan/state to preserve) and sets the composite ID.
+func appfwprofile_logexpression_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwprofileLogexpressionBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileLogexpressionBindingResourceModel {
+	tflog.Debug(ctx, "In appfwprofile_logexpression_bindingSetAttrFromGetForDatasource Function")
+
+	copyField := func(key string) types.String {
+		if val, ok := getResponseData[key]; ok && val != nil {
+			return types.StringValue(val.(string))
+		}
+		return types.StringNull()
+	}
+
+	data.Alertonly = copyField("alertonly")
+	data.AsLogexpression = copyField("as_logexpression")
+	data.Comment = copyField("comment")
+	data.Isautodeployed = copyField("isautodeployed")
+	data.Logexpression = copyField("logexpression")
+	data.Name = copyField("name")
+	data.Resourceid = copyField("resourceid")
+	data.State = copyField("state")
+	data.Ruletype = copyField("ruletype")
+
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("logexpression:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Logexpression.ValueString()))))

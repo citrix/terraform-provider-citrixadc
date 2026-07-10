@@ -42,7 +42,8 @@ func (d *AuthenticationvserverAuthenticationcertpolicyBindingDataSource) Read(ct
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Array filter with parent ID. The binding identity is (name, policy);
+	// the lookup keys are the parent vserver name and the bound policy.
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -66,34 +67,24 @@ func (d *AuthenticationvserverAuthenticationcertpolicyBindingDataSource) Read(ct
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding with the matching policy.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policy
 		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
+			if !policy_Name.IsNull() && val == policy_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationcertpolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationcertpolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	authenticationvserver_authenticationcertpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationcertpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

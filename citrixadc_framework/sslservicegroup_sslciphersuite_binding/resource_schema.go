@@ -34,8 +34,10 @@ func (r *SslservicegroupSslciphersuiteBindingResource) Schema(ctx context.Contex
 				Description: "The ID of the sslservicegroup_sslciphersuite_binding resource.",
 			},
 			"ciphername": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the cipher group/alias/name configured for the SSL service group.",
 			},
 			"description": schema.StringAttribute{
@@ -47,25 +49,28 @@ func (r *SslservicegroupSslciphersuiteBindingResource) Schema(ctx context.Contex
 				Description: "The description of the cipher.",
 			},
 			"servicegroupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the SSL service to which the SSL policy needs to be bound.",
 			},
 		},
 	}
 }
 
-func sslservicegroup_sslciphersuite_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslservicegroupSslciphersuiteBindingResourceModel) ssl.Sslservicegroupsslciphersuitebinding {
-	tflog.Debug(ctx, "In sslservicegroup_sslciphersuite_bindingGetThePayloadFromtheConfig Function")
+func sslservicegroup_sslciphersuite_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslservicegroupSslciphersuiteBindingResourceModel) ssl.Sslservicegroupsslciphersuitebinding {
+	tflog.Debug(ctx, "In sslservicegroup_sslciphersuite_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslservicegroup_sslciphersuite_binding := ssl.Sslservicegroupsslciphersuitebinding{}
-	if !data.Ciphername.IsNull() {
+	if !data.Ciphername.IsNull() && !data.Ciphername.IsUnknown() {
 		sslservicegroup_sslciphersuite_binding.Ciphername = data.Ciphername.ValueString()
 	}
-	if !data.Description.IsNull() {
+	if !data.Description.IsNull() && !data.Description.IsUnknown() {
 		sslservicegroup_sslciphersuite_binding.Description = data.Description.ValueString()
 	}
-	if !data.Servicegroupname.IsNull() {
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
 		sslservicegroup_sslciphersuite_binding.Servicegroupname = data.Servicegroupname.ValueString()
 	}
 

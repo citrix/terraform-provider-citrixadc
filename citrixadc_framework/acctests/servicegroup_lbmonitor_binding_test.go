@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -81,9 +81,12 @@ func testAccCheckServicegroup_lbmonitor_bindingExist(n string, id *string) resou
 		}
 
 		servicegroupLbmonitorBindingId := rs.Primary.ID
-		idSlice := strings.Split(servicegroupLbmonitorBindingId, ",")
-		servicegroupName := idSlice[0]
-		monitorName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(servicegroupLbmonitorBindingId, []string{"servicegroupname", "monitorname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", servicegroupLbmonitorBindingId, err)
+		}
+		servicegroupName := idMap["servicegroupname"]
+		monitorName := idMap["monitorname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "servicegroup_lbmonitor_binding",

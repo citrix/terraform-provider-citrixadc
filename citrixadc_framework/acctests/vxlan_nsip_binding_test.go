@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -114,10 +115,12 @@ func testAccCheckVxlan_nsip_bindingExist(n string, id *string) resource.TestChec
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		vxlanid := idSlice[0]
-		ipaddress := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"vxlanid", "ipaddress"}, nil)
+		if err != nil {
+			return err
+		}
+		vxlanid := idMap["vxlanid"]
+		ipaddress := idMap["ipaddress"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vxlan_nsip_binding",
@@ -163,10 +166,12 @@ func testAccCheckVxlan_nsip_bindingNotExist(n string, id string) resource.TestCh
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		vxlanid := idSlice[0]
-		ipaddress := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"vxlanid", "ipaddress"}, nil)
+		if err != nil {
+			return err
+		}
+		vxlanid := idMap["vxlanid"]
+		ipaddress := idMap["ipaddress"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vxlan_nsip_binding",

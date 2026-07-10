@@ -44,7 +44,7 @@ func AppfwprofileFileuploadtypeBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Is field name a regular expression?",
 			},
-			"isregex_fileuploadtypes_url": schema.StringAttribute{
+			"isregexfileuploadtypesurl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Is a regular expression?",
@@ -57,6 +57,11 @@ func AppfwprofileFileuploadtypeBindingDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "A \"id\" that identifies the rule.",
+			},
+			"ruletype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies rule type of binding",
 			},
 			"state": schema.StringAttribute{
 				Optional:    true,

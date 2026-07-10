@@ -64,8 +64,8 @@ resource citrixadc_appfwprofile demo_appfw {
 
 ## Argument Reference
 
-* `name` - Name of the profile to which to bind an exemption or rule.
-* `denyurl` - A regular expression that designates a URL on the Deny URL list.
+* `name` - (Required) Name of the profile to which to bind an exemption or rule.
+* `denyurl` - (Required) A regular expression that designates a URL on the Deny URL list.
 * `state` - (Optional) Enabled. Possible values: [ ENABLED, DISABLED ]
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?. Possible values: [ AUTODEPLOYED, NOTAUTODEPLOYED ]
@@ -77,4 +77,13 @@ resource citrixadc_appfwprofile demo_appfw {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the `appfwprofile_denyurl_binding`. It has the value of the string `name,denyurl`.
+* `id` - The id of the `appfwprofile_denyurl_binding`. It is the concatenation of the `name` and `denyurl` attributes separated by a comma.
+
+
+## Import
+
+A binding can be imported using its id, which is the concatenation of the `name` and `denyurl` attributes separated by a comma.
+
+```shell
+terraform import citrixadc_appfwprofile_denyurl_binding.tf_binding demo_appfwprofile,debug[.][^/?]*(|[?].*)$
+```

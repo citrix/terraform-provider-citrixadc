@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -123,10 +124,13 @@ func testAccCheckSslcacertgroup_sslcertkey_bindingExist(n string, id *string) re
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"cacertgroupname", "certkeyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
 
-		cacertgroupname := idSlice[0]
-		certkeyname := idSlice[1]
+		cacertgroupname := idMap["cacertgroupname"]
+		certkeyname := idMap["certkeyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslcacertgroup_sslcertkey_binding",

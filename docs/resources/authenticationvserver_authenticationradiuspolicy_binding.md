@@ -56,7 +56,7 @@ resource "citrixadc_authenticationvserver_authenticationradiuspolicy_binding" "t
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the authenticationvserver_authenticationradiuspolicy_binding. It is the concatenation of `name` and `policy` attributes seperated by comma.
+* `id` - The id of the authenticationvserver_authenticationradiuspolicy_binding. It is the concatenation of the `name` and `policy` attributes separated by a comma.
 
 
 ## Import

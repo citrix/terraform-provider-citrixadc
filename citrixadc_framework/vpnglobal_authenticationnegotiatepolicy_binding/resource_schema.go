@@ -2,11 +2,16 @@ package vpnglobal_authenticationnegotiatepolicy_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,62 +37,107 @@ func (r *VpnglobalAuthenticationnegotiatepolicyBindingResource) Schema(ctx conte
 				Description: "The ID of the vpnglobal_authenticationnegotiatepolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// NITRO GET does not echo this field; drop Computed so an omitted value
+				// resolves to null instead of staying unknown after apply (Pattern 13).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupextraction": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				// NITRO GET does not echo this field; drop Computed so an omitted value
+				// resolves to null instead of staying unknown after apply (Pattern 13).
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Bind the Authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called it primary and/or secondary authentication has succeeded.",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer specifying the policy's priority. The lower the priority number, the higher the policy's priority. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Bind the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only to a primary authentication server but also to a secondary authentication server. User groups are aggregated across both authentication servers. The user name must be exactly the same on both authentication servers, but the authentication servers can require different passwords.",
 			},
 		},
 	}
 }
 
-func vpnglobal_authenticationnegotiatepolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel) vpn.Vpnglobalauthenticationnegotiatepolicybinding {
-	tflog.Debug(ctx, "In vpnglobal_authenticationnegotiatepolicy_bindingGetThePayloadFromtheConfig Function")
+func vpnglobal_authenticationnegotiatepolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel) vpn.Vpnglobalauthenticationnegotiatepolicybinding {
+	tflog.Debug(ctx, "In vpnglobal_authenticationnegotiatepolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnglobal_authenticationnegotiatepolicy_binding := vpn.Vpnglobalauthenticationnegotiatepolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		vpnglobal_authenticationnegotiatepolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Groupextraction.IsNull() {
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
 		vpnglobal_authenticationnegotiatepolicy_binding.Groupextraction = data.Groupextraction.ValueBool()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		vpnglobal_authenticationnegotiatepolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		vpnglobal_authenticationnegotiatepolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Secondary.IsNull() {
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
 		vpnglobal_authenticationnegotiatepolicy_binding.Secondary = data.Secondary.ValueBool()
 	}
 
 	return vpnglobal_authenticationnegotiatepolicy_binding
 }
 
+// vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGet (resource path) preserves the
+// plan/state values for attributes that the NITRO GET response does NOT echo back
+// (gotopriorityexpression, groupextraction). All schema attributes are RequiresReplace, so the
+// state must match exactly what the user configured at create time to avoid an
+// "inconsistent result after apply" error (Pattern 7 / Pattern 13). The ID is set once in
+// Create, so this function must NOT recompute data.Id (Pattern 6).
 func vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// gotopriorityexpression and groupextraction are NOT echoed back by NITRO GET.
+	// Preserve the existing plan/state value (do not null it).
+
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	return data
+}
+
+// vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource (datasource path)
+// faithfully copies every field from the GET response and sets the ID, since the datasource has
+// no prior plan/state to preserve and never calls Create (Pattern 7 datasource split).
+func vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationnegotiatepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -116,9 +166,9 @@ func vpnglobal_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.C
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Policyname.ValueString())
+	// Set ID for the datasource (no Create path)
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
 }

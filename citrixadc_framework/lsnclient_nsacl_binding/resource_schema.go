@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +35,43 @@ func (r *LsnclientNsaclBindingResource) Schema(ctx context.Context, req resource
 				Description: "The ID of the lsnclient_nsacl_binding resource.",
 			},
 			"aclname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name(s) of any configured extended ACL(s) whose action is ALLOW.\nThe condition specified in the extended ACL rule identifies the traffic from an LSN subscriber for which the Citrix ADC is to perform large scale NAT.",
 			},
 			"clientname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the LSN client entity. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN client is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn client1\" or 'lsn client1').",
 			},
 			"td": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "ID of the traffic domain on which this subscriber or the subscriber network (as specified by the network parameter) belongs. \nIf you do not specify an ID, the subscriber or the subscriber network becomes part of the default traffic domain.",
 			},
 		},
 	}
 }
 
-func lsnclient_nsacl_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LsnclientNsaclBindingResourceModel) lsn.Lsnclientnsaclbinding {
-	tflog.Debug(ctx, "In lsnclient_nsacl_bindingGetThePayloadFromtheConfig Function")
+func lsnclient_nsacl_bindingGetThePayloadFromthePlan(ctx context.Context, data *LsnclientNsaclBindingResourceModel) lsn.Lsnclientnsaclbinding {
+	tflog.Debug(ctx, "In lsnclient_nsacl_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lsnclient_nsacl_binding := lsn.Lsnclientnsaclbinding{}
-	if !data.Aclname.IsNull() {
+	if !data.Aclname.IsNull() && !data.Aclname.IsUnknown() {
 		lsnclient_nsacl_binding.Aclname = data.Aclname.ValueString()
 	}
-	if !data.Clientname.IsNull() {
+	if !data.Clientname.IsNull() && !data.Clientname.IsUnknown() {
 		lsnclient_nsacl_binding.Clientname = data.Clientname.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		lsnclient_nsacl_binding.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
@@ -90,10 +101,13 @@ func lsnclient_nsacl_bindingSetAttrFromGet(ctx context.Context, data *LsnclientN
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Multiple unique attributes - comma-separated key:UrlEncode(value) pairs.
+	// Identity is clientname + aclname only (mirrors SDK v2 d.SetId("clientname,aclname")
+	// and resource_id_mapping.json). td is a default-able traffic-domain filter, not part
+	// of the identity, and NITRO omits it from the GET response when it is the default.
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("aclname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Aclname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("aclname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Aclname.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

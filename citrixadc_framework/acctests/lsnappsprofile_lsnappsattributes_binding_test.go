@@ -21,29 +21,24 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLsnappsprofile_lsnappsattributes_binding_basic = `
 
-resource "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {
-	appsprofilename    = "my_lsn_profile"
-	appsattributesname = "my_lsn_appattributes"
-	}
-  
-`
-
-const testAccLsnappsprofile_lsnappsattributes_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
-`
-
-const testAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic = `
-
 	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
-		appsprofilename   = "my_lsn_appsprofile"
+		appsprofilename   = "my_lsn_profile"
 		transportprotocol = "TCP"
 		mapping           = "ENDPOINT-INDEPENDENT"
+	}
+
+	# Prerequisite: the appsprofile must have a port binding whose range covers the
+	# appsattributes port (90) before an appsattributes binding is accepted (NITRO errorcode 257).
+	resource "citrixadc_lsnappsprofile_port_binding" "tf_lsnappsprofile_port_binding" {
+		appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+		lsnport         = "80-100"
 	}
 
 	resource "citrixadc_lsnappsattributes" "tf_lsnappsattributes" {
@@ -55,6 +50,59 @@ const testAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic = `
 resource "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {
 	appsprofilename    = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
 	appsattributesname = citrixadc_lsnappsattributes.tf_lsnappsattributes.name
+	depends_on         = [citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding]
+}
+  
+`
+
+const testAccLsnappsprofile_lsnappsattributes_binding_basic_step2 = `
+	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
+		appsprofilename   = "my_lsn_profile"
+		transportprotocol = "TCP"
+		mapping           = "ENDPOINT-INDEPENDENT"
+	}
+
+	# Prerequisite: the appsprofile must have a port binding whose range covers the
+	# appsattributes port (90) before an appsattributes binding is accepted (NITRO errorcode 257).
+	resource "citrixadc_lsnappsprofile_port_binding" "tf_lsnappsprofile_port_binding" {
+		appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+		lsnport         = "80-100"
+	}
+
+	resource "citrixadc_lsnappsattributes" "tf_lsnappsattributes" {
+		name              = "my_lsn_appattributes"
+		transportprotocol = "TCP"
+		port              = 90
+		sessiontimeout    = 40
+	}
+
+`
+
+const testAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic = `
+
+	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
+		appsprofilename   = "my_lsn_profile"
+		transportprotocol = "TCP"
+		mapping           = "ENDPOINT-INDEPENDENT"
+	}
+
+	# Prerequisite: the appsprofile must have a port binding whose range covers the
+	# appsattributes port (90) before an appsattributes binding is accepted (NITRO errorcode 257).
+	resource "citrixadc_lsnappsprofile_port_binding" "tf_lsnappsprofile_port_binding" {
+		appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+		lsnport         = "80-100"
+	}
+
+	resource "citrixadc_lsnappsattributes" "tf_lsnappsattributes" {
+		name              = "my_lsn_appattributes"
+		transportprotocol = "TCP"
+		port              = 90
+		sessiontimeout    = 40
+	}
+resource "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {
+	appsprofilename    = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+	appsattributesname = citrixadc_lsnappsattributes.tf_lsnappsattributes.name
+	depends_on         = [citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding]
 }
 
 data "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {
@@ -65,7 +113,6 @@ data "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsn
 `
 
 func TestAccLsnappsprofile_lsnappsattributes_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -114,10 +161,12 @@ func testAccCheckLsnappsprofile_lsnappsattributes_bindingExist(n string, id *str
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		appsprofilename := idSlice[0]
-		appsattributesname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"appsprofilename", "appsattributesname"}, nil)
+		if err != nil {
+			return err
+		}
+		appsprofilename := idMap["appsprofilename"]
+		appsattributesname := idMap["appsattributesname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsnappsprofile_lsnappsattributes_binding",
@@ -159,10 +208,12 @@ func testAccCheckLsnappsprofile_lsnappsattributes_bindingNotExist(n string, id s
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		appsprofilename := idSlice[0]
-		appsattributesname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"appsprofilename", "appsattributesname"}, nil)
+		if err != nil {
+			return err
+		}
+		appsprofilename := idMap["appsprofilename"]
+		appsattributesname := idMap["appsattributesname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsnappsprofile_lsnappsattributes_binding",
@@ -209,7 +260,13 @@ func testAccCheckLsnappsprofile_lsnappsattributes_bindingDestroy(s *terraform.St
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource("lsnappsprofile_lsnappsattributes_binding", rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"appsprofilename", "appsattributesname"}, nil)
+		if err != nil {
+			return err
+		}
+		appsprofilename := idMap["appsprofilename"]
+
+		_, err = client.FindResource("lsnappsprofile_lsnappsattributes_binding", appsprofilename)
 		if err == nil {
 			return fmt.Errorf("lsnappsprofile_lsnappsattributes_binding %s still exists", rs.Primary.ID)
 		}

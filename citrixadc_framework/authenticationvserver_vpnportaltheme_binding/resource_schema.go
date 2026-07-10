@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *AuthenticationvserverVpnportalthemeBindingResource) Schema(ctx context.
 				Description: "The ID of the authenticationvserver_vpnportaltheme_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the authentication virtual server to which to bind the policy.",
 			},
 			"portaltheme": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Theme for Authentication virtual server Login portal",
 			},
 		},
 	}
 }
 
-func authenticationvserver_vpnportaltheme_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationvserverVpnportalthemeBindingResourceModel) authentication.Authenticationvservervpnportalthemebinding {
-	tflog.Debug(ctx, "In authenticationvserver_vpnportaltheme_bindingGetThePayloadFromtheConfig Function")
+func authenticationvserver_vpnportaltheme_bindingGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationvserverVpnportalthemeBindingResourceModel) authentication.Authenticationvservervpnportalthemebinding {
+	tflog.Debug(ctx, "In authenticationvserver_vpnportaltheme_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationvserver_vpnportaltheme_binding := authentication.Authenticationvservervpnportalthemebinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationvserver_vpnportaltheme_binding.Name = data.Name.ValueString()
 	}
-	if !data.Portaltheme.IsNull() {
+	if !data.Portaltheme.IsNull() && !data.Portaltheme.IsUnknown() {
 		authenticationvserver_vpnportaltheme_binding.Portaltheme = data.Portaltheme.ValueString()
 	}
 

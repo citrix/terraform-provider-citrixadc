@@ -3,8 +3,10 @@ package lsnclient_nsacl_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,26 @@ func (r *LsnclientNsaclBindingResource) Create(ctx context.Context, req resource
 	}
 
 	tflog.Debug(ctx, "Creating lsnclient_nsacl_binding resource")
-
-	// lsnclient_nsacl_binding := lsnclient_nsacl_bindingGetThePayloadFromtheConfig(ctx, &data)
+	lsnclient_nsacl_binding := lsnclient_nsacl_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnclient_nsacl_binding.Type(), &lsnclient_nsacl_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnclient_nsacl_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lsnclient_nsacl_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Lsnclient_nsacl_binding.Type(), &lsnclient_nsacl_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnclient_nsacl_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lsnclient_nsacl_binding resource")
+
+	// Set ID for the resource before reading state.
+	// Identity is clientname + aclname only (mirrors SDK v2 d.SetId("clientname,aclname")
+	// and resource_id_mapping.json). td is excluded - it is a default-able traffic domain
+	// that NITRO omits from the GET response, so it must not participate in the identity.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("aclname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Aclname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readLsnclientNsaclBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +103,10 @@ func (r *LsnclientNsaclBindingResource) Read(ctx context.Context, req resource.R
 }
 
 func (r *LsnclientNsaclBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LsnclientNsaclBindingResourceModel
+	var data, state LsnclientNsaclBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +114,29 @@ func (r *LsnclientNsaclBindingResource) Update(ctx context.Context, req resource
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lsnclient_nsacl_binding resource")
 
-	// Create API request body from the model
-	// lsnclient_nsacl_binding := lsnclient_nsacl_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnclient_nsacl_binding.Type(), &lsnclient_nsacl_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnclient_nsacl_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		lsnclient_nsacl_binding := lsnclient_nsacl_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Lsnclient_nsacl_binding.Type(), &lsnclient_nsacl_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnclient_nsacl_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated lsnclient_nsacl_binding resource")
+		tflog.Trace(ctx, "Updated lsnclient_nsacl_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lsnclient_nsacl_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readLsnclientNsaclBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +156,105 @@ func (r *LsnclientNsaclBindingResource) Delete(ctx context.Context, req resource
 	}
 
 	tflog.Debug(ctx, "Deleting lsnclient_nsacl_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"clientname", "aclname"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For lsnclient_nsacl_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lsnclient_nsacl_binding resource from state")
+	clientname_value, ok := idMap["clientname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'clientname' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["aclname"]; ok && val != "" {
+		argsMap["aclname"] = val
+	}
+	if val, ok := idMap["td"]; ok && val != "" {
+		argsMap["td"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Lsnclient_nsacl_binding.Type(), clientname_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsnclient_nsacl_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lsnclient_nsacl_binding binding")
 }
 
 // Helper function to read lsnclient_nsacl_binding data from API
 func (r *LsnclientNsaclBindingResource) readLsnclientNsaclBindingFromApi(ctx context.Context, data *LsnclientNsaclBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lsnclient_nsacl_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"clientname", "aclname"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	clientname_Name, ok := idMap["clientname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'clientname' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Lsnclient_nsacl_binding.Type(),
+		ResourceName:             clientname_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsnclient_nsacl_binding, got error: %s", err))
 		return
 	}
 
-	lsnclient_nsacl_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "lsnclient_nsacl_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check aclname
+		if idVal, ok := idMap["aclname"]; ok {
+			if val, ok := v["aclname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["aclname"].(string); ok {
+			match = false
+			continue
+		}
+
+		// td is not part of the identity (default-able, omitted from GET) and is
+		// resolved from the matched record via SetAttrFromGet, so it is not filtered.
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("lsnclient_nsacl_binding not found with the provided ID attributes"))
+		return
+	}
+
+	lsnclient_nsacl_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

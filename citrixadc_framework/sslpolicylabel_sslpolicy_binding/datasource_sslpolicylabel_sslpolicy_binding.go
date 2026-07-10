@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -35,7 +36,7 @@ func (d *SslpolicylabelSslpolicyBindingDataSource) Schema(ctx context.Context, r
 }
 
 func (d *SslpolicylabelSslpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslpolicylabelSslpolicyBindingResourceModel
+	var data SslpolicylabelSslpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -45,6 +46,7 @@ func (d *SslpolicylabelSslpolicyBindingDataSource) Read(ctx context.Context, req
 	// Case 4: Array filter with parent ID
 	labelname_Name := data.Labelname.ValueString()
 	policyname_Name := data.Policyname
+	priority_Name := data.Priority
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +84,19 @@ func (d *SslpolicylabelSslpolicyBindingDataSource) Read(ctx context.Context, req
 			continue
 		}
 
+		// Check priority only when supplied as a lookup key
+		if !priority_Name.IsNull() {
+			if val, ok := v["priority"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != priority_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
 		if match {
 			foundIndex = i
 			break
@@ -94,7 +109,7 @@ func (d *SslpolicylabelSslpolicyBindingDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	sslpolicylabel_sslpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	sslpolicylabel_sslpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

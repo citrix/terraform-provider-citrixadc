@@ -11,7 +11,8 @@ func SslserviceSslcertkeyBindingDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"ca": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "CA certificate.",
 			},
 			"certkeyname": schema.StringAttribute{

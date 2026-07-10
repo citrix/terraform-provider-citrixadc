@@ -42,7 +42,7 @@ func (d *VpnvserverAuthenticationradiuspolicyBindingDataSource) Read(ctx context
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Case 4: Array filter with parent ID (identity: name, policy)
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -66,7 +66,7 @@ func (d *VpnvserverAuthenticationradiuspolicyBindingDataSource) Read(ctx context
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id (identity: name, policy)
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -93,7 +93,7 @@ func (d *VpnvserverAuthenticationradiuspolicyBindingDataSource) Read(ctx context
 		return
 	}
 
-	vpnvserver_authenticationradiuspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

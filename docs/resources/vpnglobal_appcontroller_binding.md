@@ -11,14 +11,14 @@ The vpnglobal_appcontroller_binding resource is used to bind an App Controller s
 
 ```hcl
 resource "citrixadc_vpnglobal_appcontroller_binding" "tf_vpnglobal_appcontroller_binding" {
-	appcontroller = "http://www.citrix.com"
+  appcontroller = "http://www.citrix.com"
 }
 ```
 
 
 ## Argument Reference
 
-* `appcontroller` - (Optional) Configured App Controller server.
+* `appcontroller` - (Required) Configured App Controller server.
 * `gotopriorityexpression` - (Optional) Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 
 

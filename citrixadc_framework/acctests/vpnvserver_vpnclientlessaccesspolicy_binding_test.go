@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -109,10 +109,12 @@ func testAccCheckVpnvserver_vpnclientlessaccesspolicy_bindingExist(n string, id 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policy"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_vpnclientlessaccesspolicy_binding",
@@ -151,13 +153,12 @@ func testAccCheckVpnvserver_vpnclientlessaccesspolicy_bindingNotExist(n string, 
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "policy"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_vpnclientlessaccesspolicy_binding",
@@ -204,9 +205,26 @@ func testAccCheckVpnvserver_vpnclientlessaccesspolicy_bindingDestroy(s *terrafor
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Vpnvserver_vpnclientlessaccesspolicy_binding.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("vpnvserver_vpnclientlessaccesspolicy_binding %s still exists", rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"name", "policy"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
+
+		findParams := service.FindParams{
+			ResourceType:             "vpnvserver_vpnclientlessaccesspolicy_binding",
+			ResourceName:             name,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			continue
+		}
+		for _, v := range dataArr {
+			if v["policy"].(string) == policy {
+				return fmt.Errorf("vpnvserver_vpnclientlessaccesspolicy_binding %s still exists", rs.Primary.ID)
+			}
 		}
 
 	}

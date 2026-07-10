@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,42 +35,54 @@ func (r *SslcacertgroupSslcertkeyBindingResource) Schema(ctx context.Context, re
 				Description: "The ID of the sslcacertgroup_sslcertkey_binding resource.",
 			},
 			"cacertgroupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name given to the CA certificate group. The name will be used to add the CA certificates to the group. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my file\" or 'my file').",
 			},
 			"certkeyname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the certkey added to the Citrix ADC. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the certificate-key pair is created.The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cert\" or 'my cert').",
 			},
 			"crlcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
 			"ocspcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The state of the OCSP check parameter. (Mandatory/Optional)",
 			},
 		},
 	}
 }
 
-func sslcacertgroup_sslcertkey_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslcacertgroupSslcertkeyBindingResourceModel) ssl.Sslcacertgroupsslcertkeybinding {
-	tflog.Debug(ctx, "In sslcacertgroup_sslcertkey_bindingGetThePayloadFromtheConfig Function")
+func sslcacertgroup_sslcertkey_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslcacertgroupSslcertkeyBindingResourceModel) ssl.Sslcacertgroupsslcertkeybinding {
+	tflog.Debug(ctx, "In sslcacertgroup_sslcertkey_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslcacertgroup_sslcertkey_binding := ssl.Sslcacertgroupsslcertkeybinding{}
-	if !data.Cacertgroupname.IsNull() {
+	if !data.Cacertgroupname.IsNull() && !data.Cacertgroupname.IsUnknown() {
 		sslcacertgroup_sslcertkey_binding.Cacertgroupname = data.Cacertgroupname.ValueString()
 	}
-	if !data.Certkeyname.IsNull() {
+	if !data.Certkeyname.IsNull() && !data.Certkeyname.IsUnknown() {
 		sslcacertgroup_sslcertkey_binding.Certkeyname = data.Certkeyname.ValueString()
 	}
-	if !data.Crlcheck.IsNull() {
+	if !data.Crlcheck.IsNull() && !data.Crlcheck.IsUnknown() {
 		sslcacertgroup_sslcertkey_binding.Crlcheck = data.Crlcheck.ValueString()
 	}
-	if !data.Ocspcheck.IsNull() {
+	if !data.Ocspcheck.IsNull() && !data.Ocspcheck.IsUnknown() {
 		sslcacertgroup_sslcertkey_binding.Ocspcheck = data.Ocspcheck.ValueString()
 	}
 

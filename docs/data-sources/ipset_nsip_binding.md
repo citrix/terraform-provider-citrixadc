@@ -7,7 +7,7 @@ subcategory: "Network"
 The ipset_nsip_binding data source allows you to retrieve information about the binding between an IP set and IP addresses.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_ipset_nsip_binding" "tf_ipset_nsip_binding" {
@@ -35,4 +35,4 @@ output "ipaddress" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the ipset_nsip_binding. It is a system-generated identifier.
+* `id` - The id of the ipset_nsip_binding. It is the concatenation of the `name` and `ipaddress` attributes separated by a comma.

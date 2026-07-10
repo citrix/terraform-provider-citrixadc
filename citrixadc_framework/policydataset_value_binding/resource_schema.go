@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -34,50 +37,65 @@ func (r *PolicydatasetValueBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the policydataset_value_binding resource.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments to preserve information about this dataset or a data bound to this dataset.",
 			},
 			"endrange": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The dataset entry is a range from <value> through <end_range>, inclusive. endRange cannot be used if value is an ipv4 or ipv6 subnet and endRange cannot itself be a subnet.",
 			},
 			"index": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The index of the value (ipv4, ipv6, number) associated with the set.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the dataset to which to bind the value.",
 			},
 			"value": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Value of the specified type that is associated with the dataset. For ipv4 and ipv6, value can be a subnet using the slash notation address/n, where address is the beginning of the subnet and n is the number of left-most bits set in the subnet mask, defining the end of the subnet. The start address will be masked by the subnet mask if necessary, for example for 192.128.128.0/10, the start address will be 192.128.0.0.",
 			},
 		},
 	}
 }
 
-func policydataset_value_bindingGetThePayloadFromtheConfig(ctx context.Context, data *PolicydatasetValueBindingResourceModel) policy.Policydatasetvaluebinding {
-	tflog.Debug(ctx, "In policydataset_value_bindingGetThePayloadFromtheConfig Function")
+func policydataset_value_bindingGetThePayloadFromthePlan(ctx context.Context, data *PolicydatasetValueBindingResourceModel) policy.Policydatasetvaluebinding {
+	tflog.Debug(ctx, "In policydataset_value_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	policydataset_value_binding := policy.Policydatasetvaluebinding{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		policydataset_value_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Endrange.IsNull() {
+	if !data.Endrange.IsNull() && !data.Endrange.IsUnknown() {
 		policydataset_value_binding.Endrange = data.Endrange.ValueString()
 	}
-	if !data.Index.IsNull() {
+	if !data.Index.IsNull() && !data.Index.IsUnknown() {
 		policydataset_value_binding.Index = utils.IntPtr(int(data.Index.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		policydataset_value_binding.Name = data.Name.ValueString()
 	}
-	if !data.Value.IsNull() {
+	if !data.Value.IsNull() && !data.Value.IsUnknown() {
 		policydataset_value_binding.Value = data.Value.ValueString()
 	}
 

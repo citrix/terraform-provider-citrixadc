@@ -19,8 +19,14 @@ func LbvserverServiceBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Order number to be assigned to the service when it is bound to the lb vserver.",
 			},
+			"servicegroupname": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the service group.",
+			},
 			"servicename": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Service to bind to the virtual server.",
 			},
 			"weight": schema.Int64Attribute{

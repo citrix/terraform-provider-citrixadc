@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -121,10 +121,13 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingExist(n string, id *string) reso
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-		policyname := idSlice[0]
-		bindpoint_type := idSlice[1]
-		globalbindtype := idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"policyname", "type", "globalbindtype"}, []string{"globalbindtype"})
+		if err != nil {
+			return err
+		}
+		policyname := idMap["policyname"]
+		bindpoint_type := idMap["type"]
+		globalbindtype := idMap["globalbindtype"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwglobal_appfwpolicy_binding",
@@ -141,7 +144,7 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingExist(n string, id *string) reso
 		// Iterate through results to find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["policyname"].(string) == policyname && v["globalbindtype"].(string) == globalbindtype {
+			if v["policyname"].(string) == policyname && (globalbindtype == "" || v["globalbindtype"].(string) == globalbindtype) {
 				found = true
 				break
 			}

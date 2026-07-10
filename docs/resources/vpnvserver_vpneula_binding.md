@@ -36,12 +36,12 @@ resource "citrixadc_vpnvserver_vpneula_binding" "tf_bind" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_vpneula_binding. It is the concatenation  of `name` and `eula` attributes serprated by comma.
+* `id` - The id of the vpnvserver_vpneula_binding. It is the concatenation of the `name` and `eula` attributes separated by a comma.
 
 
 ## Import
 
-A vpnvserver_vpneula_binding can be imported using its id , e.g.
+A vpnvserver_vpneula_binding can be imported using its id, e.g.
 
 ```shell
 terraform import citrixadc_vpnvserver_vpneula_binding.tf_bind tf_examplevserver,tf_vpneula

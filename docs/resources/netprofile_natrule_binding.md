@@ -26,17 +26,17 @@ resource "citrixadc_netprofile_natrule_binding" "tf_binding" {
 
 ## Argument Reference
 
-* `name` - (Required) Name of the netprofile to which to bind port ranges.
+* `name` - (Required) Name of the netprofile to which to bind the NAT rule.
 * `natrule` - (Required) IPv4 network address on whose traffic you want the Citrix ADC to do rewrite ip prefix.
-* `netmask` - (Optional) 0
-* `rewriteip` - (Optional) 0
+* `netmask` - (Optional) Subnet mask associated with the network address.
+* `rewriteip` - (Optional) IP address used to rewrite the network address prefix.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the netprofile_natrule_binding. Itis the concatenation of `name` and `natrule` attributes separated by comma.
+* `id` - The id of the netprofile_natrule_binding. It is the concatenation of `name` and `natrule` attributes separated by comma.
 
 
 ## Import

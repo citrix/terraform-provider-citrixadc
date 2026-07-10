@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -178,10 +178,14 @@ func testAccCheckLbvserver_service_bindingExist(n string, id *string) resource.T
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		servicename := idSlice[1]
+		// Parse the ID with ParseIdString so both the new "key:value" format and the
+		// legacy SDK v2 "name,servicename" comma format resolve correctly.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "servicename"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		servicename := idMap["servicename"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbvserver_service_binding",

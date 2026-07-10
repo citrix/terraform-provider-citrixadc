@@ -32,7 +32,7 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslservicegroup_ecccurve_binding.  It is the concatenation of the `servicegroupname` and `ecccurvename` attributes separated by a comma.
+* `id` - The id of the sslservicegroup_ecccurve_binding. It is the concatenation of the `servicegroupname` and `ecccurvename` attributes separated by a comma.
 
 
 

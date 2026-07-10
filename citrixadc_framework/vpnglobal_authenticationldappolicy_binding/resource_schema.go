@@ -2,11 +2,16 @@ package vpnglobal_authenticationldappolicy_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,62 +37,120 @@ func (r *VpnglobalAuthenticationldappolicyBindingResource) Schema(ctx context.Co
 				Description: "The ID of the vpnglobal_authenticationldappolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// NITRO GET does not echo this attribute and there is no server-side
+				// default, so Computed would leave it "unknown after apply".
+				// Optional-only (Pattern 13 — drop spurious Computed on non-echoed input).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupextraction": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Bind the Authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called it primary and/or secondary authentication has succeeded.",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer specifying the policy's priority. The lower the priority number, the higher the policy's priority. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Bind the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only to a primary authentication server but also to a secondary authentication server. User groups are aggregated across both authentication servers. The user name must be exactly the same on both authentication servers, but the authentication servers can require different passwords.",
 			},
 		},
 	}
 }
 
-func vpnglobal_authenticationldappolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnglobalAuthenticationldappolicyBindingResourceModel) vpn.Vpnglobalauthenticationldappolicybinding {
-	tflog.Debug(ctx, "In vpnglobal_authenticationldappolicy_bindingGetThePayloadFromtheConfig Function")
+func vpnglobal_authenticationldappolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnglobalAuthenticationldappolicyBindingResourceModel) vpn.Vpnglobalauthenticationldappolicybinding {
+	tflog.Debug(ctx, "In vpnglobal_authenticationldappolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnglobal_authenticationldappolicy_binding := vpn.Vpnglobalauthenticationldappolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		vpnglobal_authenticationldappolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Groupextraction.IsNull() {
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
 		vpnglobal_authenticationldappolicy_binding.Groupextraction = data.Groupextraction.ValueBool()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		vpnglobal_authenticationldappolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		vpnglobal_authenticationldappolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Secondary.IsNull() {
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
 		vpnglobal_authenticationldappolicy_binding.Secondary = data.Secondary.ValueBool()
 	}
 
 	return vpnglobal_authenticationldappolicy_binding
 }
 
+// vpnglobal_authenticationldappolicy_bindingSetAttrFromGet is the RESOURCE setter.
+// It preserves the user-configured / prior-state values for inputs that the NITRO
+// server does not echo back (e.g. gotopriorityexpression) or may override, so the
+// post-apply state matches the plan (avoids "inconsistent result after apply").
+// Every attribute is RequiresReplace, so on a clean plan these never need updating.
+// (Pattern 7 / 13 — server-overridden / non-echoed inputs.)
 func vpnglobal_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalAuthenticationldappolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationldappolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_authenticationldappolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// gotopriorityexpression is not echoed by the NITRO GET response;
+	// preserve the existing plan/state value rather than nulling it.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	}
+	// policyname is the key; preserve the configured value when present, otherwise
+	// adopt the GET value (covers import where only the ID is known).
+	if data.Policyname.IsNull() || data.Policyname.ValueString() == "" {
+		if val, ok := getResponseData["policyname"]; ok && val != nil {
+			data.Policyname = types.StringValue(val.(string))
+		}
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
+	return data
+}
+
+// vpnglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE setter. The datasource has no prior plan/state to preserve, so it
+// faithfully copies every field from the GET response and sets the ID. (Pattern 7.)
+func vpnglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnglobalAuthenticationldappolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuthenticationldappolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -116,9 +179,7 @@ func vpnglobal_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Contex
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Policyname.ValueString())
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
 }

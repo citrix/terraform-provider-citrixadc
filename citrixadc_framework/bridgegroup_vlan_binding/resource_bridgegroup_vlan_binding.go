@@ -3,8 +3,11 @@ package bridgegroup_vlan_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,23 @@ func (r *BridgegroupVlanBindingResource) Create(ctx context.Context, req resourc
 	}
 
 	tflog.Debug(ctx, "Creating bridgegroup_vlan_binding resource")
-
-	// bridgegroup_vlan_binding := bridgegroup_vlan_bindingGetThePayloadFromtheConfig(ctx, &data)
+	bridgegroup_vlan_binding := bridgegroup_vlan_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Bridgegroup_vlan_binding.Type(), &bridgegroup_vlan_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create bridgegroup_vlan_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("bridgegroup_vlan_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Bridgegroup_vlan_binding.Type(), &bridgegroup_vlan_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create bridgegroup_vlan_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created bridgegroup_vlan_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("bridgegroup_id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BridgegroupId.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("vlan:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vlan.ValueInt64()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readBridgegroupVlanBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +101,10 @@ func (r *BridgegroupVlanBindingResource) Read(ctx context.Context, req resource.
 }
 
 func (r *BridgegroupVlanBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BridgegroupVlanBindingResourceModel
+	var data, state BridgegroupVlanBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +112,12 @@ func (r *BridgegroupVlanBindingResource) Update(ctx context.Context, req resourc
 		return
 	}
 
-	tflog.Debug(ctx, "Updating bridgegroup_vlan_binding resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// bridgegroup_vlan_binding := bridgegroup_vlan_bindingGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Bridgegroup_vlan_binding.Type(), &bridgegroup_vlan_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update bridgegroup_vlan_binding, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated bridgegroup_vlan_binding resource")
+	// No-op: bridgegroup_vlan_binding has no NITRO update endpoint and all
+	// attributes are RequiresReplace, so Update is never reached for a real change.
+	tflog.Debug(ctx, "Update is a no-op for bridgegroup_vlan_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readBridgegroupVlanBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +137,101 @@ func (r *BridgegroupVlanBindingResource) Delete(ctx context.Context, req resourc
 	}
 
 	tflog.Debug(ctx, "Deleting bridgegroup_vlan_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgsMap
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"bridgegroup_id", "vlan"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For bridgegroup_vlan_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted bridgegroup_vlan_binding resource from state")
+	bridgegroup_id, ok := idMap["bridgegroup_id"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'bridgegroup_id' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["vlan"]; ok && val != "" {
+		argsMap["vlan"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Bridgegroup_vlan_binding.Type(), bridgegroup_id, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete bridgegroup_vlan_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted bridgegroup_vlan_binding binding")
 }
 
 // Helper function to read bridgegroup_vlan_binding data from API
 func (r *BridgegroupVlanBindingResource) readBridgegroupVlanBindingFromApi(ctx context.Context, data *BridgegroupVlanBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Bridgegroup_vlan_binding.Type(), "")
+
+	// Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"bridgegroup_id", "vlan"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	bridgegroup_id, ok := idMap["bridgegroup_id"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'bridgegroup_id' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Bridgegroup_vlan_binding.Type(),
+		ResourceName:             bridgegroup_id,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read bridgegroup_vlan_binding, got error: %s", err))
 		return
 	}
 
-	bridgegroup_vlan_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "bridgegroup_vlan_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right vlan
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check vlan
+		if idVal, ok := idMap["vlan"]; ok {
+			if val, ok := v["vlan"]; ok {
+				val, _ := utils.ConvertToInt64(val)
+				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
+				if val != idValInt64 {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["vlan"]; ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", "bridgegroup_vlan_binding not found with the provided ID attributes")
+		return
+	}
+
+	bridgegroup_vlan_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -27,6 +28,7 @@ type AppfwprofileXmlsqlinjectionBindingResourceModel struct {
 	IsregexXmlsql        types.String `tfsdk:"isregex_xmlsql"`
 	Name                 types.String `tfsdk:"name"`
 	Resourceid           types.String `tfsdk:"resourceid"`
+	Ruletype             types.String `tfsdk:"ruletype"`
 	State                types.String `tfsdk:"state"`
 	Xmlsqlinjection      types.String `tfsdk:"xmlsqlinjection"`
 }
@@ -41,85 +43,118 @@ func (r *AppfwprofileXmlsqlinjectionBindingResource) Schema(ctx context.Context,
 			},
 			"alertonly": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Send SNMP alert?",
 			},
 			"as_scan_location_xmlsql": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("ELEMENT"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Location of SQL injection exception - XML Element or Attribute.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"isregex_xmlsql": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the XML SQL Injection exempted field name a regular expression?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 			"xmlsqlinjection": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Exempt the specified URL from the XML SQL injection check.\nAn XML SQL injection exemption (relaxation) consists of the following items:\n* Name. Name to exempt, as a string or a PCRE-format regular expression.\n* ISREGEX flag. REGEX if URL is a regular expression, NOTREGEX if URL is a fixed string.\n* Location. ELEMENT if the injection is located in an XML element, ATTRIBUTE if located in an XML attribute.",
 			},
 		},
 	}
 }
 
-func appfwprofile_xmlsqlinjection_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileXmlsqlinjectionBindingResourceModel) appfw.Appfwprofilexmlsqlinjectionbinding {
-	tflog.Debug(ctx, "In appfwprofile_xmlsqlinjection_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_xmlsqlinjection_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileXmlsqlinjectionBindingResourceModel) appfw.Appfwprofilexmlsqlinjectionbinding {
+	tflog.Debug(ctx, "In appfwprofile_xmlsqlinjection_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_xmlsqlinjection_binding := appfw.Appfwprofilexmlsqlinjectionbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_xmlsqlinjection_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.AsScanLocationXmlsql.IsNull() {
+	if !data.AsScanLocationXmlsql.IsNull() && !data.AsScanLocationXmlsql.IsUnknown() {
 		appfwprofile_xmlsqlinjection_binding.Asscanlocationxmlsql = data.AsScanLocationXmlsql.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_xmlsqlinjection_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_xmlsqlinjection_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.IsregexXmlsql.IsNull() {
+	if !data.IsregexXmlsql.IsNull() && !data.IsregexXmlsql.IsUnknown() {
 		appfwprofile_xmlsqlinjection_binding.Isregexxmlsql = data.IsregexXmlsql.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_xmlsqlinjection_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_xmlsqlinjection_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_xmlsqlinjection_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_xmlsqlinjection_binding.State = data.State.ValueString()
 	}
-	if !data.Xmlsqlinjection.IsNull() {
+	if !data.Xmlsqlinjection.IsNull() && !data.Xmlsqlinjection.IsUnknown() {
 		appfwprofile_xmlsqlinjection_binding.Xmlsqlinjection = data.Xmlsqlinjection.ValueString()
 	}
 
@@ -130,6 +165,63 @@ func appfwprofile_xmlsqlinjection_bindingSetAttrFromGet(ctx context.Context, dat
 	tflog.Debug(ctx, "In appfwprofile_xmlsqlinjection_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	// Note: alertonly and isautodeployed are server-overridden inputs (the NITRO server
+	// returns a normalized value, e.g. OFF/NOTAUTODEPLOYED, regardless of what was sent).
+	// Preserve the configured plan/state value here so Terraform does not report an
+	// "inconsistent result after apply". This mirrors the SDK v2 read which intentionally
+	// did NOT d.Set these two fields.
+	if val, ok := getResponseData["as_scan_location_xmlsql"]; ok && val != nil {
+		data.AsScanLocationXmlsql = types.StringValue(val.(string))
+	} else {
+		data.AsScanLocationXmlsql = types.StringNull()
+	}
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["isregex_xmlsql"]; ok && val != nil {
+		data.IsregexXmlsql = types.StringValue(val.(string))
+	} else {
+		data.IsregexXmlsql = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else {
+		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["resourceid"]; ok && val != nil {
+		data.Resourceid = types.StringValue(val.(string))
+	} else {
+		data.Resourceid = types.StringNull()
+	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+	if val, ok := getResponseData["xmlsqlinjection"]; ok && val != nil {
+		data.Xmlsqlinjection = types.StringValue(val.(string))
+	} else {
+		data.Xmlsqlinjection = types.StringNull()
+	}
+
+	// ID is set once in Create (and preserved across Read/Update); do not recompute here.
+
+	return data
+}
+
+// appfwprofile_xmlsqlinjection_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (including the server-overridden alertonly/isautodeployed) and
+// sets the datasource ID, since the datasource has no Create and no prior plan/state.
+func appfwprofile_xmlsqlinjection_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwprofileXmlsqlinjectionBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileXmlsqlinjectionBindingResourceModel {
+	tflog.Debug(ctx, "In appfwprofile_xmlsqlinjection_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
 	} else {
@@ -165,6 +257,11 @@ func appfwprofile_xmlsqlinjection_bindingSetAttrFromGet(ctx context.Context, dat
 	} else {
 		data.Resourceid = types.StringNull()
 	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
+	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
 	} else {
@@ -176,8 +273,7 @@ func appfwprofile_xmlsqlinjection_bindingSetAttrFromGet(ctx context.Context, dat
 		data.Xmlsqlinjection = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (multiple unique attributes - key:UrlEncode(value) pairs)
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("as_scan_location_xmlsql:%s", utils.UrlEncode(fmt.Sprintf("%v", data.AsScanLocationXmlsql.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

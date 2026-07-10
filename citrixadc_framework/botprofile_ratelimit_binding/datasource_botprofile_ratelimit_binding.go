@@ -46,6 +46,7 @@ func (d *BotprofileRatelimitBindingDataSource) Read(ctx context.Context, req dat
 	name_Name := data.Name.ValueString()
 	botratelimittype_Name := data.BotRateLimitType
 	botratelimiturl_Name := data.BotRateLimitUrl
+	botratelimit_Name := data.BotRatelimit
 	condition_Name := data.Condition
 	cookiename_Name := data.Cookiename
 	countrycode_Name := data.Countrycode
@@ -70,65 +71,56 @@ func (d *BotprofileRatelimitBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the matching binding. A filter attribute that
+	// the user did not set (null) is treated as "do not filter on this field" — only
+	// the provided lookup keys narrow the result. This is required because most of the
+	// unique attributes are Optional in the datasource schema.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
 		// Check bot_rate_limit_type
-		if val, ok := v["bot_rate_limit_type"].(string); ok {
-			if botratelimittype_Name.IsNull() || val != botratelimittype_Name.ValueString() {
+		if !botratelimittype_Name.IsNull() {
+			if val, ok := v["bot_rate_limit_type"].(string); !ok || val != botratelimittype_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !botratelimittype_Name.IsNull() {
-			match = false
-			continue
 		}
 
 		// Check bot_rate_limit_url
-		if val, ok := v["bot_rate_limit_url"].(string); ok {
-			if botratelimiturl_Name.IsNull() || val != botratelimiturl_Name.ValueString() {
+		if match && !botratelimiturl_Name.IsNull() {
+			if val, ok := v["bot_rate_limit_url"].(string); !ok || val != botratelimiturl_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !botratelimiturl_Name.IsNull() {
-			match = false
-			continue
+		}
+
+		// Check bot_ratelimit
+		if match && !botratelimit_Name.IsNull() {
+			if val, ok := v["bot_ratelimit"].(bool); !ok || val != botratelimit_Name.ValueBool() {
+				match = false
+			}
 		}
 
 		// Check condition
-		if val, ok := v["condition"].(string); ok {
-			if condition_Name.IsNull() || val != condition_Name.ValueString() {
+		if match && !condition_Name.IsNull() {
+			if val, ok := v["condition"].(string); !ok || val != condition_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !condition_Name.IsNull() {
-			match = false
-			continue
 		}
 
 		// Check cookiename
-		if val, ok := v["cookiename"].(string); ok {
-			if cookiename_Name.IsNull() || val != cookiename_Name.ValueString() {
+		if match && !cookiename_Name.IsNull() {
+			if val, ok := v["cookiename"].(string); !ok || val != cookiename_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !cookiename_Name.IsNull() {
-			match = false
-			continue
 		}
 
 		// Check countrycode
-		if val, ok := v["countrycode"].(string); ok {
-			if countrycode_Name.IsNull() || val != countrycode_Name.ValueString() {
+		if match && !countrycode_Name.IsNull() {
+			if val, ok := v["countrycode"].(string); !ok || val != countrycode_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !countrycode_Name.IsNull() {
-			match = false
-			continue
 		}
+
 		if match {
 			foundIndex = i
 			break
@@ -141,7 +133,7 @@ func (d *BotprofileRatelimitBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	botprofile_ratelimit_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	botprofile_ratelimit_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

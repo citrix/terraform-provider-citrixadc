@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -102,9 +103,12 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingExist(n string, id *strin
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 2)
-		appFwName := idSlice[0]
-		cookieconsistency := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "cookieconsistency"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
+		}
+		appFwName := idMap["name"]
+		cookieconsistency := idMap["cookieconsistency"]
 
 		findParams := service.FindParams{
 			ResourceType:             service.Appfwprofile_cookieconsistency_binding.Type(),

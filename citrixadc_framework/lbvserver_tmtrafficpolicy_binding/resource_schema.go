@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -18,6 +22,7 @@ import (
 // LbvserverTmtrafficpolicyBindingResourceModel describes the resource data model.
 type LbvserverTmtrafficpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -36,93 +41,149 @@ func (r *LbvserverTmtrafficpolicyBindingResource) Schema(ctx context.Context, re
 				Computed:    true,
 				Description: "The ID of the lbvserver_tmtrafficpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n* If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a priority number that is numerically higher than the highest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of policy label to invoke. Applicable only to rewrite, videooptimization and cache policies. Available settings function as follows:\n* reqvserver - Evaluate the request against the request-based policies bound to the specified virtual server.\n* resvserver - Evaluate the response against the response-based policies bound to the specified virtual server.\n* policylabel - invoke the request or response against the specified user-defined policy label.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vserver\" or 'my vserver').",
 			},
 			"order": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the policy bound to the LB vserver.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Priority.",
 			},
 		},
 	}
 }
 
-func lbvserver_tmtrafficpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LbvserverTmtrafficpolicyBindingResourceModel) lb.Lbvservertmtrafficpolicybinding {
-	tflog.Debug(ctx, "In lbvserver_tmtrafficpolicy_bindingGetThePayloadFromtheConfig Function")
+func lbvserver_tmtrafficpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *LbvserverTmtrafficpolicyBindingResourceModel) lb.Lbvservertmtrafficpolicybinding {
+	tflog.Debug(ctx, "In lbvserver_tmtrafficpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lbvserver_tmtrafficpolicy_binding := lb.Lbvservertmtrafficpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		lbvserver_tmtrafficpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		lbvserver_tmtrafficpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Invoke.IsNull() {
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		lbvserver_tmtrafficpolicy_binding.Invoke = data.Invoke.ValueBool()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		lbvserver_tmtrafficpolicy_binding.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Labeltype.IsNull() {
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		lbvserver_tmtrafficpolicy_binding.Labeltype = data.Labeltype.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		lbvserver_tmtrafficpolicy_binding.Name = data.Name.ValueString()
 	}
-	if !data.Order.IsNull() {
+	if !data.Order.IsNull() && !data.Order.IsUnknown() {
 		lbvserver_tmtrafficpolicy_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		lbvserver_tmtrafficpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		lbvserver_tmtrafficpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 
 	return lbvserver_tmtrafficpolicy_binding
 }
 
+// boolFromGet safely converts a NITRO GET response value to a bool.
+// The ADC may return a real bool or the string "true"/"false".
+func boolFromGet(val interface{}) bool {
+	switch v := val.(type) {
+	case bool:
+		return v
+	case string:
+		return v == "true" || v == "True" || v == "TRUE"
+	default:
+		return false
+	}
+}
+
+// lbvserver_tmtrafficpolicy_bindingSetAttrFromGet is used by the resource Read/Create.
+// All attributes are Optional+Computed (matching SDK v2), so the server-returned values
+// are authoritative and may legitimately differ from / fill in the user's config.
+// The ID is set once in Create, so it is NOT recomputed here.
 func lbvserver_tmtrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data *LbvserverTmtrafficpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverTmtrafficpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In lbvserver_tmtrafficpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
-		data.Invoke = types.BoolValue(val.(bool))
+		data.Invoke = types.BoolValue(boolFromGet(val))
 	} else {
 		data.Invoke = types.BoolNull()
 	}
@@ -161,7 +222,18 @@ func lbvserver_tmtrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
+	return data
+}
+
+// lbvserver_tmtrafficpolicy_bindingSetAttrFromGetForDatasource is used by the datasource Read.
+// The datasource has no prior state and no Create, so it copies every field from the
+// GET response and sets the composite ID itself.
+func lbvserver_tmtrafficpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LbvserverTmtrafficpolicyBindingResourceModel, getResponseData map[string]interface{}) *LbvserverTmtrafficpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In lbvserver_tmtrafficpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	lbvserver_tmtrafficpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

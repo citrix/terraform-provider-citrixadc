@@ -3,8 +3,10 @@ package csvserver_gslbvserver_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *CsvserverGslbvserverBindingResource) Create(ctx context.Context, req re
 	}
 
 	tflog.Debug(ctx, "Creating csvserver_gslbvserver_binding resource")
-
-	// csvserver_gslbvserver_binding := csvserver_gslbvserver_bindingGetThePayloadFromtheConfig(ctx, &data)
+	csvserver_gslbvserver_binding := csvserver_gslbvserver_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Csvserver_gslbvserver_binding.Type(), &csvserver_gslbvserver_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_gslbvserver_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("csvserver_gslbvserver_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Csvserver_gslbvserver_binding.Type(), &csvserver_gslbvserver_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_gslbvserver_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created csvserver_gslbvserver_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("vserver:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vserver.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readCsvserverGslbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *CsvserverGslbvserverBindingResource) Read(ctx context.Context, req reso
 }
 
 func (r *CsvserverGslbvserverBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CsvserverGslbvserverBindingResourceModel
+	var data, state CsvserverGslbvserverBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *CsvserverGslbvserverBindingResource) Update(ctx context.Context, req re
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating csvserver_gslbvserver_binding resource")
 
-	// Create API request body from the model
-	// csvserver_gslbvserver_binding := csvserver_gslbvserver_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Csvserver_gslbvserver_binding.Type(), &csvserver_gslbvserver_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csvserver_gslbvserver_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		csvserver_gslbvserver_binding := csvserver_gslbvserver_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Csvserver_gslbvserver_binding.Type(), &csvserver_gslbvserver_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csvserver_gslbvserver_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated csvserver_gslbvserver_binding resource")
+		tflog.Trace(ctx, "Updated csvserver_gslbvserver_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for csvserver_gslbvserver_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readCsvserverGslbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,99 @@ func (r *CsvserverGslbvserverBindingResource) Delete(ctx context.Context, req re
 	}
 
 	tflog.Debug(ctx, "Deleting csvserver_gslbvserver_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "vserver"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For csvserver_gslbvserver_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted csvserver_gslbvserver_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["vserver"]; ok && val != "" {
+		argsMap["vserver"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_gslbvserver_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete csvserver_gslbvserver_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted csvserver_gslbvserver_binding binding")
 }
 
 // Helper function to read csvserver_gslbvserver_binding data from API
 func (r *CsvserverGslbvserverBindingResource) readCsvserverGslbvserverBindingFromApi(ctx context.Context, data *CsvserverGslbvserverBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Csvserver_gslbvserver_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "vserver"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Csvserver_gslbvserver_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read csvserver_gslbvserver_binding, got error: %s", err))
 		return
 	}
 
-	csvserver_gslbvserver_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "csvserver_gslbvserver_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check vserver
+		if idVal, ok := idMap["vserver"]; ok {
+			if val, ok := v["vserver"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["vserver"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("csvserver_gslbvserver_binding not found with the provided ID attributes"))
+		return
+	}
+
+	csvserver_gslbvserver_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

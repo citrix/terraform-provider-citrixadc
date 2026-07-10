@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -123,10 +123,12 @@ func testAccCheckAppfwprofile_logexpression_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		logexpression := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "logexpression"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		logexpression := idMap["logexpression"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_logexpression_binding",
@@ -165,13 +167,12 @@ func testAccCheckAppfwprofile_logexpression_bindingNotExist(n string, id string)
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "logexpression"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		logexpression := idSlice[1]
+		name := idMap["name"]
+		logexpression := idMap["logexpression"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_logexpression_binding",

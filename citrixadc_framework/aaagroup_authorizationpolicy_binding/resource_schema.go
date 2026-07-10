@@ -9,7 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,51 +37,64 @@ func (r *AaagroupAuthorizationpolicyBindingResource) Schema(ctx context.Context,
 				Description: "The ID of the aaagroup_authorizationpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the group that you are binding.",
 			},
 			"policy": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The policy name.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer specifying the priority of the policy. A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"type": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("REQUEST"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Bindpoint to which the policy is bound.",
 			},
 		},
 	}
 }
 
-func aaagroup_authorizationpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AaagroupAuthorizationpolicyBindingResourceModel) aaa.Aaagroupauthorizationpolicybinding {
-	tflog.Debug(ctx, "In aaagroup_authorizationpolicy_bindingGetThePayloadFromtheConfig Function")
+func aaagroup_authorizationpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AaagroupAuthorizationpolicyBindingResourceModel) aaa.Aaagroupauthorizationpolicybinding {
+	tflog.Debug(ctx, "In aaagroup_authorizationpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaagroup_authorizationpolicy_binding := aaa.Aaagroupauthorizationpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		aaagroup_authorizationpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Groupname.IsNull() {
+	if !data.Groupname.IsNull() && !data.Groupname.IsUnknown() {
 		aaagroup_authorizationpolicy_binding.Groupname = data.Groupname.ValueString()
 	}
-	if !data.Policy.IsNull() {
+	if !data.Policy.IsNull() && !data.Policy.IsUnknown() {
 		aaagroup_authorizationpolicy_binding.Policy = data.Policy.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		aaagroup_authorizationpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		aaagroup_authorizationpolicy_binding.Type = data.Type.ValueString()
 	}
 

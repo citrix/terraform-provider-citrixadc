@@ -44,7 +44,7 @@ resource "citrixadc_authenticationvserver_authenticationsamlidppolicy_binding" "
   policy    = citrixadc_authenticationsamlidppolicy.tf_samlidppolicy.name
   bindpoint = "REQUEST"
   priority  = 88
-  secondary = "false"
+  secondary = false
 }
 ```
 
@@ -65,7 +65,7 @@ resource "citrixadc_authenticationvserver_authenticationsamlidppolicy_binding" "
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the authenticationvserver_authenticationsamlidppolicy_binding. It is the concatenation of `name` and `policy` attributes seperated by comma.
+* `id` - The id of the authenticationvserver_authenticationsamlidppolicy_binding. It is the concatenation of `name` and `policy` attributes separated by a comma.
 
 
 ## Import

@@ -2,13 +2,15 @@ package sslpolicylabel_sslpolicy_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -20,7 +22,7 @@ type SslpolicylabelSslpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
-	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+	InvokeLabelname        types.String `tfsdk:"invokelabelname"`
 	Labelname              types.String `tfsdk:"labelname"`
 	Labeltype              types.String `tfsdk:"labeltype"`
 	Policyname             types.String `tfsdk:"policyname"`
@@ -36,65 +38,86 @@ func (r *SslpolicylabelSslpolicyBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the sslpolicylabel_sslpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Invoke policies bound to a policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.",
 			},
-			"invoke_labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+			"invokelabelname": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the label to invoke if the current policy rule evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL policy label to which to bind policies.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of policy label invocation.",
 			},
 			"policyname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL policy to bind to the policy label.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specifies the priority of the policy.",
 			},
 		},
 	}
 }
 
-func sslpolicylabel_sslpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslpolicylabelSslpolicyBindingResourceModel) ssl.Sslpolicylabelsslpolicybinding {
-	tflog.Debug(ctx, "In sslpolicylabel_sslpolicy_bindingGetThePayloadFromtheConfig Function")
+func sslpolicylabel_sslpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslpolicylabelSslpolicyBindingResourceModel) ssl.Sslpolicylabelsslpolicybinding {
+	tflog.Debug(ctx, "In sslpolicylabel_sslpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslpolicylabel_sslpolicy_binding := ssl.Sslpolicylabelsslpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		sslpolicylabel_sslpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Invoke.IsNull() {
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		sslpolicylabel_sslpolicy_binding.Invoke = data.Invoke.ValueBool()
 	}
-	if !data.InvokeLabelname.IsNull() {
+	if !data.InvokeLabelname.IsNull() && !data.InvokeLabelname.IsUnknown() {
 		sslpolicylabel_sslpolicy_binding.Invokelabelname = data.InvokeLabelname.ValueString()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		sslpolicylabel_sslpolicy_binding.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Labeltype.IsNull() {
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		sslpolicylabel_sslpolicy_binding.Labeltype = data.Labeltype.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		sslpolicylabel_sslpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		sslpolicylabel_sslpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 
@@ -104,51 +127,34 @@ func sslpolicylabel_sslpolicy_bindingGetThePayloadFromtheConfig(ctx context.Cont
 func sslpolicylabel_sslpolicy_bindingSetAttrFromGet(ctx context.Context, data *SslpolicylabelSslpolicyBindingResourceModel, getResponseData map[string]interface{}) *SslpolicylabelSslpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In sslpolicylabel_sslpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NOTE: 'invoke' is a write-only flag that the NITRO GET response never echoes
+	// back (matching the SDK v2 resource which deliberately skipped d.Set("invoke")).
+	// Preserve the prior plan/state value so the apply result stays consistent.
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
-		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
 		data.Invoke = types.BoolValue(val.(bool))
-	} else {
-		data.Invoke = types.BoolNull()
 	}
+	// else: preserve existing data.Invoke (not returned by GET)
 	if val, ok := getResponseData["invoke_labelname"]; ok && val != nil {
 		data.InvokeLabelname = types.StringValue(val.(string))
-	} else {
-		data.InvokeLabelname = types.StringNull()
 	}
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
-	} else {
-		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["labeltype"]; ok && val != nil {
 		data.Labeltype = types.StringValue(val.(string))
-	} else {
-		data.Labeltype = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
-	} else {
-		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
-		data.Priority = types.Int64Null()
 	}
-
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("labelname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Labelname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

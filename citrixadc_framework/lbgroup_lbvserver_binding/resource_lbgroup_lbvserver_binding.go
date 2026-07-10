@@ -3,8 +3,11 @@ package lbgroup_lbvserver_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,23 @@ func (r *LbgroupLbvserverBindingResource) Create(ctx context.Context, req resour
 	}
 
 	tflog.Debug(ctx, "Creating lbgroup_lbvserver_binding resource")
-
-	// lbgroup_lbvserver_binding := lbgroup_lbvserver_bindingGetThePayloadFromtheConfig(ctx, &data)
+	lbgroup_lbvserver_binding := lbgroup_lbvserver_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbgroup_lbvserver_binding.Type(), &lbgroup_lbvserver_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbgroup_lbvserver_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lbgroup_lbvserver_binding-config")
+	// Binding resource - SDK v2 contract used AddResource (POST) for this binding (Pattern 1)
+	_, err := r.client.AddResource(service.Lbgroup_lbvserver_binding.Type(), data.Name.ValueString(), &lbgroup_lbvserver_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbgroup_lbvserver_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lbgroup_lbvserver_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("vservername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vservername.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readLbgroupLbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +101,10 @@ func (r *LbgroupLbvserverBindingResource) Read(ctx context.Context, req resource
 }
 
 func (r *LbgroupLbvserverBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LbgroupLbvserverBindingResourceModel
+	var data, state LbgroupLbvserverBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +112,12 @@ func (r *LbgroupLbvserverBindingResource) Update(ctx context.Context, req resour
 		return
 	}
 
-	tflog.Debug(ctx, "Updating lbgroup_lbvserver_binding resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// lbgroup_lbvserver_binding := lbgroup_lbvserver_bindingGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbgroup_lbvserver_binding.Type(), &lbgroup_lbvserver_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbgroup_lbvserver_binding, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated lbgroup_lbvserver_binding resource")
+	// Update is a no-op for lbgroup_lbvserver_binding; all attributes are RequiresReplace
+	// and the NITRO binding exposes no update endpoint (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for lbgroup_lbvserver_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readLbgroupLbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +137,101 @@ func (r *LbgroupLbvserverBindingResource) Delete(ctx context.Context, req resour
 	}
 
 	tflog.Debug(ctx, "Deleting lbgroup_lbvserver_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "vservername"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For lbgroup_lbvserver_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lbgroup_lbvserver_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["vservername"]; ok && val != "" {
+		// URL-encode the delete arg value (SDK v2 used url.QueryEscape); the NITRO
+		// client does not encode argsMap values itself.
+		argsMap["vservername"] = url.QueryEscape(val)
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Lbgroup_lbvserver_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lbgroup_lbvserver_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lbgroup_lbvserver_binding binding")
 }
 
 // Helper function to read lbgroup_lbvserver_binding data from API
 func (r *LbgroupLbvserverBindingResource) readLbgroupLbvserverBindingFromApi(ctx context.Context, data *LbgroupLbvserverBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lbgroup_lbvserver_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "vservername"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Lbgroup_lbvserver_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbgroup_lbvserver_binding, got error: %s", err))
 		return
 	}
 
-	lbgroup_lbvserver_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "lbgroup_lbvserver_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check vservername
+		if idVal, ok := idMap["vservername"]; ok {
+			if val, ok := v["vservername"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["vservername"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("lbgroup_lbvserver_binding not found with the provided ID attributes"))
+		return
+	}
+
+	lbgroup_lbvserver_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

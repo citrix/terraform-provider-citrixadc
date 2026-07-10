@@ -44,6 +44,7 @@ func (d *VpnvserverFeopolicyBindingDataSource) Read(ctx context.Context, req dat
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	bindpoint_Name := data.Bindpoint
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -71,7 +72,21 @@ func (d *VpnvserverFeopolicyBindingDataSource) Read(ctx context.Context, req dat
 	for i, v := range dataArr {
 		match := true
 
-		// Check policy
+		// Check bindpoint only when the caller supplied it; otherwise it is not a
+		// filter criterion (the (name, policy) pair is already unique enough).
+		if !bindpoint_Name.IsNull() {
+			if val, ok := v["bindpoint"].(string); ok {
+				if val != bindpoint_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+
+		// Check policy. NITRO returns the bound policy under the key "policyname".
 		if val, ok := v["policyname"].(string); ok {
 			if policy_Name.IsNull() || val != policy_Name.ValueString() {
 				match = false
@@ -89,11 +104,11 @@ func (d *VpnvserverFeopolicyBindingDataSource) Read(ctx context.Context, req dat
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_feopolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_feopolicy_binding with bindpoint %s not found", bindpoint_Name))
 		return
 	}
 
-	vpnvserver_feopolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_feopolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

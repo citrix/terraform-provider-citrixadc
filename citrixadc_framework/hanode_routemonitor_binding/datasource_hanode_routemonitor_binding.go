@@ -42,8 +42,8 @@ func (d *HanodeRoutemonitorBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Hanodeid.ValueInt64())
+	// Array filter with parent ID (hanode_id)
+	hanodeId := fmt.Sprintf("%v", data.HanodeId.ValueInt64())
 	netmask_Name := data.Netmask
 	routemonitor_Name := data.Routemonitor
 
@@ -52,7 +52,7 @@ func (d *HanodeRoutemonitorBindingDataSource) Read(ctx context.Context, req data
 
 	findParams := service.FindParams{
 		ResourceType:             service.Hanode_routemonitor_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             hanodeId,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -67,32 +67,25 @@ func (d *HanodeRoutemonitorBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right routemonitor (and netmask if supplied)
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check netmask
-		if val, ok := v["netmask"].(string); ok {
-			if netmask_Name.IsNull() || val != netmask_Name.ValueString() {
+		// Check routemonitor
+		if !routemonitor_Name.IsNull() {
+			if val, ok := v["routemonitor"].(string); !ok || val != routemonitor_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !netmask_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check routemonitor
-		if val, ok := v["routemonitor"].(string); ok {
-			if routemonitor_Name.IsNull() || val != routemonitor_Name.ValueString() {
+		// Check netmask
+		if match && !netmask_Name.IsNull() {
+			if val, ok := v["netmask"].(string); !ok || val != netmask_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !routemonitor_Name.IsNull() {
-			match = false
-			continue
 		}
+
 		if match {
 			foundIndex = i
 			break
@@ -101,11 +94,11 @@ func (d *HanodeRoutemonitorBindingDataSource) Read(ctx context.Context, req data
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("hanode_routemonitor_binding with netmask %s not found", netmask_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("hanode_routemonitor_binding with routemonitor %s not found", routemonitor_Name))
 		return
 	}
 
-	hanode_routemonitor_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	hanode_routemonitor_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

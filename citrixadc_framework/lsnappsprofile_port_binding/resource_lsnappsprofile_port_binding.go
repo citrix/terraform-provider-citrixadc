@@ -3,8 +3,10 @@ package lsnappsprofile_port_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *LsnappsprofilePortBindingResource) Create(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Creating lsnappsprofile_port_binding resource")
-
-	// lsnappsprofile_port_binding := lsnappsprofile_port_bindingGetThePayloadFromtheConfig(ctx, &data)
+	lsnappsprofile_port_binding := lsnappsprofile_port_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnappsprofile_port_binding.Type(), &lsnappsprofile_port_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnappsprofile_port_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lsnappsprofile_port_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Lsnappsprofile_port_binding.Type(), &lsnappsprofile_port_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnappsprofile_port_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lsnappsprofile_port_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("appsprofilename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Appsprofilename.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("lsnport:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Lsnport.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readLsnappsprofilePortBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *LsnappsprofilePortBindingResource) Read(ctx context.Context, req resour
 }
 
 func (r *LsnappsprofilePortBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LsnappsprofilePortBindingResourceModel
+	var data, state LsnappsprofilePortBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *LsnappsprofilePortBindingResource) Update(ctx context.Context, req reso
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lsnappsprofile_port_binding resource")
 
-	// Create API request body from the model
-	// lsnappsprofile_port_binding := lsnappsprofile_port_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnappsprofile_port_binding.Type(), &lsnappsprofile_port_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnappsprofile_port_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		lsnappsprofile_port_binding := lsnappsprofile_port_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Lsnappsprofile_port_binding.Type(), &lsnappsprofile_port_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnappsprofile_port_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated lsnappsprofile_port_binding resource")
+		tflog.Trace(ctx, "Updated lsnappsprofile_port_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lsnappsprofile_port_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readLsnappsprofilePortBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,95 @@ func (r *LsnappsprofilePortBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting lsnappsprofile_port_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"appsprofilename", "lsnport"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For lsnappsprofile_port_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lsnappsprofile_port_binding resource from state")
+	appsprofilename_value, ok := idMap["appsprofilename"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'appsprofilename' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["lsnport"]; ok && val != "" {
+		argsMap["lsnport"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Lsnappsprofile_port_binding.Type(), appsprofilename_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsnappsprofile_port_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lsnappsprofile_port_binding binding")
 }
 
 // Helper function to read lsnappsprofile_port_binding data from API
 func (r *LsnappsprofilePortBindingResource) readLsnappsprofilePortBindingFromApi(ctx context.Context, data *LsnappsprofilePortBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lsnappsprofile_port_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"appsprofilename", "lsnport"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	appsprofilename_Name, ok := idMap["appsprofilename"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'appsprofilename' not found in ID string")
+		return
+	}
+
+	// The direct lsnappsprofile_port_binding GET endpoint does not return the bound
+	// ports; they are only available nested under the parent's aggregate
+	// lsnappsprofile_binding endpoint. Fetch them from there.
+	dataArr, err := getLsnappsprofilePortBindings(r.client, appsprofilename_Name)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsnappsprofile_port_binding, got error: %s", err))
 		return
 	}
 
-	lsnappsprofile_port_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "lsnappsprofile_port_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check lsnport
+		if idVal, ok := idMap["lsnport"]; ok {
+			if val, ok := v["lsnport"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["lsnport"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("lsnappsprofile_port_binding not found with the provided ID attributes"))
+		return
+	}
+
+	lsnappsprofile_port_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

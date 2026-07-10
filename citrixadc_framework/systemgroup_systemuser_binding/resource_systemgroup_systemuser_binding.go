@@ -3,8 +3,10 @@ package systemgroup_systemuser_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *SystemgroupSystemuserBindingResource) Create(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Creating systemgroup_systemuser_binding resource")
-
-	// systemgroup_systemuser_binding := systemgroup_systemuser_bindingGetThePayloadFromtheConfig(ctx, &data)
+	systemgroup_systemuser_binding := systemgroup_systemuser_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Systemgroup_systemuser_binding.Type(), &systemgroup_systemuser_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systemgroup_systemuser_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("systemgroup_systemuser_binding-config")
+	// Binding resource - NITRO add is POST; SDK v2 used AddResource (Pattern 1)
+	_, err := r.client.AddResource(service.Systemgroup_systemuser_binding.Type(), "", &systemgroup_systemuser_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systemgroup_systemuser_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created systemgroup_systemuser_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("username:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Username.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readSystemgroupSystemuserBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *SystemgroupSystemuserBindingResource) Read(ctx context.Context, req res
 }
 
 func (r *SystemgroupSystemuserBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SystemgroupSystemuserBindingResourceModel
+	var data, state SystemgroupSystemuserBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *SystemgroupSystemuserBindingResource) Update(ctx context.Context, req r
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating systemgroup_systemuser_binding resource")
 
-	// Create API request body from the model
-	// systemgroup_systemuser_binding := systemgroup_systemuser_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Systemgroup_systemuser_binding.Type(), &systemgroup_systemuser_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update systemgroup_systemuser_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		systemgroup_systemuser_binding := systemgroup_systemuser_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Systemgroup_systemuser_binding.Type(), &systemgroup_systemuser_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update systemgroup_systemuser_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated systemgroup_systemuser_binding resource")
+		tflog.Trace(ctx, "Updated systemgroup_systemuser_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for systemgroup_systemuser_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readSystemgroupSystemuserBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,99 @@ func (r *SystemgroupSystemuserBindingResource) Delete(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Deleting systemgroup_systemuser_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"groupname", "username"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For systemgroup_systemuser_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted systemgroup_systemuser_binding resource from state")
+	groupname_value, ok := idMap["groupname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'groupname' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["username"]; ok && val != "" {
+		argsMap["username"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Systemgroup_systemuser_binding.Type(), groupname_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete systemgroup_systemuser_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted systemgroup_systemuser_binding binding")
 }
 
 // Helper function to read systemgroup_systemuser_binding data from API
 func (r *SystemgroupSystemuserBindingResource) readSystemgroupSystemuserBindingFromApi(ctx context.Context, data *SystemgroupSystemuserBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Systemgroup_systemuser_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"groupname", "username"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	groupname_Name, ok := idMap["groupname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'groupname' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Systemgroup_systemuser_binding.Type(),
+		ResourceName:             groupname_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read systemgroup_systemuser_binding, got error: %s", err))
 		return
 	}
 
-	systemgroup_systemuser_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "systemgroup_systemuser_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check username
+		if idVal, ok := idMap["username"]; ok {
+			if val, ok := v["username"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["username"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("systemgroup_systemuser_binding not found with the provided ID attributes"))
+		return
+	}
+
+	systemgroup_systemuser_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

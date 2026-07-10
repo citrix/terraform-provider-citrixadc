@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -18,6 +22,7 @@ import (
 // AuthenticationvserverAuthenticationldappolicyBindingResourceModel describes the resource data model.
 type AuthenticationvserverAuthenticationldappolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -35,78 +40,174 @@ func (r *AuthenticationvserverAuthenticationldappolicyBindingResource) Schema(ct
 				Computed:    true,
 				Description: "The ID of the authenticationvserver_authenticationldappolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				// NITRO does not echo bindpoint back in GET, so it cannot be Computed
+				// (would stay unknown after apply -> Pattern 13). Pure user input.
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// Not echoed back by NITRO GET; drop Computed to avoid unknown-after-apply (Pattern 13).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only to advance authentication policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n* If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a priority number that is numerically higher than the highest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"groupextraction": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Bind the Authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the authentication virtual server to which to bind the policy.",
 			},
 			"nextfactor": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// Not echoed back by NITRO GET; drop Computed to avoid unknown-after-apply (Pattern 13).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor",
 			},
 			"policy": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the policy, if any, bound to the authentication vserver.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The priority, if any, of the vpn vserver policy.",
 			},
 			"secondary": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Bind the authentication policy to the secondary chain.\nProvides for multifactor authentication in which a user must authenticate via both a primary authentication method and, afterward, via a secondary authentication method.\nBecause user groups are aggregated across authentication systems, usernames must be the same on all authentication servers. Passwords can be different.",
 			},
 		},
 	}
 }
 
-func authenticationvserver_authenticationldappolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationvserverAuthenticationldappolicyBindingResourceModel) authentication.Authenticationvserverauthenticationldappolicybinding {
-	tflog.Debug(ctx, "In authenticationvserver_authenticationldappolicy_bindingGetThePayloadFromtheConfig Function")
+func authenticationvserver_authenticationldappolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationvserverAuthenticationldappolicyBindingResourceModel) authentication.Authenticationvserverauthenticationldappolicybinding {
+	tflog.Debug(ctx, "In authenticationvserver_authenticationldappolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationvserver_authenticationldappolicy_binding := authentication.Authenticationvserverauthenticationldappolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		authenticationvserver_authenticationldappolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		authenticationvserver_authenticationldappolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Groupextraction.IsNull() {
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
 		authenticationvserver_authenticationldappolicy_binding.Groupextraction = data.Groupextraction.ValueBool()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationvserver_authenticationldappolicy_binding.Name = data.Name.ValueString()
 	}
-	if !data.Nextfactor.IsNull() {
+	if !data.Nextfactor.IsNull() && !data.Nextfactor.IsUnknown() {
 		authenticationvserver_authenticationldappolicy_binding.Nextfactor = data.Nextfactor.ValueString()
 	}
-	if !data.Policy.IsNull() {
+	if !data.Policy.IsNull() && !data.Policy.IsUnknown() {
 		authenticationvserver_authenticationldappolicy_binding.Policy = data.Policy.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		authenticationvserver_authenticationldappolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Secondary.IsNull() {
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
 		authenticationvserver_authenticationldappolicy_binding.Secondary = data.Secondary.ValueBool()
 	}
 
 	return authenticationvserver_authenticationldappolicy_binding
 }
 
+// authenticationvserver_authenticationldappolicy_bindingSetAttrFromGet is the RESOURCE-side
+// state setter. Because every attribute is RequiresReplace and several inputs are either not
+// echoed back or normalized by the NITRO server (bindpoint, gotopriorityexpression, priority,
+// nextfactor), it preserves the prior plan/state value when the GET response does not contain a
+// usable value (Pattern 7). It must NOT recompute data.Id — the ID is set once in Create
+// (Pattern 6); for the datasource see ...SetAttrFromGetForDatasource.
 func authenticationvserver_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Context, data *AuthenticationvserverAuthenticationldappolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationldappolicyBindingResourceModel {
 	tflog.Debug(ctx, "In authenticationvserver_authenticationldappolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. Preserve existing plan/state values for fields the
+	// server does not faithfully echo, rather than nulling them (avoids "inconsistent result").
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		if s, ok := val.(string); ok && s != "" {
+			data.Bindpoint = types.StringValue(s)
+		}
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		if s, ok := val.(string); ok && s != "" {
+			data.Gotopriorityexpression = types.StringValue(s)
+		}
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		if b, ok := val.(bool); ok {
+			data.Groupextraction = types.BoolValue(b)
+		}
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		if s, ok := val.(string); ok && s != "" {
+			data.Name = types.StringValue(s)
+		}
+	}
+	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
+		if s, ok := val.(string); ok && s != "" {
+			data.Nextfactor = types.StringValue(s)
+		}
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		if s, ok := val.(string); ok && s != "" {
+			data.Policy = types.StringValue(s)
+		}
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		if b, ok := val.(bool); ok {
+			data.Secondary = types.BoolValue(b)
+		}
+	}
+
+	// NOTE: data.Id is intentionally NOT recomputed here (Pattern 6) — it is set once in Create.
+
+	return data
+}
+
+// authenticationvserver_authenticationldappolicy_bindingSetAttrFromGetForDatasource faithfully
+// copies every field from the GET response and sets data.Id (the datasource has no Create) so the
+// datasource returns real values instead of nulls (Pattern 7 datasource split).
+func authenticationvserver_authenticationldappolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationvserverAuthenticationldappolicyBindingResourceModel, getResponseData map[string]interface{}) *AuthenticationvserverAuthenticationldappolicyBindingResourceModel {
+	tflog.Debug(ctx, "In authenticationvserver_authenticationldappolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -145,8 +246,7 @@ func authenticationvserver_authenticationldappolicy_bindingSetAttrFromGet(ctx co
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (name,policy — matches resource_id_mapping.json and Create).
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))

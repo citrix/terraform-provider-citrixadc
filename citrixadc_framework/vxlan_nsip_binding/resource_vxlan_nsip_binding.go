@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +55,20 @@ func (r *VxlanNsipBindingResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	tflog.Debug(ctx, "Creating vxlan_nsip_binding resource")
-
-	// vxlan_nsip_binding := vxlan_nsip_bindingGetThePayloadFromtheConfig(ctx, &data)
+	vxlan_nsip_binding := vxlan_nsip_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vxlan_nsip_binding.Type(), &vxlan_nsip_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vxlan_nsip_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vxlan_nsip_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Vxlan_nsip_binding.Type(), &vxlan_nsip_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vxlan_nsip_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vxlan_nsip_binding resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(vxlan_nsip_bindingComposeId(&data))
 
 	// Read the updated state back
 	r.readVxlanNsipBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +96,10 @@ func (r *VxlanNsipBindingResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *VxlanNsipBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VxlanNsipBindingResourceModel
+	var data, state VxlanNsipBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +107,12 @@ func (r *VxlanNsipBindingResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	tflog.Debug(ctx, "Updating vxlan_nsip_binding resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// vxlan_nsip_binding := vxlan_nsip_bindingGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vxlan_nsip_binding.Type(), &vxlan_nsip_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vxlan_nsip_binding, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated vxlan_nsip_binding resource")
+	// No NITRO update endpoint exists for this binding; every attribute is
+	// RequiresReplace, so Update is a documented no-op (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for vxlan_nsip_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readVxlanNsipBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +132,88 @@ func (r *VxlanNsipBindingResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	tflog.Debug(ctx, "Deleting vxlan_nsip_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgsMap.
+	// Legacy ID order: vxlanid,ipaddress.
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vxlanid", "ipaddress"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For vxlan_nsip_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vxlan_nsip_binding resource from state")
+	vxlanid, ok := idMap["vxlanid"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'vxlanid' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["ipaddress"]; ok && val != "" {
+		argsMap["ipaddress"] = val
+	}
+	// netmask is not part of the ID; include it from state when present.
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		argsMap["netmask"] = data.Netmask.ValueString()
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Vxlan_nsip_binding.Type(), vxlanid, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vxlan_nsip_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vxlan_nsip_binding binding")
 }
 
 // Helper function to read vxlan_nsip_binding data from API
 func (r *VxlanNsipBindingResource) readVxlanNsipBindingFromApi(ctx context.Context, data *VxlanNsipBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vxlan_nsip_binding.Type(), "")
+
+	// Array filter with parent ID - parse from ID. Legacy order: vxlanid,ipaddress.
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"vxlanid", "ipaddress"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	vxlanid, ok := idMap["vxlanid"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'vxlanid' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Vxlan_nsip_binding.Type(),
+		ResourceName:             vxlanid,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vxlan_nsip_binding, got error: %s", err))
 		return
 	}
 
-	vxlan_nsip_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "vxlan_nsip_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right ipaddress
+	foundIndex := -1
+	ipaddress := idMap["ipaddress"]
+	for i, v := range dataArr {
+		if val, ok := v["ipaddress"].(string); ok && val == ipaddress {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", "vxlan_nsip_binding not found with the provided ID attributes")
+		return
+	}
+
+	vxlan_nsip_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

@@ -32,7 +32,7 @@ output "ownergroup" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the bridgegroup_nsip_binding. It is a system-generated identifier.
+* `id` - The id of the bridgegroup_nsip_binding. It is the concatenation of the `bridgegroup_id` and `ipaddress` attributes separated by a comma.
 * `netmask` - The network mask for the subnet defined for the bridge group.
 * `ownergroup` - The owner node group in a Cluster for this vlan.
 * `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.

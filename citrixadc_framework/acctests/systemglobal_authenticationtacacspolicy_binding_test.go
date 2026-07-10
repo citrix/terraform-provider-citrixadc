@@ -25,7 +25,7 @@ import (
 )
 
 const testAccSystemglobal_authenticationtacacspolicy_binding_basic = `
-resource "citrixadc_systemglobal_authenticationtatacspolicy_binding" "tf_systemglobal_authenticationtatacspolicy_binding" {
+resource "citrixadc_systemglobal_authenticationtacacspolicy_binding" "tf_systemglobal_authenticationtacacspolicy_binding" {
 	policyname = citrixadc_authenticationtacacspolicy.tf_tacacspolicy.name
 	priority   = 50
 	}
@@ -76,13 +76,13 @@ func TestAccSystemglobal_authenticationtacacspolicy_binding_basic(t *testing.T) 
 			{
 				Config: testAccSystemglobal_authenticationtacacspolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSystemglobal_authenticationtacacspolicy_bindingExist("citrixadc_systemglobal_authenticationtatacspolicy_binding.tf_systemglobal_authenticationtatacspolicy_binding", nil),
+					testAccCheckSystemglobal_authenticationtacacspolicy_bindingExist("citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtacacspolicy_binding", nil),
 				),
 			},
 			{
 				Config: testAccSystemglobal_authenticationtacacspolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSystemglobal_authenticationtacacspolicy_bindingNotExist("citrixadc_systemglobal_authenticationtatacspolicy_binding.tf_systemglobal_authenticationtatacspolicy_binding", "tf_tacacspolicy"),
+					testAccCheckSystemglobal_authenticationtacacspolicy_bindingNotExist("citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtacacspolicy_binding", "tf_tacacspolicy"),
 				),
 			},
 		},
@@ -209,7 +209,7 @@ func testAccCheckSystemglobal_authenticationtacacspolicy_bindingDestroy(s *terra
 }
 
 const testAccSystemglobal_authenticationtacacspolicy_binding_DataSource_basic = `
-resource "citrixadc_systemglobal_authenticationtatacspolicy_binding" "tf_systemglobal_authenticationtatacspolicy_binding" {
+resource "citrixadc_systemglobal_authenticationtacacspolicy_binding" "tf_systemglobal_authenticationtacacspolicy_binding" {
 	policyname = citrixadc_authenticationtacacspolicy.tf_tacacspolicy.name
 	priority   = 50
 }
@@ -231,9 +231,9 @@ resource "citrixadc_authenticationtacacspolicy" "tf_tacacspolicy" {
 	reqaction = citrixadc_authenticationtacacsaction.tf_tacacsaction.name
 }
 
-data "citrixadc_systemglobal_authenticationtacacspolicy_binding" "tf_systemglobal_authenticationtatacspolicy_binding" {
+data "citrixadc_systemglobal_authenticationtacacspolicy_binding" "tf_systemglobal_authenticationtacacspolicy_binding" {
 	policyname = citrixadc_authenticationtacacspolicy.tf_tacacspolicy.name
-	depends_on = [citrixadc_systemglobal_authenticationtatacspolicy_binding.tf_systemglobal_authenticationtatacspolicy_binding]
+	depends_on = [citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtacacspolicy_binding]
 }
 `
 
@@ -246,8 +246,8 @@ func TestAccSystemglobal_authenticationtacacspolicy_bindingDataSource_basic(t *t
 			{
 				Config: testAccSystemglobal_authenticationtacacspolicy_binding_DataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtatacspolicy_binding", "policyname", "tf_tacacspolicy"),
-					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtatacspolicy_binding", "priority", "50"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtacacspolicy_binding", "policyname", "tf_tacacspolicy"),
+					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtacacspolicy_binding", "priority", "50"),
 				),
 			},
 		},

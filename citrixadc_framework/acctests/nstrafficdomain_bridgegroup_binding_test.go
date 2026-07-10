@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -132,10 +133,12 @@ func testAccCheckNstrafficdomain_bridgegroup_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		td := idSlice[0]
-		bridgegroup := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"td", "bridgegroup"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		td := idMap["td"]
+		bridgegroup := idMap["bridgegroup"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nstrafficdomain_bridgegroup_binding",
@@ -177,10 +180,12 @@ func testAccCheckNstrafficdomain_bridgegroup_bindingNotExist(n string, id string
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		td := idSlice[0]
-		bridgegroup := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"td", "bridgegroup"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
+		}
+		td := idMap["td"]
+		bridgegroup := idMap["bridgegroup"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nstrafficdomain_bridgegroup_binding",

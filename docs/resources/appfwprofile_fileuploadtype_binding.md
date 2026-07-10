@@ -59,18 +59,18 @@ resource "citrixadc_appfwprofile_fileuploadtype_binding" "tf_binding" {
 * `alertonly` - (Optional) Send SNMP alert?
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?
-* `isregex_fileuploadtypes_url` - (Optional) Is a regular expression?
+* `isregexfileuploadtypesurl` - (Optional) Is a regular expression?
 * `resourceid` - (Optional) A "id" that identifies the rule.
 * `ruletype` - (Optional) Specifies rule type of binding
 * `state` - (Optional) Enabled.
-* `isnameregex` - (Optional) Is field name a regular expression?
+* `isnameregex` - (Optional) Is field name a regular expression? Defaults to `"NOTREGEX"`.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_fileuploadtype_binding. It is the concatenation of `name`, `fileuploadtype`, `as_fileuploadtypes_url`, and `filetype` attributes separated by comma. The `filetype` is a semicolon-separated(`;`) string of all file types (e.g., `pdf text`).
+* `id` - The id of the appfwprofile_fileuploadtype_binding. It is the concatenation of `name`, `fileuploadtype`, `as_fileuploadtypes_url`, and `filetype` attributes separated by comma. Because `filetype` is a list, its elements are joined with a semicolon (`;`) within the comma-separated id (e.g., `pdf;text`).
 
 
 ## Import

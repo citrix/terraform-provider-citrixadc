@@ -32,4 +32,4 @@ output "vserver" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the csvserver_gslbvserver_binding. It is a system-generated identifier in the format `name,vserver`.
+* `id` - The id of the csvserver_gslbvserver_binding. It is the concatenation of the `name` and `vserver` attributes separated by a comma.

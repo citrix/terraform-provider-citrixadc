@@ -36,6 +36,6 @@ output "netmask" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the binding. It is a system-generated identifier.
+* `id` - The id of the lsnclient_network_binding. It is the concatenation of `clientname` and `network` attributes separated by a comma.
 * `netmask` - Subnet mask for the IPv4 address specified in the Network parameter.
 * `td` - ID of the traffic domain on which this subscriber or the subscriber network (as specified by the network parameter) belongs. If you do not specify an ID, the subscriber or the subscriber network becomes part of the default traffic domain.

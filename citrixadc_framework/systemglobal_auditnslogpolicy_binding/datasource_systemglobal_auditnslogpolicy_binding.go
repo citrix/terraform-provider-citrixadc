@@ -92,7 +92,7 @@ func (d *SystemglobalAuditnslogpolicyBindingDataSource) Read(ctx context.Context
 		return
 	}
 
-	systemglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	systemglobal_auditnslogpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

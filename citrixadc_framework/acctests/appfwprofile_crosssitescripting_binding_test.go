@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -121,13 +121,16 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingExist(n string, id *stri
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-		appFwName := idSlice[0]
-		crosssitescripting := idSlice[1]
-		formactionurl_xss := idSlice[2]
-		as_scan_location_xss := idSlice[3]
-		as_value_type_xss := idSlice[4]
-		as_value_expr_xss := idSlice[5]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "crosssitescripting", "formactionurl_xss", "as_scan_location_xss", "as_value_type_xss", "as_value_expr_xss"}, []string{"as_value_type_xss", "as_value_expr_xss"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		appFwName := idMap["name"]
+		crosssitescripting := idMap["crosssitescripting"]
+		formactionurl_xss := idMap["formactionurl_xss"]
+		as_scan_location_xss := idMap["as_scan_location_xss"]
+		as_value_type_xss := idMap["as_value_type_xss"]
+		as_value_expr_xss := idMap["as_value_expr_xss"]
 
 		findParams := service.FindParams{
 			ResourceType:             service.Appfwprofile_crosssitescripting_binding.Type(),

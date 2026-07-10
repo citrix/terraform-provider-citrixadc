@@ -34,7 +34,7 @@ output "secondary" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnglobal_authenticationsamlpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the vpnglobal_authenticationsamlpolicy_binding. It has the same value as the `policyname` attribute.
 * `gotopriorityexpression` - Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `groupextraction` - Bind the Authentication policy to a tertiary chain which will be used only for group extraction. The user will not authenticate against this server, and this will only be called it primary and/or secondary authentication has succeeded.
 * `priority` - Integer specifying the policy's priority. The lower the priority number, the higher the policy's priority. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.

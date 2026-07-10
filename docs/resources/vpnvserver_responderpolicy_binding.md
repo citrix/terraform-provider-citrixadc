@@ -22,9 +22,9 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
   rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
 }
 resource "citrixadc_vpnvserver_responderpolicy_binding" "tf_bind" {
-  name      = citrixadc_vpnvserver.tf_vpnvserver.name
-  policy    = citrixadc_responderpolicy.tf_responder_policy.name
-  priority  = 200
+  name     = citrixadc_vpnvserver.tf_vpnvserver.name
+  policy   = citrixadc_responderpolicy.tf_responder_policy.name
+  priority = 200
 }
 ```
 

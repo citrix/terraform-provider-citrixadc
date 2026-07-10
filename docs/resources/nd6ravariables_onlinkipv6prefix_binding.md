@@ -11,7 +11,7 @@ The nd6ravariables_onlinkipv6prefix_binding resource is used to create nd6ravari
 
 ```hcl
 resource "citrixadc_nd6ravariables_onlinkipv6prefix_binding" "tf_nd6ravariables_onlinkipv6prefix_binding" {
-  vlan      = "1"
+  vlan       = 1
   ipv6prefix = "2003::/64"
 }
 ```
@@ -27,7 +27,7 @@ resource "citrixadc_nd6ravariables_onlinkipv6prefix_binding" "tf_nd6ravariables_
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the nd6ravariables_onlinkipv6prefix_binding. It has the same value as the `vlan` and `ipv6prefix` attributes separated by a comma.
+* `id` - The id of the nd6ravariables_onlinkipv6prefix_binding. It is the concatenation of the `vlan` and `ipv6prefix` attributes separated by a comma.
 
 
 ## Import

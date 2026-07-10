@@ -3,8 +3,11 @@ package vpnvserver_authenticationsamlidppolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,27 @@ func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) Create(ctx contex
 	}
 
 	tflog.Debug(ctx, "Creating vpnvserver_authenticationsamlidppolicy_binding resource")
-
-	// vpnvserver_authenticationsamlidppolicy_binding := vpnvserver_authenticationsamlidppolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	vpnvserver_authenticationsamlidppolicy_binding := vpnvserver_authenticationsamlidppolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnvserver_authenticationsamlidppolicy_binding.Type(), &vpnvserver_authenticationsamlidppolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnvserver_authenticationsamlidppolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnvserver_authenticationsamlidppolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Vpnvserver_authenticationsamlidppolicy_binding.Type(), &vpnvserver_authenticationsamlidppolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnvserver_authenticationsamlidppolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnvserver_authenticationsamlidppolicy_binding resource")
+
+	// Set ID for the resource before reading state.
+	// Legacy SDK v2 ID order is "name,policy" (see resource_id_mapping.json); the new
+	// key:value ID format keeps the same key set so ParseIdString decodes both forms.
+	// bindpoint is NOT part of the ID (it is not echoed by GET and is not in the
+	// legacy mapping).
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readVpnvserverAuthenticationsamlidppolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +105,10 @@ func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) Read(ctx context.
 }
 
 func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnvserverAuthenticationsamlidppolicyBindingResourceModel
+	var data, state VpnvserverAuthenticationsamlidppolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +116,29 @@ func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) Update(ctx contex
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnvserver_authenticationsamlidppolicy_binding resource")
 
-	// Create API request body from the model
-	// vpnvserver_authenticationsamlidppolicy_binding := vpnvserver_authenticationsamlidppolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnvserver_authenticationsamlidppolicy_binding.Type(), &vpnvserver_authenticationsamlidppolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnvserver_authenticationsamlidppolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		vpnvserver_authenticationsamlidppolicy_binding := vpnvserver_authenticationsamlidppolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Vpnvserver_authenticationsamlidppolicy_binding.Type(), &vpnvserver_authenticationsamlidppolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnvserver_authenticationsamlidppolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vpnvserver_authenticationsamlidppolicy_binding resource")
+		tflog.Trace(ctx, "Updated vpnvserver_authenticationsamlidppolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnvserver_authenticationsamlidppolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readVpnvserverAuthenticationsamlidppolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +158,113 @@ func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) Delete(ctx contex
 	}
 
 	tflog.Debug(ctx, "Deleting vpnvserver_authenticationsamlidppolicy_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ParseIdString handles both the new "name:..,policy:.." form and the legacy
+	// positional "name,policy" form.
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For vpnvserver_authenticationsamlidppolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnvserver_authenticationsamlidppolicy_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// Build delete args matching the SDK v2 resource: policy is the mandatory
+	// disambiguator; bindpoint / secondary / groupextraction are added when set in
+	// state. Values are URL-encoded to handle slashy/special characters.
+	args := make([]string, 0)
+	if val, ok := idMap["policy"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Secondary.IsNull() {
+		args = append(args, fmt.Sprintf("secondary:%t", data.Secondary.ValueBool()))
+	}
+	if !data.Groupextraction.IsNull() {
+		args = append(args, fmt.Sprintf("groupextraction:%t", data.Groupextraction.ValueBool()))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_authenticationsamlidppolicy_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_authenticationsamlidppolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnvserver_authenticationsamlidppolicy_binding binding")
 }
 
 // Helper function to read vpnvserver_authenticationsamlidppolicy_binding data from API
 func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) readVpnvserverAuthenticationsamlidppolicyBindingFromApi(ctx context.Context, data *VpnvserverAuthenticationsamlidppolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnvserver_authenticationsamlidppolicy_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Vpnvserver_authenticationsamlidppolicy_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnvserver_authenticationsamlidppolicy_binding, got error: %s", err))
 		return
 	}
 
-	vpnvserver_authenticationsamlidppolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "vpnvserver_authenticationsamlidppolicy_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the matching policy.
+	// The binding is identified by (name, policy); bindpoint is not part of the ID and
+	// is not echoed by the NITRO GET response, so only policy is matched here (matching
+	// the SDK v2 resource behaviour).
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check policy
+		if idVal, ok := idMap["policy"]; ok {
+			if val, ok := v["policy"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationsamlidppolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	vpnvserver_authenticationsamlidppolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

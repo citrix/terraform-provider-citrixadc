@@ -42,7 +42,8 @@ func (d *VpnvserverAuthenticationtacacspolicyBindingDataSource) Read(ctx context
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Array filter with parent ID. The binding identity is (name, policy);
+	// bindpoint is not returned by NITRO GET, so filter on policy only.
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -66,22 +67,10 @@ func (d *VpnvserverAuthenticationtacacspolicyBindingDataSource) Read(ctx context
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right policy
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && !policy_Name.IsNull() && val == policy_Name.ValueString() {
 			foundIndex = i
 			break
 		}
@@ -89,11 +78,11 @@ func (d *VpnvserverAuthenticationtacacspolicyBindingDataSource) Read(ctx context
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationtacacspolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationtacacspolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	vpnvserver_authenticationtacacspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_authenticationtacacspolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -18,6 +22,7 @@ import (
 // CsvserverTransformpolicyBindingResourceModel describes the resource data model.
 type CsvserverTransformpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -35,87 +40,182 @@ func (r *CsvserverTransformpolicyBindingResource) Schema(ctx context.Context, re
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the csvserver_transformpolicy_binding resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"bindpoint": schema.StringAttribute{
+				// Present in SDK v2 schema + NITRO struct; re-added for backward
+				// compatibility (was dropped by codegen).
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "The bindpoint to which the policy is bound.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Invoke flag.",
 			},
 			"labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// SDK v2 had this as Optional+Computed (not Required). NITRO GET
+				// does not echo labelname when unset, so it can never be resolved
+				// at apply time. Optional-only (no Computed) avoids "unknown value
+				// after apply" (Pattern 13).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the label invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The invocation type.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the content switching virtual server to which the content switching policy applies.",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Policies bound to this vserver.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+				},
 				Description: "Priority for the policy.",
 			},
 			"targetlbvserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// Pure user input: not echoed by NITRO GET when unset (Pattern 13).
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE.\nExample: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1\nNote: Use this parameter only in case of Content Switching policy bind operations to a CS vserver",
 			},
 		},
 	}
 }
 
-func csvserver_transformpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *CsvserverTransformpolicyBindingResourceModel) cs.Csvservertransformpolicybinding {
-	tflog.Debug(ctx, "In csvserver_transformpolicy_bindingGetThePayloadFromtheConfig Function")
+func csvserver_transformpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *CsvserverTransformpolicyBindingResourceModel) cs.Csvservertransformpolicybinding {
+	tflog.Debug(ctx, "In csvserver_transformpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	csvserver_transformpolicy_binding := cs.Csvservertransformpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		csvserver_transformpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_transformpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Invoke.IsNull() {
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		csvserver_transformpolicy_binding.Invoke = data.Invoke.ValueBool()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		csvserver_transformpolicy_binding.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Labeltype.IsNull() {
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		csvserver_transformpolicy_binding.Labeltype = data.Labeltype.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		csvserver_transformpolicy_binding.Name = data.Name.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		csvserver_transformpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		csvserver_transformpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Targetlbvserver.IsNull() {
+	if !data.Targetlbvserver.IsNull() && !data.Targetlbvserver.IsUnknown() {
 		csvserver_transformpolicy_binding.Targetlbvserver = data.Targetlbvserver.ValueString()
 	}
 
 	return csvserver_transformpolicy_binding
 }
 
+// csvserver_transformpolicy_bindingSetAttrFromGet is the resource-side state setter.
+// The NITRO GET response server-overrides / does not echo several user inputs
+// (e.g. labelname/labeltype/targetlbvserver are absent when unset). To avoid
+// "inconsistent result after apply" churn (Pattern 7 / Pattern 13) it preserves
+// the existing plan/state value when the field is absent in the response, and
+// never recomputes the ID (Pattern 6 — the ID is set exactly once in Create).
 func csvserver_transformpolicy_bindingSetAttrFromGet(ctx context.Context, data *CsvserverTransformpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverTransformpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In csvserver_transformpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	}
+	if val, ok := getResponseData["labelname"]; ok && val != nil {
+		data.Labelname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["labeltype"]; ok && val != nil {
+		data.Labeltype = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
+		data.Targetlbvserver = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// csvserver_transformpolicy_bindingSetAttrFromGetForDatasource faithfully copies
+// the GET response into the model and sets the composite ID. The datasource has
+// no prior plan/state to preserve and no Create to set the ID, so unlike the
+// resource setter it populates every field and the ID (Pattern 7 split).
+func csvserver_transformpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CsvserverTransformpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverTransformpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In csvserver_transformpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -159,7 +259,7 @@ func csvserver_transformpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Targetlbvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
+	// Set ID for the datasource (no Create runs for a datasource).
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

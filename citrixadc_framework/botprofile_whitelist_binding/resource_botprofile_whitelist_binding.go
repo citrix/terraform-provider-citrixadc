@@ -3,8 +3,11 @@ package botprofile_whitelist_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,26 @@ func (r *BotprofileWhitelistBindingResource) Create(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Creating botprofile_whitelist_binding resource")
-
-	// botprofile_whitelist_binding := botprofile_whitelist_bindingGetThePayloadFromtheConfig(ctx, &data)
+	botprofile_whitelist_binding := botprofile_whitelist_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botprofile_whitelist_binding.Type(), &botprofile_whitelist_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botprofile_whitelist_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("botprofile_whitelist_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Botprofile_whitelist_binding.Type(), &botprofile_whitelist_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botprofile_whitelist_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created botprofile_whitelist_binding resource")
+
+	// Set ID for the resource before reading state.
+	// Use the SDK v2 legacy attribute order "name,bot_whitelist_value"
+	// (see resource_id_mapping.json) so the new key:value ID and any imported
+	// legacy positional ID decode identically via utils.ParseIdString.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_whitelist_value:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotWhitelistValue.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readBotprofileWhitelistBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +104,10 @@ func (r *BotprofileWhitelistBindingResource) Read(ctx context.Context, req resou
 }
 
 func (r *BotprofileWhitelistBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BotprofileWhitelistBindingResourceModel
+	var data, state BotprofileWhitelistBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +115,29 @@ func (r *BotprofileWhitelistBindingResource) Update(ctx context.Context, req res
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating botprofile_whitelist_binding resource")
 
-	// Create API request body from the model
-	// botprofile_whitelist_binding := botprofile_whitelist_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botprofile_whitelist_binding.Type(), &botprofile_whitelist_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botprofile_whitelist_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		botprofile_whitelist_binding := botprofile_whitelist_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Botprofile_whitelist_binding.Type(), &botprofile_whitelist_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botprofile_whitelist_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated botprofile_whitelist_binding resource")
+		tflog.Trace(ctx, "Updated botprofile_whitelist_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for botprofile_whitelist_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readBotprofileWhitelistBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +157,104 @@ func (r *BotprofileWhitelistBindingResource) Delete(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Deleting botprofile_whitelist_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Parse name + bot_whitelist_value from the ID (handles new key:value and
+	// legacy positional "name,bot_whitelist_value" formats).
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "bot_whitelist_value"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For botprofile_whitelist_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted botprofile_whitelist_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	botWhitelistValue, ok := idMap["bot_whitelist_value"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Attribute 'bot_whitelist_value' not found in ID")
+		return
+	}
+
+	// NITRO requires BOTH bot_whitelist and bot_whitelist_value as delete args
+	// (errorcode 1093 "Argument pre-requisite missing [value, whiteList]"
+	// otherwise). bot_whitelist comes from prior state (it is not in the ID),
+	// mirroring the SDK v2 behavior. URL-encode values for slashy/special
+	// whitelist entries.
+	args := make([]string, 0, 2)
+	if !data.BotWhitelist.IsNull() && !data.BotWhitelist.IsUnknown() {
+		args = append(args, fmt.Sprintf("bot_whitelist:%t", data.BotWhitelist.ValueBool()))
+	}
+	args = append(args, fmt.Sprintf("bot_whitelist_value:%s", url.QueryEscape(botWhitelistValue)))
+
+	err = r.client.DeleteResourceWithArgs(service.Botprofile_whitelist_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botprofile_whitelist_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted botprofile_whitelist_binding binding")
 }
 
 // Helper function to read botprofile_whitelist_binding data from API
 func (r *BotprofileWhitelistBindingResource) readBotprofileWhitelistBindingFromApi(ctx context.Context, data *BotprofileWhitelistBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Botprofile_whitelist_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "bot_whitelist_value"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Botprofile_whitelist_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read botprofile_whitelist_binding, got error: %s", err))
 		return
 	}
 
-	botprofile_whitelist_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "botprofile_whitelist_binding returned empty array.")
+		return
+	}
 
+	// The binding under a profile is uniquely identified by bot_whitelist_value
+	// (matching the SDK v2 read, which keyed on bot_whitelist_value only).
+	botWhitelistValue, ok := idMap["bot_whitelist_value"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'bot_whitelist_value' not found in ID string")
+		return
+	}
+
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		if val, ok := v["bot_whitelist_value"].(string); ok && val == botWhitelistValue {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("botprofile_whitelist_binding not found with the provided ID attributes"))
+		return
+	}
+
+	botprofile_whitelist_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

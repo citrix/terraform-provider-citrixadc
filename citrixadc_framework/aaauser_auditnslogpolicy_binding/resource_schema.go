@@ -9,7 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,51 +37,64 @@ func (r *AaauserAuditnslogpolicyBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the aaauser_auditnslogpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n*  If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a number that is larger than the largest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"policy": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The policy Name.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer specifying the priority of the policy.  A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies max priority is 64000.",
 			},
 			"type": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("REQUEST"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Bindpoint to which the policy is bound.",
 			},
 			"username": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "User account to which to bind the policy.",
 			},
 		},
 	}
 }
 
-func aaauser_auditnslogpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AaauserAuditnslogpolicyBindingResourceModel) aaa.Aaauserauditnslogpolicybinding {
-	tflog.Debug(ctx, "In aaauser_auditnslogpolicy_bindingGetThePayloadFromtheConfig Function")
+func aaauser_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AaauserAuditnslogpolicyBindingResourceModel) aaa.Aaauserauditnslogpolicybinding {
+	tflog.Debug(ctx, "In aaauser_auditnslogpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaauser_auditnslogpolicy_binding := aaa.Aaauserauditnslogpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		aaauser_auditnslogpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Policy.IsNull() {
+	if !data.Policy.IsNull() && !data.Policy.IsUnknown() {
 		aaauser_auditnslogpolicy_binding.Policy = data.Policy.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		aaauser_auditnslogpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		aaauser_auditnslogpolicy_binding.Type = data.Type.ValueString()
 	}
-	if !data.Username.IsNull() {
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
 		aaauser_auditnslogpolicy_binding.Username = data.Username.ValueString()
 	}
 
@@ -107,10 +122,11 @@ func aaauser_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *A
 	} else {
 		data.Priority = types.Int64Null()
 	}
+	// NITRO does not echo back "type" (bindpoint) in the binding GET response,
+	// so preserve the existing plan/state/config value instead of nulling it.
+	// Nulling would cause "inconsistent result after apply" when the user sets type.
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
-		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))

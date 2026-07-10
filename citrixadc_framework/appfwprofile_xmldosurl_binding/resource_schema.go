@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,6 +26,7 @@ type AppfwprofileXmldosurlBindingResourceModel struct {
 	Isautodeployed                  types.String `tfsdk:"isautodeployed"`
 	Name                            types.String `tfsdk:"name"`
 	Resourceid                      types.String `tfsdk:"resourceid"`
+	Ruletype                        types.String `tfsdk:"ruletype"`
 	State                           types.String `tfsdk:"state"`
 	Xmlblockdtd                     types.String `tfsdk:"xmlblockdtd"`
 	Xmlblockexternalentities        types.String `tfsdk:"xmlblockexternalentities"`
@@ -82,410 +84,720 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 			"xmlblockdtd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML DTD is ON or OFF. Protects against recursive Document Type Declaration (DTD) entity expansion attacks. Also, SOAP messages cannot have DTDs in messages.",
 			},
 			"xmlblockexternalentities": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Block External Entities Check is ON or OFF. Protects against XML External Entity (XXE) attacks that force applications to parse untrusted external entities (sources) in XML documents.",
 			},
 			"xmlblockpi": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Block PI is ON or OFF. Protects resources from denial of service attacks as SOAP messages cannot have processing instructions (PI) in messages.",
 			},
 			"xmldosurl": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "XML DoS URL regular expression length.",
 			},
 			"xmlmaxattributenamelength": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the longest name of any XML attribute. Protects against overflow attacks.",
 			},
 			"xmlmaxattributenamelengthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max attribute name length check is ON or OFF.",
 			},
 			"xmlmaxattributes": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify maximum number of attributes per XML element. Protects against overflow attacks.",
 			},
 			"xmlmaxattributescheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max attributes check is ON or OFF.",
 			},
 			"xmlmaxattributevaluelength": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the longest value of any XML attribute. Protects against overflow attacks.",
 			},
 			"xmlmaxattributevaluelengthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max atribute value length is ON or OFF.",
 			},
 			"xmlmaxchardatalength": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the maximum size of CDATA. Protects against overflow attacks and large quantities of unparsed data within XML messages.",
 			},
 			"xmlmaxchardatalengthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max CDATA length check is ON or OFF.",
 			},
 			"xmlmaxelementchildren": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the maximum number of children allowed per XML element. Protects against overflow attacks.",
 			},
 			"xmlmaxelementchildrencheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max element children check is ON or OFF.",
 			},
 			"xmlmaxelementdepth": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Maximum nesting (depth) of XML elements. This check protects against documents that have excessive hierarchy depths.",
 			},
 			"xmlmaxelementdepthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max element depth check is ON or OFF.",
 			},
 			"xmlmaxelementnamelength": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the longest name of any element (including the expanded namespace) to protect against overflow attacks.",
 			},
 			"xmlmaxelementnamelengthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max element name length check is ON or OFF.",
 			},
 			"xmlmaxelements": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the maximum number of XML elements allowed. Protects against overflow attacks.",
 			},
 			"xmlmaxelementscheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max elements check is ON or OFF.",
 			},
 			"xmlmaxentityexpansiondepth": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify maximum entity expansion depth. Protects aganist Entity Expansion Attack.",
 			},
 			"xmlmaxentityexpansiondepthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max Entity Expansions Depth Check is ON or OFF.",
 			},
 			"xmlmaxentityexpansions": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify maximum allowed number of entity expansions. Protects aganist Entity Expansion Attack.",
 			},
 			"xmlmaxentityexpansionscheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max Entity Expansions Check is ON or OFF.",
 			},
 			"xmlmaxfilesize": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the maximum size of XML messages. Protects against overflow attacks.",
 			},
 			"xmlmaxfilesizecheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max file size check is ON or OFF.",
 			},
 			"xmlmaxnamespaces": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify maximum number of active namespaces. Protects against overflow attacks.",
 			},
 			"xmlmaxnamespacescheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max namespaces check is ON or OFF.",
 			},
 			"xmlmaxnamespaceurilength": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the longest URI of any XML namespace. Protects against overflow attacks.",
 			},
 			"xmlmaxnamespaceurilengthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max namespace URI length check is ON or OFF.",
 			},
 			"xmlmaxnodes": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the maximum number of XML nodes. Protects against overflow attacks.",
 			},
 			"xmlmaxnodescheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max nodes check is ON or OFF.",
 			},
 			"xmlmaxsoaparrayrank": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "XML Max Individual SOAP Array Rank. This is the dimension of the SOAP array.",
 			},
 			"xmlmaxsoaparraysize": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "XML Max Total SOAP Array Size. Protects against SOAP Array Abuse attack.",
 			},
 			"xmlminfilesize": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Enforces minimum message size.",
 			},
 			"xmlminfilesizecheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Min file size check is ON or OFF.",
 			},
 			"xmlsoaparraycheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML SOAP Array check is ON or OFF.",
 			},
 		},
 	}
 }
 
-func appfwprofile_xmldosurl_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileXmldosurlBindingResourceModel) appfw.Appfwprofilexmldosurlbinding {
-	tflog.Debug(ctx, "In appfwprofile_xmldosurl_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_xmldosurl_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileXmldosurlBindingResourceModel) appfw.Appfwprofilexmldosurlbinding {
+	tflog.Debug(ctx, "In appfwprofile_xmldosurl_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_xmldosurl_binding := appfw.Appfwprofilexmldosurlbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_xmldosurl_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_xmldosurl_binding.State = data.State.ValueString()
 	}
-	if !data.Xmlblockdtd.IsNull() {
+	if !data.Xmlblockdtd.IsNull() && !data.Xmlblockdtd.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlblockdtd = data.Xmlblockdtd.ValueString()
 	}
-	if !data.Xmlblockexternalentities.IsNull() {
+	if !data.Xmlblockexternalentities.IsNull() && !data.Xmlblockexternalentities.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlblockexternalentities = data.Xmlblockexternalentities.ValueString()
 	}
-	if !data.Xmlblockpi.IsNull() {
+	if !data.Xmlblockpi.IsNull() && !data.Xmlblockpi.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlblockpi = data.Xmlblockpi.ValueString()
 	}
-	if !data.Xmldosurl.IsNull() {
+	if !data.Xmldosurl.IsNull() && !data.Xmldosurl.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmldosurl = data.Xmldosurl.ValueString()
 	}
-	if !data.Xmlmaxattributenamelength.IsNull() {
+	if !data.Xmlmaxattributenamelength.IsNull() && !data.Xmlmaxattributenamelength.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxattributenamelength = utils.IntPtr(int(data.Xmlmaxattributenamelength.ValueInt64()))
 	}
-	if !data.Xmlmaxattributenamelengthcheck.IsNull() {
+	if !data.Xmlmaxattributenamelengthcheck.IsNull() && !data.Xmlmaxattributenamelengthcheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxattributenamelengthcheck = data.Xmlmaxattributenamelengthcheck.ValueString()
 	}
-	if !data.Xmlmaxattributes.IsNull() {
+	if !data.Xmlmaxattributes.IsNull() && !data.Xmlmaxattributes.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxattributes = utils.IntPtr(int(data.Xmlmaxattributes.ValueInt64()))
 	}
-	if !data.Xmlmaxattributescheck.IsNull() {
+	if !data.Xmlmaxattributescheck.IsNull() && !data.Xmlmaxattributescheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxattributescheck = data.Xmlmaxattributescheck.ValueString()
 	}
-	if !data.Xmlmaxattributevaluelength.IsNull() {
+	if !data.Xmlmaxattributevaluelength.IsNull() && !data.Xmlmaxattributevaluelength.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxattributevaluelength = utils.IntPtr(int(data.Xmlmaxattributevaluelength.ValueInt64()))
 	}
-	if !data.Xmlmaxattributevaluelengthcheck.IsNull() {
+	if !data.Xmlmaxattributevaluelengthcheck.IsNull() && !data.Xmlmaxattributevaluelengthcheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxattributevaluelengthcheck = data.Xmlmaxattributevaluelengthcheck.ValueString()
 	}
-	if !data.Xmlmaxchardatalength.IsNull() {
+	if !data.Xmlmaxchardatalength.IsNull() && !data.Xmlmaxchardatalength.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxchardatalength = utils.IntPtr(int(data.Xmlmaxchardatalength.ValueInt64()))
 	}
-	if !data.Xmlmaxchardatalengthcheck.IsNull() {
+	if !data.Xmlmaxchardatalengthcheck.IsNull() && !data.Xmlmaxchardatalengthcheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxchardatalengthcheck = data.Xmlmaxchardatalengthcheck.ValueString()
 	}
-	if !data.Xmlmaxelementchildren.IsNull() {
+	if !data.Xmlmaxelementchildren.IsNull() && !data.Xmlmaxelementchildren.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxelementchildren = utils.IntPtr(int(data.Xmlmaxelementchildren.ValueInt64()))
 	}
-	if !data.Xmlmaxelementchildrencheck.IsNull() {
+	if !data.Xmlmaxelementchildrencheck.IsNull() && !data.Xmlmaxelementchildrencheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxelementchildrencheck = data.Xmlmaxelementchildrencheck.ValueString()
 	}
-	if !data.Xmlmaxelementdepth.IsNull() {
+	if !data.Xmlmaxelementdepth.IsNull() && !data.Xmlmaxelementdepth.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxelementdepth = utils.IntPtr(int(data.Xmlmaxelementdepth.ValueInt64()))
 	}
-	if !data.Xmlmaxelementdepthcheck.IsNull() {
+	if !data.Xmlmaxelementdepthcheck.IsNull() && !data.Xmlmaxelementdepthcheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxelementdepthcheck = data.Xmlmaxelementdepthcheck.ValueString()
 	}
-	if !data.Xmlmaxelementnamelength.IsNull() {
+	if !data.Xmlmaxelementnamelength.IsNull() && !data.Xmlmaxelementnamelength.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxelementnamelength = utils.IntPtr(int(data.Xmlmaxelementnamelength.ValueInt64()))
 	}
-	if !data.Xmlmaxelementnamelengthcheck.IsNull() {
+	if !data.Xmlmaxelementnamelengthcheck.IsNull() && !data.Xmlmaxelementnamelengthcheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxelementnamelengthcheck = data.Xmlmaxelementnamelengthcheck.ValueString()
 	}
-	if !data.Xmlmaxelements.IsNull() {
+	if !data.Xmlmaxelements.IsNull() && !data.Xmlmaxelements.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxelements = utils.IntPtr(int(data.Xmlmaxelements.ValueInt64()))
 	}
-	if !data.Xmlmaxelementscheck.IsNull() {
+	if !data.Xmlmaxelementscheck.IsNull() && !data.Xmlmaxelementscheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxelementscheck = data.Xmlmaxelementscheck.ValueString()
 	}
-	if !data.Xmlmaxentityexpansiondepth.IsNull() {
+	if !data.Xmlmaxentityexpansiondepth.IsNull() && !data.Xmlmaxentityexpansiondepth.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxentityexpansiondepth = utils.IntPtr(int(data.Xmlmaxentityexpansiondepth.ValueInt64()))
 	}
-	if !data.Xmlmaxentityexpansiondepthcheck.IsNull() {
+	if !data.Xmlmaxentityexpansiondepthcheck.IsNull() && !data.Xmlmaxentityexpansiondepthcheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxentityexpansiondepthcheck = data.Xmlmaxentityexpansiondepthcheck.ValueString()
 	}
-	if !data.Xmlmaxentityexpansions.IsNull() {
+	if !data.Xmlmaxentityexpansions.IsNull() && !data.Xmlmaxentityexpansions.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxentityexpansions = utils.IntPtr(int(data.Xmlmaxentityexpansions.ValueInt64()))
 	}
-	if !data.Xmlmaxentityexpansionscheck.IsNull() {
+	if !data.Xmlmaxentityexpansionscheck.IsNull() && !data.Xmlmaxentityexpansionscheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxentityexpansionscheck = data.Xmlmaxentityexpansionscheck.ValueString()
 	}
-	if !data.Xmlmaxfilesize.IsNull() {
+	if !data.Xmlmaxfilesize.IsNull() && !data.Xmlmaxfilesize.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxfilesize = utils.IntPtr(int(data.Xmlmaxfilesize.ValueInt64()))
 	}
-	if !data.Xmlmaxfilesizecheck.IsNull() {
+	if !data.Xmlmaxfilesizecheck.IsNull() && !data.Xmlmaxfilesizecheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxfilesizecheck = data.Xmlmaxfilesizecheck.ValueString()
 	}
-	if !data.Xmlmaxnamespaces.IsNull() {
+	if !data.Xmlmaxnamespaces.IsNull() && !data.Xmlmaxnamespaces.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxnamespaces = utils.IntPtr(int(data.Xmlmaxnamespaces.ValueInt64()))
 	}
-	if !data.Xmlmaxnamespacescheck.IsNull() {
+	if !data.Xmlmaxnamespacescheck.IsNull() && !data.Xmlmaxnamespacescheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxnamespacescheck = data.Xmlmaxnamespacescheck.ValueString()
 	}
-	if !data.Xmlmaxnamespaceurilength.IsNull() {
+	if !data.Xmlmaxnamespaceurilength.IsNull() && !data.Xmlmaxnamespaceurilength.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxnamespaceurilength = utils.IntPtr(int(data.Xmlmaxnamespaceurilength.ValueInt64()))
 	}
-	if !data.Xmlmaxnamespaceurilengthcheck.IsNull() {
+	if !data.Xmlmaxnamespaceurilengthcheck.IsNull() && !data.Xmlmaxnamespaceurilengthcheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxnamespaceurilengthcheck = data.Xmlmaxnamespaceurilengthcheck.ValueString()
 	}
-	if !data.Xmlmaxnodes.IsNull() {
+	if !data.Xmlmaxnodes.IsNull() && !data.Xmlmaxnodes.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxnodes = utils.IntPtr(int(data.Xmlmaxnodes.ValueInt64()))
 	}
-	if !data.Xmlmaxnodescheck.IsNull() {
+	if !data.Xmlmaxnodescheck.IsNull() && !data.Xmlmaxnodescheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxnodescheck = data.Xmlmaxnodescheck.ValueString()
 	}
-	if !data.Xmlmaxsoaparrayrank.IsNull() {
+	if !data.Xmlmaxsoaparrayrank.IsNull() && !data.Xmlmaxsoaparrayrank.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxsoaparrayrank = utils.IntPtr(int(data.Xmlmaxsoaparrayrank.ValueInt64()))
 	}
-	if !data.Xmlmaxsoaparraysize.IsNull() {
+	if !data.Xmlmaxsoaparraysize.IsNull() && !data.Xmlmaxsoaparraysize.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlmaxsoaparraysize = utils.IntPtr(int(data.Xmlmaxsoaparraysize.ValueInt64()))
 	}
-	if !data.Xmlminfilesize.IsNull() {
+	if !data.Xmlminfilesize.IsNull() && !data.Xmlminfilesize.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlminfilesize = utils.IntPtr(int(data.Xmlminfilesize.ValueInt64()))
 	}
-	if !data.Xmlminfilesizecheck.IsNull() {
+	if !data.Xmlminfilesizecheck.IsNull() && !data.Xmlminfilesizecheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlminfilesizecheck = data.Xmlminfilesizecheck.ValueString()
 	}
-	if !data.Xmlsoaparraycheck.IsNull() {
+	if !data.Xmlsoaparraycheck.IsNull() && !data.Xmlsoaparraycheck.IsUnknown() {
 		appfwprofile_xmldosurl_binding.Xmlsoaparraycheck = data.Xmlsoaparraycheck.ValueString()
 	}
 
 	return appfwprofile_xmldosurl_binding
 }
 
+// appfwprofile_xmldosurl_bindingSetAttrFromGet is the RESOURCE-side setter.
+// All attributes are RequiresReplace (no update endpoint) and the NITRO server may
+// echo server-defaulted/normalized values for fields like alertonly, isautodeployed,
+// resourceid, ruletype. To avoid "inconsistent result after apply" we adopt the GET
+// value only when the model field is currently null/unknown (e.g. import); otherwise
+// we preserve the configured plan/state value. The ID is set once in Create and is
+// preserved here.
 func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileXmldosurlBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileXmldosurlBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_xmldosurl_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["alertonly"]; ok && val != nil {
-		data.Alertonly = types.StringValue(val.(string))
-	} else {
-		data.Alertonly = types.StringNull()
+	adopt := func(cur types.String, key string) types.String {
+		if !cur.IsNull() && !cur.IsUnknown() {
+			return cur
+		}
+		if val, ok := getResponseData[key]; ok && val != nil {
+			return types.StringValue(val.(string))
+		}
+		return types.StringNull()
 	}
-	if val, ok := getResponseData["comment"]; ok && val != nil {
-		data.Comment = types.StringValue(val.(string))
+
+	data.Alertonly = adopt(data.Alertonly, "alertonly")
+	data.Comment = adopt(data.Comment, "comment")
+	data.Isautodeployed = adopt(data.Isautodeployed, "isautodeployed")
+	data.Name = adopt(data.Name, "name")
+	data.Resourceid = adopt(data.Resourceid, "resourceid")
+	data.Ruletype = adopt(data.Ruletype, "ruletype")
+	data.State = adopt(data.State, "state")
+	data.Xmlblockdtd = adopt(data.Xmlblockdtd, "xmlblockdtd")
+	data.Xmlblockexternalentities = adopt(data.Xmlblockexternalentities, "xmlblockexternalentities")
+	data.Xmlblockpi = adopt(data.Xmlblockpi, "xmlblockpi")
+	data.Xmldosurl = adopt(data.Xmldosurl, "xmldosurl")
+	if !data.Xmlmaxattributenamelength.IsNull() && !data.Xmlmaxattributenamelength.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxattributenamelength"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxattributenamelength = types.Int64Value(intVal)
+		}
 	} else {
-		data.Comment = types.StringNull()
+		data.Xmlmaxattributenamelength = types.Int64Null()
 	}
-	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
-		data.Isautodeployed = types.StringValue(val.(string))
+	data.Xmlmaxattributenamelengthcheck = adopt(data.Xmlmaxattributenamelengthcheck, "xmlmaxattributenamelengthcheck")
+	if !data.Xmlmaxattributes.IsNull() && !data.Xmlmaxattributes.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxattributes"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxattributes = types.Int64Value(intVal)
+		}
 	} else {
-		data.Isautodeployed = types.StringNull()
+		data.Xmlmaxattributes = types.Int64Null()
 	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
+	data.Xmlmaxattributescheck = adopt(data.Xmlmaxattributescheck, "xmlmaxattributescheck")
+	if !data.Xmlmaxattributevaluelength.IsNull() && !data.Xmlmaxattributevaluelength.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxattributevaluelength"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxattributevaluelength = types.Int64Value(intVal)
+		}
 	} else {
-		data.Name = types.StringNull()
+		data.Xmlmaxattributevaluelength = types.Int64Null()
 	}
-	if val, ok := getResponseData["resourceid"]; ok && val != nil {
-		data.Resourceid = types.StringValue(val.(string))
+	data.Xmlmaxattributevaluelengthcheck = adopt(data.Xmlmaxattributevaluelengthcheck, "xmlmaxattributevaluelengthcheck")
+	if !data.Xmlmaxchardatalength.IsNull() && !data.Xmlmaxchardatalength.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxchardatalength"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxchardatalength = types.Int64Value(intVal)
+		}
 	} else {
-		data.Resourceid = types.StringNull()
+		data.Xmlmaxchardatalength = types.Int64Null()
 	}
-	if val, ok := getResponseData["state"]; ok && val != nil {
-		data.State = types.StringValue(val.(string))
+	data.Xmlmaxchardatalengthcheck = adopt(data.Xmlmaxchardatalengthcheck, "xmlmaxchardatalengthcheck")
+	if !data.Xmlmaxelementchildren.IsNull() && !data.Xmlmaxelementchildren.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxelementchildren"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxelementchildren = types.Int64Value(intVal)
+		}
 	} else {
-		data.State = types.StringNull()
+		data.Xmlmaxelementchildren = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlblockdtd"]; ok && val != nil {
-		data.Xmlblockdtd = types.StringValue(val.(string))
+	data.Xmlmaxelementchildrencheck = adopt(data.Xmlmaxelementchildrencheck, "xmlmaxelementchildrencheck")
+	if !data.Xmlmaxelementdepth.IsNull() && !data.Xmlmaxelementdepth.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxelementdepth"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxelementdepth = types.Int64Value(intVal)
+		}
 	} else {
-		data.Xmlblockdtd = types.StringNull()
+		data.Xmlmaxelementdepth = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlblockexternalentities"]; ok && val != nil {
-		data.Xmlblockexternalentities = types.StringValue(val.(string))
+	data.Xmlmaxelementdepthcheck = adopt(data.Xmlmaxelementdepthcheck, "xmlmaxelementdepthcheck")
+	if !data.Xmlmaxelementnamelength.IsNull() && !data.Xmlmaxelementnamelength.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxelementnamelength"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxelementnamelength = types.Int64Value(intVal)
+		}
 	} else {
-		data.Xmlblockexternalentities = types.StringNull()
+		data.Xmlmaxelementnamelength = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlblockpi"]; ok && val != nil {
-		data.Xmlblockpi = types.StringValue(val.(string))
+	data.Xmlmaxelementnamelengthcheck = adopt(data.Xmlmaxelementnamelengthcheck, "xmlmaxelementnamelengthcheck")
+	if !data.Xmlmaxelements.IsNull() && !data.Xmlmaxelements.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxelements"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxelements = types.Int64Value(intVal)
+		}
 	} else {
-		data.Xmlblockpi = types.StringNull()
+		data.Xmlmaxelements = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmldosurl"]; ok && val != nil {
-		data.Xmldosurl = types.StringValue(val.(string))
+	data.Xmlmaxelementscheck = adopt(data.Xmlmaxelementscheck, "xmlmaxelementscheck")
+	if !data.Xmlmaxentityexpansiondepth.IsNull() && !data.Xmlmaxentityexpansiondepth.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxentityexpansiondepth"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxentityexpansiondepth = types.Int64Value(intVal)
+		}
 	} else {
-		data.Xmldosurl = types.StringNull()
+		data.Xmlmaxentityexpansiondepth = types.Int64Null()
 	}
+	data.Xmlmaxentityexpansiondepthcheck = adopt(data.Xmlmaxentityexpansiondepthcheck, "xmlmaxentityexpansiondepthcheck")
+	if !data.Xmlmaxentityexpansions.IsNull() && !data.Xmlmaxentityexpansions.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxentityexpansions"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxentityexpansions = types.Int64Value(intVal)
+		}
+	} else {
+		data.Xmlmaxentityexpansions = types.Int64Null()
+	}
+	data.Xmlmaxentityexpansionscheck = adopt(data.Xmlmaxentityexpansionscheck, "xmlmaxentityexpansionscheck")
+	if !data.Xmlmaxfilesize.IsNull() && !data.Xmlmaxfilesize.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxfilesize"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxfilesize = types.Int64Value(intVal)
+		}
+	} else {
+		data.Xmlmaxfilesize = types.Int64Null()
+	}
+	data.Xmlmaxfilesizecheck = adopt(data.Xmlmaxfilesizecheck, "xmlmaxfilesizecheck")
+	if !data.Xmlmaxnamespaces.IsNull() && !data.Xmlmaxnamespaces.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxnamespaces"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxnamespaces = types.Int64Value(intVal)
+		}
+	} else {
+		data.Xmlmaxnamespaces = types.Int64Null()
+	}
+	data.Xmlmaxnamespacescheck = adopt(data.Xmlmaxnamespacescheck, "xmlmaxnamespacescheck")
+	if !data.Xmlmaxnamespaceurilength.IsNull() && !data.Xmlmaxnamespaceurilength.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxnamespaceurilength"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxnamespaceurilength = types.Int64Value(intVal)
+		}
+	} else {
+		data.Xmlmaxnamespaceurilength = types.Int64Null()
+	}
+	data.Xmlmaxnamespaceurilengthcheck = adopt(data.Xmlmaxnamespaceurilengthcheck, "xmlmaxnamespaceurilengthcheck")
+	if !data.Xmlmaxnodes.IsNull() && !data.Xmlmaxnodes.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxnodes"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxnodes = types.Int64Value(intVal)
+		}
+	} else {
+		data.Xmlmaxnodes = types.Int64Null()
+	}
+	data.Xmlmaxnodescheck = adopt(data.Xmlmaxnodescheck, "xmlmaxnodescheck")
+	if !data.Xmlmaxsoaparrayrank.IsNull() && !data.Xmlmaxsoaparrayrank.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxsoaparrayrank"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxsoaparrayrank = types.Int64Value(intVal)
+		}
+	} else {
+		data.Xmlmaxsoaparrayrank = types.Int64Null()
+	}
+	if !data.Xmlmaxsoaparraysize.IsNull() && !data.Xmlmaxsoaparraysize.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxsoaparraysize"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxsoaparraysize = types.Int64Value(intVal)
+		}
+	} else {
+		data.Xmlmaxsoaparraysize = types.Int64Null()
+	}
+	if !data.Xmlminfilesize.IsNull() && !data.Xmlminfilesize.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlminfilesize"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlminfilesize = types.Int64Value(intVal)
+		}
+	} else {
+		data.Xmlminfilesize = types.Int64Null()
+	}
+	data.Xmlminfilesizecheck = adopt(data.Xmlminfilesizecheck, "xmlminfilesizecheck")
+	data.Xmlsoaparraycheck = adopt(data.Xmlsoaparraycheck, "xmlsoaparraycheck")
+
+	return data
+}
+
+// appfwprofile_xmldosurl_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter: it faithfully copies every field from the GET response (the datasource has
+// no prior plan/state to preserve) and sets the composite ID.
+func appfwprofile_xmldosurl_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwprofileXmldosurlBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileXmldosurlBindingResourceModel {
+	tflog.Debug(ctx, "In appfwprofile_xmldosurl_bindingSetAttrFromGetForDatasource Function")
+
+	copyField := func(key string) types.String {
+		if val, ok := getResponseData[key]; ok && val != nil {
+			return types.StringValue(val.(string))
+		}
+		return types.StringNull()
+	}
+
+	data.Alertonly = copyField("alertonly")
+	data.Comment = copyField("comment")
+	data.Isautodeployed = copyField("isautodeployed")
+	data.Name = copyField("name")
+	data.Resourceid = copyField("resourceid")
+	data.Ruletype = copyField("ruletype")
+	data.State = copyField("state")
+	data.Xmlblockdtd = copyField("xmlblockdtd")
+	data.Xmlblockexternalentities = copyField("xmlblockexternalentities")
+	data.Xmlblockpi = copyField("xmlblockpi")
+	data.Xmldosurl = copyField("xmldosurl")
 	if val, ok := getResponseData["xmlmaxattributenamelength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxattributenamelength = types.Int64Value(intVal)
@@ -493,11 +805,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxattributenamelength = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxattributenamelengthcheck"]; ok && val != nil {
-		data.Xmlmaxattributenamelengthcheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxattributenamelengthcheck = types.StringNull()
-	}
+	data.Xmlmaxattributenamelengthcheck = copyField("xmlmaxattributenamelengthcheck")
 	if val, ok := getResponseData["xmlmaxattributes"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxattributes = types.Int64Value(intVal)
@@ -505,11 +813,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxattributes = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxattributescheck"]; ok && val != nil {
-		data.Xmlmaxattributescheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxattributescheck = types.StringNull()
-	}
+	data.Xmlmaxattributescheck = copyField("xmlmaxattributescheck")
 	if val, ok := getResponseData["xmlmaxattributevaluelength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxattributevaluelength = types.Int64Value(intVal)
@@ -517,11 +821,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxattributevaluelength = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxattributevaluelengthcheck"]; ok && val != nil {
-		data.Xmlmaxattributevaluelengthcheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxattributevaluelengthcheck = types.StringNull()
-	}
+	data.Xmlmaxattributevaluelengthcheck = copyField("xmlmaxattributevaluelengthcheck")
 	if val, ok := getResponseData["xmlmaxchardatalength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxchardatalength = types.Int64Value(intVal)
@@ -529,11 +829,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxchardatalength = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxchardatalengthcheck"]; ok && val != nil {
-		data.Xmlmaxchardatalengthcheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxchardatalengthcheck = types.StringNull()
-	}
+	data.Xmlmaxchardatalengthcheck = copyField("xmlmaxchardatalengthcheck")
 	if val, ok := getResponseData["xmlmaxelementchildren"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxelementchildren = types.Int64Value(intVal)
@@ -541,11 +837,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxelementchildren = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxelementchildrencheck"]; ok && val != nil {
-		data.Xmlmaxelementchildrencheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxelementchildrencheck = types.StringNull()
-	}
+	data.Xmlmaxelementchildrencheck = copyField("xmlmaxelementchildrencheck")
 	if val, ok := getResponseData["xmlmaxelementdepth"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxelementdepth = types.Int64Value(intVal)
@@ -553,11 +845,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxelementdepth = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxelementdepthcheck"]; ok && val != nil {
-		data.Xmlmaxelementdepthcheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxelementdepthcheck = types.StringNull()
-	}
+	data.Xmlmaxelementdepthcheck = copyField("xmlmaxelementdepthcheck")
 	if val, ok := getResponseData["xmlmaxelementnamelength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxelementnamelength = types.Int64Value(intVal)
@@ -565,11 +853,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxelementnamelength = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxelementnamelengthcheck"]; ok && val != nil {
-		data.Xmlmaxelementnamelengthcheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxelementnamelengthcheck = types.StringNull()
-	}
+	data.Xmlmaxelementnamelengthcheck = copyField("xmlmaxelementnamelengthcheck")
 	if val, ok := getResponseData["xmlmaxelements"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxelements = types.Int64Value(intVal)
@@ -577,11 +861,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxelements = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxelementscheck"]; ok && val != nil {
-		data.Xmlmaxelementscheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxelementscheck = types.StringNull()
-	}
+	data.Xmlmaxelementscheck = copyField("xmlmaxelementscheck")
 	if val, ok := getResponseData["xmlmaxentityexpansiondepth"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxentityexpansiondepth = types.Int64Value(intVal)
@@ -589,11 +869,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxentityexpansiondepth = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxentityexpansiondepthcheck"]; ok && val != nil {
-		data.Xmlmaxentityexpansiondepthcheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxentityexpansiondepthcheck = types.StringNull()
-	}
+	data.Xmlmaxentityexpansiondepthcheck = copyField("xmlmaxentityexpansiondepthcheck")
 	if val, ok := getResponseData["xmlmaxentityexpansions"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxentityexpansions = types.Int64Value(intVal)
@@ -601,11 +877,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxentityexpansions = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxentityexpansionscheck"]; ok && val != nil {
-		data.Xmlmaxentityexpansionscheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxentityexpansionscheck = types.StringNull()
-	}
+	data.Xmlmaxentityexpansionscheck = copyField("xmlmaxentityexpansionscheck")
 	if val, ok := getResponseData["xmlmaxfilesize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxfilesize = types.Int64Value(intVal)
@@ -613,11 +885,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxfilesize = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxfilesizecheck"]; ok && val != nil {
-		data.Xmlmaxfilesizecheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxfilesizecheck = types.StringNull()
-	}
+	data.Xmlmaxfilesizecheck = copyField("xmlmaxfilesizecheck")
 	if val, ok := getResponseData["xmlmaxnamespaces"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxnamespaces = types.Int64Value(intVal)
@@ -625,11 +893,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxnamespaces = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxnamespacescheck"]; ok && val != nil {
-		data.Xmlmaxnamespacescheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxnamespacescheck = types.StringNull()
-	}
+	data.Xmlmaxnamespacescheck = copyField("xmlmaxnamespacescheck")
 	if val, ok := getResponseData["xmlmaxnamespaceurilength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxnamespaceurilength = types.Int64Value(intVal)
@@ -637,11 +901,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxnamespaceurilength = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxnamespaceurilengthcheck"]; ok && val != nil {
-		data.Xmlmaxnamespaceurilengthcheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxnamespaceurilengthcheck = types.StringNull()
-	}
+	data.Xmlmaxnamespaceurilengthcheck = copyField("xmlmaxnamespaceurilengthcheck")
 	if val, ok := getResponseData["xmlmaxnodes"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxnodes = types.Int64Value(intVal)
@@ -649,11 +909,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlmaxnodes = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxnodescheck"]; ok && val != nil {
-		data.Xmlmaxnodescheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxnodescheck = types.StringNull()
-	}
+	data.Xmlmaxnodescheck = copyField("xmlmaxnodescheck")
 	if val, ok := getResponseData["xmlmaxsoaparrayrank"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxsoaparrayrank = types.Int64Value(intVal)
@@ -675,18 +931,10 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 	} else {
 		data.Xmlminfilesize = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlminfilesizecheck"]; ok && val != nil {
-		data.Xmlminfilesizecheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlminfilesizecheck = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlsoaparraycheck"]; ok && val != nil {
-		data.Xmlsoaparraycheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlsoaparraycheck = types.StringNull()
-	}
+	data.Xmlminfilesizecheck = copyField("xmlminfilesizecheck")
+	data.Xmlsoaparraycheck = copyField("xmlsoaparraycheck")
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

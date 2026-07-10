@@ -32,6 +32,7 @@ output "policyname" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the auditsyslogglobal_auditsyslogpolicy_binding. It is a system-generated identifier.
-* `feature` - The feature to be checked while applying this config.
+* `id` - The id of the auditsyslogglobal_auditsyslogpolicy_binding. It is the concatenation of  `globalbindtype` and `policyname` attributes separated by a comma.
 * `priority` - Specifies the priority of the policy.
+* `feature` - The feature to be checked while applying this config.
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]

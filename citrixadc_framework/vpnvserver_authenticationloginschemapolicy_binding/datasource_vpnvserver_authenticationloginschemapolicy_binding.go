@@ -66,7 +66,8 @@ func (d *VpnvserverAuthenticationloginschemapolicyBindingDataSource) Read(ctx co
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Match on policy only; bindpoint is not echoed by NITRO GET.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -93,7 +94,7 @@ func (d *VpnvserverAuthenticationloginschemapolicyBindingDataSource) Read(ctx co
 		return
 	}
 
-	vpnvserver_authenticationloginschemapolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_authenticationloginschemapolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

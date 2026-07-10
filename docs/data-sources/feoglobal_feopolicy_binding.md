@@ -36,7 +36,7 @@ output "type" {
 
 In addition to the arguments, the following attributes are available:
 
-* `globalbindtype` - Global bind type.
-* `priority` - Specifies the priority of the policy.
+* `globalbindtype` - The global bind type for the policy binding.
+* `priority` - The priority assigned to the policy binding.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `id` - The id of the feoglobal_feopolicy_binding. It is a system-generated identifier.
+* `id` - The id of the feoglobal_feopolicy_binding. It has the same value as the `policyname` attribute.

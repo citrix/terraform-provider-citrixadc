@@ -25,13 +25,13 @@ output "rewriteip" {
 
 ## Argument Reference
 
-* `name` - (Required) Name of the netprofile to which to bind port ranges.
+* `name` - (Required) Name of the netprofile to which the NAT rule is bound.
 * `natrule` - (Required) IPv4 network address on whose traffic you want the Citrix ADC to do rewrite ip prefix.
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the netprofile_natrule_binding. It is a system-generated identifier.
-* `rewriteip` - IP address used to rewrite the network address prefix.
+* `id` - The id of the netprofile_natrule_binding. It is the concatenation of `name` and `natrule` attributes separated by comma.
 * `netmask` - Subnet mask associated with the network address.
+* `rewriteip` - IP address used to rewrite the network address prefix.

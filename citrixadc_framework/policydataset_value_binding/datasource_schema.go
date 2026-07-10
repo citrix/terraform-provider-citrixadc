@@ -16,7 +16,8 @@ func PolicydatasetValueBindingDataSourceSchema() schema.Schema {
 				Description: "Any comments to preserve information about this dataset or a data bound to this dataset.",
 			},
 			"endrange": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The dataset entry is a range from <value> through <end_range>, inclusive. endRange cannot be used if value is an ipv4 or ipv6 subnet and endRange cannot itself be a subnet.",
 			},
 			"index": schema.Int64Attribute{

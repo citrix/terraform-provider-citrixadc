@@ -3,8 +3,11 @@ package appfwprofile_xmldosurl_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,23 @@ func (r *AppfwprofileXmldosurlBindingResource) Create(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Creating appfwprofile_xmldosurl_binding resource")
-
-	// appfwprofile_xmldosurl_binding := appfwprofile_xmldosurl_bindingGetThePayloadFromtheConfig(ctx, &data)
+	appfwprofile_xmldosurl_binding := appfwprofile_xmldosurl_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwprofile_xmldosurl_binding.Type(), &appfwprofile_xmldosurl_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwprofile_xmldosurl_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwprofile_xmldosurl_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Appfwprofile_xmldosurl_binding.Type(), &appfwprofile_xmldosurl_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwprofile_xmldosurl_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwprofile_xmldosurl_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("xmldosurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Xmldosurl.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readAppfwprofileXmldosurlBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +101,10 @@ func (r *AppfwprofileXmldosurlBindingResource) Read(ctx context.Context, req res
 }
 
 func (r *AppfwprofileXmldosurlBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwprofileXmldosurlBindingResourceModel
+	var data, state AppfwprofileXmldosurlBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +112,29 @@ func (r *AppfwprofileXmldosurlBindingResource) Update(ctx context.Context, req r
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwprofile_xmldosurl_binding resource")
 
-	// Create API request body from the model
-	// appfwprofile_xmldosurl_binding := appfwprofile_xmldosurl_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwprofile_xmldosurl_binding.Type(), &appfwprofile_xmldosurl_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwprofile_xmldosurl_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		appfwprofile_xmldosurl_binding := appfwprofile_xmldosurl_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Appfwprofile_xmldosurl_binding.Type(), &appfwprofile_xmldosurl_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwprofile_xmldosurl_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated appfwprofile_xmldosurl_binding resource")
+		tflog.Trace(ctx, "Updated appfwprofile_xmldosurl_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appfwprofile_xmldosurl_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAppfwprofileXmldosurlBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +154,107 @@ func (r *AppfwprofileXmldosurlBindingResource) Delete(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Deleting appfwprofile_xmldosurl_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "xmldosurl"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For appfwprofile_xmldosurl_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwprofile_xmldosurl_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// DeleteResourceWithArgsMap does NOT URL-encode the arg values, so values that
+	// contain special characters (regex DoS URLs) must be encoded here, mirroring the
+	// SDK v2 resource (which url.QueryEscape'd them).
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["xmldosurl"]; ok && val != "" {
+		argsMap["xmldosurl"] = url.QueryEscape(val)
+	}
+	// ruletype is not part of the composite ID; pull it from state and include it in
+	// the delete args (mirrors SDK v2 + the NITRO delete args list).
+	if !data.Ruletype.IsNull() && data.Ruletype.ValueString() != "" {
+		argsMap["ruletype"] = url.QueryEscape(data.Ruletype.ValueString())
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Appfwprofile_xmldosurl_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwprofile_xmldosurl_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted appfwprofile_xmldosurl_binding binding")
 }
 
 // Helper function to read appfwprofile_xmldosurl_binding data from API
 func (r *AppfwprofileXmldosurlBindingResource) readAppfwprofileXmldosurlBindingFromApi(ctx context.Context, data *AppfwprofileXmldosurlBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwprofile_xmldosurl_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "xmldosurl"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Appfwprofile_xmldosurl_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwprofile_xmldosurl_binding, got error: %s", err))
 		return
 	}
 
-	appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "appfwprofile_xmldosurl_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check xmldosurl
+		if idVal, ok := idMap["xmldosurl"]; ok {
+			if val, ok := v["xmldosurl"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["xmldosurl"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("appfwprofile_xmldosurl_binding not found with the provided ID attributes"))
+		return
+	}
+
+	appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

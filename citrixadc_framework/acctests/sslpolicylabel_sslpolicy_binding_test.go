@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -122,10 +123,12 @@ func testAccCheckSslpolicylabel_sslpolicy_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		labelname := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"labelname", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		labelname := idMap["labelname"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslpolicylabel_sslpolicy_binding",
@@ -276,7 +279,7 @@ func TestAccSslpolicylabel_sslpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "priority", "56"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "gotopriorityexpression", "END"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "labeltype", "policylabel"),
-					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "invoke_labelname", "ssl_pol_label"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "invokelabelname", "ssl_pol_label"),
 				),
 			},
 		},

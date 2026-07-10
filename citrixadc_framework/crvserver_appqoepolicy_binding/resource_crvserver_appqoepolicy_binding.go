@@ -3,8 +3,11 @@ package crvserver_appqoepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,23 @@ func (r *CrvserverAppqoepolicyBindingResource) Create(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Creating crvserver_appqoepolicy_binding resource")
-
-	// crvserver_appqoepolicy_binding := crvserver_appqoepolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	crvserver_appqoepolicy_binding := crvserver_appqoepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Crvserver_appqoepolicy_binding.Type(), &crvserver_appqoepolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_appqoepolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("crvserver_appqoepolicy_binding-config")
+	// Binding resource - NITRO 'add' is POST (matches SDK v2 AddResource)
+	_, err := r.client.AddResource(service.Crvserver_appqoepolicy_binding.Type(), "", &crvserver_appqoepolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crvserver_appqoepolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created crvserver_appqoepolicy_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readCrvserverAppqoepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +101,10 @@ func (r *CrvserverAppqoepolicyBindingResource) Read(ctx context.Context, req res
 }
 
 func (r *CrvserverAppqoepolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CrvserverAppqoepolicyBindingResourceModel
+	var data, state CrvserverAppqoepolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +112,12 @@ func (r *CrvserverAppqoepolicyBindingResource) Update(ctx context.Context, req r
 		return
 	}
 
-	tflog.Debug(ctx, "Updating crvserver_appqoepolicy_binding resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// crvserver_appqoepolicy_binding := crvserver_appqoepolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Crvserver_appqoepolicy_binding.Type(), &crvserver_appqoepolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update crvserver_appqoepolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated crvserver_appqoepolicy_binding resource")
+	// Update is a no-op for crvserver_appqoepolicy_binding; all attributes are
+	// RequiresReplace and NITRO exposes no update/set endpoint for this binding.
+	tflog.Debug(ctx, "Update is a no-op for crvserver_appqoepolicy_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readCrvserverAppqoepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +137,106 @@ func (r *CrvserverAppqoepolicyBindingResource) Delete(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Deleting crvserver_appqoepolicy_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policyname"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For crvserver_appqoepolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted crvserver_appqoepolicy_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// Build delete args, URL-encoding values that may contain slashy/special chars.
+	args := make([]string, 0)
+	if val, ok := idMap["policyname"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Priority.IsNull() {
+		args = append(args, fmt.Sprintf("priority:%d", data.Priority.ValueInt64()))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Crvserver_appqoepolicy_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crvserver_appqoepolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted crvserver_appqoepolicy_binding binding")
 }
 
 // Helper function to read crvserver_appqoepolicy_binding data from API
 func (r *CrvserverAppqoepolicyBindingResource) readCrvserverAppqoepolicyBindingFromApi(ctx context.Context, data *CrvserverAppqoepolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Crvserver_appqoepolicy_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policyname"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Crvserver_appqoepolicy_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read crvserver_appqoepolicy_binding, got error: %s", err))
 		return
 	}
 
-	crvserver_appqoepolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "crvserver_appqoepolicy_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check policyname
+		if idVal, ok := idMap["policyname"]; ok {
+			if val, ok := v["policyname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["policyname"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("crvserver_appqoepolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	crvserver_appqoepolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

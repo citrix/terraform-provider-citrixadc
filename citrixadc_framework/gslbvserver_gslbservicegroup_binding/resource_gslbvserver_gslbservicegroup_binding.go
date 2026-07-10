@@ -3,8 +3,10 @@ package gslbvserver_gslbservicegroup_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *GslbvserverGslbservicegroupBindingResource) Create(ctx context.Context,
 	}
 
 	tflog.Debug(ctx, "Creating gslbvserver_gslbservicegroup_binding resource")
-
-	// gslbvserver_gslbservicegroup_binding := gslbvserver_gslbservicegroup_bindingGetThePayloadFromtheConfig(ctx, &data)
+	gslbvserver_gslbservicegroup_binding := gslbvserver_gslbservicegroup_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Gslbvserver_gslbservicegroup_binding.Type(), &gslbvserver_gslbservicegroup_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create gslbvserver_gslbservicegroup_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("gslbvserver_gslbservicegroup_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Gslbvserver_gslbservicegroup_binding.Type(), &gslbvserver_gslbservicegroup_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create gslbvserver_gslbservicegroup_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created gslbvserver_gslbservicegroup_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readGslbvserverGslbservicegroupBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *GslbvserverGslbservicegroupBindingResource) Read(ctx context.Context, r
 }
 
 func (r *GslbvserverGslbservicegroupBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data GslbvserverGslbservicegroupBindingResourceModel
+	var data, state GslbvserverGslbservicegroupBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,14 @@ func (r *GslbvserverGslbservicegroupBindingResource) Update(ctx context.Context,
 		return
 	}
 
-	tflog.Debug(ctx, "Updating gslbvserver_gslbservicegroup_binding resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// gslbvserver_gslbservicegroup_binding := gslbvserver_gslbservicegroup_bindingGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Gslbvserver_gslbservicegroup_binding.Type(), &gslbvserver_gslbservicegroup_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update gslbvserver_gslbservicegroup_binding, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated gslbvserver_gslbservicegroup_binding resource")
+	// No-op for gslbvserver_gslbservicegroup_binding: the NITRO binding has no update
+	// endpoint and every schema attribute (name, servicegroupname, order) is
+	// RequiresReplace (matching SDK v2 ForceNew), so any change recreates the resource
+	// and Update is never reached for a real attribute change.
+	tflog.Debug(ctx, "Update is a no-op for gslbvserver_gslbservicegroup_binding; all attributes are RequiresReplace")
 
 	// Read the updated state back
 	r.readGslbvserverGslbservicegroupBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +138,99 @@ func (r *GslbvserverGslbservicegroupBindingResource) Delete(ctx context.Context,
 	}
 
 	tflog.Debug(ctx, "Deleting gslbvserver_gslbservicegroup_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "servicegroupname"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For gslbvserver_gslbservicegroup_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted gslbvserver_gslbservicegroup_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["servicegroupname"]; ok && val != "" {
+		argsMap["servicegroupname"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Gslbvserver_gslbservicegroup_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete gslbvserver_gslbservicegroup_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted gslbvserver_gslbservicegroup_binding binding")
 }
 
 // Helper function to read gslbvserver_gslbservicegroup_binding data from API
 func (r *GslbvserverGslbservicegroupBindingResource) readGslbvserverGslbservicegroupBindingFromApi(ctx context.Context, data *GslbvserverGslbservicegroupBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Gslbvserver_gslbservicegroup_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "servicegroupname"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Gslbvserver_gslbservicegroup_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read gslbvserver_gslbservicegroup_binding, got error: %s", err))
 		return
 	}
 
-	gslbvserver_gslbservicegroup_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "gslbvserver_gslbservicegroup_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check servicegroupname
+		if idVal, ok := idMap["servicegroupname"]; ok {
+			if val, ok := v["servicegroupname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["servicegroupname"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("gslbvserver_gslbservicegroup_binding not found with the provided ID attributes"))
+		return
+	}
+
+	gslbvserver_gslbservicegroup_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

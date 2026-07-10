@@ -35,4 +35,4 @@ In addition to the arguments, the following attributes are available:
 * `cipheraliasname` - The name of the cipher group/alias/individual cipher bindings.
 * `cipherpriority` - Cipher priority.
 * `description` - The cipher suite description.
-* `id` - The id of the sslprofile_sslcipher_binding. It is a system-generated identifier.
+* `id` - The id of the sslprofile_sslcipher_binding. It is the concatenation of the `name` and `ciphername` attributes separated by a comma.

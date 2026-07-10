@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -34,51 +37,65 @@ func (r *GslbvserverGslbserviceBindingResource) Schema(ctx context.Context, req 
 				Description: "The ID of the gslbvserver_gslbservice_binding resource.",
 			},
 			"domainname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Domain name for which to change the time to live (TTL) and/or backup service IP address.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server on which to perform the binding operation.",
 			},
 			"order": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Order number to be assigned to the service when it is bound to the lb vserver.",
 			},
 			"servicename": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the GSLB service for which to change the weight.",
 			},
 			"weight": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Weight for the service.",
 			},
 		},
 	}
 }
 
-func gslbvserver_gslbservice_bindingGetThePayloadFromtheConfig(ctx context.Context, data *GslbvserverGslbserviceBindingResourceModel) gslb.Gslbvservergslbservicebinding {
-	tflog.Debug(ctx, "In gslbvserver_gslbservice_bindingGetThePayloadFromtheConfig Function")
+func gslbvserver_gslbservice_bindingGetThePayloadFromthePlan(ctx context.Context, data *GslbvserverGslbserviceBindingResourceModel) gslb.Gslbvservergslbservicebinding {
+	tflog.Debug(ctx, "In gslbvserver_gslbservice_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	gslbvserver_gslbservice_binding := gslb.Gslbvservergslbservicebinding{}
-	if !data.Domainname.IsNull() {
+	if !data.Domainname.IsNull() && !data.Domainname.IsUnknown() {
 		gslbvserver_gslbservice_binding.Domainname = data.Domainname.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		gslbvserver_gslbservice_binding.Name = data.Name.ValueString()
 	}
-	if !data.Order.IsNull() {
+	if !data.Order.IsNull() && !data.Order.IsUnknown() {
 		gslbvserver_gslbservice_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
 	}
-	if !data.Servicename.IsNull() {
+	if !data.Servicename.IsNull() && !data.Servicename.IsUnknown() {
 		gslbvserver_gslbservice_binding.Servicename = data.Servicename.ValueString()
 	}
-	if !data.Weight.IsNull() {
+	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		gslbvserver_gslbservice_binding.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
 

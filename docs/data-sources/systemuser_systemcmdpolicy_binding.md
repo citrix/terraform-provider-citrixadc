@@ -36,5 +36,5 @@ output "policyname" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the systemuser_systemcmdpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the systemuser_systemcmdpolicy_binding. It is the concatenation of the `username` and `policyname` attributes separated by a comma.
 * `priority` - The priority of the policy.

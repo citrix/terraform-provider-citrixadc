@@ -3,8 +3,10 @@ package aaagroup_tmsessionpolicy_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *AaagroupTmsessionpolicyBindingResource) Create(ctx context.Context, req
 	}
 
 	tflog.Debug(ctx, "Creating aaagroup_tmsessionpolicy_binding resource")
-
-	// aaagroup_tmsessionpolicy_binding := aaagroup_tmsessionpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	aaagroup_tmsessionpolicy_binding := aaagroup_tmsessionpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaagroup_tmsessionpolicy_binding.Type(), &aaagroup_tmsessionpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaagroup_tmsessionpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("aaagroup_tmsessionpolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Aaagroup_tmsessionpolicy_binding.Type(), &aaagroup_tmsessionpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaagroup_tmsessionpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created aaagroup_tmsessionpolicy_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readAaagroupTmsessionpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *AaagroupTmsessionpolicyBindingResource) Read(ctx context.Context, req r
 }
 
 func (r *AaagroupTmsessionpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AaagroupTmsessionpolicyBindingResourceModel
+	var data, state AaagroupTmsessionpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *AaagroupTmsessionpolicyBindingResource) Update(ctx context.Context, req
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating aaagroup_tmsessionpolicy_binding resource")
 
-	// Create API request body from the model
-	// aaagroup_tmsessionpolicy_binding := aaagroup_tmsessionpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaagroup_tmsessionpolicy_binding.Type(), &aaagroup_tmsessionpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaagroup_tmsessionpolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		aaagroup_tmsessionpolicy_binding := aaagroup_tmsessionpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Aaagroup_tmsessionpolicy_binding.Type(), &aaagroup_tmsessionpolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaagroup_tmsessionpolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated aaagroup_tmsessionpolicy_binding resource")
+		tflog.Trace(ctx, "Updated aaagroup_tmsessionpolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for aaagroup_tmsessionpolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAaagroupTmsessionpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,99 @@ func (r *AaagroupTmsessionpolicyBindingResource) Delete(ctx context.Context, req
 	}
 
 	tflog.Debug(ctx, "Deleting aaagroup_tmsessionpolicy_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"groupname", "policy"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For aaagroup_tmsessionpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted aaagroup_tmsessionpolicy_binding resource from state")
+	groupname_value, ok := idMap["groupname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'groupname' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["policy"]; ok && val != "" {
+		argsMap["policy"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Aaagroup_tmsessionpolicy_binding.Type(), groupname_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete aaagroup_tmsessionpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted aaagroup_tmsessionpolicy_binding binding")
 }
 
 // Helper function to read aaagroup_tmsessionpolicy_binding data from API
 func (r *AaagroupTmsessionpolicyBindingResource) readAaagroupTmsessionpolicyBindingFromApi(ctx context.Context, data *AaagroupTmsessionpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Aaagroup_tmsessionpolicy_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"groupname", "policy"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	groupname_Name, ok := idMap["groupname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'groupname' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Aaagroup_tmsessionpolicy_binding.Type(),
+		ResourceName:             groupname_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaagroup_tmsessionpolicy_binding, got error: %s", err))
 		return
 	}
 
-	aaagroup_tmsessionpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "aaagroup_tmsessionpolicy_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check policy
+		if idVal, ok := idMap["policy"]; ok {
+			if val, ok := v["policy"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["policy"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("aaagroup_tmsessionpolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	aaagroup_tmsessionpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

@@ -3,8 +3,10 @@ package responderglobal_responderpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,22 @@ func (r *ResponderglobalResponderpolicyBindingResource) Create(ctx context.Conte
 	}
 
 	tflog.Debug(ctx, "Creating responderglobal_responderpolicy_binding resource")
-
-	// responderglobal_responderpolicy_binding := responderglobal_responderpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	responderglobal_responderpolicy_binding := responderglobal_responderpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Responderglobal_responderpolicy_binding.Type(), &responderglobal_responderpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create responderglobal_responderpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("responderglobal_responderpolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Responderglobal_responderpolicy_binding.Type(), &responderglobal_responderpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create responderglobal_responderpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created responderglobal_responderpolicy_binding resource")
+
+	// Set ID for the resource before reading state.
+	// Backward-compatible with SDK v2 (d.SetId(policyname)) and resource_id_mapping.json
+	// which maps this binding to a single "policyname" key.
+	data.Id = types.StringValue(data.Policyname.ValueString())
 
 	// Read the updated state back
 	r.readResponderglobalResponderpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +99,10 @@ func (r *ResponderglobalResponderpolicyBindingResource) Read(ctx context.Context
 }
 
 func (r *ResponderglobalResponderpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ResponderglobalResponderpolicyBindingResourceModel
+	var data, state ResponderglobalResponderpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +110,29 @@ func (r *ResponderglobalResponderpolicyBindingResource) Update(ctx context.Conte
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating responderglobal_responderpolicy_binding resource")
 
-	// Create API request body from the model
-	// responderglobal_responderpolicy_binding := responderglobal_responderpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Responderglobal_responderpolicy_binding.Type(), &responderglobal_responderpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update responderglobal_responderpolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		responderglobal_responderpolicy_binding := responderglobal_responderpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Responderglobal_responderpolicy_binding.Type(), &responderglobal_responderpolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update responderglobal_responderpolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated responderglobal_responderpolicy_binding resource")
+		tflog.Trace(ctx, "Updated responderglobal_responderpolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for responderglobal_responderpolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readResponderglobalResponderpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +152,102 @@ func (r *ResponderglobalResponderpolicyBindingResource) Delete(ctx context.Conte
 	}
 
 	tflog.Debug(ctx, "Deleting responderglobal_responderpolicy_binding resource")
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name.
+	// The ID is the plain policyname (SDK v2 contract). priority and type are read from
+	// state (they are part of the binding's unique identity). Values are URL-encoded so
+	// slashy/special characters survive (matches SDK v2 deleteResponderglobal_..._bindingFunc).
+	policyname := data.Id.ValueString()
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(policyname)))
+	if !data.Type.IsNull() && data.Type.ValueString() != "" {
+		args = append(args, fmt.Sprintf("type:%s", url.QueryEscape(data.Type.ValueString())))
+	}
+	if !data.Priority.IsNull() {
+		args = append(args, fmt.Sprintf("priority:%v", data.Priority.ValueInt64()))
+	}
 
-	// For responderglobal_responderpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted responderglobal_responderpolicy_binding resource from state")
+	err := r.client.DeleteResourceWithArgs(service.Responderglobal_responderpolicy_binding.Type(), "", args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete responderglobal_responderpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted responderglobal_responderpolicy_binding binding")
 }
 
 // Helper function to read responderglobal_responderpolicy_binding data from API
 func (r *ResponderglobalResponderpolicyBindingResource) readResponderglobalResponderpolicyBindingFromApi(ctx context.Context, data *ResponderglobalResponderpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Responderglobal_responderpolicy_binding.Type(), "")
+
+	// ID is the plain policyname (SDK v2 contract). priority and type are read from
+	// state since they form the binding's unique identity (Pattern 10 - no ParseIdString).
+	policyname := data.Id.ValueString()
+
+	var dataArr []map[string]interface{}
+	var argsMap map[string]string = make(map[string]string)
+	// Match SDK v2 read: the GET requires a bind-point type filter; default to
+	// REQ_DEFAULT when the user did not set type explicitly.
+	if !data.Type.IsNull() && !data.Type.IsUnknown() && data.Type.ValueString() != "" {
+		argsMap["type"] = data.Type.ValueString()
+	} else {
+		argsMap["type"] = "REQ_DEFAULT"
+	}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Responderglobal_responderpolicy_binding.Type(),
+		ArgsMap:                  argsMap,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read responderglobal_responderpolicy_binding, got error: %s", err))
 		return
 	}
 
-	responderglobal_responderpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "responderglobal_responderpolicy_binding returned empty array")
+		return
+	}
 
+	// Iterate through results to find the one with the matching policyname (and priority
+	// if it is known in state).
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check policyname
+		if val, ok := v["policyname"].(string); ok {
+			if val != policyname {
+				match = false
+				continue
+			}
+		} else {
+			match = false
+			continue
+		}
+
+		// Check priority when known in state
+		if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+			if val, ok := v["priority"]; ok {
+				vi, _ := utils.ConvertToInt64(val)
+				if vi != data.Priority.ValueInt64() {
+					match = false
+					continue
+				}
+			}
+		}
+
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("responderglobal_responderpolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	responderglobal_responderpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

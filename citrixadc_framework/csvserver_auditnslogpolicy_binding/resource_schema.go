@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -18,6 +22,7 @@ import (
 // CsvserverAuditnslogpolicyBindingResourceModel describes the resource data model.
 type CsvserverAuditnslogpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Invoke                 types.Bool   `tfsdk:"invoke"`
 	Labelname              types.String `tfsdk:"labelname"`
@@ -36,86 +41,158 @@ func (r *CsvserverAuditnslogpolicyBindingResource) Schema(ctx context.Context, r
 				Computed:    true,
 				Description: "The ID of the csvserver_auditnslogpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point at which policy needs to be bound. Note: Content switching policies are evaluated only at request time.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n* If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a priority number that is numerically higher than the highest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Invoke a policy label if this policy's rule evaluates to TRUE.",
 			},
 			"labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the label to be invoked.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of label to be invoked.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the content switching virtual server to which the content switching policy applies.",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Policies bound to this vserver.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Priority for the policy.",
 			},
 			"targetlbvserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE.\nExample: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1\nNote: Use this parameter only in case of Content Switching policy bind operations to a CS vserver",
 			},
 		},
 	}
 }
 
-func csvserver_auditnslogpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *CsvserverAuditnslogpolicyBindingResourceModel) cs.Csvserverauditnslogpolicybinding {
-	tflog.Debug(ctx, "In csvserver_auditnslogpolicy_bindingGetThePayloadFromtheConfig Function")
+func csvserver_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *CsvserverAuditnslogpolicyBindingResourceModel) cs.Csvserverauditnslogpolicybinding {
+	tflog.Debug(ctx, "In csvserver_auditnslogpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	csvserver_auditnslogpolicy_binding := cs.Csvserverauditnslogpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		csvserver_auditnslogpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		csvserver_auditnslogpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Invoke.IsNull() {
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		csvserver_auditnslogpolicy_binding.Invoke = data.Invoke.ValueBool()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		csvserver_auditnslogpolicy_binding.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Labeltype.IsNull() {
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		csvserver_auditnslogpolicy_binding.Labeltype = data.Labeltype.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		csvserver_auditnslogpolicy_binding.Name = data.Name.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		csvserver_auditnslogpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		csvserver_auditnslogpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Targetlbvserver.IsNull() {
+	if !data.Targetlbvserver.IsNull() && !data.Targetlbvserver.IsUnknown() {
 		csvserver_auditnslogpolicy_binding.Targetlbvserver = data.Targetlbvserver.ValueString()
 	}
 
 	return csvserver_auditnslogpolicy_binding
 }
 
+// csvserver_auditnslogpolicy_bindingSetAttrFromGet is the resource-side setter.
+// It preserves user-configured plan/state values for inputs that the NITRO GET
+// response may not echo back (or returns in a server-normalized form), so the
+// resource does not error with "inconsistent result after apply" and does not
+// show perpetual diffs. Only the live key/identity fields are adopted from GET.
 func csvserver_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *CsvserverAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAuditnslogpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In csvserver_auditnslogpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// bindpoint, gotopriorityexpression, invoke, labelname, labeltype and
+	// targetlbvserver are write-only/server-overridden inputs that NITRO does not
+	// reliably echo back (or echoes back in a server-normalized form) for this
+	// binding. They are Optional-only (not Computed), so the resource MUST preserve
+	// the user-configured plan/state value rather than clobbering it from the GET
+	// response — otherwise Terraform errors with "inconsistent result after apply".
+	// Only the echoed identity/priority fields below are adopted from GET.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	// Set ID for the resource
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+// csvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource is the datasource-side
+// setter. Unlike the resource setter it faithfully copies every field from the GET
+// response (the datasource has no prior plan/state to preserve) and sets data.Id.
+func csvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *CsvserverAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *CsvserverAuditnslogpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In csvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -159,8 +236,7 @@ func csvserver_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data 
 		data.Targetlbvserver = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))

@@ -35,6 +35,6 @@ output "metricweight" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the lbmonitor_metric_binding. It is a system-generated identifier.
+* `id` - The id of the lbmonitor_metric_binding. It is the concatenation of the `monitorname` and `metric` attributes separated by a comma.
 * `metricthreshold` - Threshold to be used for that metric.
 * `metricweight` - The weight for the specified service metric with respect to others.

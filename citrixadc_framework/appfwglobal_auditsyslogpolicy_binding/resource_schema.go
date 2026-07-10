@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -37,76 +41,103 @@ func (r *AppfwglobalAuditsyslogpolicyBindingResource) Schema(ctx context.Context
 				Description: "The ID of the appfwglobal_auditsyslogpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n* If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a number that is larger than the largest numbered priority, policy evaluation ends.\n\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is smaller than the current policy's priority number.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"invoke": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.",
 			},
 			"labelname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the policy label to invoke if the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is set to Policy Label.",
 			},
 			"labeltype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of policy label to invoke if the current policy evaluates to TRUE and the invoke parameter is set. Available settings function as follows:\n* reqvserver. Invoke the unnamed policy label associated with the specified request virtual server.\n* policylabel. Invoke the specified user-defined policy label.",
 			},
 			"policyname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The priority of the policy.",
 			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enable or disable the binding to activate or deactivate the policy. This is applicable to classic policies only.",
 			},
 			"type": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Bind point to which to policy is bound.",
 			},
 		},
 	}
 }
 
-func appfwglobal_auditsyslogpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwglobalAuditsyslogpolicyBindingResourceModel) appfw.Appfwglobalauditsyslogpolicybinding {
-	tflog.Debug(ctx, "In appfwglobal_auditsyslogpolicy_bindingGetThePayloadFromtheConfig Function")
+func appfwglobal_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwglobalAuditsyslogpolicyBindingResourceModel) appfw.Appfwglobalauditsyslogpolicybinding {
+	tflog.Debug(ctx, "In appfwglobal_auditsyslogpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwglobal_auditsyslogpolicy_binding := appfw.Appfwglobalauditsyslogpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		appfwglobal_auditsyslogpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Invoke.IsNull() {
+	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		appfwglobal_auditsyslogpolicy_binding.Invoke = data.Invoke.ValueBool()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		appfwglobal_auditsyslogpolicy_binding.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Labeltype.IsNull() {
+	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		appfwglobal_auditsyslogpolicy_binding.Labeltype = data.Labeltype.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		appfwglobal_auditsyslogpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		appfwglobal_auditsyslogpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwglobal_auditsyslogpolicy_binding.State = data.State.ValueString()
 	}
-	if !data.Type.IsNull() {
-		appfwglobal_auditsyslogpolicy_binding.Type = data.Type.ValueString()
-	}
+	// NOTE: 'type' is intentionally NOT sent in the add/bind payload.
+	// For an auditsyslog policy the only valid bindpoint is the implicit "none";
+	// NITRO rejects any explicit 'type' value with errorcode 1097
+	// ("Invalid argument value"). It is retained in the schema/ID for backward
+	// compatibility (the SDK v2 resource exposed it) but is never written to,
+	// filtered on, or deleted with on the appliance side.
 
 	return appfwglobal_auditsyslogpolicy_binding
 }
@@ -147,16 +178,16 @@ func appfwglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, da
 	} else {
 		data.Priority = types.Int64Null()
 	}
-	if val, ok := getResponseData["state"]; ok && val != nil {
-		data.State = types.StringValue(val.(string))
-	} else {
-		data.State = types.StringNull()
-	}
-	if val, ok := getResponseData["type"]; ok && val != nil {
-		data.Type = types.StringValue(val.(string))
-	} else {
-		data.Type = types.StringNull()
-	}
+	// NOTE: 'state' is intentionally NOT read back from the GET response.
+	// The ADC normalizes/overrides the bound 'state' value (e.g. a configured
+	// DISABLED is reported back as ENABLED by appfwglobal_auditsyslogpolicy_binding
+	// GET), matching the SDK v2 resource which deliberately did not d.Set("state", ...).
+	// Preserve the configured/prior-state value to avoid "inconsistent result after apply".
+	//
+	// NOTE: 'type' is intentionally NOT read back either. The GET response for this
+	// binding never echoes 'type' (it surfaces 'bindpolicytype' instead), so copying
+	// from the response would null out the user's configured value and cause an
+	// "inconsistent result after apply". Preserve the configured/prior-state value.
 
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
@@ -164,6 +195,22 @@ func appfwglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, da
 	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+// appfwglobal_auditsyslogpolicy_bindingSetAttrFromGetForDatasource faithfully copies all
+// fields from the GET response (including 'state'), since a datasource has no prior
+// plan/state to preserve and should reflect exactly what the ADC reports.
+func appfwglobal_auditsyslogpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwglobalAuditsyslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *AppfwglobalAuditsyslogpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In appfwglobal_auditsyslogpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	appfwglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
 
 	return data
 }

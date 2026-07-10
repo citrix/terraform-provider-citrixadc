@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -34,51 +37,70 @@ func (r *LsnclientNetwork6BindingResource) Schema(ctx context.Context, req resou
 				Description: "The ID of the lsnclient_network6_binding resource.",
 			},
 			"clientname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the LSN client entity. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN client is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn client1\" or 'lsn client1').",
 			},
 			"netmask": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// Not returned by GET for the network6 binding; Optional only (no
+				// Computed) so it never resolves to an unknown value after apply.
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Subnet mask for the IPv4 address specified in the Network parameter.",
 			},
 			"network": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// Not returned by GET for the network6 binding; Optional only (no
+				// Computed) so it never resolves to an unknown value after apply.
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IPv4 address(es) of the LSN subscriber(s) or subscriber network(s) on whose traffic you want the Citrix ADC to perform Large Scale NAT.",
 			},
 			"network6": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IPv6 address(es) of the LSN subscriber(s) or subscriber network(s) on whose traffic you want the Citrix ADC to perform Large Scale NAT.",
 			},
 			"td": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				// Not echoed by the NITRO GET response for this binding, so it
+				// cannot be Computed (would resolve to an unknown value after
+				// apply). Optional only; the configured value is preserved in
+				// SetAttrFromGet.
+				Optional: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "ID of the traffic domain on which this subscriber or the subscriber network (as specified by the network parameter) belongs. \nIf you do not specify an ID, the subscriber or the subscriber network becomes part of the default traffic domain.",
 			},
 		},
 	}
 }
 
-func lsnclient_network6_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LsnclientNetwork6BindingResourceModel) lsn.Lsnclientnetwork6binding {
-	tflog.Debug(ctx, "In lsnclient_network6_bindingGetThePayloadFromtheConfig Function")
+func lsnclient_network6_bindingGetThePayloadFromthePlan(ctx context.Context, data *LsnclientNetwork6BindingResourceModel) lsn.Lsnclientnetwork6binding {
+	tflog.Debug(ctx, "In lsnclient_network6_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lsnclient_network6_binding := lsn.Lsnclientnetwork6binding{}
-	if !data.Clientname.IsNull() {
+	if !data.Clientname.IsNull() && !data.Clientname.IsUnknown() {
 		lsnclient_network6_binding.Clientname = data.Clientname.ValueString()
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		lsnclient_network6_binding.Netmask = data.Netmask.ValueString()
 	}
-	if !data.Network.IsNull() {
+	if !data.Network.IsNull() && !data.Network.IsUnknown() {
 		lsnclient_network6_binding.Network = data.Network.ValueString()
 	}
-	if !data.Network6.IsNull() {
+	if !data.Network6.IsNull() && !data.Network6.IsUnknown() {
 		lsnclient_network6_binding.Network6 = data.Network6.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		lsnclient_network6_binding.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
@@ -109,16 +131,20 @@ func lsnclient_network6_bindingSetAttrFromGet(ctx context.Context, data *Lsnclie
 	} else {
 		data.Network6 = types.StringNull()
 	}
+	// td is not echoed back by the NITRO GET response for this binding. Only
+	// adopt it when present; otherwise PRESERVE the existing plan/state/config
+	// value (Pattern 7 - non-echoed input) so the post-apply state stays
+	// consistent with what the user configured (e.g. td = 0).
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
-		data.Td = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Multiple unique attributes - comma-separated key:UrlEncode(value) pairs.
+	// td is excluded (not echoed by GET) to match the Create ID and the SDK v2
+	// legacy ID order (clientname,network6).
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("network6:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network6.ValueString()))))

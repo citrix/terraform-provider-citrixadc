@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -136,10 +137,12 @@ func testAccCheckCsvserver_appflowpolicy_bindingExist(n string, id *string) reso
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		csvserverName := idSlice[0]
-		policyName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		csvserverName := idMap["name"]
+		policyName := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "csvserver_appflowpolicy_binding",

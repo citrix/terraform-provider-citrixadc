@@ -105,7 +105,7 @@ func (d *LbmonitorSslcertkeyBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	lbmonitor_sslcertkey_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbmonitor_sslcertkey_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

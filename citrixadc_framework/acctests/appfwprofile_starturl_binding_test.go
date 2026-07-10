@@ -23,6 +23,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -116,14 +117,12 @@ func testAccCheckAppfwprofile_starturl_bindingExist(n string, id *string) resour
 		}
 
 		bindingID := rs.Primary.ID
-		idSlice := strings.SplitN(bindingID, ",", 2)
-
-		if len(idSlice) < 2 {
-			return fmt.Errorf("Cannot deduce appfwprofile and starturl from ID string")
+		idMap, _, err := utils.ParseIdString(bindingID, []string{"name", "starturl"}, nil)
+		if err != nil {
+			return fmt.Errorf("Cannot deduce appfwprofile and starturl from ID string: %v", err)
 		}
-
-		profileName := idSlice[0]
-		startURL := idSlice[1]
+		profileName := idMap["name"]
+		startURL := idMap["starturl"]
 
 		findParams := service.FindParams{
 			ResourceType: service.Appfwprofile_starturl_binding.Type(),

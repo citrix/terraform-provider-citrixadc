@@ -42,8 +42,9 @@ func (d *VpnvserverAuthenticationnegotiatepolicyBindingDataSource) Read(ctx cont
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Identity for lookup is name (parent) + policy. bindpoint is an optional extra filter.
 	name_Name := data.Name.ValueString()
+	bindpoint_Name := data.Bindpoint
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -66,21 +67,27 @@ func (d *VpnvserverAuthenticationnegotiatepolicyBindingDataSource) Read(ctx cont
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching policy (and bindpoint if supplied).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
+		// Check policy (required identity disambiguator)
+		if !policy_Name.IsNull() {
+			if val, ok := v["policy"].(string); !ok || val != policy_Name.ValueString() {
 				match = false
 				continue
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
 		}
+
+		// Check bindpoint only when supplied by the caller
+		if !bindpoint_Name.IsNull() {
+			if val, ok := v["bindpoint"].(string); !ok || val != bindpoint_Name.ValueString() {
+				match = false
+				continue
+			}
+		}
+
 		if match {
 			foundIndex = i
 			break
@@ -93,7 +100,7 @@ func (d *VpnvserverAuthenticationnegotiatepolicyBindingDataSource) Read(ctx cont
 		return
 	}
 
-	vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

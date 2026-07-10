@@ -70,7 +70,7 @@ resource "citrixadc_appfwprofile_xmlwsiurl_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_xmlwsiurl_binding. It is the concatenation of `name` and `xmlwsiurl` attributes separated by comma.
+* `id` - The id of the appfwprofile_xmlwsiurl_binding. It is the concatenation of the `name` and `xmlwsiurl` attributes separated by a comma.
 
 
 ## Import

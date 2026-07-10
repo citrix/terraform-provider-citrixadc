@@ -43,7 +43,7 @@ func (d *VxlanSrcipBindingDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Vxlanid.ValueInt64())
+	vxlanid_Name := fmt.Sprintf("%v", data.Vxlanid.ValueInt64())
 	srcip_Name := data.Srcip
 
 	var dataArr []map[string]interface{}
@@ -51,7 +51,7 @@ func (d *VxlanSrcipBindingDataSource) Read(ctx context.Context, req datasource.R
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vxlan_srcip_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vxlanid_Name,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)

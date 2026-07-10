@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +35,45 @@ func (r *VpnvserverIntranetip6BindingResource) Schema(ctx context.Context, req r
 				Description: "The ID of the vpnvserver_intranetip6_binding resource.",
 			},
 			"intranetip6": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The network id for the range of intranet IP6 addresses or individual intranet ip to be bound to the vserver.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server.",
 			},
 			"numaddr": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				// SDK v2 contract: numaddr was Optional + Computed (server fills a value
+				// when omitted). Keep that contract for backward compatibility.
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The number of ipv6 addresses",
 			},
 		},
 	}
 }
 
-func vpnvserver_intranetip6_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnvserverIntranetip6BindingResourceModel) vpn.Vpnvserverintranetip6binding {
-	tflog.Debug(ctx, "In vpnvserver_intranetip6_bindingGetThePayloadFromtheConfig Function")
+func vpnvserver_intranetip6_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverIntranetip6BindingResourceModel) vpn.Vpnvserverintranetip6binding {
+	tflog.Debug(ctx, "In vpnvserver_intranetip6_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnvserver_intranetip6_binding := vpn.Vpnvserverintranetip6binding{}
-	if !data.Intranetip6.IsNull() {
+	if !data.Intranetip6.IsNull() && !data.Intranetip6.IsUnknown() {
 		vpnvserver_intranetip6_binding.Intranetip6 = data.Intranetip6.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnvserver_intranetip6_binding.Name = data.Name.ValueString()
 	}
-	if !data.Numaddr.IsNull() {
+	if !data.Numaddr.IsNull() && !data.Numaddr.IsUnknown() {
 		vpnvserver_intranetip6_binding.Numaddr = utils.IntPtr(int(data.Numaddr.ValueInt64()))
 	}
 
@@ -94,6 +107,7 @@ func vpnvserver_intranetip6_bindingSetAttrFromGet(ctx context.Context, data *Vpn
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("intranetip6:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip6.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("numaddr:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Numaddr.ValueInt64()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

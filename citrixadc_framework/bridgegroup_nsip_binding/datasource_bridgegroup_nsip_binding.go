@@ -3,6 +3,7 @@ package bridgegroup_nsip_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -43,21 +44,20 @@ func (d *BridgegroupNsipBindingDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	bridgegroup_id_Name := data.Bridgegroupid
+	// Array filter with parent ID. The parent (bridge group integer key) is the
+	// NITRO resource name; the bound nsip is identified by ipaddress.
+	bridgegroupId := strconv.FormatInt(data.Bridgegroupid.ValueInt64(), 10)
 	ipaddress_Name := data.Ipaddress
+	netmask_Name := data.Netmask
 	ownergroup_Name := data.Ownergroup
 	td_Name := data.Td
 
-	var dataArr []map[string]interface{}
-	var err error
-
 	findParams := service.FindParams{
 		ResourceType:             service.Bridgegroup_nsip_binding.Type(),
-		ResourceName:             fmt.Sprintf("%d", bridgegroup_id_Name.ValueInt64()),
+		ResourceName:             bridgegroupId,
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read bridgegroup_nsip_binding, got error: %s", err))
 		return
@@ -69,12 +69,12 @@ func (d *BridgegroupNsipBindingDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the supplied filters.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check ipaddress
+		// Check ipaddress (required lookup key)
 		if val, ok := v["ipaddress"].(string); ok {
 			if ipaddress_Name.IsNull() || val != ipaddress_Name.ValueString() {
 				match = false
@@ -85,28 +85,36 @@ func (d *BridgegroupNsipBindingDataSource) Read(ctx context.Context, req datasou
 			continue
 		}
 
-		// Check ownergroup
-		if val, ok := v["ownergroup"].(string); ok {
-			if ownergroup_Name.IsNull() || val != ownergroup_Name.ValueString() {
+		// Check netmask (optional filter)
+		if !netmask_Name.IsNull() {
+			if val, ok := v["netmask"].(string); !ok || val != netmask_Name.ValueString() {
 				match = false
 				continue
 			}
-		} else if !ownergroup_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check td
-		if val, ok := v["td"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if td_Name.IsNull() || val != td_Name.ValueInt64() {
+		// Check ownergroup (optional filter)
+		if !ownergroup_Name.IsNull() {
+			if val, ok := v["ownergroup"].(string); !ok || val != ownergroup_Name.ValueString() {
 				match = false
 				continue
 			}
-		} else if !td_Name.IsNull() {
-			match = false
-			continue
 		}
+
+		// Check td (optional filter)
+		if !td_Name.IsNull() {
+			if val, ok := v["td"]; ok {
+				valInt, _ := utils.ConvertToInt64(val)
+				if valInt != td_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+
 		if match {
 			foundIndex = i
 			break
@@ -119,7 +127,7 @@ func (d *BridgegroupNsipBindingDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	bridgegroup_nsip_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	bridgegroup_nsip_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

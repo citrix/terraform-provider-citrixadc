@@ -32,6 +32,7 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
+* `bindpoint` - Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `groupextraction` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor.
 * `id` - The id of the authenticationvserver_authenticationloginschemapolicy_binding. It is a system-generated identifier.

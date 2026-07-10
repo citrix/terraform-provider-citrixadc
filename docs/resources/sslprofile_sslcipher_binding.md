@@ -23,16 +23,18 @@ resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
 
 ## Argument Reference
 
-* `cipherpriority` - (Optional) cipher priority.
-* `name` - (Optional) Name of the SSL profile.
-* `ciphername` - (Optional) Name of the cipher.
+* `name` - (Required) Name of the SSL profile.
+* `ciphername` - (Required) Name of the cipher.
+* `cipheraliasname` - (Optional) The name of the cipher group/alias/individual cipher bindings.
+* `cipherpriority` - (Optional) Cipher priority.
+* `description` - (Optional) The cipher suite description.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslprofile_sslcipher_binding. It has is the conatenation of the `name` and `ciphername` attributes.
+* `id` - The id of the sslprofile_sslcipher_binding. It is the concatenation of the `name` and `ciphername` attributes separated by a comma.
 
 
 ## Import

@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,33 +36,46 @@ func (r *VxlanvlanmapVxlanBindingResource) Schema(ctx context.Context, req resou
 				Description: "The ID of the vxlanvlanmap_vxlan_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the mapping table.",
 			},
 			"vlan": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				Description: "The vlan id or the range of vlan ids in the on-premise network.",
 			},
 			"vxlan": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The VXLAN assigned to the vlan inside the cloud.",
 			},
 		},
 	}
 }
 
-func vxlanvlanmap_vxlan_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VxlanvlanmapVxlanBindingResourceModel) network.Vxlanvlanmapvxlanbinding {
-	tflog.Debug(ctx, "In vxlanvlanmap_vxlan_bindingGetThePayloadFromtheConfig Function")
+func vxlanvlanmap_vxlan_bindingGetThePayloadFromthePlan(ctx context.Context, data *VxlanvlanmapVxlanBindingResourceModel) network.Vxlanvlanmapvxlanbinding {
+	tflog.Debug(ctx, "In vxlanvlanmap_vxlan_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vxlanvlanmap_vxlan_binding := network.Vxlanvlanmapvxlanbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vxlanvlanmap_vxlan_binding.Name = data.Name.ValueString()
 	}
-	if !data.Vxlan.IsNull() {
+	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
+		var vlanList []string
+		data.Vlan.ElementsAs(ctx, &vlanList, false)
+		vxlanvlanmap_vxlan_binding.Vlan = vlanList
+	}
+	if !data.Vxlan.IsNull() && !data.Vxlan.IsUnknown() {
 		vxlanvlanmap_vxlan_binding.Vxlan = utils.IntPtr(int(data.Vxlan.ValueInt64()))
 	}
 
@@ -73,6 +90,17 @@ func vxlanvlanmap_vxlan_bindingSetAttrFromGet(ctx context.Context, data *Vxlanvl
 		data.Name = types.StringValue(val.(string))
 	} else {
 		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["vlan"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Vlan = listValue
+		} else {
+			data.Vlan = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Vlan = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["vxlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

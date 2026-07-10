@@ -93,7 +93,7 @@ func (d *AaagroupTmsessionpolicyBindingDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	aaagroup_tmsessionpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	aaagroup_tmsessionpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

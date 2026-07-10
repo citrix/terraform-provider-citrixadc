@@ -3,8 +3,11 @@ package appfwprofile_xmlvalidationurl_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,23 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Create(ctx context.Context
 	}
 
 	tflog.Debug(ctx, "Creating appfwprofile_xmlvalidationurl_binding resource")
-
-	// appfwprofile_xmlvalidationurl_binding := appfwprofile_xmlvalidationurl_bindingGetThePayloadFromtheConfig(ctx, &data)
+	appfwprofile_xmlvalidationurl_binding := appfwprofile_xmlvalidationurl_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwprofile_xmlvalidationurl_binding.Type(), &appfwprofile_xmlvalidationurl_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwprofile_xmlvalidationurl_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwprofile_xmlvalidationurl_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Appfwprofile_xmlvalidationurl_binding.Type(), &appfwprofile_xmlvalidationurl_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwprofile_xmlvalidationurl_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwprofile_xmlvalidationurl_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("xmlvalidationurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Xmlvalidationurl.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readAppfwprofileXmlvalidationurlBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +101,10 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Read(ctx context.Context, 
 }
 
 func (r *AppfwprofileXmlvalidationurlBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwprofileXmlvalidationurlBindingResourceModel
+	var data, state AppfwprofileXmlvalidationurlBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +112,29 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Update(ctx context.Context
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwprofile_xmlvalidationurl_binding resource")
 
-	// Create API request body from the model
-	// appfwprofile_xmlvalidationurl_binding := appfwprofile_xmlvalidationurl_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwprofile_xmlvalidationurl_binding.Type(), &appfwprofile_xmlvalidationurl_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwprofile_xmlvalidationurl_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		appfwprofile_xmlvalidationurl_binding := appfwprofile_xmlvalidationurl_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Appfwprofile_xmlvalidationurl_binding.Type(), &appfwprofile_xmlvalidationurl_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwprofile_xmlvalidationurl_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated appfwprofile_xmlvalidationurl_binding resource")
+		tflog.Trace(ctx, "Updated appfwprofile_xmlvalidationurl_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appfwprofile_xmlvalidationurl_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAppfwprofileXmlvalidationurlBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +154,107 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Delete(ctx context.Context
 	}
 
 	tflog.Debug(ctx, "Deleting appfwprofile_xmlvalidationurl_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "xmlvalidationurl"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For appfwprofile_xmlvalidationurl_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwprofile_xmlvalidationurl_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// DeleteResourceWithArgsMap does NOT URL-encode the arg values, so values that
+	// contain special characters (regex validation URLs) must be encoded here, mirroring
+	// the SDK v2 resource (which url.QueryEscape'd them).
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["xmlvalidationurl"]; ok && val != "" {
+		argsMap["xmlvalidationurl"] = url.QueryEscape(val)
+	}
+	// ruletype is not part of the composite ID; pull it from state and include it in the
+	// delete args (mirrors SDK v2 + the NITRO delete args list).
+	if !data.Ruletype.IsNull() && data.Ruletype.ValueString() != "" {
+		argsMap["ruletype"] = url.QueryEscape(data.Ruletype.ValueString())
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Appfwprofile_xmlvalidationurl_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwprofile_xmlvalidationurl_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted appfwprofile_xmlvalidationurl_binding binding")
 }
 
 // Helper function to read appfwprofile_xmlvalidationurl_binding data from API
 func (r *AppfwprofileXmlvalidationurlBindingResource) readAppfwprofileXmlvalidationurlBindingFromApi(ctx context.Context, data *AppfwprofileXmlvalidationurlBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwprofile_xmlvalidationurl_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "xmlvalidationurl"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Appfwprofile_xmlvalidationurl_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwprofile_xmlvalidationurl_binding, got error: %s", err))
 		return
 	}
 
-	appfwprofile_xmlvalidationurl_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "appfwprofile_xmlvalidationurl_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check xmlvalidationurl
+		if idVal, ok := idMap["xmlvalidationurl"]; ok {
+			if val, ok := v["xmlvalidationurl"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["xmlvalidationurl"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("appfwprofile_xmlvalidationurl_binding not found with the provided ID attributes"))
+		return
+	}
+
+	appfwprofile_xmlvalidationurl_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

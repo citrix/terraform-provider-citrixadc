@@ -3,8 +3,11 @@ package sslservicegroup_sslcertkey_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,26 @@ func (r *SslservicegroupSslcertkeyBindingResource) Create(ctx context.Context, r
 	}
 
 	tflog.Debug(ctx, "Creating sslservicegroup_sslcertkey_binding resource")
-
-	// sslservicegroup_sslcertkey_binding := sslservicegroup_sslcertkey_bindingGetThePayloadFromtheConfig(ctx, &data)
+	sslservicegroup_sslcertkey_binding := sslservicegroup_sslcertkey_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslservicegroup_sslcertkey_binding.Type(), &sslservicegroup_sslcertkey_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservicegroup_sslcertkey_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslservicegroup_sslcertkey_binding-config")
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource), Pattern 1
+	_, err := r.client.AddResource(service.Sslservicegroup_sslcertkey_binding.Type(), "", &sslservicegroup_sslcertkey_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservicegroup_sslcertkey_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created sslservicegroup_sslcertkey_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("ca:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ca.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("certkeyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Certkeyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("crlcheck:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Crlcheck.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("snicert:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Snicert.ValueBool()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readSslservicegroupSslcertkeyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +104,10 @@ func (r *SslservicegroupSslcertkeyBindingResource) Read(ctx context.Context, req
 }
 
 func (r *SslservicegroupSslcertkeyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslservicegroupSslcertkeyBindingResourceModel
+	var data, state SslservicegroupSslcertkeyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +115,29 @@ func (r *SslservicegroupSslcertkeyBindingResource) Update(ctx context.Context, r
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslservicegroup_sslcertkey_binding resource")
 
-	// Create API request body from the model
-	// sslservicegroup_sslcertkey_binding := sslservicegroup_sslcertkey_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslservicegroup_sslcertkey_binding.Type(), &sslservicegroup_sslcertkey_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslservicegroup_sslcertkey_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		sslservicegroup_sslcertkey_binding := sslservicegroup_sslcertkey_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Sslservicegroup_sslcertkey_binding.Type(), &sslservicegroup_sslcertkey_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslservicegroup_sslcertkey_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated sslservicegroup_sslcertkey_binding resource")
+		tflog.Trace(ctx, "Updated sslservicegroup_sslcertkey_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for sslservicegroup_sslcertkey_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readSslservicegroupSslcertkeyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +157,127 @@ func (r *SslservicegroupSslcertkeyBindingResource) Delete(ctx context.Context, r
 	}
 
 	tflog.Debug(ctx, "Deleting sslservicegroup_sslcertkey_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicegroupname", "certkeyname", "snicert", "ca"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For sslservicegroup_sslcertkey_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslservicegroup_sslcertkey_binding resource from state")
+	servicegroupname_value, ok := idMap["servicegroupname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'servicegroupname' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["ca"]; ok && val != "" {
+		argsMap["ca"] = val
+	}
+	if val, ok := idMap["certkeyname"]; ok && val != "" {
+		argsMap["certkeyname"] = val
+	}
+	if val, ok := idMap["crlcheck"]; ok && val != "" {
+		argsMap["crlcheck"] = val
+	}
+	if val, ok := idMap["snicert"]; ok && val != "" {
+		argsMap["snicert"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Sslservicegroup_sslcertkey_binding.Type(), servicegroupname_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslservicegroup_sslcertkey_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted sslservicegroup_sslcertkey_binding binding")
 }
 
 // Helper function to read sslservicegroup_sslcertkey_binding data from API
 func (r *SslservicegroupSslcertkeyBindingResource) readSslservicegroupSslcertkeyBindingFromApi(ctx context.Context, data *SslservicegroupSslcertkeyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslservicegroup_sslcertkey_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicegroupname", "certkeyname", "snicert", "ca"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	servicegroupname_Name, ok := idMap["servicegroupname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'servicegroupname' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Sslservicegroup_sslcertkey_binding.Type(),
+		ResourceName:             servicegroupname_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslservicegroup_sslcertkey_binding, got error: %s", err))
 		return
 	}
 
-	sslservicegroup_sslcertkey_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "sslservicegroup_sslcertkey_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check ca - only filter when the ID carries a non-empty value
+		if idVal, ok := idMap["ca"]; ok && idVal != "" {
+			idValBool, _ := strconv.ParseBool(idVal)
+			if val, ok := v["ca"].(bool); !ok || val != idValBool {
+				match = false
+				continue
+			}
+		}
+
+		// Check certkeyname - only filter when the ID carries a non-empty value
+		if idVal, ok := idMap["certkeyname"]; ok && idVal != "" {
+			if val, ok := v["certkeyname"].(string); !ok || val != idVal {
+				match = false
+				continue
+			}
+		}
+
+		// Check crlcheck - only filter when the ID carries a non-empty value
+		// (NITRO GET does not echo crlcheck, so an empty ID value must not reject records)
+		if idVal, ok := idMap["crlcheck"]; ok && idVal != "" {
+			if val, ok := v["crlcheck"].(string); !ok || val != idVal {
+				match = false
+				continue
+			}
+		}
+
+		// Check snicert - only filter when the ID carries a non-empty value
+		if idVal, ok := idMap["snicert"]; ok && idVal != "" {
+			idValBool, _ := strconv.ParseBool(idVal)
+			if val, ok := v["snicert"].(bool); !ok || val != idValBool {
+				match = false
+				continue
+			}
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("sslservicegroup_sslcertkey_binding not found with the provided ID attributes"))
+		return
+	}
+
+	sslservicegroup_sslcertkey_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

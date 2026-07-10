@@ -30,5 +30,5 @@ output "policy_priority" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the aaaglobal_aaapreauthenticationpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the aaaglobal_aaapreauthenticationpolicy_binding. It has the same value as the `policy` attribute.
 * `priority` - Priority of the bound policy.

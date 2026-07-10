@@ -3,8 +3,10 @@ package botprofile_tps_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,25 @@ func (r *BotprofileTpsBindingResource) Create(ctx context.Context, req resource.
 	}
 
 	tflog.Debug(ctx, "Creating botprofile_tps_binding resource")
-
-	// botprofile_tps_binding := botprofile_tps_bindingGetThePayloadFromtheConfig(ctx, &data)
+	botprofile_tps_binding := botprofile_tps_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botprofile_tps_binding.Type(), &botprofile_tps_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botprofile_tps_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("botprofile_tps_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Botprofile_tps_binding.Type(), &botprofile_tps_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botprofile_tps_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created botprofile_tps_binding resource")
+
+	// Set ID for the resource before reading state.
+	// ID uses the legacy SDK v2 order (name,bot_tps_type) from resource_id_mapping.json;
+	// bot_tps is not part of the binding identity and is excluded.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("bot_tps_type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotTpsType.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readBotprofileTpsBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +102,10 @@ func (r *BotprofileTpsBindingResource) Read(ctx context.Context, req resource.Re
 }
 
 func (r *BotprofileTpsBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BotprofileTpsBindingResourceModel
+	var data, state BotprofileTpsBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +113,29 @@ func (r *BotprofileTpsBindingResource) Update(ctx context.Context, req resource.
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating botprofile_tps_binding resource")
 
-	// Create API request body from the model
-	// botprofile_tps_binding := botprofile_tps_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botprofile_tps_binding.Type(), &botprofile_tps_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botprofile_tps_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		botprofile_tps_binding := botprofile_tps_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Botprofile_tps_binding.Type(), &botprofile_tps_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botprofile_tps_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated botprofile_tps_binding resource")
+		tflog.Trace(ctx, "Updated botprofile_tps_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for botprofile_tps_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readBotprofileTpsBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +155,103 @@ func (r *BotprofileTpsBindingResource) Delete(ctx context.Context, req resource.
 	}
 
 	tflog.Debug(ctx, "Deleting botprofile_tps_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "bot_tps_type"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For botprofile_tps_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted botprofile_tps_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// NITRO requires BOTH bot_tps_type and bot_tps to disambiguate the binding for
+	// delete (errorcode 1093 "Argument pre-requisite missing [type, tps]" otherwise).
+	// bot_tps_type comes from the ID; bot_tps is read from prior state.
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["bot_tps_type"]; ok && val != "" {
+		argsMap["bot_tps_type"] = val
+	}
+	if !data.BotTps.IsNull() && !data.BotTps.IsUnknown() {
+		argsMap["bot_tps"] = fmt.Sprintf("%t", data.BotTps.ValueBool())
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Botprofile_tps_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botprofile_tps_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted botprofile_tps_binding binding")
 }
 
 // Helper function to read botprofile_tps_binding data from API
 func (r *BotprofileTpsBindingResource) readBotprofileTpsBindingFromApi(ctx context.Context, data *BotprofileTpsBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Botprofile_tps_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "bot_tps_type"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Botprofile_tps_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read botprofile_tps_binding, got error: %s", err))
 		return
 	}
 
-	botprofile_tps_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "botprofile_tps_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the binding with the matching bot_tps_type.
+	// bot_tps_type is the per-binding-type identity (mirrors SDK v2 behaviour).
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check bot_tps_type
+		if idVal, ok := idMap["bot_tps_type"]; ok {
+			if val, ok := v["bot_tps_type"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("botprofile_tps_binding not found with the provided ID attributes"))
+		return
+	}
+
+	botprofile_tps_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

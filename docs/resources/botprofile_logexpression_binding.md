@@ -27,7 +27,7 @@ resource "citrixadc_botprofile" "tf_botprofile" {
 }
 resource "citrixadc_botprofile_logexpression_binding" "tf_binding" {
   name                     = citrixadc_botprofile.tf_botprofile.name
-  logexpression            = "true"
+  logexpression            = true
   bot_log_expression_name  = "tf_logname"
   bot_log_expression_value = "HTTP.REQ.BODY.CONTAINS(\"ANDROID\")"
   bot_bind_comment         = "LogTesting"
@@ -50,7 +50,7 @@ resource "citrixadc_botprofile_logexpression_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the botprofile_logexpression_binding. It is the concatenation of `name` and `bot_log_expression_name` attributes seperated by comma.
+* `id` - The id of the botprofile_logexpression_binding. It is the concatenation of the `name` and `bot_log_expression_name` attributes separated by a comma.
 
 
 ## Import

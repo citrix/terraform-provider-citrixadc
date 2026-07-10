@@ -3,8 +3,11 @@ package csvserver_botpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,24 @@ func (r *CsvserverBotpolicyBindingResource) Create(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Creating csvserver_botpolicy_binding resource")
-
-	// csvserver_botpolicy_binding := csvserver_botpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	csvserver_botpolicy_binding := csvserver_botpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Csvserver_botpolicy_binding.Type(), &csvserver_botpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_botpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("csvserver_botpolicy_binding-config")
+	// Binding resource - NITRO 'add' for this binding is POST, so use AddResource
+	// (matching the SDK v2 resource which called AddResource).
+	_, err := r.client.AddResource(service.Csvserver_botpolicy_binding.Type(), data.Name.ValueString(), &csvserver_botpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_botpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created csvserver_botpolicy_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readCsvserverBotpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +102,10 @@ func (r *CsvserverBotpolicyBindingResource) Read(ctx context.Context, req resour
 }
 
 func (r *CsvserverBotpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CsvserverBotpolicyBindingResourceModel
+	var data, state CsvserverBotpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +113,29 @@ func (r *CsvserverBotpolicyBindingResource) Update(ctx context.Context, req reso
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating csvserver_botpolicy_binding resource")
 
-	// Create API request body from the model
-	// csvserver_botpolicy_binding := csvserver_botpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Csvserver_botpolicy_binding.Type(), &csvserver_botpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csvserver_botpolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		csvserver_botpolicy_binding := csvserver_botpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Csvserver_botpolicy_binding.Type(), &csvserver_botpolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csvserver_botpolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated csvserver_botpolicy_binding resource")
+		tflog.Trace(ctx, "Updated csvserver_botpolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for csvserver_botpolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readCsvserverBotpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +155,108 @@ func (r *CsvserverBotpolicyBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting csvserver_botpolicy_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policyname"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For csvserver_botpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted csvserver_botpolicy_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// Delete args. URL-encode each value since they are placed verbatim into the
+	// NITRO query string (values may contain '/' or other special characters).
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["policyname"]; ok && val != "" {
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	// bindpoint and priority disambiguate the binding on delete (mirrors SDK v2).
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", data.Priority.ValueInt64()))
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_botpolicy_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete csvserver_botpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted csvserver_botpolicy_binding binding")
 }
 
 // Helper function to read csvserver_botpolicy_binding data from API
 func (r *CsvserverBotpolicyBindingResource) readCsvserverBotpolicyBindingFromApi(ctx context.Context, data *CsvserverBotpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Csvserver_botpolicy_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policyname"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Csvserver_botpolicy_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read csvserver_botpolicy_binding, got error: %s", err))
 		return
 	}
 
-	csvserver_botpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "csvserver_botpolicy_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check policyname
+		if idVal, ok := idMap["policyname"]; ok {
+			if val, ok := v["policyname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["policyname"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("csvserver_botpolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	csvserver_botpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

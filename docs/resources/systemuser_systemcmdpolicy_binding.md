@@ -38,7 +38,7 @@ resource "citrixadc_systemuser_systemcmdpolicy_binding" "tf_bind" {
 
 * `policyname` - (Required) The name of command policy.
 * `priority` - (Required) The priority of the policy.
-* `username` - (Required) Name of the system-user entry to which to bind the command policy. Minimum length =  1
+* `username` - (Required) Name of the system-user entry to which to bind the command policy.
 
 
 ## Attribute Reference

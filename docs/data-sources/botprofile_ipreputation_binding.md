@@ -6,7 +6,7 @@ subcategory: "Bot"
 
 The botprofile_ipreputation_binding data source allows you to retrieve information about the bindings between botprofile and IP reputation categories.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_botprofile_ipreputation_binding" "tf_binding" {

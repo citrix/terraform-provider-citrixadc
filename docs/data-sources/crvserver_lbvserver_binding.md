@@ -32,4 +32,4 @@ output "lb_vserver" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the crvserver_lbvserver_binding. It is a system-generated identifier.
+* `id` - The id of the crvserver_lbvserver_binding. It is the concatenation of the `name` and `lbvserver` attributes separated by a comma.

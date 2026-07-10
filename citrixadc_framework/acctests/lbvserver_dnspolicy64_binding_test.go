@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -137,10 +137,12 @@ func testAccCheckLbvserver_dnspolicy64_bindingExist(n string, id *string) resour
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		lbvserverName := idSlice[0]
-		policyName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		lbvserverName := idMap["name"]
+		policyName := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbvserver_dnspolicy64_binding",
@@ -179,13 +181,12 @@ func testAccCheckLbvserver_dnspolicy64_bindingNotExist(n string, id string) reso
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		lbvserverName := idSlice[0]
-		policyName := idSlice[1]
+		lbvserverName := idMap["name"]
+		policyName := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbvserver_dnspolicy64_binding",

@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -113,11 +114,13 @@ func testAccCheckRewriteglobal_rewritepolicy_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 3)
-
-		policyname := idSlice[0]
-		priority := idSlice[1]
-		type_bindpoint := idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"policyname", "priority", "type"}, nil)
+		if err != nil {
+			return err
+		}
+		policyname := idMap["policyname"]
+		priority := idMap["priority"]
+		type_bindpoint := idMap["type"]
 
 		argsMap := make(map[string]string)
 		argsMap["type"] = type_bindpoint
@@ -224,8 +227,34 @@ func testAccCheckRewriteglobal_rewritepolicy_bindingDestroy(s *terraform.State) 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Rewriteglobal_rewritepolicy_binding.Type(), rs.Primary.ID)
-		if err == nil {
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname", "priority", "type"}, nil)
+		if err != nil {
+			return err
+		}
+		policyname := idMap["policyname"]
+		priority := idMap["priority"]
+		type_bindpoint := idMap["type"]
+
+		argsMap := make(map[string]string)
+		argsMap["type"] = type_bindpoint
+
+		findParams := service.FindParams{
+			ResourceType: "rewriteglobal_rewritepolicy_binding",
+			ArgsMap:      argsMap,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+
+		for _, binding := range dataArr {
+			if binding["policyname"] != policyname {
+				continue
+			} else if binding["priority"] != priority {
+				continue
+			} else if binding["type"] != type_bindpoint {
+				continue
+			}
 			return fmt.Errorf("rewriteglobal_rewritepolicy_binding %s still exists", rs.Primary.ID)
 		}
 

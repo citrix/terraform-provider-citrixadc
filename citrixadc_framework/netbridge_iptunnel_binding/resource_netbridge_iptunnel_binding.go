@@ -3,8 +3,10 @@ package netbridge_iptunnel_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *NetbridgeIptunnelBindingResource) Create(ctx context.Context, req resou
 	}
 
 	tflog.Debug(ctx, "Creating netbridge_iptunnel_binding resource")
-
-	// netbridge_iptunnel_binding := netbridge_iptunnel_bindingGetThePayloadFromtheConfig(ctx, &data)
+	netbridge_iptunnel_binding := netbridge_iptunnel_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Netbridge_iptunnel_binding.Type(), &netbridge_iptunnel_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create netbridge_iptunnel_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("netbridge_iptunnel_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Netbridge_iptunnel_binding.Type(), &netbridge_iptunnel_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create netbridge_iptunnel_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created netbridge_iptunnel_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("tunnel:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Tunnel.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readNetbridgeIptunnelBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *NetbridgeIptunnelBindingResource) Read(ctx context.Context, req resourc
 }
 
 func (r *NetbridgeIptunnelBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NetbridgeIptunnelBindingResourceModel
+	var data, state NetbridgeIptunnelBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *NetbridgeIptunnelBindingResource) Update(ctx context.Context, req resou
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating netbridge_iptunnel_binding resource")
 
-	// Create API request body from the model
-	// netbridge_iptunnel_binding := netbridge_iptunnel_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Netbridge_iptunnel_binding.Type(), &netbridge_iptunnel_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update netbridge_iptunnel_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		netbridge_iptunnel_binding := netbridge_iptunnel_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Netbridge_iptunnel_binding.Type(), &netbridge_iptunnel_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update netbridge_iptunnel_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated netbridge_iptunnel_binding resource")
+		tflog.Trace(ctx, "Updated netbridge_iptunnel_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for netbridge_iptunnel_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readNetbridgeIptunnelBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,99 @@ func (r *NetbridgeIptunnelBindingResource) Delete(ctx context.Context, req resou
 	}
 
 	tflog.Debug(ctx, "Deleting netbridge_iptunnel_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "tunnel"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For netbridge_iptunnel_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted netbridge_iptunnel_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["tunnel"]; ok && val != "" {
+		argsMap["tunnel"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Netbridge_iptunnel_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete netbridge_iptunnel_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted netbridge_iptunnel_binding binding")
 }
 
 // Helper function to read netbridge_iptunnel_binding data from API
 func (r *NetbridgeIptunnelBindingResource) readNetbridgeIptunnelBindingFromApi(ctx context.Context, data *NetbridgeIptunnelBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Netbridge_iptunnel_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "tunnel"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Netbridge_iptunnel_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read netbridge_iptunnel_binding, got error: %s", err))
 		return
 	}
 
-	netbridge_iptunnel_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "netbridge_iptunnel_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check tunnel
+		if idVal, ok := idMap["tunnel"]; ok {
+			if val, ok := v["tunnel"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["tunnel"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("netbridge_iptunnel_binding not found with the provided ID attributes"))
+		return
+	}
+
+	netbridge_iptunnel_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

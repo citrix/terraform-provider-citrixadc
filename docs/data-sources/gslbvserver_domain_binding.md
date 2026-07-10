@@ -29,17 +29,17 @@ output "domainname" {
 
 * `name` - (Required) Name of the virtual server on which the binding is configured.
 * `domainname` - (Required) Domain name for which to retrieve the binding information.
-* `backupipflag` - (Optional) Filter by the backup IP flag value. Used when filtering bindings by the backup IP configuration.
-* `cookie_domainflag` - (Optional) Filter by the cookie domain flag value. Used when filtering bindings by the cookie domain configuration.
+* `backupipflag` - (Optional) Flag indicating whether a backup IP address is configured for the specified domain name.
+* `cookiedomainflag` - (Optional) Flag indicating whether a cookie domain is configured for the GSLB site.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the gslbvserver_domain_binding. It is a system-generated identifier.
+* `id` - The id of the gslbvserver_domain_binding. It is the concatenation of the `name` and `domainname` attributes separated by a comma.
 * `backupip` - The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.
-* `cookie_domain` - The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
+* `cookiedomain` - The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
 * `cookietimeout` - Timeout, in minutes, for the GSLB site cookie.
 * `order` - Order number assigned to the service when it is bound to the lb vserver.
 * `sitedomainttl` - TTL, in seconds, for all internally created site domains (created when a site prefix is configured on a GSLB service) that are associated with this virtual server.

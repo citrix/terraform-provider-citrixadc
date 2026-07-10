@@ -3,8 +3,12 @@ package authenticationvserver_cachepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +58,26 @@ func (r *AuthenticationvserverCachepolicyBindingResource) Create(ctx context.Con
 	}
 
 	tflog.Debug(ctx, "Creating authenticationvserver_cachepolicy_binding resource")
-
-	// authenticationvserver_cachepolicy_binding := authenticationvserver_cachepolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	authenticationvserver_cachepolicy_binding := authenticationvserver_cachepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationvserver_cachepolicy_binding.Type(), &authenticationvserver_cachepolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationvserver_cachepolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationvserver_cachepolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Authenticationvserver_cachepolicy_binding.Type(), &authenticationvserver_cachepolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationvserver_cachepolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationvserver_cachepolicy_binding resource")
+
+	// Set ID for the resource before reading state.
+	// Backward-compatible identity is name+policy (resource_id_mapping.json = "name,policy").
+	// New format is key:UrlEncode(value) joined by commas; ParseIdString also decodes the
+	// legacy positional "name,policy" form on import.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readAuthenticationvserverCachepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +105,10 @@ func (r *AuthenticationvserverCachepolicyBindingResource) Read(ctx context.Conte
 }
 
 func (r *AuthenticationvserverCachepolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationvserverCachepolicyBindingResourceModel
+	var data, state AuthenticationvserverCachepolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +116,29 @@ func (r *AuthenticationvserverCachepolicyBindingResource) Update(ctx context.Con
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationvserver_cachepolicy_binding resource")
 
-	// Create API request body from the model
-	// authenticationvserver_cachepolicy_binding := authenticationvserver_cachepolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationvserver_cachepolicy_binding.Type(), &authenticationvserver_cachepolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationvserver_cachepolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		authenticationvserver_cachepolicy_binding := authenticationvserver_cachepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Authenticationvserver_cachepolicy_binding.Type(), &authenticationvserver_cachepolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationvserver_cachepolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationvserver_cachepolicy_binding resource")
+		tflog.Trace(ctx, "Updated authenticationvserver_cachepolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for authenticationvserver_cachepolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAuthenticationvserverCachepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +158,104 @@ func (r *AuthenticationvserverCachepolicyBindingResource) Delete(ctx context.Con
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_cachepolicy_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Parent (name) and the policy disambiguator come from the ID (name:policy).
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For authenticationvserver_cachepolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationvserver_cachepolicy_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// Build delete args. policy is the binding disambiguator; bindpoint/secondary/
+	// groupextraction further narrow the binding when set. URL-encode the values so
+	// slashy/special characters survive the query string (binding-family pattern (b)).
+	args := make([]string, 0)
+	if val, ok := idMap["policy"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(strconv.FormatBool(data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(strconv.FormatBool(data.Groupextraction.ValueBool()))))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_cachepolicy_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_cachepolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted authenticationvserver_cachepolicy_binding binding")
 }
 
 // Helper function to read authenticationvserver_cachepolicy_binding data from API
 func (r *AuthenticationvserverCachepolicyBindingResource) readAuthenticationvserverCachepolicyBindingFromApi(ctx context.Context, data *AuthenticationvserverCachepolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationvserver_cachepolicy_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Authenticationvserver_cachepolicy_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationvserver_cachepolicy_binding, got error: %s", err))
 		return
 	}
 
-	authenticationvserver_cachepolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "authenticationvserver_cachepolicy_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the binding for our policy. The binding identity is
+	// name+policy (matching the SDK v2 contract and resource_id_mapping.json); secondary,
+	// groupextraction and bindpoint are not part of the identity (and the GET response does
+	// not echo secondary/groupextraction), so filtering only on policy is correct.
+	foundIndex := -1
+	for i, v := range dataArr {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("authenticationvserver_cachepolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	authenticationvserver_cachepolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

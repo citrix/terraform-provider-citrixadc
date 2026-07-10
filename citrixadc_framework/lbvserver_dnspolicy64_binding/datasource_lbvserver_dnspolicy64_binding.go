@@ -93,7 +93,7 @@ func (d *LbvserverDnspolicy64BindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	lbvserver_dnspolicy64_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbvserver_dnspolicy64_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

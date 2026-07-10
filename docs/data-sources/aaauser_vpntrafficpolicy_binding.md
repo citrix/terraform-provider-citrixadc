@@ -32,8 +32,8 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the aaauser_vpntrafficpolicy_binding. It is a system-generated identifier.
-* `type` - Bindpoint to which the policy is bound. Possible values: [ REQUEST, UDP_REQUEST, DNS_REQUEST, ICMP_REQUEST ]
+* `id` - The id of the aaauser_vpntrafficpolicy_binding. It is the concatenation of `username` and `policy` attributes separated by a comma.
+* `type` - Bindpoint to which the policy is bound.
 * `gotopriorityexpression` - Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE.  Specify one of the following values:
   * NEXT - Evaluate the policy with the next higher priority number.
   * END - End policy evaluation.

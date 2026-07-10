@@ -3,8 +3,11 @@ package sslservice_sslciphersuite_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,23 @@ func (r *SslserviceSslciphersuiteBindingResource) Create(ctx context.Context, re
 	}
 
 	tflog.Debug(ctx, "Creating sslservice_sslciphersuite_binding resource")
-
-	// sslservice_sslciphersuite_binding := sslservice_sslciphersuite_bindingGetThePayloadFromtheConfig(ctx, &data)
+	sslservice_sslciphersuite_binding := sslservice_sslciphersuite_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslservice_sslciphersuite_binding.Type(), &sslservice_sslciphersuite_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservice_sslciphersuite_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslservice_sslciphersuite_binding-config")
+	// Binding resource - NITRO add is POST (matches SDK v2 AddResource)
+	_, err := r.client.AddResource(service.Sslservice_sslciphersuite_binding.Type(), "", &sslservice_sslciphersuite_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservice_sslciphersuite_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created sslservice_sslciphersuite_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("ciphername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ciphername.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("servicename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicename.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readSslserviceSslciphersuiteBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +101,10 @@ func (r *SslserviceSslciphersuiteBindingResource) Read(ctx context.Context, req 
 }
 
 func (r *SslserviceSslciphersuiteBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslserviceSslciphersuiteBindingResourceModel
+	var data, state SslserviceSslciphersuiteBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +112,29 @@ func (r *SslserviceSslciphersuiteBindingResource) Update(ctx context.Context, re
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslservice_sslciphersuite_binding resource")
 
-	// Create API request body from the model
-	// sslservice_sslciphersuite_binding := sslservice_sslciphersuite_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslservice_sslciphersuite_binding.Type(), &sslservice_sslciphersuite_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslservice_sslciphersuite_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		sslservice_sslciphersuite_binding := sslservice_sslciphersuite_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Sslservice_sslciphersuite_binding.Type(), &sslservice_sslciphersuite_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslservice_sslciphersuite_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated sslservice_sslciphersuite_binding resource")
+		tflog.Trace(ctx, "Updated sslservice_sslciphersuite_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for sslservice_sslciphersuite_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readSslserviceSslciphersuiteBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +154,101 @@ func (r *SslserviceSslciphersuiteBindingResource) Delete(ctx context.Context, re
 	}
 
 	tflog.Debug(ctx, "Deleting sslservice_sslciphersuite_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicename", "ciphername"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For sslservice_sslciphersuite_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslservice_sslciphersuite_binding resource from state")
+	servicename_value, ok := idMap["servicename"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'servicename' not found in ID")
+		return
+	}
+
+	// DeleteResourceWithArgs joins args verbatim into the URL query string and does NOT
+	// URL-encode the value, so encode the ciphername here (handles slashy/special cipher names).
+	args := make([]string, 0)
+	if val, ok := idMap["ciphername"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("ciphername:%s", url.QueryEscape(val)))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Sslservice_sslciphersuite_binding.Type(), servicename_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslservice_sslciphersuite_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted sslservice_sslciphersuite_binding binding")
 }
 
 // Helper function to read sslservice_sslciphersuite_binding data from API
 func (r *SslserviceSslciphersuiteBindingResource) readSslserviceSslciphersuiteBindingFromApi(ctx context.Context, data *SslserviceSslciphersuiteBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslservice_sslciphersuite_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicename", "ciphername"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	servicename_Name, ok := idMap["servicename"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'servicename' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Sslservice_sslciphersuite_binding.Type(),
+		ResourceName:             servicename_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslservice_sslciphersuite_binding, got error: %s", err))
 		return
 	}
 
-	sslservice_sslciphersuite_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "sslservice_sslciphersuite_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check ciphername
+		if idVal, ok := idMap["ciphername"]; ok {
+			if val, ok := v["ciphername"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["ciphername"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("sslservice_sslciphersuite_binding not found with the provided ID attributes"))
+		return
+	}
+
+	sslservice_sslciphersuite_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

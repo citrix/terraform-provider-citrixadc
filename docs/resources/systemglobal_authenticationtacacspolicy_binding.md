@@ -10,7 +10,7 @@ The systemglobal_authenticationtacacspolicy_bindingresource is used to create sy
 ## Example usage
 
 ```hcl
-resource "citrixadc_systemglobal_authenticationtatacspolicy_binding" "tf_systemglobal_authenticationtatacspolicy_binding" {
+resource "citrixadc_systemglobal_authenticationtacacspolicy_binding" "tf_systemglobal_authenticationtacacspolicy_binding" {
   policyname = citrixadc_authenticationtacacspolicy.tf_tacacspolicy.name
   priority   = 50
 }
@@ -58,5 +58,5 @@ In addition to the arguments, the following attributes are available:
 A systemglobal_authenticationtacacspolicy_binding can be imported using its name, e.g.
 
 ```shell
-terraform import citrixadc_systemglobal_authenticationtatacspolicy_binding.tf_systemglobal_authenticationtatacspolicy_binding tf_tacacspolicy
+terraform import citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtacacspolicy_binding tf_tacacspolicy
 ```

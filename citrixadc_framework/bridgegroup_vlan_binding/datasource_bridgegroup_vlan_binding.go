@@ -3,6 +3,7 @@ package bridgegroup_vlan_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -43,8 +44,8 @@ func (d *BridgegroupVlanBindingDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	bridgegroup_id_Name := data.Bridgegroupid
+	// Array filter with parent ID
+	bridgegroup_id := strconv.FormatInt(data.BridgegroupId.ValueInt64(), 10)
 	vlan_Name := data.Vlan
 
 	var dataArr []map[string]interface{}
@@ -52,7 +53,7 @@ func (d *BridgegroupVlanBindingDataSource) Read(ctx context.Context, req datasou
 
 	findParams := service.FindParams{
 		ResourceType:             service.Bridgegroup_vlan_binding.Type(),
-		ResourceName:             fmt.Sprintf("%d", bridgegroup_id_Name.ValueInt64()),
+		ResourceName:             bridgegroup_id,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -67,7 +68,7 @@ func (d *BridgegroupVlanBindingDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right vlan
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -91,11 +92,11 @@ func (d *BridgegroupVlanBindingDataSource) Read(ctx context.Context, req datasou
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("bridgegroup_vlan_binding with vlan %s not found", vlan_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("bridgegroup_vlan_binding with vlan %d not found", vlan_Name.ValueInt64()))
 		return
 	}
 
-	bridgegroup_vlan_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	bridgegroup_vlan_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

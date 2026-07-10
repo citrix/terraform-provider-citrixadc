@@ -45,7 +45,7 @@ In addition to the arguments, the following attributes are available:
   * The expression is invalid.
   * The expression evaluates to a priority number that is smaller than the current policy's priority number.
   * The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.
-* `id` - The id of the appfwglobal_auditsyslogpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the appfwglobal_auditsyslogpolicy_binding. It is the concatenation of the `policyname` and `type` attributes separated by a comma.
 * `priority` - The priority of the policy.
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
 * `labelname` - Name of the policy label to invoke if the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is set to Policy Label.

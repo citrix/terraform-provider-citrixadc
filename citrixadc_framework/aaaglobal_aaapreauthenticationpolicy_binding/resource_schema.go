@@ -2,11 +2,15 @@ package aaaglobal_aaapreauthenticationpolicy_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -29,28 +33,33 @@ func (r *AaaglobalAaapreauthenticationpolicyBindingResource) Schema(ctx context.
 				Description: "The ID of the aaaglobal_aaapreauthenticationpolicy_binding resource.",
 			},
 			"policy": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the policy to be unbound.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Priority of the bound policy",
 			},
 		},
 	}
 }
 
-func aaaglobal_aaapreauthenticationpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AaaglobalAaapreauthenticationpolicyBindingResourceModel) aaa.Aaaglobalaaapreauthenticationpolicybinding {
-	tflog.Debug(ctx, "In aaaglobal_aaapreauthenticationpolicy_bindingGetThePayloadFromtheConfig Function")
+func aaaglobal_aaapreauthenticationpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AaaglobalAaapreauthenticationpolicyBindingResourceModel) aaa.Aaaglobalaaapreauthenticationpolicybinding {
+	tflog.Debug(ctx, "In aaaglobal_aaapreauthenticationpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaaglobal_aaapreauthenticationpolicy_binding := aaa.Aaaglobalaaapreauthenticationpolicybinding{}
-	if !data.Policy.IsNull() {
+	if !data.Policy.IsNull() && !data.Policy.IsUnknown() {
 		aaaglobal_aaapreauthenticationpolicy_binding.Policy = data.Policy.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		aaaglobal_aaapreauthenticationpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 
@@ -75,8 +84,8 @@ func aaaglobal_aaapreauthenticationpolicy_bindingSetAttrFromGet(ctx context.Cont
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Policy.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policy.ValueString()))
 
 	return data
 }

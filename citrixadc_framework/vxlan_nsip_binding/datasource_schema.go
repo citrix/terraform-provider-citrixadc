@@ -19,7 +19,6 @@ func VxlanNsipBindingDataSourceSchema() schema.Schema {
 				Description: "The IP address assigned to the VXLAN.",
 			},
 			"netmask": schema.StringAttribute{
-				Optional:    true,
 				Computed:    true,
 				Description: "Subnet mask for the network address defined for this VXLAN.",
 			},

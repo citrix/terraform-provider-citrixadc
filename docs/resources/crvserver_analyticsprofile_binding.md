@@ -28,7 +28,7 @@ resource "citrixadc_crvserver_analyticsprofile_binding" "crvserver_analyticsprof
 
 ## Argument Reference
 
-* `analyticsprofile` - (Optional) Name of the analytics profile bound to the CR vserver.
+* `analyticsprofile` - (Required) Name of the analytics profile bound to the CR vserver.
 * `name` - (Required) Name of the cache redirection virtual server to which to bind the cache redirection policy.
 
 
@@ -36,7 +36,7 @@ resource "citrixadc_crvserver_analyticsprofile_binding" "crvserver_analyticsprof
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the crvserver_analyticsprofile_binding. It has the same value as the `name` attribute.
+* `id` - The id of the crvserver_analyticsprofile_binding. It is the concatenation of the `name` and `analyticsprofile` attributes separated by a comma.
 
 
 ## Import

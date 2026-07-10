@@ -3,8 +3,11 @@ package nspartition_vxlan_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,23 @@ func (r *NspartitionVxlanBindingResource) Create(ctx context.Context, req resour
 	}
 
 	tflog.Debug(ctx, "Creating nspartition_vxlan_binding resource")
-
-	// nspartition_vxlan_binding := nspartition_vxlan_bindingGetThePayloadFromtheConfig(ctx, &data)
+	nspartition_vxlan_binding := nspartition_vxlan_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nspartition_vxlan_binding.Type(), &nspartition_vxlan_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nspartition_vxlan_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nspartition_vxlan_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nspartition_vxlan_binding.Type(), &nspartition_vxlan_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nspartition_vxlan_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nspartition_vxlan_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("partitionname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Partitionname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("vxlan:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vxlan.ValueInt64()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readNspartitionVxlanBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +101,10 @@ func (r *NspartitionVxlanBindingResource) Read(ctx context.Context, req resource
 }
 
 func (r *NspartitionVxlanBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NspartitionVxlanBindingResourceModel
+	var data, state NspartitionVxlanBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +112,29 @@ func (r *NspartitionVxlanBindingResource) Update(ctx context.Context, req resour
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nspartition_vxlan_binding resource")
 
-	// Create API request body from the model
-	// nspartition_vxlan_binding := nspartition_vxlan_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nspartition_vxlan_binding.Type(), &nspartition_vxlan_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nspartition_vxlan_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		nspartition_vxlan_binding := nspartition_vxlan_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Nspartition_vxlan_binding.Type(), &nspartition_vxlan_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nspartition_vxlan_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated nspartition_vxlan_binding resource")
+		tflog.Trace(ctx, "Updated nspartition_vxlan_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nspartition_vxlan_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readNspartitionVxlanBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +154,101 @@ func (r *NspartitionVxlanBindingResource) Delete(ctx context.Context, req resour
 	}
 
 	tflog.Debug(ctx, "Deleting nspartition_vxlan_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"partitionname", "vxlan"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For nspartition_vxlan_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nspartition_vxlan_binding resource from state")
+	partitionname_value, ok := idMap["partitionname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'partitionname' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["vxlan"]; ok && val != "" {
+		argsMap["vxlan"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Nspartition_vxlan_binding.Type(), partitionname_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nspartition_vxlan_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted nspartition_vxlan_binding binding")
 }
 
 // Helper function to read nspartition_vxlan_binding data from API
 func (r *NspartitionVxlanBindingResource) readNspartitionVxlanBindingFromApi(ctx context.Context, data *NspartitionVxlanBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nspartition_vxlan_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"partitionname", "vxlan"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	partitionname_Name, ok := idMap["partitionname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'partitionname' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Nspartition_vxlan_binding.Type(),
+		ResourceName:             partitionname_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nspartition_vxlan_binding, got error: %s", err))
 		return
 	}
 
-	nspartition_vxlan_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "nspartition_vxlan_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check vxlan
+		if idVal, ok := idMap["vxlan"]; ok {
+			if val, ok := v["vxlan"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
+				if val != idValInt64 {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["vxlan"]; ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("nspartition_vxlan_binding not found with the provided ID attributes"))
+		return
+	}
+
+	nspartition_vxlan_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

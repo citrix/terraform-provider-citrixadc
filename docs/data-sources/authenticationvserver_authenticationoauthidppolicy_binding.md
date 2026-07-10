@@ -32,6 +32,7 @@ output "nextfactor" {
 
 In addition to the arguments, the following attributes are available:
 
+* `bindpoint` - Bind point to which to bind the policy.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `groupextraction` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor.
 * `id` - The id of the authenticationvserver_authenticationoauthidppolicy_binding. It is a system-generated identifier.

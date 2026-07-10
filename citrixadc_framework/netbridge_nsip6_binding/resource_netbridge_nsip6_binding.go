@@ -3,8 +3,11 @@ package netbridge_nsip6_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,26 @@ func (r *NetbridgeNsip6BindingResource) Create(ctx context.Context, req resource
 	}
 
 	tflog.Debug(ctx, "Creating netbridge_nsip6_binding resource")
-
-	// netbridge_nsip6_binding := netbridge_nsip6_bindingGetThePayloadFromtheConfig(ctx, &data)
+	netbridge_nsip6_binding := netbridge_nsip6_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Netbridge_nsip6_binding.Type(), &netbridge_nsip6_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create netbridge_nsip6_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("netbridge_nsip6_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Netbridge_nsip6_binding.Type(), &netbridge_nsip6_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create netbridge_nsip6_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created netbridge_nsip6_binding resource")
+
+	// Set ID for the resource before reading state.
+	// Composite ID order matches resource_id_mapping.json ("name,ipaddress").
+	// netmask is intentionally excluded (it is not part of the SDK v2 ID and is a
+	// Computed/server-overridden value for IPv6 bindings).
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readNetbridgeNsip6BindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +104,10 @@ func (r *NetbridgeNsip6BindingResource) Read(ctx context.Context, req resource.R
 }
 
 func (r *NetbridgeNsip6BindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NetbridgeNsip6BindingResourceModel
+	var data, state NetbridgeNsip6BindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +115,29 @@ func (r *NetbridgeNsip6BindingResource) Update(ctx context.Context, req resource
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating netbridge_nsip6_binding resource")
 
-	// Create API request body from the model
-	// netbridge_nsip6_binding := netbridge_nsip6_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Netbridge_nsip6_binding.Type(), &netbridge_nsip6_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update netbridge_nsip6_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		netbridge_nsip6_binding := netbridge_nsip6_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Netbridge_nsip6_binding.Type(), &netbridge_nsip6_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update netbridge_nsip6_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated netbridge_nsip6_binding resource")
+		tflog.Trace(ctx, "Updated netbridge_nsip6_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for netbridge_nsip6_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readNetbridgeNsip6BindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +157,103 @@ func (r *NetbridgeNsip6BindingResource) Delete(ctx context.Context, req resource
 	}
 
 	tflog.Debug(ctx, "Deleting netbridge_nsip6_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "ipaddress"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For netbridge_nsip6_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted netbridge_nsip6_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// The ipaddress value (an IPv6 subnet, e.g. "dea:97c5:d381:e72b::/64") contains
+	// characters such as '/' that must be URL-encoded before being placed in the
+	// delete ?args= query string. The NITRO client does NOT encode arg values, so we
+	// encode here (mirrors the SDK v2 resource's url.PathEscape). netmask is excluded
+	// from the delete args, matching the SDK v2 resource.
+	args := make([]string, 0)
+	if val, ok := idMap["ipaddress"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("ipaddress:%s", url.QueryEscape(val)))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Netbridge_nsip6_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete netbridge_nsip6_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted netbridge_nsip6_binding binding")
 }
 
 // Helper function to read netbridge_nsip6_binding data from API
 func (r *NetbridgeNsip6BindingResource) readNetbridgeNsip6BindingFromApi(ctx context.Context, data *NetbridgeNsip6BindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Netbridge_nsip6_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "ipaddress"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Netbridge_nsip6_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read netbridge_nsip6_binding, got error: %s", err))
 		return
 	}
 
-	netbridge_nsip6_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "netbridge_nsip6_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one matching the binding's ipaddress.
+	// Identity is (name, ipaddress) per resource_id_mapping.json; netmask is not a
+	// match key (it is server-derived for IPv6 bindings).
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check ipaddress
+		if idVal, ok := idMap["ipaddress"]; ok {
+			if val, ok := v["ipaddress"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("netbridge_nsip6_binding not found with the provided ID attributes"))
+		return
+	}
+
+	netbridge_nsip6_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

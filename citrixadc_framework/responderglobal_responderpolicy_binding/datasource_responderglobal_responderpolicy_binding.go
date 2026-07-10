@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -44,6 +45,7 @@ func (d *ResponderglobalResponderpolicyBindingDataSource) Read(ctx context.Conte
 
 	// Case 3: Array filter without parent ID
 	policyname_Name := data.Policyname
+	priority_Name := data.Priority
 	type_Name := data.Type
 
 	var dataArr []map[string]interface{}
@@ -86,6 +88,20 @@ func (d *ResponderglobalResponderpolicyBindingDataSource) Read(ctx context.Conte
 			continue
 		}
 
+		// Check priority only when supplied in config
+		if !priority_Name.IsNull() && !priority_Name.IsUnknown() {
+			if val, ok := v["priority"]; ok {
+				vi, _ := utils.ConvertToInt64(val)
+				if vi != priority_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+		// Check type_Name
 		if !type_Name.IsNull() && type_Name.ValueString() != "" {
 			if v, ok := v["type"]; ok {
 				if v.(string) != type_Name.ValueString() {

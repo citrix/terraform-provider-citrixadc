@@ -38,4 +38,4 @@ In addition to the arguments, the following attributes are available:
 * `invoke` - Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.
 * `labelname` - Name of the label to invoke if the current policy evaluates to TRUE.
 * `labeltype` - Type of policy label to invoke. Specify vserver for a policy label associated with a virtual server, or policylabel for a user-defined policy label.
-* `id` - The id of the appflowglobal_appflowpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the appflowglobal_appflowpolicy_binding. It has the same value as the `policyname` attribute.

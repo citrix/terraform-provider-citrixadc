@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -36,67 +39,87 @@ func (r *BotprofileLogexpressionBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the botprofile_logexpression_binding resource.",
 			},
 			"bot_bind_comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about this binding.",
 			},
 			"bot_log_expression_enabled": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enable or disable the log expression binding.",
 			},
 			"bot_log_expression_name": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the log expression object.",
 			},
 			"bot_log_expression_value": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression whose result to be logged when violation happened on the bot profile.",
 			},
 			"logexpression": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Log expression binding.",
 			},
 			"logmessage": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Message to be logged for this binding.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my profile\" or 'my profile').",
 			},
 		},
 	}
 }
 
-func botprofile_logexpression_bindingGetThePayloadFromtheConfig(ctx context.Context, data *BotprofileLogexpressionBindingResourceModel) bot.Botprofilelogexpressionbinding {
-	tflog.Debug(ctx, "In botprofile_logexpression_bindingGetThePayloadFromtheConfig Function")
+func botprofile_logexpression_bindingGetThePayloadFromthePlan(ctx context.Context, data *BotprofileLogexpressionBindingResourceModel) bot.Botprofilelogexpressionbinding {
+	tflog.Debug(ctx, "In botprofile_logexpression_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	botprofile_logexpression_binding := bot.Botprofilelogexpressionbinding{}
-	if !data.BotBindComment.IsNull() {
+	if !data.BotBindComment.IsNull() && !data.BotBindComment.IsUnknown() {
 		botprofile_logexpression_binding.Botbindcomment = data.BotBindComment.ValueString()
 	}
-	if !data.BotLogExpressionEnabled.IsNull() {
+	if !data.BotLogExpressionEnabled.IsNull() && !data.BotLogExpressionEnabled.IsUnknown() {
 		botprofile_logexpression_binding.Botlogexpressionenabled = data.BotLogExpressionEnabled.ValueString()
 	}
-	if !data.BotLogExpressionName.IsNull() {
+	if !data.BotLogExpressionName.IsNull() && !data.BotLogExpressionName.IsUnknown() {
 		botprofile_logexpression_binding.Botlogexpressionname = data.BotLogExpressionName.ValueString()
 	}
-	if !data.BotLogExpressionValue.IsNull() {
+	if !data.BotLogExpressionValue.IsNull() && !data.BotLogExpressionValue.IsUnknown() {
 		botprofile_logexpression_binding.Botlogexpressionvalue = data.BotLogExpressionValue.ValueString()
 	}
-	if !data.Logexpression.IsNull() {
+	if !data.Logexpression.IsNull() && !data.Logexpression.IsUnknown() {
 		botprofile_logexpression_binding.Logexpression = data.Logexpression.ValueBool()
 	}
-	if !data.Logmessage.IsNull() {
+	if !data.Logmessage.IsNull() && !data.Logmessage.IsUnknown() {
 		botprofile_logexpression_binding.Logmessage = data.Logmessage.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		botprofile_logexpression_binding.Name = data.Name.ValueString()
 	}
 
@@ -147,6 +170,7 @@ func botprofile_logexpression_bindingSetAttrFromGet(ctx context.Context, data *B
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("bot_log_expression_name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.BotLogExpressionName.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("logexpression:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Logexpression.ValueBool()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 

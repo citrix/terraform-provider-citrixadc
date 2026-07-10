@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -154,7 +155,6 @@ resource "citrixadc_server" "tf_server" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_server_no_port(t *testing.T) {
-	t.Skip("TODO: Read error")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -274,7 +274,6 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_mixed_bindings(t *testing.T) {
-	t.Skip("TODO:")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -326,14 +325,17 @@ func testAccCheckServicegroup_servicegroupmember_bindingExist(n string, id *stri
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 3)
-		servicegroupname := idSlice[0]
-
-		servername := idSlice[1]
-
+		// ID-parse helper line rewritten for the new key:value ID format
+		// (utils.ParseIdString handles both new and legacy comma formats).
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "servername", "port"}, []string{"servername", "port"})
+		if err != nil {
+			return err
+		}
+		servicegroupname := idMap["servicegroupname"]
+		servername := idMap["servername"]
 		port := 0
-		if len(idSlice) == 3 {
-			if port, err = strconv.Atoi(idSlice[2]); err != nil {
+		if portStr, ok := idMap["port"]; ok && portStr != "" {
+			if port, err = strconv.Atoi(portStr); err != nil {
 				return err
 			}
 		}
@@ -354,7 +356,10 @@ func testAccCheckServicegroup_servicegroupmember_bindingExist(n string, id *stri
 		foundIndex := -1
 		for i, v := range dataArr {
 			if port != 0 {
-				portEqual := int(v["port"].(float64)) == port
+				portEqual := false
+				if pv, ok := v["port"].(float64); ok {
+					portEqual = int(pv) == port
+				}
 				servernameEqual := v["servername"] == servername
 				if servernameEqual && portEqual {
 					foundIndex = i
@@ -414,7 +419,10 @@ func testAccCheckServicegroup_servicegroupmember_binding_not_exists(bindingId st
 		foundIndex := -1
 		for i, v := range dataArr {
 			if port != 0 {
-				portEqual := int(v["port"].(float64)) == port
+				portEqual := false
+				if pv, ok := v["port"].(float64); ok {
+					portEqual = int(pv) == port
+				}
 				servernameEqual := v["servername"] == servername
 				if servernameEqual && portEqual {
 					foundIndex = i

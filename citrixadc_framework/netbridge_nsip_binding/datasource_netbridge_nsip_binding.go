@@ -71,7 +71,8 @@ func (d *NetbridgeNsipBindingDataSource) Read(ctx context.Context, req datasourc
 	for i, v := range dataArr {
 		match := true
 
-		// Check ipaddress
+		// Check ipaddress (the unique discriminator under a given netbridge name).
+		// netmask is NOT echoed by the GET response, so it cannot be used as a filter.
 		if val, ok := v["ipaddress"].(string); ok {
 			if ipaddress_Name.IsNull() || val != ipaddress_Name.ValueString() {
 				match = false
@@ -81,7 +82,6 @@ func (d *NetbridgeNsipBindingDataSource) Read(ctx context.Context, req datasourc
 			match = false
 			continue
 		}
-
 		if match {
 			foundIndex = i
 			break
@@ -94,7 +94,7 @@ func (d *NetbridgeNsipBindingDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	netbridge_nsip_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	netbridge_nsip_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

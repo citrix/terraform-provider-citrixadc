@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,6 +26,7 @@ type AppfwprofileXmlattachmenturlBindingResourceModel struct {
 	Isautodeployed                types.String `tfsdk:"isautodeployed"`
 	Name                          types.String `tfsdk:"name"`
 	Resourceid                    types.String `tfsdk:"resourceid"`
+	Ruletype                      types.String `tfsdk:"ruletype"`
 	State                         types.String `tfsdk:"state"`
 	Xmlattachmentcontenttype      types.String `tfsdk:"xmlattachmentcontenttype"`
 	Xmlattachmentcontenttypecheck types.String `tfsdk:"xmlattachmentcontenttypecheck"`
@@ -50,149 +52,207 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 			"xmlattachmentcontenttype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Specify content-type regular expression.",
 			},
 			"xmlattachmentcontenttypecheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML attachment content-type check is ON or OFF. Protects against XML requests with illegal attachments.",
 			},
 			"xmlattachmenturl": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "XML attachment URL regular expression length.",
 			},
 			"xmlmaxattachmentsize": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify maximum attachment size.",
 			},
 			"xmlmaxattachmentsizecheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if XML Max attachment size Check is ON or OFF. Protects against XML requests with large attachment data.",
 			},
 		},
 	}
 }
 
-func appfwprofile_xmlattachmenturl_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileXmlattachmenturlBindingResourceModel) appfw.Appfwprofilexmlattachmenturlbinding {
-	tflog.Debug(ctx, "In appfwprofile_xmlattachmenturl_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_xmlattachmenturl_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileXmlattachmenturlBindingResourceModel) appfw.Appfwprofilexmlattachmenturlbinding {
+	tflog.Debug(ctx, "In appfwprofile_xmlattachmenturl_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_xmlattachmenturl_binding := appfw.Appfwprofilexmlattachmenturlbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_xmlattachmenturl_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.State = data.State.ValueString()
 	}
-	if !data.Xmlattachmentcontenttype.IsNull() {
+	if !data.Xmlattachmentcontenttype.IsNull() && !data.Xmlattachmentcontenttype.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.Xmlattachmentcontenttype = data.Xmlattachmentcontenttype.ValueString()
 	}
-	if !data.Xmlattachmentcontenttypecheck.IsNull() {
+	if !data.Xmlattachmentcontenttypecheck.IsNull() && !data.Xmlattachmentcontenttypecheck.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.Xmlattachmentcontenttypecheck = data.Xmlattachmentcontenttypecheck.ValueString()
 	}
-	if !data.Xmlattachmenturl.IsNull() {
+	if !data.Xmlattachmenturl.IsNull() && !data.Xmlattachmenturl.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.Xmlattachmenturl = data.Xmlattachmenturl.ValueString()
 	}
-	if !data.Xmlmaxattachmentsize.IsNull() {
+	if !data.Xmlmaxattachmentsize.IsNull() && !data.Xmlmaxattachmentsize.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.Xmlmaxattachmentsize = utils.IntPtr(int(data.Xmlmaxattachmentsize.ValueInt64()))
 	}
-	if !data.Xmlmaxattachmentsizecheck.IsNull() {
+	if !data.Xmlmaxattachmentsizecheck.IsNull() && !data.Xmlmaxattachmentsizecheck.IsUnknown() {
 		appfwprofile_xmlattachmenturl_binding.Xmlmaxattachmentsizecheck = data.Xmlmaxattachmentsizecheck.ValueString()
 	}
 
 	return appfwprofile_xmlattachmenturl_binding
 }
 
+// appfwprofile_xmlattachmenturl_bindingSetAttrFromGet is the RESOURCE-side setter.
+// All attributes are RequiresReplace (no update endpoint) and the NITRO server may
+// echo server-defaulted/normalized values for fields like alertonly, isautodeployed,
+// resourceid, ruletype. To avoid "inconsistent result after apply" we adopt the GET
+// value only when the model field is currently null/unknown (e.g. import); otherwise
+// we preserve the configured plan/state value. The ID is set once in Create and is
+// preserved here.
 func appfwprofile_xmlattachmenturl_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileXmlattachmenturlBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileXmlattachmenturlBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_xmlattachmenturl_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["alertonly"]; ok && val != nil {
-		data.Alertonly = types.StringValue(val.(string))
-	} else {
-		data.Alertonly = types.StringNull()
+	adopt := func(cur types.String, key string) types.String {
+		if !cur.IsNull() && !cur.IsUnknown() {
+			return cur
+		}
+		if val, ok := getResponseData[key]; ok && val != nil {
+			return types.StringValue(val.(string))
+		}
+		return types.StringNull()
 	}
-	if val, ok := getResponseData["comment"]; ok && val != nil {
-		data.Comment = types.StringValue(val.(string))
+
+	data.Alertonly = adopt(data.Alertonly, "alertonly")
+	data.Comment = adopt(data.Comment, "comment")
+	data.Isautodeployed = adopt(data.Isautodeployed, "isautodeployed")
+	data.Name = adopt(data.Name, "name")
+	data.Resourceid = adopt(data.Resourceid, "resourceid")
+	data.Ruletype = adopt(data.Ruletype, "ruletype")
+	data.State = adopt(data.State, "state")
+	data.Xmlattachmentcontenttype = adopt(data.Xmlattachmentcontenttype, "xmlattachmentcontenttype")
+	data.Xmlattachmentcontenttypecheck = adopt(data.Xmlattachmentcontenttypecheck, "xmlattachmentcontenttypecheck")
+	data.Xmlattachmenturl = adopt(data.Xmlattachmenturl, "xmlattachmenturl")
+	if !data.Xmlmaxattachmentsize.IsNull() && !data.Xmlmaxattachmentsize.IsUnknown() {
+		// preserve configured value
+	} else if val, ok := getResponseData["xmlmaxattachmentsize"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Xmlmaxattachmentsize = types.Int64Value(intVal)
+		}
 	} else {
-		data.Comment = types.StringNull()
+		data.Xmlmaxattachmentsize = types.Int64Null()
 	}
-	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
-		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
-		data.Isautodeployed = types.StringNull()
+	data.Xmlmaxattachmentsizecheck = adopt(data.Xmlmaxattachmentsizecheck, "xmlmaxattachmentsizecheck")
+
+	return data
+}
+
+// appfwprofile_xmlattachmenturl_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE-side setter: it faithfully copies every field from the GET response
+// (the datasource has no prior plan/state to preserve) and sets the composite ID.
+func appfwprofile_xmlattachmenturl_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwprofileXmlattachmenturlBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileXmlattachmenturlBindingResourceModel {
+	tflog.Debug(ctx, "In appfwprofile_xmlattachmenturl_bindingSetAttrFromGetForDatasource Function")
+
+	copyField := func(key string) types.String {
+		if val, ok := getResponseData[key]; ok && val != nil {
+			return types.StringValue(val.(string))
+		}
+		return types.StringNull()
 	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
-	}
-	if val, ok := getResponseData["resourceid"]; ok && val != nil {
-		data.Resourceid = types.StringValue(val.(string))
-	} else {
-		data.Resourceid = types.StringNull()
-	}
-	if val, ok := getResponseData["state"]; ok && val != nil {
-		data.State = types.StringValue(val.(string))
-	} else {
-		data.State = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlattachmentcontenttype"]; ok && val != nil {
-		data.Xmlattachmentcontenttype = types.StringValue(val.(string))
-	} else {
-		data.Xmlattachmentcontenttype = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlattachmentcontenttypecheck"]; ok && val != nil {
-		data.Xmlattachmentcontenttypecheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlattachmentcontenttypecheck = types.StringNull()
-	}
-	if val, ok := getResponseData["xmlattachmenturl"]; ok && val != nil {
-		data.Xmlattachmenturl = types.StringValue(val.(string))
-	} else {
-		data.Xmlattachmenturl = types.StringNull()
-	}
+
+	data.Alertonly = copyField("alertonly")
+	data.Comment = copyField("comment")
+	data.Isautodeployed = copyField("isautodeployed")
+	data.Name = copyField("name")
+	data.Resourceid = copyField("resourceid")
+	data.Ruletype = copyField("ruletype")
+	data.State = copyField("state")
+	data.Xmlattachmentcontenttype = copyField("xmlattachmentcontenttype")
+	data.Xmlattachmentcontenttypecheck = copyField("xmlattachmentcontenttypecheck")
+	data.Xmlattachmenturl = copyField("xmlattachmenturl")
 	if val, ok := getResponseData["xmlmaxattachmentsize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxattachmentsize = types.Int64Value(intVal)
@@ -200,13 +260,9 @@ func appfwprofile_xmlattachmenturl_bindingSetAttrFromGet(ctx context.Context, da
 	} else {
 		data.Xmlmaxattachmentsize = types.Int64Null()
 	}
-	if val, ok := getResponseData["xmlmaxattachmentsizecheck"]; ok && val != nil {
-		data.Xmlmaxattachmentsizecheck = types.StringValue(val.(string))
-	} else {
-		data.Xmlmaxattachmentsizecheck = types.StringNull()
-	}
+	data.Xmlmaxattachmentsizecheck = copyField("xmlmaxattachmentsizecheck")
 
-	// Set ID for the resource
+	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

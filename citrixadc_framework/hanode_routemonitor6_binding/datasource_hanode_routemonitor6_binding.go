@@ -42,8 +42,8 @@ func (d *HanodeRoutemonitor6BindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Hanodeid.ValueInt64())
+	// Array filter with parent ID. The parent (hanode_id) is the NITRO resource name.
+	id_Name := fmt.Sprintf("%v", data.HanodeId.ValueInt64())
 	routemonitor_Name := data.Routemonitor
 
 	var dataArr []map[string]interface{}
@@ -66,22 +66,10 @@ func (d *HanodeRoutemonitor6BindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching routemonitor.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check routemonitor
-		if val, ok := v["routemonitor"].(string); ok {
-			if routemonitor_Name.IsNull() || val != routemonitor_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !routemonitor_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["routemonitor"].(string); ok && val == routemonitor_Name.ValueString() {
 			foundIndex = i
 			break
 		}
@@ -89,11 +77,11 @@ func (d *HanodeRoutemonitor6BindingDataSource) Read(ctx context.Context, req dat
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("hanode_routemonitor6_binding with routemonitor %s not found", routemonitor_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("hanode_routemonitor6_binding with routemonitor %s not found", routemonitor_Name.ValueString()))
 		return
 	}
 
-	hanode_routemonitor6_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	hanode_routemonitor6_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

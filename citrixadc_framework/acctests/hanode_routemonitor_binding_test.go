@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -104,10 +105,12 @@ func testAccCheckHanode_routemonitor_bindingExist(n string, id *string) resource
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		id := idSlice[0]
-		routemonitor := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"hanode_id", "routemonitor"}, nil)
+		if err != nil {
+			return err
+		}
+		id := idMap["hanode_id"]
+		routemonitor := idMap["routemonitor"]
 
 		findParams := service.FindParams{
 			ResourceType:             "hanode_routemonitor_binding",
@@ -149,10 +152,12 @@ func testAccCheckHanode_routemonitor_bindingNotExist(n string, id string) resour
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		id := idSlice[0]
-		routemonitor := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"hanode_id", "routemonitor"}, nil)
+		if err != nil {
+			return err
+		}
+		id := idMap["hanode_id"]
+		routemonitor := idMap["routemonitor"]
 
 		findParams := service.FindParams{
 			ResourceType:             "hanode_routemonitor_binding",

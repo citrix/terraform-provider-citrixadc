@@ -71,7 +71,7 @@ func (d *VpnvserverIntranetipBindingDataSource) Read(ctx context.Context, req da
 	for i, v := range dataArr {
 		match := true
 
-		// Check intranetip
+		// Check intranetip (the binding discriminator within the parent's array)
 		if val, ok := v["intranetip"].(string); ok {
 			if intranetip_Name.IsNull() || val != intranetip_Name.ValueString() {
 				match = false
@@ -81,7 +81,6 @@ func (d *VpnvserverIntranetipBindingDataSource) Read(ctx context.Context, req da
 			match = false
 			continue
 		}
-
 		if match {
 			foundIndex = i
 			break
@@ -94,7 +93,7 @@ func (d *VpnvserverIntranetipBindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	vpnvserver_intranetip_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_intranetip_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

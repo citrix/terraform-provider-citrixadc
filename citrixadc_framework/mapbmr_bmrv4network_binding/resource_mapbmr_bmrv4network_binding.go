@@ -3,8 +3,11 @@ package mapbmr_bmrv4network_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,24 @@ func (r *MapbmrBmrv4networkBindingResource) Create(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Creating mapbmr_bmrv4network_binding resource")
-
-	// mapbmr_bmrv4network_binding := mapbmr_bmrv4network_bindingGetThePayloadFromtheConfig(ctx, &data)
+	mapbmr_bmrv4network_binding := mapbmr_bmrv4network_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Mapbmr_bmrv4network_binding.Type(), &mapbmr_bmrv4network_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create mapbmr_bmrv4network_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("mapbmr_bmrv4network_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Mapbmr_bmrv4network_binding.Type(), &mapbmr_bmrv4network_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create mapbmr_bmrv4network_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created mapbmr_bmrv4network_binding resource")
+
+	// Set ID for the resource before reading state
+	// Composite ID matches legacy SDK v2 order (resource_id_mapping.json: "name,network").
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readMapbmrBmrv4networkBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +102,10 @@ func (r *MapbmrBmrv4networkBindingResource) Read(ctx context.Context, req resour
 }
 
 func (r *MapbmrBmrv4networkBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data MapbmrBmrv4networkBindingResourceModel
+	var data, state MapbmrBmrv4networkBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +113,29 @@ func (r *MapbmrBmrv4networkBindingResource) Update(ctx context.Context, req reso
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating mapbmr_bmrv4network_binding resource")
 
-	// Create API request body from the model
-	// mapbmr_bmrv4network_binding := mapbmr_bmrv4network_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Mapbmr_bmrv4network_binding.Type(), &mapbmr_bmrv4network_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update mapbmr_bmrv4network_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		mapbmr_bmrv4network_binding := mapbmr_bmrv4network_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Mapbmr_bmrv4network_binding.Type(), &mapbmr_bmrv4network_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update mapbmr_bmrv4network_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated mapbmr_bmrv4network_binding resource")
+		tflog.Trace(ctx, "Updated mapbmr_bmrv4network_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for mapbmr_bmrv4network_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readMapbmrBmrv4networkBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +155,106 @@ func (r *MapbmrBmrv4networkBindingResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting mapbmr_bmrv4network_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "network"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For mapbmr_bmrv4network_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted mapbmr_bmrv4network_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// network is the mandatory delete arg (red/bold in NITRO doc); netmask is optional.
+	// netmask is not part of the ID, so read it from state. URL-encode arg values since
+	// the NITRO client joins them raw into the delete URL.
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["network"]; ok && val != "" {
+		argsMap["network"] = url.QueryEscape(val)
+	}
+	if !data.Netmask.IsNull() && data.Netmask.ValueString() != "" {
+		argsMap["netmask"] = url.QueryEscape(data.Netmask.ValueString())
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Mapbmr_bmrv4network_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete mapbmr_bmrv4network_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted mapbmr_bmrv4network_binding binding")
 }
 
 // Helper function to read mapbmr_bmrv4network_binding data from API
 func (r *MapbmrBmrv4networkBindingResource) readMapbmrBmrv4networkBindingFromApi(ctx context.Context, data *MapbmrBmrv4networkBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Mapbmr_bmrv4network_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "network"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Mapbmr_bmrv4network_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read mapbmr_bmrv4network_binding, got error: %s", err))
 		return
 	}
 
-	mapbmr_bmrv4network_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "mapbmr_bmrv4network_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id.
+	// Identity is (name, network); netmask is not part of the ID.
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check network
+		if idVal, ok := idMap["network"]; ok {
+			if val, ok := v["network"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["network"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("mapbmr_bmrv4network_binding not found with the provided ID attributes"))
+		return
+	}
+
+	mapbmr_bmrv4network_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

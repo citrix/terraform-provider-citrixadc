@@ -7,9 +7,14 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -19,6 +24,7 @@ import (
 // AuditnslogglobalAuditnslogpolicyBindingResourceModel describes the resource data model.
 type AuditnslogglobalAuditnslogpolicyBindingResourceModel struct {
 	Id             types.String `tfsdk:"id"`
+	Builtin        types.List   `tfsdk:"builtin"`
 	Globalbindtype types.String `tfsdk:"globalbindtype"`
 	Policyname     types.String `tfsdk:"policyname"`
 	Priority       types.Int64  `tfsdk:"priority"`
@@ -32,35 +38,55 @@ func (r *AuditnslogglobalAuditnslogpolicyBindingResource) Schema(ctx context.Con
 				Computed:    true,
 				Description: "The ID of the auditnslogglobal_auditnslogpolicy_binding resource.",
 			},
-			"globalbindtype": schema.StringAttribute{
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
 				Optional:    true,
-				Default:     stringdefault.StaticString("SYSTEM_GLOBAL"),
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
+			},
+			"globalbindtype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("SYSTEM_GLOBAL"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "0",
 			},
 			"policyname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the audit nslog policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specifies the priority of the policy.",
 			},
 		},
 	}
 }
 
-func auditnslogglobal_auditnslogpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AuditnslogglobalAuditnslogpolicyBindingResourceModel) audit.Auditnslogglobalauditnslogpolicybinding {
-	tflog.Debug(ctx, "In auditnslogglobal_auditnslogpolicy_bindingGetThePayloadFromtheConfig Function")
+func auditnslogglobal_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *AuditnslogglobalAuditnslogpolicyBindingResourceModel) audit.Auditnslogglobalauditnslogpolicybinding {
+	tflog.Debug(ctx, "In auditnslogglobal_auditnslogpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	auditnslogglobal_auditnslogpolicy_binding := audit.Auditnslogglobalauditnslogpolicybinding{}
-	if !data.Globalbindtype.IsNull() {
+	if !data.Globalbindtype.IsNull() && !data.Globalbindtype.IsUnknown() {
 		auditnslogglobal_auditnslogpolicy_binding.Globalbindtype = data.Globalbindtype.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		auditnslogglobal_auditnslogpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		auditnslogglobal_auditnslogpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 
@@ -71,6 +97,17 @@ func auditnslogglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context
 	tflog.Debug(ctx, "In auditnslogglobal_auditnslogpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if listVal, listOk := val.([]interface{}); listOk {
+			elems := make([]attr.Value, 0, len(listVal))
+			for _, item := range listVal {
+				elems = append(elems, types.StringValue(fmt.Sprintf("%v", item)))
+			}
+			data.Builtin = types.ListValueMust(types.StringType, elems)
+		}
+	} else if data.Builtin.IsUnknown() {
+		data.Builtin = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
 		data.Globalbindtype = types.StringValue(val.(string))
 	} else {

@@ -2,13 +2,16 @@ package systemglobal_authenticationpolicy_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -19,6 +22,7 @@ import (
 // SystemglobalAuthenticationpolicyBindingResourceModel describes the resource data model.
 type SystemglobalAuthenticationpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Builtin                types.List   `tfsdk:"builtin"`
 	Feature                types.String `tfsdk:"feature"`
 	Globalbindtype         types.String `tfsdk:"globalbindtype"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
@@ -35,6 +39,16 @@ func (r *SystemglobalAuthenticationpolicyBindingResource) Schema(ctx context.Con
 				Computed:    true,
 				Description: "The ID of the systemglobal_authenticationpolicy_binding resource.",
 			},
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
+			},
 			"feature": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -45,57 +59,76 @@ func (r *SystemglobalAuthenticationpolicyBindingResource) Schema(ctx context.Con
 			},
 			"globalbindtype": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("SYSTEM_GLOBAL"),
 				Description: "0",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE. Applicable only for advanced authentication policies",
 			},
 			"nextfactor": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "On success invoke label. Applicable for advanced authentication policy binding",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the  command policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The priority of the command policy.",
 			},
 		},
 	}
 }
 
-func systemglobal_authenticationpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SystemglobalAuthenticationpolicyBindingResourceModel) system.Systemglobalauthenticationpolicybinding {
-	tflog.Debug(ctx, "In systemglobal_authenticationpolicy_bindingGetThePayloadFromtheConfig Function")
+func systemglobal_authenticationpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *SystemglobalAuthenticationpolicyBindingResourceModel) system.Systemglobalauthenticationpolicybinding {
+	tflog.Debug(ctx, "In systemglobal_authenticationpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	systemglobal_authenticationpolicy_binding := system.Systemglobalauthenticationpolicybinding{}
-	if !data.Feature.IsNull() {
+	if !data.Builtin.IsNull() && !data.Builtin.IsUnknown() {
+		builtinList := make([]string, 0, len(data.Builtin.Elements()))
+		for _, elem := range data.Builtin.Elements() {
+			if strElem, ok := elem.(types.String); ok {
+				builtinList = append(builtinList, strElem.ValueString())
+			}
+		}
+		systemglobal_authenticationpolicy_binding.Builtin = builtinList
+	}
+	if !data.Feature.IsNull() && !data.Feature.IsUnknown() {
 		systemglobal_authenticationpolicy_binding.Feature = data.Feature.ValueString()
 	}
-	if !data.Globalbindtype.IsNull() {
+	if !data.Globalbindtype.IsNull() && !data.Globalbindtype.IsUnknown() {
 		systemglobal_authenticationpolicy_binding.Globalbindtype = data.Globalbindtype.ValueString()
 	}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		systemglobal_authenticationpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Nextfactor.IsNull() {
+	if !data.Nextfactor.IsNull() && !data.Nextfactor.IsUnknown() {
 		systemglobal_authenticationpolicy_binding.Nextfactor = data.Nextfactor.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		systemglobal_authenticationpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		systemglobal_authenticationpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 
@@ -106,6 +139,24 @@ func systemglobal_authenticationpolicy_bindingSetAttrFromGet(ctx context.Context
 	tflog.Debug(ctx, "In systemglobal_authenticationpolicy_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["builtin"]; ok && val != nil {
+		if rawList, ok := val.([]interface{}); ok {
+			elems := make([]attr.Value, 0, len(rawList))
+			for _, item := range rawList {
+				elems = append(elems, types.StringValue(fmt.Sprintf("%v", item)))
+			}
+			listVal, diags := types.ListValue(types.StringType, elems)
+			if !diags.HasError() {
+				data.Builtin = listVal
+			} else {
+				data.Builtin = types.ListNull(types.StringType)
+			}
+		} else {
+			data.Builtin = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Builtin = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
 	} else {
@@ -140,8 +191,8 @@ func systemglobal_authenticationpolicy_bindingSetAttrFromGet(ctx context.Context
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Policyname.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
 }

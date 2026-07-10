@@ -16,17 +16,15 @@ func AppfwprofileCmdinjectionBindingDataSourceSchema() schema.Schema {
 				Description: "Send SNMP alert?",
 			},
 			"as_scan_location_cmd": schema.StringAttribute{
-				Optional:    true,
+				Required:    true,
 				Description: "Location of command injection exception - form field, header or cookie.",
 			},
 			"as_value_expr_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The web form/header/cookie value expression.",
 			},
 			"as_value_type_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Type of the relaxed web form value",
 			},
 			"cmdinjection": schema.StringAttribute{
@@ -65,6 +63,11 @@ func AppfwprofileCmdinjectionBindingDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "A \"id\" that identifies the rule.",
+			},
+			"ruletype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies rule type of binding",
 			},
 			"state": schema.StringAttribute{
 				Optional:    true,

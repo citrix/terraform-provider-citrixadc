@@ -3,8 +3,10 @@ package systemgroup_systemcmdpolicy_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *SystemgroupSystemcmdpolicyBindingResource) Create(ctx context.Context, 
 	}
 
 	tflog.Debug(ctx, "Creating systemgroup_systemcmdpolicy_binding resource")
-
-	// systemgroup_systemcmdpolicy_binding := systemgroup_systemcmdpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	systemgroup_systemcmdpolicy_binding := systemgroup_systemcmdpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Systemgroup_systemcmdpolicy_binding.Type(), &systemgroup_systemcmdpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systemgroup_systemcmdpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("systemgroup_systemcmdpolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Systemgroup_systemcmdpolicy_binding.Type(), &systemgroup_systemcmdpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systemgroup_systemcmdpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created systemgroup_systemcmdpolicy_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readSystemgroupSystemcmdpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *SystemgroupSystemcmdpolicyBindingResource) Read(ctx context.Context, re
 }
 
 func (r *SystemgroupSystemcmdpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SystemgroupSystemcmdpolicyBindingResourceModel
+	var data, state SystemgroupSystemcmdpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *SystemgroupSystemcmdpolicyBindingResource) Update(ctx context.Context, 
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating systemgroup_systemcmdpolicy_binding resource")
 
-	// Create API request body from the model
-	// systemgroup_systemcmdpolicy_binding := systemgroup_systemcmdpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Systemgroup_systemcmdpolicy_binding.Type(), &systemgroup_systemcmdpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update systemgroup_systemcmdpolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		systemgroup_systemcmdpolicy_binding := systemgroup_systemcmdpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Systemgroup_systemcmdpolicy_binding.Type(), &systemgroup_systemcmdpolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update systemgroup_systemcmdpolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated systemgroup_systemcmdpolicy_binding resource")
+		tflog.Trace(ctx, "Updated systemgroup_systemcmdpolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for systemgroup_systemcmdpolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readSystemgroupSystemcmdpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,99 @@ func (r *SystemgroupSystemcmdpolicyBindingResource) Delete(ctx context.Context, 
 	}
 
 	tflog.Debug(ctx, "Deleting systemgroup_systemcmdpolicy_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"groupname", "policyname"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For systemgroup_systemcmdpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted systemgroup_systemcmdpolicy_binding resource from state")
+	groupname_value, ok := idMap["groupname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'groupname' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["policyname"]; ok && val != "" {
+		argsMap["policyname"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Systemgroup_systemcmdpolicy_binding.Type(), groupname_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete systemgroup_systemcmdpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted systemgroup_systemcmdpolicy_binding binding")
 }
 
 // Helper function to read systemgroup_systemcmdpolicy_binding data from API
 func (r *SystemgroupSystemcmdpolicyBindingResource) readSystemgroupSystemcmdpolicyBindingFromApi(ctx context.Context, data *SystemgroupSystemcmdpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Systemgroup_systemcmdpolicy_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"groupname", "policyname"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	groupname_Name, ok := idMap["groupname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'groupname' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Systemgroup_systemcmdpolicy_binding.Type(),
+		ResourceName:             groupname_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read systemgroup_systemcmdpolicy_binding, got error: %s", err))
 		return
 	}
 
-	systemgroup_systemcmdpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "systemgroup_systemcmdpolicy_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check policyname
+		if idVal, ok := idMap["policyname"]; ok {
+			if val, ok := v["policyname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["policyname"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("systemgroup_systemcmdpolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	systemgroup_systemcmdpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

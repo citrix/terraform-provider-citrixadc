@@ -7,7 +7,7 @@ subcategory: "Network"
 The rnatglobal_auditsyslogpolicy_binding data source allows you to retrieve information about a rnatglobal_auditsyslogpolicy_binding.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_rnatglobal_auditsyslogpolicy_binding" "tf_binding" {
@@ -33,6 +33,7 @@ output "priority" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the rnatglobal_auditsyslogpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the rnatglobal_auditsyslogpolicy_binding. It has the same value as the `policy` attribute.
+* `all` - Remove all RNAT global config.
 * `priority` - The priority of the policy.
 

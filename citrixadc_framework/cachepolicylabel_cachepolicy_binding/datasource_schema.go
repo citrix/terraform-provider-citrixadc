@@ -20,7 +20,7 @@ func CachepolicylabelCachepolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next-lower priority.",
 			},
-			"invoke_labelname": schema.StringAttribute{
+			"invokelabelname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of the policy label to invoke if the current policy rule evaluates to TRUE.",

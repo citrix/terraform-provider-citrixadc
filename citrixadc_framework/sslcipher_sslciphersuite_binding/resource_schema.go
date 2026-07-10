@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -37,28 +38,41 @@ func (r *SslcipherSslciphersuiteBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the sslcipher_sslciphersuite_binding resource.",
 			},
 			"ciphergroupname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the user-defined cipher group.",
 			},
 			"ciphername": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Cipher name.",
 			},
 			"cipheroperation": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The operation that is performed when adding the cipher-suite.\n\nPossible cipher operations are:\n	ADD - Appends the given cipher-suite to the existing one configured for the virtual server.\n	REM - Removes the given cipher-suite from the existing one configured for the virtual server.\n	ORD - Overrides the current configured cipher-suite for the virtual server with the given cipher-suite.",
 			},
 			"cipherpriority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "This indicates priority assigned to the particular cipher",
 			},
 			"ciphgrpals": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A cipher-suite can consist of an individual cipher name, the system predefined cipher-alias name, or user defined cipher-group name.",
 			},
 			"description": schema.StringAttribute{
@@ -73,27 +87,27 @@ func (r *SslcipherSslciphersuiteBindingResource) Schema(ctx context.Context, req
 	}
 }
 
-func sslcipher_sslciphersuite_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslcipherSslciphersuiteBindingResourceModel) ssl.Sslciphersslciphersuitebinding {
-	tflog.Debug(ctx, "In sslcipher_sslciphersuite_bindingGetThePayloadFromtheConfig Function")
+func sslcipher_sslciphersuite_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslcipherSslciphersuiteBindingResourceModel) ssl.Sslciphersslciphersuitebinding {
+	tflog.Debug(ctx, "In sslcipher_sslciphersuite_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslcipher_sslciphersuite_binding := ssl.Sslciphersslciphersuitebinding{}
-	if !data.Ciphergroupname.IsNull() {
+	if !data.Ciphergroupname.IsNull() && !data.Ciphergroupname.IsUnknown() {
 		sslcipher_sslciphersuite_binding.Ciphergroupname = data.Ciphergroupname.ValueString()
 	}
-	if !data.Ciphername.IsNull() {
+	if !data.Ciphername.IsNull() && !data.Ciphername.IsUnknown() {
 		sslcipher_sslciphersuite_binding.Ciphername = data.Ciphername.ValueString()
 	}
-	if !data.Cipheroperation.IsNull() {
+	if !data.Cipheroperation.IsNull() && !data.Cipheroperation.IsUnknown() {
 		sslcipher_sslciphersuite_binding.Cipheroperation = data.Cipheroperation.ValueString()
 	}
-	if !data.Cipherpriority.IsNull() {
+	if !data.Cipherpriority.IsNull() && !data.Cipherpriority.IsUnknown() {
 		sslcipher_sslciphersuite_binding.Cipherpriority = utils.IntPtr(int(data.Cipherpriority.ValueInt64()))
 	}
-	if !data.Ciphgrpals.IsNull() {
+	if !data.Ciphgrpals.IsNull() && !data.Ciphgrpals.IsUnknown() {
 		sslcipher_sslciphersuite_binding.Ciphgrpals = data.Ciphgrpals.ValueString()
 	}
-	if !data.Description.IsNull() {
+	if !data.Description.IsNull() && !data.Description.IsUnknown() {
 		sslcipher_sslciphersuite_binding.Description = data.Description.ValueString()
 	}
 

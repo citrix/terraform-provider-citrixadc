@@ -32,9 +32,10 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
+* `bindpoint` - Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `groupextraction` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor
-* `nextfactor` - Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor
+* `groupextraction` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor.
+* `nextfactor` - Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor.
 * `priority` - The priority, if any, of the vpn vserver policy.
-* `secondary` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor
-* `id` - The id of the authenticationvserver_cspolicy_binding. It is a system-generated identifier.
+* `secondary` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor.
+* `id` - The id of the authenticationvserver_cspolicy_binding. It is the concatenation of `name` and `policy` attributes separated by a comma.

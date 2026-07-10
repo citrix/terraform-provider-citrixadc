@@ -85,6 +85,7 @@ func (d *AppfwglobalAppfwpolicyBindingDataSource) Read(ctx context.Context, req 
 			match = false
 			continue
 		}
+		// Check type_Name
 		if !type_Name.IsNull() && type_Name.ValueString() != "" {
 			if v, ok := v["type"]; ok {
 				if v.(string) != type_Name.ValueString() {
@@ -105,7 +106,7 @@ func (d *AppfwglobalAppfwpolicyBindingDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	appfwglobal_appfwpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwglobal_appfwpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -4,24 +4,24 @@ subcategory: "Load Balancing"
 
 # Data Source: lbvserver_contentinspectionpolicy_binding
 
-The lbvserver_contentinspectionpolicy_binding data source allows you to retrieve information about a content inspection policy binding to an lbvserver.
+The lbvserver_contentinspectionpolicy_binding data source allows you to retrieve information about the binding between a load balancing virtual server and a content inspection policy.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
-data "citrixadc_lbvserver_contentinspectionpolicy_binding" "tf_lbvserver_contentinspectionpolicy_binding" {
+data "citrixadc_lbvserver_contentinspectionpolicy_binding" "foo" {
   name       = "tf_lbvserver"
   bindpoint  = "REQUEST"
   policyname = "tf_contentinspectionpolicy"
 }
 
-output "bindpoint" {
-  value = data.citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding.bindpoint
+output "gotopriorityexpression" {
+  value = data.citrixadc_lbvserver_contentinspectionpolicy_binding.foo.gotopriorityexpression
 }
 
-output "gotopriorityexpression" {
-  value = data.citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding.gotopriorityexpression
+output "priority" {
+  value = data.citrixadc_lbvserver_contentinspectionpolicy_binding.foo.priority
 }
 ```
 
@@ -37,10 +37,10 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
+* `id` - The id of the lbvserver_contentinspectionpolicy_binding. It is a system-generated identifier.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `priority` - Priority.
 * `invoke` - Invoke policies bound to a virtual server or policy label.
 * `labelname` - Name of the label invoked.
-* `priority` - Priority.
 * `labeltype` - The invocation type.
 * `order` - Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.
-* `id` - The id of the lbvserver_contentinspectionpolicy_binding. It is a system-generated identifier.

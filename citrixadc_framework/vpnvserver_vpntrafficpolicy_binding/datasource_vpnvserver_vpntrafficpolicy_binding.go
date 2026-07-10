@@ -42,7 +42,8 @@ func (d *VpnvserverVpntrafficpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Array filter with parent ID; the binding is identified by name (parent)
+	// and policy (bound entity).
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -66,24 +67,14 @@ func (d *VpnvserverVpntrafficpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the requested policy.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policy
 		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
+			if policy_Name.IsNull() || val == policy_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
@@ -93,7 +84,7 @@ func (d *VpnvserverVpntrafficpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	vpnvserver_vpntrafficpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_vpntrafficpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

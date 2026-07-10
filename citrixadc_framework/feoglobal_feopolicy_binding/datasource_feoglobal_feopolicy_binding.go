@@ -85,6 +85,7 @@ func (d *FeoglobalFeopolicyBindingDataSource) Read(ctx context.Context, req data
 			match = false
 			continue
 		}
+		// Check type_Name
 		if !type_Name.IsNull() && type_Name.ValueString() != "" {
 			if v, ok := v["type"]; ok {
 				if v.(string) != type_Name.ValueString() {
@@ -105,7 +106,7 @@ func (d *FeoglobalFeopolicyBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	feoglobal_feopolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	feoglobal_feopolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

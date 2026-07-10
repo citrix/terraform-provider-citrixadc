@@ -26,6 +26,7 @@ type AppfwprofileExcluderescontenttypeBindingResourceModel struct {
 	Isautodeployed        types.String `tfsdk:"isautodeployed"`
 	Name                  types.String `tfsdk:"name"`
 	Resourceid            types.String `tfsdk:"resourceid"`
+	Ruletype              types.String `tfsdk:"ruletype"`
 	State                 types.String `tfsdk:"state"`
 }
 
@@ -39,69 +40,94 @@ func (r *AppfwprofileExcluderescontenttypeBindingResource) Schema(ctx context.Co
 			},
 			"alertonly": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"excluderescontenttype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A regular expression that represents the content type of the response that are to be excluded from inspection.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding.",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 		},
 	}
 }
 
-func appfwprofile_excluderescontenttype_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileExcluderescontenttypeBindingResourceModel) appfw.Appfwprofileexcluderescontenttypebinding {
-	tflog.Debug(ctx, "In appfwprofile_excluderescontenttype_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_excluderescontenttype_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileExcluderescontenttypeBindingResourceModel) appfw.Appfwprofileexcluderescontenttypebinding {
+	tflog.Debug(ctx, "In appfwprofile_excluderescontenttype_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_excluderescontenttype_binding := appfw.Appfwprofileexcluderescontenttypebinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_excluderescontenttype_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_excluderescontenttype_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Excluderescontenttype.IsNull() {
+	if !data.Excluderescontenttype.IsNull() && !data.Excluderescontenttype.IsUnknown() {
 		appfwprofile_excluderescontenttype_binding.Excluderescontenttype = data.Excluderescontenttype.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_excluderescontenttype_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_excluderescontenttype_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_excluderescontenttype_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_excluderescontenttype_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_excluderescontenttype_binding.State = data.State.ValueString()
 	}
 
@@ -111,7 +137,52 @@ func appfwprofile_excluderescontenttype_bindingGetThePayloadFromtheConfig(ctx co
 func appfwprofile_excluderescontenttype_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileExcluderescontenttypeBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileExcluderescontenttypeBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_excluderescontenttype_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// NOTE: The NITRO server overrides/normalizes some write-only inputs in the GET
+	// response (alertonly, isautodeployed) and never echoes ruletype. To preserve the
+	// user-configured values (matching SDK v2 backward-compat behavior, which did NOT
+	// re-set alertonly/isautodeployed), these fields are intentionally left untouched
+	// here. See appfwprofile_excluderescontenttype_bindingSetAttrFromGetForDatasource
+	// for the faithful copy used by the datasource.
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["excluderescontenttype"]; ok && val != nil {
+		data.Excluderescontenttype = types.StringValue(val.(string))
+	} else {
+		data.Excluderescontenttype = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else {
+		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["resourceid"]; ok && val != nil {
+		data.Resourceid = types.StringValue(val.(string))
+	} else {
+		data.Resourceid = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("excluderescontenttype:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Excluderescontenttype.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+func appfwprofile_excluderescontenttype_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwprofileExcluderescontenttypeBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileExcluderescontenttypeBindingResourceModel {
+	tflog.Debug(ctx, "In appfwprofile_excluderescontenttype_bindingSetAttrFromGetForDatasource Function")
+
+	// Datasource: faithfully copy every field from the GET response.
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
 	} else {
@@ -142,14 +213,18 @@ func appfwprofile_excluderescontenttype_bindingSetAttrFromGet(ctx context.Contex
 	} else {
 		data.Resourceid = types.StringNull()
 	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
+	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
 	} else {
 		data.State = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (no Create to set it)
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("excluderescontenttype:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Excluderescontenttype.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

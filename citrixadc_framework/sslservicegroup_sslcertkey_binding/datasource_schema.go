@@ -11,11 +11,13 @@ func SslservicegroupSslcertkeyBindingDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"ca": schema.BoolAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "CA certificate.",
 			},
 			"certkeyname": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The name of the certificate bound to the SSL service group.",
 			},
 			"crlcheck": schema.StringAttribute{

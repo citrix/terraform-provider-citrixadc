@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -18,6 +22,7 @@ import (
 // VpnvserverAuthenticationnegotiatepolicyBindingResourceModel describes the resource data model.
 type VpnvserverAuthenticationnegotiatepolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -34,70 +39,148 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) Schema(ctx cont
 				Computed:    true,
 				Description: "The ID of the vpnvserver_authenticationnegotiatepolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only to advance vpn session policy. Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n*  If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a number that is larger than the largest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"groupextraction": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Binds the authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server.",
 			},
 			"policy": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the policy, if any, bound to the VPN virtual server.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Binds the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only via a primary authentication method but also via a secondary authentication method. User groups are aggregated across both. The user name must be exactly the same for both authentication methods, but they can require different passwords.",
 			},
 		},
 	}
 }
 
-func vpnvserver_authenticationnegotiatepolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel) vpn.Vpnvserverauthenticationnegotiatepolicybinding {
-	tflog.Debug(ctx, "In vpnvserver_authenticationnegotiatepolicy_bindingGetThePayloadFromtheConfig Function")
+func vpnvserver_authenticationnegotiatepolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel) vpn.Vpnvserverauthenticationnegotiatepolicybinding {
+	tflog.Debug(ctx, "In vpnvserver_authenticationnegotiatepolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnvserver_authenticationnegotiatepolicy_binding := vpn.Vpnvserverauthenticationnegotiatepolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		vpnvserver_authenticationnegotiatepolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		vpnvserver_authenticationnegotiatepolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Groupextraction.IsNull() {
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
 		vpnvserver_authenticationnegotiatepolicy_binding.Groupextraction = data.Groupextraction.ValueBool()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnvserver_authenticationnegotiatepolicy_binding.Name = data.Name.ValueString()
 	}
-	if !data.Policy.IsNull() {
+	if !data.Policy.IsNull() && !data.Policy.IsUnknown() {
 		vpnvserver_authenticationnegotiatepolicy_binding.Policy = data.Policy.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		vpnvserver_authenticationnegotiatepolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Secondary.IsNull() {
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
 		vpnvserver_authenticationnegotiatepolicy_binding.Secondary = data.Secondary.ValueBool()
 	}
 
 	return vpnvserver_authenticationnegotiatepolicy_binding
 }
 
+// vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet is the RESOURCE-side setter.
+// It mirrors the SDK v2 read: it adopts the server-returned values for the policy-controlled
+// fields (so the Computed attributes resolve) but PRESERVES the configured bindpoint from the
+// prior plan/state. The SDK v2 resource deliberately never read bindpoint back from the GET
+// response because the server normalizes it, which would otherwise cause an "inconsistent
+// result after apply". The ID is set in Create and is not recomputed here.
 func vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// bindpoint: preserved from plan/state (server-normalized; SDK v2 did not read it back).
+
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else {
+		data.Gotopriorityexpression = types.StringNull()
+	}
+	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+		data.Groupextraction = types.BoolValue(val.(bool))
+	} else {
+		data.Groupextraction = types.BoolNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policy"]; ok && val != nil {
+		data.Policy = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	} else {
+		data.Priority = types.Int64Null()
+	}
+	if val, ok := getResponseData["secondary"]; ok && val != nil {
+		data.Secondary = types.BoolValue(val.(bool))
+	} else {
+		data.Secondary = types.BoolNull()
+	}
+
+	return data
+}
+
+// vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE-side
+// setter. The datasource has no prior plan/state to preserve, so it faithfully copies every field
+// from the GET response and sets the ID itself.
+func vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -131,8 +214,7 @@ func vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (identity is name,policy).
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))

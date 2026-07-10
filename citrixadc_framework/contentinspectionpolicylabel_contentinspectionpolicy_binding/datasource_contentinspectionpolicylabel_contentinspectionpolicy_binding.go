@@ -93,7 +93,7 @@ func (d *ContentinspectionpolicylabelContentinspectionpolicyBindingDataSource) R
 		return
 	}
 
-	contentinspectionpolicylabel_contentinspectionpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	contentinspectionpolicylabel_contentinspectionpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -66,7 +66,8 @@ func (d *VpnvserverAuditnslogpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Match only on policy; bindpoint is not echoed by NITRO so it cannot be filtered on.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -93,7 +94,7 @@ func (d *VpnvserverAuditnslogpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	vpnvserver_auditnslogpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

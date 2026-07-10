@@ -9,7 +9,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -19,6 +23,7 @@ import (
 // ServicegroupServicegroupmemberBindingResourceModel describes the resource data model.
 type ServicegroupServicegroupmemberBindingResourceModel struct {
 	Id               types.String `tfsdk:"id"`
+	DisableRead      types.Bool   `tfsdk:"disable_read"`
 	Customserverid   types.String `tfsdk:"customserverid"`
 	Dbsttl           types.Int64  `tfsdk:"dbsttl"`
 	Hashid           types.Int64  `tfsdk:"hashid"`
@@ -41,118 +46,245 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Computed:    true,
 				Description: "The ID of the servicegroup_servicegroupmember_binding resource.",
 			},
+			"disable_read": schema.BoolAttribute{
+				// Synthetic, non-NITRO convenience flag preserved from the SDK v2
+				// resource for backward compatibility. When true, the provider skips
+				// reading this binding back from the ADC during refresh (some bindings
+				// cannot be reliably read). It is never sent in any NITRO payload.
+				// Mirrors SDK v2: Optional + Default(false) + ForceNew.
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Skip reading the resource attributes from the NetScaler during refresh. Useful for bindings that cannot be reliably read back.",
+			},
 			"customserverid": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("None"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The identifier for this IP:Port pair. Used when the persistency type is set to Custom Server ID.",
 			},
 			"dbsttl": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors",
 			},
 			"hashid": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.",
 			},
 			"ip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IP Address.",
 			},
 			"nameserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver",
 			},
 			"order": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				// "order" is never echoed back by the NITRO GET response (only
+				// "orderstr" is returned), so it must NOT be Computed — otherwise a
+				// config that omits it leaves the value unknown after apply
+				// ("still indicated an unknown value", Pattern 13).
+				Optional: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Order number to be assigned to the servicegroup member",
 			},
 			"port": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				// "port" is NOT Computed: the NITRO GET response only echoes "port"
+				// for ip/port-based members, never for servername-only members. With
+				// Computed set, a config that omits port (servername binding) leaves
+				// the value unknown after apply ("still indicated an unknown value",
+				// Pattern 13). Dropping Computed makes the configured value (or null)
+				// authoritative; SetAttrFromGet still adopts the echoed value when
+				// present, which matches the configured port for ip/port members.
+				Optional: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Server port number.",
 			},
 			"serverid": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The  identifier for the service. This is used when the persistency type is set to Custom Server ID.",
 			},
 			"servername": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the server to which to bind the service group.",
 			},
 			"servicegroupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the service group.",
 			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Initial state of the service group.",
 			},
 			"weight": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.",
 			},
 		},
 	}
 }
 
-func servicegroup_servicegroupmember_bindingGetThePayloadFromtheConfig(ctx context.Context, data *ServicegroupServicegroupmemberBindingResourceModel) basic.Servicegroupservicegroupmemberbinding {
-	tflog.Debug(ctx, "In servicegroup_servicegroupmember_bindingGetThePayloadFromtheConfig Function")
+func servicegroup_servicegroupmember_bindingGetThePayloadFromthePlan(ctx context.Context, data *ServicegroupServicegroupmemberBindingResourceModel) basic.Servicegroupservicegroupmemberbinding {
+	tflog.Debug(ctx, "In servicegroup_servicegroupmember_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	servicegroup_servicegroupmember_binding := basic.Servicegroupservicegroupmemberbinding{}
-	if !data.Customserverid.IsNull() {
+	if !data.Customserverid.IsNull() && !data.Customserverid.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Customserverid = data.Customserverid.ValueString()
 	}
-	if !data.Dbsttl.IsNull() {
+	if !data.Dbsttl.IsNull() && !data.Dbsttl.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Dbsttl = utils.IntPtr(int(data.Dbsttl.ValueInt64()))
 	}
-	if !data.Hashid.IsNull() {
+	if !data.Hashid.IsNull() && !data.Hashid.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Hashid = utils.IntPtr(int(data.Hashid.ValueInt64()))
 	}
-	if !data.Ip.IsNull() {
+	if !data.Ip.IsNull() && !data.Ip.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Ip = data.Ip.ValueString()
 	}
-	if !data.Nameserver.IsNull() {
+	if !data.Nameserver.IsNull() && !data.Nameserver.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Nameserver = data.Nameserver.ValueString()
 	}
-	if !data.Order.IsNull() {
+	if !data.Order.IsNull() && !data.Order.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Serverid.IsNull() {
+	if !data.Serverid.IsNull() && !data.Serverid.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Serverid = utils.IntPtr(int(data.Serverid.ValueInt64()))
 	}
-	if !data.Servername.IsNull() {
+	if !data.Servername.IsNull() && !data.Servername.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Servername = data.Servername.ValueString()
 	}
-	if !data.Servicegroupname.IsNull() {
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Servicegroupname = data.Servicegroupname.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		servicegroup_servicegroupmember_binding.State = data.State.ValueString()
 	}
-	if !data.Weight.IsNull() {
+	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
 
 	return servicegroup_servicegroupmember_binding
 }
 
+// servicegroup_servicegroupmember_bindingSetAttrFromGet is the RESOURCE-side state
+// setter. It preserves the prior plan/state value for attributes the NITRO GET
+// response does not echo back (notably "order", which only appears as "orderstr"
+// in GET) so that an Optional+Computed input the user supplied is not nulled and
+// does not trigger an "inconsistent result after apply" error (Pattern 7 / 13).
+// It does NOT recompute data.Id; the ID is set once in Create.
 func servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx context.Context, data *ServicegroupServicegroupmemberBindingResourceModel, getResponseData map[string]interface{}) *ServicegroupServicegroupmemberBindingResourceModel {
 	tflog.Debug(ctx, "In servicegroup_servicegroupmember_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. Only overwrite a field when the GET response
+	// actually echoes it; otherwise preserve the existing plan/state value.
+	if val, ok := getResponseData["customserverid"]; ok && val != nil {
+		data.Customserverid = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["dbsttl"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Dbsttl = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["hashid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Hashid = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["ip"]; ok && val != nil {
+		data.Ip = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["nameserver"]; ok && val != nil {
+		data.Nameserver = types.StringValue(val.(string))
+	}
+	// "order" is never echoed by the NITRO GET response (only "orderstr" is
+	// returned). Preserve the existing plan/state value rather than nulling it.
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["port"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Port = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["serverid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Serverid = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["servername"]; ok && val != nil {
+		data.Servername = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
+		data.Servicegroupname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["weight"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Weight = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// servicegroup_servicegroupmember_bindingSetAttrFromGetForDatasource is the
+// DATASOURCE-side setter (Pattern 7). The datasource has no prior plan/state to
+// preserve, so it faithfully copies every field from the GET response (nulling
+// absent fields) and computes data.Id itself.
+func servicegroup_servicegroupmember_bindingSetAttrFromGetForDatasource(ctx context.Context, data *ServicegroupServicegroupmemberBindingResourceModel, getResponseData map[string]interface{}) *ServicegroupServicegroupmemberBindingResourceModel {
+	tflog.Debug(ctx, "In servicegroup_servicegroupmember_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["customserverid"]; ok && val != nil {
 		data.Customserverid = types.StringValue(val.(string))
 	} else {
@@ -226,8 +358,11 @@ func servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx context.Context, 
 		data.Weight = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// disable_read is a resource-only convenience flag with no datasource meaning;
+	// give it a known value so the shared model is fully populated.
+	data.DisableRead = types.BoolValue(false)
+
+	// Set ID for the datasource (no Create to set it).
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("ip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ip.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))

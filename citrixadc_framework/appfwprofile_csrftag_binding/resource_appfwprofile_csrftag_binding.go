@@ -3,8 +3,11 @@ package appfwprofile_csrftag_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,24 @@ func (r *AppfwprofileCsrftagBindingResource) Create(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Creating appfwprofile_csrftag_binding resource")
-
-	// appfwprofile_csrftag_binding := appfwprofile_csrftag_bindingGetThePayloadFromtheConfig(ctx, &data)
+	appfwprofile_csrftag_binding := appfwprofile_csrftag_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwprofile_csrftag_binding.Type(), &appfwprofile_csrftag_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwprofile_csrftag_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwprofile_csrftag_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Appfwprofile_csrftag_binding.Type(), &appfwprofile_csrftag_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwprofile_csrftag_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwprofile_csrftag_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("csrfformactionurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Csrfformactionurl.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("csrftag:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Csrftag.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readAppfwprofileCsrftagBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +102,10 @@ func (r *AppfwprofileCsrftagBindingResource) Read(ctx context.Context, req resou
 }
 
 func (r *AppfwprofileCsrftagBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwprofileCsrftagBindingResourceModel
+	var data, state AppfwprofileCsrftagBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +113,29 @@ func (r *AppfwprofileCsrftagBindingResource) Update(ctx context.Context, req res
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwprofile_csrftag_binding resource")
 
-	// Create API request body from the model
-	// appfwprofile_csrftag_binding := appfwprofile_csrftag_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwprofile_csrftag_binding.Type(), &appfwprofile_csrftag_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwprofile_csrftag_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		appfwprofile_csrftag_binding := appfwprofile_csrftag_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Appfwprofile_csrftag_binding.Type(), &appfwprofile_csrftag_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwprofile_csrftag_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated appfwprofile_csrftag_binding resource")
+		tflog.Trace(ctx, "Updated appfwprofile_csrftag_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appfwprofile_csrftag_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAppfwprofileCsrftagBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +155,124 @@ func (r *AppfwprofileCsrftagBindingResource) Delete(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Deleting appfwprofile_csrftag_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "csrftag", "csrfformactionurl"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For appfwprofile_csrftag_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwprofile_csrftag_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// The delete-arg values must be URL-encoded because the NITRO client joins them
+	// into the delete URL ?args= list verbatim (no escaping). csrfformactionurl/csrftag
+	// can contain regex/URL special characters. Mirrors SDK v2 (url.QueryEscape).
+	args := make([]string, 0)
+	if val, ok := idMap["csrftag"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("csrftag:%s", url.QueryEscape(val)))
+	}
+	if val, ok := idMap["csrfformactionurl"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("csrfformactionurl:%s", url.QueryEscape(val)))
+	}
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() && data.Ruletype.ValueString() != "" {
+		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(data.Ruletype.ValueString())))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Appfwprofile_csrftag_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwprofile_csrftag_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted appfwprofile_csrftag_binding binding")
 }
 
 // Helper function to read appfwprofile_csrftag_binding data from API
 func (r *AppfwprofileCsrftagBindingResource) readAppfwprofileCsrftagBindingFromApi(ctx context.Context, data *AppfwprofileCsrftagBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwprofile_csrftag_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "csrftag", "csrfformactionurl"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Appfwprofile_csrftag_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwprofile_csrftag_binding, got error: %s", err))
 		return
 	}
 
-	appfwprofile_csrftag_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "appfwprofile_csrftag_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check csrfformactionurl
+		if idVal, ok := idMap["csrfformactionurl"]; ok {
+			if val, ok := v["csrfformactionurl"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["csrfformactionurl"].(string); ok {
+			match = false
+			continue
+		}
+
+		// Check csrftag
+		if idVal, ok := idMap["csrftag"]; ok {
+			if val, ok := v["csrftag"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["csrftag"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("appfwprofile_csrftag_binding not found with the provided ID attributes"))
+		return
+	}
+
+	appfwprofile_csrftag_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

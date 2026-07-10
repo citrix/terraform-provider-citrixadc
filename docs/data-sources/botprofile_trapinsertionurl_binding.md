@@ -38,5 +38,5 @@ In addition to the arguments, the following attributes are available:
 * `trapinsertionurl` - Bind the trap URL for the configured request URLs. Maximum 30 bindings can be configured per profile.
 * `bot_bind_comment` - Any comments about this binding.
 * `bot_trap_url_insertion_enabled` - Enable or disable the request URL pattern.
-* `id` - The id of the botprofile_trapinsertionurl_binding. It is a system-generated identifier.
+* `id` - The id of the botprofile_trapinsertionurl_binding. It is the concatenation of `name` and `bot_trap_url` attributes separated by a comma.
 * `logmessage` - Message to be logged for this binding.

@@ -37,8 +37,8 @@ output "isvalueregex_cmd" {
 * `cmdinjection` - (Required) Name of the relaxed web form field/header/cookie.
 * `formactionurl_cmd` - (Required) The web form action URL.
 * `as_scan_location_cmd` - (Required) Location of command injection exception - form field, header or cookie.
-* `as_value_type_cmd` - (Optional) Type of the relaxed web form value.
-* `as_value_expr_cmd` - (Optional) The web form/header/cookie value expression.
+* `as_value_type_cmd` - (Required) Type of the relaxed web form value.
+* `as_value_expr_cmd` - (Required) The web form/header/cookie value expression.
 
 ## Attribute Reference
 
@@ -46,9 +46,10 @@ In addition to the arguments, the following attributes are available:
 
 * `alertonly` - Send SNMP alert? Possible values: [ ON, OFF ]
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
-* `id` - The id of the appfwprofile_cmdinjection_binding. It is a system-generated identifier.
+* `id` - The id of the appfwprofile_cmdinjection_binding. It is the concatenation of the `name`, `cmdinjection`, `formactionurl_cmd`, `as_scan_location_cmd`, `as_value_type_cmd` and `as_value_expr_cmd` attributes separated by a comma.
 * `isautodeployed` - Is the rule auto deployed by dynamic profile? Possible values: [ AUTODEPLOYED, NOTAUTODEPLOYED ]
 * `isregex_cmd` - Is the relaxed web form field name/header/cookie a regular expression? Possible values: [ REGEX, NOTREGEX ]
 * `isvalueregex_cmd` - Is the web form field/header/cookie value a regular expression? Possible values: [ REGEX, NOTREGEX ]
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled. Possible values: [ ENABLED, DISABLED ]

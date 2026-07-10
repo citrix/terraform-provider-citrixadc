@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *AppflowactionAnalyticsprofileBindingResource) Schema(ctx context.Contex
 				Description: "The ID of the appflowaction_analyticsprofile_binding resource.",
 			},
 			"analyticsprofile": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Analytics profile to be bound to the appflow action",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my appflow action\" or 'my appflow action').",
 			},
 		},
 	}
 }
 
-func appflowaction_analyticsprofile_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppflowactionAnalyticsprofileBindingResourceModel) appflow.Appflowactionanalyticsprofilebinding {
-	tflog.Debug(ctx, "In appflowaction_analyticsprofile_bindingGetThePayloadFromtheConfig Function")
+func appflowaction_analyticsprofile_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppflowactionAnalyticsprofileBindingResourceModel) appflow.Appflowactionanalyticsprofilebinding {
+	tflog.Debug(ctx, "In appflowaction_analyticsprofile_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appflowaction_analyticsprofile_binding := appflow.Appflowactionanalyticsprofilebinding{}
-	if !data.Analyticsprofile.IsNull() {
+	if !data.Analyticsprofile.IsNull() && !data.Analyticsprofile.IsUnknown() {
 		appflowaction_analyticsprofile_binding.Analyticsprofile = data.Analyticsprofile.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appflowaction_analyticsprofile_binding.Name = data.Name.ValueString()
 	}
 

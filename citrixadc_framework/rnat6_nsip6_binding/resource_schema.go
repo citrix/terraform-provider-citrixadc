@@ -9,7 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,34 +34,43 @@ func (r *Rnat6Nsip6BindingResource) Schema(ctx context.Context, req resource.Sch
 				Description: "The ID of the rnat6_nsip6_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the RNAT6 rule to which to bind NAT IPs.",
 			},
 			"natip6": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Nat IP Address.",
 			},
 			"ownergroup": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("DEFAULT_NG"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The owner node group in a Cluster for this rnat rule.",
 			},
 		},
 	}
 }
 
-func rnat6_nsip6_bindingGetThePayloadFromtheConfig(ctx context.Context, data *Rnat6Nsip6BindingResourceModel) network.Rnat6nsip6binding {
-	tflog.Debug(ctx, "In rnat6_nsip6_bindingGetThePayloadFromtheConfig Function")
+func rnat6_nsip6_bindingGetThePayloadFromthePlan(ctx context.Context, data *Rnat6Nsip6BindingResourceModel) network.Rnat6nsip6binding {
+	tflog.Debug(ctx, "In rnat6_nsip6_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	rnat6_nsip6_binding := network.Rnat6nsip6binding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		rnat6_nsip6_binding.Name = data.Name.ValueString()
 	}
-	if !data.Natip6.IsNull() {
+	if !data.Natip6.IsNull() && !data.Natip6.IsUnknown() {
 		rnat6_nsip6_binding.Natip6 = data.Natip6.ValueString()
 	}
-	if !data.Ownergroup.IsNull() {
+	if !data.Ownergroup.IsNull() && !data.Ownergroup.IsUnknown() {
 		rnat6_nsip6_binding.Ownergroup = data.Ownergroup.ValueString()
 	}
 
@@ -87,12 +97,12 @@ func rnat6_nsip6_bindingSetAttrFromGet(ctx context.Context, data *Rnat6Nsip6Bind
 		data.Ownergroup = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the resource.
+	// Identity is "name,natip6" (matches the SDK v2 ID and resource_id_mapping.json);
+	// ownergroup is a read-back / delete-arg attribute, not part of the identity.
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("natip6:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Natip6.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("ownergroup:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ownergroup.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

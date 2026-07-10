@@ -7,7 +7,7 @@ subcategory: "Content Switching"
 The csvserver_vpnvserver_binding data source allows you to retrieve information about a csvserver_vpnvserver_binding.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_csvserver_vpnvserver_binding" "tf_csvserver_vpnvserver_binding" {

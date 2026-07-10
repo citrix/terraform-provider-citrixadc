@@ -1,8 +1,37 @@
 package servicegroup_lbmonitor_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// ServicegroupLbmonitorBindingDataSourceModel describes the datasource data model.
+// The datasource exposes the monitor name under the "monitor_name" attribute (the
+// NITRO wire name) while the resource keeps the legacy SDK v2 "monitorname" attribute,
+// so the two need separate models even though they share most fields.
+type ServicegroupLbmonitorBindingDataSourceModel struct {
+	Id               types.String `tfsdk:"id"`
+	Customserverid   types.String `tfsdk:"customserverid"`
+	Dbsttl           types.Int64  `tfsdk:"dbsttl"`
+	Hashid           types.Int64  `tfsdk:"hashid"`
+	MonitorName      types.String `tfsdk:"monitor_name"`
+	Monstate         types.String `tfsdk:"monstate"`
+	Nameserver       types.String `tfsdk:"nameserver"`
+	Order            types.Int64  `tfsdk:"order"`
+	Passive          types.Bool   `tfsdk:"passive"`
+	Port             types.Int64  `tfsdk:"port"`
+	Serverid         types.Int64  `tfsdk:"serverid"`
+	Servicegroupname types.String `tfsdk:"servicegroupname"`
+	State            types.String `tfsdk:"state"`
+	Weight           types.Int64  `tfsdk:"weight"`
+}
 
 func ServicegroupLbmonitorBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -75,4 +104,96 @@ func ServicegroupLbmonitorBindingDataSourceSchema() schema.Schema {
 			},
 		},
 	}
+}
+
+// servicegroup_lbmonitor_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response into the datasource model and sets the composite ID.
+func servicegroup_lbmonitor_bindingSetAttrFromGetForDatasource(ctx context.Context, data *ServicegroupLbmonitorBindingDataSourceModel, getResponseData map[string]interface{}) *ServicegroupLbmonitorBindingDataSourceModel {
+	tflog.Debug(ctx, "In servicegroup_lbmonitor_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["customserverid"]; ok && val != nil {
+		data.Customserverid = types.StringValue(val.(string))
+	} else {
+		data.Customserverid = types.StringNull()
+	}
+	if val, ok := getResponseData["dbsttl"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Dbsttl = types.Int64Value(intVal)
+		}
+	} else {
+		data.Dbsttl = types.Int64Null()
+	}
+	if val, ok := getResponseData["hashid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Hashid = types.Int64Value(intVal)
+		}
+	} else {
+		data.Hashid = types.Int64Null()
+	}
+	if val, ok := getResponseData["monitor_name"]; ok && val != nil {
+		data.MonitorName = types.StringValue(val.(string))
+	} else {
+		data.MonitorName = types.StringNull()
+	}
+	if val, ok := getResponseData["monstate"]; ok && val != nil {
+		data.Monstate = types.StringValue(val.(string))
+	} else {
+		data.Monstate = types.StringNull()
+	}
+	if val, ok := getResponseData["nameserver"]; ok && val != nil {
+		data.Nameserver = types.StringValue(val.(string))
+	} else {
+		data.Nameserver = types.StringNull()
+	}
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	} else {
+		data.Order = types.Int64Null()
+	}
+	if val, ok := getResponseData["passive"]; ok && val != nil {
+		data.Passive = types.BoolValue(val.(bool))
+	} else {
+		data.Passive = types.BoolNull()
+	}
+	if val, ok := getResponseData["port"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Port = types.Int64Value(intVal)
+		}
+	} else {
+		data.Port = types.Int64Null()
+	}
+	if val, ok := getResponseData["serverid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Serverid = types.Int64Value(intVal)
+		}
+	} else {
+		data.Serverid = types.Int64Null()
+	}
+	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
+		data.Servicegroupname = types.StringValue(val.(string))
+	} else {
+		data.Servicegroupname = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+	if val, ok := getResponseData["weight"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Weight = types.Int64Value(intVal)
+		}
+	} else {
+		data.Weight = types.Int64Null()
+	}
+
+	// Datasource has no Create — set the composite ID here.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("monitorname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
 }

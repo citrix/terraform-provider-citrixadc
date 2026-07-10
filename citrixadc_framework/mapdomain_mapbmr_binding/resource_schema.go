@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,26 +33,32 @@ func (r *MapdomainMapbmrBindingResource) Schema(ctx context.Context, req resourc
 				Description: "The ID of the mapdomain_mapbmr_binding resource.",
 			},
 			"mapbmrname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Basic Mapping rule name.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the MAP Domain. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the  MAP Domain is created . The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"add network MapDomain map1\").",
 			},
 		},
 	}
 }
 
-func mapdomain_mapbmr_bindingGetThePayloadFromtheConfig(ctx context.Context, data *MapdomainMapbmrBindingResourceModel) network.Mapdomainmapbmrbinding {
-	tflog.Debug(ctx, "In mapdomain_mapbmr_bindingGetThePayloadFromtheConfig Function")
+func mapdomain_mapbmr_bindingGetThePayloadFromthePlan(ctx context.Context, data *MapdomainMapbmrBindingResourceModel) network.Mapdomainmapbmrbinding {
+	tflog.Debug(ctx, "In mapdomain_mapbmr_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	mapdomain_mapbmr_binding := network.Mapdomainmapbmrbinding{}
-	if !data.Mapbmrname.IsNull() {
+	if !data.Mapbmrname.IsNull() && !data.Mapbmrname.IsUnknown() {
 		mapdomain_mapbmr_binding.Mapbmrname = data.Mapbmrname.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		mapdomain_mapbmr_binding.Name = data.Name.ValueString()
 	}
 

@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -122,10 +122,12 @@ func testAccCheckVxlanvlanmap_vxlan_bindingExist(n string, id *string) resource.
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		vxlan := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vxlan"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		name := idMap["name"]
+		vxlan := idMap["vxlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vxlanvlanmap_vxlan_binding",
@@ -164,13 +166,12 @@ func testAccCheckVxlanvlanmap_vxlan_bindingNotExist(n string, id string) resourc
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "vxlan"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		vxlan := idSlice[1]
+		name := idMap["name"]
+		vxlan := idMap["vxlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vxlanvlanmap_vxlan_binding",

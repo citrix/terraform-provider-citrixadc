@@ -12,14 +12,11 @@ The netbridge_nsip_binding data source allows you to retrieve information about 
 data "citrixadc_netbridge_nsip_binding" "tf_netbridge_nsip_binding" {
   name      = "my_netbridge"
   ipaddress = "10.222.74.128"
+  netmask   = "255.255.255.192"
 }
 
-output "ipaddress" {
-  value = data.citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding.ipaddress
-}
-
-output "netmask" {
-  value = data.citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding.netmask
+output "id" {
+  value = data.citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding.id
 }
 ```
 
@@ -27,10 +24,10 @@ output "netmask" {
 
 * `name` - (Required) The name of the network bridge.
 * `ipaddress` - (Required) The subnet that is extended by this network bridge.
+* `netmask` - (Required) The network mask for the subnet.
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the netbridge_nsip_binding. It is a system-generated identifier.
-* `netmask` - The network mask for the subnet.

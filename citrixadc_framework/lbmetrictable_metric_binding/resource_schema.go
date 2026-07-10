@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,7 +34,10 @@ func (r *LbmetrictableMetricBindingResource) Schema(ctx context.Context, req res
 				Description: "The ID of the lbmetrictable_metric_binding resource.",
 			},
 			"snmpoid": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "New SNMP OID of the metric.",
 			},
 			"metric": schema.StringAttribute{
@@ -40,25 +45,28 @@ func (r *LbmetrictableMetricBindingResource) Schema(ctx context.Context, req res
 				Description: "Name of the metric for which to change the SNMP OID.",
 			},
 			"metrictable": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the metric table.",
 			},
 		},
 	}
 }
 
-func lbmetrictable_metric_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LbmetrictableMetricBindingResourceModel) lb.Lbmetrictablemetricbinding {
-	tflog.Debug(ctx, "In lbmetrictable_metric_bindingGetThePayloadFromtheConfig Function")
+func lbmetrictable_metric_bindingGetThePayloadFromthePlan(ctx context.Context, data *LbmetrictableMetricBindingResourceModel) lb.Lbmetrictablemetricbinding {
+	tflog.Debug(ctx, "In lbmetrictable_metric_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lbmetrictable_metric_binding := lb.Lbmetrictablemetricbinding{}
-	if !data.Snmpoid.IsNull() {
+	if !data.Snmpoid.IsNull() && !data.Snmpoid.IsUnknown() {
 		lbmetrictable_metric_binding.Snmpoid = data.Snmpoid.ValueString()
 	}
-	if !data.Metric.IsNull() {
+	if !data.Metric.IsNull() && !data.Metric.IsUnknown() {
 		lbmetrictable_metric_binding.Metric = data.Metric.ValueString()
 	}
-	if !data.Metrictable.IsNull() {
+	if !data.Metrictable.IsNull() && !data.Metrictable.IsUnknown() {
 		lbmetrictable_metric_binding.Metrictable = data.Metrictable.ValueString()
 	}
 

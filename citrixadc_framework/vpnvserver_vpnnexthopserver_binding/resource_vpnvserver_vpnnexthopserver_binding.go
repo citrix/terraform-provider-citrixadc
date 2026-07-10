@@ -3,8 +3,10 @@ package vpnvserver_vpnnexthopserver_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *VpnvserverVpnnexthopserverBindingResource) Create(ctx context.Context, 
 	}
 
 	tflog.Debug(ctx, "Creating vpnvserver_vpnnexthopserver_binding resource")
-
-	// vpnvserver_vpnnexthopserver_binding := vpnvserver_vpnnexthopserver_bindingGetThePayloadFromtheConfig(ctx, &data)
+	vpnvserver_vpnnexthopserver_binding := vpnvserver_vpnnexthopserver_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnvserver_vpnnexthopserver_binding.Type(), &vpnvserver_vpnnexthopserver_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnvserver_vpnnexthopserver_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnvserver_vpnnexthopserver_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Vpnvserver_vpnnexthopserver_binding.Type(), &vpnvserver_vpnnexthopserver_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnvserver_vpnnexthopserver_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnvserver_vpnnexthopserver_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("nexthopserver:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Nexthopserver.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readVpnvserverVpnnexthopserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *VpnvserverVpnnexthopserverBindingResource) Read(ctx context.Context, re
 }
 
 func (r *VpnvserverVpnnexthopserverBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnvserverVpnnexthopserverBindingResourceModel
+	var data, state VpnvserverVpnnexthopserverBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *VpnvserverVpnnexthopserverBindingResource) Update(ctx context.Context, 
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnvserver_vpnnexthopserver_binding resource")
 
-	// Create API request body from the model
-	// vpnvserver_vpnnexthopserver_binding := vpnvserver_vpnnexthopserver_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnvserver_vpnnexthopserver_binding.Type(), &vpnvserver_vpnnexthopserver_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnvserver_vpnnexthopserver_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		vpnvserver_vpnnexthopserver_binding := vpnvserver_vpnnexthopserver_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Vpnvserver_vpnnexthopserver_binding.Type(), &vpnvserver_vpnnexthopserver_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnvserver_vpnnexthopserver_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vpnvserver_vpnnexthopserver_binding resource")
+		tflog.Trace(ctx, "Updated vpnvserver_vpnnexthopserver_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnvserver_vpnnexthopserver_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readVpnvserverVpnnexthopserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,99 @@ func (r *VpnvserverVpnnexthopserverBindingResource) Delete(ctx context.Context, 
 	}
 
 	tflog.Debug(ctx, "Deleting vpnvserver_vpnnexthopserver_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "nexthopserver"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For vpnvserver_vpnnexthopserver_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnvserver_vpnnexthopserver_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["nexthopserver"]; ok && val != "" {
+		argsMap["nexthopserver"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_vpnnexthopserver_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_vpnnexthopserver_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnvserver_vpnnexthopserver_binding binding")
 }
 
 // Helper function to read vpnvserver_vpnnexthopserver_binding data from API
 func (r *VpnvserverVpnnexthopserverBindingResource) readVpnvserverVpnnexthopserverBindingFromApi(ctx context.Context, data *VpnvserverVpnnexthopserverBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnvserver_vpnnexthopserver_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "nexthopserver"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Vpnvserver_vpnnexthopserver_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnvserver_vpnnexthopserver_binding, got error: %s", err))
 		return
 	}
 
-	vpnvserver_vpnnexthopserver_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "vpnvserver_vpnnexthopserver_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check nexthopserver
+		if idVal, ok := idMap["nexthopserver"]; ok {
+			if val, ok := v["nexthopserver"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["nexthopserver"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("vpnvserver_vpnnexthopserver_binding not found with the provided ID attributes"))
+		return
+	}
+
+	vpnvserver_vpnnexthopserver_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

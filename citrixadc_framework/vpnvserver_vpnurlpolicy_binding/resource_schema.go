@@ -9,6 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -18,6 +22,7 @@ import (
 // VpnvserverVpnurlpolicyBindingResourceModel describes the resource data model.
 type VpnvserverVpnurlpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
 	Name                   types.String `tfsdk:"name"`
@@ -34,70 +39,161 @@ func (r *VpnvserverVpnurlpolicyBindingResource) Schema(ctx context.Context, req 
 				Computed:    true,
 				Description: "The ID of the vpnvserver_vpnurlpolicy_binding resource.",
 			},
+			"bindpoint": schema.StringAttribute{
+				// Not echoed by NITRO GET for this binding; Optional only (drop
+				// Computed) so an unset value does not stay unknown after apply.
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Next priority expression.",
 			},
 			"groupextraction": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				// Not echoed by NITRO GET for this binding; Optional only.
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Binds the authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server.",
 			},
 			"policy": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the policy, if any, bound to the VPN virtual server.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
 			"secondary": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
+				// Not echoed by NITRO GET for this binding; Optional only.
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 				Description: "Binds the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only via a primary authentication method but also via a secondary authentication method. User groups are aggregated across both. The user name must be exactly the same for both authentication methods, but they can require different passwords.",
 			},
 		},
 	}
 }
 
-func vpnvserver_vpnurlpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnvserverVpnurlpolicyBindingResourceModel) vpn.Vpnvservervpnurlpolicybinding {
-	tflog.Debug(ctx, "In vpnvserver_vpnurlpolicy_bindingGetThePayloadFromtheConfig Function")
+func vpnvserver_vpnurlpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverVpnurlpolicyBindingResourceModel) vpn.Vpnvservervpnurlpolicybinding {
+	tflog.Debug(ctx, "In vpnvserver_vpnurlpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnvserver_vpnurlpolicy_binding := vpn.Vpnvservervpnurlpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() {
+		vpnvserver_vpnurlpolicy_binding.Bindpoint = data.Bindpoint.ValueString()
+	}
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		vpnvserver_vpnurlpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Groupextraction.IsNull() {
+	if !data.Groupextraction.IsNull() && !data.Groupextraction.IsUnknown() {
 		vpnvserver_vpnurlpolicy_binding.Groupextraction = data.Groupextraction.ValueBool()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnvserver_vpnurlpolicy_binding.Name = data.Name.ValueString()
 	}
-	if !data.Policy.IsNull() {
+	if !data.Policy.IsNull() && !data.Policy.IsUnknown() {
 		vpnvserver_vpnurlpolicy_binding.Policy = data.Policy.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		vpnvserver_vpnurlpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Secondary.IsNull() {
+	if !data.Secondary.IsNull() && !data.Secondary.IsUnknown() {
 		vpnvserver_vpnurlpolicy_binding.Secondary = data.Secondary.ValueBool()
 	}
 
 	return vpnvserver_vpnurlpolicy_binding
 }
 
+// vpnvserver_vpnurlpolicy_bindingSetAttrFromGet is the RESOURCE setter.
+// All attributes are RequiresReplace inputs. The NITRO GET for this binding
+// returns a sparse/normalized view that does not faithfully echo every
+// configured input (e.g. bindpoint is not reliably round-tripped; priority and
+// gotopriorityexpression may be server-normalized). To avoid "inconsistent
+// result after apply" errors and clobbering of user values, this setter
+// PRESERVES the existing plan/state values and only adopts a value from the GET
+// response when the current model value is null/unknown (the import case, where
+// state carries only the ID). The composite ID is set once in Create/Read and
+// is NOT recomputed here.
 func vpnvserver_vpnurlpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverVpnurlpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverVpnurlpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_vpnurlpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	if data.Bindpoint.IsNull() || data.Bindpoint.IsUnknown() {
+		if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+			data.Bindpoint = types.StringValue(val.(string))
+		}
+	}
+	if data.Gotopriorityexpression.IsNull() || data.Gotopriorityexpression.IsUnknown() {
+		if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+			data.Gotopriorityexpression = types.StringValue(val.(string))
+		}
+	}
+	if data.Groupextraction.IsNull() || data.Groupextraction.IsUnknown() {
+		if val, ok := getResponseData["groupextraction"]; ok && val != nil {
+			data.Groupextraction = types.BoolValue(val.(bool))
+		}
+	}
+	if data.Name.IsNull() || data.Name.IsUnknown() {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
+	}
+	if data.Policy.IsNull() || data.Policy.IsUnknown() {
+		if val, ok := getResponseData["policy"]; ok && val != nil {
+			data.Policy = types.StringValue(val.(string))
+		}
+	}
+	if data.Priority.IsNull() || data.Priority.IsUnknown() {
+		if val, ok := getResponseData["priority"]; ok && val != nil {
+			if intVal, err := utils.ConvertToInt64(val); err == nil {
+				data.Priority = types.Int64Value(intVal)
+			}
+		}
+	}
+	if data.Secondary.IsNull() || data.Secondary.IsUnknown() {
+		if val, ok := getResponseData["secondary"]; ok && val != nil {
+			data.Secondary = types.BoolValue(val.(bool))
+		}
+	}
+
+	return data
+}
+
+// vpnvserver_vpnurlpolicy_bindingSetAttrFromGetForDatasource is the DATASOURCE
+// setter. A datasource has no prior plan/state to preserve, so it faithfully
+// copies every field from the GET response and sets its own composite ID
+// (name:policy, matching the resource ID format).
+func vpnvserver_vpnurlpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VpnvserverVpnurlpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverVpnurlpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In vpnvserver_vpnurlpolicy_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
+		data.Bindpoint = types.StringValue(val.(string))
+	} else {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -131,8 +227,7 @@ func vpnvserver_vpnurlpolicy_bindingSetAttrFromGet(ctx context.Context, data *Vp
 		data.Secondary = types.BoolNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource (name:policy, matching the resource ID format).
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))

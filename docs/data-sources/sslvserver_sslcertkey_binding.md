@@ -36,12 +36,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `crlcheck` - (Optional) The state of the CRL check parameter. (Mandatory/Optional)
-* `ocspcheck` - (Optional) The state of the OCSP check parameter. (Mandatory/Optional)
+* `crlcheck` - (Optional) The state of the CRL check parameter. Possible values: [ Mandatory, Optional ]
+* `ocspcheck` - (Optional) The state of the OCSP check parameter. Possible values: [ Mandatory, Optional ]
+* `skipcaname` - (Optional) The flag is used to indicate whether this particular CA certificate's CA_Name needs to be sent to the SSL client while requesting for client certificate in a SSL handshake.
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslvserver_sslcertkey_binding. It is a system-generated identifier.
-* `skipcaname` - The flag is used to indicate whether this particular CA certificate's CA_Name needs to be sent to the SSL client while requesting for client certificate in a SSL handshake.
+* `id` - The id of the sslvserver_sslcertkey_binding. It is the concatenation of the `vservername`, `certkeyname`, `snicert` and `ca` attributes separated by a comma.

@@ -24,25 +24,25 @@ resource "citrixadc_responderpolicy" "tf_responder_policy" {
 }
 
 resource "citrixadc_csvserver_responderpolicy_binding" "tf_bind" {
-    name = citrixadc_csvserver.tf_csvserver.name
-    policyname = citrixadc_responderpolicy.tf_responder_policy.name
-    priority = 100
-    bindpoint = "REQUEST"
+  name       = citrixadc_csvserver.tf_csvserver.name
+  policyname = citrixadc_responderpolicy.tf_responder_policy.name
+  priority   = 100
+  bindpoint  = "REQUEST"
 }
 ```
 
 
 ## Argument Reference
 
+* `name` - (Required) Name of the content switching virtual server to which the content switching policy applies.
 * `policyname` - (Required) Policies bound to this vserver.
-* `priority` - (Optional) Priority for the policy.
+* `bindpoint` - (Optional) The bindpoint to which the policy is bound.
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - (Optional) Invoke flag.
-* `labeltype` - (Optional) The invocation type. Possible values: [ reqvserver, resvserver, policylabel ]
 * `labelname` - (Optional) Name of the label invoked.
-* `name` - (Required) Name of the content switching virtual server to which the content switching policy applies.
-* `targetlbvserver` - (Optional) Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE. Example: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1 Note: Use this parameter only in case of Content Switching policy bind operations to a CS vserver.
-* `bindpoint` - (Optional) For a rewrite policy, the bind point to which to bind the policy. Note: This parameter applies only to rewrite policies, because content switching policies are evaluated only at request time. Possible values: [ REQUEST, RESPONSE, ICA_REQUEST, OTHERTCP_REQUEST ]
+* `labeltype` - (Optional) The invocation type.
+* `priority` - (Optional) Priority for the policy.
+* `targetlbvserver` - (Optional) Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE. Example: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1. Note: Use this parameter only in case of Content Switching policy bind operations to a CS vserver.
 
 
 ## Attribute Reference

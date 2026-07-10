@@ -93,7 +93,7 @@ func (d *AaagroupVpntrafficpolicyBindingDataSource) Read(ctx context.Context, re
 		return
 	}
 
-	aaagroup_vpntrafficpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	aaagroup_vpntrafficpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

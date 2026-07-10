@@ -2,11 +2,15 @@ package tmglobal_auditnslogpolicy_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/tm"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -30,46 +34,78 @@ func (r *TmglobalAuditnslogpolicyBindingResource) Schema(ctx context.Context, re
 				Description: "The ID of the tmglobal_auditnslogpolicy_binding resource.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Applicable only to advance tmsession policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n* If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a priority number that is numerically higher than the highest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The priority of the policy.",
 			},
 		},
 	}
 }
 
-func tmglobal_auditnslogpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *TmglobalAuditnslogpolicyBindingResourceModel) tm.Tmglobalauditnslogpolicybinding {
-	tflog.Debug(ctx, "In tmglobal_auditnslogpolicy_bindingGetThePayloadFromtheConfig Function")
+func tmglobal_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *TmglobalAuditnslogpolicyBindingResourceModel) tm.Tmglobalauditnslogpolicybinding {
+	tflog.Debug(ctx, "In tmglobal_auditnslogpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	tmglobal_auditnslogpolicy_binding := tm.Tmglobalauditnslogpolicybinding{}
-	if !data.Gotopriorityexpression.IsNull() {
+	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		tmglobal_auditnslogpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		tmglobal_auditnslogpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		tmglobal_auditnslogpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 
 	return tmglobal_auditnslogpolicy_binding
 }
 
+// Resource-side state setter. Preserves user-supplied inputs that the NITRO GET
+// response does not echo back (e.g. gotopriorityexpression is not returned by GET),
+// and does NOT recompute the ID (Create sets the ID exactly once). This avoids
+// "inconsistent result after apply" diffs for non-echoed inputs (Pattern 7/13).
 func tmglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *TmglobalAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *TmglobalAuditnslogpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In tmglobal_auditnslogpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
+	// gotopriorityexpression is NOT echoed back by NITRO GET — preserve the existing
+	// plan/state value instead of nulling it.
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["policyname"]; ok && val != nil {
+		data.Policyname = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// Datasource-side state setter. Faithfully copies every field from the GET response
+// (a datasource has no prior plan/state to preserve) and sets the ID, since a
+// datasource never calls Create.
+func tmglobal_auditnslogpolicy_bindingSetAttrFromGetForDatasource(ctx context.Context, data *TmglobalAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *TmglobalAuditnslogpolicyBindingResourceModel {
+	tflog.Debug(ctx, "In tmglobal_auditnslogpolicy_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {
@@ -88,9 +124,9 @@ func tmglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Priority = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Policyname.ValueString())
+	// Set ID for the datasource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
 
 	return data
 }

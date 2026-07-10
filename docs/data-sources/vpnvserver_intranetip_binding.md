@@ -6,7 +6,7 @@ subcategory: "VPN"
 
 The vpnvserver_intranetip_binding data source allows you to retrieve information about the binding between a VPN virtual server and an intranet IP address.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_vpnvserver_intranetip_binding" "tf_bind" {

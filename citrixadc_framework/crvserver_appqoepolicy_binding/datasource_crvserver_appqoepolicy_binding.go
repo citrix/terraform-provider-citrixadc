@@ -93,7 +93,7 @@ func (d *CrvserverAppqoepolicyBindingDataSource) Read(ctx context.Context, req d
 		return
 	}
 
-	crvserver_appqoepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	crvserver_appqoepolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

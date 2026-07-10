@@ -66,7 +66,9 @@ func (d *SslcertkeySslocspresponderBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// Match on ocspresponder only - "ca" is never returned by the NITRO GET response
+	// for this binding (it is a delete-only arg), so it cannot be used as a filter.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -93,7 +95,7 @@ func (d *SslcertkeySslocspresponderBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	sslcertkey_sslocspresponder_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	sslcertkey_sslocspresponder_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

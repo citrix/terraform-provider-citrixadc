@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -39,6 +39,7 @@ type AppfwprofileJsondosurlBindingResourceModel struct {
 	Jsonmaxstringlengthcheck    types.String `tfsdk:"jsonmaxstringlengthcheck"`
 	Name                        types.String `tfsdk:"name"`
 	Resourceid                  types.String `tfsdk:"resourceid"`
+	Ruletype                    types.String `tfsdk:"ruletype"`
 	State                       types.String `tfsdk:"state"`
 }
 
@@ -52,165 +53,227 @@ func (r *AppfwprofileJsondosurlBindingResource) Schema(ctx context.Context, req 
 			},
 			"alertonly": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Send SNMP alert?",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
 			"isautodeployed": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
 			"jsondosurl": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The URL on which we need to enforce the specified JSON denial-of-service (JSONDoS) attack protections.\nAn JSON DoS configuration consists of the following items:\n* URL. PCRE-format regular expression for the URL.\n* Maximum-document-length-check toggle.  ON to enable this check, OFF to disable it.\n* Maximum document length. Positive integer representing the maximum length of the JSON document.\n* Maximum-container-depth-check toggle. ON to enable, OFF to disable.\n * Maximum container depth. Positive integer representing the maximum container depth of the JSON document.\n* Maximum-object-key-count-check toggle. ON to enable, OFF to disable.\n* Maximum object key count. Positive integer representing the maximum allowed number of keys in any of the  JSON object.\n* Maximum-object-key-length-check toggle. ON to enable, OFF to disable.\n* Maximum object key length. Positive integer representing the maximum allowed length of key in any of the  JSON object.\n* Maximum-array-value-count-check toggle. ON to enable, OFF to disable.\n* Maximum array value count. Positive integer representing the maximum allowed number of values in any of the JSON array.\n* Maximum-string-length-check toggle. ON to enable, OFF to disable.\n* Maximum string length. Positive integer representing the maximum length of string in JSON.",
 			},
 			"jsonmaxarraylength": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(10000),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Maximum array length in the any of JSON object. This check protects against arrays having large lengths.",
 			},
 			"jsonmaxarraylengthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if JSON Max array value count check is ON or OFF.",
 			},
 			"jsonmaxcontainerdepth": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(5),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Maximum allowed nesting depth  of JSON document. JSON allows one to nest the containers (object and array) in any order to any depth. This check protects against documents that have excessive depth of hierarchy.",
 			},
 			"jsonmaxcontainerdepthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if JSON Max depth check is ON or OFF.",
 			},
 			"jsonmaxdocumentlength": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(20000000),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Maximum document length of JSON document, in bytes.",
 			},
 			"jsonmaxdocumentlengthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if JSON Max document length check is ON or OFF.",
 			},
 			"jsonmaxobjectkeycount": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(10000),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Maximum key count in the any of JSON object. This check protects against objects that have large number of keys.",
 			},
 			"jsonmaxobjectkeycountcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if JSON Max object key count check is ON or OFF.",
 			},
 			"jsonmaxobjectkeylength": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(128),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Maximum key length in the any of JSON object. This check protects against objects that have large keys.",
 			},
 			"jsonmaxobjectkeylengthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if JSON Max object key length check is ON or OFF.",
 			},
 			"jsonmaxstringlength": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(1000000),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Maximum string length in the JSON. This check protects against strings that have large length.",
 			},
 			"jsonmaxstringlengthcheck": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "State if JSON Max string value count check is ON or OFF.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile to which to bind an exemption or rule.",
 			},
 			"resourceid": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies rule type of binding",
+			},
 			"state": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Enabled.",
 			},
 		},
 	}
 }
 
-func appfwprofile_jsondosurl_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AppfwprofileJsondosurlBindingResourceModel) appfw.Appfwprofilejsondosurlbinding {
-	tflog.Debug(ctx, "In appfwprofile_jsondosurl_bindingGetThePayloadFromtheConfig Function")
+func appfwprofile_jsondosurl_bindingGetThePayloadFromthePlan(ctx context.Context, data *AppfwprofileJsondosurlBindingResourceModel) appfw.Appfwprofilejsondosurlbinding {
+	tflog.Debug(ctx, "In appfwprofile_jsondosurl_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwprofile_jsondosurl_binding := appfw.Appfwprofilejsondosurlbinding{}
-	if !data.Alertonly.IsNull() {
+	if !data.Alertonly.IsNull() && !data.Alertonly.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Alertonly = data.Alertonly.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Comment = data.Comment.ValueString()
 	}
-	if !data.Isautodeployed.IsNull() {
+	if !data.Isautodeployed.IsNull() && !data.Isautodeployed.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Isautodeployed = data.Isautodeployed.ValueString()
 	}
-	if !data.Jsondosurl.IsNull() {
+	if !data.Jsondosurl.IsNull() && !data.Jsondosurl.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsondosurl = data.Jsondosurl.ValueString()
 	}
-	if !data.Jsonmaxarraylength.IsNull() {
+	if !data.Jsonmaxarraylength.IsNull() && !data.Jsonmaxarraylength.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxarraylength = utils.IntPtr(int(data.Jsonmaxarraylength.ValueInt64()))
 	}
-	if !data.Jsonmaxarraylengthcheck.IsNull() {
+	if !data.Jsonmaxarraylengthcheck.IsNull() && !data.Jsonmaxarraylengthcheck.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxarraylengthcheck = data.Jsonmaxarraylengthcheck.ValueString()
 	}
-	if !data.Jsonmaxcontainerdepth.IsNull() {
+	if !data.Jsonmaxcontainerdepth.IsNull() && !data.Jsonmaxcontainerdepth.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxcontainerdepth = utils.IntPtr(int(data.Jsonmaxcontainerdepth.ValueInt64()))
 	}
-	if !data.Jsonmaxcontainerdepthcheck.IsNull() {
+	if !data.Jsonmaxcontainerdepthcheck.IsNull() && !data.Jsonmaxcontainerdepthcheck.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxcontainerdepthcheck = data.Jsonmaxcontainerdepthcheck.ValueString()
 	}
-	if !data.Jsonmaxdocumentlength.IsNull() {
+	if !data.Jsonmaxdocumentlength.IsNull() && !data.Jsonmaxdocumentlength.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxdocumentlength = utils.IntPtr(int(data.Jsonmaxdocumentlength.ValueInt64()))
 	}
-	if !data.Jsonmaxdocumentlengthcheck.IsNull() {
+	if !data.Jsonmaxdocumentlengthcheck.IsNull() && !data.Jsonmaxdocumentlengthcheck.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxdocumentlengthcheck = data.Jsonmaxdocumentlengthcheck.ValueString()
 	}
-	if !data.Jsonmaxobjectkeycount.IsNull() {
+	if !data.Jsonmaxobjectkeycount.IsNull() && !data.Jsonmaxobjectkeycount.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxobjectkeycount = utils.IntPtr(int(data.Jsonmaxobjectkeycount.ValueInt64()))
 	}
-	if !data.Jsonmaxobjectkeycountcheck.IsNull() {
+	if !data.Jsonmaxobjectkeycountcheck.IsNull() && !data.Jsonmaxobjectkeycountcheck.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxobjectkeycountcheck = data.Jsonmaxobjectkeycountcheck.ValueString()
 	}
-	if !data.Jsonmaxobjectkeylength.IsNull() {
+	if !data.Jsonmaxobjectkeylength.IsNull() && !data.Jsonmaxobjectkeylength.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxobjectkeylength = utils.IntPtr(int(data.Jsonmaxobjectkeylength.ValueInt64()))
 	}
-	if !data.Jsonmaxobjectkeylengthcheck.IsNull() {
+	if !data.Jsonmaxobjectkeylengthcheck.IsNull() && !data.Jsonmaxobjectkeylengthcheck.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxobjectkeylengthcheck = data.Jsonmaxobjectkeylengthcheck.ValueString()
 	}
-	if !data.Jsonmaxstringlength.IsNull() {
+	if !data.Jsonmaxstringlength.IsNull() && !data.Jsonmaxstringlength.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxstringlength = utils.IntPtr(int(data.Jsonmaxstringlength.ValueInt64()))
 	}
-	if !data.Jsonmaxstringlengthcheck.IsNull() {
+	if !data.Jsonmaxstringlengthcheck.IsNull() && !data.Jsonmaxstringlengthcheck.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Jsonmaxstringlengthcheck = data.Jsonmaxstringlengthcheck.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Name = data.Name.ValueString()
 	}
-	if !data.Resourceid.IsNull() {
+	if !data.Resourceid.IsNull() && !data.Resourceid.IsUnknown() {
 		appfwprofile_jsondosurl_binding.Resourceid = data.Resourceid.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.Ruletype.IsNull() && !data.Ruletype.IsUnknown() {
+		appfwprofile_jsondosurl_binding.Ruletype = data.Ruletype.ValueString()
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwprofile_jsondosurl_binding.State = data.State.ValueString()
 	}
 
@@ -221,6 +284,132 @@ func appfwprofile_jsondosurl_bindingSetAttrFromGet(ctx context.Context, data *Ap
 	tflog.Debug(ctx, "In appfwprofile_jsondosurl_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	// NOTE: alertonly and isautodeployed are NOT set from the GET response.
+	// The NITRO server overrides the user-supplied values (e.g. returns "OFF" /
+	// "NOTAUTODEPLOYED" regardless of what was configured), which would cause an
+	// "inconsistent result after apply" error. Preserve the existing plan/state
+	// value instead (Pattern 7 server-overrides variant). The datasource uses a
+	// separate setter that faithfully copies the GET response.
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["jsondosurl"]; ok && val != nil {
+		data.Jsondosurl = types.StringValue(val.(string))
+	} else {
+		data.Jsondosurl = types.StringNull()
+	}
+	if val, ok := getResponseData["jsonmaxarraylength"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Jsonmaxarraylength = types.Int64Value(intVal)
+		}
+	} else {
+		data.Jsonmaxarraylength = types.Int64Null()
+	}
+	if val, ok := getResponseData["jsonmaxarraylengthcheck"]; ok && val != nil {
+		data.Jsonmaxarraylengthcheck = types.StringValue(val.(string))
+	} else {
+		data.Jsonmaxarraylengthcheck = types.StringNull()
+	}
+	if val, ok := getResponseData["jsonmaxcontainerdepth"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Jsonmaxcontainerdepth = types.Int64Value(intVal)
+		}
+	} else {
+		data.Jsonmaxcontainerdepth = types.Int64Null()
+	}
+	if val, ok := getResponseData["jsonmaxcontainerdepthcheck"]; ok && val != nil {
+		data.Jsonmaxcontainerdepthcheck = types.StringValue(val.(string))
+	} else {
+		data.Jsonmaxcontainerdepthcheck = types.StringNull()
+	}
+	if val, ok := getResponseData["jsonmaxdocumentlength"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Jsonmaxdocumentlength = types.Int64Value(intVal)
+		}
+	} else {
+		data.Jsonmaxdocumentlength = types.Int64Null()
+	}
+	if val, ok := getResponseData["jsonmaxdocumentlengthcheck"]; ok && val != nil {
+		data.Jsonmaxdocumentlengthcheck = types.StringValue(val.(string))
+	} else {
+		data.Jsonmaxdocumentlengthcheck = types.StringNull()
+	}
+	if val, ok := getResponseData["jsonmaxobjectkeycount"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Jsonmaxobjectkeycount = types.Int64Value(intVal)
+		}
+	} else {
+		data.Jsonmaxobjectkeycount = types.Int64Null()
+	}
+	if val, ok := getResponseData["jsonmaxobjectkeycountcheck"]; ok && val != nil {
+		data.Jsonmaxobjectkeycountcheck = types.StringValue(val.(string))
+	} else {
+		data.Jsonmaxobjectkeycountcheck = types.StringNull()
+	}
+	if val, ok := getResponseData["jsonmaxobjectkeylength"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Jsonmaxobjectkeylength = types.Int64Value(intVal)
+		}
+	} else {
+		data.Jsonmaxobjectkeylength = types.Int64Null()
+	}
+	if val, ok := getResponseData["jsonmaxobjectkeylengthcheck"]; ok && val != nil {
+		data.Jsonmaxobjectkeylengthcheck = types.StringValue(val.(string))
+	} else {
+		data.Jsonmaxobjectkeylengthcheck = types.StringNull()
+	}
+	if val, ok := getResponseData["jsonmaxstringlength"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Jsonmaxstringlength = types.Int64Value(intVal)
+		}
+	} else {
+		data.Jsonmaxstringlength = types.Int64Null()
+	}
+	if val, ok := getResponseData["jsonmaxstringlengthcheck"]; ok && val != nil {
+		data.Jsonmaxstringlengthcheck = types.StringValue(val.(string))
+	} else {
+		data.Jsonmaxstringlengthcheck = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else {
+		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["resourceid"]; ok && val != nil {
+		data.Resourceid = types.StringValue(val.(string))
+	} else {
+		data.Resourceid = types.StringNull()
+	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("jsondosurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Jsondosurl.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	return data
+}
+
+// appfwprofile_jsondosurl_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (including server-overridden alertonly/isautodeployed)
+// and sets the ID. Used by the datasource Read, which has no prior plan/state to
+// preserve (Pattern 7 datasource split).
+func appfwprofile_jsondosurl_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AppfwprofileJsondosurlBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileJsondosurlBindingResourceModel {
+	tflog.Debug(ctx, "In appfwprofile_jsondosurl_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
 	} else {
@@ -323,14 +512,17 @@ func appfwprofile_jsondosurl_bindingSetAttrFromGet(ctx context.Context, data *Ap
 	} else {
 		data.Resourceid = types.StringNull()
 	}
+	if val, ok := getResponseData["ruletype"]; ok && val != nil {
+		data.Ruletype = types.StringValue(val.(string))
+	} else {
+		data.Ruletype = types.StringNull()
+	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
 	} else {
 		data.State = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("jsondosurl:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Jsondosurl.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

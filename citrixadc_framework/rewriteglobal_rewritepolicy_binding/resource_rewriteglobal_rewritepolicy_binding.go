@@ -3,8 +3,12 @@ package rewriteglobal_rewritepolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +58,24 @@ func (r *RewriteglobalRewritepolicyBindingResource) Create(ctx context.Context, 
 	}
 
 	tflog.Debug(ctx, "Creating rewriteglobal_rewritepolicy_binding resource")
-
-	// rewriteglobal_rewritepolicy_binding := rewriteglobal_rewritepolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	rewriteglobal_rewritepolicy_binding := rewriteglobal_rewritepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Rewriteglobal_rewritepolicy_binding.Type(), &rewriteglobal_rewritepolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create rewriteglobal_rewritepolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("rewriteglobal_rewritepolicy_binding-config")
+	// Binding resource - SDK v2 used AddResource (POST); NITRO add verb is POST
+	_, err := r.client.AddResource(service.Rewriteglobal_rewritepolicy_binding.Type(), "", &rewriteglobal_rewritepolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create rewriteglobal_rewritepolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created rewriteglobal_rewritepolicy_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("priority:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Priority.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readRewriteglobalRewritepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +103,10 @@ func (r *RewriteglobalRewritepolicyBindingResource) Read(ctx context.Context, re
 }
 
 func (r *RewriteglobalRewritepolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data RewriteglobalRewritepolicyBindingResourceModel
+	var data, state RewriteglobalRewritepolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +114,29 @@ func (r *RewriteglobalRewritepolicyBindingResource) Update(ctx context.Context, 
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating rewriteglobal_rewritepolicy_binding resource")
 
-	// Create API request body from the model
-	// rewriteglobal_rewritepolicy_binding := rewriteglobal_rewritepolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Rewriteglobal_rewritepolicy_binding.Type(), &rewriteglobal_rewritepolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update rewriteglobal_rewritepolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		rewriteglobal_rewritepolicy_binding := rewriteglobal_rewritepolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Rewriteglobal_rewritepolicy_binding.Type(), &rewriteglobal_rewritepolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update rewriteglobal_rewritepolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated rewriteglobal_rewritepolicy_binding resource")
+		tflog.Trace(ctx, "Updated rewriteglobal_rewritepolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for rewriteglobal_rewritepolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readRewriteglobalRewritepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +156,127 @@ func (r *RewriteglobalRewritepolicyBindingResource) Delete(ctx context.Context, 
 	}
 
 	tflog.Debug(ctx, "Deleting rewriteglobal_rewritepolicy_binding resource")
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name
+	// Multiple unique attributes - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname", "priority", "type"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For rewriteglobal_rewritepolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted rewriteglobal_rewritepolicy_binding resource from state")
+	// URL-encode arg values (matches SDK v2 behavior) so slashy/special values are
+	// transmitted safely in the delete query string.
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["policyname"]; ok && val != "" {
+		argsMap["policyname"] = url.QueryEscape(val)
+	}
+	if val, ok := idMap["priority"]; ok && val != "" {
+		argsMap["priority"] = url.QueryEscape(val)
+	}
+	if val, ok := idMap["type"]; ok && val != "" {
+		argsMap["type"] = url.QueryEscape(val)
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Rewriteglobal_rewritepolicy_binding.Type(), "", argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete rewriteglobal_rewritepolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted rewriteglobal_rewritepolicy_binding binding")
 }
 
 // Helper function to read rewriteglobal_rewritepolicy_binding data from API
 func (r *RewriteglobalRewritepolicyBindingResource) readRewriteglobalRewritepolicyBindingFromApi(ctx context.Context, data *RewriteglobalRewritepolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Rewriteglobal_rewritepolicy_binding.Type(), "")
+
+	// Case 3: Array filter without parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"policyname", "priority", "type"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	var dataArr []map[string]interface{}
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["type"]; ok && val != "" {
+		argsMap["type"] = val
+	}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Rewriteglobal_rewritepolicy_binding.Type(),
+		ArgsMap:                  argsMap,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read rewriteglobal_rewritepolicy_binding, got error: %s", err))
 		return
 	}
 
-	rewriteglobal_rewritepolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "rewriteglobal_rewritepolicy_binding returned empty array")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check policyname
+		if idVal, ok := idMap["policyname"]; ok {
+			if val, ok := v["policyname"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["policyname"].(string); ok {
+			match = false
+			continue
+		}
+
+		// Check priority
+		if idVal, ok := idMap["priority"]; ok {
+			if val, ok := v["priority"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
+				if val != idValInt64 {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["priority"]; ok {
+			match = false
+			continue
+		}
+		// Check type
+		if val, ok := idMap["type"]; ok && val != "" {
+			if v, ok := v["type"]; ok {
+				if v.(string) != val {
+					match = false
+				}
+			}
+		}
+
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("rewriteglobal_rewritepolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	rewriteglobal_rewritepolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

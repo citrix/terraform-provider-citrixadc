@@ -42,7 +42,7 @@ func (d *RnatglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context,
 		return
 	}
 
-	// Case 3: Array filter without parent ID
+	// Single unique key (policy) - look up the binding by policy name.
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -64,23 +64,10 @@ func (d *RnatglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context,
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policy
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["policy"].(string); ok && !policy_Name.IsNull() && val == policy_Name.ValueString() {
 			foundIndex = i
 			break
 		}

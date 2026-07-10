@@ -28,7 +28,7 @@ resource "citrixadc_botprofile" "tf_botprofile" {
 resource "citrixadc_botprofile_tps_binding" "tf_binding" {
   name         = citrixadc_botprofile.tf_botprofile.name
   bot_tps_type = "SOURCE_IP"
-  bot_tps      = "true"
+  bot_tps      = true
   logmessage   = "Hellobinding"
   threshold    = 3
   percentage   = 20
@@ -53,7 +53,7 @@ resource "citrixadc_botprofile_tps_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the botprofile_tps_binding. It is the concatenation of `name` and `bot_tps_type` attributes seperated by comma.
+* `id` - The id of the botprofile_tps_binding. It is the concatenation of the `name` and `bot_tps_type` attributes separated by a comma.
 
 
 ## Import

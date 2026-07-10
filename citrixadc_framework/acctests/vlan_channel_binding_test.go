@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -104,10 +105,12 @@ func testAccCheckVlan_channel_bindingExist(n string, id *string) resource.TestCh
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		vlanid := idSlice[0]
-		ifnum := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"vlanid", "ifnum"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		vlanid := idMap["vlanid"]
+		ifnum := idMap["ifnum"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vlan_channel_binding",
@@ -199,9 +202,26 @@ func testAccCheckVlan_channel_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Vlan_channel_binding.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("vlan_channel_binding %s still exists", rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"vlanid", "ifnum"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", rs.Primary.ID, err)
+		}
+		vlanid := idMap["vlanid"]
+		ifnum := idMap["ifnum"]
+
+		findParams := service.FindParams{
+			ResourceType:             service.Vlan_channel_binding.Type(),
+			ResourceName:             vlanid,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			continue
+		}
+		for _, v := range dataArr {
+			if val, ok := v["ifnum"].(string); ok && val == ifnum {
+				return fmt.Errorf("vlan_channel_binding %s still exists", rs.Primary.ID)
+			}
 		}
 
 	}

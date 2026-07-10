@@ -3,8 +3,10 @@ package lsngroup_lsnhttphdrlogprofile_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,23 @@ func (r *LsngroupLsnhttphdrlogprofileBindingResource) Create(ctx context.Context
 	}
 
 	tflog.Debug(ctx, "Creating lsngroup_lsnhttphdrlogprofile_binding resource")
-
-	// lsngroup_lsnhttphdrlogprofile_binding := lsngroup_lsnhttphdrlogprofile_bindingGetThePayloadFromtheConfig(ctx, &data)
+	lsngroup_lsnhttphdrlogprofile_binding := lsngroup_lsnhttphdrlogprofile_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsngroup_lsnhttphdrlogprofile_binding.Type(), &lsngroup_lsnhttphdrlogprofile_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsngroup_lsnhttphdrlogprofile_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lsngroup_lsnhttphdrlogprofile_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Lsngroup_lsnhttphdrlogprofile_binding.Type(), &lsngroup_lsnhttphdrlogprofile_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsngroup_lsnhttphdrlogprofile_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lsngroup_lsnhttphdrlogprofile_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("httphdrlogprofilename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Httphdrlogprofilename.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readLsngroupLsnhttphdrlogprofileBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +100,10 @@ func (r *LsngroupLsnhttphdrlogprofileBindingResource) Read(ctx context.Context, 
 }
 
 func (r *LsngroupLsnhttphdrlogprofileBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LsngroupLsnhttphdrlogprofileBindingResourceModel
+	var data, state LsngroupLsnhttphdrlogprofileBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +111,29 @@ func (r *LsngroupLsnhttphdrlogprofileBindingResource) Update(ctx context.Context
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lsngroup_lsnhttphdrlogprofile_binding resource")
 
-	// Create API request body from the model
-	// lsngroup_lsnhttphdrlogprofile_binding := lsngroup_lsnhttphdrlogprofile_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsngroup_lsnhttphdrlogprofile_binding.Type(), &lsngroup_lsnhttphdrlogprofile_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsngroup_lsnhttphdrlogprofile_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		lsngroup_lsnhttphdrlogprofile_binding := lsngroup_lsnhttphdrlogprofile_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Lsngroup_lsnhttphdrlogprofile_binding.Type(), &lsngroup_lsnhttphdrlogprofile_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsngroup_lsnhttphdrlogprofile_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated lsngroup_lsnhttphdrlogprofile_binding resource")
+		tflog.Trace(ctx, "Updated lsngroup_lsnhttphdrlogprofile_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lsngroup_lsnhttphdrlogprofile_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readLsngroupLsnhttphdrlogprofileBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +153,99 @@ func (r *LsngroupLsnhttphdrlogprofileBindingResource) Delete(ctx context.Context
 	}
 
 	tflog.Debug(ctx, "Deleting lsngroup_lsnhttphdrlogprofile_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"groupname", "httphdrlogprofilename"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For lsngroup_lsnhttphdrlogprofile_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lsngroup_lsnhttphdrlogprofile_binding resource from state")
+	groupname_value, ok := idMap["groupname"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'groupname' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["httphdrlogprofilename"]; ok && val != "" {
+		argsMap["httphdrlogprofilename"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Lsngroup_lsnhttphdrlogprofile_binding.Type(), groupname_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsngroup_lsnhttphdrlogprofile_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lsngroup_lsnhttphdrlogprofile_binding binding")
 }
 
 // Helper function to read lsngroup_lsnhttphdrlogprofile_binding data from API
 func (r *LsngroupLsnhttphdrlogprofileBindingResource) readLsngroupLsnhttphdrlogprofileBindingFromApi(ctx context.Context, data *LsngroupLsnhttphdrlogprofileBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lsngroup_lsnhttphdrlogprofile_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"groupname", "httphdrlogprofilename"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	groupname_Name, ok := idMap["groupname"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'groupname' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Lsngroup_lsnhttphdrlogprofile_binding.Type(),
+		ResourceName:             groupname_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsngroup_lsnhttphdrlogprofile_binding, got error: %s", err))
 		return
 	}
 
-	lsngroup_lsnhttphdrlogprofile_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "lsngroup_lsnhttphdrlogprofile_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check httphdrlogprofilename
+		if idVal, ok := idMap["httphdrlogprofilename"]; ok {
+			if val, ok := v["httphdrlogprofilename"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["httphdrlogprofilename"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("lsngroup_lsnhttphdrlogprofile_binding not found with the provided ID attributes"))
+		return
+	}
+
+	lsngroup_lsnhttphdrlogprofile_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

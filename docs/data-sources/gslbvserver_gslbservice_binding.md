@@ -6,7 +6,7 @@ subcategory: "GSLB"
 
 The gslbvserver_gslbservice_binding data source allows you to retrieve information about a GSLB virtual server to GSLB service binding.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_gslbvserver_gslbservice_binding" "tf_gslbvserver_gslbservice_binding" {

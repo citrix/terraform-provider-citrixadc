@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -96,10 +97,12 @@ func testAccCheckSslcipher_sslciphersuite_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		ciphergroupname := idSlice[0]
-		ciphername := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"ciphergroupname", "ciphername"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		ciphergroupname := idMap["ciphergroupname"]
+		ciphername := idMap["ciphername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslcipher_sslciphersuite_binding",

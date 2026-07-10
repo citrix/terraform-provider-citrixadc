@@ -85,6 +85,7 @@ func (d *TunnelglobalTunneltrafficpolicyBindingDataSource) Read(ctx context.Cont
 			match = false
 			continue
 		}
+		// Check type_Name
 		if !type_Name.IsNull() && type_Name.ValueString() != "" {
 			if v, ok := v["type"]; ok {
 				if v.(string) != type_Name.ValueString() {
@@ -105,7 +106,7 @@ func (d *TunnelglobalTunneltrafficpolicyBindingDataSource) Read(ctx context.Cont
 		return
 	}
 
-	tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

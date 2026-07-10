@@ -3,8 +3,12 @@ package vpnvserver_intranetip6_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +58,24 @@ func (r *VpnvserverIntranetip6BindingResource) Create(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Creating vpnvserver_intranetip6_binding resource")
-
-	// vpnvserver_intranetip6_binding := vpnvserver_intranetip6_bindingGetThePayloadFromtheConfig(ctx, &data)
+	vpnvserver_intranetip6_binding := vpnvserver_intranetip6_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnvserver_intranetip6_binding.Type(), &vpnvserver_intranetip6_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnvserver_intranetip6_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnvserver_intranetip6_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Vpnvserver_intranetip6_binding.Type(), &vpnvserver_intranetip6_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnvserver_intranetip6_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnvserver_intranetip6_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("intranetip6:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetip6.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("numaddr:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Numaddr.ValueInt64()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readVpnvserverIntranetip6BindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +103,10 @@ func (r *VpnvserverIntranetip6BindingResource) Read(ctx context.Context, req res
 }
 
 func (r *VpnvserverIntranetip6BindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnvserverIntranetip6BindingResourceModel
+	var data, state VpnvserverIntranetip6BindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +114,29 @@ func (r *VpnvserverIntranetip6BindingResource) Update(ctx context.Context, req r
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnvserver_intranetip6_binding resource")
 
-	// Create API request body from the model
-	// vpnvserver_intranetip6_binding := vpnvserver_intranetip6_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnvserver_intranetip6_binding.Type(), &vpnvserver_intranetip6_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnvserver_intranetip6_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		vpnvserver_intranetip6_binding := vpnvserver_intranetip6_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Vpnvserver_intranetip6_binding.Type(), &vpnvserver_intranetip6_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnvserver_intranetip6_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vpnvserver_intranetip6_binding resource")
+		tflog.Trace(ctx, "Updated vpnvserver_intranetip6_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnvserver_intranetip6_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readVpnvserverIntranetip6BindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +156,125 @@ func (r *VpnvserverIntranetip6BindingResource) Delete(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Deleting vpnvserver_intranetip6_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// ParseIdString handles both the new key:value ID format and the legacy
+	// SDK v2 positional "name,intranetip6" format.
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "intranetip6"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For vpnvserver_intranetip6_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnvserver_intranetip6_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// Build delete args. URL-encode the values so slashy/special characters
+	// (e.g. an intranetip6 network range like "::1/64") do not corrupt the
+	// ?args=key:value query string.
+	args := make([]string, 0)
+	if val, ok := idMap["intranetip6"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("intranetip6:%s", url.QueryEscape(val)))
+	}
+	if val, ok := idMap["numaddr"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("numaddr:%s", url.QueryEscape(val)))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_intranetip6_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_intranetip6_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnvserver_intranetip6_binding binding")
 }
 
 // Helper function to read vpnvserver_intranetip6_binding data from API
 func (r *VpnvserverIntranetip6BindingResource) readVpnvserverIntranetip6BindingFromApi(ctx context.Context, data *VpnvserverIntranetip6BindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnvserver_intranetip6_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "intranetip6"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Vpnvserver_intranetip6_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnvserver_intranetip6_binding, got error: %s", err))
 		return
 	}
 
-	vpnvserver_intranetip6_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "vpnvserver_intranetip6_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check intranetip6
+		if idVal, ok := idMap["intranetip6"]; ok {
+			if val, ok := v["intranetip6"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["intranetip6"].(string); ok {
+			match = false
+			continue
+		}
+
+		// Check numaddr
+		if idVal, ok := idMap["numaddr"]; ok {
+			if val, ok := v["numaddr"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
+				if val != idValInt64 {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["numaddr"]; ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("vpnvserver_intranetip6_binding not found with the provided ID attributes"))
+		return
+	}
+
+	vpnvserver_intranetip6_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

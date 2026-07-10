@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -114,10 +114,12 @@ func testAccCheckSystemuser_nspartition_bindingExist(n string, id *string) resou
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		username := idSlice[0]
-		partitionname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"username", "partitionname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		username := idMap["username"]
+		partitionname := idMap["partitionname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "systemuser_nspartition_binding",
@@ -156,13 +158,12 @@ func testAccCheckSystemuser_nspartition_bindingNotExist(n string, id string) res
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"username", "partitionname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		username := idSlice[0]
-		partitionname := idSlice[1]
+		username := idMap["username"]
+		partitionname := idMap["partitionname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "systemuser_nspartition_binding",

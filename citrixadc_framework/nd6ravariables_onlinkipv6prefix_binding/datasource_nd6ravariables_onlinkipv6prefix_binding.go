@@ -3,6 +3,7 @@ package nd6ravariables_onlinkipv6prefix_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -43,7 +44,7 @@ func (d *Nd6ravariablesOnlinkipv6prefixBindingDataSource) Read(ctx context.Conte
 	}
 
 	// Case 4: Array filter with parent ID
-	vlan_Name := fmt.Sprintf("%d", data.Vlan.ValueInt64())
+	vlan_Name := strconv.FormatInt(data.Vlan.ValueInt64(), 10)
 	ipv6prefix_Name := data.Ipv6prefix
 
 	var dataArr []map[string]interface{}

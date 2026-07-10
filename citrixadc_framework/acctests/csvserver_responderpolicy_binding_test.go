@@ -17,12 +17,12 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"fmt"
-	"strings"
 	"testing"
 )
 
@@ -147,9 +147,12 @@ func testAccCheckCsvserver_responderpolicy_bindingExist(n string, id *string) re
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 2)
-		name := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "csvserver_responderpolicy_binding",
@@ -197,7 +200,13 @@ func testAccCheckCsvserver_responderpolicy_bindingDestroy(s *terraform.State) er
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Csvserver_responderpolicy_binding.Type(), rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+
+		_, err = client.FindResource(service.Csvserver_responderpolicy_binding.Type(), name)
 		if err == nil {
 			return fmt.Errorf("csvserver_responderpolicy_binding %s still exists", rs.Primary.ID)
 		}

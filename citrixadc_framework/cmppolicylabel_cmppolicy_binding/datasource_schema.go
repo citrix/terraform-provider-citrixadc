@@ -20,7 +20,7 @@ func CmppolicylabelCmppolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next higher priority number in the original label.",
 			},
-			"invoke_labelname": schema.StringAttribute{
+			"invokelabelname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of the label to invoke if the current policy evaluates to TRUE.",

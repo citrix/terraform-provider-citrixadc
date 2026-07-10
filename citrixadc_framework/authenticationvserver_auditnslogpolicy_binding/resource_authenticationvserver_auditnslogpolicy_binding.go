@@ -3,8 +3,11 @@ package authenticationvserver_auditnslogpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,24 @@ func (r *AuthenticationvserverAuditnslogpolicyBindingResource) Create(ctx contex
 	}
 
 	tflog.Debug(ctx, "Creating authenticationvserver_auditnslogpolicy_binding resource")
-
-	// authenticationvserver_auditnslogpolicy_binding := authenticationvserver_auditnslogpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	authenticationvserver_auditnslogpolicy_binding := authenticationvserver_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationvserver_auditnslogpolicy_binding.Type(), &authenticationvserver_auditnslogpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationvserver_auditnslogpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationvserver_auditnslogpolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Authenticationvserver_auditnslogpolicy_binding.Type(), &authenticationvserver_auditnslogpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationvserver_auditnslogpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationvserver_auditnslogpolicy_binding resource")
+
+	// Set ID for the resource before reading state.
+	// Canonical legacy ID order is name,policy (resource_id_mapping.json).
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readAuthenticationvserverAuditnslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +102,10 @@ func (r *AuthenticationvserverAuditnslogpolicyBindingResource) Read(ctx context.
 }
 
 func (r *AuthenticationvserverAuditnslogpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationvserverAuditnslogpolicyBindingResourceModel
+	var data, state AuthenticationvserverAuditnslogpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +113,29 @@ func (r *AuthenticationvserverAuditnslogpolicyBindingResource) Update(ctx contex
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationvserver_auditnslogpolicy_binding resource")
 
-	// Create API request body from the model
-	// authenticationvserver_auditnslogpolicy_binding := authenticationvserver_auditnslogpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationvserver_auditnslogpolicy_binding.Type(), &authenticationvserver_auditnslogpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationvserver_auditnslogpolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		authenticationvserver_auditnslogpolicy_binding := authenticationvserver_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Authenticationvserver_auditnslogpolicy_binding.Type(), &authenticationvserver_auditnslogpolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationvserver_auditnslogpolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationvserver_auditnslogpolicy_binding resource")
+		tflog.Trace(ctx, "Updated authenticationvserver_auditnslogpolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for authenticationvserver_auditnslogpolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readAuthenticationvserverAuditnslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +155,101 @@ func (r *AuthenticationvserverAuditnslogpolicyBindingResource) Delete(ctx contex
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_auditnslogpolicy_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs.
+	// Parse the ID (handles both new key:value and legacy name,policy formats)
+	// to recover the parent name and the policy delete-arg.
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For authenticationvserver_auditnslogpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationvserver_auditnslogpolicy_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// Build delete args. policy is the disambiguator; secondary/groupextraction/
+	// bindpoint mirror the SDK v2 conditional args. URL-encode slashy/special
+	// values (Pattern b: DeleteResourceWithArgs + url.QueryEscape).
+	args := make([]string, 0)
+	if val, ok := idMap["policy"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	} else if !data.Policy.IsNull() {
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(data.Policy.ValueString())))
+	}
+	if !data.Secondary.IsNull() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_auditnslogpolicy_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_auditnslogpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted authenticationvserver_auditnslogpolicy_binding binding")
 }
 
 // Helper function to read authenticationvserver_auditnslogpolicy_binding data from API
 func (r *AuthenticationvserverAuditnslogpolicyBindingResource) readAuthenticationvserverAuditnslogpolicyBindingFromApi(ctx context.Context, data *AuthenticationvserverAuditnslogpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationvserver_auditnslogpolicy_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Authenticationvserver_auditnslogpolicy_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationvserver_auditnslogpolicy_binding, got error: %s", err))
 		return
 	}
 
-	authenticationvserver_auditnslogpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "authenticationvserver_auditnslogpolicy_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the binding for the configured policy.
+	// policy is the disambiguator within a parent vserver (name).
+	foundIndex := -1
+	for i, v := range dataArr {
+		if idVal, ok := idMap["policy"]; ok {
+			if val, ok := v["policy"].(string); ok && val == idVal {
+				foundIndex = i
+				break
+			}
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("authenticationvserver_auditnslogpolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	authenticationvserver_auditnslogpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

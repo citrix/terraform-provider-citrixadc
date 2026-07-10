@@ -34,11 +34,13 @@ output "type" {
   * REQ_OVERRIDE - Request override. Binds the policy to the priority request queue.
   * REQ_DEFAULT - Binds the policy to the default request queue.
 
+  Possible values: [ REQ_OVERRIDE, REQ_DEFAULT ]
+
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `globalbindtype` - The global bind type of the binding. Default value: "SYSTEM_GLOBAL"
+* `globalbindtype` - Global bind type for the binding. Defaults to `"SYSTEM_GLOBAL"`.
 * `priority` - Specifies the priority of the policy.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server.
@@ -46,4 +48,4 @@ In addition to the arguments, the following attributes are available:
 * `labeltype` - Type of invocation. Available settings function as follows:
   * vserver - Forward the request to the specified virtual server.
   * policylabel - Invoke the specified policy label.
-* `id` - The id of the botglobal_botpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the botglobal_botpolicy_binding. It is the concatenation of `policyname` and `type` attributes separated by a comma.

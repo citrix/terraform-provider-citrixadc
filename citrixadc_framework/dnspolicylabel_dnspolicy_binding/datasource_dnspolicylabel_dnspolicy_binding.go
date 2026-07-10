@@ -93,7 +93,7 @@ func (d *DnspolicylabelDnspolicyBindingDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	dnspolicylabel_dnspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	dnspolicylabel_dnspolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -59,14 +60,6 @@ const testAccSslvserver_sslciphersuite_bindingDataSource_basic = `
 		vservername = citrixadc_lbvserver.tf_sslvserver.name
 	}
 
-	resource "citrixadc_sslvserver" "tf_sslvserver_ssl" {
-		vservername = citrixadc_lbvserver.tf_sslvserver.name
-		tls1 = "ENABLED"
-		tls11 = "ENABLED"
-		tls12 = "ENABLED"
-		tls13 = "DISABLED"
-	}
-
 	resource "citrixadc_lbvserver" "tf_sslvserver" {
 		name = "tf_sslvserver_ds"
 		servicetype = "SSL"
@@ -82,7 +75,9 @@ const testAccSslvserver_sslciphersuite_bindingDataSource_basic = `
 `
 
 func TestAccSslvserver_sslciphersuite_binding_basic(t *testing.T) {
-	t.Skip("TODO: Operation not permitted!")
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -143,10 +138,12 @@ func testAccCheckSslvserver_sslciphersuite_bindingExist(n string, id *string) re
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		vservername := idSlice[0]
-		ciphername := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"vservername", "ciphername"}, nil)
+		if err != nil {
+			return err
+		}
+		vservername := idMap["vservername"]
+		ciphername := idMap["ciphername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslciphersuite_binding",
@@ -188,10 +185,12 @@ func testAccCheckSslvserver_sslciphersuite_bindingNotExist(n string, id string) 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		ciphername := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"vservername", "ciphername"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["vservername"]
+		ciphername := idMap["ciphername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslciphersuite_binding",
@@ -238,7 +237,13 @@ func testAccCheckSslvserver_sslciphersuite_bindingDestroy(s *terraform.State) er
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Sslvserver_sslciphersuite_binding.Type(), rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"vservername", "ciphername"}, nil)
+		if err != nil {
+			return err
+		}
+		vservername := idMap["vservername"]
+
+		_, err = client.FindResource(service.Sslvserver_sslciphersuite_binding.Type(), vservername)
 		if err == nil {
 			return fmt.Errorf("sslvserver_sslciphersuite_binding %s still exists", rs.Primary.ID)
 		}
@@ -249,9 +254,8 @@ func testAccCheckSslvserver_sslciphersuite_bindingDestroy(s *terraform.State) er
 }
 
 func TestAccSslvserver_sslciphersuite_bindingDataSource_basic(t *testing.T) {
-	t.Skip("TODO: Operation not permitted when SSL profiles are enabled!")
-	if adcTestbed == "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
-		t.Skipf("ADC testbed is %s. This test is incompatible with SSL profiles.", adcTestbed)
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

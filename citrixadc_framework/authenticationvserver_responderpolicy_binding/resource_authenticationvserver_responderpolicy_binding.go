@@ -3,8 +3,10 @@ package authenticationvserver_responderpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,21 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Create(ctx context
 	}
 
 	tflog.Debug(ctx, "Creating authenticationvserver_responderpolicy_binding resource")
-
-	// authenticationvserver_responderpolicy_binding := authenticationvserver_responderpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	authenticationvserver_responderpolicy_binding := authenticationvserver_responderpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationvserver_responderpolicy_binding.Type(), &authenticationvserver_responderpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationvserver_responderpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationvserver_responderpolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource (NITRO 'add' verb is PUT for this binding)
+	err := r.client.UpdateUnnamedResource(service.Authenticationvserver_responderpolicy_binding.Type(), &authenticationvserver_responderpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationvserver_responderpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationvserver_responderpolicy_binding resource")
+
+	// Set ID for the resource before reading state.
+	// Legacy SDK v2 ID format: "name,policy" (see resource_id_mapping.json).
+	data.Id = types.StringValue(data.Name.ValueString() + "," + data.Policy.ValueString())
 
 	// Read the updated state back
 	r.readAuthenticationvserverResponderpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +98,10 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Read(ctx context.C
 }
 
 func (r *AuthenticationvserverResponderpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationvserverResponderpolicyBindingResourceModel
+	var data, state AuthenticationvserverResponderpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,21 +109,13 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Update(ctx context
 		return
 	}
 
-	tflog.Debug(ctx, "Updating authenticationvserver_responderpolicy_binding resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// authenticationvserver_responderpolicy_binding := authenticationvserver_responderpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// No NITRO update endpoint exists for this binding; every attribute is RequiresReplace,
+	// so Terraform never reaches Update with a real change. Read back and persist (Pattern 5).
+	tflog.Debug(ctx, "Update is a no-op for authenticationvserver_responderpolicy_binding; all attributes are RequiresReplace")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationvserver_responderpolicy_binding.Type(), &authenticationvserver_responderpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationvserver_responderpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated authenticationvserver_responderpolicy_binding resource")
-
-	// Read the updated state back
 	r.readAuthenticationvserverResponderpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -136,20 +133,98 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Delete(ctx context
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationvserver_responderpolicy_binding resource")
+	// Parse the ID (accepts both new key:value and legacy "name,policy" formats).
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For authenticationvserver_responderpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationvserver_responderpolicy_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// Build the delete args. policy is the disambiguator; the optional discriminators are
+	// added only when set in state (mirrors the SDK v2 delete). URL-encode slashy/special values.
+	args := make([]string, 0)
+	if policy, ok := idMap["policy"]; ok && policy != "" {
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(policy)))
+	}
+	if !data.Secondary.IsNull() && data.Secondary.ValueBool() {
+		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
+	}
+	if !data.Groupextraction.IsNull() && data.Groupextraction.ValueBool() {
+		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
+	}
+	if !data.Bindpoint.IsNull() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_responderpolicy_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationvserver_responderpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted authenticationvserver_responderpolicy_binding binding")
 }
 
 // Helper function to read authenticationvserver_responderpolicy_binding data from API
 func (r *AuthenticationvserverResponderpolicyBindingResource) readAuthenticationvserverResponderpolicyBindingFromApi(ctx context.Context, data *AuthenticationvserverResponderpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationvserver_responderpolicy_binding.Type(), "")
+
+	// Parse the ID (accepts both new key:value and legacy "name,policy" formats).
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+	policy_value, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Authenticationvserver_responderpolicy_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationvserver_responderpolicy_binding, got error: %s", err))
 		return
 	}
 
-	authenticationvserver_responderpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "authenticationvserver_responderpolicy_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the matching policy (matches SDK v2 behaviour).
+	foundIndex := -1
+	for i, v := range dataArr {
+		if val, ok := v["policy"].(string); ok && val == policy_value {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", "authenticationvserver_responderpolicy_binding not found with the provided ID attributes")
+		return
+	}
+
+	authenticationvserver_responderpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

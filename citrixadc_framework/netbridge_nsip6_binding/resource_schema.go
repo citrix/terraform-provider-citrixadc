@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,45 +34,77 @@ func (r *NetbridgeNsip6BindingResource) Schema(ctx context.Context, req resource
 				Description: "The ID of the netbridge_nsip6_binding resource.",
 			},
 			"ipaddress": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The subnet that is extended by this network bridge.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the network bridge.",
 			},
 			"netmask": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The network mask for the subnet.",
 			},
 		},
 	}
 }
 
-func netbridge_nsip6_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NetbridgeNsip6BindingResourceModel) network.Netbridgensip6binding {
-	tflog.Debug(ctx, "In netbridge_nsip6_bindingGetThePayloadFromtheConfig Function")
+func netbridge_nsip6_bindingGetThePayloadFromthePlan(ctx context.Context, data *NetbridgeNsip6BindingResourceModel) network.Netbridgensip6binding {
+	tflog.Debug(ctx, "In netbridge_nsip6_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	netbridge_nsip6_binding := network.Netbridgensip6binding{}
-	if !data.Ipaddress.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		netbridge_nsip6_binding.Ipaddress = data.Ipaddress.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		netbridge_nsip6_binding.Name = data.Name.ValueString()
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		netbridge_nsip6_binding.Netmask = data.Netmask.ValueString()
 	}
 
 	return netbridge_nsip6_binding
 }
 
+// netbridge_nsip6_bindingSetAttrFromGet is the resource-side setter. It adopts the
+// echoed-back values for name/ipaddress and, for netmask (server-overridden/omitted
+// for IPv6 bindings), only adopts the GET value when present so the configured/state
+// value is preserved (avoids "inconsistent result after apply"). It never recomputes
+// the ID — the ID is set exactly once in Create. See Pattern 7/13.
 func netbridge_nsip6_bindingSetAttrFromGet(ctx context.Context, data *NetbridgeNsip6BindingResourceModel, getResponseData map[string]interface{}) *NetbridgeNsip6BindingResourceModel {
 	tflog.Debug(ctx, "In netbridge_nsip6_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+		data.Ipaddress = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// netbridge_nsip6_bindingSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response and sets the datasource ID (the datasource has no Create).
+// See Pattern 7 datasource split.
+func netbridge_nsip6_bindingSetAttrFromGetForDatasource(ctx context.Context, data *NetbridgeNsip6BindingResourceModel, getResponseData map[string]interface{}) *NetbridgeNsip6BindingResourceModel {
+	tflog.Debug(ctx, "In netbridge_nsip6_bindingSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
 	} else {
@@ -87,11 +121,10 @@ func netbridge_nsip6_bindingSetAttrFromGet(ctx context.Context, data *NetbridgeN
 		data.Netmask = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// Set ID for the datasource: matches resource_id_mapping.json order (name,ipaddress).
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

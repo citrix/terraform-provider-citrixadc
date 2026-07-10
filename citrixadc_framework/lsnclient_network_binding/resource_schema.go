@@ -2,13 +2,14 @@ package lsnclient_network_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,43 +34,54 @@ func (r *LsnclientNetworkBindingResource) Schema(ctx context.Context, req resour
 				Description: "The ID of the lsnclient_network_binding resource.",
 			},
 			"clientname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the LSN client entity. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN client is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn client1\" or 'lsn client1').",
 			},
 			"netmask": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Subnet mask for the IPv4 address specified in the Network parameter.",
 			},
 			"network": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "IPv4 address(es) of the LSN subscriber(s) or subscriber network(s) on whose traffic you want the Citrix ADC to perform Large Scale NAT.",
 			},
 			"td": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "ID of the traffic domain on which this subscriber or the subscriber network (as specified by the network parameter) belongs. \nIf you do not specify an ID, the subscriber or the subscriber network becomes part of the default traffic domain.",
 			},
 		},
 	}
 }
 
-func lsnclient_network_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LsnclientNetworkBindingResourceModel) lsn.Lsnclientnetworkbinding {
-	tflog.Debug(ctx, "In lsnclient_network_bindingGetThePayloadFromtheConfig Function")
+func lsnclient_network_bindingGetThePayloadFromthePlan(ctx context.Context, data *LsnclientNetworkBindingResourceModel) lsn.Lsnclientnetworkbinding {
+	tflog.Debug(ctx, "In lsnclient_network_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lsnclient_network_binding := lsn.Lsnclientnetworkbinding{}
-	if !data.Clientname.IsNull() {
+	if !data.Clientname.IsNull() && !data.Clientname.IsUnknown() {
 		lsnclient_network_binding.Clientname = data.Clientname.ValueString()
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		lsnclient_network_binding.Netmask = data.Netmask.ValueString()
 	}
-	if !data.Network.IsNull() {
+	if !data.Network.IsNull() && !data.Network.IsUnknown() {
 		lsnclient_network_binding.Network = data.Network.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		lsnclient_network_binding.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
@@ -95,20 +107,49 @@ func lsnclient_network_bindingSetAttrFromGet(ctx context.Context, data *Lsnclien
 	} else {
 		data.Network = types.StringNull()
 	}
+	// Pattern 7: The NITRO GET response for this binding does NOT echo back the
+	// configured `td` value. Preserve the value already present in plan/state
+	// (set in Create) instead of nulling it, which would otherwise cause an
+	// "inconsistent result after apply" for a config that sets td explicitly.
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
-		data.Td = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// ID is composed in Create from the legacy identity keys (clientname,network);
+	// do not recompute it here.
+
+	return data
+}
+
+// lsnclient_network_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response (the datasource has no prior plan/state to
+// preserve). The ID is set by the datasource Read.
+func lsnclient_network_bindingSetAttrFromGetForDatasource(ctx context.Context, data *LsnclientNetworkBindingResourceModel, getResponseData map[string]interface{}) *LsnclientNetworkBindingResourceModel {
+	tflog.Debug(ctx, "In lsnclient_network_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["clientname"]; ok && val != nil {
+		data.Clientname = types.StringValue(val.(string))
+	} else {
+		data.Clientname = types.StringNull()
+	}
+	if val, ok := getResponseData["netmask"]; ok && val != nil {
+		data.Netmask = types.StringValue(val.(string))
+	} else {
+		data.Netmask = types.StringNull()
+	}
+	if val, ok := getResponseData["network"]; ok && val != nil {
+		data.Network = types.StringValue(val.(string))
+	} else {
+		data.Network = types.StringNull()
+	}
+	// td is not echoed by the GET response; preserve the config-supplied value.
+	if val, ok := getResponseData["td"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Td = types.Int64Value(intVal)
+		}
+	}
 
 	return data
 }

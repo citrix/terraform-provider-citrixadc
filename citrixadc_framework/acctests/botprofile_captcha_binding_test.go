@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -120,10 +121,12 @@ func testAccCheckBotprofile_captcha_bindingExist(n string, id *string) resource.
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		bot_captcha_url := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "bot_captcha_url"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		bot_captcha_url := idMap["bot_captcha_url"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_captcha_binding",

@@ -6,7 +6,7 @@ subcategory: "Responder"
 
 The responderglobal_responderpolicy_binding data source allows you to retrieve information about a specific binding between a responder global entity and a responder policy.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_responderglobal_responderpolicy_binding" "tf_responderglobal_responderpolicy_binding" {
@@ -35,7 +35,7 @@ In addition to the arguments, the following attributes are available:
 * `globalbindtype` - Applicable global bind point.
 * `priority` - Specifies the priority of the policy.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `id` - The id of the responderglobal_responderpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the responderglobal_responderpolicy_binding. It has the same value as the `policyname` attribute.
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
 * `labelname` - Name of the policy label to invoke. If the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is policylabel.
 * `labeltype` - Type of invocation. Possible values: [ vserver, policylabel ]

@@ -42,7 +42,8 @@ func (d *AuthenticationvserverAuthenticationsamlidppolicyBindingDataSource) Read
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Case 4: Array filter with parent ID. The parent (name) selects the array;
+	// the policy attribute identifies the specific binding within it.
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -66,24 +67,14 @@ func (d *AuthenticationvserverAuthenticationsamlidppolicyBindingDataSource) Read
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one whose policy matches.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policy
 		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
+			if policy_Name.IsNull() || val == policy_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
@@ -93,7 +84,7 @@ func (d *AuthenticationvserverAuthenticationsamlidppolicyBindingDataSource) Read
 		return
 	}
 
-	authenticationvserver_authenticationsamlidppolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationsamlidppolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

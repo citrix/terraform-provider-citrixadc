@@ -7,7 +7,7 @@ subcategory: "LSN"
 The lsnappsprofile_lsnappsattributes_binding data source allows you to retrieve information about a lsnappsprofile_lsnappsattributes_binding.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {

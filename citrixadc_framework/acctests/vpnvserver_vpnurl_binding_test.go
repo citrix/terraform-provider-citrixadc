@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -148,10 +149,13 @@ func testAccCheckVpnvserver_vpnurl_bindingExist(n string, id *string) resource.T
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		urlname := idSlice[1]
+		// ID-parse only: handle both new key:value and legacy comma ID formats.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "urlname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		urlname := idMap["urlname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_vpnurl_binding",

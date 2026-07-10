@@ -34,8 +34,10 @@ func (r *SslvserverSslciphersuiteBindingResource) Schema(ctx context.Context, re
 				Description: "The ID of the sslvserver_sslciphersuite_binding resource.",
 			},
 			"ciphername": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The cipher group/alias/individual cipher configuration",
 			},
 			"description": schema.StringAttribute{
@@ -47,25 +49,28 @@ func (r *SslvserverSslciphersuiteBindingResource) Schema(ctx context.Context, re
 				Description: "The cipher suite description.",
 			},
 			"vservername": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL virtual server.",
 			},
 		},
 	}
 }
 
-func sslvserver_sslciphersuite_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslvserverSslciphersuiteBindingResourceModel) ssl.Sslvserversslciphersuitebinding {
-	tflog.Debug(ctx, "In sslvserver_sslciphersuite_bindingGetThePayloadFromtheConfig Function")
+func sslvserver_sslciphersuite_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslvserverSslciphersuiteBindingResourceModel) ssl.Sslvserversslciphersuitebinding {
+	tflog.Debug(ctx, "In sslvserver_sslciphersuite_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslvserver_sslciphersuite_binding := ssl.Sslvserversslciphersuitebinding{}
-	if !data.Ciphername.IsNull() {
+	if !data.Ciphername.IsNull() && !data.Ciphername.IsUnknown() {
 		sslvserver_sslciphersuite_binding.Ciphername = data.Ciphername.ValueString()
 	}
-	if !data.Description.IsNull() {
+	if !data.Description.IsNull() && !data.Description.IsUnknown() {
 		sslvserver_sslciphersuite_binding.Description = data.Description.ValueString()
 	}
-	if !data.Vservername.IsNull() {
+	if !data.Vservername.IsNull() && !data.Vservername.IsUnknown() {
 		sslvserver_sslciphersuite_binding.Vservername = data.Vservername.ValueString()
 	}
 

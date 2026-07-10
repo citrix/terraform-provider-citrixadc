@@ -85,6 +85,7 @@ func (d *TransformglobalTransformpolicyBindingDataSource) Read(ctx context.Conte
 			match = false
 			continue
 		}
+		// Check type_Name
 		if !type_Name.IsNull() && type_Name.ValueString() != "" {
 			if v, ok := v["type"]; ok {
 				if v.(string) != type_Name.ValueString() {

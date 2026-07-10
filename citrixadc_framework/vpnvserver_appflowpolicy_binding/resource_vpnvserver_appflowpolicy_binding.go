@@ -3,8 +3,11 @@ package vpnvserver_appflowpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +57,24 @@ func (r *VpnvserverAppflowpolicyBindingResource) Create(ctx context.Context, req
 	}
 
 	tflog.Debug(ctx, "Creating vpnvserver_appflowpolicy_binding resource")
-
-	// vpnvserver_appflowpolicy_binding := vpnvserver_appflowpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	vpnvserver_appflowpolicy_binding := vpnvserver_appflowpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnvserver_appflowpolicy_binding.Type(), &vpnvserver_appflowpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnvserver_appflowpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnvserver_appflowpolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Vpnvserver_appflowpolicy_binding.Type(), &vpnvserver_appflowpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnvserver_appflowpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnvserver_appflowpolicy_binding resource")
+
+	// Set ID for the resource before reading state
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("bindpoint:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Bindpoint.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readVpnvserverAppflowpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +102,10 @@ func (r *VpnvserverAppflowpolicyBindingResource) Read(ctx context.Context, req r
 }
 
 func (r *VpnvserverAppflowpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnvserverAppflowpolicyBindingResourceModel
+	var data, state VpnvserverAppflowpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +113,29 @@ func (r *VpnvserverAppflowpolicyBindingResource) Update(ctx context.Context, req
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnvserver_appflowpolicy_binding resource")
 
-	// Create API request body from the model
-	// vpnvserver_appflowpolicy_binding := vpnvserver_appflowpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnvserver_appflowpolicy_binding.Type(), &vpnvserver_appflowpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnvserver_appflowpolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		vpnvserver_appflowpolicy_binding := vpnvserver_appflowpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Vpnvserver_appflowpolicy_binding.Type(), &vpnvserver_appflowpolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnvserver_appflowpolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vpnvserver_appflowpolicy_binding resource")
+		tflog.Trace(ctx, "Updated vpnvserver_appflowpolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnvserver_appflowpolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readVpnvserverAppflowpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,20 +155,120 @@ func (r *VpnvserverAppflowpolicyBindingResource) Delete(ctx context.Context, req
 	}
 
 	tflog.Debug(ctx, "Deleting vpnvserver_appflowpolicy_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy", "bindpoint"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For vpnvserver_appflowpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnvserver_appflowpolicy_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	// Build delete args, URL-encoding values so slashy/special characters survive the
+	// raw arg join performed by the NITRO client (matches SDK v2 url.QueryEscape).
+	args := make([]string, 0)
+	if val, ok := idMap["policy"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	}
+	if val, ok := idMap["bindpoint"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(val)))
+	}
+
+	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_appflowpolicy_binding.Type(), name_value, args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_appflowpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnvserver_appflowpolicy_binding binding")
 }
 
 // Helper function to read vpnvserver_appflowpolicy_binding data from API
 func (r *VpnvserverAppflowpolicyBindingResource) readVpnvserverAppflowpolicyBindingFromApi(ctx context.Context, data *VpnvserverAppflowpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnvserver_appflowpolicy_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy", "bindpoint"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Vpnvserver_appflowpolicy_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnvserver_appflowpolicy_binding, got error: %s", err))
 		return
 	}
 
-	vpnvserver_appflowpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		diags.AddError("Client Error", "vpnvserver_appflowpolicy_binding returned empty array.")
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check bindpoint
+		if idVal, ok := idMap["bindpoint"]; ok {
+			if val, ok := v["bindpoint"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["bindpoint"].(string); ok {
+			match = false
+			continue
+		}
+
+		// Check policy
+		if idVal, ok := idMap["policy"]; ok {
+			if val, ok := v["policy"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["policy"].(string); ok {
+			match = false
+			continue
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	//  Resource is missing
+	if foundIndex == -1 {
+		diags.AddError("Client Error", fmt.Sprintf("vpnvserver_appflowpolicy_binding not found with the provided ID attributes"))
+		return
+	}
+
+	vpnvserver_appflowpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

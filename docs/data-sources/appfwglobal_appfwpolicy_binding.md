@@ -30,13 +30,13 @@ output "priority" {
 ## Argument Reference
 
 * `policyname` - (Required) Name of the policy.
-* `type` - (Required) Bind point to which to policy is bound.
+* `type` - (Required) Bind point to which the policy is bound. Possible values: [ REQ_OVERRIDE, REQ_DEFAULT, HTTPQUIC_REQ_OVERRIDE, HTTPQUIC_REQ_DEFAULT, NONE ].
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `globalbindtype` - Global bind type.
+* `globalbindtype` - Global bind type. Possible values: [ SYSTEM_GLOBAL, VPN_GLOBAL, RNAT_GLOBAL, APPFW_GLOBAL, TM_GLOBAL ].
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `id` - The id of the appfwglobal_appfwpolicy_binding. It is a system-generated identifier.
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.

@@ -44,6 +44,7 @@ func (d *LbvserverServiceBindingDataSource) Read(ctx context.Context, req dataso
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	servicegroupname_Name := data.Servicegroupname
 	servicename_Name := data.Servicename
 
 	var dataArr []map[string]interface{}
@@ -66,21 +67,26 @@ func (d *LbvserverServiceBindingDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the supplied filter
+	// attributes (servicename and/or servicegroupname).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check servicename
-		if val, ok := v["servicename"].(string); ok {
-			if servicename_Name.IsNull() || val != servicename_Name.ValueString() {
+		// Check servicegroupname when supplied in config
+		if !servicegroupname_Name.IsNull() {
+			if val, ok := v["servicegroupname"].(string); !ok || val != servicegroupname_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !servicename_Name.IsNull() {
-			match = false
-			continue
 		}
+
+		// Check servicename when supplied in config
+		if match && !servicename_Name.IsNull() {
+			if val, ok := v["servicename"].(string); !ok || val != servicename_Name.ValueString() {
+				match = false
+			}
+		}
+
 		if match {
 			foundIndex = i
 			break
@@ -89,11 +95,11 @@ func (d *LbvserverServiceBindingDataSource) Read(ctx context.Context, req dataso
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("lbvserver_service_binding with servicename %s not found", servicename_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("lbvserver_service_binding for vserver %s not found with the provided filter attributes", name_Name))
 		return
 	}
 
-	lbvserver_service_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbvserver_service_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

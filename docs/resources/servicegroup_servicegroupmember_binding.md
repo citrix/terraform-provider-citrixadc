@@ -26,19 +26,18 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
 
 ## Argument Reference
 
+* `servicegroupname` - (Required) Name of the service group.
 * `ip` - (Optional) IP Address.
-* `port` - (Optional) Server port number. Range 1 - 65535 * in CLI is represented as 65535 in NITRO API
-* `weight` - (Optional) Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
+* `port` - (Optional) Server port number.
 * `servername` - (Optional) Name of the server to which to bind the service group.
+* `weight` - (Optional) Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
 * `customserverid` - (Optional) The identifier for this IP:Port pair. Used when the persistency type is set to Custom Server ID.
-* `serverid` - (Optional) The  identifier for the service. This is used when the persistency type is set to Custom Server ID.
-* `state` - (Optional) Initial state of the service group. Possible values: [ ENABLED, DISABLED ]
+* `serverid` - (Optional) The identifier for the service. This is used when the persistency type is set to Custom Server ID.
+* `state` - (Optional) Initial state of the service group. Possible values: [ ENABLED, DISABLED ] Defaults to `ENABLED`.
 * `hashid` - (Optional) The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.
 * `nameserver` - (Optional) Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver.
-* `dbsttl` - (Optional) Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors.
-* `servicegroupname` - (Required) Name of the service group.
-* `disable_read` - (Optional) When set to true the read operation is skipped. Useful when the read operation will cause errors such as the binding of an dns query server.
-* `order` - (Optional) Order number to be assigned to the servicegroup member
+* `dbsttl` - (Optional) Specify the TTL for DNS record for domain based service. The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors.
+* `order` - (Optional) Order number to be assigned to the servicegroup member.
 
 
 ## Attribute Reference
