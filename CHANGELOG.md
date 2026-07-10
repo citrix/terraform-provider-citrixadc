@@ -1,3 +1,16 @@
+## 2.2.2 (July 9, 2026)
+
+BUG FIXES
+* **provider**: Reinstated self-healing on read for resources migrated from SDKv2 to the Plugin Framework. When a resource's object is deleted out-of-band, `Read` now removes it from Terraform state (and recreates it on the next apply) instead of failing with an error, matching the pre-migration SDKv2 behavior.
+* **citrixadc_lbmonitor**: Restored backward compatibility for the legacy resource id, so state created before v2.2.1 (bare `monitorname`) continues to work after upgrade. New ids use the composite `monitorname:type` form.
+* **citrixadc_nshttpprofile**: Added `http2smallwndtimeout` attribute to mitigate CVE-2026-13474.
+* **citrixadc_cluster** and **citrixadc_nscapacity**: Re-registered these resources in the SDKv2 provider so they remain available.
+
+ENHANCEMENTS
+* **testing**: Added backward-compatibility acceptance tests covering the SDKv2 to Framework id-format upgrade for migrated resources.
+* **documentation**: Rectified and expanded ephemeral (write-only) attribute documentation across resources, including lbmonitor, sslcertkey, gslbsite, systemuser, dnskey, ipsecprofile, autoscaleprofile, sslcert, sslcertreq, sslecdsakey, sslrsakey, sslhsmkey and several authentication resources.
+
+
 ## 2.2.1 (June 30, 2026)
 
 FEATURES
