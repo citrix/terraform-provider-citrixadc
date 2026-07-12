@@ -81,6 +81,48 @@ func TestAccCrvserver_crpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+// TestAccCrvserver_crpolicy_binding_import verifies `terraform import` for the
+// binding. The binding implements ImportStatePassthroughID(id), so Read must
+// reconstruct the full state from the id alone. Two import shapes are exercised:
+//   1. the canonical new-format id that the resource stores (default: prior state's id)
+//   2. the legacy SDK v2 positional id "name,policyname" (via ImportStateIdFunc)
+// ImportStateVerify compares the imported instance attribute-by-attribute against
+// the applied state; attributes the ADC does not echo back on the binding GET are
+// listed in ImportStateVerifyIgnore.
+func TestAccCrvserver_crpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_crpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_crpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_crpolicy_bindingExist(resAddr, nil),
+				),
+			},
+			// (1) import using the resource's stored (new-format) id
+			{
+				Config:                  testAccCrvserver_crpolicy_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			// (2) import using the legacy SDK v2 positional id "name,policyname"
+			{
+				Config:                  testAccCrvserver_crpolicy_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           "my_vserver,crpolicy1",
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCrvserver_crpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -253,6 +295,68 @@ func TestAcccrvserver_crpolicy_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding", "name", "my_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding", "policyname", "my_crpolicy_ds"),
+				),
+			},
+		},
+	})
+}
+
+// testAcccrvserver_crpolicy_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// labels as testAccCrvserver_crpolicy_binding_basic so it is valid under BOTH
+// the SDK v2 2.2.0 schema and the current framework schema.
+const testAcccrvserver_crpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_crpolicy" "crpolicy" {
+    policyname = "crpolicy1"
+    rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
+    action = "ORIGIN"
+}
+resource "citrixadc_crvserver" "crvserver" {
+    name = "my_vserver"
+    servicetype = "HTTP"
+    arp = "OFF"
+}
+resource "citrixadc_crvserver_crpolicy_binding" "crvserver_crpolicy_binding" {
+    name = citrixadc_crvserver.crvserver.name
+    policyname = citrixadc_crpolicy.crpolicy.policyname
+    priority = 10
+}
+`
+
+// TestAccCrvserver_crpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccCrvserver_crpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_crpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAcccrvserver_crpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_crpolicy_bindingExist("citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding", "id", "my_vserver,crpolicy1"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAcccrvserver_crpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_crpolicy_bindingExist("citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding", "id", "name:my_vserver,policyname:crpolicy1"),
 				),
 			},
 		},

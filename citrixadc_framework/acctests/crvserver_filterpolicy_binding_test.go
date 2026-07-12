@@ -186,6 +186,42 @@ func testAccCheckCrvserver_filterpolicy_bindingNotExist(n string, id string) res
 	}
 }
 
+func TestAccCrvserver_filterpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("filterpolicy is not supported in 13.1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the binding with the last SDK v2 release (v2.2.0),
+				// which writes state using the legacy comma-separated ID format.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCrvserver_filterpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_filterpolicy_bindingExist("citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding", "id", "my_vserver,tf_filterpolicy"),
+				),
+			},
+			{
+				// Step 2: Refresh/apply the legacy-ID state through the current
+				// (Framework) provider. Read parses the legacy ID via ParseIdString
+				// and recomputes the canonical new-format ID.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrvserver_filterpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_filterpolicy_bindingExist("citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding", "id", "bindpoint:REQUEST,name:my_vserver,policyname:tf_filterpolicy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCrvserver_filterpolicy_bindingDestroy(s *terraform.State) error {
 	// Use the shared utility function to get a configured client
 	client, err := testAccGetFrameworkClient()
@@ -210,4 +246,18 @@ func testAccCheckCrvserver_filterpolicy_bindingDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+func TestAccCrvserver_filterpolicy_binding_import(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	const resAddr = "citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_filterpolicy_binding_basic},
+			{Config: testAccCrvserver_filterpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
 }

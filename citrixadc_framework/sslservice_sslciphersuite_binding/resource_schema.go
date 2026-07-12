@@ -19,11 +19,10 @@ import (
 
 // SslserviceSslciphersuiteBindingResourceModel describes the resource data model.
 type SslserviceSslciphersuiteBindingResourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	Cipherdefaulton types.Int64  `tfsdk:"cipherdefaulton"`
-	Ciphername      types.String `tfsdk:"ciphername"`
-	Description     types.String `tfsdk:"description"`
-	Servicename     types.String `tfsdk:"servicename"`
+	Id          types.String `tfsdk:"id"`
+	Ciphername  types.String `tfsdk:"ciphername"`
+	Description types.String `tfsdk:"description"`
+	Servicename types.String `tfsdk:"servicename"`
 }
 
 func (r *SslserviceSslciphersuiteBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -33,10 +32,6 @@ func (r *SslserviceSslciphersuiteBindingResource) Schema(ctx context.Context, re
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the sslservice_sslciphersuite_binding resource.",
-			},
-			"cipherdefaulton": schema.Int64Attribute{
-				Computed:    true,
-				Description: "Flag indicating whether the bound cipher was the DEFAULT cipher, bound at boot time, or any other cipher from the CLI",
 			},
 			"ciphername": schema.StringAttribute{
 				Required: true,
@@ -87,13 +82,6 @@ func sslservice_sslciphersuite_bindingSetAttrFromGet(ctx context.Context, data *
 	tflog.Debug(ctx, "In sslservice_sslciphersuite_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
-	if val, ok := getResponseData["cipherdefaulton"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Cipherdefaulton = types.Int64Value(intVal)
-		}
-	} else {
-		data.Cipherdefaulton = types.Int64Null()
-	}
 	if val, ok := getResponseData["ciphername"]; ok && val != nil {
 		data.Ciphername = types.StringValue(val.(string))
 	} else {

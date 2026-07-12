@@ -64,6 +64,19 @@ func TestAccLsnclient_network6_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLsnclient_network6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclient_network6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnclient_network6_binding_basic},
+			{Config: testAccLsnclient_network6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLsnclient_network6_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -227,6 +240,53 @@ func TestAccLsnclient_network6_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", "clientname", "my_lsn_client"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", "network6", "2001:db8:5001::/96"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", "id"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLsnclient_network6_binding_upgrade_basic = `
+
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsnclient"
+}
+
+resource "citrixadc_lsnclient_network6_binding" "tf_lsnclient_network6_binding" {
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+	network6   = "2001:db8:5001::/96"
+}
+`
+
+func TestAccLsnclient_network6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnclient_network6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLsnclient_network6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnclient_network6_bindingExist("citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", "id", "my_lsnclient,2001:db8:5001::/96"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnclient_network6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnclient_network6_bindingExist("citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", "id", "clientname:my_lsnclient,network6:2001%3Adb8%3A5001%3A%3A%2F96"),
 				),
 			},
 		},

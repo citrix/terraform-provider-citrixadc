@@ -54,7 +54,7 @@ func (d *SslpolicylabelSslpolicyBindingDataSource) Read(ctx context.Context, req
 	findParams := service.FindParams{
 		ResourceType:             service.Sslpolicylabel_sslpolicy_binding.Type(),
 		ResourceName:             labelname_Name,
-		ResourceMissingErrorCode: 258,
+		ResourceMissingErrorCode: 3087,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {

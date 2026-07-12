@@ -117,6 +117,19 @@ func TestAccVpnvserver_authenticationsamlidppolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnvserver_authenticationsamlidppolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationsamlidppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationsamlidppolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationsamlidppolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
+		},
+	})
+}
+
 func testAccCheckVpnvserver_authenticationsamlidppolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -308,6 +321,83 @@ func TestAccVpnvserver_authenticationsamlidppolicy_bindingDataSource_basic(t *te
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding_ds", "name", "tf_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding_ds", "policy", "tf_samlidppolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding_ds", "priority", "9"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnvserver_authenticationsamlidppolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey"
+		cert    = "/var/tmp/certificate1.crt"
+		key     = "/var/tmp/key1.pem"
+	}
+	resource "citrixadc_authenticationsamlidpprofile" "tf_samlidpprofile" {
+		name                        = "tf_samlidpprofile"
+		samlspcertname              = citrixadc_sslcertkey.tf_sslcertkey.certkey
+		assertionconsumerserviceurl = "http://www.example.com"
+		sendpassword                = "OFF"
+		samlissuername              = "new_user"
+		rejectunsignedrequests      = "ON"
+		signaturealg                = "RSA-SHA1"
+		digestmethod                = "SHA1"
+		nameidformat                = "Unspecified"
+	}
+	resource "citrixadc_authenticationsamlidppolicy" "tf_samlidppolicy" {
+		name    = "tf_samlidppolicy"
+		rule    = "false"
+		action  = citrixadc_authenticationsamlidpprofile.tf_samlidpprofile.name
+		comment = "aSimpleTesting"
+	}
+	resource "citrixadc_vpnvserver_authenticationsamlidppolicy_binding" "tf_binding" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationsamlidppolicy.tf_samlidppolicy.name
+		priority  = 9
+		bindpoint = "REQUEST"
+	}
+`
+
+// TestAccVpnvserver_authenticationsamlidppolicy_binding_sdkv2StateUpgrade verifies that
+// state written by the last SDK v2 release (legacy comma-joined id "name,policy") is
+// transparently upgraded by the current Framework provider. Step 1 creates the binding
+// with citrix/citrixadc 2.2.0; step 2 refreshes/plans the same config through the current
+// Framework provider, whose Read parses the legacy id and recomputes it to the new
+// "name:<v>,policy:<v>" canonical format (SetAttrFromGet).
+func TestAccVpnvserver_authenticationsamlidppolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationsamlidppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationsamlidppolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationsamlidppolicy_bindingExist("citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding", "id", "tf_vserver,tf_samlidppolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_authenticationsamlidppolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationsamlidppolicy_bindingExist("citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationsamlidppolicy_binding.tf_binding", "id", "name:tf_vserver,policy:tf_samlidppolicy"),
 				),
 			},
 		},

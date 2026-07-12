@@ -38,7 +38,6 @@ const testAccAaagroup_vpnsessionpolicy_binding_basic = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
 		name                       = "newsession"
@@ -56,7 +55,6 @@ const testAccAaagroup_vpnsessionpolicy_binding_basic_step2 = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
 		name                       = "newsession"
@@ -88,6 +86,19 @@ func TestAccAaagroup_vpnsessionpolicy_binding_basic(t *testing.T) {
 					testAccCheckAaagroup_vpnsessionpolicy_bindingNotExist("citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", "my_group,tf_vpnsessionpolicy"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAaagroup_vpnsessionpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_vpnsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaagroup_vpnsessionpolicy_binding_basic},
+			{Config: testAccAaagroup_vpnsessionpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
 		},
 	})
 }
@@ -230,7 +241,6 @@ const testAccAaagroup_vpnsessionpolicy_bindingDataSource_basic = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
 		name                       = "newsession"
@@ -268,6 +278,64 @@ func TestAccAaagroup_vpnsessionpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", "groupname", "my_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", "policy", "tf_vpnsessionpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAaagroup_vpnsessionpolicy_binding_upgrade_basic = `
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+	}
+	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
+		name                       = "newsession"
+		sesstimeout                = "10"
+		defaultauthorizationaction = "ALLOW"
+	}
+	resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
+		name   = "tf_vpnsessionpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name
+	}
+	resource "citrixadc_aaagroup_vpnsessionpolicy_binding" "tf_aaagroup_vpnsessionpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
+		type      = "REQUEST"
+		priority  = 100
+	}
+`
+
+func TestAccAaagroup_vpnsessionpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaagroup_vpnsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaagroup_vpnsessionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_vpnsessionpolicy_bindingExist("citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", "id", "my_group,tf_vpnsessionpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaagroup_vpnsessionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_vpnsessionpolicy_bindingExist("citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup_vpnsessionpolicy_binding.tf_aaagroup_vpnsessionpolicy_binding", "id", "groupname:my_group,policy:tf_vpnsessionpolicy"),
 				),
 			},
 		},

@@ -256,3 +256,93 @@ func TestAccAppfwglobal_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) 
 		},
 	})
 }
+
+// testAccAppfwglobal_auditsyslogpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccAppfwglobal_auditsyslogpolicy_binding_upgrade_basic = `
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "tf_syslogaction"
+		serverip   = "10.78.60.33"
+		serverport = 514
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_policy" {
+		name   = "tf_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+	resource "citrixadc_appfwglobal_auditsyslogpolicy_binding" "tf_binding" {
+		policyname = citrixadc_auditsyslogpolicy.tf_policy.name
+		priority   = 90
+		state      = "DISABLED"
+		type       = "NONE"
+	}
+`
+
+// TestAccAppfwglobal_auditsyslogpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy ID) is correctly upgraded when the same
+// config is subsequently managed by the current Framework provider. Step 1 creates the
+// binding with citrix/citrixadc 2.2.0 (writes the legacy id "tf_auditsyslogpolicy",
+// from d.SetId(policyname)). Step 2 refreshes/plans/applies the same config through the
+// Framework provider, exercising ParseIdString on the legacy id; because the Framework
+// recomputes the id on Read (SetAttrFromGet), the id upgrades to the new "key:value" form.
+func TestAccAppfwglobal_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	// Skipped: Step 1 builds the fixture with the last published SDK v2 release
+	// (citrix/citrixadc 2.2.0), whose binding-create path issues an UpdateResource (PUT)
+	// carrying type="NONE", which NITRO rejects with errorcode 1097 "Invalid argument value
+	// [NONE]". That is a bug in the 2.2.0 provider, not in the migrated Framework code -- the
+	// pure-Framework TestAccAppfwglobal_auditsyslogpolicy_binding_basic (same type="NONE"
+	// config) passes. The upgrade path cannot be exercised until a base release that can
+	// create this binding is available.
+	t.Skip("skipping: SDK v2 2.2.0 rejects type=NONE (ec1097) when creating appfwglobal_auditsyslogpolicy_binding, so the step-1 upgrade fixture cannot be built (baseline provider defect, not the migrated resource); see TestAccAppfwglobal_auditsyslogpolicy_binding_basic for Framework coverage")
+	resourceAddr := "citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwglobal_auditsyslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_auditsyslogpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwglobal_auditsyslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "policyname:tf_auditsyslogpolicy,type:NONE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwglobal_auditsyslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwglobal_auditsyslogpolicy_binding_basic},
+			{Config: testAccAppfwglobal_auditsyslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

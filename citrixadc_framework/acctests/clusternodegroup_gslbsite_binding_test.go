@@ -21,34 +21,57 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_gslbsite_binding_basic = `
 
-resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
-	gslbsite = citrixadc_gslbsite.site_remote.sitename
-	name     = "my_tf_group"
-	}
-  
-  resource "citrixadc_gslbsite" "site_remote" {
-	sitename        = "my_local_site"
-	siteipaddress   = "10.222.74.169"
-	sessionexchange = "DISABLED"
-	sitetype        = "LOCAL"
-	sitepassword    = "password123"
-	}
-`
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
 
-const testAccClusternodegroup_gslbsite_binding_basic_step2 = `
+resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+	name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	node = 0
+}
+
 resource "citrixadc_gslbsite" "site_remote" {
 	sitename        = "my_local_site"
 	siteipaddress   = "10.222.74.169"
 	sessionexchange = "DISABLED"
 	sitetype        = "LOCAL"
 	sitepassword    = "password123"
-	}
+}
+
+resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
+	gslbsite   = citrixadc_gslbsite.site_remote.sitename
+	name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+}
+`
+
+const testAccClusternodegroup_gslbsite_binding_basic_step2 = `
+
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
+
+resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+	name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	node = 0
+}
+
+resource "citrixadc_gslbsite" "site_remote" {
+	sitename        = "my_local_site"
+	siteipaddress   = "10.222.74.169"
+	sessionexchange = "DISABLED"
+	sitetype        = "LOCAL"
+	sitepassword    = "password123"
+}
 `
 
 func TestAccClusternodegroup_gslbsite_binding_basic(t *testing.T) {
@@ -69,7 +92,7 @@ func TestAccClusternodegroup_gslbsite_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_gslbsite_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_gslbsite_bindingNotExist("citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "my_group,my_local_site"),
+					testAccCheckClusternodegroup_gslbsite_bindingNotExist("citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "my_tf_group,my_local_site"),
 				),
 			},
 		},
@@ -103,10 +126,12 @@ func testAccCheckClusternodegroup_gslbsite_bindingExist(n string, id *string) re
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		gslbsite := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "gslbsite"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		gslbsite := idMap["gslbsite"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_gslbsite_binding",
@@ -246,6 +271,99 @@ func TestAccclusternodegroup_gslbsite_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "gslbsite", "my_gslb_site_ds"),
 				),
 			},
+		},
+	})
+}
+
+// testAccClusternodegroup_gslbsite_binding_upgrade_basic mirrors the _basic
+// config values (name = "my_tf_group", gslbsite = "my_local_site") using the
+// SDK v2 attribute names so the same HCL is valid under both the last SDK v2
+// release (2.2.0) and the current provider.
+const testAccClusternodegroup_gslbsite_binding_upgrade_basic = `
+
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
+
+resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+	name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	node = 0
+}
+
+resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
+	gslbsite   = citrixadc_gslbsite.site_remote.sitename
+	name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+}
+
+resource "citrixadc_gslbsite" "site_remote" {
+	sitename        = "my_local_site"
+	siteipaddress   = "10.222.74.169"
+	sessionexchange = "DISABLED"
+	sitetype        = "LOCAL"
+	sitepassword    = "password123"
+}
+`
+
+// TestAccClusternodegroup_gslbsite_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (which stores the legacy comma-separated id
+// "name,gslbsite") is read/planned/applied cleanly by the current provider.
+//
+// Gated on CLUSTER: nodegroup commands are only supported on a cluster setup
+// (NITRO errorcode 4014 on standalone), matching the resource's other tests.
+func TestAccClusternodegroup_gslbsite_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternodegroup_gslbsite_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry.
+			// State is written with the legacy comma id "name,gslbsite".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccClusternodegroup_gslbsite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_gslbsite_bindingExist("citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "id", "my_tf_group,my_local_site"),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current
+			// (muxed) provider. This resource is still served by the SDK v2
+			// implementation (only its datasource is registered in the Framework
+			// provider), so Read does not recompute the id and it stays the
+			// legacy comma form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccClusternodegroup_gslbsite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_gslbsite_bindingExist("citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "id", "name:my_tf_group,gslbsite:my_local_site"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_gslbsite_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_gslbsite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternodegroup_gslbsite_binding_basic},
+			{Config: testAccClusternodegroup_gslbsite_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

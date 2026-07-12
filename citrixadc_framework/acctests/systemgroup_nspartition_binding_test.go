@@ -62,6 +62,19 @@ resource "citrixadc_nspartition" "tf_nspartition" {
 }
 `
 
+func TestAccSystemgroup_nspartition_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemgroup_nspartition_binding.tf_systemgroup_nspartition_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemgroup_nspartition_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemgroup_nspartition_binding_basic},
+			{Config: testAccSystemgroup_nspartition_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func TestAccSystemgroup_nspartition_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -243,6 +256,70 @@ const testAccSystemgroup_nspartition_bindingDataSource_basic = `
 		depends_on    = [citrixadc_systemgroup_nspartition_binding.tf_systemgroup_nspartition_binding]
 	}
 `
+
+const testAccSystemgroup_nspartition_binding_upgrade_basic = `
+
+	resource "citrixadc_systemgroup_nspartition_binding" "tf_systemgroup_nspartition_binding" {
+		groupname     = citrixadc_systemgroup.tf_systemgroup.groupname
+		partitionname = citrixadc_nspartition.tf_nspartition.partitionname
+	}
+
+	resource "citrixadc_systemgroup" "tf_systemgroup" {
+		groupname = "tf_systemgroup"
+		timeout   = 999
+	}
+
+	resource "citrixadc_nspartition" "tf_nspartition" {
+		partitionname = "tf_nspartition"
+		maxbandwidth  = 10240
+		minbandwidth  = 512
+		maxconn       = 512
+		maxmemlimit   = 11
+	}
+`
+
+// TestAccSystemgroup_nspartition_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider. Step 1 creates the binding
+// with citrix/citrixadc 2.2.0 (writes the legacy comma-joined id
+// "tf_systemgroup,tf_nspartition" from the SDK v2 d.SetId). Step 2 refreshes/plans/
+// applies the same config through the Framework provider, exercising ParseIdString on
+// the legacy id; the Framework recomputes the id on Read (SetAttrFromGet) to the
+// canonical new key:value format "groupname:tf_systemgroup,partitionname:tf_nspartition".
+func TestAccSystemgroup_nspartition_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_systemgroup_nspartition_binding.tf_systemgroup_nspartition_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemgroup_nspartition_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSystemgroup_nspartition_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemgroup_nspartition_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_systemgroup,tf_nspartition"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read into the canonical new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemgroup_nspartition_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemgroup_nspartition_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "groupname:tf_systemgroup,partitionname:tf_nspartition"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccSystemgroup_nspartition_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

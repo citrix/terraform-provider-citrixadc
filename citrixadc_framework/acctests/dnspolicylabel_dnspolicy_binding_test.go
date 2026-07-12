@@ -256,3 +256,76 @@ func TestAccDnspolicylabel_dnspolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccDnspolicylabel_dnspolicy_binding_upgrade_basic = `
+
+resource "citrixadc_dnspolicy" "dnspolicy" {
+	name = "policy_A"
+	rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
+	drop = "YES"
+	}
+  resource "citrixadc_dnspolicylabel" "dnspolicylabel" {
+	labelname = "blue_label"
+	transform = "dns_req"
+
+	}
+  resource "citrixadc_dnspolicylabel_dnspolicy_binding" "dnspolicylabel_dnspolicy_binding" {
+	labelname  = citrixadc_dnspolicylabel.dnspolicylabel.labelname
+	policyname = citrixadc_dnspolicy.dnspolicy.name
+	priority   = 10
+
+	}
+`
+
+// TestAccDnspolicylabel_dnspolicy_binding_sdkv2StateUpgrade verifies that a binding created with
+// the last SDK v2 release (v2.2.0), which writes state using the legacy comma-joined ID
+// (labelname,policyname), is correctly refreshed and re-planned by the current Plugin Framework
+// provider. The framework Read recomputes the ID to the new key:UrlEncode(value) format, so after
+// the upgrade step the ID becomes the canonical new format.
+func TestAccDnspolicylabel_dnspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_dnspolicylabel_dnspolicy_binding.dnspolicylabel_dnspolicy_binding"
+	legacyId := "blue_label,policy_A"
+	newId := "labelname:blue_label,policyname:policy_A"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnspolicylabel_dnspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create with the last SDK v2 release (writes legacy-format ID to state).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccDnspolicylabel_dnspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnspolicylabel_dnspolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", legacyId),
+				),
+			},
+			// Step 2: Refresh/plan/apply the legacy-ID state through the current framework provider.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnspolicylabel_dnspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnspolicylabel_dnspolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", newId),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDnspolicylabel_dnspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_dnspolicylabel_dnspolicy_binding.dnspolicylabel_dnspolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnspolicylabel_dnspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnspolicylabel_dnspolicy_binding_basic},
+			{Config: testAccDnspolicylabel_dnspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

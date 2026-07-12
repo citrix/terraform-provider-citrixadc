@@ -95,6 +95,27 @@ func TestAccVxlanvlanmap_vxlan_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVxlanvlanmap_vxlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vxlanvlanmap_vxlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlanvlanmap_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVxlanvlanmap_vxlan_binding_basic,
+			},
+			{
+				Config:                  testAccVxlanvlanmap_vxlan_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVxlanvlanmap_vxlan_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -269,6 +290,64 @@ func TestAccVxlanvlanmap_vxlan_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vxlanvlanmap_vxlan_binding.tf_binding", "name", "tf_vxlanvlanmp"),
 					resource.TestCheckResourceAttr("data.citrixadc_vxlanvlanmap_vxlan_binding.tf_binding", "vxlan", "123"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVxlanvlanmap_vxlan_binding_upgrade_basic = `
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 40
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_vlan" "tf_vlan1" {
+		vlanid    = 41
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_vxlanvlanmap_vxlan_binding" "tf_binding" {
+		name  = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+		vxlan = citrixadc_vxlan.tf_vxlan.vxlanid
+		vlan  = [citrixadc_vlan.tf_vlan.vlanid,citrixadc_vlan.tf_vlan1.vlanid]
+	}
+`
+
+func TestAccVxlanvlanmap_vxlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVxlanvlanmap_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release (legacy comma ID)
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVxlanvlanmap_vxlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxlanvlanmap_vxlan_bindingExist("citrixadc_vxlanvlanmap_vxlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vxlanvlanmap_vxlan_binding.tf_binding", "id", "tf_vxlanvlanmp,123"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the legacy-id state through the current framework provider
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVxlanvlanmap_vxlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxlanvlanmap_vxlan_bindingExist("citrixadc_vxlanvlanmap_vxlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vxlanvlanmap_vxlan_binding.tf_binding", "id", "name:tf_vxlanvlanmp,vxlan:123"),
 				),
 			},
 		},

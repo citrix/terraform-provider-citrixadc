@@ -241,6 +241,67 @@ const testAccVpnvserver_analyticsprofile_bindingDataSource_basic = `
 	}
 `
 
+// Config for the SDK v2 -> Framework state-upgrade test. Reuses the _basic
+// resource block and prerequisites; valid under both the SDK v2 2.2.0 schema
+// and the current Framework schema (same attribute names).
+const testAccVpnvserver_analyticsprofile_binding_upgrade_basic = `
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name = "new_profile"
+		type = "tcpinsight"
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name           = "tf_vserver"
+		servicetype    = "SSL"
+		ipv46          = "3.3.3.3"
+		port           = 443
+	}
+	resource "citrixadc_vpnvserver_analyticsprofile_binding" "tf_bind" {
+		name 			 = citrixadc_vpnvserver.tf_vpnvserver.name
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+`
+
+// TestAccVpnvserver_analyticsprofile_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-joined id "name,analyticsprofile")
+// is transparently upgraded by the current Framework provider. Step 1 creates the
+// binding with citrix/citrixadc 2.2.0; step 2 refreshes/plans the same config through
+// the current Framework provider, whose Read parses the legacy id and recomputes it
+// to the new "analyticsprofile:<v>,name:<v>" canonical format (SetAttrFromGet).
+func TestAccVpnvserver_analyticsprofile_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_analyticsprofile_bindingExist("citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", "id", "tf_vserver,new_profile"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_analyticsprofile_bindingExist("citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", "id", "analyticsprofile:new_profile,name:tf_vserver"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -253,6 +314,19 @@ func TestAccVpnvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", "analyticsprofile", "new_profile"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_analyticsprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_analyticsprofile_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_analyticsprofile_binding_basic},
+			{Config: testAccVpnvserver_analyticsprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

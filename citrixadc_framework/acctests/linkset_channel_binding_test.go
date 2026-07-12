@@ -248,3 +248,89 @@ func TestAccLinkset_channel_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLinkset_channel_binding_import(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_linkset_channel_binding.tf_linkset_channel_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLinkset_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLinkset_channel_binding_basic},
+			{Config: testAccLinkset_channel_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// testAccLinkset_channel_binding_upgrade_basic mirrors the _basic config (a
+// linkset + a channel bound together). It uses only the SDK v2 attribute names
+// (linkset_id, ifnum, channel_id) that the migration restored, so it is valid
+// under BOTH the SDK v2 2.2.0 schema and the current framework schema. This lets
+// it be applied with the old provider in step 1 and re-planned with the new
+// provider in step 2 of the state-upgrade test below.
+const testAccLinkset_channel_binding_upgrade_basic = `
+
+resource "citrixadc_linkset" "tf_linkset" {
+	linkset_id = "LS/3"
+}
+
+resource "citrixadc_channel" "tf_channel" {
+	channel_id = "LA/3"
+}
+
+resource "citrixadc_linkset_channel_binding" "tf_linkset_channel_binding" {
+	linkset_id = citrixadc_linkset.tf_linkset.linkset_id
+	ifnum      = citrixadc_channel.tf_channel.channel_id
+}
+`
+
+// TestAccLinkset_channel_binding_sdkv2StateUpgrade verifies that a resource
+// created by the LAST SDK v2 release (2.2.0) — which writes the legacy
+// comma-joined id "linkset_id,ifnum" (e.g. "LS/3,LA/3") — is refreshed and
+// re-applied correctly by the CURRENT framework provider. Step 2 exercises
+// ParseIdString on the legacy id during the framework Read.
+//
+// On this branch the framework recomputes data.Id into the new key:value form
+// during Read (linkset_channel_bindingSetAttrFromGet in resource_schema.go), so
+// after the step-2 refresh the id becomes the canonical
+// "linkset_id:LS%2F3,ifnum:LA%2F3".
+//
+// Skipped for the same reason as the other tests of this resource (creating the
+// underlying linkset/channel binding is not reliably testable on the shared ADC).
+func TestAccLinkset_channel_binding_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLinkset_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLinkset_channel_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLinkset_channel_bindingExist("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "id", "LS/3,LA/3"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id) then plans/applies. The framework Read
+			// recomputes the id into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLinkset_channel_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLinkset_channel_bindingExist("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "id", "linkset_id:LS%2F3,ifnum:LA%2F3"),
+				),
+			},
+		},
+	})
+}

@@ -276,3 +276,76 @@ func TestAccBotprofileLogexpressionBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccBotprofile_logexpression_binding_upgrade_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_logexpression_binding" "tf_binding" {
+		name                     = citrixadc_botprofile.tf_botprofile.name
+		logexpression            = "true"
+		bot_log_expression_name  = "tf_logname"
+		bot_log_expression_value = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"ANDROID\")"
+		bot_bind_comment         = "LogTesting"
+	}
+`
+
+func TestAccBotprofile_logexpression_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofile_logexpression_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccBotprofile_logexpression_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_logexpression_bindingExist("citrixadc_botprofile_logexpression_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_logexpression_binding.tf_binding", "id", "tf_botprofile,tf_logname"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotprofile_logexpression_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_logexpression_bindingExist("citrixadc_botprofile_logexpression_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_logexpression_binding.tf_binding", "id", "bot_log_expression_name:tf_logname,logexpression:true,name:tf_botprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBotprofile_logexpression_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_logexpression_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_logexpression_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_logexpression_binding_basic},
+			{Config: testAccBotprofile_logexpression_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

@@ -225,6 +225,80 @@ func testAccCheckNetbridge_nsip_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccNetbridge_nsip_binding_upgrade_basic = `
+
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "my_netbridge"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.128"
+		type      = "VIP"
+		netmask   = "255.255.255.255"
+		icmp      = "ENABLED"
+	}
+	resource "citrixadc_netbridge_nsip_binding" "tf_netbridge_nsip_binding" {
+		name      = citrixadc_netbridge.tf_netbridge.name
+		netmask   = citrixadc_nsip.tf_nsip.netmask
+		ipaddress = citrixadc_nsip.tf_nsip.ipaddress
+	}
+
+`
+
+func TestAccNetbridge_nsip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridge_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetbridge_nsip_binding_basic},
+			{Config: testAccNetbridge_nsip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccNetbridge_nsip_binding_sdkv2StateUpgrade verifies that a resource created
+// with the last SDK v2 release (which writes a legacy comma-joined id) is refreshed
+// cleanly through the current Framework provider, and that the id is upgraded to the
+// new key:value format on Read (SetAttrFromGet re-derives data.Id).
+func TestAccNetbridge_nsip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetbridge_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNetbridge_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_nsip_bindingExist("citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", "id", "my_netbridge,10.222.74.128"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current Framework provider.
+			// Read re-derives the id into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNetbridge_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_nsip_bindingExist("citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", "id", "ipaddress:10.222.74.128,name:my_netbridge,netmask:255.255.255.255"),
+				),
+			},
+		},
+	})
+}
+
 const testAccNetbridge_nsip_bindingDataSource_basic = `
 
 	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {

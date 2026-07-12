@@ -268,6 +268,66 @@ const testAccVpnvserver_authenticationoauthidppolicy_bindingDataSource_basic = `
 	}
 `
 
+const testAccVpnvserver_authenticationoauthidppolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_authenticationoauthidpprofile" "tf_idpprofile" {
+		name         = "tf_idpprofile"
+		clientid     = "cliId"
+		clientsecret = "secret"
+		redirecturl  = "http://www.example.com/1/"
+	}
+	resource "citrixadc_authenticationoauthidppolicy" "tf_idppolicy" {
+		name    = "tf_idppolicy"
+		rule    = "true"
+		action  = citrixadc_authenticationoauthidpprofile.tf_idpprofile.name
+		comment = "aboutpolicy"
+	}
+	resource "citrixadc_vpnvserver_authenticationoauthidppolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationoauthidppolicy.tf_idppolicy.name
+		priority  = 70
+		bindpoint = "REQUEST"
+		secondary = "false"
+	}
+`
+
+func TestAccVpnvserver_authenticationoauthidppolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationoauthidppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the resource with the last SDK v2 release (writes legacy id)
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationoauthidppolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationoauthidppolicy_bindingExist("citrixadc_vpnvserver_authenticationoauthidppolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationoauthidppolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_idppolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/apply through the current framework provider (exercises ParseIdString on the legacy id)
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_authenticationoauthidppolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationoauthidppolicy_bindingExist("citrixadc_vpnvserver_authenticationoauthidppolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationoauthidppolicy_binding.tf_bind", "id", "name:tf_vpnvserver,policy:tf_idppolicy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnvserver_authenticationoauthidppolicy_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -281,6 +341,19 @@ func TestAccVpnvserver_authenticationoauthidppolicy_bindingDataSource_basic(t *t
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationoauthidppolicy_binding.tf_bind", "priority", "70"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationoauthidppolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationoauthidppolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationoauthidppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationoauthidppolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationoauthidppolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "secondary"}},
 		},
 	})
 }

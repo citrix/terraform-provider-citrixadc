@@ -201,6 +201,58 @@ func testAccCheckTmglobal_tmtrafficpolicy_bindingDestroy(s *terraform.State) err
 	return nil
 }
 
+const testAccTmglobal_tmtrafficpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_trafficaction"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "my_tmtrafficpolicy"
+		rule   = "true"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
+
+	resource "citrixadc_tmglobal_tmtrafficpolicy_binding" "tf_tmglobal_tmtrafficpolicy_binding" {
+		priority   = "100"
+		policyname = citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy.name
+	}
+`
+
+func TestAccTmglobal_tmtrafficpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmglobal_tmtrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes legacy id)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccTmglobal_tmtrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmglobal_tmtrafficpolicy_bindingExist("citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding", "id", "my_tmtrafficpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework provider
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTmglobal_tmtrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmglobal_tmtrafficpolicy_bindingExist("citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding", "id", "my_tmtrafficpolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccTmglobal_tmtrafficpolicy_binding_DataSource_basic = `
 
 	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
@@ -239,6 +291,19 @@ func TestAccTmglobal_tmtrafficpolicy_binding_DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding", "priority", "100"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccTmglobal_tmtrafficpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmglobal_tmtrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTmglobal_tmtrafficpolicy_binding_basic},
+			{Config: testAccTmglobal_tmtrafficpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

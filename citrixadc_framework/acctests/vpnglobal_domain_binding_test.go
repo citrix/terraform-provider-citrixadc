@@ -173,6 +173,48 @@ func testAccCheckVpnglobal_domain_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccVpnglobal_domain_binding_upgrade_basic = `
+	resource "citrixadc_vpnglobal_domain_binding" "tf_bind" {
+		intranetdomain = "http://www.example.com/"
+	}
+`
+
+func TestAccVpnglobal_domain_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_domain_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (plain intranetdomain value).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_domain_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_domain_bindingExist("citrixadc_vpnglobal_domain_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_domain_binding.tf_bind", "id", "http://www.example.com/"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read re-derives the canonical id in
+				// SetAttrFromGet. This is a single-key binding, so the canonical
+				// id is the plain intranetdomain value (same as the legacy id).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_domain_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_domain_bindingExist("citrixadc_vpnglobal_domain_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_domain_binding.tf_bind", "id", "http://www.example.com/"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpnglobal_domain_bindingDataSource_basic = `
 	resource "citrixadc_vpnglobal_domain_binding" "tf_bind" {
 		intranetdomain = "http://www.example.com/"
@@ -195,6 +237,19 @@ func TestAccVpnglobal_domain_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_domain_binding.tf_bind", "intranetdomain", "http://www.example.com/"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnglobal_domain_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_domain_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_domain_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_domain_binding_basic},
+			{Config: testAccVpnglobal_domain_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

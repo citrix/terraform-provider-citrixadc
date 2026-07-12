@@ -71,6 +71,50 @@ func TestAccVpnvserver_staserver_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccVpnvserver_staserver_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_staserver_binding" "tf_binding" {
+		name           = citrixadc_vpnvserver.tf_vpnvserver.name
+		staserver      = "http://www.example.com/"
+		staaddresstype = "IPV6"
+	}
+`
+
+func TestAccVpnvserver_staserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_staserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_staserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_staserver_bindingExist("citrixadc_vpnvserver_staserver_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_staserver_binding.tf_binding", "id", "tf_vserver,http://www.example.com/"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_staserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_staserver_bindingExist("citrixadc_vpnvserver_staserver_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_staserver_binding.tf_binding", "id", "name:tf_vserver,staserver:http%3A%2F%2Fwww.example.com%2F"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVpnvserver_staserver_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -237,6 +281,19 @@ func TestAccVpnvserver_staserver_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_staserver_binding.tf_binding", "id"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_staserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_staserver_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_staserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_staserver_binding_basic},
+			{Config: testAccVpnvserver_staserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

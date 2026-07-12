@@ -201,6 +201,74 @@ func testAccCheckVpnglobal_authenticationcertpolicy_bindingDestroy(s *terraform.
 	return nil
 }
 
+// testAccVpnglobal_authenticationcertpolicy_binding_upgrade_basic reuses the _basic
+// config (binding + all prerequisite resources). It is valid under BOTH the SDK v2
+// 2.2.0 schema and the current Framework schema because the migration restored the
+// SDK v2 attribute names.
+const testAccVpnglobal_authenticationcertpolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationcertaction" "tf_certaction" {
+		name                       = "tf_certaction"
+		twofactor                  = "ON"
+		defaultauthenticationgroup = "new_group"
+		usernamefield              = "Subject:CN"
+		groupnamefield             = "subject:grp"
+	}
+	resource "citrixadc_authenticationcertpolicy" "tf_certpolicy" {
+		name      = "tf_certpolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationcertaction.tf_certaction.name
+	}
+	resource "citrixadc_vpnglobal_authenticationcertpolicy_binding" "tf_bind" {
+		policyname      = citrixadc_authenticationcertpolicy.tf_certpolicy.name
+		priority        = 20
+		groupextraction = false
+		secondary       = false
+	}
+`
+
+// TestAccVpnglobal_authenticationcertpolicy_binding_sdkv2StateUpgrade verifies that
+// state written by the last SDK v2 release is correctly upgraded when the same config
+// is subsequently managed by the current Framework provider. Step 1 creates the
+// binding with citrix/citrixadc 2.2.0 (writes the legacy id "tf_certpolicy"). Step 2
+// refreshes/plans/applies the same config through the Framework provider; the
+// Framework recomputes the id on Read (SetAttrFromGet). This resource keys the id on
+// a single unique attribute (policyname), so the legacy id and the new canonical id
+// are both the plain policyname value "tf_certpolicy".
+func TestAccVpnglobal_authenticationcertpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_vpnglobal_authenticationcertpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_authenticationcertpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_authenticationcertpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationcertpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_certpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The id is recomputed to the canonical new format, which for this
+			// single-key binding is the plain policyname value.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_authenticationcertpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationcertpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_certpolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpnglobal_authenticationcertpolicy_bindingDataSource_basic = `
 	resource "citrixadc_authenticationcertaction" "tf_certaction" {
 		name                       = "tf_certaction"
@@ -239,6 +307,19 @@ func TestAccVpnglobal_authenticationcertpolicy_bindingDataSource_basic(t *testin
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationcertpolicy_binding.tf_bind", "priority", "20"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnglobal_authenticationcertpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationcertpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationcertpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_authenticationcertpolicy_binding_basic},
+			{Config: testAccVpnglobal_authenticationcertpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"groupextraction"}},
 		},
 	})
 }

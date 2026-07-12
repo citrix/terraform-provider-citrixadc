@@ -232,3 +232,83 @@ func TestAccCsvserver_cmppolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAcccsvserver_cmppolicy_binding_upgrade_basic = `
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_cmppolicy" "tf_cmppolicy" {
+    name = "tf_cmppolicy"
+    rule = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"
+    resaction = "COMPRESS"
+}
+
+resource "citrixadc_csvserver_cmppolicy_binding" "tf_bind" {
+    name = citrixadc_csvserver.tf_csvserver.name
+    policyname = citrixadc_cmppolicy.tf_cmppolicy.name
+    priority = 100
+    bindpoint = "RESPONSE"
+    gotopriorityexpression = "END"
+}
+
+`
+
+// TestAccCsvserver_cmppolicy_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded when
+// the same config is subsequently managed by the current Framework provider. Step 1
+// creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_csvserver,tf_cmppolicy"). Step 2 refreshes/plans/applies the same config through
+// the Framework provider, exercising ParseIdString on the legacy id; because the
+// Framework recomputes the id on Read (SetAttrFromGet), the id upgrades to the new
+// "key:value" form "bindpoint:RESPONSE,name:tf_csvserver,policyname:tf_cmppolicy".
+func TestAccCsvserver_cmppolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_csvserver_cmppolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_cmppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAcccsvserver_cmppolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_cmppolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_csvserver,tf_cmppolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAcccsvserver_cmppolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_cmppolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "bindpoint:RESPONSE,name:tf_csvserver,policyname:tf_cmppolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_cmppolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_cmppolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_cmppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_cmppolicy_binding_basic_step1},
+			{Config: testAccCsvserver_cmppolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

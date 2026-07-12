@@ -85,6 +85,61 @@ func TestAccVpnvserver_cachepolicy_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccVpnvserver_cachepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "tf_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_examplecom"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_cachepolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_cachepolicy.tf_cachepolicy.policyname
+		priority  = 5
+		bindpoint = "REQUEST"
+	}
+`
+
+func TestAccVpnvserver_cachepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	legacyId := "tf_examplecom,tf_cachepolicy"
+	newId := "bindpoint:REQUEST,name:tf_examplecom,policy:tf_cachepolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the resource with the last SDK v2 release, writing legacy-id state.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_cachepolicy_bindingExist("citrixadc_vpnvserver_cachepolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_cachepolicy_binding.tf_bind", "id", legacyId),
+				),
+			},
+			{
+				// Step 2: refresh/apply the legacy-id state through the current framework provider.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_cachepolicy_bindingExist("citrixadc_vpnvserver_cachepolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_cachepolicy_binding.tf_bind", "id", newId),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVpnvserver_cachepolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -263,6 +318,19 @@ func TestAccVpnvserver_cachepolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_cachepolicy_binding.tf_bind_data", "bindpoint", "REQUEST"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_cachepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_cachepolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_cachepolicy_binding_basic},
+			{Config: testAccVpnvserver_cachepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

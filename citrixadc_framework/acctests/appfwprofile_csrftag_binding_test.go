@@ -95,6 +95,19 @@ func TestAccAppfwprofile_csrftag_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwprofile_csrftag_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_csrftag_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_csrftag_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_csrftag_binding_basic},
+			{Config: testAccAppfwprofile_csrftag_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckAppfwprofile_csrftag_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -270,6 +283,57 @@ func TestAccAppfwprofile_csrftag_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_csrftag_binding.tf_binding", "comment", "Testing"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_csrftag_binding.tf_binding", "state", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_csrftag_binding.tf_binding", "alertonly", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAppfwprofile_csrftag_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_csrftag_binding" "tf_binding" {
+		name              = citrixadc_appfwprofile.tf_appfwprofile.name
+		csrftag           = "www.source.com"
+		csrfformactionurl = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		isautodeployed    = "NOTAUTODEPLOYED"
+		comment           = "Testing"
+		state             = "ENABLED"
+		alertonly         = "OFF"
+	}
+`
+
+func TestAccAppfwprofile_csrftag_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_csrftag_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwprofile_csrftag_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_csrftag_bindingExist("citrixadc_appfwprofile_csrftag_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_csrftag_binding.tf_binding", "id", "tf_appfwprofile,www.source.com,^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwprofile_csrftag_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_csrftag_bindingExist("citrixadc_appfwprofile_csrftag_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_csrftag_binding.tf_binding", "id", "csrfformactionurl:%5Ehttps%3A%2F%2Fsd2%5C-zgw%5C.test%5C.ctxns%5C.com%2Fapi%2Fdocument%2Fcontent%24,csrftag:www.source.com,name:tf_appfwprofile"),
 				),
 			},
 		},

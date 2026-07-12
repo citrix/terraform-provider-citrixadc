@@ -10,11 +10,6 @@ func AaauserDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"loggedin": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Show whether the user is logged in or not.",
-			},
 			"password": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

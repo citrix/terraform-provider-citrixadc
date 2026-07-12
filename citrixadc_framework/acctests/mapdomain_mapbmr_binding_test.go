@@ -226,6 +226,73 @@ func testAccCheckMapdomain_mapbmr_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+// testAccMapdomain_mapbmr_binding_upgrade_basic reuses the _basic config (binding +
+// all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0 schema and the
+// current Framework schema because the migration restored the SDK v2 attribute names.
+const testAccMapdomain_mapbmr_binding_upgrade_basic = `
+	resource "citrixadc_mapbmr" "tf_mapbmr" {
+		name           = "tf_mapbmr"
+		ruleipv6prefix = "2001:db8:abcd:12::/64"
+		psidoffset     = 6
+		eabitlength    = 16
+		psidlength     = 8
+	}
+	resource "citrixadc_mapdmr" "tf_mapdmr" {
+		name         = "tf_mapdmr"
+		bripv6prefix = "2002:db8::/64"
+	}
+	resource "citrixadc_mapdomain" "tf_mapdomain" {
+		name       = "tf_mapdomain"
+		mapdmrname = citrixadc_mapdmr.tf_mapdmr.name
+	}
+	resource "citrixadc_mapdomain_mapbmr_binding" "tf_binding" {
+		name       = citrixadc_mapdomain.tf_mapdomain.name
+		mapbmrname = citrixadc_mapbmr.tf_mapbmr.name
+	}
+`
+
+// TestAccMapdomain_mapbmr_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (legacy comma-separated ID) is correctly upgraded when the same
+// config is subsequently managed by the current Framework provider. Step 1 creates the
+// binding with citrix/citrixadc 2.2.0 (writes the legacy id "tf_mapdomain,tf_mapbmr").
+// Step 2 refreshes/plans/applies the same config through the Framework provider,
+// exercising ParseIdString on the legacy id; because the Framework recomputes the id on
+// Read (SetAttrFromGet), the id upgrades to the new "key:value" form.
+func TestAccMapdomain_mapbmr_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_mapdomain_mapbmr_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckMapdomain_mapbmr_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccMapdomain_mapbmr_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMapdomain_mapbmr_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_mapdomain,tf_mapbmr"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccMapdomain_mapbmr_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMapdomain_mapbmr_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "mapbmrname:tf_mapbmr,name:tf_mapdomain"),
+				),
+			},
+		},
+	})
+}
+
 const testAccMapdomain_mapbmr_bindingDataSource_basic = `
 	resource "citrixadc_mapbmr" "tf_mapbmr" {
 		name           = "tf_mapbmr"
@@ -266,6 +333,19 @@ func TestAccMapdomain_mapbmr_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_mapdomain_mapbmr_binding.tf_binding_ds", "mapbmrname", "tf_mapbmr"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccMapdomain_mapbmr_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_mapdomain_mapbmr_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMapdomain_mapbmr_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccMapdomain_mapbmr_binding_basic},
+			{Config: testAccMapdomain_mapbmr_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

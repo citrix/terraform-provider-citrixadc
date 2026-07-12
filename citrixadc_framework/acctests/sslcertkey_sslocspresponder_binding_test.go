@@ -81,6 +81,19 @@ func TestAccSslcertkey_sslocspresponder_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslcertkey_sslocspresponder_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcertkey_sslocspresponder_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkey_sslocspresponder_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslcertkey_sslocspresponder_binding_basic},
+			{Config: testAccSslcertkey_sslocspresponder_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckSslcertkey_sslocspresponder_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -256,6 +269,72 @@ func TestAccSslcertkey_sslocspresponder_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey_sslocspresponder_binding.tf_binding", "certkey", "tf_sslcertkey"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey_sslocspresponder_binding.tf_binding", "ocspresponder", "tf_sslocspresponder"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey_sslocspresponder_binding.tf_binding", "priority", "90"),
+				),
+			},
+		},
+	})
+}
+
+// testAccSslcertkey_sslocspresponder_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccSslcertkey_sslocspresponder_binding_upgrade_basic = `
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey            = "tf_sslcertkey"
+		cert               = "/nsconfig/ssl/rootcert2.cert"
+		key                = "/nsconfig/ssl/rootcert2.key"
+		notificationperiod = 40
+		expirymonitor      = "ENABLED"
+	}
+	resource "citrixadc_sslocspresponder" "tf_sslocspresponder" {
+		name = "tf_sslocspresponder"
+		url  = "http://www.google.com"
+	}
+	resource "citrixadc_sslcertkey_sslocspresponder_binding" "tf_binding" {
+		certkey 	  = citrixadc_sslcertkey.tf_sslcertkey.certkey
+		ocspresponder = citrixadc_sslocspresponder.tf_sslocspresponder.name
+		priority      = 90
+	}
+`
+
+// TestAccSslcertkey_sslocspresponder_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded
+// when the same config is subsequently managed by the current Framework provider.
+// Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_sslcertkey,tf_sslocspresponder"). Step 2 refreshes/plans/applies the same config
+// through the Framework provider, exercising ParseIdString on the legacy id; because the
+// Framework recomputes the id on Read (SetAttrFromGet), the id upgrades to the new
+// "key:value" form.
+func TestAccSslcertkey_sslocspresponder_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_sslcertkey_sslocspresponder_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslcertkeyPreChecks(t) },
+		CheckDestroy: testAccCheckSslcertkey_sslocspresponder_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSslcertkey_sslocspresponder_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkey_sslocspresponder_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_sslcertkey,tf_sslocspresponder"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslcertkey_sslocspresponder_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkey_sslocspresponder_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "certkey:tf_sslcertkey,ocspresponder:tf_sslocspresponder"),
 				),
 			},
 		},

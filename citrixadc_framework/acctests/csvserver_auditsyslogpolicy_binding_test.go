@@ -293,3 +293,84 @@ func TestAccCsvserver_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccCsvserver_auditsyslogpolicy_binding_upgrade_basic = `
+	resource "citrixadc_csvserver_auditsyslogpolicy_binding" "tf_csvserver_auditsyslogpolicy_binding" {
+        name = citrixadc_csvserver.tf_csvserver.name
+        policyname = citrixadc_auditsyslogpolicy.tf_auditsyslogpolicy.name
+        priority = 5
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name = "tf_csvserver"
+		ipv46 = "10.202.11.11"
+		port = 8080
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_auditsyslogpolicy" "tf_auditsyslogpolicy" {
+		name = "tf_auditsyslogpolicy"
+		rule = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name = "tf_syslogaction"
+		serverip = "10.78.60.33"
+		serverport = 514
+		loglevel = [
+			"ERROR",
+			"NOTICE",
+		]
+	}
+`
+
+// TestAccCsvserver_auditsyslogpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0), whose state carries the legacy
+// comma-joined id ("name,policyname"), is transparently upgraded when refreshed/applied
+// through the current Framework provider. The Framework Read re-derives the canonical
+// new-format id ("name:<v>,policyname:<v>") via SetAttrFromGet.
+func TestAccCsvserver_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy id in state.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCsvserver_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_auditsyslogpolicy_bindingExist("citrixadc_csvserver_auditsyslogpolicy_binding.tf_csvserver_auditsyslogpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_auditsyslogpolicy_binding.tf_csvserver_auditsyslogpolicy_binding", "id", "tf_csvserver,tf_auditsyslogpolicy"),
+				),
+			},
+			// Step 2: same config through the current Framework provider -> id upgraded to new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_auditsyslogpolicy_bindingExist("citrixadc_csvserver_auditsyslogpolicy_binding.tf_csvserver_auditsyslogpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_auditsyslogpolicy_binding.tf_csvserver_auditsyslogpolicy_binding", "id", "name:tf_csvserver,policyname:tf_auditsyslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_auditsyslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_auditsyslogpolicy_binding.tf_csvserver_auditsyslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_auditsyslogpolicy_binding_basic},
+			{Config: testAccCsvserver_auditsyslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

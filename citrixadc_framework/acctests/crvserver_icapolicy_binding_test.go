@@ -90,6 +90,19 @@ func TestAccCrvserver_icapolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCrvserver_icapolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_icapolicy_binding.crvserver_icapolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_icapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_icapolicy_binding_basic},
+			{Config: testAccCrvserver_icapolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"priority"}},
+		},
+	})
+}
+
 func testAccCheckCrvserver_icapolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -263,6 +276,73 @@ func TestAcccrvserver_icapolicy_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_icapolicy_binding.crvserver_icapolicy_binding", "name", "my_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_icapolicy_binding.crvserver_icapolicy_binding", "policyname", "tf_icapolicy_ds"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCrvserver_icapolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = "true"
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+
+	resource "citrixadc_crvserver_icapolicy_binding" "crvserver_icapolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_icapolicy.tf_icapolicy.name
+		priority   = 1
+	}
+`
+
+// TestAccCrvserver_icapolicy_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded when
+// the same config is subsequently managed by the current Framework provider. Step 1
+// creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "my_vserver,tf_icapolicy"). Step 2 refreshes/plans/applies the same config through
+// the Framework provider, exercising ParseIdString on the legacy id; because the
+// Framework recomputes the id on Read (SetAttrFromGet), the id upgrades to the new
+// "key:value" form.
+func TestAccCrvserver_icapolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_crvserver_icapolicy_binding.crvserver_icapolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_icapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCrvserver_icapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_icapolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "my_vserver,tf_icapolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrvserver_icapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_icapolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:my_vserver,policyname:tf_icapolicy"),
 				),
 			},
 		},

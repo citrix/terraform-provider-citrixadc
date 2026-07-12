@@ -293,3 +293,71 @@ func TestAccAppfwprofile_fileuploadtype_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccAppfwprofile_fileuploadtype_binding_upgrade_basic reuses the (single-filetype)
+// tf_binding3 values from the _basic config. A single-element filetype list keeps both
+// the legacy composite ID and the recomputed new-format ID deterministic (no list-order
+// ambiguity). The attribute names are the SDK v2 names (restored by the migration), so
+// this config is valid under BOTH the 2.2.0 SDK v2 schema and the current Framework schema.
+const testAccAppfwprofile_fileuploadtype_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_fileuploadtype_binding" "tf_binding1" {
+		name                   = citrixadc_appfwprofile.tf_appfwprofile.name
+		fileuploadtype         = "tf_uploadtype"
+		as_fileuploadtypes_url = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"
+		filetype               = ["text"]
+	}
+`
+
+// TestAccAppfwprofile_fileuploadtype_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0), which writes the legacy comma-composite
+// ID, is refreshed cleanly by the current Framework provider and its ID is upgraded to
+// the new key:value format on Read (see SetAttrFromGet -> ComposeId).
+func TestAccAppfwprofile_fileuploadtype_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_fileuploadtype_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (legacy ID written to state).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwprofile_fileuploadtype_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_fileuploadtype_bindingExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "id", `tf_appfwprofile,tf_uploadtype,^https://sd2\-zgw\.test\.ctxns\.com/api/v1/resource/temp$,text`),
+				),
+			},
+			// Step 2: same config through the current (Framework) provider. Refresh exercises
+			// ParseIdString on the legacy ID and Read recomputes the ID to the new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwprofile_fileuploadtype_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_fileuploadtype_bindingExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "id", `as_fileuploadtypes_url:%5Ehttps%3A%2F%2Fsd2%5C-zgw%5C.test%5C.ctxns%5C.com%2Fapi%2Fv1%2Fresource%2Ftemp%24,filetype:text,fileuploadtype:tf_uploadtype,name:tf_appfwprofile`),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_fileuploadtype_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_fileuploadtype_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_fileuploadtype_binding_basic},
+			{Config: testAccAppfwprofile_fileuploadtype_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

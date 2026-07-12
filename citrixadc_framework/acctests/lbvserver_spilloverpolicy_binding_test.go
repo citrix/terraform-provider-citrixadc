@@ -232,6 +232,79 @@ func testAccCheckLbvserver_spilloverpolicy_bindingDestroy(s *terraform.State) er
 	return nil
 }
 
+const testAccLbvserver_spilloverpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
+
+	resource "citrixadc_lbvserver_spilloverpolicy_binding" "tf_lbvserver_spilloverpolicy_binding" {
+		name 					= citrixadc_lbvserver.tf_lbvserver.name
+        policyname				= citrixadc_spilloverpolicy.tf_spilloverpolicy.name
+        bindpoint 				= "REQUEST"
+        gotopriorityexpression 	= "END"
+        invoke 					= false
+        priority 				= 1
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+`
+
+// TestAccLbvserver_spilloverpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "tf_lbvserver,tf_spilloverpolicy"). Step 2 refreshes/plans/applies the
+// same config through the Framework provider, exercising ParseIdString on the legacy
+// id; because the Framework recomputes the id on Read (SetAttrFromGet), the id
+// upgrades to the new "key:value" form.
+func TestAccLbvserver_spilloverpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_lbvserver_spilloverpolicy_binding.tf_lbvserver_spilloverpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_spilloverpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_spilloverpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_spilloverpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_lbvserver,tf_spilloverpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_spilloverpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_spilloverpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_lbvserver,policyname:tf_spilloverpolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccLbvserver_spilloverpolicy_bindingDataSource_basic = `
 
 	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
@@ -281,6 +354,19 @@ func TestAccLbvserver_spilloverpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_spilloverpolicy_binding.tf_lbvserver_spilloverpolicy_binding", "priority", "1"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccLbvserver_spilloverpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_spilloverpolicy_binding.tf_lbvserver_spilloverpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_spilloverpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_spilloverpolicy_binding_basic},
+			{Config: testAccLbvserver_spilloverpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"invoke"}},
 		},
 	})
 }

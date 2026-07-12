@@ -25,9 +25,7 @@ resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
 
 * `name` - (Required) Name of the SSL profile.
 * `ciphername` - (Required) Name of the cipher.
-* `cipheraliasname` - (Optional) The name of the cipher group/alias/individual cipher bindings.
 * `cipherpriority` - (Optional) Cipher priority.
-* `description` - (Optional) The cipher suite description.
 
 
 ## Attribute Reference

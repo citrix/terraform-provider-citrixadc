@@ -79,6 +79,19 @@ func TestAccTransformglobal_transformpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccTransformglobal_transformpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformglobal_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTransformglobal_transformpolicy_binding_basic},
+			{Config: testAccTransformglobal_transformpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckTransformglobal_transformpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -222,6 +235,56 @@ func testAccCheckTransformglobal_transformpolicy_bindingDestroy(s *terraform.Sta
 	}
 
 	return nil
+}
+
+const testAccTransformglobal_transformpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_transformprofile" "tf_trans_profile" {
+	name = "tf_trans_profile"
+	comment = "Some comment"
+	}
+resource "citrixadc_transformpolicy" "tf_trans_policy" {
+	name        = "tf_trans_policy"
+	profilename = citrixadc_transformprofile.tf_trans_profile.name
+	rule        = "http.REQ.URL.CONTAINS(\"test_url\")"
+	}
+  resource "citrixadc_transformglobal_transformpolicy_binding" "transformglobal_transformpolicy_binding" {
+	policyname = citrixadc_transformpolicy.tf_trans_policy.name
+	priority   = 2
+	type       = "REQ_DEFAULT"
+	}
+`
+
+func TestAccTransformglobal_transformpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTransformglobal_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the resource with the last SDK v2 release (writes legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccTransformglobal_transformpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformglobal_transformpolicy_bindingExist("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "id", "tf_trans_policy"),
+				),
+			},
+			{
+				// Step 2: Refresh the legacy-id state through the current (framework) provider.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTransformglobal_transformpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformglobal_transformpolicy_bindingExist("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "id", "policyname:tf_trans_policy,type:REQ_DEFAULT"),
+				),
+			},
+		},
+	})
 }
 
 const testAccTransformglobal_transformpolicy_bindingDataSource_basic = `

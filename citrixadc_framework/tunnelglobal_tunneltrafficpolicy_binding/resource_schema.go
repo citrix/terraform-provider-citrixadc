@@ -20,7 +20,6 @@ import (
 type TunnelglobalTunneltrafficpolicyBindingResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Feature                types.String `tfsdk:"feature"`
-	Globalbindtype         types.String `tfsdk:"globalbindtype"`
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
 	Policyname             types.String `tfsdk:"policyname"`
 	Priority               types.Int64  `tfsdk:"priority"`
@@ -43,15 +42,6 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) Schema(ctx context.Cont
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "The feature to be checked while applying this config",
-			},
-			"globalbindtype": schema.StringAttribute{
-				// Not echoed by NITRO GET - Optional only (no Computed) so it resolves
-				// to null after apply instead of staying unknown (Pattern 13).
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Description: "0",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				// Not echoed by NITRO GET - Optional only (Pattern 13).
@@ -105,9 +95,6 @@ func tunnelglobal_tunneltrafficpolicy_bindingGetThePayloadFromthePlan(ctx contex
 	if !data.Feature.IsNull() && !data.Feature.IsUnknown() {
 		tunnelglobal_tunneltrafficpolicy_binding.Feature = data.Feature.ValueString()
 	}
-	if !data.Globalbindtype.IsNull() && !data.Globalbindtype.IsUnknown() {
-		tunnelglobal_tunneltrafficpolicy_binding.Globalbindtype = data.Globalbindtype.ValueString()
-	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		tunnelglobal_tunneltrafficpolicy_binding.Gotopriorityexpression = data.Gotopriorityexpression.ValueString()
 	}
@@ -129,7 +116,7 @@ func tunnelglobal_tunneltrafficpolicy_bindingGetThePayloadFromthePlan(ctx contex
 
 // tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGet is the RESOURCE-side state
 // setter. The NITRO GET for this binding echoes back only policyname, priority, state
-// and feature; it does NOT return globalbindtype, gotopriorityexpression or type. For
+// and feature; it does NOT return gotopriorityexpression or type. For
 // those non-echoed inputs we PRESERVE the existing plan/state value (Pattern 7) instead
 // of nulling it, which would otherwise trigger an "inconsistent result after apply"
 // error or a perpetual diff. The ID is preserved as set by Create (plain policyname).
@@ -151,7 +138,7 @@ func tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGet(ctx context.Context,
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
 	}
-	// globalbindtype, gotopriorityexpression and type are non-echoed inputs - preserve
+	// gotopriorityexpression and type are non-echoed inputs - preserve
 	// whatever the plan/state already holds (do not overwrite or null them out).
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
@@ -171,11 +158,6 @@ func tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGetForDatasource(ctx con
 		data.Feature = types.StringValue(val.(string))
 	} else {
 		data.Feature = types.StringNull()
-	}
-	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
-		data.Globalbindtype = types.StringValue(val.(string))
-	} else {
-		data.Globalbindtype = types.StringNull()
 	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))

@@ -79,6 +79,14 @@ func (r *CrvserverRewritepolicyBindingResource) Create(ctx context.Context, req 
 	// Read the updated state back
 	r.readCrvserverRewritepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "crvserver_rewritepolicy_binding not found on the ADC immediately after create")
+		return
+	}
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -96,6 +104,16 @@ func (r *CrvserverRewritepolicyBindingResource) Read(ctx context.Context, req re
 	tflog.Debug(ctx, "Reading crvserver_rewritepolicy_binding resource")
 
 	r.readCrvserverRewritepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -139,6 +157,14 @@ func (r *CrvserverRewritepolicyBindingResource) Update(ctx context.Context, req 
 
 	// Read the updated state back
 	r.readCrvserverRewritepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "crvserver_rewritepolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -217,7 +243,9 @@ func (r *CrvserverRewritepolicyBindingResource) readCrvserverRewritepolicyBindin
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "crvserver_rewritepolicy_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -227,6 +255,7 @@ func (r *CrvserverRewritepolicyBindingResource) readCrvserverRewritepolicyBindin
 		match := true
 
 		// Check bindpoint
+		// Backward-compat: legacy SDK v2 id omits bindpoint (name,policyname), so a GET record carrying a bindpoint must not disqualify the match.
 		if idVal, ok := idMap["bindpoint"]; ok {
 			if val, ok := v["bindpoint"].(string); ok {
 				if val != idVal {
@@ -237,9 +266,6 @@ func (r *CrvserverRewritepolicyBindingResource) readCrvserverRewritepolicyBindin
 				match = false
 				continue
 			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
 		}
 
 		// Check policyname
@@ -265,7 +291,7 @@ func (r *CrvserverRewritepolicyBindingResource) readCrvserverRewritepolicyBindin
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("crvserver_rewritepolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

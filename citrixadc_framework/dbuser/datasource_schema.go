@@ -10,11 +10,6 @@ func DbuserDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"loggedin": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Display the names of all database users currently logged on to the Citrix ADC.",
-			},
 			"password": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

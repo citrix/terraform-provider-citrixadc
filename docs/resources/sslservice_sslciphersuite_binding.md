@@ -89,7 +89,6 @@ resource "citrixadc_sslcipher" "tfAccsslcipher" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslservice_sslciphersuite_binding. It is the concatenation of the `servicename` and `ciphername` attributes separated by a comma.
-* `cipherdefaulton` - Flag indicating whether the bound cipher was the DEFAULT cipher, bound at boot time, or any other cipher from the CLI.
 
 
 ## Import

@@ -263,3 +263,80 @@ func TestAccNetbridge_nsip6_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccNetbridge_nsip6_binding_upgrade_basic = `
+
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "my_netbridge"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "dea:97c5:d381:e72b::/64"
+		type 		= "VIP"
+		icmp 		= "DISABLED"
+	}
+
+	resource "citrixadc_netbridge_nsip6_binding" "tf_netbridge_nsip6_binding" {
+		name      = citrixadc_netbridge.tf_netbridge.name
+		ipaddress = citrixadc_nsip6.tf_nsip6.ipv6address
+	}
+`
+
+// TestAccNetbridge_nsip6_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (legacy comma-separated ID) is correctly upgraded when the same
+// config is subsequently managed by the current Framework provider. Step 1 creates the
+// binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "my_netbridge,dea:97c5:d381:e72b::/64"). Step 2 refreshes/plans/applies the same
+// config through the Framework provider, exercising ParseIdString on the legacy id;
+// because the Framework recomputes the id on Read (netbridge_nsip6_bindingSetAttrFromGet),
+// the id upgrades to the new "key:value" form.
+func TestAccNetbridge_nsip6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_netbridge_nsip6_binding.tf_netbridge_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetbridge_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNetbridge_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_nsip6_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "my_netbridge,dea:97c5:d381:e72b::/64"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNetbridge_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_nsip6_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:my_netbridge,ipaddress:dea%3A97c5%3Ad381%3Ae72b%3A%3A%2F64"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetbridge_nsip6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_netbridge_nsip6_binding.tf_netbridge_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridge_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetbridge_nsip6_binding_basic},
+			{Config: testAccNetbridge_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

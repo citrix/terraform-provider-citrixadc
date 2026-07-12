@@ -83,6 +83,61 @@ func TestAccSslservicegroup_sslcertkey_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccSslservicegroup_sslcertkey_binding_upgrade_basic = `
+	resource "citrixadc_sslservicegroup_sslcertkey_binding" "tf_sslservicegroup_sslcertkey_binding" {
+		ca = false
+		snicert = false
+        certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
+        servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+	}
+
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey"
+		cert = "/var/tmp/certificate1.crt"
+		key = "/var/tmp/key1.pem"
+	}
+
+	resource "citrixadc_servicegroup" "tf_servicegroup" {
+		servicegroupname = "tf_servicegroup"
+		servicetype = "SSL"
+	}
+`
+
+func TestAccSslservicegroup_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslcertkeyPreChecks(t) },
+		CheckDestroy: testAccCheckSslservicegroup_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the binding with the last SDK v2 release (2.2.0). This
+			// writes the legacy comma-joined ID into state.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSslservicegroup_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservicegroup_sslcertkey_bindingExist("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "id", "tf_servicegroup,tf_sslcertkey,false,false"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework)
+			// provider. Read exercises ParseIdString on the legacy id and recomputes
+			// the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslservicegroup_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservicegroup_sslcertkey_bindingExist("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "id", "ca:false,certkeyname:tf_sslcertkey,crlcheck:,servicegroupname:tf_servicegroup,snicert:false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSslservicegroup_sslcertkey_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -204,6 +259,19 @@ func testAccCheckSslservicegroup_sslcertkey_bindingNotExist(n string, id string)
 
 		return nil
 	}
+}
+
+func TestAccSslservicegroup_sslcertkey_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservicegroup_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslservicegroup_sslcertkey_binding_basic},
+			{Config: testAccSslservicegroup_sslcertkey_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
 }
 
 func testAccCheckSslservicegroup_sslcertkey_bindingDestroy(s *terraform.State) error {

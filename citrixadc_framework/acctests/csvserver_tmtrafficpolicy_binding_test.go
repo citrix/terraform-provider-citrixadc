@@ -96,6 +96,19 @@ func TestAccCsvserver_tmtrafficpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_tmtrafficpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_tmtrafficpolicy_binding.tf_csvserver_tmtrafficpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_tmtrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_tmtrafficpolicy_binding_basic},
+			{Config: testAccCsvserver_tmtrafficpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckCsvserver_tmtrafficpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -228,6 +241,71 @@ func testAccCheckCsvserver_tmtrafficpolicy_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+const testAccCsvserver_tmtrafficpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_trafficaction"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "tf_tmttrafficpolicy"
+		rule   = "true"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
+	resource "citrixadc_csvserver_tmtrafficpolicy_binding" "tf_csvserver_tmtrafficpolicy_binding" {
+		name 		= citrixadc_csvserver.tf_csvserver.name
+		policyname	= citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy.name
+		priority 	= 1
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
+		servicetype = "HTTP"
+	}
+`
+
+// TestAccCsvserver_tmtrafficpolicy_binding_sdkv2StateUpgrade verifies that state written by
+// the last SDK v2 release (v2.2.0), which uses the legacy comma-joined id
+// (name,policyname), is transparently upgraded by the current Framework provider.
+// Step 1 creates the resource with the external SDK v2 provider (legacy id).
+// Step 2 refreshes/plans/applies the SAME config through the Framework provider; its Read
+// re-derives the canonical new-format id (name:<v>,policyname:<v>) via SetAttrFromGet.
+func TestAccCsvserver_tmtrafficpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_tmtrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create with the last SDK v2 release from the registry -> legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCsvserver_tmtrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_tmtrafficpolicy_bindingExist("citrixadc_csvserver_tmtrafficpolicy_binding.tf_csvserver_tmtrafficpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_tmtrafficpolicy_binding.tf_csvserver_tmtrafficpolicy_binding", "id", "tf_csvserver,tf_tmttrafficpolicy"),
+				),
+			},
+			{
+				// Refresh legacy-id state through the current Framework provider -> id upgraded.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_tmtrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_tmtrafficpolicy_bindingExist("citrixadc_csvserver_tmtrafficpolicy_binding.tf_csvserver_tmtrafficpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_tmtrafficpolicy_binding.tf_csvserver_tmtrafficpolicy_binding", "id", "name:tf_csvserver,policyname:tf_tmttrafficpolicy"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccCsvserver_tmtrafficpolicy_bindingDataSource_basic(t *testing.T) {

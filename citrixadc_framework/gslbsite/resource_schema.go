@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -58,7 +57,11 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes; add
+					// UseStateForUnknown so the GET-populated Computed value on refresh does not
+					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Cluster IP address. Specify this parameter to connect to the remote cluster site for GSLB auto-sync. Note: The cluster IP address is defined when creating the cluster.",
 			},
@@ -76,7 +79,10 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// NOT ForceNew in SDK v2 (newname is the rename helper) -> drop the spurious
+					// RequiresReplace added during migration; UseStateForUnknown keeps this
+					// un-echoed Computed value stable across a refresh.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "New name for the GSLB site.",
 			},
@@ -94,7 +100,11 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes; add
+					// UseStateForUnknown so the GET-populated Computed value on refresh does not
+					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "IP address to be used to globally access the remote cluster when it is deployed behind a NAT. It can be same as the normal cluster IP address.",
 			},
@@ -138,8 +148,6 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"sitepassword_wo_version": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
-				Default:  int64default.StaticInt64(1),
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -149,7 +157,11 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes; add
+					// UseStateForUnknown so the GET-populated Computed value on refresh does not
+					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Type of site to create. If the type is not specified, the appliance automatically detects and sets the type on the basis of the IP address being assigned to the site. If the specified site IP address is owned by the appliance (for example, a MIP address or SNIP address), the site is a local site. Otherwise, it is a remote site.",
 			},

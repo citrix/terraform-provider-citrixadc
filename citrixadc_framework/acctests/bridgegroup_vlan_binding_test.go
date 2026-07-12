@@ -213,6 +213,79 @@ func testAccCheckBridgegroup_vlan_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+// testAccBridgegroup_vlan_binding_upgrade_basic is valid under BOTH the SDK v2
+// 2.2.0 schema and the current framework schema. It reuses the values from
+// testAccBridgegroup_vlan_binding_basic and keeps the same resource labels so the
+// Exist/Destroy helpers and addresses match.
+const testAccBridgegroup_vlan_binding_upgrade_basic = `
+	resource "citrixadc_bridgegroup" "tf_bridgegroup" {
+		bridgegroup_id     = 2
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_bridgegroup_vlan_binding" "tf_binding" {
+		bridgegroup_id = citrixadc_bridgegroup.tf_bridgegroup.bridgegroup_id
+		vlan           = citrixadc_vlan.tf_vlan.vlanid
+	}
+`
+
+// TestAccBridgegroup_vlan_binding_sdkv2StateUpgrade verifies that a binding created
+// by the last SDK v2 release (which writes the legacy id "2,20" via
+// d.SetId("bridgegroup_id,vlan")) is correctly read/refreshed by the current
+// framework provider, which recomputes the id to the new
+// "bridgegroup_id:...,vlan:..." format on Read (SetAttrFromGet).
+func TestAccBridgegroup_vlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBridgegroup_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the LAST SDK v2 release from the registry.
+			// State is written with the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccBridgegroup_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBridgegroup_vlan_bindingExist("citrixadc_bridgegroup_vlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_bridgegroup_vlan_binding.tf_binding", "id", "2,20"),
+				),
+			},
+			// Step 2: same config through the CURRENT (framework) provider. Terraform
+			// refreshes the legacy-id state (exercising ParseIdString on the legacy id),
+			// and the framework Read recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBridgegroup_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBridgegroup_vlan_bindingExist("citrixadc_bridgegroup_vlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_bridgegroup_vlan_binding.tf_binding", "id", "bridgegroup_id:2,vlan:20"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBridgegroup_vlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_bridgegroup_vlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgegroup_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBridgegroup_vlan_binding_basic},
+			{Config: testAccBridgegroup_vlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 const testAccBridgegroup_vlan_bindingDataSource_basic = `
 	resource "citrixadc_bridgegroup" "tf_bridgegroup" {
 		bridgegroup_id     = 2

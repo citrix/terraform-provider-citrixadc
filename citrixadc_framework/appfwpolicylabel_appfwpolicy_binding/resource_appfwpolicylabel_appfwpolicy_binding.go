@@ -76,6 +76,13 @@ func (r *AppfwpolicylabelAppfwpolicyBindingResource) Create(ctx context.Context,
 
 	// Read the updated state back
 	r.readAppfwpolicylabelAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "appfwpolicylabel_appfwpolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,6 +101,15 @@ func (r *AppfwpolicylabelAppfwpolicyBindingResource) Read(ctx context.Context, r
 	tflog.Debug(ctx, "Reading appfwpolicylabel_appfwpolicy_binding resource")
 
 	r.readAppfwpolicylabelAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,6 +153,13 @@ func (r *AppfwpolicylabelAppfwpolicyBindingResource) Update(ctx context.Context,
 
 	// Read the updated state back
 	r.readAppfwpolicylabelAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "appfwpolicylabel_appfwpolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -169,6 +192,9 @@ func (r *AppfwpolicylabelAppfwpolicyBindingResource) Delete(ctx context.Context,
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
 		argsMap["policyname"] = val
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		argsMap["priority"] = fmt.Sprintf("%d", data.Priority.ValueInt64())
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Appfwpolicylabel_appfwpolicy_binding.Type(), labelname_value, argsMap)
@@ -211,7 +237,9 @@ func (r *AppfwpolicylabelAppfwpolicyBindingResource) readAppfwpolicylabelAppfwpo
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "appfwpolicylabel_appfwpolicy_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -243,7 +271,7 @@ func (r *AppfwpolicylabelAppfwpolicyBindingResource) readAppfwpolicylabelAppfwpo
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("appfwpolicylabel_appfwpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

@@ -278,3 +278,77 @@ func TestAccAuthenticationpolicylabel_authenticationpolicy_bindingDataSource_bas
 		},
 	})
 }
+
+const testAccAuthenticationpolicylabel_authenticationpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_authenticationpolicylabel" "tf_authenticationpolicylabel" {
+		labelname = "tf_authenticationpolicylabel"
+		type      = "AAATM_REQ"
+		comment   = "Testing"
+	}
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "ldapaction"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationpolicy" "tf_authenticationpolicy" {
+		name   = "tf_authenticationpolicy"
+		rule   = "true"
+		action = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+	resource "citrixadc_authenticationpolicylabel_authenticationpolicy_binding" "tf_bind" {
+		labelname  = citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel.labelname
+		policyname = citrixadc_authenticationpolicy.tf_authenticationpolicy.name
+		priority   = 20
+	}
+`
+
+func TestAccAuthenticationpolicylabel_authenticationpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAuthenticationpolicylabel_authenticationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingExist("citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", "id", "tf_authenticationpolicylabel,tf_authenticationpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationpolicylabel_authenticationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingExist("citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", "id", "labelname:tf_authenticationpolicylabel,policyname:tf_authenticationpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationpolicylabel_authenticationpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic},
+			{Config: testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

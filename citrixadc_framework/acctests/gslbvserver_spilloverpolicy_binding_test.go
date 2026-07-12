@@ -299,3 +299,86 @@ func TestAccGslbvserver_spilloverpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccGslbvserver_spilloverpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
+
+resource "citrixadc_gslbvserver_spilloverpolicy_binding" "tf_gslbvserver_spilloverpolicy_binding" {
+	name       = citrixadc_gslbvserver.tf_gslbvserver.name
+	policyname = citrixadc_spilloverpolicy.tf_spilloverpolicy.name
+	priority   = 100
+
+	}
+
+  resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+	dnsrecordtype = "A"
+	name          = "gslb_vserver"
+	servicetype   = "HTTP"
+	domain {
+	  domainname = "www.fooco.co"
+	  ttl        = "60"
+	}
+	domain {
+	  domainname = "www.barco.com"
+	  ttl        = "65"
+	}
+	}
+`
+
+func TestAccGslbvserver_spilloverpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbvserver_spilloverpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccGslbvserver_spilloverpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_spilloverpolicy_bindingExist("citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding", "id", "gslb_vserver,tf_spilloverpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbvserver_spilloverpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_spilloverpolicy_bindingExist("citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding", "id", "name:gslb_vserver,policyname:tf_spilloverpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGslbvserver_spilloverpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserver_spilloverpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbvserver_spilloverpolicy_binding_basic},
+			{Config: testAccGslbvserver_spilloverpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

@@ -50,6 +50,19 @@ func TestAccVpnglobal_appcontroller_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnglobal_appcontroller_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_appcontroller_binding.tf_vpnglobal_appcontroller_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_appcontroller_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_appcontroller_binding_basic},
+			{Config: testAccVpnglobal_appcontroller_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckVpnglobal_appcontroller_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -136,6 +149,56 @@ func testAccCheckVpnglobal_appcontroller_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+const testAccVpnglobal_appcontroller_binding_upgrade_basic = `
+
+	resource "citrixadc_vpnglobal_appcontroller_binding" "tf_vpnglobal_appcontroller_binding" {
+		appcontroller = "http://www.citrix.com"
+	}
+
+`
+
+// TestAccVpnglobal_appcontroller_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release is correctly upgraded when the same config is subsequently
+// managed by the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0 (writes the legacy id "http://www.citrix.com" via
+// d.SetId(appcontroller)). Step 2 refreshes/plans/applies the same config through the
+// Framework provider; for this binding the id is a single plain value (appcontroller is a
+// URL, so ParseIdString is intentionally skipped) and SetAttrFromGet recomputes it to the
+// same canonical value, so the id remains "http://www.citrix.com".
+func TestAccVpnglobal_appcontroller_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_vpnglobal_appcontroller_binding.tf_vpnglobal_appcontroller_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_appcontroller_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_appcontroller_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_appcontroller_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "http://www.citrix.com"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The single-value id is recomputed to the same canonical value.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_appcontroller_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_appcontroller_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "http://www.citrix.com"),
+				),
+			},
+		},
+	})
 }
 
 const testAccVpnglobal_appcontroller_bindingDataSource_basic = `

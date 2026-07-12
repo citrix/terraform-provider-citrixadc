@@ -87,6 +87,19 @@ func TestAccLbvserver_feopolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbvserver_feopolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_feopolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_feopolicy_binding_basic},
+			{Config: testAccLbvserver_feopolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbvserver_feopolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -262,6 +275,73 @@ func TestAccLbvserver_feopolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", "policyname", "tf_feopolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", "priority", "1"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}
+
+// testAccLbvserver_feopolicy_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// labels as testAccLbvserver_feopolicy_binding_basic so it is valid under BOTH
+// the SDK v2 2.2.0 schema and the current framework schema.
+const testAccLbvserver_feopolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_lbvserver_feopolicy_binding" "tf_lbvserver_feopolicy_binding" {
+		bindpoint              = "REQUEST"
+		gotopriorityexpression = "END"
+		name                   = citrixadc_lbvserver.tf_lbvserver.name
+		policyname             = citrixadc_feopolicy.tf_feopolicy.name
+		priority               = 1
+	}
+`
+
+// TestAccLbvserver_feopolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccLbvserver_feopolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_feopolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_feopolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_feopolicy_bindingExist("citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", "id", "tf_lbvserver,tf_feopolicy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_feopolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_feopolicy_bindingExist("citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding", "id", "name:tf_lbvserver,policyname:tf_feopolicy"),
 				),
 			},
 		},

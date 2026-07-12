@@ -104,6 +104,19 @@ func TestAccCsvserver_transformpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_transformpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_transformpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_transformpolicy_binding_basic_step1},
+			{Config: testAccCsvserver_transformpolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckCsvserver_transformpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -239,6 +252,77 @@ func TestAccCsvserver_transformpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_transformpolicy_binding.tf_binding", "policyname", "tf_trans_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_transformpolicy_binding.tf_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_transformpolicy_binding.tf_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCsvserver_transformpolicy_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// labels as testAccCsvserver_transformpolicy_binding_basic_step1 so it is valid
+// under BOTH the SDK v2 2.2.0 schema and the current framework schema.
+const testAccCsvserver_transformpolicy_binding_upgrade_basic = `
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.34"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_transformprofile" "tf_trans_profile" {
+  name = "tf_trans_profile"
+  comment = "Some comment"
+}
+
+resource "citrixadc_transformpolicy" "tf_trans_policy" {
+    name = "tf_trans_policy"
+    profilename = citrixadc_transformprofile.tf_trans_profile.name
+    rule = "http.REQ.URL.CONTAINS(\"test_url\")"
+}
+
+resource "citrixadc_csvserver_transformpolicy_binding" "tf_binding" {
+    name = citrixadc_csvserver.tf_csvserver.name
+    policyname = citrixadc_transformpolicy.tf_trans_policy.name
+    priority = 100
+    bindpoint = "REQUEST"
+    gotopriorityexpression = "END"
+}
+`
+
+// TestAccCsvserver_transformpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccCsvserver_transformpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCsvserver_transformpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_transformpolicy_bindingExist("citrixadc_csvserver_transformpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_transformpolicy_binding.tf_binding", "id", "tf_csvserver,tf_trans_policy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_transformpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_transformpolicy_bindingExist("citrixadc_csvserver_transformpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_transformpolicy_binding.tf_binding", "id", "name:tf_csvserver,policyname:tf_trans_policy"),
 				),
 			},
 		},

@@ -266,12 +266,23 @@ func ParseIdString(idStr string, legacyAttrOrder []string, legacyOptionalAttrs [
 		if len(legacyAttrOrder) == 0 {
 			return nil, nil, fmt.Errorf("cannot parse legacy ID %q: no attribute order provided", idStr)
 		}
-		result = make(map[string]string, len(parts))
-		for i, val := range parts {
-			if i >= len(legacyAttrOrder) {
+		result = make(map[string]string, len(legacyAttrOrder))
+		lastIdx := len(legacyAttrOrder) - 1
+		for i, attr := range legacyAttrOrder {
+			if i >= len(parts) {
 				break
 			}
-			result[legacyAttrOrder[i]] = val
+			if i == lastIdx {
+				// The last attribute absorbs any remaining comma-parts. A legacy
+				// (un-encoded) value may itself contain commas -- e.g. a regex quantifier
+				// "^logon_[0-9A-Za-z]{2,15}$" or a pattern "pattern1,/postfix". Splitting on
+				// every comma would otherwise truncate the trailing value and the binding
+				// could not be located on the SDK v2 -> Framework upgrade. (The new id
+				// format URL-encodes values, so this only affects legacy positional ids.)
+				result[attr] = strings.Join(parts[i:], ",")
+			} else {
+				result[attr] = parts[i]
+			}
 		}
 	}
 

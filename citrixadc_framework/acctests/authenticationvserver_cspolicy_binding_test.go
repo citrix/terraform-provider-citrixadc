@@ -144,6 +144,19 @@ func TestAccAuthenticationvserver_cspolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationvserver_cspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_cspolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_cspolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_cspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
+		},
+	})
+}
+
 func testAccCheckAuthenticationvserver_cspolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -290,6 +303,82 @@ func TestAccAuthenticationvserverCspolicyBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_cspolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_cspolicy_binding.tf_bind", "policy", "test_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_cspolicy_binding.tf_bind", "priority", "90"),
+				),
+			},
+		},
+	})
+}
+
+// testAccauthenticationvserver_cspolicy_binding_upgrade_basic is the config used by
+// the sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// labels as testAccAuthenticationvserver_cspolicy_binding_basic so it is valid under
+// BOTH the SDK v2 2.2.0 schema and the current framework schema.
+const testAccauthenticationvserver_cspolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_lbvserver" "foo_lbvserver" {
+		name        = "test_policy_lb"
+		servicetype = "HTTP"
+		ipv46       = "192.122.3.3"
+		port        = 8000
+		comment     = "hello"
+	}
+	resource "citrixadc_csaction" "tf_csaction" {
+		name            = "tf_csaction"
+		targetlbvserver = citrixadc_lbvserver.foo_lbvserver.name
+	}
+	resource "citrixadc_cspolicy" "foo_cspolicy" {
+		policyname = "test_policy"
+		rule       = "TRUE"
+		action     = citrixadc_csaction.tf_csaction.name
+	}
+	resource "citrixadc_authenticationvserver_cspolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_cspolicy.foo_cspolicy.policyname
+		priority  = 90
+		bindpoint = "REQUEST" #doesnot unbind for RESPONSE
+	}
+`
+
+// TestAccAuthenticationvserver_cspolicy_binding_sdkv2StateUpgrade verifies that a
+// binding created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider. The
+// framework recomputes the id on Read to the new key:value form.
+func TestAccAuthenticationvserver_cspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccauthenticationvserver_cspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_cspolicy_bindingExist("citrixadc_authenticationvserver_cspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_cspolicy_binding.tf_bind", "id", "tf_authenticationvserver,test_policy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccauthenticationvserver_cspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_cspolicy_bindingExist("citrixadc_authenticationvserver_cspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_cspolicy_binding.tf_bind", "id", "name:tf_authenticationvserver,policy:test_policy"),
 				),
 			},
 		},

@@ -242,6 +242,59 @@ const testAccSystemgroup_systemcmdpolicy_bindingDataSource_basic = `
 	}
 `
 
+const testAccSystemgroup_systemcmdpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_systemgroup" "tf_systemgroup" {
+		groupname    = "tf_systemgroup"
+		timeout      = 999
+		promptstring = "bye>"
+	}
+
+	resource "citrixadc_systemcmdpolicy" "tf_policy" {
+		policyname = "tf_policy"
+		action     = "DENY"
+		cmdspec    = "add.*"
+	}
+
+	resource "citrixadc_systemgroup_systemcmdpolicy_binding" "tf_bind" {
+		groupname  = citrixadc_systemgroup.tf_systemgroup.groupname
+		policyname = citrixadc_systemcmdpolicy.tf_policy.policyname
+		priority   = 100
+	}
+`
+
+func TestAccSystemgroup_systemcmdpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemgroup_systemcmdpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes legacy id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSystemgroup_systemcmdpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemgroup_systemcmdpolicy_bindingExist("citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind", "id", "tf_systemgroup,tf_policy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework provider.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemgroup_systemcmdpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemgroup_systemcmdpolicy_bindingExist("citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind", "id", "groupname:tf_systemgroup,policyname:tf_policy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSystemgroup_systemcmdpolicy_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -255,6 +308,19 @@ func TestAccSystemgroup_systemcmdpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind", "priority", "100"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccSystemgroup_systemcmdpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemgroup_systemcmdpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemgroup_systemcmdpolicy_binding_basic},
+			{Config: testAccSystemgroup_systemcmdpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

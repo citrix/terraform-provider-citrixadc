@@ -66,6 +66,19 @@ const testAccTmglobal_auditsyslogpolicy_binding_basic_step2 = `
 	}
 `
 
+func TestAccTmglobal_auditsyslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_tmglobal_auditsyslogpolicy_binding.tf_tmglobal_auditsyslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTmglobal_auditsyslogpolicy_binding_basic},
+			{Config: testAccTmglobal_auditsyslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func TestAccTmglobal_auditsyslogpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -82,6 +95,61 @@ func TestAccTmglobal_auditsyslogpolicy_binding_basic(t *testing.T) {
 				Config: testAccTmglobal_auditsyslogpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTmglobal_auditsyslogpolicy_bindingNotExist("citrixadc_tmglobal_auditsyslogpolicy_binding.tf_tmglobal_auditsyslogpolicy_binding", "tf_auditsyslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
+const testAccTmglobal_auditsyslogpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name = "tf_syslogaction"
+		serverip = "10.78.60.33"
+		serverport = 514
+		loglevel = [
+			"ERROR",
+			"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_auditsyslogpolicy" {
+		name   = "tf_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+
+	resource "citrixadc_tmglobal_auditsyslogpolicy_binding" "tf_tmglobal_auditsyslogpolicy_binding" {
+		policyname = citrixadc_auditsyslogpolicy.tf_auditsyslogpolicy.name
+		priority   = 100
+	}
+`
+
+func TestAccTmglobal_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes legacy id)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccTmglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmglobal_auditsyslogpolicy_bindingExist("citrixadc_tmglobal_auditsyslogpolicy_binding.tf_tmglobal_auditsyslogpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmglobal_auditsyslogpolicy_binding.tf_tmglobal_auditsyslogpolicy_binding", "id", "tf_auditsyslogpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework provider
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTmglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmglobal_auditsyslogpolicy_bindingExist("citrixadc_tmglobal_auditsyslogpolicy_binding.tf_tmglobal_auditsyslogpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmglobal_auditsyslogpolicy_binding.tf_tmglobal_auditsyslogpolicy_binding", "id", "tf_auditsyslogpolicy"),
 				),
 			},
 		},

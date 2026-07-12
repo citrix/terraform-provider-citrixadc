@@ -285,6 +285,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/crvserver_crpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/crvserver_cspolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/crvserver_feopolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/crvserver_filterpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/crvserver_icapolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/crvserver_lbvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/crvserver_policymap_binding"
@@ -309,6 +310,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_contentinspectionpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_cspolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_feopolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_filterpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_gslbvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_lbvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_responderpolicy_binding"
@@ -348,6 +350,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/feoglobal_feopolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/feoparameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/feopolicy"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/filterglobal_filterpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/fis"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/forwardingsession"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/gslbparameter"
@@ -419,6 +422,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_contentinspectionpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_dnspolicy64_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_feopolicy_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_filterpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_lbpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_responderpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/lbvserver_rewritepolicy_binding"
@@ -579,6 +583,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/rsskeytype"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/server"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/service_dospolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/service_lbmonitor_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/servicegroup"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/servicegroup_lbmonitor_binding"
@@ -1184,6 +1189,11 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		csvserver_feopolicy_binding.NewCsvserverFeopolicyBindingResource,
 		csvserver_gslbvserver_binding.NewCsvserverGslbvserverBindingResource,
 		csvserver_responderpolicy_binding.NewCsvserverResponderpolicyBindingResource,
+		csvserver_filterpolicy_binding.NewCsvserverFilterpolicyBindingResource,
+		crvserver_filterpolicy_binding.NewCrvserverFilterpolicyBindingResource,
+		lbvserver_filterpolicy_binding.NewLbvserverFilterpolicyBindingResource,
+		filterglobal_filterpolicy_binding.NewFilterglobalFilterpolicyBindingResource,
+		service_dospolicy_binding.NewServiceDospolicyBindingResource,
 		csvserver_rewritepolicy_binding.NewCsvserverRewritepolicyBindingResource,
 		csvserver_spilloverpolicy_binding.NewCsvserverSpilloverpolicyBindingResource,
 		csvserver_tmtrafficpolicy_binding.NewCsvserverTmtrafficpolicyBindingResource,
@@ -1271,6 +1281,8 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		service_lbmonitor_binding.NewServiceLbmonitorBindingResource,
 		servicegroup_lbmonitor_binding.NewServicegroupLbmonitorBindingResource,
 		servicegroup_servicegroupmember_binding.NewServicegroupServicegroupmemberBindingResource,
+		gslbservicegroup_lbmonitor_binding.NewGslbservicegroupLbmonitorBindingResource,
+		gslbservicegroup_gslbservicegroupmember_binding.NewGslbservicegroupGslbservicegroupmemberBindingResource,
 		snmptrap_snmpuser_binding.NewSnmptrapSnmpuserBindingResource,
 		sslcacertgroup_sslcertkey_binding.NewSslcacertgroupSslcertkeyBindingResource,
 		sslcertkey_sslocspresponder_binding.NewSslcertkeySslocspresponderBindingResource,
@@ -1375,6 +1387,17 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		vlan_channel_binding.NewVlanChannelBindingResource,
 		systemglobal_authenticationtacacspolicy_binding.NewSystemglobalAuthenticationtacacspolicyBindingResource,
 		vpnglobal_vpntrafficpolicy_binding.NewVpnglobalVpntrafficpolicyBindingResource,
+		clusternodegroup_authenticationvserver_binding.NewClusternodegroupAuthenticationvserverBindingResource,
+		clusternodegroup_clusternode_binding.NewClusternodegroupClusternodeBindingResource,
+		clusternodegroup_crvserver_binding.NewClusternodegroupCrvserverBindingResource,
+		clusternodegroup_csvserver_binding.NewClusternodegroupCsvserverBindingResource,
+		clusternodegroup_gslbsite_binding.NewClusternodegroupGslbsiteBindingResource,
+		clusternodegroup_gslbvserver_binding.NewClusternodegroupGslbvserverBindingResource,
+		clusternodegroup_lbvserver_binding.NewClusternodegroupLbvserverBindingResource,
+		clusternodegroup_nslimitidentifier_binding.NewClusternodegroupNslimitidentifierBindingResource,
+		clusternodegroup_service_binding.NewClusternodegroupServiceBindingResource,
+		clusternodegroup_streamidentifier_binding.NewClusternodegroupStreamidentifierBindingResource,
+		clusternodegroup_vpnvserver_binding.NewClusternodegroupVpnvserverBindingResource,
 	}
 }
 
@@ -1923,6 +1946,11 @@ func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() d
 		csvserver_feopolicy_binding.CSvserverFeopolicyBindingDataSource,
 		csvserver_gslbvserver_binding.CSvserverGslbvserverBindingDataSource,
 		csvserver_responderpolicy_binding.CSvserverResponderpolicyBindingDataSource,
+		csvserver_filterpolicy_binding.CSvserverFilterpolicyBindingDataSource,
+		crvserver_filterpolicy_binding.CRvserverFilterpolicyBindingDataSource,
+		lbvserver_filterpolicy_binding.LBvserverFilterpolicyBindingDataSource,
+		filterglobal_filterpolicy_binding.FIlterglobalFilterpolicyBindingDataSource,
+		service_dospolicy_binding.SErviceDospolicyBindingDataSource,
 		csvserver_rewritepolicy_binding.CSvserverRewritepolicyBindingDataSource,
 		csvserver_spilloverpolicy_binding.CSvserverSpilloverpolicyBindingDataSource,
 		csvserver_tmtrafficpolicy_binding.CSvserverTmtrafficpolicyBindingDataSource,

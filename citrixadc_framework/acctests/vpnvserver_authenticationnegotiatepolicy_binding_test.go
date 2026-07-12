@@ -233,6 +233,68 @@ func testAccCheckVpnvserver_authenticationnegotiatepolicy_bindingDestroy(s *terr
 	return nil
 }
 
+const testAccVpnvserver_authenticationnegotiatepolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction" {
+		name                       = "tf_negotiateaction"
+		domain                     = "DomainName"
+		domainuser                 = "usersame"
+		domainuserpasswd           = "password"
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "new_grpname"
+	}
+	resource "citrixadc_authenticationnegotiatepolicy" "tf_negotiatepolicy" {
+		name      = "tf_negotiatepolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationnegotiateaction.tf_negotiateaction.name
+	}
+	resource "citrixadc_vpnvserver_authenticationnegotiatepolicy_binding" "tf_binding" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy.name
+		priority  = 33
+		bindpoint = "AAA_REQUEST"
+	}
+`
+
+func TestAccVpnvserver_authenticationnegotiatepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationnegotiatepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationnegotiatepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationnegotiatepolicy_bindingExist("citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", "id", "tf_vpnvserver,tf_negotiatepolicy"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// The framework Read recomputes the canonical id to the new "key:value" format
+			// (SetAttrFromGet re-derives data.Id), so the id upgrades on refresh.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_authenticationnegotiatepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationnegotiatepolicy_bindingExist("citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", "id", "name:tf_vpnvserver,policy:tf_negotiatepolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpnvserver_authenticationnegotiatepolicy_bindingDataSource_basic = `
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserver"
@@ -280,6 +342,19 @@ func TestAccVpnvserver_authenticationnegotiatepolicy_bindingDataSource_basic(t *
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", "priority", "33"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationnegotiatepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationnegotiatepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationnegotiatepolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationnegotiatepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
 		},
 	})
 }

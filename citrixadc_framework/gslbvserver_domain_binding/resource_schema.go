@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -43,35 +42,55 @@ func (r *GslbvserverDomainBindingResource) Schema(ctx context.Context, req resou
 				Description: "The ID of the gslbvserver_domain_binding resource.",
 			},
 			"backupip": schema.StringAttribute{
+				// backupip is ForceNew in SDK v2 and is accepted by the NITRO bind payload and
+				// echoed by GET (key "backupip") when set. Class-B upgrade fix (Row-4): add
+				// Computed so a value stored by SDK v2 2.2.0 (which stored "" when unset) is
+				// absorbed instead of diffing a null config against the stored value on a
+				// RequiresReplace attribute (which would destroy+recreate the binding on upgrade).
+				// UseStateForUnknown MUST be listed BEFORE RequiresReplace: on update the
+				// framework marks a Computed null-config attribute unknown, USFU then restores
+				// the prior-state value so RequiresReplace sees plan==state and does NOT replace;
+				// a genuine user change to a new value still trips RequiresReplace afterwards.
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.",
 			},
 			"backupipflag": schema.BoolAttribute{
-				// GET-response-only flag; not accepted by the NITRO bind payload (errorcode 278).
-				// Optional only (no Computed): GET does not echo it back, so a Computed value
-				// would stay unknown after apply ("inconsistent result"). (Pattern 13 / Pattern 15)
-				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
+				// Variant (b) of the Class-B upgrade fix. Verified empirically against the ADC:
+				// the NITRO bind payload REJECTS backupipflag with errorcode 278 and GET NEVER
+				// echoes it back. It therefore cannot be Computed (a Computed value would stay
+				// unknown after apply -> "inconsistent result after apply ... still unknown").
+				// Row-4 (variant a) is impossible here, so we keep it Optional-only and DROP
+				// RequiresReplace: that prevents an SDK v2 upgrade (stored bool vs a null config)
+				// from force-replacing the binding. It is deliberately NOT read in the resource
+				// setter (GET has nothing to echo), so planned==final on every apply.
+				Optional:    true,
 				Description: "The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.",
 			},
 			"cookiedomain": schema.StringAttribute{
+				// cookiedomain is ForceNew in SDK v2 and is accepted by the NITRO bind payload
+				// (JSON key "cookie_domain") and echoed by GET (key "cookie_domain") when set.
+				// Class-B upgrade fix (Row-4): see the backupip comment above for the ordering
+				// rationale of UseStateForUnknown before RequiresReplace.
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.",
 			},
 			"cookiedomainflag": schema.BoolAttribute{
-				// GET-response-only flag; not accepted by the NITRO bind payload (errorcode 278).
-				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
+				// Variant (b), same rationale as backupipflag: the NITRO bind payload rejects it
+				// (errorcode 278) and GET never echoes it, so it cannot be Computed. Kept
+				// Optional-only with RequiresReplace dropped. Unlike backupipflag (which the
+				// acctest configures to false), this one is left unset in config, so the resource
+				// setter explicitly NULLs it to keep the SDK v2 upgrade plan a no-op (see setter).
+				Optional:    true,
 				Description: "The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.",
 			},
 			"cookietimeout": schema.Int64Attribute{
@@ -152,22 +171,44 @@ func gslbvserver_domain_bindingGetThePayloadFromthePlan(ctx context.Context, dat
 }
 
 // gslbvserver_domain_bindingSetAttrFromGet is used by the resource Read/Create/Update.
-// It preserves the existing plan/state values for write-only / server-non-echoed inputs
-// (backupipflag, cookiedomainflag, order) and never recomputes the ID — the ID is set
-// exactly once in Create. (Pattern 6 / Pattern 7 / Pattern 13)
+// backupip/cookiedomain are resolved from the GET response (defaulting to "" when absent);
+// backupipflag is preserved from the plan/state (config-supplied); cookiedomainflag is nulled;
+// order is left as-is (server-non-echoed). It re-derives the canonical new-format ID so a legacy
+// SDK v2 id is upgraded on Read. (Pattern 6 / Pattern 7 / Pattern 13)
 func gslbvserver_domain_bindingSetAttrFromGet(ctx context.Context, data *GslbvserverDomainBindingResourceModel, getResponseData map[string]interface{}) *GslbvserverDomainBindingResourceModel {
 	tflog.Debug(ctx, "In gslbvserver_domain_bindingSetAttrFromGet Function")
 
 	// Convert API response to model.
-	// backupipflag / cookiedomainflag / order are write-only inputs the GET does not
-	// echo back reliably; preserve the configured plan/state value to avoid
-	// "inconsistent result after apply" churn.
+	// backupip / cookiedomain are Optional+Computed with RequiresReplace+UseStateForUnknown.
+	// NITRO GET echoes them (keys "backupip" / "cookie_domain") ONLY when they hold a value;
+	// when unset they are absent from the response. We must still resolve the Computed value
+	// to a concrete, NON-null value ("") on the not-echoed path, otherwise the Create plan's
+	// unknown would remain unknown ("inconsistent result after apply") and UseStateForUnknown
+	// (which ignores a null prior state) could not keep subsequent plans empty.
 	if val, ok := getResponseData["backupip"]; ok && val != nil {
 		data.Backupip = types.StringValue(val.(string))
+	} else {
+		data.Backupip = types.StringValue("")
 	}
-	if val, ok := getResponseData["cookiedomain"]; ok && val != nil {
+	if val, ok := getResponseData["cookie_domain"]; ok && val != nil {
 		data.CookieDomain = types.StringValue(val.(string))
+	} else {
+		data.CookieDomain = types.StringValue("")
 	}
+	// backupipflag / cookiedomainflag: the NITRO bind payload rejects them (errorcode 278) and
+	// GET never echoes them, so there is nothing to read. Variant (b) of the Class-B upgrade fix
+	// (Optional-only, RequiresReplace dropped) is asymmetric between the two flags because the
+	// acctest config supplies backupipflag=false but leaves cookiedomainflag unset:
+	//   - backupipflag is left UNTOUCHED. Its planned value comes from config (false); nulling it
+	//     would make planned(false) != final(null) ("inconsistent result after apply"). On the
+	//     SDK v2 upgrade the stored false already equals the configured false, so no diff.
+	//   - cookiedomainflag is explicitly NULLED. Config leaves it null, so on the SDK v2 upgrade
+	//     the value stored by 2.2.0 (false) would otherwise diff false->null. Because the domain
+	//     binding cannot be updated in place (a re-bind of an already-bound domain fails with
+	//     errorcode 1842), that phantom diff must be eliminated: nulling it here makes the
+	//     refreshed state (null) match the config (null) so the upgrade plan is a clean no-op,
+	//     and on create planned(null)==final(null).
+	data.CookieDomainflag = types.BoolNull()
 	if val, ok := getResponseData["cookietimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cookietimeout = types.Int64Value(intVal)

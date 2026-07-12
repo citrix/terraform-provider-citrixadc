@@ -83,6 +83,82 @@ func TestAccCachepolicylabel_cachepolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCachepolicylabel_cachepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCachepolicylabel_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCachepolicylabel_cachepolicy_binding_basic},
+			{Config: testAccCachepolicylabel_cachepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// testAccCachepolicylabel_cachepolicy_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the exact values from
+// testAccCachepolicylabel_cachepolicy_binding_basic and only uses SDK v2 attribute names
+// so it is valid under BOTH the last SDK v2 release (2.2.0) and the current framework schema.
+const testAccCachepolicylabel_cachepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_cachepolicylabel" "tf_policylabel" {
+		labelname = "my_cachepolicylabel"
+		evaluates = "REQ"
+	}
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+
+	resource "citrixadc_cachepolicylabel_cachepolicy_binding" "tf_cachepolicylabel_cachepolicy_binding" {
+		labelname  = citrixadc_cachepolicylabel.tf_policylabel.labelname
+		priority   = 100
+		policyname = citrixadc_cachepolicy.tf_cachepolicy.policyname
+	}
+`
+
+// TestAccCachepolicylabel_cachepolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created by the last SDK v2 release (which writes the legacy comma-joined id
+// "my_cachepolicylabel,my_cachepolicy") is correctly read/refreshed by the current
+// framework provider, which recomputes the id to the new
+// "labelname:...,policyname:..." format on Read (SetAttrFromGet).
+func TestAccCachepolicylabel_cachepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCachepolicylabel_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the LAST SDK v2 release from the registry.
+			// State is written with the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCachepolicylabel_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCachepolicylabel_cachepolicy_bindingExist("citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding", "id", "my_cachepolicylabel,my_cachepolicy"),
+				),
+			},
+			// Step 2: same config through the CURRENT (framework) provider. Terraform
+			// refreshes the legacy-id state (exercising ParseIdString on the legacy id),
+			// and the framework Read recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCachepolicylabel_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCachepolicylabel_cachepolicy_bindingExist("citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding", "id", "labelname:my_cachepolicylabel,policyname:my_cachepolicy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCachepolicylabel_cachepolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -247,3 +247,73 @@ func TestAccAuthorizationpolicylabel_authorizationpolicy_bindingDataSource_basic
 		},
 	})
 }
+
+const testAccAuthorizationpolicylabel_authorizationpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_authorizationpolicy" "authorize" {
+	name   = "tp-authorize-1"
+	rule   = "true"
+	action = "DENY"
+	}
+  resource "citrixadc_authorizationpolicylabel" "authorizationpolicylabel" {
+	labelname = "trans_http_url"
+	}
+  resource "citrixadc_authorizationpolicylabel_authorizationpolicy_binding" "authorizationpolicylabel_authorizationpolicy_binding" {
+	policyname = citrixadc_authorizationpolicy.authorize.name
+	labelname = citrixadc_authorizationpolicylabel.authorizationpolicylabel.labelname
+	priority = 2
+	}
+`
+
+// TestAccAuthorizationpolicylabel_authorizationpolicy_binding_sdkv2StateUpgrade verifies that
+// a binding created with the last SDK v2 release (v2.2.0), which writes state using the legacy
+// comma-joined ID (labelname,policyname), is correctly refreshed and re-planned by the current
+// Plugin Framework provider. The framework Read recomputes the ID to the new
+// key:UrlEncode(value) format, so after the upgrade step the ID becomes the canonical new format.
+func TestAccAuthorizationpolicylabel_authorizationpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_authorizationpolicylabel_authorizationpolicy_binding.authorizationpolicylabel_authorizationpolicy_binding"
+	legacyId := "trans_http_url,tp-authorize-1"
+	newId := "labelname:trans_http_url,policyname:tp-authorize-1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create with the last SDK v2 release (writes legacy-format ID to state).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAuthorizationpolicylabel_authorizationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", legacyId),
+				),
+			},
+			// Step 2: Refresh/plan/apply the legacy-ID state through the current framework provider.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthorizationpolicylabel_authorizationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", newId),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthorizationpolicylabel_authorizationpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authorizationpolicylabel_authorizationpolicy_binding.authorizationpolicylabel_authorizationpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthorizationpolicylabel_authorizationpolicy_binding_basic},
+			{Config: testAccAuthorizationpolicylabel_authorizationpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

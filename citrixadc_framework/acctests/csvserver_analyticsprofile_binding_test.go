@@ -90,6 +90,19 @@ func TestAccCsvserver_analyticsprofile_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_analyticsprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_analyticsprofile_binding_basic},
+			{Config: testAccCsvserver_analyticsprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckCsvserver_analyticsprofile_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -234,6 +247,67 @@ func TestAccCsvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding", "name", "tf_csvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding", "analyticsprofile", "ns_analytics_global_profile"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCsvserver_analyticsprofile_binding_upgrade_basic reuses the _basic config
+// (binding + its csvserver prerequisite). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccCsvserver_analyticsprofile_binding_upgrade_basic = `
+	resource "citrixadc_csvserver_analyticsprofile_binding" "tf_csvserver_analyticsprofile_binding" {
+        name = citrixadc_csvserver.tf_csvserver.name
+		analyticsprofile = "ns_analytics_global_profile"
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name = "tf_csvserver"
+		ipv46 = "1.1.1.2"
+		port = 80
+		servicetype = "HTTP"
+	}
+`
+
+// TestAccCsvserver_analyticsprofile_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider. Step 1 creates the binding
+// with citrix/citrixadc 2.2.0 (writes the legacy id "tf_csvserver,ns_analytics_global_profile" —
+// the SDK v2 d.SetId(name,analyticsprofile)). Step 2 refreshes/plans/applies the same
+// config through the Framework provider, exercising ParseIdString on the legacy id; the
+// Framework recomputes the id on Read (SetAttrFromGet) into the canonical new format
+// "analyticsprofile:ns_analytics_global_profile,name:tf_csvserver".
+func TestAccCsvserver_analyticsprofile_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCsvserver_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_analyticsprofile_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_csvserver,ns_analytics_global_profile"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_analyticsprofile_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "analyticsprofile:ns_analytics_global_profile,name:tf_csvserver"),
 				),
 			},
 		},

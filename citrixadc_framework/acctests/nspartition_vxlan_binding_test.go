@@ -86,6 +86,19 @@ func TestAccNspartition_vxlan_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccNspartition_vxlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nspartition_vxlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartition_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNspartition_vxlan_binding_basic},
+			{Config: testAccNspartition_vxlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckNspartition_vxlan_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -217,6 +230,60 @@ func testAccCheckNspartition_vxlan_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccNspartition_vxlan_binding_upgrade_basic = `
+	resource "citrixadc_nspartition" "tf_nspartition" {
+		partitionname = "tf_nspartition"
+		maxbandwidth  = 10240
+		minbandwidth  = 512
+		maxconn       = 512
+		maxmemlimit   = 11
+	}
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_nspartition_vxlan_binding" "tf_binding" {
+		partitionname = citrixadc_nspartition.tf_nspartition.partitionname
+		vxlan         = citrixadc_vxlan.tf_vxlan.vxlanid
+	}
+`
+
+func TestAccNspartition_vxlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNspartition_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNspartition_vxlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspartition_vxlan_bindingExist("citrixadc_nspartition_vxlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspartition_vxlan_binding.tf_binding", "id", "tf_nspartition,123"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNspartition_vxlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspartition_vxlan_bindingExist("citrixadc_nspartition_vxlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspartition_vxlan_binding.tf_binding", "id", "partitionname:tf_nspartition,vxlan:123"),
+				),
+			},
+		},
+	})
 }
 
 const testAccNspartition_vxlan_bindingDataSource_basic = `

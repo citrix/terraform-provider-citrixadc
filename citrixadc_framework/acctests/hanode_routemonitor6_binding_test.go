@@ -75,6 +75,22 @@ func TestAccHanode_routemonitor6_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccHanode_routemonitor6_binding_import(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	const resAddr = "citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckHanode_routemonitor6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccHanode_routemonitor6_binding_basic},
+			{Config: testAccHanode_routemonitor6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckHanode_routemonitor6_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -206,6 +222,53 @@ func testAccCheckHanode_routemonitor6_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccHanode_routemonitor6_binding_upgrade_basic = `
+
+resource "citrixadc_hanode_routemonitor6_binding" "tf_hanode_routemonitor6_binding" {
+	hanode_id    = 0
+	routemonitor = "fd7f:6bd8:cea9:f32d::/64"
+	}
+`
+
+// TestAccHanode_routemonitor6_binding_sdkv2StateUpgrade verifies that state written by
+// the last SDK v2 release (with the legacy comma-joined id) is transparently upgraded
+// to the new key:value id format when refreshed through the current Framework provider.
+func TestAccHanode_routemonitor6_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckHanode_routemonitor6_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release; state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccHanode_routemonitor6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanode_routemonitor6_bindingExist("citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding", "id", "0,fd7f:6bd8:cea9:f32d::/64"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current Framework provider.
+			// Read recomputes the id, upgrading it to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccHanode_routemonitor6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanode_routemonitor6_bindingExist("citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding", "id", "hanode_id:0,routemonitor:fd7f%3A6bd8%3Acea9%3Af32d%3A%3A%2F64"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccHanode_routemonitor6_bindingDataSource_basic(t *testing.T) {

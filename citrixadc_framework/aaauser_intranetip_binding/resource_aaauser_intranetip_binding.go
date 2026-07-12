@@ -76,6 +76,13 @@ func (r *AaauserIntranetipBindingResource) Create(ctx context.Context, req resou
 
 	// Read the updated state back
 	r.readAaauserIntranetipBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "aaauser_intranetip_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,6 +101,15 @@ func (r *AaauserIntranetipBindingResource) Read(ctx context.Context, req resourc
 	tflog.Debug(ctx, "Reading aaauser_intranetip_binding resource")
 
 	r.readAaauserIntranetipBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,6 +153,13 @@ func (r *AaauserIntranetipBindingResource) Update(ctx context.Context, req resou
 
 	// Read the updated state back
 	r.readAaauserIntranetipBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "aaauser_intranetip_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -214,9 +237,10 @@ func (r *AaauserIntranetipBindingResource) readAaauserIntranetipBindingFromApi(c
 		return
 	}
 
-	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "aaauser_intranetip_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -248,7 +272,8 @@ func (r *AaauserIntranetipBindingResource) readAaauserIntranetipBindingFromApi(c
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("aaauser_intranetip_binding not found with the provided ID attributes"))
+		// Binding not present in the returned set: signal removal via a null Id (see above).
+		data.Id = types.StringNull()
 		return
 	}
 

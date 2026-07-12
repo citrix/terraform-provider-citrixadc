@@ -216,3 +216,61 @@ func TestAccSystemglobal_authenticationlocalpolicy_bindingDataSource_basic(t *te
 		},
 	})
 }
+
+const testAccsystemglobal_authenticationlocalpolicy_binding_upgrade_basic = `
+resource "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy" {
+	name   = "tf_authenticationlocalpolicy"
+	rule   = "ns_true"
+}
+
+resource "citrixadc_systemglobal_authenticationlocalpolicy_binding" "tf_systemglobal_authenticationlocalpolicy_binding" {
+	policyname = citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy.name
+	priority   = 50
+}
+`
+
+func TestAccSystemglobal_authenticationlocalpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemglobal_authenticationlocalpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes legacy-format id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccsystemglobal_authenticationlocalpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_authenticationlocalpolicy_bindingExist("citrixadc_systemglobal_authenticationlocalpolicy_binding.tf_systemglobal_authenticationlocalpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemglobal_authenticationlocalpolicy_binding.tf_systemglobal_authenticationlocalpolicy_binding", "id", "tf_authenticationlocalpolicy"),
+				),
+			},
+			// Step 2: Refresh/apply the legacy-id state through the current (framework) provider.
+			// Read recomputes the id; single-key binding => new format is the plain policyname value.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccsystemglobal_authenticationlocalpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_authenticationlocalpolicy_bindingExist("citrixadc_systemglobal_authenticationlocalpolicy_binding.tf_systemglobal_authenticationlocalpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemglobal_authenticationlocalpolicy_binding.tf_systemglobal_authenticationlocalpolicy_binding", "id", "tf_authenticationlocalpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSystemglobal_authenticationlocalpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_authenticationlocalpolicy_binding.tf_systemglobal_authenticationlocalpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemglobal_authenticationlocalpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemglobal_authenticationlocalpolicy_binding_basic},
+			{Config: testAccSystemglobal_authenticationlocalpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

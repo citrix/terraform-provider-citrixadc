@@ -273,3 +273,80 @@ data "citrixadc_vpnvserver_icapolicy_binding" "tf_binding" {
 	depends_on = [citrixadc_vpnvserver_icapolicy_binding.tf_binding]
 }
 `
+
+const testAccVpnvserver_icapolicy_binding_upgrade_basic = `
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserverexample"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_icapolicy_binding" "tf_binding" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_icapolicy.tf_icapolicy.name
+		priority  = 30
+		bindpoint = "AAA_RESPONSE"
+	}
+`
+
+// TestAccVpnvserver_icapolicy_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (legacy comma-joined id "name,policy") is transparently
+// upgraded by the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0; step 2 refreshes/plans the same config through the current
+// Framework provider, whose Read parses the legacy id and recomputes it to the new
+// "name:<v>,policy:<v>" canonical format (SetAttrFromGet).
+func TestAccVpnvserver_icapolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_icapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_icapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_icapolicy_bindingExist("citrixadc_vpnvserver_icapolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_icapolicy_binding.tf_binding", "id", "tf_vpnvserverexample,tf_icapolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_icapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_icapolicy_bindingExist("citrixadc_vpnvserver_icapolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_icapolicy_binding.tf_binding", "id", "name:tf_vpnvserverexample,policy:tf_icapolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_icapolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_icapolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_icapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_icapolicy_binding_basic},
+			{Config: testAccVpnvserver_icapolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
+		},
+	})
+}

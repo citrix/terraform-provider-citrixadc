@@ -71,6 +71,13 @@ func (r *VpnglobalSslcertkeyBindingResource) Create(ctx context.Context, req res
 
 	// Read the updated state back
 	r.readVpnglobalSslcertkeyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnglobal_sslcertkey_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -90,6 +97,12 @@ func (r *VpnglobalSslcertkeyBindingResource) Read(ctx context.Context, req resou
 
 	r.readVpnglobalSslcertkeyBindingFromApi(ctx, &data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
@@ -115,6 +128,13 @@ func (r *VpnglobalSslcertkeyBindingResource) Update(ctx context.Context, req res
 	tflog.Debug(ctx, "Update is a no-op for vpnglobal_sslcertkey_binding; all attributes are RequiresReplace")
 
 	r.readVpnglobalSslcertkeyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnglobal_sslcertkey_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

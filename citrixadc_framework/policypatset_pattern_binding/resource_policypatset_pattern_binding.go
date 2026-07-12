@@ -73,6 +73,13 @@ func (r *PolicypatsetPatternBindingResource) Create(ctx context.Context, req res
 
 	// Read the updated state back
 	r.readPolicypatsetPatternBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "policypatset_pattern_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -91,6 +98,15 @@ func (r *PolicypatsetPatternBindingResource) Read(ctx context.Context, req resou
 	tflog.Debug(ctx, "Reading policypatset_pattern_binding resource")
 
 	r.readPolicypatsetPatternBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -116,6 +132,13 @@ func (r *PolicypatsetPatternBindingResource) Update(ctx context.Context, req res
 
 	// Read the updated state back
 	r.readPolicypatsetPatternBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "policypatset_pattern_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

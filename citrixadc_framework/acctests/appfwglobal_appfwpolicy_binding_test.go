@@ -261,3 +261,68 @@ func TestAccAppfwglobal_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccAppfwglobal_appfwpolicy_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
+		name        = "tf_appfwpolicy"
+		profilename = citrixadc_appfwprofile.tf_appfwprofile.name
+		rule        = "true"
+	}
+	resource "citrixadc_appfwglobal_appfwpolicy_binding" "tf_binding" {
+		policyname = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		priority   = 30
+		state      = "ENABLED"
+	}
+`
+
+func TestAccAppfwglobal_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwglobal_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwglobal_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwglobal_appfwpolicy_bindingExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "id", "tf_appfwpolicy,REQ_DEFAULT,SYSTEM_GLOBAL"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwglobal_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwglobal_appfwpolicy_bindingExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "id", "policyname:tf_appfwpolicy,type:REQ_DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwglobal_appfwpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwglobal_appfwpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwglobal_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwglobal_appfwpolicy_binding_basic},
+			{Config: testAccAppfwglobal_appfwpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"state"}},
+		},
+	})
+}

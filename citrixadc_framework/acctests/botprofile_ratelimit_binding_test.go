@@ -292,3 +292,87 @@ func TestAccBotprofileRatelimitBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccBotprofile_ratelimit_binding_upgrade_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_ratelimit_binding" "tf_binding" {
+		name                   = citrixadc_botprofile.tf_botprofile.name
+		bot_ratelimit          = "true"
+		bot_rate_limit_type    = "SESSION"
+		bot_rate_limit_enabled = "ON"
+		cookiename             = "name"
+		rate                   = 3
+		timeslice              = 20
+		bot_rate_limit_action  = ["LOG", "DROP"]
+	}
+`
+
+// TestAccBotprofile_ratelimit_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded when
+// the same config is subsequently managed by the current Framework provider. Step 1
+// creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_botprofile,SESSION"). Step 2 refreshes/plans/applies the same config through
+// the Framework provider, exercising ParseIdString on the legacy id; because the
+// Framework recomputes the id on Read (SetAttrFromGet), the id upgrades to the new
+// "key:value" form "name:tf_botprofile,bot_rate_limit_type:SESSION".
+func TestAccBotprofile_ratelimit_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_botprofile_ratelimit_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofile_ratelimit_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccBotprofile_ratelimit_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_ratelimit_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_botprofile,SESSION"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotprofile_ratelimit_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_ratelimit_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_botprofile,bot_rate_limit_type:SESSION"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBotprofile_ratelimit_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_ratelimit_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_ratelimit_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_ratelimit_binding_basic},
+			{Config: testAccBotprofile_ratelimit_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

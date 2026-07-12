@@ -315,3 +315,100 @@ func TestAccLbvserver_appflowpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccLbvserver_appflowpolicy_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// labels as testAccLbvserver_appflowpolicy_binding_basic so it is valid under
+// BOTH the SDK v2 2.2.0 schema and the current framework schema.
+const testAccLbvserver_appflowpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+  depends_on = [ citrixadc_appflowaction.tf_appflowaction ]
+	name      = "tf_appflowpolicy"
+	action    = citrixadc_appflowaction.tf_appflowaction.name
+	rule      = "client.TCP.DSTPORT.EQ(22)"
+}
+resource "citrixadc_appflowaction" "tf_appflowaction" {
+  depends_on = [ citrixadc_appflowcollector.tf_appflowcollector ]
+	name = "test_action"
+	collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+	securityinsight = "ENABLED"
+	botinsight      = "ENABLED"
+	videoanalytics  = "ENABLED"
+}
+resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+	name      = "col1"
+	ipaddress = "192.168.2.2"
+	port      = 80
+}
+
+resource "citrixadc_lbvserver_appflowpolicy_binding" "tf_lbvserver_appflowpolicy_binding" {
+  depends_on  = [citrixadc_appflowpolicy.tf_appflowpolicy, citrixadc_lbvserver.tf_lbvserver]
+	name = citrixadc_lbvserver.tf_lbvserver.name
+	policyname = "tf_appflowpolicy"
+	labelname = citrixadc_lbvserver.tf_lbvserver.name
+	gotopriorityexpression = "END"
+	invoke = true
+	labeltype = "reqvserver"
+	priority = 1
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	name        = "tf_lbvserver"
+	ipv46       = "10.10.10.33"
+	port        = 80
+	servicetype = "HTTP"
+}
+`
+
+// TestAccLbvserver_appflowpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccLbvserver_appflowpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_appflowpolicy_bindingExist("citrixadc_lbvserver_appflowpolicy_binding.tf_lbvserver_appflowpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_appflowpolicy_binding.tf_lbvserver_appflowpolicy_binding", "id", "tf_lbvserver,tf_appflowpolicy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_appflowpolicy_bindingExist("citrixadc_lbvserver_appflowpolicy_binding.tf_lbvserver_appflowpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_appflowpolicy_binding.tf_lbvserver_appflowpolicy_binding", "id", "name:tf_lbvserver,policyname:tf_appflowpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_appflowpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_appflowpolicy_binding.tf_lbvserver_appflowpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_appflowpolicy_binding_basic},
+			{Config: testAccLbvserver_appflowpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"gotopriorityexpression", "invoke", "labelname", "labeltype"}},
+		},
+	})
+}

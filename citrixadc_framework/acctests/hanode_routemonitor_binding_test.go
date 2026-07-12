@@ -78,6 +78,22 @@ func TestAccHanode_routemonitor_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccHanode_routemonitor_binding_import(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	const resAddr = "citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckHanode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccHanode_routemonitor_binding_basic},
+			{Config: testAccHanode_routemonitor_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckHanode_routemonitor_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -228,6 +244,62 @@ func TestAccHanode_routemonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "hanode_id", "0"),
 					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "routemonitor", "10.222.74.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "netmask", "255.255.255.192"),
+				),
+			},
+		},
+	})
+}
+
+// testAccHanode_routemonitor_binding_upgrade_basic reuses the _basic config values.
+// It is valid under BOTH the SDK v2 2.2.0 schema and the current Framework schema
+// because the migration restored the SDK v2 attribute names.
+const testAccHanode_routemonitor_binding_upgrade_basic = `
+
+	resource "citrixadc_hanode_routemonitor_binding" "tf_hanode_routemonitor_binding" {
+		hanode_id = 0
+		routemonitor = "10.222.74.128"
+		netmask = "255.255.255.192"
+	}
+`
+
+// TestAccHanode_routemonitor_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (2.2.0) with the legacy comma-joined id ("0,10.222.74.128") upgrades
+// cleanly through the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0. Step 2 refreshes/plans/applies the SAME config through the current
+// Framework provider, exercising ParseIdString on the legacy id; because the Framework
+// recomputes the id on Read (SetAttrFromGet), the id upgrades to the new key:value form
+// "hanode_id:0,routemonitor:10.222.74.128".
+func TestAccHanode_routemonitor_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	resourceAddr := "citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckHanode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release (writes the legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccHanode_routemonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanode_routemonitor_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "0,10.222.74.128"),
+				),
+			},
+			{
+				// Step 2: refresh/plan/apply the SAME config through the current Framework
+				// provider. Read recomputes the id to the new key:value format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccHanode_routemonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanode_routemonitor_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "hanode_id:0,routemonitor:10.222.74.128"),
 				),
 			},
 		},

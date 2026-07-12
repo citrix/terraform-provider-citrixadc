@@ -239,6 +239,69 @@ func testAccCheckVpnvserver_authenticationloginschemapolicy_bindingDestroy(s *te
 	return nil
 }
 
+const testAccVpnvserver_authenticationloginschemapolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vserver_example"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_authenticationloginschema" "tf_loginschema" {
+		name                    = "tf_loginschema"
+		authenticationschema    = "LoginSchema/SingleAuth.xml"
+		ssocredentials          = "YES"
+		authenticationstrength  = "30"
+		passwordcredentialindex = "10"
+	}
+	resource "citrixadc_authenticationloginschemapolicy" "tf_loginschemapolicy" {
+		name    = "tf_loginschemapolicy"
+		rule    = "true"
+		action  = citrixadc_authenticationloginschema.tf_loginschema.name
+		comment = "samplenew_testing"
+	}
+	resource "citrixadc_vpnvserver_authenticationloginschemapolicy_binding" "tf_bind" {
+		name            = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy          = citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy.name
+		priority        = 80
+		secondary       = "false"
+		groupextraction = "false"
+		bindpoint       = "REQUEST"
+	}
+`
+
+func TestAccVpnvserver_authenticationloginschemapolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationloginschemapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release; state carries the legacy "name,policy" id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationloginschemapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationloginschemapolicy_bindingExist("citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind", "id", "tf_vserver_example,tf_loginschemapolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan/apply the legacy-id state through the current framework provider.
+				// Read re-derives the canonical id to the new "key:value" format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_authenticationloginschemapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationloginschemapolicy_bindingExist("citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind", "id", "name:tf_vserver_example,policy:tf_loginschemapolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpnvserver_authenticationloginschemapolicy_bindingDataSource_basic = `
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vserver_example"
@@ -289,6 +352,19 @@ func TestAccVpnvserver_authenticationloginschemapolicy_bindingDataSource_basic(t
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind", "priority", "80"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationloginschemapolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationloginschemapolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationloginschemapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationloginschemapolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationloginschemapolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "groupextraction", "secondary"}},
 		},
 	})
 }

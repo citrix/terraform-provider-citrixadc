@@ -110,6 +110,19 @@ func TestAccLbvserver_dnspolicy64_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbvserver_dnspolicy64_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_dnspolicy64_binding.tf_lbvserver_dnspolicy64_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_dnspolicy64_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_dnspolicy64_binding_basic},
+			{Config: testAccLbvserver_dnspolicy64_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbvserver_dnspolicy64_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -241,6 +254,70 @@ func testAccCheckLbvserver_dnspolicy64_bindingDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+// testAccLbvserver_dnspolicy64_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// labels as testAccLbvserver_dnspolicy64_binding_basic so it is valid under BOTH
+// the SDK v2 2.2.0 schema and the current framework schema.
+const testAccLbvserver_dnspolicy64_binding_upgrade_basic = `
+
+	resource "citrixadc_dnspolicy64" "dnspolicy64" {
+		name  = "tf_dnspolicy64"
+		rule = "dns.req.question.type.ne(aaaa)"
+		action = "default_DNS64_action"
+	}
+	resource "citrixadc_lbvserver_dnspolicy64_binding" "tf_lbvserver_dnspolicy64_binding" {
+        name = citrixadc_lbvserver.tf_lbvserver.name
+        policyname = citrixadc_dnspolicy64.dnspolicy64.name
+        priority = 1
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "DNS_TCP"
+	}
+`
+
+// TestAccLbvserver_dnspolicy64_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccLbvserver_dnspolicy64_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_dnspolicy64_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_dnspolicy64_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_dnspolicy64_bindingExist("citrixadc_lbvserver_dnspolicy64_binding.tf_lbvserver_dnspolicy64_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_dnspolicy64_binding.tf_lbvserver_dnspolicy64_binding", "id", "tf_lbvserver,tf_dnspolicy64"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_dnspolicy64_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_dnspolicy64_bindingExist("citrixadc_lbvserver_dnspolicy64_binding.tf_lbvserver_dnspolicy64_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_dnspolicy64_binding.tf_lbvserver_dnspolicy64_binding", "id", "name:tf_lbvserver,policyname:tf_dnspolicy64"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccLbvserver_dnspolicy64_bindingDataSource_basic(t *testing.T) {

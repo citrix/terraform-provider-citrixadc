@@ -90,6 +90,19 @@ func TestAccDnsglobal_dnspolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccDnsglobal_dnspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsglobal_dnspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnsglobal_dnspolicy_binding_basic},
+			{Config: testAccDnsglobal_dnspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckDnsglobal_dnspolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -225,6 +238,55 @@ func TestAccDnsglobal_dnspolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "policyname", "policy_A"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "type", "REQ_DEFAULT"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "priority", "30"),
+				),
+			},
+		},
+	})
+}
+
+const testAccDnsglobal_dnspolicy_binding_upgrade_basic = `
+
+resource "citrixadc_dnspolicy" "dnspolicy" {
+	name = "policy_A"
+	rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
+	drop = "YES"
+}
+resource "citrixadc_dnsglobal_dnspolicy_binding" "dnsglobal_dnspolicy_binding" {
+	policyname = citrixadc_dnspolicy.dnspolicy.name
+	priority   = 30
+	type       = "REQ_DEFAULT"
+}
+`
+
+func TestAccDnsglobal_dnspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnsglobal_dnspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccDnsglobal_dnspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsglobal_dnspolicy_bindingExist("citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "id", "policy_A"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnsglobal_dnspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsglobal_dnspolicy_bindingExist("citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "id", "policyname:policy_A,type:REQ_DEFAULT"),
 				),
 			},
 		},

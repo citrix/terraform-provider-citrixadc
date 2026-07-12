@@ -105,6 +105,19 @@ func TestAccIcaglobal_icapolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccIcaglobal_icapolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcaglobal_icapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIcaglobal_icapolicy_binding_basic},
+			{Config: testAccIcaglobal_icapolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckIcaglobal_icapolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -241,6 +254,61 @@ func TestAccIcaglobal_icapolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "policyname", "tf_icapolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "type", "ICA_REQ_DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
+const testAccIcaglobal_icapolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
+
+	resource "citrixadc_icaglobal_icapolicy_binding" "tf_icaglobal_icapolicy_binding" {
+		policyname = citrixadc_icapolicy.tf_icapolicy.name
+		priority   = 100
+		type       = "ICA_REQ_DEFAULT"
+	}
+`
+
+// TestAccIcaglobal_icapolicy_binding_sdkv2StateUpgrade verifies that a binding created
+// with the last SDK v2 release (legacy plain-policyname id) is refreshed and upgraded to
+// the new key:value id format by the current Framework provider.
+func TestAccIcaglobal_icapolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIcaglobal_icapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release. State is written with the legacy id (policyname).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccIcaglobal_icapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcaglobal_icapolicy_bindingExist("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "id", "tf_icapolicy"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current (Framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the id to the new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIcaglobal_icapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcaglobal_icapolicy_bindingExist("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "id", "policyname:tf_icapolicy,type:ICA_REQ_DEFAULT"),
 				),
 			},
 		},

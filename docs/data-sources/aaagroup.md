@@ -17,10 +17,6 @@ data "citrixadc_aaagroup" "tf_aaagroup" {
 output "weight" {
   value = data.citrixadc_aaagroup.tf_aaagroup.weight
 }
-
-output "loggedin" {
-  value = data.citrixadc_aaagroup.tf_aaagroup.loggedin
-}
 ```
 
 
@@ -33,7 +29,6 @@ output "loggedin" {
 In addition to the arguments, the following attributes are available:
 
 * `weight` - Weight of the group.
-* `loggedin` - Shows whether the group is currently logged in.
 * `id` - The id of the aaagroup. It has the same value as the `groupname` attribute.
 
 

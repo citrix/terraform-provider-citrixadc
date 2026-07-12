@@ -263,6 +263,68 @@ func testAccCheckVpnvserver_vpntrafficpolicy_bindingDestroy(s *terraform.State) 
 	return nil
 }
 
+const testAccVpnvserver_vpntrafficpolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_examplevserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta  = "ON"
+		hdx  = "ON"
+		name = "Testingaction"
+		qual = "tcp"
+		sso  = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
+	resource "citrixadc_vpnvserver_vpntrafficpolicy_binding" "tf_bind" {
+		name                   = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy                 = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		priority               = 200
+		bindpoint              = "REQUEST"
+		gotopriorityexpression = "NEXT"
+	}
+`
+
+func TestAccVpnvserver_vpntrafficpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_vpntrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the resource with the last SDK v2 release (2.2.0),
+				// which writes state with the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_vpntrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_vpntrafficpolicy_bindingExist("citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind", "id", "tf_examplevserver,tf_vpntrafficpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan/apply the legacy-id state through the current
+				// framework provider. Read recomputes the id to the new key:value format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_vpntrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_vpntrafficpolicy_bindingExist("citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind", "id", "name:tf_examplevserver,policy:tf_vpntrafficpolicy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnvserver_vpntrafficpolicy_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -276,6 +338,19 @@ func TestAccVpnvserver_vpntrafficpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind", "priority", "200"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_vpntrafficpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_vpntrafficpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_vpntrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_vpntrafficpolicy_binding_basic},
+			{Config: testAccVpnvserver_vpntrafficpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "gotopriorityexpression", "priority"}},
 		},
 	})
 }

@@ -118,7 +118,7 @@ func (d *GslbservicegroupGslbservicegroupmemberBindingDataSource) Read(ctx conte
 		return
 	}
 
-	gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

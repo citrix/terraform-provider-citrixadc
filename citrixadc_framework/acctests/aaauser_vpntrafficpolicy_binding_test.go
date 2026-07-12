@@ -130,6 +130,19 @@ func TestAccAaauser_vpntrafficpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaauser_vpntrafficpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_vpntrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaauser_vpntrafficpolicy_binding_basic},
+			{Config: testAccAaauser_vpntrafficpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
+		},
+	})
+}
+
 func testAccCheckAaauser_vpntrafficpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -261,6 +274,67 @@ func testAccCheckAaauser_vpntrafficpolicy_bindingDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+const testAccAaauser_vpntrafficpolicy_binding_upgrade_basic = `
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta        = "ON"
+		hdx        = "ON"
+		name       = "Testingaction"
+		qual       = "tcp"
+		sso        = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
+
+	resource "citrixadc_aaauser_vpntrafficpolicy_binding" "tf_aaauser_vpntrafficpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy    = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		type     = "REQUEST"
+		priority  = 100
+	}
+`
+
+func TestAccAaauser_vpntrafficpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaauser_vpntrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id "username,policy".
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaauser_vpntrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_vpntrafficpolicy_bindingExist("citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding", "id", "user1,tf_vpntrafficpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaauser_vpntrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_vpntrafficpolicy_bindingExist("citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding", "id", "policy:tf_vpntrafficpolicy,username:user1"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccAaauser_vpntrafficpolicy_bindingDataSource_basic(t *testing.T) {

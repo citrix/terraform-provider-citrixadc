@@ -94,6 +94,73 @@ func TestAccBotprofile_ipreputation_binding_basic(t *testing.T) {
 	})
 }
 
+// testAccBotprofile_ipreputation_binding_upgrade_basic reuses the _basic config
+// values. It must be valid under BOTH the SDK v2 2.2.0 schema (step 1) and the
+// current Framework schema (step 2).
+const testAccBotprofile_ipreputation_binding_upgrade_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_ipreputation_binding" "tf_binding" {
+		name              = citrixadc_botprofile.tf_botprofile.name
+		bot_ipreputation  = "true"
+		category          = "BOTNETS"
+		bot_iprep_action  = ["LOG", "REDIRECT"]
+		bot_bind_comment  = "TestingIpreputation"
+		bot_iprep_enabled = "ON"
+		logmessage        = "MessageTesting"
+	}
+`
+
+// TestAccBotprofile_ipreputation_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-joined id) is upgraded in
+// place by the current Framework provider, which recomputes the id to the new
+// key:value format on Read.
+func TestAccBotprofile_ipreputation_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofile_ipreputation_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create with the last SDK v2 release; state stores the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccBotprofile_ipreputation_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_ipreputation_bindingExist("citrixadc_botprofile_ipreputation_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_ipreputation_binding.tf_binding", "id", "tf_botprofile,BOTNETS"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current Framework provider
+			// (exercises ParseIdString on the legacy id); id upgrades to the new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotprofile_ipreputation_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_ipreputation_bindingExist("citrixadc_botprofile_ipreputation_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_ipreputation_binding.tf_binding", "id", "bot_ipreputation:true,category:BOTNETS,name:tf_botprofile"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBotprofile_ipreputation_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -276,6 +343,19 @@ func TestAccBotprofileIpreputationBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_ipreputation_binding.tf_binding", "logmessage", "MessageTesting"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccBotprofile_ipreputation_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_ipreputation_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_ipreputation_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_ipreputation_binding_basic},
+			{Config: testAccBotprofile_ipreputation_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

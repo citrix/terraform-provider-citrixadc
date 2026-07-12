@@ -250,3 +250,76 @@ func TestAccIpset_nsip6_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccIpset_nsip6_binding_upgrade_basic = `
+
+	resource "citrixadc_ipset" "tf_ipset" {
+		name = "tf_ipset"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2003:db8:100::fb/64"
+		type 		= "VIP"
+	}
+
+	resource "citrixadc_ipset_nsip6_binding" "tf_ipset_nsip6_binding" {
+		name      = citrixadc_ipset.tf_ipset.name
+		ipaddress = citrixadc_nsip6.tf_nsip6.ipv6address
+	}
+
+`
+
+// TestAccIpset_nsip6_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (legacy comma-separated ID) is correctly upgraded when the
+// same config is subsequently managed by the current Framework provider. Step 1
+// creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_ipset,2003:db8:100::fb/64"). Step 2 refreshes/plans/applies the same config
+// through the Framework provider, exercising ParseIdString on the legacy id; because
+// the Framework recomputes the id on Read (SetAttrFromGet re-derives data.Id), the
+// id upgrades to the new "key:value" form.
+func TestAccIpset_nsip6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_ipset_nsip6_binding.tf_ipset_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIpset_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccIpset_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpset_nsip6_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_ipset,2003:db8:100::fb/64"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIpset_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpset_nsip6_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "ipaddress:2003%3Adb8%3A100%3A%3Afb%2F64,name:tf_ipset"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIpset_nsip6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_ipset_nsip6_binding.tf_ipset_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpset_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIpset_nsip6_binding_basic},
+			{Config: testAccIpset_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

@@ -292,3 +292,97 @@ func TestAccAppflowpolicylabel_appflowpolicy_bindingDataSource_basic(t *testing.
 		},
 	})
 }
+
+// testAccAppflowpolicylabel_appflowpolicy_binding_upgrade_basic reuses the _basic config
+// (the binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccAppflowpolicylabel_appflowpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_appflowpolicylabel_appflowpolicy_binding" "tf_appflowpolicylabel_appflowpolicy_binding" {
+		labelname  = citrixadc_appflowpolicylabel.tf_appflowpolicylabel.labelname
+		policyname = citrixadc_appflowpolicy.tf_appflowpolicy.name
+		priority   = 30
+	}
+
+	resource "citrixadc_appflowpolicylabel" "tf_appflowpolicylabel" {
+	  labelname       = "tf_policylabel"
+	  policylabeltype = "OTHERTCP"
+	}
+
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+	  name      = "test_policy"
+	  action    = citrixadc_appflowaction.tf_appflowaction.name
+	  rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+	  name = "test_action"
+	  collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+	  securityinsight = "ENABLED"
+	  botinsight      = "ENABLED"
+	  videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+	  name      = "tf_collector"
+	  ipaddress = "192.168.2.2"
+	  port      = 80
+	}
+`
+
+// TestAccAppflowpolicylabel_appflowpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider.
+//
+// Step 1 creates the binding with citrix/citrixadc 2.2.0, which writes the legacy
+// comma-joined id (SDK v2 d.SetId("labelname,policyname") => "tf_policylabel,test_policy").
+// Step 2 refreshes/plans/applies the SAME config through the current Framework provider,
+// exercising ParseIdString on the legacy id. The Framework recomputes the id on Read
+// (appflowpolicylabel_appflowpolicy_bindingSetAttrFromGet), so the id is upgraded to the
+// canonical new key:value format "labelname:tf_policylabel,policyname:test_policy".
+func TestAccAppflowpolicylabel_appflowpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_appflowpolicylabel_appflowpolicy_binding.tf_appflowpolicylabel_appflowpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppflowpolicylabel_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppflowpolicylabel_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowpolicylabel_appflowpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_policylabel,test_policy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read to the canonical new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppflowpolicylabel_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowpolicylabel_appflowpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "labelname:tf_policylabel,policyname:test_policy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppflowpolicylabel_appflowpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appflowpolicylabel_appflowpolicy_binding.tf_appflowpolicylabel_appflowpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicylabel_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppflowpolicylabel_appflowpolicy_binding_basic},
+			{Config: testAccAppflowpolicylabel_appflowpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

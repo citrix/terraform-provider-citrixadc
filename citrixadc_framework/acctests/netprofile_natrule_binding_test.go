@@ -241,3 +241,63 @@ func TestAccNetprofile_natrule_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccNetprofile_natrule_binding_upgrade_basic = `
+	resource "citrixadc_netprofile" "tf_netprofile" {
+		name                   = "tf_netprofile"
+		proxyprotocol          = "ENABLED"
+		proxyprotocoltxversion = "V1"
+	}
+	resource "citrixadc_netprofile_natrule_binding" "tf_binding" {
+		name      = citrixadc_netprofile.tf_netprofile.name
+		natrule   = "10.10.10.10"
+		netmask   = "255.255.255.255"
+		rewriteip = "3.3.3.3"
+	}
+`
+
+func TestAccNetprofile_natrule_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetprofile_natrule_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNetprofile_natrule_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofile_natrule_bindingExist("citrixadc_netprofile_natrule_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netprofile_natrule_binding.tf_binding", "id", "tf_netprofile,10.10.10.10"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNetprofile_natrule_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofile_natrule_bindingExist("citrixadc_netprofile_natrule_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netprofile_natrule_binding.tf_binding", "id", "name:tf_netprofile,natrule:10.10.10.10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetprofile_natrule_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_netprofile_natrule_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofile_natrule_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetprofile_natrule_binding_basic},
+			{Config: testAccNetprofile_natrule_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

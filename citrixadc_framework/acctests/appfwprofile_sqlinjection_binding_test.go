@@ -296,3 +296,73 @@ func TestAccAppfwprofileSqlinjectionBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccAppfwprofile_sqlinjection_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile_sqlinjection_binding" "appfw-szw-bi-test-sqlinject-relax-7" {
+		name                 = citrixadc_appfwprofile.demo_appfw.name
+		sqlinjection         = "data"
+		isautodeployed       = "NOTAUTODEPLOYED"
+		as_scan_location_sql = "FORMFIELD"
+		formactionurl_sql    = "^https://citrix.csg.com/analytics/saw.dll$"
+		as_value_type_sql    = "Keyword"
+		isvalueregex_sql     = "REGEX"
+		as_value_expr_sql    = ".*"
+		state                = "ENABLED"
+		depends_on           = [citrixadc_appfwprofile.demo_appfw]
+	}
+
+	resource "citrixadc_appfwprofile" "demo_appfw" {
+		name = "demo_appfwprofile"
+		type = ["HTML"]
+	}
+`
+
+// TestAccAppfwprofile_sqlinjection_binding_sdkv2StateUpgrade verifies that a
+// resource created with the last SDK v2 release (2.2.0, legacy comma-joined ID)
+// upgrades cleanly when refreshed through the current Framework provider, and
+// that the Framework Read re-derives the canonical new-format (key:value) ID.
+func TestAccAppfwprofile_sqlinjection_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_sqlinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_sqlinjection_binding_basic},
+			{Config: testAccAppfwprofile_sqlinjection_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAppfwprofile_sqlinjection_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_sqlinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy positional ID.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwprofile_sqlinjection_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_sqlinjection_bindingExist("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "id", "demo_appfwprofile,data,^https://citrix.csg.com/analytics/saw.dll$,FORMFIELD,Keyword,.*,ALLOW"),
+				),
+			},
+			// Step 2: refresh/apply the SAME config through the current Framework
+			// provider. Read parses the legacy ID and re-derives the new-format ID.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwprofile_sqlinjection_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_sqlinjection_bindingExist("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "id", "as_scan_location_sql:FORMFIELD,as_value_expr_sql:.%2A,as_value_type_sql:Keyword,formactionurl_sql:%5Ehttps%3A%2F%2Fcitrix.csg.com%2Fanalytics%2Fsaw.dll%24,name:demo_appfwprofile,sqlinjection:data"),
+				),
+			},
+		},
+	})
+}

@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -127,10 +127,12 @@ func testAccCheckGslbservicegroup_lbmonitor_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		servicegroupname := idSlice[0]
-		monitor_name := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "monitor_name"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
+		}
+		servicegroupname := idMap["servicegroupname"]
+		monitor_name := idMap["monitor_name"]
 
 		findParams := service.FindParams{
 			ResourceType:             "gslbservicegroup_lbmonitor_binding",
@@ -169,13 +171,12 @@ func testAccCheckGslbservicegroup_lbmonitor_bindingNotExist(n string, id string)
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"servicegroupname", "monitor_name"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		servicegroupname := idSlice[0]
-		monitor_name := idSlice[1]
+		servicegroupname := idMap["servicegroupname"]
+		monitor_name := idMap["monitor_name"]
 
 		findParams := service.FindParams{
 			ResourceType:             "gslbservicegroup_lbmonitor_binding",
@@ -280,6 +281,98 @@ func TestAccGslbservicegroup_lbmonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding", "weight", "20"),
 				),
 			},
+		},
+	})
+}
+
+// testAccGslbservicegroup_lbmonitor_binding_upgrade_basic reuses the _basic config
+// (the binding plus all prerequisite resources). It is valid under BOTH the SDK v2
+// 2.2.0 schema and the current provider schema because it uses the SDK v2 attribute
+// names that the migration restored.
+const testAccGslbservicegroup_lbmonitor_binding_upgrade_basic = `
+
+resource "citrixadc_gslbservicegroup_lbmonitor_binding" "tf_gslbservicegroup_lbmonitor_binding" {
+	weight           = 20
+	servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
+	monitor_name     = citrixadc_lbmonitor.tfmonitor1.monitorname
+}
+
+resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+	servicegroupname = "test_gslbvservicegroup"
+	servicetype      = "HTTP"
+	cip              = "DISABLED"
+	healthmonitor    = "NO"
+	sitename         = citrixadc_gslbsite.site_local.sitename
+}
+
+resource "citrixadc_gslbsite" "site_local" {
+	sitename        = "Site-Local"
+	siteipaddress   = "172.31.96.234"
+	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
+}
+
+resource "citrixadc_lbmonitor" "tfmonitor1" {
+	monitorname = "tf_monitor"
+	type        = "HTTP"
+}
+`
+
+// TestAccGslbservicegroup_lbmonitor_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated id) is correctly read
+// and reconciled when the same config is subsequently managed by the current
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0, which writes the
+// legacy id "test_gslbvservicegroup,tf_monitor". Step 2 refreshes/plans/applies the
+// SAME config through the current provider.
+//
+// NOTE: on this branch the citrixadc_gslbservicegroup_lbmonitor_binding RESOURCE is
+// still served by the SDK v2 provider (only the datasource is registered in the
+// Framework provider; the Framework resource stub is not wired into Resources()).
+// The SDK v2 Read does not recompute the id, so the id remains the legacy value after
+// the step-2 refresh; step 2 therefore asserts the Exist helper only (the "id
+// recompute on Read" behavior does not apply to this resource).
+func TestAccGslbservicegroup_lbmonitor_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbservicegroup_lbmonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccGslbservicegroup_lbmonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservicegroup_lbmonitor_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "test_gslbvservicegroup,tf_monitor"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current provider,
+			// exercising the read of the legacy-id state.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbservicegroup_lbmonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservicegroup_lbmonitor_bindingExist(resourceAddr, nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGslbservicegroup_lbmonitor_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservicegroup_lbmonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbservicegroup_lbmonitor_binding_basic},
+			{Config: testAccGslbservicegroup_lbmonitor_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

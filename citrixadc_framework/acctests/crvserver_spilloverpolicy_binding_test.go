@@ -281,3 +281,91 @@ func TestAcccrvserver_spilloverpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccCrvserver_spilloverpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccCrvserver_spilloverpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+
+	resource "citrixadc_crvserver_spilloverpolicy_binding" "crvserver_spilloverpolicy_binding" {
+		name                   = citrixadc_crvserver.crvserver.name
+		policyname             = citrixadc_spilloverpolicy.tf_spilloverpolicy.name
+		bindpoint              = "REQUEST"
+		gotopriorityexpression = "END"
+		invoke                 = false
+		priority               = 1
+	}
+`
+
+// TestAccCrvserver_spilloverpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "my_vserver,tf_spilloverpolicy"). Step 2 refreshes/plans/applies the
+// same config through the Framework provider, exercising ParseIdString on the legacy
+// id; because the Framework recomputes the id on Read (SetAttrFromGet), the id
+// upgrades to the new "key:value" form.
+func TestAccCrvserver_spilloverpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_crvserver_spilloverpolicy_binding.crvserver_spilloverpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_spilloverpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCrvserver_spilloverpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_spilloverpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "my_vserver,tf_spilloverpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrvserver_spilloverpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_spilloverpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:my_vserver,policyname:tf_spilloverpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_spilloverpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_spilloverpolicy_binding.crvserver_spilloverpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_spilloverpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_spilloverpolicy_binding_basic},
+			{Config: testAccCrvserver_spilloverpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"invoke"}},
+		},
+	})
+}

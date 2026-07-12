@@ -69,6 +69,52 @@ func TestAccVpnglobal_vpnnexthopserver_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccVpnglobal_vpnnexthopserver_binding_upgrade_basic = `
+
+	resource "citrixadc_vpnnexthopserver" "tf_vpnnexthopserver" {
+		name        = "tf_vpnnexthopserver"
+		nexthopip   = "2.6.1.5"
+		nexthopport = "200"
+	}
+	resource "citrixadc_vpnglobal_vpnnexthopserver_binding" "tf_bind" {
+		nexthopserver = citrixadc_vpnnexthopserver.tf_vpnnexthopserver.name
+	}
+`
+
+func TestAccVpnglobal_vpnnexthopserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_vpnnexthopserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release, writing state with the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_vpnnexthopserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnnexthopserver_bindingExist("citrixadc_vpnglobal_vpnnexthopserver_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnnexthopserver_binding.tf_bind", "id", "tf_vpnnexthopserver"),
+				),
+			},
+			// Step 2: Refresh/apply the legacy-id state through the current (framework) provider,
+			// exercising ParseIdString on the legacy id. The framework recomputes the id to the
+			// canonical new format on Read (single unique attribute => plain value).
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_vpnnexthopserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnnexthopserver_bindingExist("citrixadc_vpnglobal_vpnnexthopserver_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnnexthopserver_binding.tf_bind", "id", "tf_vpnnexthopserver"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVpnglobal_vpnnexthopserver_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -215,6 +261,19 @@ func TestAccVpnglobal_vpnnexthopserver_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnnexthopserver_binding.tf_bind", "nexthopserver", "tf_vpnnexthopserver"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpnnexthopserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnnexthopserver_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnnexthopserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_vpnnexthopserver_binding_basic},
+			{Config: testAccVpnglobal_vpnnexthopserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

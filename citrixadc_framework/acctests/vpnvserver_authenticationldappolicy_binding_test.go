@@ -260,6 +260,75 @@ const testAccVpnvserver_authenticationldappolicy_bindingDataSource_basic = `
 	}
 `
 
+// Config for the SDK v2 -> Framework state-upgrade test. Reuses the _basic
+// resource block and prerequisites; valid under both the SDK v2 2.2.0 schema
+// and the current Framework schema.
+const testAccVpnvserver_authenticationldappolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "tf_ldapaction"
+		serverip      = "5.5.5.5"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_ldappolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "vpn_vserver"
+		servicetype = "SSL"
+	}
+	resource "citrixadc_vpnvserver_authenticationldappolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
+		priority  = 20
+	}
+`
+
+// TestAccVpnvserver_authenticationldappolicy_binding_sdkv2StateUpgrade verifies that
+// state written by the last SDK v2 release (legacy comma-joined id "name,policy")
+// is transparently upgraded by the current Framework provider. Step 1 creates the
+// binding with citrix/citrixadc 2.2.0; step 2 refreshes/plans the same config through
+// the current Framework provider, whose Read parses the legacy id and recomputes it
+// to the new "name:<v>,policy:<v>" canonical format (SetAttrFromGet).
+func TestAccVpnvserver_authenticationldappolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationldappolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationldappolicy_bindingExist("citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "id", "vpn_vserver,tf_ldappolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_authenticationldappolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationldappolicy_bindingExist("citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "id", "name:vpn_vserver,policy:tf_ldappolicy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnvserver_authenticationldappolicy_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -274,6 +343,19 @@ func TestAccVpnvserver_authenticationldappolicy_bindingDataSource_basic(t *testi
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "priority", "20"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationldappolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationldappolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationldappolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

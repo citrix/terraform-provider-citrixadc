@@ -52,7 +52,7 @@ func (d *SslserviceEcccurveBindingDataSource) Read(ctx context.Context, req data
 	findParams := service.FindParams{
 		ResourceType:             service.Sslservice_ecccurve_binding.Type(),
 		ResourceName:             servicename_Name,
-		ResourceMissingErrorCode: 258,
+		ResourceMissingErrorCode: 463,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {

@@ -77,6 +77,13 @@ func (r *AppfwprofileStarturlBindingResource) Create(ctx context.Context, req re
 
 	// Read the updated state back
 	r.readAppfwprofileStarturlBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "appfwprofile_starturl_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -95,6 +102,15 @@ func (r *AppfwprofileStarturlBindingResource) Read(ctx context.Context, req reso
 	tflog.Debug(ctx, "Reading appfwprofile_starturl_binding resource")
 
 	r.readAppfwprofileStarturlBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -138,6 +154,13 @@ func (r *AppfwprofileStarturlBindingResource) Update(ctx context.Context, req re
 
 	// Read the updated state back
 	r.readAppfwprofileStarturlBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "appfwprofile_starturl_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -173,11 +196,6 @@ func (r *AppfwprofileStarturlBindingResource) Delete(ctx context.Context, req re
 	args := make([]string, 0)
 	if val, ok := idMap["starturl"]; ok && val != "" {
 		args = append(args, fmt.Sprintf("starturl:%s", url.QueryEscape(val)))
-	}
-	// ruletype is part of the binding's identity when set; include it in the
-	// delete args (URL-encoded) so the correct rule is removed.
-	if !data.Ruletype.IsNull() && data.Ruletype.ValueString() != "" {
-		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(data.Ruletype.ValueString())))
 	}
 
 	err = r.client.DeleteResourceWithArgs(service.Appfwprofile_starturl_binding.Type(), name_value, args)
@@ -220,7 +238,9 @@ func (r *AppfwprofileStarturlBindingResource) readAppfwprofileStarturlBindingFro
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "appfwprofile_starturl_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -252,7 +272,7 @@ func (r *AppfwprofileStarturlBindingResource) readAppfwprofileStarturlBindingFro
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("appfwprofile_starturl_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

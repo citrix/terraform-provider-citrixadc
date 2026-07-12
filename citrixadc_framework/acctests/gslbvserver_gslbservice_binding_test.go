@@ -119,6 +119,19 @@ func TestAccGslbvserver_gslbservice_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccGslbvserver_gslbservice_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserver_gslbservice_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbvserver_gslbservice_binding_basic},
+			{Config: testAccGslbvserver_gslbservice_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckGslbvserver_gslbservice_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -307,6 +320,79 @@ func TestAccGslbvserver_gslbservice_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", "name", "gslb_vserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", "servicename", "gslb1vservice"),
+				),
+			},
+		},
+	})
+}
+
+const testAccGslbvserver_gslbservice_binding_upgrade_basic = `
+
+resource "citrixadc_gslbvserver_gslbservice_binding" "tf_gslbvserver_gslbservice_binding"{
+	name = citrixadc_gslbvserver.tf_gslbvserver.name
+	servicename = citrixadc_gslbservice.gslb_svc1.servicename
+	}
+  resource "citrixadc_gslbsite" "site_local" {
+	sitename        = "Site-Local"
+	siteipaddress   = "172.31.96.234"
+	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
+	}
+
+  resource "citrixadc_gslbservice" "gslb_svc1" {
+	ip          = "172.16.1.121"
+	port        = "80"
+	servicename = "gslb1vservice"
+	servicetype = "HTTP"
+	sitename    = citrixadc_gslbsite.site_local.sitename
+	}
+
+  resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+	dnsrecordtype = "A"
+	name          = "gslb_vserver"
+	servicetype   = "HTTP"
+	domain {
+	  domainname = "www.fooco.co"
+	  ttl        = "60"
+	}
+	domain {
+	  domainname = "www.barco.com"
+	  ttl        = "65"
+	}
+	}
+
+
+`
+
+func TestAccGslbvserver_gslbservice_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbvserver_gslbservice_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccGslbvserver_gslbservice_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_gslbservice_bindingExist("citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", "id", "gslb_vserver,gslb1vservice"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbvserver_gslbservice_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_gslbservice_bindingExist("citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", "id", "name:gslb_vserver,servicename:gslb1vservice"),
 				),
 			},
 		},

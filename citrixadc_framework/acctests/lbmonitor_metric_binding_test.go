@@ -207,3 +207,84 @@ func TestAccLbmonitor_metric_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccLbmonitor_metric_binding_upgrade_basic reuses the working _basic config values
+// (prerequisite lbmetrictable + lbmetrictable_metric_binding + lbmonitor plus the binding).
+// It must be valid under BOTH the SDK v2 2.2.0 schema (step 1) and the current provider
+// schema (step 2), so it uses the SDK v2 attribute names.
+const testAccLbmonitor_metric_binding_upgrade_basic = `
+
+resource "citrixadc_lbmetrictable" "tab1" {
+	metrictable = "tab1"
+	}
+
+resource "citrixadc_lbmetrictable_metric_binding" "tf_bind" {
+	metric      = "metric1"
+	metrictable = citrixadc_lbmetrictable.tab1.metrictable
+	snmpoid     = "1.3.6.1.4.1.5951.4.1.1.8.0"
+	}
+resource "citrixadc_lbmonitor" "tfmonitor1" {
+  monitorname = "tf-monitor1"
+  type        = "LOAD"
+  metrictable = citrixadc_lbmetrictable.tab1.metrictable
+}
+
+resource citrixadc_lbmonitor_metric_binding tf_acclbmonitor_metric_binding {
+	monitorname = citrixadc_lbmonitor.tfmonitor1.monitorname
+	metric = citrixadc_lbmetrictable_metric_binding.tf_bind.metric
+	metricthreshold = 100
+	}
+`
+
+// TestAccLbmonitor_metric_binding_sdkv2StateUpgrade creates the binding with the last SDK v2
+// provider release (2.2.0) — which writes state with the legacy comma-joined id
+// (monitorname,metric) — then refreshes/applies that legacy-id state through the current
+// framework provider. Step 2's Read exercises ParseIdString on the legacy id and
+// SetAttrFromGet recomputes the id into the new key:value form (metric:...,monitorname:...).
+func TestAccLbmonitor_metric_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbmonitor_metric_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbmonitor_metric_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitor_metric_bindingExist("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "id", "tf-monitor1,metric1"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current framework
+				// provider. Read exercises ParseIdString on the legacy id and
+				// SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbmonitor_metric_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitor_metric_bindingExist("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "id", "metric:metric1,monitorname:tf-monitor1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbmonitor_metric_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitor_metric_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbmonitor_metric_binding_basic},
+			{Config: testAccLbmonitor_metric_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

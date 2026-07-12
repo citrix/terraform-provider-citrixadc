@@ -17,17 +17,12 @@ data "citrixadc_dbuser" "tf_dbuser_ds" {
 output "username" {
   value = data.citrixadc_dbuser.tf_dbuser_ds.username
 }
-
-output "loggedin" {
-  value = data.citrixadc_dbuser.tf_dbuser_ds.loggedin
-}
 ```
 
 
 ## Argument Reference
 
 * `username` - (Required) Name of the database user. Must be the same as the user name specified in the database.
-* `loggedin` - (Optional) Display the names of all database users currently logged on to the Citrix ADC.
 
 
 ## Attribute Reference

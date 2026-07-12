@@ -555,3 +555,91 @@ func TestAccSslservice_sslcertkey_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccSslservice_sslcertkey_binding_upgrade_basic reuses the _basic config
+// values (certkey/lbvserver/service + the binding). It is valid under BOTH the
+// last SDK v2 release (2.2.0) schema and the current Framework schema. crlcheck
+// is set explicitly so the API echoes it back, making the recomputed new-format
+// id fully deterministic.
+const testAccSslservice_sslcertkey_binding_upgrade_basic = `
+resource "citrixadc_sslcertkey" "tf_certkey" {
+	certkey = "tf_certkey"
+	cert = "/nsconfig/ssl/ns-root.cert"
+	key = "/nsconfig/ssl/ns-root.key"
+	notificationperiod = 40
+	expirymonitor = "ENABLED"
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	ipv46       = "10.10.10.44"
+	name        = "tf_lbvserver"
+	port        = 443
+	servicetype = "SSL"
+	sslprofile  = "ns_default_ssl_profile_frontend"
+}
+
+resource "citrixadc_service" "tf_service" {
+	name = "tf_service"
+	servicetype = "SSL"
+	port = 443
+	lbvserver = citrixadc_lbvserver.tf_lbvserver.name
+	ip = "10.77.33.22"
+	depends_on = [citrixadc_sslcertkey.tf_certkey]
+}
+
+resource "citrixadc_sslservice_sslcertkey_binding" "tf_sslservice_sslcertkey_binding" {
+	certkeyname = citrixadc_sslcertkey.tf_certkey.certkey
+	servicename = citrixadc_service.tf_service.name
+	ca = true
+	crlcheck = "Mandatory"
+}
+`
+
+func TestAccSslservice_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslservice_sslcertkey_bindingPreChecks(t) },
+		CheckDestroy: testAccCheckSslservice_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id
+				// (servicename,certkeyname,snicert,ca).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSslservice_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservice_sslcertkey_bindingExist("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "id", "tf_service,tf_certkey,false,true"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslservice_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservice_sslcertkey_bindingExist("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "id", "ca:true,certkeyname:tf_certkey,crlcheck:Mandatory,servicename:tf_service,snicert:false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslservice_sslcertkey_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslservice_sslcertkey_bindingPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservice_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslservice_sslcertkey_binding_basic_step1},
+			{Config: testAccSslservice_sslcertkey_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

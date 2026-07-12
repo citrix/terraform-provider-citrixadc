@@ -260,3 +260,73 @@ func TestAccAuthenticationvserverResponderpolicyBindingDataSource_basic(t *testi
 		},
 	})
 }
+
+const testAccAuthenticationvserver_responderpolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_responderpolicy" "tf_responder_policy" {
+		name   = "tf_responder_policy"
+		action = "NOOP"
+		rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+	}
+	resource "citrixadc_authenticationvserver_responderpolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_responderpolicy.tf_responder_policy.name
+		priority  = 200
+		bindpoint = "REQUEST"
+	}
+`
+
+func TestAccAuthenticationvserver_responderpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_responderpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_responderpolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_responderpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_responderpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 provider release (writes the legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAuthenticationvserver_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_responderpolicy_bindingExist("citrixadc_authenticationvserver_responderpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_responderpolicy_binding.tf_bind", "id", "tf_authenticationvserver,tf_responder_policy"),
+				),
+			},
+			{
+				// Step 2: same config through the current framework provider; the legacy-id
+				// state is refreshed through Read (exercising ParseIdString on the legacy id)
+				// and the id is re-derived to the resource's canonical format. For this
+				// resource both Create and SetAttrFromGet build the id as "name,policy",
+				// so the upgraded id stays the comma composite.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationvserver_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_responderpolicy_bindingExist("citrixadc_authenticationvserver_responderpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_responderpolicy_binding.tf_bind", "id", "tf_authenticationvserver,tf_responder_policy"),
+				),
+			},
+		},
+	})
+}

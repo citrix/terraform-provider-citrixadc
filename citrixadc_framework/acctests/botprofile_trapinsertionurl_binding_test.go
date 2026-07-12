@@ -92,6 +92,19 @@ func TestAccBotprofile_trapinsertionurl_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccBotprofile_trapinsertionurl_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_trapinsertionurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_trapinsertionurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_trapinsertionurl_binding_basic},
+			{Config: testAccBotprofile_trapinsertionurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckBotprofile_trapinsertionurl_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -273,6 +286,73 @@ func TestAccbotprofile_trapinsertionurl_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_trapinsertionurl_binding.tf_binding", "bot_trap_url", "www.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_trapinsertionurl_binding.tf_binding", "bot_bind_comment", "testing"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_trapinsertionurl_binding.tf_binding", "bot_trap_url_insertion_enabled", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccBotprofile_trapinsertionurl_binding_upgrade_basic reuses the _basic config
+// values. It must be valid under BOTH the last SDK v2 release (2.2.0) schema and the
+// current Framework schema, so it uses the SDK v2 attribute names (restored by the
+// migration).
+const testAccBotprofile_trapinsertionurl_binding_upgrade_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_trapinsertionurl_binding" "tf_binding" {
+		name                           = citrixadc_botprofile.tf_botprofile.name
+		trapinsertionurl               = "true"
+		bot_trap_url                   = "www.example.com"
+		bot_bind_comment               = "testing"
+		bot_trap_url_insertion_enabled = "OFF"
+	}
+`
+
+// TestAccBotprofile_trapinsertionurl_binding_sdkv2StateUpgrade verifies that a resource
+// created with the last SDK v2 release (2.2.0, legacy comma-join ID) is upgraded in-place
+// by the current Framework provider: the Framework Read re-derives the canonical
+// key:value ID (SetAttrFromGet) without recreating the binding.
+func TestAccBotprofile_trapinsertionurl_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofile_trapinsertionurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy id "name,bot_trap_url".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccBotprofile_trapinsertionurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_trapinsertionurl_bindingExist("citrixadc_botprofile_trapinsertionurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_trapinsertionurl_binding.tf_binding", "id", "tf_botprofile,www.example.com"),
+				),
+			},
+			// Step 2: same config through the current Framework provider. Read runs
+			// ParseIdString on the legacy id and SetAttrFromGet recomputes the id into
+			// the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotprofile_trapinsertionurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_trapinsertionurl_bindingExist("citrixadc_botprofile_trapinsertionurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_trapinsertionurl_binding.tf_binding", "id", "bot_trap_url:www.example.com,name:tf_botprofile,trapinsertionurl:true"),
 				),
 			},
 		},

@@ -76,6 +76,13 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Create(ctx context.C
 
 	// Read the updated state back
 	r.readAuditsyslogglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "auditsyslogglobal_auditsyslogpolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,6 +101,15 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Read(ctx context.Con
 	tflog.Debug(ctx, "Reading auditsyslogglobal_auditsyslogpolicy_binding resource")
 
 	r.readAuditsyslogglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,6 +153,13 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Update(ctx context.C
 
 	// Read the updated state back
 	r.readAuditsyslogglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "auditsyslogglobal_auditsyslogpolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -162,8 +185,10 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Delete(ctx context.C
 	}
 
 	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["globalbindtype"]; ok && val != "" {
-		argsMap["globalbindtype"] = val
+	if !data.Globalbindtype.IsNull() && !data.Globalbindtype.IsUnknown() && data.Globalbindtype.ValueString() != "" {
+		argsMap["globalbindtype"] = data.Globalbindtype.ValueString()
+	} else {
+		argsMap["globalbindtype"] = "SYSTEM_GLOBAL"
 	}
 	if val, ok := idMap["policyname"]; ok && val != "" {
 		argsMap["policyname"] = val
@@ -200,9 +225,10 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) readAuditsysloggloba
 		return
 	}
 
-	// Resource is missing
+	// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+	// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "auditsyslogglobal_auditsyslogpolicy_binding returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -212,6 +238,7 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) readAuditsysloggloba
 		match := true
 
 		// Check globalbindtype
+		// Backward-compat: legacy SDK v2 id omits "globalbindtype" while NITRO always returns it on the record, so do not disqualify a record that carries it when the parsed id lacks it.
 		if idVal, ok := idMap["globalbindtype"]; ok {
 			if val, ok := v["globalbindtype"].(string); ok {
 				if val != idVal {
@@ -222,9 +249,6 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) readAuditsysloggloba
 				match = false
 				continue
 			}
-		} else if _, ok := v["globalbindtype"].(string); ok {
-			match = false
-			continue
 		}
 
 		// Check policyname
@@ -249,9 +273,9 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) readAuditsysloggloba
 		}
 	}
 
-	// Resource is missing
+	// Binding not present in the returned set: signal removal via a null Id (see above).
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("auditsyslogglobal_auditsyslogpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

@@ -110,6 +110,19 @@ func TestAccCrvserver_appflowpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCrvserver_appflowpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_appflowpolicy_binding_basic},
+			{Config: testAccCrvserver_appflowpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckCrvserver_appflowpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -295,6 +308,84 @@ func TestAcccrvserver_appflowpolicy_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding", "name", "my_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding", "policyname", "tf_appflowpolicy_ds"),
+				),
+			},
+		},
+	})
+}
+
+// testAcccrvserver_appflowpolicy_binding_upgrade_basic mirrors the _basic config
+// (same resource labels + prerequisites) and must be valid under BOTH the SDK v2
+// 2.2.0 schema and the current Framework schema.
+const testAcccrvserver_appflowpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name = "my_vserver"
+		servicetype = "HTTP"
+		arp = "OFF"
+	}
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name      = "tf_appflowpolicy"
+		action    = citrixadc_appflowaction.tf_appflowaction.name
+		rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name = "test_action"
+		collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "tf_collector"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
+
+	resource "citrixadc_crvserver_appflowpolicy_binding" "crvserver_appflowpolicy_binding" {
+		name = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_appflowpolicy.tf_appflowpolicy.name
+		gotopriorityexpression = "END"
+		labelname = citrixadc_crvserver.crvserver.name
+		invoke = true
+		labeltype = "reqvserver"
+		priority = 1
+	}
+`
+
+// TestAccCrvserver_appflowpolicy_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (legacy comma-separated id) is upgraded in place by the
+// current Framework provider. Step 1 creates the binding with citrix/citrixadc 2.2.0
+// (legacy id "name,policyname"); step 2 refreshes/plans/applies the SAME config through
+// the Framework provider, whose Read re-derives the canonical new-format id
+// ("name:...,policyname:...").
+func TestAccCrvserver_appflowpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release; state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAcccrvserver_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_appflowpolicy_bindingExist("citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding", "id", "my_vserver,tf_appflowpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the same config through the Framework provider,
+			// which upgrades the legacy id to the new key:value format on Read.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAcccrvserver_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_appflowpolicy_bindingExist("citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_appflowpolicy_binding.crvserver_appflowpolicy_binding", "id", "name:my_vserver,policyname:tf_appflowpolicy"),
 				),
 			},
 		},

@@ -92,6 +92,56 @@ func TestAccFilterglobal_filterpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccFilterglobal_filterpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("filterpolicy is not supported in 13.1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckFilterglobal_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the binding with the last SDK v2 release (v2.2.0),
+				// which writes state using the legacy single-key ID format (just the policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccFilterglobal_filterpolicy_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterglobal_filterpolicy_bindingExist("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", nil),
+					resource.TestCheckResourceAttr("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", "id", "tf_filterpolicy"),
+				),
+			},
+			{
+				// Step 2: Refresh/apply the legacy-ID state through the current
+				// (Framework) provider. Read parses the legacy ID via ParseIdString
+				// and recomputes the canonical new-format ID.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccFilterglobal_filterpolicy_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterglobal_filterpolicy_bindingExist("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", nil),
+					resource.TestCheckResourceAttr("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", "id", "policyname:tf_filterpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFilterglobal_filterpolicy_binding_import(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	const resAddr = "citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFilterglobal_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccFilterglobal_filterpolicy_binding_basic_step1},
+			{Config: testAccFilterglobal_filterpolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckFilterglobal_filterpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -133,6 +133,19 @@ func TestAccGslbservice_lbmonitor_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccGslbservice_lbmonitor_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservice_lbmonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbservice_lbmonitor_binding_basic},
+			{Config: testAccGslbservice_lbmonitor_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckGslbservice_lbmonitor_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -279,6 +292,70 @@ func TestAccGslbservice_lbmonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "monitor_name", "tf_monitor"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "monstate", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "weight", "20"),
+				),
+			},
+		},
+	})
+}
+
+const testAccGslbservice_lbmonitor_binding_upgrade_basic = `
+resource "citrixadc_gslbservice_lbmonitor_binding" "tf_gslbservice_lbmonitor_binding" {
+	monitor_name = citrixadc_lbmonitor.tfmonitor1.monitorname
+	monstate    = "DISABLED"
+	servicename = citrixadc_gslbservice.tf_gslbservice.servicename
+	weight      = "20"
+	}
+
+  resource "citrixadc_gslbservice" "tf_gslbservice" {
+	ip          = "172.16.1.200"
+	port        = "80"
+	servicename = "tf_gslb1vservice"
+	servicetype = "HTTP"
+	sitename    = citrixadc_gslbsite.tf_gslbsite.sitename
+	}
+
+  resource "citrixadc_gslbsite" "tf_gslbsite" {
+	sitename      = "tf_sitename"
+	siteipaddress = "10.222.70.210"
+	sitepassword  = "password123"
+	}
+
+  resource "citrixadc_lbmonitor" "tfmonitor1" {
+	monitorname = "tf_monitor"
+	type        = "HTTP"
+	}
+
+`
+
+func TestAccGslbservice_lbmonitor_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbservice_lbmonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccGslbservice_lbmonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservice_lbmonitor_bindingExist("citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "id", "tf_gslb1vservice,tf_monitor"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbservice_lbmonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservice_lbmonitor_bindingExist("citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "id", "monitor_name:tf_monitor,servicename:tf_gslb1vservice"),
 				),
 			},
 		},

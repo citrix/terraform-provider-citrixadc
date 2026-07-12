@@ -235,3 +235,73 @@ func TestAcccacheglobal_cachepolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccCacheglobal_cachepolicy_binding_upgrade_basic is valid under BOTH the
+// SDK v2 2.2.0 schema and the current framework schema. It reuses the values from
+// testAccCacheglobal_cachepolicy_binding_basic and keeps the same resource labels so
+// the Exist/Destroy helpers and addresses match.
+const testAccCacheglobal_cachepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_cacheglobal_cachepolicy_binding" "tf_cacheglobal_cachepolicy_binding" {
+		policy   = citrixadc_cachepolicy.tf_cachepolicy.policyname
+		priority = 100
+		type     = "REQ_DEFAULT"
+	}
+`
+
+// TestAccCacheglobal_cachepolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created by the last SDK v2 release (which writes the legacy id "my_cachepolicy" via
+// d.SetId(policy)) is correctly read/refreshed by the current framework provider, which
+// recomputes the id to the new "policy:...,type:..." format on Read (SetAttrFromGet).
+func TestAccCacheglobal_cachepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCacheglobal_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the LAST SDK v2 release from the registry.
+			// State is written with the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCacheglobal_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCacheglobal_cachepolicy_bindingExist("citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "id", "my_cachepolicy"),
+				),
+			},
+			// Step 2: same config through the CURRENT (framework) provider. Terraform
+			// refreshes the legacy-id state (exercising ParseIdString on the legacy id),
+			// and the framework Read recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCacheglobal_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCacheglobal_cachepolicy_bindingExist("citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "id", "policy:my_cachepolicy,type:REQ_DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCacheglobal_cachepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCacheglobal_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCacheglobal_cachepolicy_binding_basic},
+			{Config: testAccCacheglobal_cachepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

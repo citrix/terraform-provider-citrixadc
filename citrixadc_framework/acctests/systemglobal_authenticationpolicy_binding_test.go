@@ -83,6 +83,59 @@ func TestAccSystemglobal_authenticationpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccSystemglobal_authenticationpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_systemglobal_authenticationpolicy_binding" "tf_systemglobal_authenticationpolicy_binding" {
+	policyname = citrixadc_authenticationpolicy.tf_authenticationpolicy.name
+	priority   = 50
+	}
+
+  resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+	name          = "ldapaction"
+	serverip      = "1.2.3.4"
+	serverport    = 8080
+	authtimeout   = 1
+	ldaploginname = "username"
+	}
+  resource "citrixadc_authenticationpolicy" "tf_authenticationpolicy" {
+	name   = "tf_authenticationpolicy"
+	rule   = "true"
+	action = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+`
+
+func TestAccSystemglobal_authenticationpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemglobal_authenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes legacy id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSystemglobal_authenticationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_authenticationpolicy_bindingExist("citrixadc_systemglobal_authenticationpolicy_binding.tf_systemglobal_authenticationpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemglobal_authenticationpolicy_binding.tf_systemglobal_authenticationpolicy_binding", "id", "tf_authenticationpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework provider.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemglobal_authenticationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_authenticationpolicy_bindingExist("citrixadc_systemglobal_authenticationpolicy_binding.tf_systemglobal_authenticationpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemglobal_authenticationpolicy_binding.tf_systemglobal_authenticationpolicy_binding", "id", "tf_authenticationpolicy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSystemglobal_authenticationpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -238,6 +291,19 @@ func TestAccSystemglobal_authenticationpolicy_bindingDataSource(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationpolicy_binding.tf_bind", "priority", "50"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccSystemglobal_authenticationpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_authenticationpolicy_binding.tf_systemglobal_authenticationpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemglobal_authenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemglobal_authenticationpolicy_binding_basic},
+			{Config: testAccSystemglobal_authenticationpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

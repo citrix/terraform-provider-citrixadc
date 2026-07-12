@@ -85,6 +85,19 @@ func TestAccCsvserver_cachepolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_cachepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_cachepolicy_binding.tf_csvserver_cachepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_cachepolicy_binding_basic},
+			{Config: testAccCsvserver_cachepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckCsvserver_cachepolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -259,6 +272,62 @@ func TestAccCsvserver_cachepolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cachepolicy_binding.tf_csvserver_cachepolicy_binding", "policyname", "tf_cachepolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cachepolicy_binding.tf_csvserver_cachepolicy_binding", "priority", "5"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cachepolicy_binding.tf_csvserver_cachepolicy_binding", "bindpoint", "REQUEST"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCsvserver_cachepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "tf_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_csvserver_cachepolicy_binding" "tf_csvserver_cachepolicy_binding" {
+		name 		= citrixadc_csvserver.tf_csvserver.name
+		policyname 	= citrixadc_cachepolicy.tf_cachepolicy.policyname
+		priority 	= 5
+		bindpoint 	= "REQUEST"
+	}
+`
+
+func TestAccCsvserver_cachepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCsvserver_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_cachepolicy_bindingExist("citrixadc_csvserver_cachepolicy_binding.tf_csvserver_cachepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_cachepolicy_binding.tf_csvserver_cachepolicy_binding", "id", "tf_csvserver,tf_cachepolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_cachepolicy_bindingExist("citrixadc_csvserver_cachepolicy_binding.tf_csvserver_cachepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_cachepolicy_binding.tf_csvserver_cachepolicy_binding", "id", "bindpoint:REQUEST,name:tf_csvserver,policyname:tf_cachepolicy"),
 				),
 			},
 		},

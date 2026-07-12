@@ -105,6 +105,19 @@ func TestAccGslbvserver_lbpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccGslbvserver_lbpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver_lbpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserver_lbpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbvserver_lbpolicy_binding_basic},
+			{Config: testAccGslbvserver_lbpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckGslbvserver_lbpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -250,6 +263,67 @@ func TestAccGslbvserver_lbpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_lbpolicy_binding.tf_bind", "name", "tf_gslbvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_lbpolicy_binding.tf_bind", "policyname", "tf_pol"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_lbpolicy_binding.tf_bind", "priority", "10"),
+				),
+			},
+		},
+	})
+}
+
+// testAccGslbvserver_lbpolicy_binding_upgrade_basic reuses the _basic config
+// (participating gslbvserver + lbpolicy plus the binding). It must be valid
+// under both the SDK v2 2.2.0 schema and the current framework schema.
+const testAccGslbvserver_lbpolicy_binding_upgrade_basic = `
+	resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+		name        = "tf_gslbvserver"
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_lbpolicy" "tf_pol" {
+		name   = "tf_pol"
+		rule   = "true"
+		action = "NOLBACTION"
+	}
+
+	resource "citrixadc_gslbvserver_lbpolicy_binding" "tf_bind" {
+		policyname = citrixadc_lbpolicy.tf_pol.name
+		name       = citrixadc_gslbvserver.tf_gslbvserver.name
+		priority   = 10
+	}
+`
+
+// TestAccGslbvserver_lbpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (which stores the legacy comma-separated
+// id "name,policyname") is read/planned/applied cleanly by the current
+// framework provider, and that Read recomputes the id into the new key:value
+// form ("name:...,policyname:...").
+func TestAccGslbvserver_lbpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbvserver_lbpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccGslbvserver_lbpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_lbpolicy_bindingExist("citrixadc_gslbvserver_lbpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver_lbpolicy_binding.tf_bind", "id", "tf_gslbvserver,tf_pol"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbvserver_lbpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_lbpolicy_bindingExist("citrixadc_gslbvserver_lbpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver_lbpolicy_binding.tf_bind", "id", "name:tf_gslbvserver,policyname:tf_pol"),
 				),
 			},
 		},

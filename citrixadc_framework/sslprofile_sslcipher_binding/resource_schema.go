@@ -20,12 +20,10 @@ import (
 
 // SslprofileSslcipherBindingResourceModel describes the resource data model.
 type SslprofileSslcipherBindingResourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	Cipheraliasname types.String `tfsdk:"cipheraliasname"`
-	Ciphername      types.String `tfsdk:"ciphername"`
-	Cipherpriority  types.Int64  `tfsdk:"cipherpriority"`
-	Description     types.String `tfsdk:"description"`
-	Name            types.String `tfsdk:"name"`
+	Id             types.String `tfsdk:"id"`
+	Ciphername     types.String `tfsdk:"ciphername"`
+	Cipherpriority types.Int64  `tfsdk:"cipherpriority"`
+	Name           types.String `tfsdk:"name"`
 }
 
 func (r *SslprofileSslcipherBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -35,14 +33,6 @@ func (r *SslprofileSslcipherBindingResource) Schema(ctx context.Context, req res
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the sslprofile_sslcipher_binding resource.",
-			},
-			"cipheraliasname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Description: "The name of the cipher group/alias/individual cipheri bindings.",
 			},
 			"ciphername": schema.StringAttribute{
 				Required: true,
@@ -58,14 +48,6 @@ func (r *SslprofileSslcipherBindingResource) Schema(ctx context.Context, req res
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "cipher priority",
-			},
-			"description": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Description: "The cipher suite description.",
 			},
 			"name": schema.StringAttribute{
 				Required: true,
@@ -83,17 +65,11 @@ func sslprofile_sslcipher_bindingGetThePayloadFromthePlan(ctx context.Context, d
 
 	// Create API request body from the model
 	sslprofile_sslcipher_binding := ssl.Sslprofilesslcipherbinding{}
-	if !data.Cipheraliasname.IsNull() && !data.Cipheraliasname.IsUnknown() {
-		sslprofile_sslcipher_binding.Cipheraliasname = data.Cipheraliasname.ValueString()
-	}
 	if !data.Ciphername.IsNull() && !data.Ciphername.IsUnknown() {
 		sslprofile_sslcipher_binding.Ciphername = data.Ciphername.ValueString()
 	}
 	if !data.Cipherpriority.IsNull() && !data.Cipherpriority.IsUnknown() {
 		sslprofile_sslcipher_binding.Cipherpriority = utils.IntPtr(int(data.Cipherpriority.ValueInt64()))
-	}
-	if !data.Description.IsNull() && !data.Description.IsUnknown() {
-		sslprofile_sslcipher_binding.Description = data.Description.ValueString()
 	}
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		sslprofile_sslcipher_binding.Name = data.Name.ValueString()
@@ -120,7 +96,6 @@ func sslprofile_sslcipher_bindingSetAttrFromGet(ctx context.Context, data *Sslpr
 	// "cipheraliasname" field; there is no "ciphername" key in the response.
 	// "cipheraliasname" is a Computed read-back output.
 	if val, ok := getResponseData["cipheraliasname"]; ok && val != nil {
-		data.Cipheraliasname = types.StringValue(val.(string))
 		// Preserve the user's "ciphername" input. The SDK v2 resource read
 		// ciphername back from cipheraliasname (d.Set("ciphername", cipheraliasname));
 		// on import (where ciphername is unset) adopt the live value so the
@@ -133,11 +108,6 @@ func sslprofile_sslcipher_bindingSetAttrFromGet(ctx context.Context, data *Sslpr
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cipherpriority = types.Int64Value(intVal)
 		}
-	}
-	if val, ok := getResponseData["description"]; ok && val != nil {
-		data.Description = types.StringValue(val.(string))
-	} else {
-		data.Description = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
@@ -156,12 +126,9 @@ func sslprofile_sslcipher_bindingSetAttrFromGetForDatasource(ctx context.Context
 	tflog.Debug(ctx, "In sslprofile_sslcipher_bindingSetAttrFromGetForDatasource Function")
 
 	if val, ok := getResponseData["cipheraliasname"]; ok && val != nil {
-		data.Cipheraliasname = types.StringValue(val.(string))
 		// The cipher value is returned only as cipheraliasname; mirror it into
 		// ciphername so the datasource exposes the user-facing attribute too.
 		data.Ciphername = types.StringValue(val.(string))
-	} else {
-		data.Cipheraliasname = types.StringNull()
 	}
 	if val, ok := getResponseData["cipherpriority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -169,11 +136,6 @@ func sslprofile_sslcipher_bindingSetAttrFromGetForDatasource(ctx context.Context
 		}
 	} else {
 		data.Cipherpriority = types.Int64Null()
-	}
-	if val, ok := getResponseData["description"]; ok && val != nil {
-		data.Description = types.StringValue(val.(string))
-	} else {
-		data.Description = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))

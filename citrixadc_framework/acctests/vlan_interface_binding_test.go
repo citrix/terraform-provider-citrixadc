@@ -188,6 +188,19 @@ func testAccCheckVlan_interface_bindingNotExist(bindingId string) resource.TestC
 	}
 }
 
+func TestAccVlan_interface_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vlan_interface_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_interface_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVlan_interface_binding_basic_step1},
+			{Config: testAccVlan_interface_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckVlan_interface_bindingDestroy(s *terraform.State) error {
 	// Use the shared utility function to get a configured client
 	client, err := testAccGetFrameworkClient()
@@ -231,6 +244,68 @@ data "citrixadc_vlan_interface_binding" "tf_bind" {
 	depends_on = [citrixadc_vlan_interface_binding.tf_bind]
 }
 `
+
+// testAccVlan_interface_binding_upgrade_basic mirrors the _basic_step1 config
+// (a vlan + an interface bound to it). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current framework schema, so it can be applied with the old
+// provider in step 1 and re-planned with the new provider in step 2 of the
+// state-upgrade test below.
+const testAccVlan_interface_binding_upgrade_basic = `
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid = 50
+    aliasname = "Management VLAN"
+}
+
+resource "citrixadc_vlan_interface_binding" "tf_bind" {
+    vlanid = citrixadc_vlan.tf_vlan.vlanid
+    ifnum = "1/1"
+}
+`
+
+// TestAccVlan_interface_binding_sdkv2StateUpgrade verifies that a binding created
+// by the LAST SDK v2 release (2.2.0) — which writes the legacy comma-joined id
+// "vlanid,ifnum" (e.g. "50,1/1") — is refreshed and re-applied correctly by the
+// CURRENT framework provider. Step 2 exercises ParseIdString on the legacy id
+// during the framework Read.
+//
+// On this branch the framework RECOMPUTES the id on Read (SetAttrFromGet calls
+// vlanInterfaceBindingComposeId, setting data.Id to the canonical new format), so
+// after the step-2 refresh the id becomes "vlanid:50,ifnum:1%2F1".
+func TestAccVlan_interface_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVlan_interface_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVlan_interface_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlan_interface_bindingExist("citrixadc_vlan_interface_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan_interface_binding.tf_bind", "id", "50,1/1"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id) then plans/applies. The framework
+			// recomputes the id to the canonical new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVlan_interface_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlan_interface_bindingExist("citrixadc_vlan_interface_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan_interface_binding.tf_bind", "id", "vlanid:50,ifnum:1%2F1"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccVlan_interface_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

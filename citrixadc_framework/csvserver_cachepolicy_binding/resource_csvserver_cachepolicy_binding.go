@@ -77,6 +77,13 @@ func (r *CsvserverCachepolicyBindingResource) Create(ctx context.Context, req re
 
 	// Read the updated state back
 	r.readCsvserverCachepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "csvserver_cachepolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -95,6 +102,15 @@ func (r *CsvserverCachepolicyBindingResource) Read(ctx context.Context, req reso
 	tflog.Debug(ctx, "Reading csvserver_cachepolicy_binding resource")
 
 	r.readCsvserverCachepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -138,6 +154,13 @@ func (r *CsvserverCachepolicyBindingResource) Update(ctx context.Context, req re
 
 	// Read the updated state back
 	r.readCsvserverCachepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "csvserver_cachepolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -173,6 +196,9 @@ func (r *CsvserverCachepolicyBindingResource) Delete(ctx context.Context, req re
 	}
 	if val, ok := idMap["policyname"]; ok && val != "" {
 		argsMap["policyname"] = val
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() && data.Priority.ValueInt64() != 0 {
+		argsMap["priority"] = fmt.Sprintf("%d", data.Priority.ValueInt64())
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_cachepolicy_binding.Type(), name_value, argsMap)
@@ -215,7 +241,9 @@ func (r *CsvserverCachepolicyBindingResource) readCsvserverCachepolicyBindingFro
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "csvserver_cachepolicy_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -225,6 +253,7 @@ func (r *CsvserverCachepolicyBindingResource) readCsvserverCachepolicyBindingFro
 		match := true
 
 		// Check bindpoint
+		// Backward-compat: legacy SDK v2 id omits bindpoint (name,policyname form), so a GET record carrying a bindpoint must not be disqualified when the id lacks one.
 		if idVal, ok := idMap["bindpoint"]; ok {
 			if val, ok := v["bindpoint"].(string); ok {
 				if val != idVal {
@@ -235,9 +264,6 @@ func (r *CsvserverCachepolicyBindingResource) readCsvserverCachepolicyBindingFro
 				match = false
 				continue
 			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
 		}
 
 		// Check policyname
@@ -263,7 +289,8 @@ func (r *CsvserverCachepolicyBindingResource) readCsvserverCachepolicyBindingFro
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("csvserver_cachepolicy_binding not found with the provided ID attributes"))
+		// Binding not present in the returned set: signal removal via a null Id (see above).
+		data.Id = types.StringNull()
 		return
 	}
 

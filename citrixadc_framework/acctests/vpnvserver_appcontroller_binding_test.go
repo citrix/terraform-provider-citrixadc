@@ -208,6 +208,53 @@ func testAccCheckVpnvserver_appcontroller_bindingDestroy(s *terraform.State) err
 	return nil
 }
 
+const testAccVpnvserver_appcontroller_binding_upgrade_basic = `
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf.citrix.example.com"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_appcontroller_binding" "tf_bind" {
+		name          = citrixadc_vpnvserver.tf_vpnvserver.name
+		appcontroller = "http://www.example.com"
+	}
+`
+
+func TestAccVpnvserver_appcontroller_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_appcontroller_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes the legacy id)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_appcontroller_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_appcontroller_bindingExist("citrixadc_vpnvserver_appcontroller_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appcontroller_binding.tf_bind", "id", "tf.citrix.example.com,http://www.example.com"),
+				),
+			},
+			// Step 2: refresh/apply the legacy-id state through the current (framework) provider.
+			// The framework Read recomputes the id into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_appcontroller_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_appcontroller_bindingExist("citrixadc_vpnvserver_appcontroller_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appcontroller_binding.tf_bind", "id", "appcontroller:http%3A%2F%2Fwww.example.com,name:tf.citrix.example.com"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpnvserver_appcontroller_bindingDataSource_basic = `
 
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
@@ -240,6 +287,19 @@ func TestAccVpnvserver_appcontroller_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appcontroller_binding.tf_bind", "appcontroller", "http://www.example.com"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_appcontroller_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_appcontroller_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_appcontroller_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_appcontroller_binding_basic},
+			{Config: testAccVpnvserver_appcontroller_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

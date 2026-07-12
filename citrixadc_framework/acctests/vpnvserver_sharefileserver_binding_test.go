@@ -88,6 +88,19 @@ func TestAccVpnvserver_sharefileserver_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnvserver_sharefileserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_sharefileserver_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_sharefileserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_sharefileserver_binding_basic},
+			{Config: testAccVpnvserver_sharefileserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckVpnvserver_sharefileserver_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -219,6 +232,59 @@ func testAccCheckVpnvserver_sharefileserver_bindingDestroy(s *terraform.State) e
 	}
 
 	return nil
+}
+
+const testAccVpnvserver_sharefileserver_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_sharefileserver_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		sharefile = "3.3.4.3:90"
+	}
+`
+
+// TestAccVpnvserver_sharefileserver_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-joined id) is transparently
+// upgraded by the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0 (legacy id "name,sharefile"); step 2 refreshes/plans the
+// same config through the current Framework provider, whose Read parses the legacy
+// id and recomputes it to the new "name:<v>,sharefile:<v>" format (SetAttrFromGet).
+func TestAccVpnvserver_sharefileserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_sharefileserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_sharefileserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_sharefileserver_bindingExist("citrixadc_vpnvserver_sharefileserver_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_sharefileserver_binding.tf_bind", "id", "tf_vpnvserver,3.3.4.3:90"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_sharefileserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_sharefileserver_bindingExist("citrixadc_vpnvserver_sharefileserver_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_sharefileserver_binding.tf_bind", "id", "name:tf_vpnvserver,sharefile:3.3.4.3%3A90"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccVpnvserver_sharefileserver_bindingDataSource_basic(t *testing.T) {

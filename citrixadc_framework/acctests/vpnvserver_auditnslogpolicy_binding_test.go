@@ -53,6 +53,66 @@ const testAccVpnvserver_auditnslogpolicy_binding_basic = `
 
 `
 
+const testAccVpnvserver_auditnslogpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_auditnslogpolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+		bindpoint = "REQUEST"
+		priority  = 200
+	}
+`
+
+// TestAccVpnvserver_auditnslogpolicy_binding_sdkv2StateUpgrade verifies that a
+// binding created with the last SDK v2 release (legacy comma-joined id) is
+// correctly read and upgraded to the new key:value id format by the current
+// (framework) provider.
+func TestAccVpnvserver_auditnslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_auditnslogpolicy_bindingExist("citrixadc_vpnvserver_auditnslogpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_auditnslogpolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_auditnslogpolicy"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_auditnslogpolicy_bindingExist("citrixadc_vpnvserver_auditnslogpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_auditnslogpolicy_binding.tf_bind", "id", "name:tf_vpnvserver,policy:tf_auditnslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpnvserver_auditnslogpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 
@@ -92,6 +152,19 @@ func TestAccVpnvserver_auditnslogpolicy_binding_basic(t *testing.T) {
 					testAccCheckVpnvserver_auditnslogpolicy_bindingNotExist("citrixadc_vpnvserver_auditnslogpolicy_binding.tf_bind", "tf_vpnvserver,tf_auditnslogpolicy"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_auditnslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_auditnslogpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_auditnslogpolicy_binding_basic},
+			{Config: testAccVpnvserver_auditnslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
 		},
 	})
 }

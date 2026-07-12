@@ -286,3 +286,92 @@ func TestAccAaauser_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccAaauser_auditsyslogpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccAaauser_auditsyslogpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_aaauser_auditsyslogpolicy_binding" "tf_aaauser_auditsyslogpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy    = citrixadc_auditsyslogpolicy.tf_auditsyslogpolicy.name
+		type     = "REQUEST"
+		priority  = 100
+	}
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "tf_syslogaction"
+		serverip   = "10.78.60.33"
+		serverport = 514
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_auditsyslogpolicy" {
+		name   = "tf_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+`
+
+// TestAccAaauser_auditsyslogpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "user1,tf_auditsyslogpolicy"). Step 2 refreshes/plans/applies the same
+// config through the Framework provider, exercising ParseIdString on the legacy id;
+// because the Framework recomputes the id on Read (SetAttrFromGet), the id upgrades
+// to the new "key:value" form.
+func TestAccAaauser_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_aaauser_auditsyslogpolicy_binding.tf_aaauser_auditsyslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaauser_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaauser_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_auditsyslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "user1,tf_auditsyslogpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaauser_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_auditsyslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "policy:tf_auditsyslogpolicy,username:user1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaauser_auditsyslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_auditsyslogpolicy_binding.tf_aaauser_auditsyslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaauser_auditsyslogpolicy_binding_basic},
+			{Config: testAccAaauser_auditsyslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
+		},
+	})
+}

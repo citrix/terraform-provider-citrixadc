@@ -237,3 +237,87 @@ func TestAccGslbvserver_domain_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccgslbvserver_domain_binding_upgrade_basic mirrors testAccGslbvserver_domain_binding_basic
+// using only SDK v2 attribute names, so it is valid under BOTH the last SDK v2 release (2.2.0)
+// schema and the current framework schema. The resource label is kept identical so the Exist /
+// Destroy helpers and the state address match.
+const testAccgslbvserver_domain_binding_upgrade_basic = `
+
+resource "citrixadc_gslbvserver_domain_binding" "tf_gslbvserver_domain_binding"{
+	name = citrixadc_gslbvserver.tf_gslbvserver.name
+	domainname = "www.exampledomain.com"
+	backupipflag = false
+	}
+  resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+	dnsrecordtype = "A"
+	name          = "GSLB-East-Coast-Vserver"
+	servicetype   = "HTTP"
+	}
+`
+
+// TestAccGslbvserver_domain_binding_sdkv2StateUpgrade verifies that state written by the last
+// SDK v2 release (with the legacy comma-joined ID) is refreshed and re-applied cleanly by the
+// current framework provider.
+//
+//	Step 1: create the binding with citrix/citrixadc 2.2.0 (SDK v2). State carries the legacy
+//	        ID "name,domainname".
+//	Step 2: the SAME config served by the current framework provider. Terraform refreshes the
+//	        legacy-id state through the framework Read (exercising utils.ParseIdString on the
+//	        legacy id) then plans/applies. The framework Read does NOT recompute the ID
+//	        (gslbvserver_domain_bindingSetAttrFromGet leaves data.Id untouched), so the legacy
+//	        ID is retained after the upgrade.
+func TestAccGslbvserver_domain_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbvserver_domain_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create with the last SDK v2 release from the registry.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccgslbvserver_domain_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_domain_bindingExist("citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", "id", "GSLB-East-Coast-Vserver,www.exampledomain.com"),
+				),
+			},
+			{
+				// Refresh/plan/apply the legacy-id state through the current framework provider.
+				// The framework Read re-derives the canonical new-format id from name+domainname,
+				// so after the upgrade the id is the key:value form (legacy->new-format only).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccgslbvserver_domain_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_domain_bindingExist("citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", "id", "name:GSLB-East-Coast-Vserver,domainname:www.exampledomain.com"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGslbvserver_domain_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserver_domain_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_domain_binding_basic,
+			},
+			{
+				Config:                  testAccGslbvserver_domain_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"backupipflag"},
+			},
+		},
+	})
+}

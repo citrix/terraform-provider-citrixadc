@@ -41,7 +41,14 @@ func (r *LbmetrictableMetricBindingResource) Schema(ctx context.Context, req res
 				Description: "New SNMP OID of the metric.",
 			},
 			"metric": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// metric is part of the binding identity (id = metric:..,metrictable:..) and
+				// the Read match keys on it; changing it must destroy+recreate, matching SDK
+				// v2's ForceNew. Without this an in-place PUT would orphan the old binding and
+				// produce an inconsistent-result error.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the metric for which to change the SNMP OID.",
 			},
 			"metrictable": schema.StringAttribute{

@@ -223,6 +223,19 @@ func testAccCheckService_lbmonitor_bindingNotExist(n string, id string) resource
 	}
 }
 
+func TestAccService_lbmonitor_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_service_lbmonitor_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckService_lbmonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccService_lbmonitor_binding_basic},
+			{Config: testAccService_lbmonitor_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckService_lbmonitor_bindingDestroy(s *terraform.State) error {
 	// Use the shared utility function to get a configured client
 	client, err := testAccGetFrameworkClient()
@@ -247,6 +260,78 @@ func testAccCheckService_lbmonitor_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+// testAccService_lbmonitor_binding_upgrade_basic mirrors the _basic config
+// (a service + an lbmonitor bound together). It uses the SDK v2 attribute names
+// so it is valid under BOTH the SDK v2 2.2.0 schema and the current framework
+// schema, letting it be applied with the old provider in step 1 and re-planned
+// with the new provider in step 2 of the state-upgrade test below.
+const testAccService_lbmonitor_binding_upgrade_basic = `
+	resource "citrixadc_service" "tf_service" {
+		servicetype         = "HTTP"
+		name                = "tf_service"
+		ipaddress           = "10.77.33.22"
+		ip                  = "10.77.33.22"
+		port                = "80"
+		state               = "ENABLED"
+		wait_until_disabled = true
+	}
+	resource "citrixadc_lbmonitor" "tf_monitor" {
+		monitorname = "tf_monitor"
+		type        = "HTTP"
+	}
+	resource "citrixadc_service_lbmonitor_binding" "tf_binding" {
+		name         = citrixadc_service.tf_service.name
+		monitor_name = citrixadc_lbmonitor.tf_monitor.monitorname
+		monstate     = "ENABLED"
+		weight       = 2
+	}
+`
+
+// TestAccService_lbmonitor_binding_sdkv2StateUpgrade verifies that a resource
+// created by the LAST SDK v2 release (2.2.0) — which writes the legacy
+// comma-joined id "name,monitor_name" — is refreshed and re-applied correctly by
+// the CURRENT framework provider. Step 2 exercises ParseIdString on the legacy id
+// during the framework Read.
+//
+// The resource-side SetAttrFromGet RECOMPUTES data.Id to the new canonical
+// key:value format on Read (see resource_schema.go), so after the step-2 refresh
+// the id becomes "monitor_name:tf_monitor,name:tf_service" — asserted below.
+func TestAccService_lbmonitor_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckService_lbmonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccService_lbmonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckService_lbmonitor_bindingExist("citrixadc_service_lbmonitor_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_service_lbmonitor_binding.tf_binding", "id", "tf_service,tf_monitor"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id) then plans/applies. The framework Read
+			// recomputes the id to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccService_lbmonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckService_lbmonitor_bindingExist("citrixadc_service_lbmonitor_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_service_lbmonitor_binding.tf_binding", "id", "monitor_name:tf_monitor,name:tf_service"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccService_lbmonitor_bindingDataSource_basic(t *testing.T) {

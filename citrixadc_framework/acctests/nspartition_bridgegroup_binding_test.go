@@ -261,3 +261,68 @@ func TestAccNspartition_bridgegroup_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccNspartition_bridgegroup_binding_upgrade_basic = `
+	resource "citrixadc_nspartition" "tf_nspartition" {
+		partitionname = "tf_nspartition"
+		maxbandwidth  = 10240
+		minbandwidth  = 512
+		maxconn       = 512
+		maxmemlimit   = 11
+	}
+	resource "citrixadc_bridgegroup" "tf_bridgegroup" {
+		bridgegroup_id     = 2
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+	}
+	resource "citrixadc_nspartition_bridgegroup_binding" "tf_binding" {
+		partitionname = citrixadc_nspartition.tf_nspartition.partitionname
+		bridgegroup   = citrixadc_bridgegroup.tf_bridgegroup.bridgegroup_id
+	}
+`
+
+func TestAccNspartition_bridgegroup_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNspartition_bridgegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNspartition_bridgegroup_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspartition_bridgegroup_bindingExist("citrixadc_nspartition_bridgegroup_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspartition_bridgegroup_binding.tf_binding", "id", "tf_nspartition,2"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNspartition_bridgegroup_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspartition_bridgegroup_bindingExist("citrixadc_nspartition_bridgegroup_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspartition_bridgegroup_binding.tf_binding", "id", "bridgegroup:2,partitionname:tf_nspartition"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNspartition_bridgegroup_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nspartition_bridgegroup_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartition_bridgegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNspartition_bridgegroup_binding_basic},
+			{Config: testAccNspartition_bridgegroup_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

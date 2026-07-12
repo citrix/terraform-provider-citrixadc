@@ -10,11 +10,6 @@ func SslprofileSslcipherBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"cipheraliasname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the cipher group/alias/individual cipheri bindings.",
-			},
 			"ciphername": schema.StringAttribute{
 				Required:    true,
 				Description: "Name of the cipher.",
@@ -23,11 +18,6 @@ func SslprofileSslcipherBindingDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "cipher priority",
-			},
-			"description": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "The cipher suite description.",
 			},
 			"name": schema.StringAttribute{
 				Required:    true,

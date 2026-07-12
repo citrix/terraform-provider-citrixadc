@@ -74,6 +74,13 @@ func (r *FeoglobalFeopolicyBindingResource) Create(ctx context.Context, req reso
 
 	// Read the updated state back
 	r.readFeoglobalFeopolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "feoglobal_feopolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -92,6 +99,15 @@ func (r *FeoglobalFeopolicyBindingResource) Read(ctx context.Context, req resour
 	tflog.Debug(ctx, "Reading feoglobal_feopolicy_binding resource")
 
 	r.readFeoglobalFeopolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -135,6 +151,13 @@ func (r *FeoglobalFeopolicyBindingResource) Update(ctx context.Context, req reso
 
 	// Read the updated state back
 	r.readFeoglobalFeopolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "feoglobal_feopolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -201,9 +224,10 @@ func (r *FeoglobalFeopolicyBindingResource) readFeoglobalFeopolicyBindingFromApi
 		return
 	}
 
-	// Resource is missing
+	// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+	// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "feoglobal_feopolicy_binding returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -216,9 +240,9 @@ func (r *FeoglobalFeopolicyBindingResource) readFeoglobalFeopolicyBindingFromApi
 		}
 	}
 
-	// Resource is missing
+	// Binding not present in the returned set: signal removal via a null Id (see above).
 	if foundIndex == -1 {
-		diags.AddError("Client Error", "feoglobal_feopolicy_binding not found with the provided ID attributes")
+		data.Id = types.StringNull()
 		return
 	}
 

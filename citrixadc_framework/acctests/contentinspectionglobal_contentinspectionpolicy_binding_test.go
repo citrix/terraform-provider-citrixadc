@@ -254,3 +254,67 @@ func TestAcccontentinspectionglobal_contentinspectionpolicy_bindingDataSource_ba
 		},
 	})
 }
+
+const testAccContentinspectionglobal_contentinspectionpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_contentinspectionpolicy" "tf_contentinspectionpolicy" {
+		name   = "my_ci_policy"
+		rule   = "false"
+		action = "DROP"
+	}
+
+	resource "citrixadc_contentinspectionglobal_contentinspectionpolicy_binding" "tf_ci_binding" {
+		policyname = citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy.name
+		priority   = 100
+	}
+`
+
+func TestAccContentinspectionglobal_contentinspectionpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckContentinspectionglobal_contentinspectionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (d.SetId(policyname)).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccContentinspectionglobal_contentinspectionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionglobal_contentinspectionpolicy_bindingExist("citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_ci_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_ci_binding", "id", "my_ci_policy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new multi-key format.
+				// The binding lands on the REQ_DEFAULT bindpoint, so the canonical
+				// new id is "policyname:my_ci_policy,type:REQ_DEFAULT".
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccContentinspectionglobal_contentinspectionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionglobal_contentinspectionpolicy_bindingExist("citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_ci_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_ci_binding", "id", "policyname:my_ci_policy,type:REQ_DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccContentinspectionglobal_contentinspectionpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_ci_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionglobal_contentinspectionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccContentinspectionglobal_contentinspectionpolicy_binding_basic},
+			{Config: testAccContentinspectionglobal_contentinspectionpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

@@ -253,3 +253,81 @@ func TestAccAuthenticationvserverVpnportalthemeBindingDataSource_basic(t *testin
 		},
 	})
 }
+
+// testAccAuthenticationvserver_vpnportaltheme_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0 schema AND
+// the current Framework schema because the migration restored the SDK v2 attribute names. The
+// terraform resource label (tf_bind) is kept identical to the _basic config so the Exist/Destroy
+// helpers and resource address match.
+const testAccAuthenticationvserver_vpnportaltheme_binding_upgrade_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_vpnportaltheme" "tf_vpnportaltheme" {
+		name      = "tf_vpnportaltheme"
+		basetheme = "X1"
+	}
+	resource "citrixadc_authenticationvserver_vpnportaltheme_binding" "tf_bind" {
+		name = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		portaltheme = citrixadc_vpnportaltheme.tf_vpnportaltheme.name
+	}
+`
+
+// TestAccAuthenticationvserver_vpnportaltheme_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded when the
+// same config is subsequently managed by the current Framework provider. Step 1 creates the
+// binding with citrix/citrixadc 2.2.0 (writes the legacy id "tf_authenticationvserver,tf_vpnportaltheme").
+// Step 2 refreshes/plans/applies the SAME config through the Framework provider, exercising
+// ParseIdString on the legacy id; because the Framework recomputes the id on Read (SetAttrFromGet
+// re-derives data.Id), the id upgrades to the new "key:value" form.
+func TestAccAuthenticationvserver_vpnportaltheme_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_authenticationvserver_vpnportaltheme_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_vpnportaltheme_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAuthenticationvserver_vpnportaltheme_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_vpnportaltheme_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_authenticationvserver,tf_vpnportaltheme"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationvserver_vpnportaltheme_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_vpnportaltheme_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_authenticationvserver,portaltheme:tf_vpnportaltheme"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_vpnportaltheme_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_vpnportaltheme_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_vpnportaltheme_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_vpnportaltheme_binding_basic},
+			{Config: testAccAuthenticationvserver_vpnportaltheme_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

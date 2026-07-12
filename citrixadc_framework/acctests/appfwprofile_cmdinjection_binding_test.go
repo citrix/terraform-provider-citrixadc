@@ -316,3 +316,70 @@ func TestAccAppfwprofile_cmdinjection_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccAppfwprofile_cmdinjection_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_cmdinjection_binding" "tf_binding1" {
+		name                 = citrixadc_appfwprofile.tf_appfwprofile.name
+		cmdinjection         = "tf_cmdinjection"
+		formactionurl_cmd    = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		as_scan_location_cmd = "HEADER"
+		as_value_type_cmd    = "Keyword"
+		as_value_expr_cmd    = "[a-z]+grep"
+		alertonly            = "OFF"
+		isvalueregex_cmd     = "REGEX"
+		isautodeployed       = "NOTAUTODEPLOYED"
+		comment              = "Testing"
+	}
+`
+
+func TestAccAppfwprofile_cmdinjection_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_cmdinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwprofile_cmdinjection_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_cmdinjection_bindingExist("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "id", `tf_appfwprofile,tf_cmdinjection,^https://sd2\-zgw\.test\.ctxns\.com/api/document/content$,HEADER,Keyword,[a-z]+grep`),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwprofile_cmdinjection_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_cmdinjection_bindingExist("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "id", `as_scan_location_cmd:HEADER,as_value_expr_cmd:%5Ba-z%5D%2Bgrep,as_value_type_cmd:Keyword,cmdinjection:tf_cmdinjection,formactionurl_cmd:%5Ehttps%3A%2F%2Fsd2%5C-zgw%5C.test%5C.ctxns%5C.com%2Fapi%2Fdocument%2Fcontent%24,name:tf_appfwprofile`),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_cmdinjection_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_cmdinjection_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_cmdinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_cmdinjection_binding_basic},
+			{Config: testAccAppfwprofile_cmdinjection_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

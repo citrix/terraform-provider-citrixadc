@@ -200,3 +200,63 @@ func TestAccPolicypatset_pattern_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccPolicypatset_pattern_binding_upgrade_basic = `
+
+resource "citrixadc_policypatset" "tf_patset" {
+    name = "tf_patset"
+    comment = "some comment"
+}
+
+resource "citrixadc_policypatset_pattern_binding" "tf_bind" {
+    name = citrixadc_policypatset.tf_patset.name
+    string = "pattern1,/postfix"
+}
+
+`
+
+func TestAccPolicypatset_pattern_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicypatset_pattern_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes state with the legacy id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccPolicypatset_pattern_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicypatset_pattern_bindingExist("citrixadc_policypatset_pattern_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_policypatset_pattern_binding.tf_bind", "id", "tf_patset,pattern1,/postfix"),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework provider.
+			// The framework Read recomputes the id into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccPolicypatset_pattern_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicypatset_pattern_bindingExist("citrixadc_policypatset_pattern_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_policypatset_pattern_binding.tf_bind", "id", "name:tf_patset,string:pattern1%2C%2Fpostfix"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPolicypatset_pattern_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_policypatset_pattern_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicypatset_pattern_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicypatset_pattern_binding_basic_step1},
+			{Config: testAccPolicypatset_pattern_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

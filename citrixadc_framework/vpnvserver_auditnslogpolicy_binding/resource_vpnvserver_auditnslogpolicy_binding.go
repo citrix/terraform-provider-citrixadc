@@ -3,6 +3,7 @@ package vpnvserver_auditnslogpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -80,6 +81,13 @@ func (r *VpnvserverAuditnslogpolicyBindingResource) Create(ctx context.Context, 
 
 	// Read the updated state back
 	r.readVpnvserverAuditnslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnvserver_auditnslogpolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -98,6 +106,15 @@ func (r *VpnvserverAuditnslogpolicyBindingResource) Read(ctx context.Context, re
 	tflog.Debug(ctx, "Reading vpnvserver_auditnslogpolicy_binding resource")
 
 	r.readVpnvserverAuditnslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -141,6 +158,13 @@ func (r *VpnvserverAuditnslogpolicyBindingResource) Update(ctx context.Context, 
 
 	// Read the updated state back
 	r.readVpnvserverAuditnslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnvserver_auditnslogpolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -173,6 +197,12 @@ func (r *VpnvserverAuditnslogpolicyBindingResource) Delete(ctx context.Context, 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policy"]; ok && val != "" {
 		argsMap["policy"] = val
+	}
+
+	// bindpoint (string enum, e.g. REQUEST/RESPONSE) disambiguates the delete when set.
+	// Restored from prior state to match SDK v2 delete behaviour. (url-encoded, non-empty only)
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Vpnvserver_auditnslogpolicy_binding.Type(), name_value, argsMap)
@@ -213,9 +243,10 @@ func (r *VpnvserverAuditnslogpolicyBindingResource) readVpnvserverAuditnslogpoli
 		return
 	}
 
-	// Resource is missing
+	// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+	// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "vpnvserver_auditnslogpolicy_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -247,9 +278,9 @@ func (r *VpnvserverAuditnslogpolicyBindingResource) readVpnvserverAuditnslogpoli
 		}
 	}
 
-	//  Resource is missing
+	// Binding not present in the returned set: signal removal via a null Id (see above).
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnvserver_auditnslogpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

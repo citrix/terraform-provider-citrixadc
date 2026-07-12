@@ -15,11 +15,6 @@ func TunnelglobalTunneltrafficpolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The feature to be checked while applying this config",
 			},
-			"globalbindtype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "0",
-			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

@@ -84,6 +84,19 @@ func TestAccSystemgroup_systemuser_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccSystemgroup_systemuser_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemgroup_systemuser_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemgroup_systemuser_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemgroup_systemuser_binding_basic},
+			{Config: testAccSystemgroup_systemuser_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckSystemgroup_systemuser_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -254,6 +267,73 @@ func TestAccSystemgroup_systemuser_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_systemgroup_systemuser_binding.tf_bind", "groupname", "tf_systemgroup"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemgroup_systemuser_binding.tf_bind", "username", "tf_user"),
+				),
+			},
+		},
+	})
+}
+
+// testAccSystemgroup_systemuser_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccSystemgroup_systemuser_binding_upgrade_basic = `
+
+	resource "citrixadc_systemgroup" "tf_systemgroup" {
+		groupname    = "tf_systemgroup"
+		timeout      = 999
+		promptstring = "bye>"
+	}
+
+	resource "citrixadc_systemuser" "tf_user" {
+		username = "tf_user"
+		password = "tf_password"
+		timeout  = 200
+	}
+
+	resource "citrixadc_systemgroup_systemuser_binding" "tf_bind" {
+		groupname = citrixadc_systemgroup.tf_systemgroup.groupname
+		username  = citrixadc_systemuser.tf_user.username
+	}
+`
+
+// TestAccSystemgroup_systemuser_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "tf_systemgroup,tf_user"). Step 2 refreshes/plans/applies the same
+// config through the Framework provider, exercising ParseIdString on the legacy id;
+// because the Framework recomputes the id on Read (SetAttrFromGet), the id upgrades
+// to the new "key:value" form.
+func TestAccSystemgroup_systemuser_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_systemgroup_systemuser_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemgroup_systemuser_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSystemgroup_systemuser_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemgroup_systemuser_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_systemgroup,tf_user"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemgroup_systemuser_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemgroup_systemuser_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "groupname:tf_systemgroup,username:tf_user"),
 				),
 			},
 		},

@@ -63,7 +63,7 @@ resource "citrixadc_sslecdsakey" "tf_sslecdsakey" {
 * `des3` - (Optional) Encrypt the generated RSA key by using the Triple-DES algorithm.
 * `password` - (Optional, Sensitive) Pass phrase to use for encryption if DES or DES3 option is selected. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative.
 * `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence.
-* `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
+* `password_wo_version` - (Optional) A user-managed integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger the write-only secret to be re-sent. For this resource, changing the value forces the resource to be replaced.
 * `pkcs8` - (Optional) Create the private key in PKCS#8 format.
 
 ## Attribute Reference

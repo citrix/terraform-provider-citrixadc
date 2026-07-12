@@ -254,3 +254,67 @@ func TestAccNstrafficdomain_vxlan_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccNstrafficdomain_vxlan_binding_upgrade_basic = `
+	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
+		td        = 2
+		aliasname = "tf_trafficdomain"
+	}
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_nstrafficdomain_vxlan_binding" "tf_binding" {
+		td    = citrixadc_nstrafficdomain.tf_trafficdomain.td
+		vxlan = citrixadc_vxlan.tf_vxlan.vxlanid
+	}
+`
+
+func TestAccNstrafficdomain_vxlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNstrafficdomain_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNstrafficdomain_vxlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstrafficdomain_vxlan_bindingExist("citrixadc_nstrafficdomain_vxlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstrafficdomain_vxlan_binding.tf_binding", "id", "2,123"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNstrafficdomain_vxlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstrafficdomain_vxlan_bindingExist("citrixadc_nstrafficdomain_vxlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstrafficdomain_vxlan_binding.tf_binding", "id", "td:2,vxlan:123"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNstrafficdomain_vxlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nstrafficdomain_vxlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomain_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNstrafficdomain_vxlan_binding_basic},
+			{Config: testAccNstrafficdomain_vxlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

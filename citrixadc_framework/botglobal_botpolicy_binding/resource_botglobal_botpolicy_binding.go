@@ -76,6 +76,13 @@ func (r *BotglobalBotpolicyBindingResource) Create(ctx context.Context, req reso
 
 	// Read the updated state back
 	r.readBotglobalBotpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "botglobal_botpolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,6 +101,15 @@ func (r *BotglobalBotpolicyBindingResource) Read(ctx context.Context, req resour
 	tflog.Debug(ctx, "Reading botglobal_botpolicy_binding resource")
 
 	r.readBotglobalBotpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,6 +153,13 @@ func (r *BotglobalBotpolicyBindingResource) Update(ctx context.Context, req reso
 
 	// Read the updated state back
 	r.readBotglobalBotpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "botglobal_botpolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -168,6 +191,9 @@ func (r *BotglobalBotpolicyBindingResource) Delete(ctx context.Context, req reso
 	if val, ok := idMap["type"]; ok && val != "" {
 		argsMap["type"] = val
 	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() && data.Priority.ValueInt64() != 0 {
+		argsMap["priority"] = fmt.Sprintf("%d", data.Priority.ValueInt64())
+	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Botglobal_botpolicy_binding.Type(), "", argsMap)
 	if err != nil {
@@ -192,6 +218,11 @@ func (r *BotglobalBotpolicyBindingResource) readBotglobalBotpolicyBindingFromApi
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["type"]; ok && val != "" {
 		argsMap["type"] = val
+	} else if !data.Type.IsNull() && data.Type.ValueString() != "" {
+		// type (bind point) is not part of the legacy comma-joined id, so on the
+		// SDK v2 -> Framework upgrade it must come from prior state; the NITRO GET needs
+		// it to return the correct binding (otherwise "not found with the provided ID").
+		argsMap["type"] = data.Type.ValueString()
 	}
 
 	findParams := service.FindParams{
@@ -205,9 +236,10 @@ func (r *BotglobalBotpolicyBindingResource) readBotglobalBotpolicyBindingFromApi
 		return
 	}
 
-	// Resource is missing
+	// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+	// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "botglobal_botpolicy_binding returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -246,9 +278,9 @@ func (r *BotglobalBotpolicyBindingResource) readBotglobalBotpolicyBindingFromApi
 		}
 	}
 
-	// Resource is missing
+	// Binding not present in the returned set: signal removal via a null Id (see above).
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("botglobal_botpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

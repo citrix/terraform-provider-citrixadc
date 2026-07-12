@@ -283,3 +283,93 @@ func TestAccVpnvserver_authenticationsamlpolicy_bindingDataSource_basic(t *testi
 		},
 	})
 }
+
+func TestAccVpnvserver_authenticationsamlpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationsamlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationsamlpolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationsamlpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "priority"}},
+		},
+	})
+}
+
+// testAccVpnvserver_authenticationsamlpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0 schema and
+// the current Framework schema because the migration restored the SDK v2 attribute names. The
+// terraform resource label (tf_bind) is kept identical to _basic so the Exist/Destroy helpers
+// and resource addresses match.
+const testAccVpnvserver_authenticationsamlpolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name           = "tf_vserver_examples"
+		servicetype    = "SSL"
+		ipv46          = "3.3.3.3"
+		port           = 443
+	}
+	resource "citrixadc_authenticationsamlaction" "tf_samlaction" {
+		name                    = "tf_samlaction"
+		metadataurl             = "http://www.example.com"
+		samltwofactor           = "OFF"
+		requestedauthncontext   = "minimum"
+		digestmethod            = "SHA1"
+		signaturealg            = "RSA-SHA256"
+		metadatarefreshinterval = 1
+	}
+	resource "citrixadc_authenticationsamlpolicy" "tf_samlpolicy" {
+		name      = "tf_samlpolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationsamlaction.tf_samlaction.name
+	}
+	resource "citrixadc_vpnvserver_authenticationsamlpolicy_binding" "tf_bind" {
+		name 	  = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationsamlpolicy.tf_samlpolicy.name
+		priority  = 80
+		bindpoint = "RESPONSE"
+	}
+`
+
+// TestAccVpnvserver_authenticationsamlpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded when the
+// same config is subsequently managed by the current Framework provider. Step 1 creates the
+// binding with citrix/citrixadc 2.2.0 (writes the legacy id "tf_vserver_examples,tf_samlpolicy").
+// Step 2 refreshes/plans/applies the same config through the Framework provider, exercising
+// ParseIdString on the legacy id; because the Framework recomputes the id on Read
+// (SetAttrFromGet), the id upgrades to the new "key:value" form
+// "name:tf_vserver_examples,policy:tf_samlpolicy".
+func TestAccVpnvserver_authenticationsamlpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationsamlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationsamlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationsamlpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_vserver_examples,tf_samlpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_authenticationsamlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationsamlpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_vserver_examples,policy:tf_samlpolicy"),
+				),
+			},
+		},
+	})
+}

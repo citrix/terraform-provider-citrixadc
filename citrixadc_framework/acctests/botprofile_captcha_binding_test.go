@@ -94,6 +94,72 @@ func TestAccBotprofile_captcha_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccBotprofile_captcha_binding_upgrade_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_captcha_binding" "tf_binding" {
+		name                = citrixadc_botprofile.tf_botprofile.name
+		captcharesource     = "true"
+		bot_captcha_url     = "www.example.com"
+		bot_captcha_action  = ["NONE"]
+		bot_captcha_enabled = "OFF"
+		logmessage          = "Testing"
+		retryattempts       = 4
+	}
+`
+
+// TestAccBotprofile_captcha_binding_sdkv2StateUpgrade verifies that a resource
+// created with the last SDK v2 release (2.2.0), which writes the legacy
+// positional ID "name,bot_captcha_url", can be refreshed/planned/applied by the
+// current Plugin Framework provider without recreation. On the first framework
+// Read the ID is upgraded to the canonical new key:value format.
+func TestAccBotprofile_captcha_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofile_captcha_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release from the registry.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccBotprofile_captcha_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_captcha_bindingExist("citrixadc_botprofile_captcha_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_captcha_binding.tf_binding", "id", "tf_botprofile,www.example.com"),
+				),
+			},
+			{
+				// Step 2: refresh the legacy-ID state through the current
+				// framework provider. Read parses the legacy ID and re-derives
+				// the canonical new-format ID.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotprofile_captcha_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_captcha_bindingExist("citrixadc_botprofile_captcha_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_captcha_binding.tf_binding", "id", "name:tf_botprofile,bot_captcha_url:www.example.com"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBotprofile_captcha_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -276,6 +342,19 @@ func TestAccBotprofileCaptchaBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_captcha_binding.tf_binding", "retryattempts", "4"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccBotprofile_captcha_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_captcha_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_captcha_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_captcha_binding_basic},
+			{Config: testAccBotprofile_captcha_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

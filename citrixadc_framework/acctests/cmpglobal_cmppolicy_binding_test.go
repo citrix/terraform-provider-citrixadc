@@ -199,6 +199,19 @@ func testAccCheckCmpglobal_cmppolicy_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCmpglobal_cmppolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmpglobal_cmppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCmpglobal_cmppolicy_binding_basic},
+			{Config: testAccCmpglobal_cmppolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 const testAccCmpglobal_cmppolicy_bindingDataSource_basic = `
 
 	resource "citrixadc_cmppolicy" "tf_cmppolicy" {
@@ -232,6 +245,58 @@ func TestAcccmpglobal_cmppolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "policyname", "tf_cmppolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "type", "RES_OVERRIDE"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCmpglobal_cmppolicy_binding_upgrade_basic = `
+
+resource "citrixadc_cmpglobal_cmppolicy_binding" "tf_cmpglobal_cmppolicy_binding" {
+	globalbindtype = "SYSTEM_GLOBAL"
+	priority   = 50
+	policyname =citrixadc_cmppolicy.tf_cmppolicy.name
+	}
+
+  resource "citrixadc_cmppolicy" "tf_cmppolicy" {
+	  name = "tf_cmppolicy"
+	  rule = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"
+	  resaction = "COMPRESS"
+	}
+`
+
+func TestAccCmpglobal_cmppolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCmpglobal_cmppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (d.SetId(policyname)).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCmpglobal_cmppolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCmpglobal_cmppolicy_bindingExist("citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "id", "tf_cmppolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new multi-key format.
+				// The binding lands on the RES_DEFAULT bindpoint, so the canonical
+				// new id is "policyname:tf_cmppolicy,type:RES_DEFAULT".
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCmpglobal_cmppolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCmpglobal_cmppolicy_bindingExist("citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "id", "policyname:tf_cmppolicy,type:RES_DEFAULT"),
 				),
 			},
 		},

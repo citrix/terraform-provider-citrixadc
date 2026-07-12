@@ -288,3 +288,85 @@ func TestAccSnmptrap_snmpuser_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccSnmptrap_snmpuser_binding_upgrade_basic reuses the _basic config (binding +
+// all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0 schema and the
+// current Framework schema because the migration restored the SDK v2 attribute names.
+const testAccSnmptrap_snmpuser_binding_upgrade_basic = `
+	resource "citrixadc_snmpuser" "tf_snmpuser" {
+	name       = "tf_snmpuser"
+	group      = "all_group"
+	authtype   = "SHA"
+	authpasswd = "secretpassword"
+	privtype   = "AES"
+	privpasswd = "secretpassword"
+	}
+	resource "citrixadc_snmptrap" "tf_snmptrap" {
+	trapclass       = "generic"
+	trapdestination = "10.50.50.10"
+	version         = "V3"
+	}
+	resource "citrixadc_snmptrap_snmpuser_binding" "tf_binding" {
+	trapclass       = citrixadc_snmptrap.tf_snmptrap.trapclass
+	trapdestination = citrixadc_snmptrap.tf_snmptrap.trapdestination
+	username        = citrixadc_snmpuser.tf_snmpuser.name
+	securitylevel   = "authPriv"
+	}
+`
+
+// TestAccSnmptrap_snmpuser_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release is correctly upgraded when the same config is subsequently managed
+// by the current Framework provider. Step 1 creates the binding with citrix/citrixadc
+// 2.2.0 (writes the legacy comma id "generic,10.50.50.10,tf_snmpuser" — the SDK v2
+// d.SetId(fmt.Sprintf("%s,%s", trapclass+","+trapdestination, username))). Step 2
+// refreshes/plans/applies the same config through the Framework provider, exercising
+// ParseIdString on the legacy id; the Framework recomputes the id on Read
+// (SetAttrFromGet), so the canonical new-format id becomes
+// "td:0,trapclass:generic,trapdestination:10.50.50.10,username:tf_snmpuser,version:V3".
+func TestAccSnmptrap_snmpuser_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_snmptrap_snmpuser_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSnmptrap_snmpuser_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSnmptrap_snmpuser_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmptrap_snmpuser_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "generic,10.50.50.10,tf_snmpuser"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSnmptrap_snmpuser_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmptrap_snmpuser_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "td:0,trapclass:generic,trapdestination:10.50.50.10,username:tf_snmpuser,version:V3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSnmptrap_snmpuser_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_snmptrap_snmpuser_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmptrap_snmpuser_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSnmptrap_snmpuser_binding_basic},
+			{Config: testAccSnmptrap_snmpuser_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

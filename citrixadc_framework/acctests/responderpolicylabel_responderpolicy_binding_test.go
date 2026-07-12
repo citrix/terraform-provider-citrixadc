@@ -84,6 +84,19 @@ func TestAccResponderpolicylabel_responderpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccResponderpolicylabel_responderpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicylabel_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderpolicylabel_responderpolicy_binding_basic},
+			{Config: testAccResponderpolicylabel_responderpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"gotopriorityexpression", "invoke", "priority"}},
+		},
+	})
+}
+
 func testAccCheckResponderpolicylabel_responderpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -261,6 +274,63 @@ func TestAccResponderpolicylabel_responderpolicy_bindingDataSource_basic(t *test
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "priority", "5"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "gotopriorityexpression", "END"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "invoke", "false"),
+				),
+			},
+		},
+	})
+}
+
+const testAccResponderpolicylabel_responderpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_responderpolicylabel_responderpolicy_binding" "tf_responderpolicylabel_responderpolicy_binding" {
+	labelname = citrixadc_responderpolicylabel.tf_responderpolicylabel.labelname
+	policyname = citrixadc_responderpolicy.tf_responderpolicy.name
+	priority = 5
+	gotopriorityexpression = "END"
+	invoke = "false"
+}
+
+resource "citrixadc_responderpolicylabel" "tf_responderpolicylabel" {
+	labelname = "tf_responderpolicylabel"
+	policylabeltype = "HTTP"
+}
+
+resource "citrixadc_responderpolicy" "tf_responderpolicy" {
+	name    = "tf_responderpolicy"
+	action = "NOOP"
+	rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+}
+`
+
+func TestAccResponderpolicylabel_responderpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderpolicylabel_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccResponderpolicylabel_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicylabel_responderpolicy_bindingExist("citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "id", "tf_responderpolicylabel,tf_responderpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccResponderpolicylabel_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicylabel_responderpolicy_bindingExist("citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "id", "labelname:tf_responderpolicylabel,policyname:tf_responderpolicy"),
 				),
 			},
 		},

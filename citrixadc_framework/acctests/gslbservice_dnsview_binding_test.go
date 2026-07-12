@@ -280,3 +280,80 @@ func TestAccGslbservice_dnsview_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccGslbservice_dnsview_binding_upgrade_basic = `
+resource "citrixadc_gslbservice_dnsview_binding" "tf_gslbservice_dnsview_binding" {
+	servicename = citrixadc_gslbservice.gslb_svc1.servicename
+	viewname    = citrixadc_dnsview.tf_dnsview.viewname
+	viewip      = "192.168.2.1"
+}
+
+resource "citrixadc_gslbsite" "site_remote" {
+	sitename        = "Site-Remote"
+	siteipaddress   = "172.31.48.18"
+	sessionexchange = "ENABLED"
+	sitepassword    = "password123"
+}
+
+resource "citrixadc_gslbservice" "gslb_svc1" {
+	ip          = "172.16.1.121"
+	port        = "80"
+	servicename = "gslb1vservice"
+	servicetype = "HTTP"
+	sitename    = citrixadc_gslbsite.site_remote.sitename
+}
+
+resource "citrixadc_dnsview" "tf_dnsview" {
+	viewname = "view4"
+}
+`
+
+// TestAccGslbservice_dnsview_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 provider release (2.2.0) with the legacy comma-format id upgrades cleanly
+// through the current Framework provider, which recomputes the id to the new key:value format
+// on Read (commit "Updating resource Id to new format for existing configurations upon Read/Update").
+func TestAccGslbservice_dnsview_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbservice_dnsview_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release, which writes state with the legacy comma id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccGslbservice_dnsview_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservice_dnsview_bindingExist("citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding", "id", "gslb1vservice,view4"),
+				),
+			},
+			// Step 2: same config through the current Framework provider; Read exercises ParseIdString on
+			// the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbservice_dnsview_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservice_dnsview_bindingExist("citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding", "id", "servicename:gslb1vservice,viewname:view4"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGslbservice_dnsview_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservice_dnsview_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbservice_dnsview_binding_basic},
+			{Config: testAccGslbservice_dnsview_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

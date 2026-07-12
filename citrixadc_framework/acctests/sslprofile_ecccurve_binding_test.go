@@ -232,3 +232,69 @@ func TestAccSslprofile_ecccurve_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccSslprofile_ecccurve_binding_upgrade_basic reuses the _basic config values
+// (same resource labels, same profile name and ecccurve list) so it is valid under
+// BOTH the last SDK v2 release (2.2.0) schema and the current Framework schema.
+const testAccSslprofile_ecccurve_binding_upgrade_basic = `
+	resource "citrixadc_sslprofile" "tf_sslprofile" {
+		name = "tf_sslprofile"
+	}
+
+	resource "citrixadc_sslprofile_ecccurve_binding" "tf_sslprofile_ecccurve_binding" {
+		name                             = citrixadc_sslprofile.tf_sslprofile.name
+		ecccurvename                     = ["X_25519", "P_521", "P_384"]
+		remove_existing_ecccurve_binding = true
+	}
+`
+
+// TestAccSslprofile_ecccurve_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (with the legacy comma-composite id) upgrades cleanly through the
+// current Framework provider, which recomputes the id to the new canonical form on Read.
+func TestAccSslprofile_ecccurve_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslprofile_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (2.2.0). State carries the
+			// legacy id: fmt.Sprintf("%s,%s", name, ecccurvename) => "tf_sslprofile,[X_25519 P_521 P_384]".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSslprofile_ecccurve_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_ecccurve_bindingExist("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "id", "tf_sslprofile,[X_25519 P_521 P_384]"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework provider.
+			// Read (readSslprofileEcccurveBindingFromApi) recomputes data.Id to the new canonical
+			// form (the plain SSL profile name), so the id upgrades from legacy to "tf_sslprofile".
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslprofile_ecccurve_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_ecccurve_bindingExist("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "id", "tf_sslprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslprofile_ecccurve_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofile_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslprofile_ecccurve_binding_basic},
+			{Config: testAccSslprofile_ecccurve_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"remove_existing_ecccurve_binding"}},
+		},
+	})
+}

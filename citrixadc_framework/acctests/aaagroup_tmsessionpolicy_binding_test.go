@@ -30,7 +30,6 @@ const testAccAaagroup_tmsessionpolicy_binding_basic = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
 		name                       = "my_tmsession_action"
@@ -58,7 +57,6 @@ const testAccAaagroup_tmsessionpolicy_binding_basic_step2 = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
 		name                       = "my_tmsession_action"
@@ -91,6 +89,19 @@ func TestAccAaagroup_tmsessionpolicy_binding_basic(t *testing.T) {
 					testAccCheckAaagroup_tmsessionpolicy_bindingNotExist("citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "my_group,tf_tmsesspolicy"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAaagroup_tmsessionpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_tmsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaagroup_tmsessionpolicy_binding_basic},
+			{Config: testAccAaagroup_tmsessionpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
 		},
 	})
 }
@@ -233,7 +244,6 @@ const testAccAaagroup_tmsessionpolicy_bindingDataSource_basic = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
 		name                       = "my_tmsession_action"
@@ -274,6 +284,67 @@ func TestAccAaagroup_tmsessionpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "groupname", "my_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "policy", "my_tmsession_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "priority", "50"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAaagroup_tmsessionpolicy_binding_upgrade_basic = `
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+	}
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "my_tmsession_action"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
+	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+		name   = "my_tmsession_policy"
+		rule   = "true"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
+	}
+
+
+	resource "citrixadc_aaagroup_tmsessionpolicy_binding" "tf_aaagroup_tmsessionpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_tmsessionpolicy.tf_tmsessionpolicy.name
+		type     = "REQUEST"
+		priority  = 50
+	}
+`
+
+func TestAccAaagroup_tmsessionpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaagroup_tmsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaagroup_tmsessionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_tmsessionpolicy_bindingExist("citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "id", "my_group,my_tmsession_policy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaagroup_tmsessionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_tmsessionpolicy_bindingExist("citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "id", "groupname:my_group,policy:my_tmsession_policy"),
 				),
 			},
 		},

@@ -277,3 +277,90 @@ func TestAccAuthenticationvserverAuditnslogpolicyBindingDataSource_basic(t *test
 		},
 	})
 }
+
+// testAccauthenticationvserver_auditnslogpolicy_binding_upgrade_basic is the config
+// used by the sdkv2 state-upgrade test. It reuses the _basic config values and keeps
+// the "tf_bind" resource label so the shared Exist/Destroy helpers and addresses
+// match. It must be valid under both the SDK v2 2.2.0 schema and the current
+// Framework schema (both use the same SDK v2 attribute names).
+const testAccauthenticationvserver_auditnslogpolicy_binding_upgrade_basic = `
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationvserver_auditnslogpolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+		priority  = 90
+		bindpoint = "RESPONSE"
+	}
+`
+
+// TestAccAuthenticationvserver_auditnslogpolicy_binding_sdkv2StateUpgrade verifies that
+// state written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the legacy
+// id "tf_authenticationvserver,my_auditnslogpolicy"). Step 2 refreshes/plans/applies the
+// same config through the Framework provider, exercising ParseIdString on the legacy id;
+// because the Framework recomputes the id on Read (SetAttrFromGet), the id upgrades to the
+// new "key:value" form "name:tf_authenticationvserver,policy:my_auditnslogpolicy".
+func TestAccAuthenticationvserver_auditnslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_authenticationvserver_auditnslogpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccauthenticationvserver_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_authenticationvserver,my_auditnslogpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccauthenticationvserver_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_authenticationvserver,policy:my_auditnslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_auditnslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_auditnslogpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_auditnslogpolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_auditnslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
+		},
+	})
+}

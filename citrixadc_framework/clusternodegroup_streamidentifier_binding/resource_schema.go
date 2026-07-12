@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,12 +33,17 @@ func (r *ClusternodegroupStreamidentifierBindingResource) Schema(ctx context.Con
 				Description: "The ID of the clusternodegroup_streamidentifier_binding resource.",
 			},
 			"identifiername": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "stream identifier  and rate limit identifier that need to be bound to this nodegroup.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the nodegroup to which you want to bind a cluster node or an entity.",
 			},
 		},
@@ -48,10 +55,10 @@ func clusternodegroup_streamidentifier_bindingGetThePayloadFromtheConfig(ctx con
 
 	// Create API request body from the model
 	clusternodegroup_streamidentifier_binding := cluster.Clusternodegroupstreamidentifierbinding{}
-	if !data.Identifiername.IsNull() {
+	if !data.Identifiername.IsNull() && !data.Identifiername.IsUnknown() {
 		clusternodegroup_streamidentifier_binding.Identifiername = data.Identifiername.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		clusternodegroup_streamidentifier_binding.Name = data.Name.ValueString()
 	}
 
@@ -76,8 +83,8 @@ func clusternodegroup_streamidentifier_bindingSetAttrFromGet(ctx context.Context
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("identifiername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Identifiername.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("identifiername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Identifiername.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

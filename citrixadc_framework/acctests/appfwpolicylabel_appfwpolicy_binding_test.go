@@ -128,6 +128,19 @@ func TestAccAppfwpolicylabel_appfwpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwpolicylabel_appfwpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwpolicylabel_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwpolicylabel_appfwpolicy_binding_basic},
+			{Config: testAccAppfwpolicylabel_appfwpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckAppfwpolicylabel_appfwpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -260,6 +273,62 @@ func testAccCheckAppfwpolicylabel_appfwpolicy_bindingDestroy(s *terraform.State)
 	}
 
 	return nil
+}
+
+const testAccAppfwpolicylabel_appfwpolicy_binding_upgrade_basic = `
+	resource "citrixadc_appfwpolicylabel" "tf_appfwpolicylabel" {
+		labelname       = "tf_appfwpolicylabel"
+		policylabeltype = "http_req"
+	}
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name = "tf_appfwprofile"
+		type = ["HTML"]
+	}
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy1" {
+		name        = "tf_appfwpolicy1"
+		profilename = citrixadc_appfwprofile.tf_appfwprofile.name
+		rule        = "true"
+	}
+	resource "citrixadc_appfwpolicylabel_appfwpolicy_binding" "tf_binding1" {
+		labelname  = citrixadc_appfwpolicylabel.tf_appfwpolicylabel.labelname
+		policyname = citrixadc_appfwpolicy.tf_appfwpolicy1.name
+		priority   = 90
+	}
+`
+
+func TestAccAppfwpolicylabel_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwpolicylabel_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwpolicylabel_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwpolicylabel_appfwpolicy_bindingExist("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1", "id", "tf_appfwpolicylabel,tf_appfwpolicy1"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwpolicylabel_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwpolicylabel_appfwpolicy_bindingExist("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1", "id", "labelname:tf_appfwpolicylabel,policyname:tf_appfwpolicy1"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccAppfwpolicylabel_appfwpolicy_bindingDataSource_basic(t *testing.T) {

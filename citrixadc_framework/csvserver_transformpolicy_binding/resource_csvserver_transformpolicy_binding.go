@@ -3,6 +3,7 @@ package csvserver_transformpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -59,9 +60,9 @@ func (r *CsvserverTransformpolicyBindingResource) Create(ctx context.Context, re
 	csvserver_transformpolicy_binding := csvserver_transformpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource - NITRO `add` is POST (matches SDK v2 AddResource); the
-	// nitro client omits ?idempotent=yes for *_binding types (Pattern 1).
-	_, err := r.client.AddResource(service.Csvserver_transformpolicy_binding.Type(), data.Name.ValueString(), &csvserver_transformpolicy_binding)
+	// Binding resource - NITRO `add` for a binding is a PUT; use UpdateUnnamedResource
+	// to match SDK v2 (idempotent re-bind: upserts an existing binding instead of erroring).
+	err := r.client.UpdateUnnamedResource(service.Csvserver_transformpolicy_binding.Type(), &csvserver_transformpolicy_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csvserver_transformpolicy_binding, got error: %s", err))
 		return
@@ -77,6 +78,13 @@ func (r *CsvserverTransformpolicyBindingResource) Create(ctx context.Context, re
 
 	// Read the updated state back
 	r.readCsvserverTransformpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "csvserver_transformpolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -95,6 +103,15 @@ func (r *CsvserverTransformpolicyBindingResource) Read(ctx context.Context, req 
 	tflog.Debug(ctx, "Reading csvserver_transformpolicy_binding resource")
 
 	r.readCsvserverTransformpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -122,6 +139,13 @@ func (r *CsvserverTransformpolicyBindingResource) Update(ctx context.Context, re
 
 	// Read the updated state back
 	r.readCsvserverTransformpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "csvserver_transformpolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -154,6 +178,12 @@ func (r *CsvserverTransformpolicyBindingResource) Delete(ctx context.Context, re
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["policyname"]; ok && val != "" {
 		argsMap["policyname"] = val
+	}
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		argsMap["bindpoint"] = url.QueryEscape(data.Bindpoint.ValueString())
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() && data.Priority.ValueInt64() != 0 {
+		argsMap["priority"] = fmt.Sprintf("%d", data.Priority.ValueInt64())
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Csvserver_transformpolicy_binding.Type(), name_value, argsMap)
@@ -196,7 +226,9 @@ func (r *CsvserverTransformpolicyBindingResource) readCsvserverTransformpolicyBi
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "csvserver_transformpolicy_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -228,7 +260,7 @@ func (r *CsvserverTransformpolicyBindingResource) readCsvserverTransformpolicyBi
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("csvserver_transformpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

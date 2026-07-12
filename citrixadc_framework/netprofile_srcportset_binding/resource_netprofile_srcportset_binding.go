@@ -76,6 +76,13 @@ func (r *NetprofileSrcportsetBindingResource) Create(ctx context.Context, req re
 
 	// Read the updated state back
 	r.readNetprofileSrcportsetBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "netprofile_srcportset_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,6 +101,15 @@ func (r *NetprofileSrcportsetBindingResource) Read(ctx context.Context, req reso
 	tflog.Debug(ctx, "Reading netprofile_srcportset_binding resource")
 
 	r.readNetprofileSrcportsetBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,6 +153,13 @@ func (r *NetprofileSrcportsetBindingResource) Update(ctx context.Context, req re
 
 	// Read the updated state back
 	r.readNetprofileSrcportsetBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "netprofile_srcportset_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -211,7 +234,9 @@ func (r *NetprofileSrcportsetBindingResource) readNetprofileSrcportsetBindingFro
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "netprofile_srcportset_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -243,7 +268,7 @@ func (r *NetprofileSrcportsetBindingResource) readNetprofileSrcportsetBindingFro
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("netprofile_srcportset_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

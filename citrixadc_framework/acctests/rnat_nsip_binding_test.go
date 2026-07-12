@@ -268,3 +268,79 @@ func TestAccRnat_nsip_bindingDataSource(t *testing.T) {
 		},
 	})
 }
+
+const testAccRnat_nsip_binding_upgrade_basic = `
+
+	resource "citrixadc_rnat" "tfrnat" {
+		name             = "my_rnat"
+		network          = "10.2.2.0"
+		netmask          = "255.255.255.255"
+		useproxyport     = "ENABLED"
+		srcippersistency = "DISABLED"
+		connfailover     = "DISABLED"
+	}
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.200"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+		icmp      = "ENABLED"
+	}
+	resource "citrixadc_rnat_nsip_binding" "tf_rnat_nsip_binding" {
+		name  = citrixadc_rnat.tfrnat.name
+		natip = citrixadc_nsip.tf_nsip.ipaddress
+	}
+
+`
+
+// TestAccRnat_nsip_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (legacy comma-joined id) is transparently upgraded by the
+// current Framework provider. Step 1 creates the binding with citrix/citrixadc
+// 2.2.0 (legacy id "name,natip"); step 2 refreshes/plans the same config through
+// the current Framework provider, whose Read parses the legacy id and recomputes
+// it to the new "name:<v>,natip:<v>" format (SetAttrFromGet).
+func TestAccRnat_nsip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRnat_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccRnat_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnat_nsip_bindingExist("citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding", "id", "my_rnat,10.222.74.200"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRnat_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnat_nsip_bindingExist("citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding", "id", "name:my_rnat,natip:10.222.74.200"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRnat_nsip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRnat_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRnat_nsip_binding_basic},
+			{Config: testAccRnat_nsip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

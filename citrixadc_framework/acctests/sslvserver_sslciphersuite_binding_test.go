@@ -111,6 +111,22 @@ func TestAccSslvserver_sslciphersuite_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslvserver_sslciphersuite_binding_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslvserver_sslciphersuite_binding_basic},
+			{Config: testAccSslvserver_sslciphersuite_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckSslvserver_sslciphersuite_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -148,7 +164,7 @@ func testAccCheckSslvserver_sslciphersuite_bindingExist(n string, id *string) re
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslciphersuite_binding",
 			ResourceName:             vservername,
-			ResourceMissingErrorCode: 258,
+			ResourceMissingErrorCode: 461,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
@@ -195,7 +211,7 @@ func testAccCheckSslvserver_sslciphersuite_bindingNotExist(n string, id string) 
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslciphersuite_binding",
 			ResourceName:             name,
-			ResourceMissingErrorCode: 258,
+			ResourceMissingErrorCode: 461,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
@@ -266,6 +282,70 @@ func TestAccSslvserver_sslciphersuite_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding", "vservername", "tf_sslvserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding", "ciphername", "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"),
+				),
+			},
+		},
+	})
+}
+
+// testAccSslvserver_sslciphersuite_binding_upgrade_basic reuses the _basic config values
+// (a single binding + its prerequisite lbvserver). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names (ciphername, vservername).
+const testAccSslvserver_sslciphersuite_binding_upgrade_basic = `
+	resource "citrixadc_sslvserver_sslciphersuite_binding" "tf_sslvserver_sslciphersuite_binding" {
+		ciphername = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+		vservername = citrixadc_lbvserver.tf_sslvserver.name
+	}
+
+	resource "citrixadc_lbvserver" "tf_sslvserver" {
+		name = "tf_sslvserver"
+		servicetype = "SSL"
+		ipv46 = "5.5.5.5"
+		port = 80
+	}
+`
+
+// TestAccSslvserver_sslciphersuite_binding_sdkv2StateUpgrade verifies that state written by
+// the last SDK v2 release is correctly upgraded when the same config is subsequently managed
+// by the current Framework provider. Step 1 creates the binding with citrix/citrixadc 2.2.0
+// (writes the legacy comma id "tf_sslvserver,TLS1.2-ECDHE-RSA-AES128-GCM-SHA256" — the SDK v2
+// d.SetId(fmt.Sprintf("%s,%s", vservername, ciphername))). Step 2 refreshes/plans/applies the
+// same config through the Framework provider, exercising ParseIdString on the legacy id; the
+// Framework recomputes the id on Read (SetAttrFromGet), so the canonical new-format id becomes
+// "ciphername:TLS1.2-ECDHE-RSA-AES128-GCM-SHA256,vservername:tf_sslvserver".
+func TestAccSslvserver_sslciphersuite_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resourceAddr := "citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslvserver_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSslvserver_sslciphersuite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserver_sslciphersuite_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_sslvserver,TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslvserver_sslciphersuite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserver_sslciphersuite_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "ciphername:TLS1.2-ECDHE-RSA-AES128-GCM-SHA256,vservername:tf_sslvserver"),
 				),
 			},
 		},

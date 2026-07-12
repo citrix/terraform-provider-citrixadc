@@ -77,6 +77,19 @@ func TestAccMapbmr_bmrv4network_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccMapbmr_bmrv4network_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_mapbmr_bmrv4network_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMapbmr_bmrv4network_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccMapbmr_bmrv4network_binding_basic},
+			{Config: testAccMapbmr_bmrv4network_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckMapbmr_bmrv4network_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -245,6 +258,54 @@ func TestAccMapbmr_bmrv4network_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_mapbmr_bmrv4network_binding.tf_binding", "name", "tf_mapbmr"),
 					resource.TestCheckResourceAttr("data.citrixadc_mapbmr_bmrv4network_binding.tf_binding", "network", "1.2.3.0"),
 					resource.TestCheckResourceAttr("data.citrixadc_mapbmr_bmrv4network_binding.tf_binding", "netmask", "255.255.255.0"),
+				),
+			},
+		},
+	})
+}
+
+const testAccMapbmr_bmrv4network_binding_upgrade_basic = `
+	resource "citrixadc_mapbmr" "tf_mapbmr" {
+		name           = "tf_mapbmr"
+		ruleipv6prefix = "2001:db8:abcd:12::/64"
+		psidoffset     = 6
+		eabitlength    = 16
+		psidlength     = 8
+	}
+	resource "citrixadc_mapbmr_bmrv4network_binding" "tf_binding" {
+		name    = citrixadc_mapbmr.tf_mapbmr.name
+		network = "1.2.3.0"
+		netmask = "255.255.255.0"
+	}
+`
+
+func TestAccMapbmr_bmrv4network_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckMapbmr_bmrv4network_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccMapbmr_bmrv4network_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMapbmr_bmrv4network_bindingExist("citrixadc_mapbmr_bmrv4network_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_mapbmr_bmrv4network_binding.tf_binding", "id", "tf_mapbmr,1.2.3.0"),
+				),
+			},
+			// Step 2: same config through the current (Framework) provider. Read parses the legacy id
+			// via ParseIdString and recomputes it to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccMapbmr_bmrv4network_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMapbmr_bmrv4network_bindingExist("citrixadc_mapbmr_bmrv4network_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_mapbmr_bmrv4network_binding.tf_binding", "id", "name:tf_mapbmr,network:1.2.3.0"),
 				),
 			},
 		},

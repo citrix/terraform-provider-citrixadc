@@ -126,6 +126,19 @@ func TestAccCsvserver_auditnslogpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_auditnslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_auditnslogpolicy_binding_basic},
+			{Config: testAccCsvserver_auditnslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckCsvserver_auditnslogpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -271,6 +284,80 @@ func TestAccCsvserver_auditnslogpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding", "name", "tf_csvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding", "policyname", "tf_auditnslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding", "priority", "5"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCsvserver_auditnslogpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccCsvserver_auditnslogpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+
+	resource "citrixadc_csvserver_auditnslogpolicy_binding" "tf_csvserver_auditnslogpolicy_binding" {
+        name 		= citrixadc_csvserver.tf_csvserver.name
+        policyname 	= citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+        priority 	= 5
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
+		servicetype = "HTTP"
+	}
+`
+
+// TestAccCsvserver_auditnslogpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "tf_csvserver,tf_auditnslogpolicy"). Step 2 refreshes/plans/applies the
+// same config through the Framework provider, exercising ParseIdString on the legacy
+// id; because the Framework recomputes the id on Read (SetAttrFromGet), the id
+// upgrades to the new "key:value" form.
+func TestAccCsvserver_auditnslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCsvserver_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_csvserver,tf_auditnslogpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_csvserver,policyname:tf_auditnslogpolicy"),
 				),
 			},
 		},

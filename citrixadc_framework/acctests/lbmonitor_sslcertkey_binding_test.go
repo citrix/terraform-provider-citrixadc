@@ -164,6 +164,19 @@ func TestAccLbmonitor_sslcertkey_binding_ca(t *testing.T) {
 	})
 }
 
+func TestAccLbmonitor_sslcertkey_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitor_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbmonitor_sslcertkey_binding_basic},
+			{Config: testAccLbmonitor_sslcertkey_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbmonitor_sslcertkey_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -311,6 +324,60 @@ func TestAccLbmonitor_sslcertkey_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "monitorname", "tf_monitor"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "certkeyname", "tf_sslcertkey"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "ca", "false"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbmonitor_sslcertkey_binding_upgrade_basic = `
+	resource "citrixadc_lbmonitor_sslcertkey_binding" "tf_lbmonitor_sslcertkey_binding" {
+		monitorname = citrixadc_lbmonitor.tf_monitor.monitorname
+		certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
+	}
+
+	resource "citrixadc_lbmonitor" "tf_monitor" {
+		monitorname = "tf_monitor"
+		type = "HTTP"
+		sslprofile = "ns_default_ssl_profile_backend"
+	}
+
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey"
+		cert = "/var/tmp/certificate1.crt"
+		key = "/var/tmp/key1.pem"
+	}
+`
+
+func TestAccLbmonitor_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslcertkeyPreChecks(t) },
+		CheckDestroy: testAccCheckLbmonitor_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbmonitor_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitor_sslcertkey_bindingExist("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "id", "tf_monitor,tf_sslcertkey"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbmonitor_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitor_sslcertkey_bindingExist("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "id", "monitorname:tf_monitor,certkeyname:tf_sslcertkey"),
 				),
 			},
 		},

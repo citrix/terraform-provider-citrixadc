@@ -259,3 +259,80 @@ func TestAcccrvserver_responderpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Config for the SDK v2 -> Framework state-upgrade test. It is identical to the
+// _basic config (same terraform resource labels, same values) so it is valid under
+// BOTH the last SDK v2 release (2.2.0) schema in step 1 and the current framework
+// schema in step 2.
+const testAccCrvserver_responderpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_crvserver" "crvserver" {
+    name = "my_vserver"
+    servicetype = "HTTP"
+    arp = "OFF"
+}
+resource "citrixadc_responderpolicy" "tf_responderpolicy" {
+	name    = "tf_responderpolicy1"
+	action = "NOOP"
+	rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+}
+resource "citrixadc_crvserver_responderpolicy_binding" "crvserver_responderpolicy_binding" {
+    name = citrixadc_crvserver.crvserver.name
+    policyname = citrixadc_responderpolicy.tf_responderpolicy.name
+    priority = 10
+
+}
+`
+
+// TestAccCrvserver_responderpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 provider release (2.2.0), which stores the legacy
+// comma-joined ID "name,policyname", is refreshed cleanly through the current
+// Framework provider. On Read the Framework recomputes the ID to the canonical
+// new "key:value" format, so after the step-2 apply the ID becomes
+// "name:<name>,policyname:<policyname>".
+func TestAccCrvserver_responderpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release; state gets the legacy comma ID.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCrvserver_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_responderpolicy_bindingExist("citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", "id", "my_vserver,tf_responderpolicy1"),
+				),
+			},
+			// Step 2: refresh/apply the legacy-ID state through the current Framework
+			// provider. Read exercises ParseIdString on the legacy ID and recomputes
+			// the canonical new-format ID.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrvserver_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_responderpolicy_bindingExist("citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", "id", "name:my_vserver,policyname:tf_responderpolicy1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_responderpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_responderpolicy_binding_basic},
+			{Config: testAccCrvserver_responderpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

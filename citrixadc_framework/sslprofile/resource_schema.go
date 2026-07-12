@@ -431,6 +431,11 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes; add
+					// UseStateForUnknown so the GET-populated Computed value on refresh does not
+					// drift null->value and force a spurious parent replace on the v2 -> Framework
+					// upgrade (which would cascade-drop child sslcipher/ecccurve/sslcertkey bindings).
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Type of profile. Front end profiles apply to the entity that receives requests from a client. Backend profiles apply to the entity that sends client requests to a server.",

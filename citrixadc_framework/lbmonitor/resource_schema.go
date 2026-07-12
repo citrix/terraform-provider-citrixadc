@@ -153,7 +153,10 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// snmpoid is NOT ForceNew in SDK v2 (updatable Computed field). Drop the
+					// spurious RequiresReplace added during migration; carry the prior value
+					// forward so a GET-populated value on refresh does not force a replace.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "SNMP OID for SNMP monitors.",
 			},
@@ -299,7 +302,10 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// hostname is NOT ForceNew in SDK v2 (updatable Computed field). Drop the
+					// spurious RequiresReplace added during migration; carry the prior value
+					// forward so a GET-populated value on refresh does not force a replace.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Hostname in the FQDN format (Example: porche.cars.org). Applicable to STOREFRONT monitors.",
 			},
@@ -594,7 +600,11 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes, but add
+					// UseStateForUnknown so a Computed value the GET populates on refresh does not
+					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "The name of the service group to which the monitor is to be bound.",
 			},
@@ -602,7 +612,11 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes, but add
+					// UseStateForUnknown so a Computed value the GET populates on refresh does not
+					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "The name of the service to which the monitor is bound.",
 			},

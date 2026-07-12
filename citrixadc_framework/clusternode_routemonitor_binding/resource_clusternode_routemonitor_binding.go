@@ -77,6 +77,13 @@ func (r *ClusternodeRoutemonitorBindingResource) Create(ctx context.Context, req
 
 	// Read the updated state back
 	r.readClusternodeRoutemonitorBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "clusternode_routemonitor_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -95,6 +102,15 @@ func (r *ClusternodeRoutemonitorBindingResource) Read(ctx context.Context, req r
 	tflog.Debug(ctx, "Reading clusternode_routemonitor_binding resource")
 
 	r.readClusternodeRoutemonitorBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -138,6 +154,13 @@ func (r *ClusternodeRoutemonitorBindingResource) Update(ctx context.Context, req
 
 	// Read the updated state back
 	r.readClusternodeRoutemonitorBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "clusternode_routemonitor_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -213,9 +236,10 @@ func (r *ClusternodeRoutemonitorBindingResource) readClusternodeRoutemonitorBind
 		return
 	}
 
-	// Resource is missing
+	// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+	// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "clusternode_routemonitor_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -224,7 +248,9 @@ func (r *ClusternodeRoutemonitorBindingResource) readClusternodeRoutemonitorBind
 	for i, v := range dataArr {
 		match := true
 
-		// Check netmask
+		// Check netmask only when the id carries it. A legacy SDK v2 id is
+		// "nodeid,routemonitor" (no netmask), so a record that has a netmask must
+		// NOT be disqualified when the parsed id omits it (backward compat).
 		if idVal, ok := idMap["netmask"]; ok {
 			if val, ok := v["netmask"].(string); ok {
 				if val != idVal {
@@ -235,9 +261,6 @@ func (r *ClusternodeRoutemonitorBindingResource) readClusternodeRoutemonitorBind
 				match = false
 				continue
 			}
-		} else if _, ok := v["netmask"].(string); ok {
-			match = false
-			continue
 		}
 
 		// Check routemonitor
@@ -261,9 +284,9 @@ func (r *ClusternodeRoutemonitorBindingResource) readClusternodeRoutemonitorBind
 		}
 	}
 
-	//  Resource is missing
+	// Binding not present in the returned set: signal removal via a null Id (see above).
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("clusternode_routemonitor_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

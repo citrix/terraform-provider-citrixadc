@@ -261,3 +261,86 @@ func TestAccLsngroup_lsnappsprofile_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccLsngroup_lsnappsprofile_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// label as the _basic config so the Exist/Destroy helpers and addresses match,
+// and is valid under both the SDK v2 2.2.0 schema and the framework schema.
+const testAccLsngroup_lsnappsprofile_binding_upgrade_basic = `
+
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
+	}
+
+	resource "citrixadc_lsngroup" "tf_lsngroup" {
+		groupname     = "my_lsngroup"
+		clientname    = citrixadc_lsnclient.tf_lsnclient.clientname
+		logging       = "DISABLED"
+		nattype       = "DYNAMIC"
+		snmptraplimit = 50
+	}
+
+	resource "citrixadc_lsnappsprofile" "tf_lsnappsprofile" {
+		appsprofilename   = "my_lsn_appsprofile"
+		transportprotocol = "TCP"
+		mapping           = "ENDPOINT-INDEPENDENT"
+	}
+
+resource "citrixadc_lsngroup_lsnappsprofile_binding" "tf_lsngroup_lsnappsprofile_binding" {
+	groupname       = citrixadc_lsngroup.tf_lsngroup.groupname
+	appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+}
+
+`
+
+// TestAccLsngroup_lsnappsprofile_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccLsngroup_lsnappsprofile_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsngroup_lsnappsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLsngroup_lsnappsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsnappsprofile_bindingExist("citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding", "id", "my_lsngroup,my_lsn_appsprofile"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsngroup_lsnappsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsnappsprofile_bindingExist("citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding", "id", "appsprofilename:my_lsn_appsprofile,groupname:my_lsngroup"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLsngroup_lsnappsprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnappsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsngroup_lsnappsprofile_binding_basic},
+			{Config: testAccLsngroup_lsnappsprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

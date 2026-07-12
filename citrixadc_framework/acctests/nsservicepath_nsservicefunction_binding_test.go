@@ -258,3 +258,75 @@ func TestAccNsservicepath_nsservicefunction_bindingDataSource_basic(t *testing.T
 		},
 	})
 }
+
+// testAccNsservicepath_nsservicefunction_binding_upgrade_basic reuses the _basic config values
+// (prerequisite resources + the binding). It is valid under BOTH the SDK v2 2.2.0 schema and the
+// current Framework schema, keeping the same terraform resource label as the _basic config so the
+// Exist/Destroy helpers and addresses match.
+const testAccNsservicepath_nsservicefunction_binding_upgrade_basic = `
+	resource "citrixadc_nsservicepath" "tf_servicepath" {
+		servicepathname = "tf_servicepath"
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_nsservicefunction" "tf_servicefunc" {
+		servicefunctionname = "tf_servicefunc"
+		ingressvlan         = citrixadc_vlan.tf_vlan.vlanid
+	}
+	resource "citrixadc_nsservicepath_nsservicefunction_binding" "tf_binding" {
+		servicepathname = citrixadc_nsservicepath.tf_servicepath.servicepathname
+		servicefunction = citrixadc_nsservicefunction.tf_servicefunc.servicefunctionname
+		index           = 2
+	}
+`
+
+// TestAccNsservicepath_nsservicefunction_binding_sdkv2StateUpgrade verifies that state written by
+// the last SDK v2 release (2.2.0) with the legacy comma-joined id upgrades cleanly through the
+// current Framework provider, which recomputes the id to the new key:value format on Read.
+func TestAccNsservicepath_nsservicefunction_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsservicepath_nsservicefunction_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release (writes the legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNsservicepath_nsservicefunction_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsservicepath_nsservicefunction_bindingExist("citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", "id", "tf_servicepath,tf_servicefunc"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework provider.
+				// Read recomputes the id to the new key:value format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsservicepath_nsservicefunction_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsservicepath_nsservicefunction_bindingExist("citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", "id", "servicefunction:tf_servicefunc,servicepathname:tf_servicepath"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNsservicepath_nsservicefunction_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nsservicepath_nsservicefunction_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsservicepath_nsservicefunction_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsservicepath_nsservicefunction_binding_basic},
+			{Config: testAccNsservicepath_nsservicefunction_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

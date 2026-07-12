@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -125,14 +125,16 @@ func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(n string, 
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 3)
-		servicegroupname := idSlice[0]
-
-		servername := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "servername", "port"}, []string{"servername", "port"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
+		}
+		servicegroupname := idMap["servicegroupname"]
+		servername := idMap["servername"]
 
 		port := 0
-		if len(idSlice) == 3 {
-			if port, err = strconv.Atoi(idSlice[2]); err != nil {
+		if p, ok := idMap["port"]; ok && p != "" {
+			if port, err = strconv.Atoi(p); err != nil {
 				return err
 			}
 		}
@@ -185,18 +187,16 @@ func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingNotExist(n strin
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"servicegroupname", "servername", "port"}, []string{"servername", "port"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", id, err)
 		}
-
-		idSlice := strings.SplitN(id, ",", 3)
-		servicegroupname := idSlice[0]
-
-		servername := idSlice[1]
+		servicegroupname := idMap["servicegroupname"]
+		servername := idMap["servername"]
 
 		port := 0
-		if len(idSlice) == 3 {
-			if port, err = strconv.Atoi(idSlice[2]); err != nil {
+		if p, ok := idMap["port"]; ok && p != "" {
+			if port, err = strconv.Atoi(p); err != nil {
 				return err
 			}
 		}
@@ -294,6 +294,71 @@ const testAccGslbservicegroup_gslbservicegroupmember_bindingDataSource_basic = `
 	}
 `
 
+const testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_basic = `
+
+	resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+		servicegroupname = "test_gslbvservicegroup"
+		servicetype      = "HTTP"
+		cip              = "DISABLED"
+		healthmonitor    = "NO"
+		sitename         = citrixadc_gslbsite.site_local.sitename
+	}
+	resource "citrixadc_gslbsite" "site_local" {
+		sitename        = "Site-Local"
+		siteipaddress   = "172.31.96.234"
+		sessionexchange = "DISABLED"
+		sitepassword = "password123"
+	}
+	resource "citrixadc_server" "tf_server" {
+		name = "tf_server"
+		ipaddress = "192.168.11.13"
+	}
+
+	resource "citrixadc_gslbservicegroup_gslbservicegroupmember_binding" "tf_binding" {
+		servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
+		servername       = citrixadc_server.tf_server.name
+		port             = 60
+	}
+
+`
+
+// TestAccGslbservicegroup_gslbservicegroupmember_binding_sdkv2StateUpgrade verifies that a
+// resource created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current (framework-muxed) provider, and that
+// the ID is upgraded to the new key:value format on Read.
+func TestAccGslbservicegroup_gslbservicegroupmember_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release -> legacy comma-separated ID.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist("citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "id", "test_gslbvservicegroup,tf_server,60"),
+				),
+			},
+			{
+				// Step 2: same config through the current (framework) provider. Read exercises
+				// ParseIdString on the legacy ID and recomputes the ID to the new key:value format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist("citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "id", "servicegroupname:test_gslbvservicegroup,servername:tf_server,port:60"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGslbservicegroup_gslbservicegroupmember_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -308,6 +373,19 @@ func TestAccGslbservicegroup_gslbservicegroupmember_bindingDataSource_basic(t *t
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "ip", "192.168.11.13"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccGslbservicegroup_gslbservicegroupmember_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbservicegroup_gslbservicegroupmember_binding_basic},
+			{Config: testAccGslbservicegroup_gslbservicegroupmember_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

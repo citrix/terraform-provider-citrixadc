@@ -78,6 +78,13 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) Create(ctx cont
 
 	// Read the updated state back
 	r.readVpnvserverAuthenticationnegotiatepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnvserver_authenticationnegotiatepolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -96,6 +103,15 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) Read(ctx contex
 	tflog.Debug(ctx, "Reading vpnvserver_authenticationnegotiatepolicy_binding resource")
 
 	r.readVpnvserverAuthenticationnegotiatepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -139,6 +155,13 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) Update(ctx cont
 
 	// Read the updated state back
 	r.readVpnvserverAuthenticationnegotiatepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnvserver_authenticationnegotiatepolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -172,6 +195,12 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) Delete(ctx cont
 	args := make([]string, 0)
 	if val, ok := idMap["policy"]; ok && val != "" {
 		args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(val)))
+	}
+
+	// bindpoint (string enum, e.g. REQUEST/RESPONSE) disambiguates the delete when set.
+	// Restored from prior state to match SDK v2 delete behaviour. (url-encoded, non-empty only)
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
 	}
 
 	err = r.client.DeleteResourceWithArgs(service.Vpnvserver_authenticationnegotiatepolicy_binding.Type(), name_value, args)
@@ -220,7 +249,9 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) readVpnvserverA
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "vpnvserver_authenticationnegotiatepolicy_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -235,7 +266,7 @@ func (r *VpnvserverAuthenticationnegotiatepolicyBindingResource) readVpnvserverA
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationnegotiatepolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

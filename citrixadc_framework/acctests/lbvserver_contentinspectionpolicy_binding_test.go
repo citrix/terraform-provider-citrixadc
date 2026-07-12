@@ -87,6 +87,19 @@ func TestAccLbvserver_contentinspectionpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbvserver_contentinspectionpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_contentinspectionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_contentinspectionpolicy_binding_basic},
+			{Config: testAccLbvserver_contentinspectionpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbvserver_contentinspectionpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -264,6 +277,68 @@ func TestAccLbvserver_contentinspectionpolicy_bindingDataSource_basic(t *testing
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding", "policyname", "tf_contentinspectionpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding", "priority", "1"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}
+
+// testAccLbvserver_contentinspectionpolicy_binding_upgrade_basic is valid under BOTH the SDK v2
+// 2.2.0 schema and the current Framework schema (it uses only the SDK v2 attribute names, which
+// the migration restored). It reuses the values from testAccLbvserver_contentinspectionpolicy_binding_basic.
+const testAccLbvserver_contentinspectionpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_contentinspectionpolicy" "tf_contentinspectionpolicy" {
+		name   = "tf_contentinspectionpolicy"
+		rule   = "false"
+		action = "DROP"
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_lbvserver_contentinspectionpolicy_binding" "tf_lbvserver_contentinspectionpolicy_binding" {
+		bindpoint              = "REQUEST"
+		gotopriorityexpression = "END"
+		name                   = citrixadc_lbvserver.tf_lbvserver.name
+		policyname             = citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy.name
+		priority               = 1
+	}
+`
+
+func TestAccLbvserver_contentinspectionpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_contentinspectionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_contentinspectionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_contentinspectionpolicy_bindingExist("citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding", "id", "tf_lbvserver,tf_contentinspectionpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_contentinspectionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_contentinspectionpolicy_bindingExist("citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding", "id", "bindpoint:REQUEST,name:tf_lbvserver,policyname:tf_contentinspectionpolicy"),
 				),
 			},
 		},

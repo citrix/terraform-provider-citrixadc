@@ -255,3 +255,78 @@ func TestAccIpset_nsip_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccIpset_nsip_binding_upgrade_basic = `
+
+	resource "citrixadc_ipset_nsip_binding" "tf_ipset_nsip_binding" {
+		name    = citrixadc_ipset.tf_ipset.name
+		ipaddress = citrixadc_nsip.tf_nsip.ipaddress
+	}
+
+
+	resource "citrixadc_ipset" "tf_ipset" {
+		name = "tf_test_ipset"
+	}
+
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.1.1.1"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+	}
+`
+
+func TestAccIpset_nsip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIpset_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccIpset_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpset_nsip_bindingExist("citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", "id", "tf_test_ipset,10.1.1.1"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIpset_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpset_nsip_bindingExist("citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", "id", "name:tf_test_ipset,ipaddress:10.1.1.1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIpset_nsip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpset_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpset_nsip_binding_basic,
+			},
+			{
+				Config:                  testAccIpset_nsip_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

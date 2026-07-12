@@ -239,3 +239,71 @@ func TestAccAppfwprofile_crosssitescripting_bindingDataSource_basic(t *testing.T
 		},
 	})
 }
+
+const testAccAppfwprofile_crosssitescripting_binding_upgrade_basic = `
+
+resource "citrixadc_appfwprofile_crosssitescripting_binding" "demo_binding1" {
+  name                 = citrixadc_appfwprofile.demo_appfw.name
+  crosssitescripting   = "file"
+  isregex_xss          = "NOTREGEX"
+  formactionurl_xss    = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+  as_scan_location_xss = "FORMFIELD"
+  as_value_type_xss    = "Tag"
+  isvalueregex_xss     = "REGEX"
+  as_value_expr_xss    = ".*"
+  state                = "ENABLED"
+}
+
+resource "citrixadc_appfwprofile" "demo_appfw" {
+	name                     = "demo_appfwprofile"
+	type                     = ["HTML"]
+  }
+`
+
+func TestAccAppfwprofile_crosssitescripting_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_crosssitescripting_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwprofile_crosssitescripting_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_crosssitescripting_bindingExist("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "id", "demo_appfwprofile,file,^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$,FORMFIELD,Tag,.*"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwprofile_crosssitescripting_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_crosssitescripting_bindingExist("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "id", "as_scan_location_xss:FORMFIELD,as_value_expr_xss:.%2A,as_value_type_xss:Tag,crosssitescripting:file,formactionurl_xss:%5Ehttps%3A%2F%2Fsd2%5C-zgw%5C.test%5C.ctxns%5C.com%2Fapi%2Fdocument%2Fcontent%24,name:demo_appfwprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_crosssitescripting_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_crosssitescripting_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_crosssitescripting_binding_basic},
+			{Config: testAccAppfwprofile_crosssitescripting_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

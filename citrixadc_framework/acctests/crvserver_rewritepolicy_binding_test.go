@@ -262,3 +262,71 @@ func TestAcccrvserver_rewritepolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccCrvserver_rewritepolicy_binding_upgrade_basic = `
+
+resource "citrixadc_crvserver" "crvserver" {
+	name        = "my_vserver"
+	servicetype = "HTTP"
+	arp         = "OFF"
+	}
+  resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+	name   = "tf_rewrite_policy"
+	action = "DROP"
+	rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	}
+  resource "citrixadc_crvserver_rewritepolicy_binding" "crvserver_rewritepolicy_binding" {
+	name       = citrixadc_crvserver.crvserver.name
+	policyname = citrixadc_rewritepolicy.tf_rewrite_policy.name
+	priority   = 10
+	bindpoint  = "RESPONSE"
+	}
+`
+
+func TestAccCrvserver_rewritepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the binding with the last SDK v2 release (v2.2.0),
+				// which writes state using the legacy comma-separated ID format.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCrvserver_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_rewritepolicy_bindingExist("citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding", "id", "my_vserver,tf_rewrite_policy"),
+				),
+			},
+			{
+				// Step 2: Refresh/apply the legacy-ID state through the current
+				// (Framework) provider. Read parses the legacy ID via ParseIdString
+				// and recomputes the canonical new-format ID.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrvserver_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_rewritepolicy_bindingExist("citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding", "id", "bindpoint:RESPONSE,name:my_vserver,policyname:tf_rewrite_policy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_rewritepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_rewritepolicy_binding.crvserver_rewritepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_rewritepolicy_binding_basic},
+			{Config: testAccCrvserver_rewritepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

@@ -236,3 +236,62 @@ func TestAccAaauser_intranetip6_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccAaauser_intranetip6_binding_upgrade_basic = `
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_aaauser_intranetip6_binding" "tf_aaauser_intranetip6_binding" {
+		username    = citrixadc_aaauser.tf_aaauser.username
+		intranetip6 = "2003:db8:100::fb/128"
+	}
+`
+
+func TestAccAaauser_intranetip6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaauser_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaauser_intranetip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_intranetip6_bindingExist("citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding", "id", "user1,2003:db8:100::fb/128"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaauser_intranetip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_intranetip6_bindingExist("citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding", "id", "intranetip6:2003%3Adb8%3A100%3A%3Afb%2F128,username:user1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaauser_intranetip6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaauser_intranetip6_binding_basic},
+			{Config: testAccAaauser_intranetip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

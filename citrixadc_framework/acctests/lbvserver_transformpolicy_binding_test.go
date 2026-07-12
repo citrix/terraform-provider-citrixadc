@@ -103,6 +103,19 @@ func TestAccLbvserver_transformpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbvserver_transformpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_transformpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_transformpolicy_binding_basic_step1},
+			{Config: testAccLbvserver_transformpolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbvserver_transformpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -237,6 +250,71 @@ func TestAccLbvserver_transformpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_transformpolicy_binding.tf_binding", "policyname", "tf_trans_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_transformpolicy_binding.tf_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_transformpolicy_binding.tf_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbvserver_transformpolicy_binding_upgrade_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_lbvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_transformprofile" "tf_trans_profile" {
+  name = "tf_trans_profile"
+  comment = "Some comment"
+}
+
+resource "citrixadc_transformpolicy" "tf_trans_policy" {
+    name = "tf_trans_policy"
+    profilename = citrixadc_transformprofile.tf_trans_profile.name
+    rule = "http.REQ.URL.CONTAINS(\"test_url\")"
+}
+
+resource "citrixadc_lbvserver_transformpolicy_binding" "tf_binding" {
+    name = citrixadc_lbvserver.tf_lbvserver.name
+    policyname = citrixadc_transformpolicy.tf_trans_policy.name
+    priority = 100
+    bindpoint = "REQUEST"
+    gotopriorityexpression = "END"
+}
+`
+
+// TestAccLbvserver_transformpolicy_binding_sdkv2StateUpgrade verifies that a resource
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is correctly
+// adopted by the current Framework provider: the Framework Read parses the legacy ID via
+// ParseIdString and recomputes it to the canonical new key:value format.
+func TestAccLbvserver_transformpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy id "name,policyname".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_transformpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_transformpolicy_bindingExist("citrixadc_lbvserver_transformpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_transformpolicy_binding.tf_binding", "id", "tf_lbvserver,tf_trans_policy"),
+				),
+			},
+			// Step 2: refresh/plan/apply through the current Framework provider. Read
+			// parses the legacy id and recomputes it to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_transformpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_transformpolicy_bindingExist("citrixadc_lbvserver_transformpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_transformpolicy_binding.tf_binding", "id", "name:tf_lbvserver,policyname:tf_trans_policy"),
 				),
 			},
 		},

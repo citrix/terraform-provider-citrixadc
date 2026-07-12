@@ -262,3 +262,66 @@ func TestAccAppfwprofile_trustedlearningclients_bindingDataSource_basic(t *testi
 		},
 	})
 }
+
+const testAccAppfwprofile_trustedlearningclients_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_trustedlearningclients_binding" "tf_binding1" {
+		name                   = citrixadc_appfwprofile.tf_appfwprofile.name
+		trustedlearningclients = "1.2.31.1/32"
+		state                  = "ENABLED"
+		alertonly              = "ON"
+		isautodeployed         = "AUTODEPLOYED"
+		comment                = "Testing"
+	}
+`
+
+func TestAccAppfwprofile_trustedlearningclients_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_trustedlearningclients_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwprofile_trustedlearningclients_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_trustedlearningclients_bindingExist("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "id", "tf_appfwprofile,1.2.31.1/32"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwprofile_trustedlearningclients_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_trustedlearningclients_bindingExist("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "id", "name:tf_appfwprofile,trustedlearningclients:1.2.31.1%2F32"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_trustedlearningclients_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_trustedlearningclients_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_trustedlearningclients_binding_basic},
+			{Config: testAccAppfwprofile_trustedlearningclients_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"alertonly", "isautodeployed"}},
+		},
+	})
+}

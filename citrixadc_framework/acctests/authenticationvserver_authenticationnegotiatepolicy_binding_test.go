@@ -291,3 +291,94 @@ func TestAccAuthenticationvserverAuthenticationnegotiatepolicyBindingDataSource_
 		},
 	})
 }
+
+// testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_upgrade_basic reuses
+// the _basic config (binding + all prerequisite resources). It is valid under BOTH the
+// SDK v2 2.2.0 schema AND the current Framework schema because the migration restored the
+// SDK v2 attribute names. The terraform resource label (tf_binding) is kept identical to
+// the _basic config so the Exist/Destroy helpers and resource address match.
+const testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction" {
+		name                       = "tf_negotiateaction"
+		domain                     = "DomainName"
+		domainuser                 = "usersame"
+		domainuserpasswd           = "password"
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "new_grpname"
+	}
+	resource "citrixadc_authenticationnegotiatepolicy" "tf_negotiatepolicy" {
+		name      = "tf_negotiatepolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationnegotiateaction.tf_negotiateaction.name
+	}
+	resource "citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding" "tf_binding" {
+		name            = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy          = citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy.name
+		priority        = 9
+		groupextraction = "false"
+		bindpoint       = "REQUEST"
+	}
+`
+
+// TestAccAuthenticationvserver_authenticationnegotiatepolicy_binding_sdkv2StateUpgrade
+// verifies that state written by the last SDK v2 release (legacy comma-separated ID) is
+// correctly upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_authenticationvserver,tf_negotiatepolicy"). Step 2 refreshes/plans/applies the SAME
+// config through the Framework provider, exercising ParseIdString on the legacy id; because
+// the Framework recomputes the id on Read (SetAttrFromGet re-derives data.Id), the id
+// upgrades to the new "key:value" form.
+func TestAccAuthenticationvserver_authenticationnegotiatepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_authenticationnegotiatepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationnegotiatepolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_authenticationvserver,tf_negotiatepolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationnegotiatepolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_authenticationvserver,policy:tf_negotiatepolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_authenticationnegotiatepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationnegotiatepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "groupextraction"}},
+		},
+	})
+}

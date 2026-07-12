@@ -115,6 +115,19 @@ func TestAccVpnglobal_authenticationsamlpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnglobal_authenticationsamlpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationsamlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_authenticationsamlpolicy_binding_basic},
+			{Config: testAccVpnglobal_authenticationsamlpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"groupextraction"}},
+		},
+	})
+}
+
 func testAccCheckVpnglobal_authenticationsamlpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -244,6 +257,66 @@ func TestAccVpnglobal_authenticationsamlpolicy_bindingDataSource_basic(t *testin
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind", "policyname", "tf_samlpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind", "priority", "80"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind", "secondary", "false"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnglobal_authenticationsamlpolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationsamlaction" "tf_samlaction" {
+		name                    = "tf_samlaction"
+		metadataurl             = "http://www.example.com"
+		samltwofactor           = "OFF"
+		requestedauthncontext   = "minimum"
+		digestmethod            = "SHA1"
+		signaturealg            = "RSA-SHA256"
+		metadatarefreshinterval = 1
+	}
+	resource "citrixadc_authenticationsamlpolicy" "tf_samlpolicy" {
+		name      = "tf_samlpolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationsamlaction.tf_samlaction.name
+	}
+	resource "citrixadc_vpnglobal_authenticationsamlpolicy_binding" "tf_bind" {
+		policyname      = citrixadc_authenticationsamlpolicy.tf_samlpolicy.name
+		priority        = 80
+		groupextraction = false
+		secondary       = false
+	}
+`
+
+// TestAccVpnglobal_authenticationsamlpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (legacy plain-policyname id) is refreshed by the current
+// Framework provider. The Framework Read recomputes the id (single-key => plain policyname),
+// so the id stays "tf_samlpolicy" across the upgrade.
+func TestAccVpnglobal_authenticationsamlpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_authenticationsamlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release. State is written with the legacy id (policyname).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_authenticationsamlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationsamlpolicy_bindingExist("citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind", "id", "tf_samlpolicy"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current (Framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the id (single-key => plain policyname).
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_authenticationsamlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationsamlpolicy_bindingExist("citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationsamlpolicy_binding.tf_bind", "id", "tf_samlpolicy"),
 				),
 			},
 		},

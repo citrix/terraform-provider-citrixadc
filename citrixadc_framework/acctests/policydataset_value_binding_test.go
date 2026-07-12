@@ -244,3 +244,81 @@ func TestAccPolicydataset_value_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccPolicydataset_value_binding_upgrade_basic mirrors the tf_value1 entry from
+// _basic_step1 (a policydataset parent plus a single value binding). It is valid
+// under BOTH the SDK v2 2.2.0 schema and the current framework schema, so it can be
+// created with the old provider in step 1 and re-planned with the new provider in
+// step 2 of the state-upgrade test below.
+const testAccPolicydataset_value_binding_upgrade_basic = `
+resource "citrixadc_policydataset" "tf_dataset" {
+  name    = "tf_dataset"
+  type    = "number"
+  comment = "hello"
+}
+
+resource "citrixadc_policydataset_value_binding" "tf_value1" {
+  name = citrixadc_policydataset.tf_dataset.name
+
+  value    = 100
+  index    = 111
+  endrange = 150
+}
+`
+
+func TestAccPolicydataset_value_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_policydataset_value_binding.tf_value1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicydataset_value_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicydataset_value_binding_basic_step1},
+			{Config: testAccPolicydataset_value_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccPolicydataset_value_binding_sdkv2StateUpgrade verifies that a binding
+// created by the LAST SDK v2 release (2.2.0) — which writes the legacy comma-joined
+// id "name,value" — is refreshed and re-applied correctly by the CURRENT framework
+// provider. Step 2 exercises ParseIdString on the legacy id during the framework
+// Read; the framework SetAttrFromGet then recomputes data.Id into the canonical new
+// "key:value" format, so the id upgrades in place.
+func TestAccPolicydataset_value_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicydataset_value_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id "name,value".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccPolicydataset_value_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil),
+					testAccCheckPolicydatasetValue("citrixadc_policydataset_value_binding.tf_value1"),
+					resource.TestCheckResourceAttr("citrixadc_policydataset_value_binding.tf_value1", "id", "tf_dataset,100"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id), then plans/applies. SetAttrFromGet
+			// recomputes the id to the new "key:value" format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccPolicydataset_value_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil),
+					testAccCheckPolicydatasetValue("citrixadc_policydataset_value_binding.tf_value1"),
+					resource.TestCheckResourceAttr("citrixadc_policydataset_value_binding.tf_value1", "id", "endrange:150,name:tf_dataset,value:100"),
+				),
+			},
+		},
+	})
+}

@@ -101,6 +101,73 @@ func TestAccAuthenticationvserver_authenticationloginschemapolicy_binding_basic(
 	})
 }
 
+const testAccAuthenticationvserver_authenticationloginschemapolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationloginschema" "tf_loginschema" {
+		name                    = "tf_loginschema"
+		authenticationschema    = "LoginSchema/SingleAuth.xml"
+		ssocredentials          = "YES"
+		authenticationstrength  = "30"
+		passwordcredentialindex = "10"
+	}
+	resource "citrixadc_authenticationloginschemapolicy" "tf_loginschemapolicy" {
+		name    = "tf_loginschemapolicy"
+		rule    = "true"
+		action  = citrixadc_authenticationloginschema.tf_loginschema.name
+		comment = "samplenew_testing"
+	}
+	resource "citrixadc_authenticationvserver_authenticationloginschemapolicy_binding" "tf_binding" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy.name
+		priority  = 77
+		bindpoint = "REQUEST"
+	}
+`
+
+// TestAccAuthenticationvserver_authenticationloginschemapolicy_binding_sdkv2StateUpgrade
+// verifies that state written by the last SDK v2 release (2.2.0), which stored the
+// legacy composite ID "name,policy", is correctly upgraded and refreshed by the current
+// Framework provider. On the step-2 refresh the Framework Read recomputes the ID into the
+// new "name:value,policy:value" form (SetAttrFromGet -> ComposeId).
+func TestAccAuthenticationvserver_authenticationloginschemapolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release -> legacy id "name,policy".
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAuthenticationvserver_authenticationloginschemapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingExist("citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "id", "tf_authenticationvserver,tf_loginschemapolicy"),
+				),
+			},
+			{
+				// Step 2: refresh the legacy-id state through the current Framework provider.
+				// Read parses the legacy id and recomputes it to the new format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationvserver_authenticationloginschemapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingExist("citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "id", "name:tf_authenticationvserver,policy:tf_loginschemapolicy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -286,6 +353,19 @@ func TestAccAuthenticationvserverAuthenticationloginschemapolicyBindingDataSourc
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "priority", "77"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_authenticationloginschemapolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_authenticationloginschemapolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_authenticationloginschemapolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "priority"}},
 		},
 	})
 }

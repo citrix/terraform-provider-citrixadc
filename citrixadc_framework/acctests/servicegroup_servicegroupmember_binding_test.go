@@ -516,3 +516,68 @@ func TestAccServicegroup_servicegroupmember_bindingDataSource(t *testing.T) {
 		},
 	})
 }
+
+// testAccServicegroup_servicegroupmember_binding_upgrade_basic mirrors the
+// _ipv4_step1 config (servicegroup + a member bound by ip+port with order). It is
+// valid under BOTH the SDK v2 2.2.0 schema and the current framework schema, so it
+// can be applied with the old provider in step 1 and re-planned with the new
+// provider in step 2 of the state-upgrade test below.
+const testAccServicegroup_servicegroupmember_binding_upgrade_basic = `
+
+resource "citrixadc_servicegroup" "tf_servicegroup" {
+  servicegroupname = "tf_servicegroup"
+  servicetype      = "HTTP"
+}
+
+resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
+    servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+    ip = "10.78.22.33"
+    port = 80
+    order = 100
+}
+`
+
+// TestAccServicegroup_servicegroupmember_binding_sdkv2StateUpgrade verifies that a
+// resource created by the LAST SDK v2 release (2.2.0) — which writes the legacy
+// comma-joined id "servicegroupname,servername,port" — is refreshed and re-applied
+// correctly by the CURRENT framework provider. Step 2 exercises ParseIdString on
+// the legacy id during the framework Read.
+//
+// The resource-side SetAttrFromGet does NOT recompute data.Id, so the legacy id is
+// retained after the upgrade. Step 2 asserts only the Exist helper (the binding
+// surviving the provider switch and being resolvable by the framework provider is
+// the core signal); asserting a specific id form is avoided to prevent false
+// negatives on this ForceNew-heavy binding.
+func TestAccServicegroup_servicegroupmember_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccServicegroup_servicegroupmember_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "id", "tf_servicegroup,10.78.22.33,80"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id) then plans/applies.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccServicegroup_servicegroupmember_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
+				),
+			},
+		},
+	})
+}

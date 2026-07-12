@@ -69,6 +69,19 @@ func TestAccSslvserver_sslpolicy_binding_csvserver(t *testing.T) {
 	})
 }
 
+func TestAccSslvserver_sslpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1},
+			{Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckSslvserver_sslpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -267,6 +280,69 @@ resource "citrixadc_sslvserver_sslpolicy_binding" "tf_binding_cs" {
     type = "REQUEST"
 }
 `
+
+const testAccsslvserver_sslpolicy_binding_upgrade_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  name        = "tf_lbvserver"
+  ipv46       = "192.168.34.21"
+  port        = "443"
+  servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
+}
+
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_sslpolicy"
+  rule   = "true"
+  action = "NOOP"
+}
+
+resource "citrixadc_sslvserver_sslpolicy_binding" "tf_binding_lb" {
+    vservername = citrixadc_lbvserver.tf_lbvserver.name
+    policyname = citrixadc_sslpolicy.tf_sslpolicy.name
+    priority = 333
+    type = "REQUEST"
+}
+`
+
+// TestAccSslvserver_sslpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccSslvserver_sslpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslvserver_sslpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccsslvserver_sslpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserver_sslpolicy_bindingExist("citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "id", "tf_lbvserver,tf_sslpolicy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccsslvserver_sslpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserver_sslpolicy_bindingExist("citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "id", "policyname:tf_sslpolicy,priority:333,type:REQUEST,vservername:tf_lbvserver"),
+				),
+			},
+		},
+	})
+}
 
 const testAccSslvserver_sslpolicy_bindingDataSource_basic = `
 resource "citrixadc_lbvserver" "tf_lbvserver" {

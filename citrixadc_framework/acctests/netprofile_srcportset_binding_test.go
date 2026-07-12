@@ -238,3 +238,72 @@ func TestAccNetprofile_srcportset_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccNetprofile_srcportset_binding_upgrade_basic reuses the _basic config
+// values and is valid under BOTH the last SDK v2 release (2.2.0) schema and the
+// current Framework schema (uses only SDK v2 attribute names).
+const testAccNetprofile_srcportset_binding_upgrade_basic = `
+	resource "citrixadc_netprofile" "tf_netprofile" {
+		name                   = "tf_netprofile"
+		proxyprotocol          = "ENABLED"
+		proxyprotocoltxversion = "V1"
+	}
+	resource "citrixadc_netprofile_srcportset_binding" "tf_binding" {
+		name         = citrixadc_netprofile.tf_netprofile.name
+		srcportrange = "2000"
+	}
+`
+
+// TestAccNetprofile_srcportset_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-joined id) is transparently
+// upgraded by the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0 (legacy id "name,srcportrange"); step 2 refreshes/plans
+// the same config through the current Framework provider, whose Read parses the
+// legacy id and recomputes it to the new "name:<v>,srcportrange:<v>" format
+// (SetAttrFromGet).
+func TestAccNetprofile_srcportset_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetprofile_srcportset_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNetprofile_srcportset_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofile_srcportset_bindingExist("citrixadc_netprofile_srcportset_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netprofile_srcportset_binding.tf_binding", "id", "tf_netprofile,2000"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNetprofile_srcportset_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofile_srcportset_bindingExist("citrixadc_netprofile_srcportset_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netprofile_srcportset_binding.tf_binding", "id", "name:tf_netprofile,srcportrange:2000"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetprofile_srcportset_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_netprofile_srcportset_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofile_srcportset_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetprofile_srcportset_binding_basic},
+			{Config: testAccNetprofile_srcportset_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

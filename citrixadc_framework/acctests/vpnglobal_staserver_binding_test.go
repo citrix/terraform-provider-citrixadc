@@ -186,6 +186,49 @@ func testAccCheckVpnglobal_staserver_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccVpnglobal_staserver_binding_upgrade_basic = `
+	resource "citrixadc_vpnglobal_staserver_binding" "tf_bind" {
+		staserver      = "http://www.example.com/"
+		staaddresstype = "IPV4"
+	}
+`
+
+func TestAccVpnglobal_staserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_staserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (plain staserver value).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_staserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_staserver_bindingExist("citrixadc_vpnglobal_staserver_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_staserver_binding.tf_bind", "id", "http://www.example.com/"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read re-derives the canonical id in
+				// SetAttrFromGet. This is a single-key binding, so the canonical
+				// id is the plain staserver value (same as the legacy id).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_staserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_staserver_bindingExist("citrixadc_vpnglobal_staserver_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_staserver_binding.tf_bind", "id", "http://www.example.com/"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnglobal_staserver_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -198,6 +241,19 @@ func TestAccVpnglobal_staserver_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "staaddresstype", "IPV4"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnglobal_staserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_staserver_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_staserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_staserver_binding_basic},
+			{Config: testAccVpnglobal_staserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

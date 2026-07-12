@@ -25,6 +25,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func TestAccServicegroup_lbmonitor_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_servicegroup_lbmonitor_binding.bind1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServicegroup_lbmonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccServicegroup_lbmonitor_binding_basic_step1},
+			{Config: testAccServicegroup_lbmonitor_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func TestAccServicegroup_lbmonitor_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -322,6 +335,101 @@ func TestAccServicegroup_lbmonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_lbmonitor_binding.bind1", "servicegroupname", "tf_servicegroup"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_lbmonitor_binding.bind1", "monitor_name", "tf-monitor1"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_lbmonitor_binding.bind1", "weight", "80"),
+				),
+			},
+		},
+	})
+}
+
+// testAccServicegroup_lbmonitor_binding_upgrade_basic mirrors the _basic_step1
+// config (lbvserver + two lbmonitors + servicegroup + two lbmonitor bindings). It
+// is valid under BOTH the SDK v2 2.2.0 schema and the current framework schema, so
+// it can be applied with the old provider in step 1 and re-planned with the new
+// provider in step 2 of the state-upgrade test below.
+const testAccServicegroup_lbmonitor_binding_upgrade_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  name        = "tf_lbvserver"
+  ipv46       = "192.168.13.46"
+  port        = "80"
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_lbmonitor" "tfmonitor1" {
+  monitorname = "tf-monitor1"
+  type        = "HTTP"
+}
+
+resource "citrixadc_lbmonitor" "tfmonitor2" {
+  monitorname = "tfmonitor2"
+  type        = "PING"
+}
+
+resource "citrixadc_servicegroup" "tf_servicegroup" {
+  servicegroupname = "tf_servicegroup"
+  lbvservers       = [citrixadc_lbvserver.tf_lbvserver.name]
+  servicetype      = "HTTP"
+  servicegroupmembers = [
+    "192.168.33.33:80:1",
+  ]
+
+}
+
+resource "citrixadc_servicegroup_lbmonitor_binding" "bind1" {
+    servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+    monitorname = citrixadc_lbmonitor.tfmonitor1.monitorname
+    weight = 80
+}
+
+resource "citrixadc_servicegroup_lbmonitor_binding" "bind2" {
+    servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+    monitorname = citrixadc_lbmonitor.tfmonitor2.monitorname
+    weight = 20
+}
+`
+
+// TestAccServicegroup_lbmonitor_binding_sdkv2StateUpgrade verifies that bindings
+// created by the LAST SDK v2 release (2.2.0) — which write the legacy comma-joined
+// id "servicegroupname,monitorname" — are refreshed and re-applied correctly by the
+// CURRENT framework provider. Step 2 exercises ParseIdString on the legacy id during
+// the framework Read.
+//
+// This resource's SetAttrFromGet RECOMPUTES data.Id into the new
+// "servicegroupname:<v>,monitorname:<v>" format on every Read, so after the step-2
+// refresh the id upgrades to the canonical new format (asserted below).
+func TestAccServicegroup_lbmonitor_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckServicegroup_lbmonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccServicegroup_lbmonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroup_lbmonitor_bindingExist("citrixadc_servicegroup_lbmonitor_binding.bind1", nil),
+					testAccCheckServicegroup_lbmonitor_bindingExist("citrixadc_servicegroup_lbmonitor_binding.bind2", nil),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup_lbmonitor_binding.bind1", "id", "tf_servicegroup,tf-monitor1"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup_lbmonitor_binding.bind2", "id", "tf_servicegroup,tfmonitor2"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id) then plans/applies. The framework Read
+			// recomputes the id into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccServicegroup_lbmonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroup_lbmonitor_bindingExist("citrixadc_servicegroup_lbmonitor_binding.bind1", nil),
+					testAccCheckServicegroup_lbmonitor_bindingExist("citrixadc_servicegroup_lbmonitor_binding.bind2", nil),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup_lbmonitor_binding.bind1", "id", "servicegroupname:tf_servicegroup,monitorname:tf-monitor1"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup_lbmonitor_binding.bind2", "id", "servicegroupname:tf_servicegroup,monitorname:tfmonitor2"),
 				),
 			},
 		},

@@ -78,6 +78,75 @@ const testAccVpnvserver_authenticationwebauthpolicy_binding_basic_step2 = `
 	}
 `
 
+const testAccVpnvserver_authenticationwebauthpolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_examplevserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_authenticationwebauthaction" "tf_webauthaction" {
+		name                       = "tf_webauthaction"
+		serverip                   = "1.2.3.4"
+		serverport                 = 8080
+		fullreqexpr                = "TRUE"
+		scheme                     = "http"
+		successrule                = "http.RES.STATUS.EQ(200)"
+		defaultauthenticationgroup = "new_group"
+	}
+	resource "citrixadc_authenticationwebauthpolicy" "tf_webauthpolicy" {
+		name   = "tf_webauthpolicy"
+		rule   = "NS_TRUE"
+		action = citrixadc_authenticationwebauthaction.tf_webauthaction.name
+	}
+	resource "citrixadc_vpnvserver_authenticationwebauthpolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationwebauthpolicy.tf_webauthpolicy.name
+		priority  = 80
+		bindpoint = "OTHERTCP_REQUEST"
+	}
+`
+
+// TestAccVpnvserver_authenticationwebauthpolicy_binding_sdkv2StateUpgrade verifies that
+// state written by the last SDK v2 release (legacy comma-joined id "name,policy") is
+// transparently upgraded by the current Framework provider. Step 1 creates the binding
+// with citrix/citrixadc 2.2.0; step 2 refreshes/plans the same config through the current
+// Framework provider, whose Read parses the legacy id and recomputes it to the new
+// "name:<v>,policy:<v>" canonical format (SetAttrFromGet).
+func TestAccVpnvserver_authenticationwebauthpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationwebauthpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationwebauthpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationwebauthpolicy_bindingExist("citrixadc_vpnvserver_authenticationwebauthpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationwebauthpolicy_binding.tf_bind", "id", "tf_examplevserver,tf_webauthpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_authenticationwebauthpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationwebauthpolicy_bindingExist("citrixadc_vpnvserver_authenticationwebauthpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationwebauthpolicy_binding.tf_bind", "id", "name:tf_examplevserver,policy:tf_webauthpolicy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnvserver_authenticationwebauthpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -281,6 +350,19 @@ func TestAccVpnvserver_authenticationwebauthpolicy_bindingDataSource_basic(t *te
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationwebauthpolicy_binding.tf_bind", "priority", "80"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationwebauthpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationwebauthpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationwebauthpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationwebauthpolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationwebauthpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
 		},
 	})
 }

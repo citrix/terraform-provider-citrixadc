@@ -232,6 +232,60 @@ func testAccCheckVlan_nsip_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccVlan_nsip_binding_upgrade_basic = `
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid 	  = 40
+    aliasname = "Management VLAN"
+}
+
+resource "citrixadc_nsip" "tf_snip" {
+    ipaddress = "10.222.74.145"
+    type 	  = "SNIP"
+    netmask   = "255.255.255.0"
+    icmp 	  = "ENABLED"
+    state 	  = "ENABLED"
+}
+
+resource "citrixadc_vlan_nsip_binding" "tf_bind" {
+    vlanid 	  = citrixadc_vlan.tf_vlan.vlanid
+    ipaddress = citrixadc_nsip.tf_snip.ipaddress
+    netmask   = citrixadc_nsip.tf_snip.netmask
+    td 		  = 0
+}
+`
+
+func TestAccVlan_nsip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVlan_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the resource with the last SDK v2 release (writes legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVlan_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlan_nsip_bindingExist("citrixadc_vlan_nsip_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan_nsip_binding.tf_bind", "id", "40,10.222.74.145"),
+				),
+			},
+			{
+				// Step 2: refresh/plan/apply the legacy-id state through the current framework provider.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVlan_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlan_nsip_bindingExist("citrixadc_vlan_nsip_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan_nsip_binding.tf_bind", "id", "vlanid:40,ipaddress:10.222.74.145,netmask:255.255.255.0,ownergroup:,td:0"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVlan_nsip_bindingDataSource_basic = `
 resource "citrixadc_vlan" "tf_vlan" {
     vlanid 	  = 40
@@ -273,6 +327,19 @@ func TestAccVlan_nsip_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vlan_nsip_binding.tf_bind", "netmask", "255.255.255.0"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVlan_nsip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vlan_nsip_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVlan_nsip_binding_basic_step1},
+			{Config: testAccVlan_nsip_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"td"}},
 		},
 	})
 }

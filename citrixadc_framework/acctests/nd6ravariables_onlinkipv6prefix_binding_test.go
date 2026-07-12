@@ -225,6 +225,53 @@ func testAccCheckNd6ravariables_onlinkipv6prefix_bindingDestroy(s *terraform.Sta
 	return nil
 }
 
+const testAccNd6ravariables_onlinkipv6prefix_binding_upgrade_basic = `
+
+	resource "citrixadc_onlinkipv6prefix" "tf_onlinkipv6prefix" {
+		ipv6prefix      = "2003::/64"
+		onlinkprefix    = "YES"
+		autonomusprefix = "NO"
+	}
+
+	resource "citrixadc_nd6ravariables_onlinkipv6prefix_binding" "tf_nd6ravariables_onlinkipv6prefix_binding" {
+		vlan      = 1
+		ipv6prefix = citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix.ipv6prefix
+	}
+`
+
+func TestAccNd6ravariables_onlinkipv6prefix_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNd6ravariables_onlinkipv6prefix_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNd6ravariables_onlinkipv6prefix_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNd6ravariables_onlinkipv6prefix_bindingExist("citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", "id", "1,2003::/64"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNd6ravariables_onlinkipv6prefix_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNd6ravariables_onlinkipv6prefix_bindingExist("citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", "id", "ipv6prefix:2003%3A%3A%2F64,vlan:1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNd6ravariables_onlinkipv6prefix_bindingDataSource_basic(t *testing.T) {
 	// t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
@@ -238,6 +285,19 @@ func TestAccNd6ravariables_onlinkipv6prefix_bindingDataSource_basic(t *testing.T
 					resource.TestCheckResourceAttr("data.citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", "ipv6prefix", "2003::/64"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccNd6ravariables_onlinkipv6prefix_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNd6ravariables_onlinkipv6prefix_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNd6ravariables_onlinkipv6prefix_binding_basic},
+			{Config: testAccNd6ravariables_onlinkipv6prefix_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

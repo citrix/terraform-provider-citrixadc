@@ -78,6 +78,13 @@ func (r *VpnvserverAppflowpolicyBindingResource) Create(ctx context.Context, req
 
 	// Read the updated state back
 	r.readVpnvserverAppflowpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnvserver_appflowpolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -96,6 +103,15 @@ func (r *VpnvserverAppflowpolicyBindingResource) Read(ctx context.Context, req r
 	tflog.Debug(ctx, "Reading vpnvserver_appflowpolicy_binding resource")
 
 	r.readVpnvserverAppflowpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -139,6 +155,13 @@ func (r *VpnvserverAppflowpolicyBindingResource) Update(ctx context.Context, req
 
 	// Read the updated state back
 	r.readVpnvserverAppflowpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnvserver_appflowpolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -218,7 +241,9 @@ func (r *VpnvserverAppflowpolicyBindingResource) readVpnvserverAppflowpolicyBind
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "vpnvserver_appflowpolicy_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -228,6 +253,7 @@ func (r *VpnvserverAppflowpolicyBindingResource) readVpnvserverAppflowpolicyBind
 		match := true
 
 		// Check bindpoint
+		// Backward-compat: legacy SDK v2 id omits bindpoint (name,policyname-style), so a GET record that carries a bindpoint must not be disqualified.
 		if idVal, ok := idMap["bindpoint"]; ok {
 			if val, ok := v["bindpoint"].(string); ok {
 				if val != idVal {
@@ -238,9 +264,6 @@ func (r *VpnvserverAppflowpolicyBindingResource) readVpnvserverAppflowpolicyBind
 				match = false
 				continue
 			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
 		}
 
 		// Check policy
@@ -266,7 +289,8 @@ func (r *VpnvserverAppflowpolicyBindingResource) readVpnvserverAppflowpolicyBind
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnvserver_appflowpolicy_binding not found with the provided ID attributes"))
+		// Binding not present in the returned set: signal removal via a null Id (see above).
+		data.Id = types.StringNull()
 		return
 	}
 

@@ -277,3 +277,74 @@ func TestAccAaauser_vpnsessionpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccAaauser_vpnsessionpolicy_binding_upgrade_basic = `
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
+		name                       = "newsession"
+		sesstimeout                = "10"
+		defaultauthorizationaction = "ALLOW"
+	}
+	resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
+		name   = "tf_vpnsessionpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name
+	}
+	resource "citrixadc_aaauser_vpnsessionpolicy_binding" "tf_aaauser_vpnsessionpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy   = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
+		type     = "REQUEST"
+		priority = 100
+	}
+`
+
+func TestAccAaauser_vpnsessionpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaauser_vpnsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaauser_vpnsessionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_vpnsessionpolicy_bindingExist("citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", "id", "user1,tf_vpnsessionpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaauser_vpnsessionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_vpnsessionpolicy_bindingExist("citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", "id", "policy:tf_vpnsessionpolicy,username:user1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaauser_vpnsessionpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_vpnsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaauser_vpnsessionpolicy_binding_basic},
+			{Config: testAccAaauser_vpnsessionpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
+		},
+	})
+}

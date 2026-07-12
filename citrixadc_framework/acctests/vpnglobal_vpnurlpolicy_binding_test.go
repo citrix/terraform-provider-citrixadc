@@ -250,3 +250,76 @@ func TestAccVpnglobal_vpnurlpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccVpnglobal_vpnurlpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
+		name             = "tf_vpnurlaction"
+		linkname         = "new_link"
+		actualurl        = "http://www.citrix.com"
+		applicationtype  = "CVPN"
+		clientlessaccess = "OFF"
+		comment          = "Testing"
+		ssotype          = "unifiedgateway"
+		vservername      = "vserver1"
+	}
+	resource "citrixadc_vpnurlpolicy" "citrixadc_vpnurlpolicy" {
+		name   = "new_policy"
+		rule   = "true"
+		action = citrixadc_vpnurlaction.tf_vpnurlaction.name
+	}
+	resource "citrixadc_vpnglobal_vpnurlpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnurlpolicy.citrixadc_vpnurlpolicy.name
+		priority = "20"
+	}
+`
+
+func TestAccVpnglobal_vpnurlpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_vpnurlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnurlpolicy_bindingExist("citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", "id", "new_policy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id. This is a single-key binding,
+				// so the canonical framework id is the plain policyname value, which
+				// matches the legacy id.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_vpnurlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnurlpolicy_bindingExist("citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", "id", "new_policy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpnurlpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_vpnurlpolicy_binding_basic},
+			{Config: testAccVpnglobal_vpnurlpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

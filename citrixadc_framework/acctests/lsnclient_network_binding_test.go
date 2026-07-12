@@ -236,3 +236,64 @@ func TestAccLsnclient_network_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccLsnclient_network_binding_upgrade_basic = `
+
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsnclient"
+}
+
+resource "citrixadc_lsnclient_network_binding" "tf_lsnclient_network_binding" {
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+	network    = "10.222.74.160"
+	netmask    = "255.255.255.255"
+	td         = 0
+}
+
+`
+
+func TestAccLsnclient_network_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnclient_network_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLsnclient_network_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnclient_network_bindingExist("citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding", "id", "my_lsnclient,10.222.74.160"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnclient_network_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnclient_network_bindingExist("citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding", "id", "clientname:my_lsnclient,network:10.222.74.160"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLsnclient_network_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclient_network_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnclient_network_binding_basic},
+			{Config: testAccLsnclient_network_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"td"}},
+		},
+	})
+}

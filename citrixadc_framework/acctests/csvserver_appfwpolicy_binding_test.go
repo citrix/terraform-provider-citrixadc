@@ -264,3 +264,112 @@ func TestAccCsvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAcccsvserver_appfwpolicy_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// label as testAccCsvserver_appfwpolicy_binding_basic so it is valid under BOTH
+// the SDK v2 2.2.0 schema and the current framework schema.
+const testAcccsvserver_appfwpolicy_binding_upgrade_basic = `
+	resource citrixadc_csvserver_appfwpolicy_binding demo_binding {
+		name = citrixadc_csvserver.demo_cs.name
+		priority = 100
+		policyname  = citrixadc_appfwpolicy.demo_appfwpolicy.name
+		gotopriorityexpression = "END"
+	}
+	resource "citrixadc_csvserver" "demo_cs" {
+		ipv46       = "10.10.10.33"
+		name        = "demo_csvserver"
+		port        = 80
+		servicetype = "HTTP"
+	}
+
+	resource citrixadc_appfwprofile demo_appfwprofile {
+		name = "demo_appfwprofile"
+		bufferoverflowaction = ["none"]
+		contenttypeaction = ["none"]
+		cookieconsistencyaction = ["none"]
+		creditcard = ["none"]
+		creditcardaction = ["none"]
+		crosssitescriptingaction = ["none"]
+		csrftagaction = ["none"]
+		denyurlaction = ["none"]
+		dynamiclearning = ["none"]
+		fieldconsistencyaction = ["none"]
+		fieldformataction = ["none"]
+		fileuploadtypesaction = ["none"]
+		inspectcontenttypes = ["none"]
+		jsondosaction = ["none"]
+		jsonsqlinjectionaction = ["none"]
+		jsonxssaction = ["none"]
+		multipleheaderaction = ["none"]
+		sqlinjectionaction = ["none"]
+		starturlaction = ["none"]
+		type = ["HTML"]
+		xmlattachmentaction = ["none"]
+		xmldosaction = ["none"]
+		xmlformataction = ["none"]
+		xmlsoapfaultaction = ["none"]
+		xmlsqlinjectionaction = ["none"]
+		xmlvalidationaction = ["none"]
+		xmlwsiaction = ["none"]
+		xmlxssaction = ["none"]
+	}
+
+	resource citrixadc_appfwpolicy demo_appfwpolicy {
+		name = "demo_appfwpolicy"
+		profilename = citrixadc_appfwprofile.demo_appfwprofile.name
+		rule = "true"
+	}
+`
+
+// TestAccCsvserver_appfwpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccCsvserver_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAcccsvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_appfwpolicy_bindingExist("citrixadc_csvserver_appfwpolicy_binding.demo_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_appfwpolicy_binding.demo_binding", "id", "demo_csvserver,demo_appfwpolicy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAcccsvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_appfwpolicy_bindingExist("citrixadc_csvserver_appfwpolicy_binding.demo_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_appfwpolicy_binding.demo_binding", "id", "name:demo_csvserver,policyname:demo_appfwpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_appfwpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_appfwpolicy_binding.demo_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_appfwpolicy_binding_basic},
+			{Config: testAccCsvserver_appfwpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

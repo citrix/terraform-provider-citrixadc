@@ -96,6 +96,66 @@ func TestAccVpnvserver_authenticationdfapolicy_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccVpnvserver_authenticationdfapolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_authenticationdfaaction" "tf_dfaaction" {
+		name       = "tf_dfaaction"
+		serverurl  = "https://example.com/"
+		clientid   = "cliId"
+		passphrase = "secret"
+	}
+	resource "citrixadc_authenticationdfapolicy" "td_dfapolicy" {
+		name   = "tf_dfapolicy"
+		rule   = "ns_true"
+		action = citrixadc_authenticationdfaaction.tf_dfaaction.name
+	}
+	resource "citrixadc_vpnvserver_authenticationdfapolicy_binding" "tf_bind" {
+		name            = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy          = citrixadc_authenticationdfapolicy.td_dfapolicy.name
+		priority        = 50
+		groupextraction = "0"
+		bindpoint       = "REQUEST"
+	}
+`
+
+func TestAccVpnvserver_authenticationdfapolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationdfapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes legacy positional id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationdfapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationdfapolicy_bindingExist("citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_dfapolicy"),
+				),
+			},
+			// Step 2: refresh/apply the same config through the current framework provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_authenticationdfapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationdfapolicy_bindingExist("citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind", "id", "name:tf_vpnvserver,policy:tf_dfapolicy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVpnvserver_authenticationdfapolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -282,6 +342,19 @@ func TestAccVpnvserver_authenticationdfapolicy_bindingDataSource_basic(t *testin
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind", "priority", "50"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationdfapolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationdfapolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationdfapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationdfapolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationdfapolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "groupextraction"}},
 		},
 	})
 }

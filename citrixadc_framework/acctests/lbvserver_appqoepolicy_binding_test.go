@@ -94,6 +94,19 @@ func TestAccLbvserver_appqoepolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbvserver_appqoepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_appqoepolicy_binding.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_appqoepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_appqoepolicy_binding_basic_step1},
+			{Config: testAccLbvserver_appqoepolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbvserver_appqoepolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -276,6 +289,76 @@ func TestAccLbvserver_appqoepolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appqoepolicy_binding.foo", "policyname", "appqoe-pol-primd"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appqoepolicy_binding.foo", "priority", "56"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appqoepolicy_binding.foo", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}
+
+// testAccLbvserver_appqoepolicy_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// labels as testAccLbvserver_appqoepolicy_binding_basic_step1 so it is valid
+// under BOTH the SDK v2 2.2.0 schema and the current framework schema.
+const testAccLbvserver_appqoepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "tf_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "appqoe-pol-primd"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_lbvserver_appqoepolicy_binding" "foo" {
+		name = citrixadc_lbvserver.tf_lbvserver.name
+		policyname = citrixadc_appqoepolicy.tf_appqoepolicy.name
+		bindpoint = "REQUEST"
+		gotopriorityexpression = "END"
+		priority = 56
+	}
+`
+
+// TestAccLbvserver_appqoepolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccLbvserver_appqoepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_appqoepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_appqoepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_appqoepolicy_bindingExist("citrixadc_lbvserver_appqoepolicy_binding.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_appqoepolicy_binding.foo", "id", "tf_lbvserver,appqoe-pol-primd"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_appqoepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_appqoepolicy_bindingExist("citrixadc_lbvserver_appqoepolicy_binding.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_appqoepolicy_binding.foo", "id", "name:tf_lbvserver,policyname:appqoe-pol-primd"),
 				),
 			},
 		},

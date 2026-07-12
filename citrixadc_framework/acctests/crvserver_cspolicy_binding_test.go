@@ -319,3 +319,97 @@ func TestAcccrvserver_cspolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAcccrvserver_cspolicy_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// labels as testAccCrvserver_cspolicy_binding_basic so it is valid under BOTH
+// the SDK v2 2.2.0 schema and the current framework schema.
+const testAcccrvserver_cspolicy_binding_upgrade_basic = `
+
+resource "citrixadc_crvserver" "crvserver" {
+	name        = "my_vserver"
+	servicetype = "HTTP"
+	arp         = "OFF"
+	}
+  resource "citrixadc_lbvserver" "foo_lbvserver" {
+	name        = "test_policy_lbv"
+	servicetype = "HTTP"
+	ipv46       = "192.122.3.30"
+	port        = 8000
+	comment     = "hello"
+	}
+  resource "citrixadc_csaction" "tf_csaction" {
+	name            = "test_csaction"
+	targetlbvserver = citrixadc_lbvserver.foo_lbvserver.name
+	}
+  resource "citrixadc_cspolicy" "foo_cspolicy" {
+	policyname = "test_cspolicy"
+	rule       = "TRUE"
+	action     = citrixadc_csaction.tf_csaction.name
+	}
+  resource "citrixadc_service" "tf_service" {
+	lbvserver = citrixadc_lbvserver.foo_lbvserver.name
+	name = "tf_service1"
+	port = 8080
+	ip = "10.202.22.111"
+	servicetype = "HTTP"
+	cachetype = "TRANSPARENT"
+	}
+  resource "citrixadc_crvserver_cspolicy_binding" "crvserver_cspolicy_binding" {
+	name       = citrixadc_crvserver.crvserver.name
+	policyname = citrixadc_cspolicy.foo_cspolicy.policyname
+	priority   = 90
+	}
+`
+
+// TestAccCrvserver_cspolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccCrvserver_cspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAcccrvserver_cspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_cspolicy_bindingExist("citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", "id", "my_vserver,test_cspolicy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAcccrvserver_cspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_cspolicy_bindingExist("citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", "id", "name:my_vserver,policyname:test_cspolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_cspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_cspolicy_binding_basic},
+			{Config: testAccCrvserver_cspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

@@ -108,6 +108,100 @@ func TestAccLbvserver_appfwpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccLbvserver_appfwpolicy_binding_upgrade_basic = `
+	resource citrixadc_lbvserver_appfwpolicy_binding demo_binding {
+		name = citrixadc_lbvserver.demo_lb.name
+		priority = 100
+		bindpoint = "REQUEST"
+		policyname  = citrixadc_appfwpolicy.demo_appfwpolicy.name
+		labelname = citrixadc_lbvserver.demo_lb.name
+		gotopriorityexpression = "END"
+		invoke = true
+		labeltype = "reqvserver"
+	}
+
+	resource citrixadc_lbvserver demo_lb {
+	name        = "demo_lb"
+	ipv46       = "1.1.1.1"
+	port        = "80"
+	servicetype = "HTTP"
+	}
+
+	resource citrixadc_appfwprofile demo_appfwprofile {
+		name = "demo_appfwprofile"
+		bufferoverflowaction = ["none"]
+		contenttypeaction = ["none"]
+		cookieconsistencyaction = ["none"]
+		creditcard = ["none"]
+		creditcardaction = ["none"]
+		crosssitescriptingaction = ["none"]
+		csrftagaction = ["none"]
+		denyurlaction = ["none"]
+		dynamiclearning = ["none"]
+		fieldconsistencyaction = ["none"]
+		fieldformataction = ["none"]
+		fileuploadtypesaction = ["none"]
+		inspectcontenttypes = ["none"]
+		jsondosaction = ["none"]
+		jsonsqlinjectionaction = ["none"]
+		jsonxssaction = ["none"]
+		multipleheaderaction = ["none"]
+		sqlinjectionaction = ["none"]
+		starturlaction = ["none"]
+		type = ["HTML"]
+		xmlattachmentaction = ["none"]
+		xmldosaction = ["none"]
+		xmlformataction = ["none"]
+		xmlsoapfaultaction = ["none"]
+		xmlsqlinjectionaction = ["none"]
+		xmlvalidationaction = ["none"]
+		xmlwsiaction = ["none"]
+		xmlxssaction = ["none"]
+	}
+
+	resource citrixadc_appfwpolicy demo_appfwpolicy {
+		name = "demo_appfwpolicy"
+		profilename = citrixadc_appfwprofile.demo_appfwprofile.name
+		rule = "true"
+	}
+
+`
+
+func TestAccLbvserver_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id (name,policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_appfwpolicy_bindingExist("citrixadc_lbvserver_appfwpolicy_binding.demo_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_appfwpolicy_binding.demo_binding", "id", "demo_lb,demo_appfwpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_appfwpolicy_bindingExist("citrixadc_lbvserver_appfwpolicy_binding.demo_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_appfwpolicy_binding.demo_binding", "id", "name:demo_lb,policyname:demo_appfwpolicy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckLbvserver_appfwpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -270,6 +364,27 @@ func TestAccLbvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appfwpolicy_binding.tf_acc_test_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_appfwpolicy_binding.tf_acc_test_binding", "gotopriorityexpression", "END"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_appfwpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_appfwpolicy_binding.demo_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_appfwpolicy_binding_basic,
+			},
+			{
+				Config:                  testAccLbvserver_appfwpolicy_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

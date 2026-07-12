@@ -257,6 +257,85 @@ func testAccCheckVpnvserver_vpnurl_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccVpnvserver_vpnurl_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_examplevserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnurl" "url" {
+		actualurl        = "http://www.citrix.com"
+		appjson          = "xyz"
+		applicationtype  = "CVPN"
+		clientlessaccess = "OFF"
+		comment          = "Testing"
+		linkname         = "Description"
+		ssotype          = "unifiedgateway"
+		urlname          = "Firsturl"
+		vservername      = "server1"
+	}
+	resource "citrixadc_vpnvserver_vpnurl_binding" "tf_bind" {
+		name    = citrixadc_vpnvserver.tf_vpnvserver.name
+		urlname = citrixadc_vpnurl.url.urlname
+	}
+`
+
+// TestAccVpnvserver_vpnurl_binding_sdkv2StateUpgrade verifies that a binding created with
+// the last SDK v2 provider release (2.2.0, legacy comma-joined ID) is refreshed and
+// upgraded cleanly by the current framework provider, which recomputes the ID into the
+// new key:value format on Read.
+func TestAccVpnvserver_vpnurl_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_vpnvserver_vpnurl_binding.tf_bind"
+	legacyId := "tf_examplevserver,Firsturl"
+	newId := "name:tf_examplevserver,urlname:Firsturl"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_vpnurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release, writing legacy-id state.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_vpnurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_vpnurl_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", legacyId),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework
+			// provider. Read exercises ParseIdString on the legacy id and recomputes the
+			// canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_vpnurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_vpnurl_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", newId),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_vpnurl_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_vpnurl_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_vpnurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_vpnurl_binding_basic},
+			{Config: testAccVpnvserver_vpnurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func TestAccVpnvserver_vpnurl_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

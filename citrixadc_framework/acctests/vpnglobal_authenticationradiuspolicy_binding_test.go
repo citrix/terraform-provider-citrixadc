@@ -249,3 +249,78 @@ func TestAccVpnglobal_authenticationradiuspolicy_bindingDataSource_basic(t *test
 		},
 	})
 }
+
+// testAccVpnglobal_authenticationradiuspolicy_binding_upgrade_basic is valid under BOTH
+// the SDK v2 2.2.0 schema and the current framework schema (same attribute names).
+const testAccVpnglobal_authenticationradiuspolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+		name         = "tf_radiusaction"
+		radkey       = "secret"
+		serverip     = "1.2.3.4"
+		serverport   = 8080
+		authtimeout  = 2
+		radnasip     = "DISABLED"
+		passencoding = "chap"
+	}
+	resource "citrixadc_authenticationradiuspolicy" "tf_radiuspolicy" {
+		name      = "tf_radiuspolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationradiusaction.tf_radiusaction.name
+	}
+	resource "citrixadc_vpnglobal_authenticationradiuspolicy_binding" "tf_bind" {
+		policyname 		= citrixadc_authenticationradiuspolicy.tf_radiuspolicy.name
+		priority 		= 20
+		secondary 		= "false"
+		groupextraction = "false"
+	}
+`
+
+func TestAccVpnglobal_authenticationradiuspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_authenticationradiuspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (plain policyname value).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_authenticationradiuspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationradiuspolicy_bindingExist("citrixadc_vpnglobal_authenticationradiuspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationradiuspolicy_binding.tf_bind", "id", "tf_radiuspolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises the legacy id and SetAttrFromGet
+				// recomputes the id. This binding is single-key (policyname), so the
+				// canonical new id is the plain policyname value (== the legacy id).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_authenticationradiuspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationradiuspolicy_bindingExist("citrixadc_vpnglobal_authenticationradiuspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationradiuspolicy_binding.tf_bind", "id", "tf_radiuspolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_authenticationradiuspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationradiuspolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationradiuspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_authenticationradiuspolicy_binding_basic},
+			{Config: testAccVpnglobal_authenticationradiuspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"groupextraction"}},
+		},
+	})
+}

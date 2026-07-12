@@ -238,6 +238,70 @@ func testAccCheckVpnvserver_aaapreauthenticationpolicy_bindingDestroy(s *terrafo
 	return nil
 }
 
+const testAccVpnvserver_aaapreauthenticationpolicy_binding_upgrade_basic = `
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "tf_aaaaction"
+		preauthenticationaction = "DENY"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
+	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
+		name 	  = "tf_aaapolicy"
+		rule 	  = "NS_TRUE"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserverexample"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_aaapreauthenticationpolicy_binding" "tf_binding" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy.name
+		priority  = 40
+		secondary = "false"
+		bindpoint = "OTHERTCP_REQUEST"
+	}
+`
+
+// TestAccVpnvserver_aaapreauthenticationpolicy_binding_sdkv2StateUpgrade verifies that a
+// resource created with the last SDK v2 release (2.2.0), which writes the legacy
+// comma-joined id "name,policy", can be refreshed/planned/applied by the current
+// Plugin Framework provider. On the framework Read the id is recomputed to the new
+// key:value format via SetAttrFromGet -> BuildId.
+func TestAccVpnvserver_aaapreauthenticationpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_aaapreauthenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_aaapreauthenticationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_aaapreauthenticationpolicy_bindingExist("citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "id", "tf_vpnvserverexample,tf_aaapolicy"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current framework provider.
+			// The framework recomputes the id to the new key:value format on Read.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_aaapreauthenticationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_aaapreauthenticationpolicy_bindingExist("citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "id", "name:tf_vpnvserverexample,policy:tf_aaapolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpnvserver_aaapreauthenticationpolicy_bindingDataSource_basic = `
 
 	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
@@ -283,6 +347,19 @@ func TestAccVpnvserver_aaapreauthenticationpolicy_bindingDataSource_basic(t *tes
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "priority", "40"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_aaapreauthenticationpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_aaapreauthenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_aaapreauthenticationpolicy_binding_basic},
+			{Config: testAccVpnvserver_aaapreauthenticationpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "priority", "secondary"}},
 		},
 	})
 }

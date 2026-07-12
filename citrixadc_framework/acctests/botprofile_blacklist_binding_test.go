@@ -95,6 +95,19 @@ func TestAccBotprofile_blacklist_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccBotprofile_blacklist_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_blacklist_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_blacklist_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_blacklist_binding_basic},
+			{Config: testAccBotprofile_blacklist_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckBotprofile_blacklist_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -277,6 +290,81 @@ func TestAccBotprofileBlacklistBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_blacklist_binding.tf_binding", "bot_bind_comment", "TestingBlacklist"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_blacklist_binding.tf_binding", "bot_blacklist_enabled", "ON"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_blacklist_binding.tf_binding", "logmessage", "HelloTesting"),
+				),
+			},
+		},
+	})
+}
+
+// testAccBotprofile_blacklist_binding_upgrade_basic mirrors testAccBotprofile_blacklist_binding_basic
+// using only SDK v2 attribute names, so it is valid under BOTH the last SDK v2 release (2.2.0)
+// schema and the current framework schema. The resource labels are kept identical so the Exist /
+// Destroy helpers and the state addresses match.
+const testAccBotprofile_blacklist_binding_upgrade_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_blacklist_binding" "tf_binding" {
+		name                  = citrixadc_botprofile.tf_botprofile.name
+		bot_blacklist         = "true"
+		bot_blacklist_type    = "IPv4"
+		bot_blacklist_value   = "1.3.5.7"
+		bot_bind_comment      = "TestingBlacklist"
+		bot_blacklist_enabled = "ON"
+		bot_blacklist_action  = ["LOG", "RESET"]
+		logmessage            = "HelloTesting"
+	}
+`
+
+// TestAccBotprofile_blacklist_binding_sdkv2StateUpgrade verifies that state written by the last
+// SDK v2 release (with the legacy comma-joined ID) is refreshed and re-applied cleanly by the
+// current framework provider.
+//
+//	Step 1: create the binding with citrix/citrixadc 2.2.0 (SDK v2). State carries the legacy
+//	        ID "name,bot_blacklist_value".
+//	Step 2: the SAME config served by the current framework provider. Terraform refreshes the
+//	        legacy-id state through the framework Read (exercising utils.ParseIdString on the
+//	        legacy id) then plans/applies. The framework Read RECOMPUTES the ID to the new
+//	        canonical key:value format (botprofile_blacklist_bindingSetAttrFromGet re-derives
+//	        data.Id), so after the upgrade the ID becomes "name:...,bot_blacklist_value:...".
+func TestAccBotprofile_blacklist_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofile_blacklist_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create with the last SDK v2 release from the registry.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccBotprofile_blacklist_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_blacklist_bindingExist("citrixadc_botprofile_blacklist_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_blacklist_binding.tf_binding", "id", "tf_botprofile,1.3.5.7"),
+				),
+			},
+			{
+				// Refresh/plan/apply the legacy-id state through the current framework provider.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotprofile_blacklist_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_blacklist_bindingExist("citrixadc_botprofile_blacklist_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_blacklist_binding.tf_binding", "id", "name:tf_botprofile,bot_blacklist_value:1.3.5.7"),
 				),
 			},
 		},

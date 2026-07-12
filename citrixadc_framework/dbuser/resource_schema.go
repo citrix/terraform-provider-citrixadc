@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -19,7 +18,6 @@ import (
 // DbuserResourceModel describes the resource data model.
 type DbuserResourceModel struct {
 	Id                types.String `tfsdk:"id"`
-	Loggedin          types.Bool   `tfsdk:"loggedin"`
 	Password          types.String `tfsdk:"password"`
 	PasswordWo        types.String `tfsdk:"password_wo"`
 	PasswordWoVersion types.Int64  `tfsdk:"password_wo_version"`
@@ -33,14 +31,6 @@ func (r *DbuserResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the dbuser resource.",
-			},
-			"loggedin": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
-				Description: "Display the names of all database users currently logged on to the Citrix ADC.",
 			},
 			"password": schema.StringAttribute{
 				Optional:    true,
@@ -75,9 +65,6 @@ func dbuserGetThePayloadFromthePlan(ctx context.Context, data *DbuserResourceMod
 
 	// Create API request body from the model
 	dbuser := db.Dbuser{}
-	if !data.Loggedin.IsNull() && !data.Loggedin.IsUnknown() {
-		dbuser.Loggedin = data.Loggedin.ValueBool()
-	}
 	if !data.Password.IsNull() && !data.Password.IsUnknown() {
 		dbuser.Password = data.Password.ValueString()
 	}
@@ -107,11 +94,6 @@ func dbuserSetAttrFromGet(ctx context.Context, data *DbuserResourceModel, getRes
 	tflog.Debug(ctx, "In dbuserSetAttrFromGet Function")
 
 	// Convert API response to model
-	if val, ok := getResponseData["loggedin"]; ok && val != nil {
-		data.Loggedin = types.BoolValue(val.(bool))
-	} else {
-		data.Loggedin = types.BoolNull()
-	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
 	// password_wo is not returned by NITRO API (secret/ephemeral) - retain from config
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config

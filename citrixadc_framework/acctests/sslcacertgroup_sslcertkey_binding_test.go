@@ -271,3 +271,70 @@ func TestAccSslcacertgroup_sslcertkey_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccsslcacertgroup_sslcertkey_binding_upgrade_basic = `
+	resource "citrixadc_sslcacertgroup_sslcertkey_binding" "sslcacertgroup_sslcertkey_binding_demo" {
+        cacertgroupname = citrixadc_sslcacertgroup.ns_callout_certs1.cacertgroupname
+		certkeyname = citrixadc_sslcertkey.tf_cacertkey.certkey
+        ocspcheck = "Mandatory"
+	}
+
+	resource "citrixadc_sslcertkey" "tf_cacertkey" {
+		certkey = "tf_cacertkey"
+		cert = "/var/tmp/rootcert1.cert"
+	}
+
+	resource "citrixadc_sslcacertgroup" "ns_callout_certs1" {
+		cacertgroupname = "ns_callout_certs1"
+	}
+`
+
+func TestAccSslcacertgroup_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslcacertgroup_sslcertkey_bindingPreChecks(t) },
+		CheckDestroy: testAccCheckSslcacertgroup_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id
+				// (d.SetId("<cacertgroupname>,<certkeyname>")).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccsslcacertgroup_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcacertgroup_sslcertkey_bindingExist("citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo", "id", "ns_callout_certs1,tf_cacertkey"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id to the canonical new format
+				// (comma-joined key:UrlEncode(value) pairs in idParts order).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccsslcacertgroup_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcacertgroup_sslcertkey_bindingExist("citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo", "id", "cacertgroupname:ns_callout_certs1,certkeyname:tf_cacertkey"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslcacertgroup_sslcertkey_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcacertgroup_sslcertkey_bindingPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcacertgroup_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslcacertgroup_sslcertkey_binding_basic_step1},
+			{Config: testAccSslcacertgroup_sslcertkey_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

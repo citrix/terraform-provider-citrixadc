@@ -305,3 +305,83 @@ func TestAccVpnvserver_appflowpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccVpnvserver_appflowpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name      = "tf_appflowpolicy"
+		action    = citrixadc_appflowaction.tf_appflowaction.name
+		rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name = "test_action"
+		collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "col1"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_appflowpolicy_binding" "tf_bind" {
+		name                   = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy                 = citrixadc_appflowpolicy.tf_appflowpolicy.name
+		bindpoint              = "ICA_REQUEST"
+		priority               = 200
+		gotopriorityexpression = "END"
+	}
+`
+
+func TestAccVpnvserver_appflowpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_appflowpolicy_bindingExist("citrixadc_vpnvserver_appflowpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appflowpolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_appflowpolicy,ICA_REQUEST"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_appflowpolicy_bindingExist("citrixadc_vpnvserver_appflowpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appflowpolicy_binding.tf_bind", "id", "bindpoint:ICA_REQUEST,name:tf_vpnvserver,policy:tf_appflowpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_appflowpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_appflowpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_appflowpolicy_binding_basic},
+			{Config: testAccVpnvserver_appflowpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

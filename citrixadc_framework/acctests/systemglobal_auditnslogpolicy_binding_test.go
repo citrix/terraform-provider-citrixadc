@@ -54,6 +54,19 @@ const testAccSystemglobal_auditnslogpolicy_binding_basic_step2 = `
 	}
 `
 
+func TestAccSystemglobal_auditnslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_auditnslogpolicy_binding.tf_systemglobal_auditnslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemglobal_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemglobal_auditnslogpolicy_binding_basic},
+			{Config: testAccSystemglobal_auditnslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func TestAccSystemglobal_auditnslogpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -228,6 +241,72 @@ func TestAccSystemglobal_auditnslogpolicy_bindingDataSource_basic(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_auditnslogpolicy_binding.tf_systemglobal_auditnslogpolicy_binding", "policyname", "tf_auditnslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_auditnslogpolicy_binding.tf_systemglobal_auditnslogpolicy_binding", "priority", "50"),
+				),
+			},
+		},
+	})
+}
+
+// testAccSystemglobal_auditnslogpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccSystemglobal_auditnslogpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+
+	resource "citrixadc_systemglobal_auditnslogpolicy_binding" "tf_systemglobal_auditnslogpolicy_binding" {
+		policyname = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+		priority   = 50
+	}
+`
+
+// TestAccSystemglobal_auditnslogpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider. Step 1 creates the binding
+// with citrix/citrixadc 2.2.0 (writes the legacy id "tf_auditnslogpolicy" — the SDK v2
+// d.SetId(policyname)). Step 2 refreshes/plans/applies the same config through the
+// Framework provider, exercising ParseIdString on the legacy id; the Framework
+// recomputes the id on Read (SetAttrFromGet). For this single-key resource the
+// canonical new-format id is the plain policyname, so it stays "tf_auditnslogpolicy".
+func TestAccSystemglobal_auditnslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_systemglobal_auditnslogpolicy_binding.tf_systemglobal_auditnslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemglobal_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSystemglobal_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_auditnslogpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read; for this single-key resource it remains "tf_auditnslogpolicy".
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemglobal_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_auditnslogpolicy"),
 				),
 			},
 		},

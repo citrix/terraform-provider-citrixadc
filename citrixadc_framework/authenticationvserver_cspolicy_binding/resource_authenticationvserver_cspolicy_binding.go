@@ -75,6 +75,13 @@ func (r *AuthenticationvserverCspolicyBindingResource) Create(ctx context.Contex
 
 	// Read the updated state back
 	r.readAuthenticationvserverCspolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "authenticationvserver_cspolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -93,6 +100,15 @@ func (r *AuthenticationvserverCspolicyBindingResource) Read(ctx context.Context,
 	tflog.Debug(ctx, "Reading authenticationvserver_cspolicy_binding resource")
 
 	r.readAuthenticationvserverCspolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -119,6 +135,13 @@ func (r *AuthenticationvserverCspolicyBindingResource) Update(ctx context.Contex
 
 	// Read the current state back
 	r.readAuthenticationvserverCspolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "authenticationvserver_cspolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -159,6 +182,12 @@ func (r *AuthenticationvserverCspolicyBindingResource) Delete(ctx context.Contex
 	// policy is the only disambiguating delete arg this binding requires.
 	// URL-encode the value to handle slashy/special characters. (binding pattern (b))
 	args := []string{fmt.Sprintf("policy:%s", url.QueryEscape(policy_value))}
+
+	// bindpoint (string enum, e.g. REQUEST/RESPONSE) disambiguates the delete when set.
+	// Restored from prior state to match SDK v2 delete behaviour. (url-encoded, non-empty only)
+	if !data.Bindpoint.IsNull() && !data.Bindpoint.IsUnknown() && data.Bindpoint.ValueString() != "" {
+		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(data.Bindpoint.ValueString())))
+	}
 
 	err = r.client.DeleteResourceWithArgs(service.Authenticationvserver_cspolicy_binding.Type(), name_value, args)
 	if err != nil {
@@ -206,7 +235,9 @@ func (r *AuthenticationvserverCspolicyBindingResource) readAuthenticationvserver
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "authenticationvserver_cspolicy_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -223,7 +254,7 @@ func (r *AuthenticationvserverCspolicyBindingResource) readAuthenticationvserver
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", "authenticationvserver_cspolicy_binding not found with the provided ID attributes")
+		data.Id = types.StringNull()
 		return
 	}
 

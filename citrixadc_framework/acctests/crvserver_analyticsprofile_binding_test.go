@@ -83,6 +83,63 @@ func TestAccCrvserver_analyticsprofile_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccCrvserver_analyticsprofile_binding_upgrade_basic = `
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name             = "new_profile"
+		type             = "webinsight"
+		httppagetracking = "DISABLED"
+		httpurl          = "ENABLED"
+	}
+
+	resource "citrixadc_crvserver_analyticsprofile_binding" "crvserver_analyticsprofile_binding" {
+		name        	 = citrixadc_crvserver.crvserver.name
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+`
+
+// TestAccCrvserver_analyticsprofile_binding_sdkv2StateUpgrade verifies that a resource
+// created with the last SDK v2 release (legacy comma-joined ID) is refreshed and
+// upgraded correctly by the current Framework provider (key:value ID).
+func TestAccCrvserver_analyticsprofile_binding_sdkv2StateUpgrade(t *testing.T) {
+	addr := "citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create with the last SDK v2 release; state holds the legacy ID.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCrvserver_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_analyticsprofile_bindingExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "id", "my_vserver,new_profile"),
+				),
+			},
+			// Step 2: Refresh the legacy-ID state through the current Framework provider.
+			// Read exercises ParseIdString on the legacy ID and recomputes the new-format ID.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrvserver_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_analyticsprofile_bindingExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "id", "analyticsprofile:new_profile,name:my_vserver"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCrvserver_analyticsprofile_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -256,6 +313,19 @@ func TestAcccrvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding", "analyticsprofile", "new_profile_ds"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccCrvserver_analyticsprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_analyticsprofile_binding_basic},
+			{Config: testAccCrvserver_analyticsprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

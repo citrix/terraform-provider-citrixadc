@@ -179,3 +179,57 @@ func testAccCheckLbvserver_filterpolicy_bindingDestroy(s *terraform.State) error
 
 	return nil
 }
+
+// TestAccLbvserver_filterpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccLbvserver_filterpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_filterpolicy_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_filterpolicy_bindingExist("citrixadc_lbvserver_filterpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_filterpolicy_binding.tf_bind", "id", "tf_lbvserver,tf_filterpolicy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_filterpolicy_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_filterpolicy_bindingExist("citrixadc_lbvserver_filterpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_filterpolicy_binding.tf_bind", "id", "name:tf_lbvserver,policyname:tf_filterpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_filterpolicy_binding_import(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	const resAddr = "citrixadc_lbvserver_filterpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_filterpolicy_binding_basic_step1},
+			{Config: testAccLbvserver_filterpolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

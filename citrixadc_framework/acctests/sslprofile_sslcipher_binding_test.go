@@ -57,6 +57,19 @@ func TestAccSslprofile_sslcipher_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslprofile_sslcipher_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslprofile_sslcipher_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofile_sslcipher_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslprofile_sslcipher_binding_basic_step1},
+			{Config: testAccSslprofile_sslcipher_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckSslprofile_sslcipher_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -175,7 +188,10 @@ const testAccSslprofile_sslcipher_binding_basic_step1 = `
 resource "citrixadc_sslprofile" "tf_sslprofile" {
   name = "tf_sslprofile"
 
-  ecccurvebindings = []
+  # defaultProfile-enabled ADCs auto-bind 6 default ECC curves; nodefaultecccurvebindings
+  # drops them so the profile actually matches the empty ecccurvebindings set.
+  ecccurvebindings          = []
+  nodefaultecccurvebindings = true
 
 }
 
@@ -198,7 +214,10 @@ const testAccSslprofile_sslcipher_binding_basic_step2 = `
 resource "citrixadc_sslprofile" "tf_sslprofile" {
   name = "tf_sslprofile"
 
-  ecccurvebindings = []
+  # defaultProfile-enabled ADCs auto-bind 6 default ECC curves; nodefaultecccurvebindings
+  # drops them so the profile actually matches the empty ecccurvebindings set.
+  ecccurvebindings          = []
+  nodefaultecccurvebindings = true
 
 }
 
@@ -221,7 +240,10 @@ const testAccSslprofile_sslcipher_binding_basic_step3 = `
 resource "citrixadc_sslprofile" "tf_sslprofile" {
   name = "tf_sslprofile"
 
-  ecccurvebindings = []
+  # defaultProfile-enabled ADCs auto-bind 6 default ECC curves; nodefaultecccurvebindings
+  # drops them so the profile actually matches the empty ecccurvebindings set.
+  ecccurvebindings          = []
+  nodefaultecccurvebindings = true
 
 }
 
@@ -236,7 +258,10 @@ const testAccSslprofile_sslcipher_bindingDataSource_basic = `
 resource "citrixadc_sslprofile" "tf_sslprofile" {
   name = "tf_sslprofile"
 
-  ecccurvebindings = []
+  # defaultProfile-enabled ADCs auto-bind 6 default ECC curves; nodefaultecccurvebindings
+  # drops them so the profile actually matches the empty ecccurvebindings set.
+  ecccurvebindings          = []
+  nodefaultecccurvebindings = true
 
 }
 
@@ -261,8 +286,72 @@ func TestAccSslprofile_sslcipher_bindingDataSource_basic(t *testing.T) {
 				Config: testAccSslprofile_sslcipher_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "name", "tf_sslprofile"),
-					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "cipheraliasname", "HIGH"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "ciphername", "HIGH"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "cipherpriority", "10"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSslprofile_sslcipher_binding_upgrade_basic = `
+
+resource "citrixadc_sslprofile" "tf_sslprofile" {
+  name = "tf_sslprofile"
+
+  # defaultProfile-enabled ADCs auto-bind 6 default ECC curves; nodefaultecccurvebindings
+  # drops them so the profile actually matches the empty ecccurvebindings set.
+  ecccurvebindings          = []
+  nodefaultecccurvebindings = true
+
+}
+
+resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
+    name = citrixadc_sslprofile.tf_sslprofile.name
+    ciphername = "HIGH"
+    cipherpriority = 10
+}
+`
+
+// TestAccSslprofile_sslcipher_binding_sdkv2StateUpgrade verifies that a binding
+// created by the LAST SDK v2 release (2.2.0) — which writes the legacy
+// comma-joined id "name,ciphername" — is refreshed and re-applied correctly by
+// the CURRENT framework provider. Step 2 exercises ParseIdString on the legacy id
+// during the framework Read.
+//
+// The resource-side SetAttrFromGet RECOMPUTES data.Id to the new canonical
+// key:value format on Read (see resource_schema.go sslprofile_sslcipher_bindingComputeId),
+// so after the step-2 refresh the id becomes "name:tf_sslprofile,ciphername:HIGH".
+func TestAccSslprofile_sslcipher_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslprofile_sslcipher_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSslprofile_sslcipher_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_sslcipher_bindingExist("citrixadc_sslprofile_sslcipher_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_sslcipher_binding.tf_binding", "id", "tf_sslprofile,HIGH"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id) then plans/applies. The framework Read
+			// recomputes the id to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslprofile_sslcipher_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_sslcipher_bindingExist("citrixadc_sslprofile_sslcipher_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_sslcipher_binding.tf_binding", "id", "name:tf_sslprofile,ciphername:HIGH"),
 				),
 			},
 		},

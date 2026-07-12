@@ -248,3 +248,84 @@ func TestAccSystemglobal_authenticationradiuspolicy_bindingDataSource_basic(t *t
 		},
 	})
 }
+
+const testAccSystemglobal_authenticationradiuspolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_systemglobal_authenticationradiuspolicy_binding" "tf_systemglobal_authenticationradiuspolicy_binding" {
+		policyname = citrixadc_authenticationradiuspolicy.tf_radiuspolicy.name
+		priority   = 50
+	}
+
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+		name         = "tf_radiusaction"
+		radkey       = "secret"
+		serverip     = "1.2.3.4"
+		serverport   = 8080
+		authtimeout  = 2
+		radnasip     = "DISABLED"
+		passencoding = "chap"
+	}
+	resource "citrixadc_authenticationradiuspolicy" "tf_radiuspolicy" {
+		name      = "tf_radiuspolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationradiusaction.tf_radiusaction.name
+	}
+`
+
+// TestAccSystemglobal_authenticationradiuspolicy_binding_sdkv2StateUpgrade verifies that
+// state written by the last SDK v2 release (legacy id) is correctly upgraded when the
+// same config is subsequently managed by the current Framework provider. Step 1 creates
+// the binding with citrix/citrixadc 2.2.0, which writes state using the legacy id
+// (d.SetId(policyname) -> "tf_radiuspolicy"). Step 2 refreshes/plans/applies the SAME
+// config through the Framework provider, exercising ParseIdString on the legacy id. This
+// is a single-unique-attribute global binding, so the Framework recomputes the id on Read
+// (SetAttrFromGet: data.Id = policyname) to the plain policyname value, which equals the
+// legacy id "tf_radiuspolicy".
+func TestAccSystemglobal_authenticationradiuspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_systemglobal_authenticationradiuspolicy_binding.tf_systemglobal_authenticationradiuspolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemglobal_authenticationradiuspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSystemglobal_authenticationradiuspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_authenticationradiuspolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_radiuspolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read (SetAttrFromGet). Single unique attribute -> the new
+			// canonical id is the plain policyname value "tf_radiuspolicy".
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemglobal_authenticationradiuspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_authenticationradiuspolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_radiuspolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSystemglobal_authenticationradiuspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_authenticationradiuspolicy_binding.tf_systemglobal_authenticationradiuspolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemglobal_authenticationradiuspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemglobal_authenticationradiuspolicy_binding_basic},
+			{Config: testAccSystemglobal_authenticationradiuspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

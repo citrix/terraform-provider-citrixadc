@@ -312,3 +312,89 @@ func TestAccAppfwprofile_xmldosurl_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccAppfwprofile_xmldosurl_binding_upgrade_basic is valid under BOTH the last
+// SDK v2 release (2.2.0) schema and the current Framework schema. It reuses the values
+// from testAccAppfwprofile_xmldosurl_binding_basic and keeps the same resource labels so
+// the Exist/Destroy helpers and addresses match.
+const testAccAppfwprofile_xmldosurl_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_xmldosurl_binding" "tf_binding" {
+		name                           = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmldosurl                      = ".*"
+		state                          = "ENABLED"
+		xmlsoaparraycheck              = "ON"
+		xmlmaxelementdepthcheck        = "ON"
+		xmlmaxfilesize                 = 100000
+		xmlmaxfilesizecheck            = "OFF"
+		xmlmaxnamespaceurilength       = 200
+		xmlmaxnamespaceurilengthcheck  = "ON"
+		xmlmaxelementnamelength        = 300
+		xmlmaxelementnamelengthcheck   = "ON"
+		xmlmaxelements                 = 30
+		xmlmaxelementscheck            = "ON"
+		xmlmaxattributes               = 20
+		xmlmaxattributescheck          = "ON"
+		xmlmaxchardatalength           = 1000
+		xmlmaxchardatalengthcheck      = "ON"
+		xmlmaxnamespaces               = 30
+		xmlmaxnamespacescheck          = "ON"
+		xmlmaxattributenamelength      = 200
+		xmlmaxattributenamelengthcheck = "ON"
+	}
+`
+
+// TestAccAppfwprofile_xmldosurl_binding_sdkv2StateUpgrade verifies that a resource created
+// with the last SDK v2 release (which writes the legacy comma-separated id) is refreshed
+// cleanly through the current Framework provider, and that the Framework Read upgrades the
+// id to the new key:value format.
+func TestAccAppfwprofile_xmldosurl_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_xmldosurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the LAST SDK v2 release. State is written with the
+				// legacy id "name,xmldosurl".
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwprofile_xmldosurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_xmldosurl_bindingExist("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "id", "tf_appfwprofile,.*"),
+				),
+			},
+			{
+				// Step 2: same config through the CURRENT (framework) provider. Terraform
+				// refreshes the legacy-id state through Read (exercising ParseIdString on the
+				// legacy id) and the framework re-derives the canonical new-format id.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwprofile_xmldosurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_xmldosurl_bindingExist("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "id", "name:tf_appfwprofile,xmldosurl:.%2A"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_xmldosurl_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_xmldosurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_xmldosurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_xmldosurl_binding_basic},
+			{Config: testAccAppfwprofile_xmldosurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

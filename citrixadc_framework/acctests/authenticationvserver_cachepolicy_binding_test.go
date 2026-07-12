@@ -268,3 +268,84 @@ func TestAccAuthenticationvserverCachepolicyBindingDataSource_basic(t *testing.T
 		},
 	})
 }
+
+// testAccauthenticationvserver_cachepolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0 schema and
+// the current Framework schema because the migration restored the SDK v2 attribute names.
+const testAccauthenticationvserver_cachepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationvserver_cachepolicy_binding" "tf_binding" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_cachepolicy.tf_cachepolicy.policyname
+		bindpoint = "REQUEST"
+		priority  = 9
+	}
+`
+
+// TestAccAuthenticationvserver_cachepolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded when
+// the same config is subsequently managed by the current Framework provider.
+// Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_authenticationvserver,my_cachepolicy"). Step 2 refreshes/plans/applies the same config
+// through the Framework provider, exercising ParseIdString on the legacy id; because the
+// Framework recomputes the id on Read (SetAttrFromGet re-derives name:policy), the id upgrades
+// to the new "key:value" form.
+func TestAccAuthenticationvserver_cachepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_authenticationvserver_cachepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccauthenticationvserver_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_cachepolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_authenticationvserver,my_cachepolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccauthenticationvserver_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_cachepolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_authenticationvserver,policy:my_cachepolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_cachepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_cachepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_cachepolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_cachepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

@@ -252,3 +252,74 @@ func TestAccLsngroup_lsntransportprofile_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccLsngroup_lsntransportprofile_binding_upgrade_basic = `
+
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsnclient"
+}
+
+resource "citrixadc_lsngroup" "tf_lsngroup" {
+	groupname = "my_lsngroup"
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+}
+
+resource "citrixadc_lsntransportprofile" "tf_lsntransportprofile" {
+	transportprofilename = "my_lsntransportprofile"
+	transportprotocol = "TCP"
+}
+
+resource "citrixadc_lsngroup_lsntransportprofile_binding" "tf_lsngroup_lsntransportprofile_binding" {
+	groupname            = citrixadc_lsngroup.tf_lsngroup.groupname
+	transportprofilename = citrixadc_lsntransportprofile.tf_lsntransportprofile.transportprofilename
+}
+
+`
+
+func TestAccLsngroup_lsntransportprofile_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsngroup_lsntransportprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLsngroup_lsntransportprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsntransportprofile_bindingExist("citrixadc_lsngroup_lsntransportprofile_binding.tf_lsngroup_lsntransportprofile_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup_lsntransportprofile_binding.tf_lsngroup_lsntransportprofile_binding", "id", "my_lsngroup,my_lsntransportprofile"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsngroup_lsntransportprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsntransportprofile_bindingExist("citrixadc_lsngroup_lsntransportprofile_binding.tf_lsngroup_lsntransportprofile_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup_lsntransportprofile_binding.tf_lsngroup_lsntransportprofile_binding", "id", "groupname:my_lsngroup,transportprofilename:my_lsntransportprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLsngroup_lsntransportprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_lsntransportprofile_binding.tf_lsngroup_lsntransportprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsntransportprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsngroup_lsntransportprofile_binding_basic},
+			{Config: testAccLsngroup_lsntransportprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

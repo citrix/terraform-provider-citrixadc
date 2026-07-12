@@ -246,3 +246,85 @@ func TestAccVpnglobal_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccVpnglobal_auditsyslogpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccVpnglobal_auditsyslogpolicy_binding_upgrade_basic = `
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "new_syslogaction"
+		serverip   = "20.3.3.3"
+		serverport = 54
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_policy" {
+		name   = "new_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+	resource "citrixadc_vpnglobal_auditsyslogpolicy_binding" "tf_bind" {
+		policyname             = citrixadc_auditsyslogpolicy.tf_policy.name
+		priority               = 300
+		gotopriorityexpression = "NEXT"
+	}
+`
+
+// TestAccVpnglobal_auditsyslogpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider. Step 1 creates the binding
+// with citrix/citrixadc 2.2.0 (writes the legacy id "new_auditsyslogpolicy"). Step 2
+// refreshes/plans/applies the same config through the Framework provider, exercising
+// ParseIdString on the legacy id; the Framework recomputes the id on Read
+// (SetAttrFromGet). This binding has a single unique attribute (policyname), so the
+// legacy id and the new-format id are both the plain policyname value.
+func TestAccVpnglobal_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_vpnglobal_auditsyslogpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_auditsyslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "new_auditsyslogpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed by SetAttrFromGet to the new-format id (plain policyname).
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_auditsyslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "new_auditsyslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_auditsyslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_auditsyslogpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_auditsyslogpolicy_binding_basic},
+			{Config: testAccVpnglobal_auditsyslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"gotopriorityexpression"}},
+		},
+	})
+}

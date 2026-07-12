@@ -277,3 +277,76 @@ func TestAcccrvserver_appqoepolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccCrvserver_appqoepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "tf_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "tf_appqoepolicy"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+	resource "citrixadc_crvserver_appqoepolicy_binding" "crvserver_appqoepolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_appqoepolicy.tf_appqoepolicy.name
+		priority   = 10
+	}
+`
+
+func TestAccCrvserver_appqoepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_appqoepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCrvserver_appqoepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_appqoepolicy_bindingExist("citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", "id", "my_vserver,tf_appqoepolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrvserver_appqoepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_appqoepolicy_bindingExist("citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", "id", "name:my_vserver,policyname:tf_appqoepolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_appqoepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_appqoepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_appqoepolicy_binding_basic},
+			{Config: testAccCrvserver_appqoepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

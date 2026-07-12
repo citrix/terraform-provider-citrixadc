@@ -122,6 +122,19 @@ func TestAccCsvserver_rewritepolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_rewritepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_rewritepolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_rewritepolicy_binding_basic_step1},
+			{Config: testAccCsvserver_rewritepolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckCsvserver_rewritepolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -250,6 +263,68 @@ func TestAccCsvserver_rewritepolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_rewritepolicy_binding.tf_bind", "policyname", "tf_test_rewrite_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_rewritepolicy_binding.tf_bind", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_rewritepolicy_binding.tf_bind", "bindpoint", "REQUEST"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCsvserver_rewritepolicy_binding_upgrade_basic = `
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+  name   = "tf_test_rewrite_policy"
+  action = "DROP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+}
+
+resource "citrixadc_csvserver_rewritepolicy_binding" "tf_bind" {
+    name = citrixadc_csvserver.tf_csvserver.name
+    policyname = citrixadc_rewritepolicy.tf_rewrite_policy.name
+    priority = 100
+    bindpoint = "REQUEST"
+}
+`
+
+// TestAccCsvserver_rewritepolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 provider release (legacy comma-joined id) can be
+// refreshed/planned/applied by the current Plugin Framework provider. Step 1 creates
+// the resource with citrix/citrixadc 2.2.0 (writing the legacy id "name,policyname").
+// Step 2 runs the same config through the current framework provider, which exercises
+// ParseIdString on the legacy id during Read and recomputes the id to the new
+// "key:value" canonical format.
+func TestAccCsvserver_rewritepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy id "name,policyname"
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCsvserver_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_rewritepolicy_bindingExist("citrixadc_csvserver_rewritepolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_rewritepolicy_binding.tf_bind", "id", "tf_csvserver,tf_test_rewrite_policy"),
+				),
+			},
+			// Step 2: refresh/plan/apply through the current framework provider.
+			// Read parses the legacy id and recomputes it to the new canonical format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_rewritepolicy_bindingExist("citrixadc_csvserver_rewritepolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_rewritepolicy_binding.tf_bind", "id", "bindpoint:REQUEST,name:tf_csvserver,policyname:tf_test_rewrite_policy"),
 				),
 			},
 		},

@@ -223,3 +223,73 @@ func TestAccPolicystringmap_pattern_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccPolicystringmap_pattern_binding_upgrade_basic = `
+
+resource "citrixadc_policystringmap" "tf_policystringmap" {
+    name = "tf_policystringmap"
+    comment = "Some comment"
+}
+
+resource "citrixadc_policystringmap_pattern_binding" "tf_bind1" {
+    name = citrixadc_policystringmap.tf_policystringmap.name
+    key = "key1"
+    value = "value1"
+    comment = "key1-value1"
+}
+`
+
+// TestAccPolicystringmap_pattern_binding_sdkv2StateUpgrade verifies that a binding
+// created by the LAST SDK v2 release (2.2.0) — which writes the legacy comma-joined
+// id "name,key" — is refreshed and re-applied correctly by the CURRENT framework
+// provider. Step 2 exercises ParseIdString on the legacy id during the framework
+// Read; the framework SetAttrFromGet then recomputes data.Id into the canonical new
+// "key:value" format, so the id upgrades in place.
+func TestAccPolicystringmap_pattern_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicystringmap_pattern_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id "name,key".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccPolicystringmap_pattern_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicystringmap_pattern_bindingExist("citrixadc_policystringmap_pattern_binding.tf_bind1", nil),
+					resource.TestCheckResourceAttr("citrixadc_policystringmap_pattern_binding.tf_bind1", "id", "tf_policystringmap,key1"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id), then plans/applies. SetAttrFromGet
+			// recomputes the id to the new "key:value" format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccPolicystringmap_pattern_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicystringmap_pattern_bindingExist("citrixadc_policystringmap_pattern_binding.tf_bind1", nil),
+					resource.TestCheckResourceAttr("citrixadc_policystringmap_pattern_binding.tf_bind1", "id", "key:key1,name:tf_policystringmap"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPolicystringmap_pattern_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_policystringmap_pattern_binding.tf_bind1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicystringmap_pattern_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicystringmap_pattern_binding_basic_step1},
+			{Config: testAccPolicystringmap_pattern_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

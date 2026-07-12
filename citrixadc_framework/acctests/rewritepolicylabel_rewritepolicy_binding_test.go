@@ -60,6 +60,19 @@ const testAccRewritepolicylabel_rewritepolicy_binding_basic_step2 = `
 	}
 `
 
+func TestAccRewritepolicylabel_rewritepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicylabel_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRewritepolicylabel_rewritepolicy_binding_basic},
+			{Config: testAccRewritepolicylabel_rewritepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func TestAccRewritepolicylabel_rewritepolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -256,6 +269,74 @@ func TestAccRewritepolicylabel_rewritepolicy_bindingDataSource_basic(t *testing.
 					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", "policyname", "tf_rewrite_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", "priority", "5"),
 					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", "gotopriorityexpression", "END"),
+				),
+			},
+		},
+	})
+}
+
+// testAccRewritepolicylabel_rewritepolicy_binding_upgrade_basic mirrors the _basic config
+// but is written so it is valid under BOTH the last SDK v2 release (2.2.0) schema and the
+// current Framework schema, so the same HCL can be applied by each provider across the two
+// steps of the state-upgrade test.
+const testAccRewritepolicylabel_rewritepolicy_binding_upgrade_basic = `
+
+resource "citrixadc_rewritepolicylabel_rewritepolicy_binding" "tf_rewritepolicylabel_rewritepolicy_binding" {
+	labelname = citrixadc_rewritepolicylabel.tf_rewritepolicylabel.labelname
+	policyname = citrixadc_rewritepolicy.tf_rewrite_policy.name
+	gotopriorityexpression = "END"
+	priority = 5
+}
+
+resource "citrixadc_rewritepolicylabel" "tf_rewritepolicylabel" {
+	labelname = "tf_rewritepolicylabel"
+	transform = "http_req"
+}
+
+resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+	name = "tf_rewrite_policy"
+	action = "DROP"
+	rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+}
+`
+
+// TestAccRewritepolicylabel_rewritepolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 provider release (legacy comma-separated ID) is read and
+// upgraded cleanly by the current Framework provider.
+//
+// Step 1 creates the binding with citrix/citrixadc 2.2.0, which writes the legacy ID
+// "<labelname>,<policyname>".
+// Step 2 re-applies the SAME config through the current (Framework) provider. Its Read
+// parses the legacy ID (via ParseIdString), then SetAttrFromGet re-derives the canonical
+// new-format ID "labelname:<v>,policyname:<v>,priority:<v>".
+func TestAccRewritepolicylabel_rewritepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		// Providers are specified per-step (ExternalProviders in step 1, framework factories
+		// in step 2), so they must NOT also be set at the TestCase level.
+		CheckDestroy: testAccCheckRewritepolicylabel_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (writes the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccRewritepolicylabel_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicylabel_rewritepolicy_bindingExist("citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", "id", "tf_rewritepolicylabel,tf_rewrite_policy"),
+				),
+			},
+			// Step 2: same config through the current Framework provider; Read upgrades the ID.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRewritepolicylabel_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicylabel_rewritepolicy_bindingExist("citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", "id", "labelname:tf_rewritepolicylabel,policyname:tf_rewrite_policy,priority:5"),
 				),
 			},
 		},

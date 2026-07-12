@@ -284,3 +284,83 @@ func TestAccAuthenticationvserverAuthenticationldappolicyBindingDataSource_basic
 		},
 	})
 }
+
+const testAccAuthenticationvserver_authenticationldappolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationldapaction" "tf_ldapaction" {
+		name          = "tf_ldapaction"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_authenticationldappolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_ldapaction.name
+	}
+	resource "citrixadc_authenticationvserver_authenticationldappolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
+		priority  = 90
+		bindpoint = "RESPONSE"
+	}
+`
+
+// TestAccAuthenticationvserver_authenticationldappolicy_binding_sdkv2StateUpgrade verifies that
+// state written by the last SDK v2 release (legacy comma id) is upgraded cleanly by the current
+// Framework provider: Read parses the legacy id via ParseIdString and recomputes the canonical
+// new key:value id.
+func TestAccAuthenticationvserver_authenticationldappolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release (2.2.0), which
+			// writes state with the legacy comma-joined id "name,policy".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAuthenticationvserver_authenticationldappolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationldappolicy_bindingExist("citrixadc_authenticationvserver_authenticationldappolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_authenticationldappolicy_binding.tf_bind", "id", "tf_authenticationvserver,tf_authenticationldappolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. Read exercises ParseIdString on the legacy id and recomputes the
+			// canonical new-format id "name:<v>,policy:<v>".
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationvserver_authenticationldappolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationldappolicy_bindingExist("citrixadc_authenticationvserver_authenticationldappolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_authenticationldappolicy_binding.tf_bind", "id", "name:tf_authenticationvserver,policy:tf_authenticationldappolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_authenticationldappolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationldappolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_authenticationldappolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_authenticationldappolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
+		},
+	})
+}

@@ -21,25 +21,54 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_crvserver_binding_basic = `
 
-	resource "citrixadc_crvserver" "tf_crvserver" {
-		name        = "my_cache_redirection_server_ds"
-		servicetype = "HTTP"
-	}
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
 
-	resource "citrixadc_clusternodegroup_crvserver_binding" "tf_clusternodegroup_crvserver_binding" {
-		name = "my_tf_group"
-		vserver = citrixadc_crvserver.tf_crvserver.name
-	}
+resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+	name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	node = 0
+}
+
+resource "citrixadc_crvserver" "tf_crvserver" {
+	name        = "my_cache_redirection_server_ds"
+	servicetype = "HTTP"
+}
+
+resource "citrixadc_clusternodegroup_crvserver_binding" "tf_clusternodegroup_crvserver_binding" {
+	name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	vserver    = citrixadc_crvserver.tf_crvserver.name
+	depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+}
 `
 
+// Step 2 keeps the participating entities (nodegroup, clusternode binding and
+// crvserver) but drops the binding itself so proper deletion of the binding can
+// be verified while the endpoints still exist.
 const testAccClusternodegroup_crvserver_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
+
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
+
+resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+	name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	node = 0
+}
+
+resource "citrixadc_crvserver" "tf_crvserver" {
+	name        = "my_cache_redirection_server_ds"
+	servicetype = "HTTP"
+}
 `
 
 func TestAccClusternodegroup_crvserver_binding_basic(t *testing.T) {
@@ -60,9 +89,25 @@ func TestAccClusternodegroup_crvserver_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_crvserver_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_crvserver_bindingNotExist("citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", "my_cr_group,my_crvserver"),
+					testAccCheckClusternodegroup_crvserver_bindingNotExist("citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", "my_tf_group,my_cache_redirection_server_ds"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_crvserver_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_crvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternodegroup_crvserver_binding_basic},
+			{Config: testAccClusternodegroup_crvserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }
@@ -94,10 +139,12 @@ func testAccCheckClusternodegroup_crvserver_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		vserver := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		vserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_crvserver_binding",
@@ -232,6 +279,69 @@ func TestAccclusternodegroup_crvserver_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", "vserver", "my_cache_redirection_server_ds"),
+				),
+			},
+		},
+	})
+}
+
+const testAccClusternodegroup_crvserver_binding_upgrade_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_crvserver" "tf_crvserver" {
+		name        = "my_cache_redirection_server_ds"
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_clusternodegroup_crvserver_binding" "tf_clusternodegroup_crvserver_binding" {
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver    = citrixadc_crvserver.tf_crvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+	}
+`
+
+func TestAccClusternodegroup_crvserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternodegroup_crvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccClusternodegroup_crvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_crvserver_bindingExist("citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", "id", "my_tf_group,my_cache_redirection_server_ds"),
+				),
+			},
+			{
+				// Step 2: refresh the legacy-id state through the current provider.
+				// This resource is served by the SDK v2 provider through the muxer
+				// (its Framework resource is not registered - only its datasource is),
+				// so the id is NOT recomputed into the new key:value form. Per the
+				// sanctioned fallback, assert existence only (never a guessed id).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccClusternodegroup_crvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_crvserver_bindingExist("citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", nil),
 				),
 			},
 		},

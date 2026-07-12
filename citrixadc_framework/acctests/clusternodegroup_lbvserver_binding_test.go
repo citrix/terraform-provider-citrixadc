@@ -17,15 +17,25 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_lbvserver_binding_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
 
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		name        = "my_lb_vserver_ds"
@@ -33,13 +43,30 @@ const testAccClusternodegroup_lbvserver_binding_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
-		name = "my_tf_group"
-		vserver = citrixadc_lbvserver.tf_lbvserver.name
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver    = citrixadc_lbvserver.tf_lbvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 `
 
 const testAccClusternodegroup_lbvserver_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
+	# Keep the participating entities (nodegroup, clusternode binding and lbvserver)
+	# but drop the binding itself to verify proper deletion while endpoints exist.
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "my_lb_vserver_ds"
+		servicetype = "HTTP"
+	}
 `
 
 func TestAccClusternodegroup_lbvserver_binding_basic(t *testing.T) {
@@ -60,9 +87,92 @@ func TestAccClusternodegroup_lbvserver_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_lbvserver_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_lbvserver_bindingNotExist("citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "my_test_group,my_lbvserver"),
+					testAccCheckClusternodegroup_lbvserver_bindingNotExist("citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "my_tf_group,my_lb_vserver_ds"),
 				),
 			},
+		},
+	})
+}
+
+// testAccClusternodegroup_lbvserver_binding_upgrade_basic mirrors the _basic config and must be
+// valid under BOTH the last SDK v2 release (2.2.0) schema AND the current provider schema.
+const testAccClusternodegroup_lbvserver_binding_upgrade_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "my_lb_vserver_ds"
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver    = citrixadc_lbvserver.tf_lbvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+	}
+`
+
+// TestAccClusternodegroup_lbvserver_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (2.2.0) upgrades cleanly to the current provider.
+//
+// Note: the clusternodegroup_lbvserver_binding resource is now served by the Plugin Framework, so its
+// Read recomputes the id to the new key:value form on refresh. Step 1 (SDK v2 2.2.0) writes the legacy
+// comma-separated id; step 2 (current framework provider) upgrades it to the new name:vserver form.
+func TestAccClusternodegroup_lbvserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternodegroup_lbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (2.2.0). State is written with the legacy comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccClusternodegroup_lbvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_lbvserver_bindingExist("citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "id", "my_tf_group,my_lb_vserver_ds"),
+				),
+			},
+			// Step 2: refresh/apply the same config through the current provider (exercising the state upgrade).
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccClusternodegroup_lbvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_lbvserver_bindingExist("citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding", "id", "name:my_tf_group,vserver:my_lb_vserver_ds"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_lbvserver_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_lbvserver_binding.tf_clusternodegroup_lbvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_lbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternodegroup_lbvserver_binding_basic},
+			{Config: testAccClusternodegroup_lbvserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }
@@ -94,10 +204,12 @@ func testAccCheckClusternodegroup_lbvserver_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		vserver := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		vserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_lbvserver_binding",
@@ -136,13 +248,12 @@ func testAccCheckClusternodegroup_lbvserver_bindingNotExist(n string, id string)
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		vserver := idSlice[1]
+		name := idMap["name"]
+		vserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_lbvserver_binding",

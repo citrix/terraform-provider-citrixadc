@@ -50,6 +50,19 @@ func TestAccCsvserver_cspolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_cspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_cspolicy_binding_basic_step1},
+			{Config: testAccCsvserver_cspolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckCsvserver_cspolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -287,6 +300,81 @@ func TestAccCsvserver_cspolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "policyname", "tf_cspolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "targetlbvserver", "tf_lbvserver"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCsvserver_cspolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccCsvserver_cspolicy_binding_upgrade_basic = `
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_lbvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_cspolicy" "tf_cspolicy" {
+  policyname = "tf_cspolicy"
+  rule       = "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.85.0)"
+}
+
+resource "citrixadc_csvserver_cspolicy_binding" "tf_csvscspolbind" {
+    name            = citrixadc_csvserver.tf_csvserver.name
+    policyname      = citrixadc_cspolicy.tf_cspolicy.policyname
+    priority        = 100
+    targetlbvserver = citrixadc_lbvserver.tf_lbvserver.name
+}
+`
+
+// TestAccCsvserver_cspolicy_binding_sdkv2StateUpgrade verifies that state written by
+// the last SDK v2 release (legacy comma-separated ID) is correctly upgraded when the
+// same config is subsequently managed by the current Framework provider. Step 1 creates
+// the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_csvserver,tf_cspolicy"). Step 2 refreshes/plans/applies the same config through
+// the Framework provider, exercising ParseIdString on the legacy id; because the
+// Framework recomputes the id on Read (SetAttrFromGet), the id upgrades to the new
+// "key:value" form.
+func TestAccCsvserver_cspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCsvserver_cspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_cspolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_csvserver,tf_cspolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_cspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_cspolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_csvserver,policyname:tf_cspolicy"),
 				),
 			},
 		},

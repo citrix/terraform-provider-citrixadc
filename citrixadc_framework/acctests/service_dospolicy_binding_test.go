@@ -192,6 +192,52 @@ func testAccCheckService_dospolicy_bindingNotExist(n string, id string) resource
 	}
 }
 
+// TestAccService_dospolicy_binding_sdkv2StateUpgrade verifies that a resource
+// created by the LAST SDK v2 release (2.2.0) — which writes the legacy
+// comma-joined id "name,policyname" — is refreshed and re-applied correctly by
+// the CURRENT framework provider. Step 2 exercises ParseIdString on the legacy id
+// during the framework Read.
+//
+// The resource-side SetAttrFromGet RECOMPUTES data.Id to the new canonical
+// key:value format on Read (see resource_schema.go), so after the step-2 refresh
+// the id becomes "name:tf_service,policyname:tf_dospolicy" — asserted below.
+func TestAccService_dospolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	t.Skipf("citrixadc_service_dospolicy_binding is not supported in 13.1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckService_dospolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccService_dospolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckService_dospolicy_bindingExist("citrixadc_service_dospolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_service_dospolicy_binding.tf_binding", "id", "tf_service,tf_dospolicy"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id) then plans/applies. The framework Read
+			// recomputes the id to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccService_dospolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckService_dospolicy_bindingExist("citrixadc_service_dospolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_service_dospolicy_binding.tf_binding", "id", "name:tf_service,policyname:tf_dospolicy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckService_dospolicy_bindingDestroy(s *terraform.State) error {
 	// Use the shared utility function to get a configured client
 	client, err := testAccGetFrameworkClient()
@@ -216,4 +262,18 @@ func testAccCheckService_dospolicy_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccService_dospolicy_binding_import(t *testing.T) {
+	t.Skipf("citrixadc_service_dospolicy_binding is not supported in 13.1")
+	const resAddr = "citrixadc_service_dospolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckService_dospolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccService_dospolicy_binding_basic},
+			{Config: testAccService_dospolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
 }

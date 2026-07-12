@@ -266,3 +266,83 @@ func TestAccLbvserver_tmtrafficpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAcclbvserver_tmtrafficpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_trafficaction"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "tf_tmttrafficpolicy"
+		rule   = "true"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+
+	resource "citrixadc_lbvserver_tmtrafficpolicy_binding" "tf_lbvserver_tmtrafficpolicy_binding" {
+		name 		= citrixadc_lbvserver.tf_lbvserver.name
+		policyname 	= citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy.name
+		priority 	= 1
+	}
+`
+
+// TestAccLbvserver_tmtrafficpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccLbvserver_tmtrafficpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_tmtrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release (2.2.0).
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAcclbvserver_tmtrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_tmtrafficpolicy_bindingExist("citrixadc_lbvserver_tmtrafficpolicy_binding.tf_lbvserver_tmtrafficpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_tmtrafficpolicy_binding.tf_lbvserver_tmtrafficpolicy_binding", "id", "tf_lbvserver,tf_tmttrafficpolicy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAcclbvserver_tmtrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_tmtrafficpolicy_bindingExist("citrixadc_lbvserver_tmtrafficpolicy_binding.tf_lbvserver_tmtrafficpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_tmtrafficpolicy_binding.tf_lbvserver_tmtrafficpolicy_binding", "id", "name:tf_lbvserver,policyname:tf_tmttrafficpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_tmtrafficpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_tmtrafficpolicy_binding.tf_lbvserver_tmtrafficpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_tmtrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_tmtrafficpolicy_binding_basic},
+			{Config: testAccLbvserver_tmtrafficpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

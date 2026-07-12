@@ -237,6 +237,64 @@ func testAccCheckVpnvserverAppfwpolicyBindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccVpnvserver_appfwpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name = "tf_appfwprofile"
+	}
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
+		name        = "tf_appfwpolicy"
+		profilename = citrixadc_appfwprofile.tf_appfwprofile.name
+		rule        = "true"
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "0.0.0.0"
+		port        = 0
+	}
+	resource "citrixadc_vpnvserver_appfwpolicy_binding" "tf_bind" {
+		name                   = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy                 = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		priority               = 100
+		gotopriorityexpression = "END"
+	}
+`
+
+func TestAccVpnvserver_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserverAppfwpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserverAppfwpolicyBindingExist("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_appfwpolicy"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// The framework Read keeps the "<name>,<policy>" id (SetAttrFromGet does not recompute it),
+			// so the canonical id remains identical to the legacy value after the upgrade.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserverAppfwpolicyBindingExist("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_appfwpolicy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

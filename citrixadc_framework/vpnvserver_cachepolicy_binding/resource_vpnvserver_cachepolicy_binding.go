@@ -78,6 +78,13 @@ func (r *VpnvserverCachepolicyBindingResource) Create(ctx context.Context, req r
 
 	// Read the updated state back
 	r.readVpnvserverCachepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnvserver_cachepolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -96,6 +103,15 @@ func (r *VpnvserverCachepolicyBindingResource) Read(ctx context.Context, req res
 	tflog.Debug(ctx, "Reading vpnvserver_cachepolicy_binding resource")
 
 	r.readVpnvserverCachepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -139,6 +155,13 @@ func (r *VpnvserverCachepolicyBindingResource) Update(ctx context.Context, req r
 
 	// Read the updated state back
 	r.readVpnvserverCachepolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnvserver_cachepolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -216,9 +239,10 @@ func (r *VpnvserverCachepolicyBindingResource) readVpnvserverCachepolicyBindingF
 		return
 	}
 
-	// Resource is missing
+	// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+	// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "vpnvserver_cachepolicy_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -228,6 +252,8 @@ func (r *VpnvserverCachepolicyBindingResource) readVpnvserverCachepolicyBindingF
 		match := true
 
 		// Check bindpoint
+		// Backward-compat: legacy SDK v2 ids omit bindpoint (name,policyname-style),
+		// so a GET record carrying a bindpoint must not be disqualified when id omits it.
 		if idVal, ok := idMap["bindpoint"]; ok {
 			if val, ok := v["bindpoint"].(string); ok {
 				if val != idVal {
@@ -238,9 +264,6 @@ func (r *VpnvserverCachepolicyBindingResource) readVpnvserverCachepolicyBindingF
 				match = false
 				continue
 			}
-		} else if _, ok := v["bindpoint"].(string); ok {
-			match = false
-			continue
 		}
 
 		// Check policy
@@ -264,9 +287,9 @@ func (r *VpnvserverCachepolicyBindingResource) readVpnvserverCachepolicyBindingF
 		}
 	}
 
-	//  Resource is missing
+	// Binding not present in the returned set: signal removal via a null Id (see above).
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnvserver_cachepolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

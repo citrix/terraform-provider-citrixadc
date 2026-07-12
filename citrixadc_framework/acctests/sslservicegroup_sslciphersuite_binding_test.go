@@ -286,6 +286,80 @@ data "citrixadc_sslservicegroup_sslciphersuite_binding" "tf_sslservicegroup_sslc
 }
 `
 
+const testAccSslservicegroup_sslciphersuite_binding_upgrade_basic = `
+resource "citrixadc_sslservicegroup_sslciphersuite_binding" "tf_sslservicegroup_sslciphersuite_binding" {
+	ciphername       = citrixadc_sslcipher.tf_sslcipher.ciphergroupname
+	servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
+}
+
+resource "citrixadc_sslcipher" "tf_sslcipher" {
+	ciphergroupname = "my_ciphersuite"
+
+	ciphersuitebinding {
+		ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+		cipherpriority = 1
+	}
+}
+
+resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+	servicegroupname = "my_gslbvservicegroup"
+	servicetype      = "SSL_TCP"
+	cip              = "DISABLED"
+	healthmonitor    = "NO"
+	sitename         = citrixadc_gslbsite.site_local.sitename
+}
+
+resource "citrixadc_gslbsite" "site_local" {
+	sitename        = "Site-Local"
+	siteipaddress   = "172.31.96.234"
+	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
+}
+`
+
+// TestAccSslservicegroup_sslciphersuite_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-joined id) is transparently upgraded
+// by the current Framework provider. Step 1 creates the binding with citrix/citrixadc
+// 2.2.0 (legacy id "servicegroupname,ciphername"); step 2 refreshes/plans the same
+// config through the current Framework provider, whose Read parses the legacy id and
+// recomputes it to the new "ciphername:<v>,servicegroupname:<v>" format (SetAttrFromGet).
+func TestAccSslservicegroup_sslciphersuite_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslservicegroup_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSslservicegroup_sslciphersuite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservicegroup_sslciphersuite_bindingExist("citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding", "id", "my_gslbvservicegroup,my_ciphersuite"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslservicegroup_sslciphersuite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservicegroup_sslciphersuite_bindingExist("citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding", "id", "ciphername:my_ciphersuite,servicegroupname:my_gslbvservicegroup"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSslservicegroup_sslciphersuite_bindingDataSource_basic(t *testing.T) {
 	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
 		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
@@ -301,6 +375,22 @@ func TestAccSslservicegroup_sslciphersuite_bindingDataSource_basic(t *testing.T)
 					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding", "ciphername", "my_ciphersuite"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccSslservicegroup_sslciphersuite_binding_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservicegroup_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslservicegroup_sslciphersuite_binding_basic},
+			{Config: testAccSslservicegroup_sslciphersuite_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

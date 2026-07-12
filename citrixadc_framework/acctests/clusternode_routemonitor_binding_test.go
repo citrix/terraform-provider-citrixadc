@@ -64,6 +64,22 @@ func TestAccClusternode_routemonitor_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccClusternode_routemonitor_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternode_routemonitor_binding_basic},
+			{Config: testAccClusternode_routemonitor_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckClusternode_routemonitor_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -231,6 +247,56 @@ func TestAccclusternode_routemonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "nodeid", "0"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "routemonitor", "10.222.74.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "netmask", "255.255.255.192"),
+				),
+			},
+		},
+	})
+}
+
+// testAccClusternode_routemonitor_binding_upgrade_basic reuses the _basic config values.
+// It is valid under BOTH the SDK v2 2.2.0 schema and the current Framework schema.
+const testAccClusternode_routemonitor_binding_upgrade_basic = `
+
+resource "citrixadc_clusternode_routemonitor_binding" "tf_clusternode_routemonitor_binding" {
+		nodeid       = 0
+		routemonitor = "10.222.74.128"
+		netmask      = "255.255.255.192"
+	}
+`
+
+// TestAccClusternode_routemonitor_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (2.2.0) with the legacy comma-joined id upgrades cleanly through the
+// current Framework provider, which recomputes the id to the new key:value format on Read.
+func TestAccClusternode_routemonitor_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release (writes the legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccClusternode_routemonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternode_routemonitor_bindingExist("citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "id", "0,10.222.74.128"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework provider.
+				// Read recomputes the id to the new key:value format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccClusternode_routemonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternode_routemonitor_bindingExist("citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "id", "netmask:255.255.255.192,nodeid:0,routemonitor:10.222.74.128"),
 				),
 			},
 		},

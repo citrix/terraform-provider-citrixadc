@@ -81,6 +81,70 @@ const testAccVpnvserver_cspolicy_binding_basic_step2 = `
 	}
 `
 
+const testAccVpnvserver_cspolicy_binding_upgrade_basic = `
+	resource "citrixadc_lbvserver" "foo_lbvserver" {
+		name        = "test_policy_lb"
+		servicetype = "HTTP"
+		ipv46       = "192.122.3.3"
+		port        = 8000
+		comment     = "hello"
+	}
+	resource "citrixadc_csaction" "tf_csaction" {
+		name            = "tf_csaction"
+		targetlbvserver = citrixadc_lbvserver.foo_lbvserver.name
+	}
+	resource "citrixadc_cspolicy" "foo_cspolicy" {
+		policyname = "test_policy"
+		rule       = "TRUE"
+		action     = citrixadc_csaction.tf_csaction.name
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_example"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_cspolicy_binding" "tf_bind" {
+		name     = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy   = citrixadc_cspolicy.foo_cspolicy.policyname
+		priority = 20
+	}
+`
+
+func TestAccVpnvserver_cspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	legacyId := "tf_example,test_policy"
+	newId := "name:tf_example,policy:test_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the resource with the last SDK v2 release, writing legacy-id state.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_cspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_cspolicy_bindingExist("citrixadc_vpnvserver_cspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_cspolicy_binding.tf_bind", "id", legacyId),
+				),
+			},
+			{
+				// Step 2: refresh/apply the legacy-id state through the current framework provider.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_cspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_cspolicy_bindingExist("citrixadc_vpnvserver_cspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_cspolicy_binding.tf_bind", "id", newId),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnvserver_cspolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -285,6 +349,19 @@ func TestAccVpnvserver_cspolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_cspolicy_binding.tf_bind", "priority", "25"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_cspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_cspolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_cspolicy_binding_basic},
+			{Config: testAccVpnvserver_cspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

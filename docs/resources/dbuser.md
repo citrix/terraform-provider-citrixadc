@@ -65,7 +65,6 @@ resource "citrixadc_dbuser" "tf_dbuser" {
 * `password` - (Optional, Sensitive) Password for logging on to the database. Must be the same as the password specified in the database. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative.
 * `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence.
 * `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
-* `loggedin` - (Optional) Display the names of all database users currently logged on to the Citrix ADC.
 
 ## Attribute Reference
 

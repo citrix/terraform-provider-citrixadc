@@ -17,10 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -30,6 +30,7 @@ const testAccClusternodegroup_vpnvserver_binding_basic = `
 	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
 		name   = "my_clusternode_ds"
 		strict = "NO"
+		sticky = "YES"
 	}
 
 	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
@@ -51,6 +52,22 @@ const testAccClusternodegroup_vpnvserver_binding_basic = `
 `
 
 const testAccClusternodegroup_vpnvserver_binding_basic_step2 = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_clusternode_ds"
+		strict = "NO"
+		sticky = "YES"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "my_vpn_vserver_ds"
+		servicetype = "SSL"
+	}
 	# Keep the above bound resources without the actual binding to check proper deletion
 `
 
@@ -106,10 +123,12 @@ func testAccCheckClusternodegroup_vpnvserver_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		vserver := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		vserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_vpnvserver_binding",
@@ -148,13 +167,12 @@ func testAccCheckClusternodegroup_vpnvserver_bindingNotExist(n string, id string
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		vserver := idSlice[1]
+		name := idMap["name"]
+		vserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_vpnvserver_binding",
@@ -246,6 +264,91 @@ func TestAccclusternodegroup_vpnvserver_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding", "vserver", "my_vpn_vserver_ds"),
 				),
 			},
+		},
+	})
+}
+
+// Config used by the SDK v2 -> Framework state-upgrade test. It reuses the same
+// values as testAccClusternodegroup_vpnvserver_binding_basic and keeps the exact
+// resource labels so the Exist/Destroy helpers and addresses match. It is valid
+// under both the SDK v2 2.2.0 schema and the current provider schema.
+const testAccClusternodegroup_vpnvserver_binding_upgrade_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_clusternode_ds"
+		strict = "NO"
+		sticky = "YES"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "my_vpn_vserver_ds"
+		servicetype = "SSL"
+	}
+
+	resource "citrixadc_clusternodegroup_vpnvserver_binding" "tf_clusternodegroup_vpnvserver_binding" {
+		name    = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver = citrixadc_vpnvserver.tf_vpnvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+	}
+
+`
+
+func TestAccClusternodegroup_vpnvserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternodegroup_vpnvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release (v2.2.0) from the
+				// Terraform registry. This writes state with the legacy comma id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccClusternodegroup_vpnvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_vpnvserver_bindingExist("citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding", "id", "my_clusternode_ds,my_vpn_vserver_ds"),
+				),
+			},
+			{
+				// Step 2: refresh/plan/apply the same config through the current
+				// provider. The current provider still serves this resource via
+				// SDK v2 (the Framework resource is not registered), so the Read
+				// does not recompute the id to the new key:value format; the id
+				// stays the legacy value. Assert only that the binding survives.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccClusternodegroup_vpnvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_vpnvserver_bindingExist("citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_vpnvserver_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_vpnvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternodegroup_vpnvserver_binding_basic},
+			{Config: testAccClusternodegroup_vpnvserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

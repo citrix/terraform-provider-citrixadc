@@ -21,20 +21,33 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_clusternode_binding_basic = `
 
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
+
 resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
-	name = "my_tf_group"
+	name = citrixadc_clusternodegroup.tf_clusternodegroup.name
 	node = 0
-	}
-  
+}
+
 `
 
+// Step 2 keeps the nodegroup but drops the clusternode binding itself so proper
+// deletion of the binding can be verified while the nodegroup still exists.
 const testAccClusternodegroup_clusternode_binding_basic_step2 = `
+
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
 
 `
 
@@ -59,6 +72,22 @@ func TestAccClusternodegroup_clusternode_binding_basic(t *testing.T) {
 					testAccCheckClusternodegroup_clusternode_bindingNotExist("citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", "my_group,2"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_clusternode_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_clusternode_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternodegroup_clusternode_binding_basic},
+			{Config: testAccClusternodegroup_clusternode_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }
@@ -90,10 +119,12 @@ func testAccCheckClusternodegroup_clusternode_bindingExist(n string, id *string)
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		node := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "node"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		node := idMap["node"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_clusternode_binding",
@@ -222,6 +253,70 @@ func TestAccclusternodegroup_clusternode_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", "node", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccClusternodegroup_clusternode_binding_upgrade_basic mirrors the _basic
+// config (a clusternodegroup nodegroup + a node bound by index). It is valid under
+// BOTH the SDK v2 2.2.0 schema and the current framework schema, so it can be
+// applied with the old provider in step 1 and re-planned with the new provider in
+// step 2 of the state-upgrade test below. The terraform resource label is kept
+// identical to the _basic config so the Exist/Destroy helpers and addresses match.
+const testAccClusternodegroup_clusternode_binding_upgrade_basic = `
+
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
+
+resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+	name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	node = 0
+}
+
+`
+
+// TestAccClusternodegroup_clusternode_binding_sdkv2StateUpgrade verifies that a
+// resource created by the LAST SDK v2 release (2.2.0) — which writes the legacy
+// comma-joined id "name,node" — is refreshed and re-applied correctly by the
+// CURRENT framework provider. Step 2 exercises the framework Read (which recomputes
+// the id to the new "name:UrlEncode(value),node:UrlEncode(value)" format via
+// SetAttrFromGet) on the legacy-id state.
+func TestAccClusternodegroup_clusternode_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternodegroup_clusternode_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id "name,node".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccClusternodegroup_clusternode_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_clusternode_bindingExist("citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", "id", "my_tf_group,0"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (recomputing
+			// the id to the new key:value format) then plans/applies.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccClusternodegroup_clusternode_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_clusternode_bindingExist("citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", "id", "name:my_tf_group,node:0"),
 				),
 			},
 		},

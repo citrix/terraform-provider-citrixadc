@@ -246,3 +246,73 @@ func TestAccSslservicegroup_ecccurve_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccSslservicegroup_ecccurve_binding_upgrade_basic is valid under BOTH the
+// SDK v2 2.2.0 schema and the current Framework schema (it uses the SDK v2
+// attribute names that the migration restored). Values mirror the _basic config
+// so the shared Exist/Destroy helpers and resource addresses match.
+const testAccSslservicegroup_ecccurve_binding_upgrade_basic = `
+	resource "citrixadc_sslservicegroup_ecccurve_binding" "tf_sslservicegroup_ecccurve_binding" {
+		ecccurvename = "P_256"
+		servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+	}
+
+	resource "citrixadc_servicegroup" "tf_servicegroup" {
+		servicegroupname = "tf_servicegroup"
+		servicetype = "SSL"
+	}
+`
+
+func TestAccSslservicegroup_ecccurve_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslservicegroup_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSslservicegroup_ecccurve_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservicegroup_ecccurve_bindingExist("citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding", "id", "tf_servicegroup,P_256"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslservicegroup_ecccurve_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservicegroup_ecccurve_bindingExist("citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding", "id", "ecccurvename:P_256,servicegroupname:tf_servicegroup"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslservicegroup_ecccurve_binding_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservicegroup_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslservicegroup_ecccurve_binding_basic},
+			{Config: testAccSslservicegroup_ecccurve_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

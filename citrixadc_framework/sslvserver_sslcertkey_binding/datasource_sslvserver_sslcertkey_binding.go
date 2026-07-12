@@ -56,7 +56,7 @@ func (d *SslvserverSslcertkeyBindingDataSource) Read(ctx context.Context, req da
 	findParams := service.FindParams{
 		ResourceType:             service.Sslvserver_sslcertkey_binding.Type(),
 		ResourceName:             vservername_Name,
-		ResourceMissingErrorCode: 258,
+		ResourceMissingErrorCode: 461,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {

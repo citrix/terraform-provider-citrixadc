@@ -274,6 +274,22 @@ func TestAccSslservice_sslciphersuite_binding_dataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslservice_sslciphersuite_binding_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslservice_sslciphersuite_binding.tf_sslservice_sslciphersuite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservice_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslservice_sslciphersuite_binding_basic_step1},
+			{Config: testAccSslservice_sslciphersuite_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckSslservice_sslciphersuite_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -379,6 +395,114 @@ func testAccCheckSslservice_sslciphersuite_bindingNotExist(n string, id string) 
 
 		return nil
 	}
+}
+
+const testAccsslservice_sslciphersuite_binding_upgrade_basic = `
+resource "citrixadc_sslservice" "demo_sslservice" {
+	cipherredirect = "DISABLED"
+	clientauth = "DISABLED"
+	dh = "DISABLED"
+	dhcount = 0
+	dhkeyexpsizelimit = "DISABLED"
+	dtls12 = "DISABLED"
+	ersa = "DISABLED"
+	redirectportrewrite = "DISABLED"
+	serverauth = "ENABLED"
+	servicename = citrixadc_service.tf_service.name
+	sessreuse = "ENABLED"
+	sesstimeout = 300
+	snienable = "DISABLED"
+	ssl2 = "DISABLED"
+	ssl3 = "ENABLED"
+	sslredirect = "DISABLED"
+	sslv2redirect = "DISABLED"
+	tls1 = "ENABLED"
+	tls11 = "ENABLED"
+	tls12 = "ENABLED"
+	tls13 = "DISABLED"
+
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	ipv46       = "10.10.10.44"
+	name        = "tf_lbvserver"
+	port        = 443
+	servicetype = "SSL"
+	sslprofile  = "ns_default_ssl_profile_frontend"
+}
+
+resource "citrixadc_service" "tf_service" {
+	name = "tf_service"
+	servicetype = "SSL"
+	port = 443
+	lbvserver = citrixadc_lbvserver.tf_lbvserver.name
+	ip = "10.77.33.22"
+
+}
+
+resource "citrixadc_sslcipher" "tfAccsslcipher" {
+	ciphergroupname = "tfAccsslcipher"
+
+	# ciphersuitebinding is MANDATORY attribute
+	# Any change in the ciphersuitebinding will result in re-creation of the whole sslcipher resource.
+	ciphersuitebinding {
+		ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+		cipherpriority = 1
+	}
+	ciphersuitebinding {
+		ciphername     = "TLS1.2-ECDHE-RSA-AES256-GCM-SHA384"
+		cipherpriority = 2
+	}
+	ciphersuitebinding {
+		ciphername     = "TLS1.2-ECDHE-RSA-AES-128-SHA256"
+		cipherpriority = 3
+	}
+}
+
+resource "citrixadc_sslservice_sslciphersuite_binding" "tf_sslservice_sslciphersuite_binding" {
+	ciphername = citrixadc_sslcipher.tfAccsslcipher.ciphergroupname
+	servicename = citrixadc_service.tf_service.name
+}
+`
+
+// TestAccSslservice_sslciphersuite_binding_sdkv2StateUpgrade verifies that a resource
+// created with the last SDK v2 provider release (2.2.0, legacy comma-joined ID) is
+// correctly refreshed and re-planned by the current Framework provider, and that the
+// Framework Read recomputes the ID into the new key:value format.
+func TestAccSslservice_sslciphersuite_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslservice_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release -> legacy comma-joined ID
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccsslservice_sslciphersuite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservice_sslciphersuite_bindingExist("citrixadc_sslservice_sslciphersuite_binding.tf_sslservice_sslciphersuite_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslciphersuite_binding.tf_sslservice_sslciphersuite_binding", "id", "tf_service,tfAccsslcipher"),
+				),
+			},
+			{
+				// Step 2: same config through the current Framework provider -> refresh legacy
+				// state (exercises ParseIdString on the legacy ID) and recompute the new ID.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccsslservice_sslciphersuite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservice_sslciphersuite_bindingExist("citrixadc_sslservice_sslciphersuite_binding.tf_sslservice_sslciphersuite_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslciphersuite_binding.tf_sslservice_sslciphersuite_binding", "id", "ciphername:tfAccsslcipher,servicename:tf_service"),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckSslservice_sslciphersuite_bindingDestroy(s *terraform.State) error {

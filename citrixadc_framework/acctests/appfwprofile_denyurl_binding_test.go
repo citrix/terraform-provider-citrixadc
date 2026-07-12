@@ -257,3 +257,66 @@ func TestAccAppfwprofile_denyurl_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccAppfwprofile_denyurl_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "demo_appfw" {
+		name = "tfAcc_appfwprofile"
+		type = ["HTML"]
+	}
+
+	resource "citrixadc_appfwprofile_denyurl_binding" "appfwprofile_denyurl1" {
+		name           = citrixadc_appfwprofile.demo_appfw.name
+		denyurl        = "debug[.][^/?]*(|[?].*)$"
+		alertonly      = "OFF"
+		isautodeployed = "NOTAUTODEPLOYED"
+		state          = "ENABLED"
+	}
+`
+
+func TestAccAppfwprofile_denyurl_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_denyurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwprofile_denyurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_denyurl_bindingExist("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", "id", `tfAcc_appfwprofile,debug[.][^/?]*(|[?].*)$`),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwprofile_denyurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_denyurl_bindingExist("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", "id", `denyurl:debug%5B.%5D%5B%5E%2F%3F%5D%2A%28%7C%5B%3F%5D.%2A%29%24,name:tfAcc_appfwprofile`),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_denyurl_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_denyurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_denyurl_binding_basic},
+			{Config: testAccAppfwprofile_denyurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

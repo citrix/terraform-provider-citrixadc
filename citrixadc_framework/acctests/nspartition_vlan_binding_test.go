@@ -254,3 +254,67 @@ func TestAccNspartition_vlan_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccNspartition_vlan_binding_upgrade_basic = `
+	resource "citrixadc_nspartition" "tf_nspartition" {
+		partitionname = "tf_nspartition"
+		maxbandwidth  = 10240
+		minbandwidth  = 512
+		maxconn       = 512
+		maxmemlimit   = 11
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_nspartition_vlan_binding" "tf_binding" {
+		partitionname = citrixadc_nspartition.tf_nspartition.partitionname
+		vlan          = citrixadc_vlan.tf_vlan.vlanid
+	}
+`
+
+func TestAccNspartition_vlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nspartition_vlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartition_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNspartition_vlan_binding_basic},
+			{Config: testAccNspartition_vlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccNspartition_vlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNspartition_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes state with the legacy id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNspartition_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspartition_vlan_bindingExist("citrixadc_nspartition_vlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspartition_vlan_binding.tf_binding", "id", "tf_nspartition,20"),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework provider.
+			// The framework Read recomputes the id into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNspartition_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspartition_vlan_bindingExist("citrixadc_nspartition_vlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspartition_vlan_binding.tf_binding", "id", "partitionname:tf_nspartition,vlan:20"),
+				),
+			},
+		},
+	})
+}

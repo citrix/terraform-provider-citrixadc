@@ -81,6 +81,13 @@ func (r *SnmptrapSnmpuserBindingResource) Create(ctx context.Context, req resour
 
 	// Read the updated state back
 	r.readSnmptrapSnmpuserBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "snmptrap_snmpuser_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -99,6 +106,15 @@ func (r *SnmptrapSnmpuserBindingResource) Read(ctx context.Context, req resource
 	tflog.Debug(ctx, "Reading snmptrap_snmpuser_binding resource")
 
 	r.readSnmptrapSnmpuserBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -142,6 +158,13 @@ func (r *SnmptrapSnmpuserBindingResource) Update(ctx context.Context, req resour
 
 	// Read the updated state back
 	r.readSnmptrapSnmpuserBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "snmptrap_snmpuser_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -259,7 +282,9 @@ func (r *SnmptrapSnmpuserBindingResource) readSnmptrapSnmpuserBindingFromApi(ctx
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "snmptrap_snmpuser_binding returned empty array")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -281,9 +306,6 @@ func (r *SnmptrapSnmpuserBindingResource) readSnmptrapSnmpuserBindingFromApi(ctx
 				match = false
 				continue
 			}
-		} else if _, ok := v["td"]; ok {
-			match = false
-			continue
 		}
 
 		// Check trapclass
@@ -345,9 +367,6 @@ func (r *SnmptrapSnmpuserBindingResource) readSnmptrapSnmpuserBindingFromApi(ctx
 				match = false
 				continue
 			}
-		} else if _, ok := v["version"].(string); ok {
-			match = false
-			continue
 		}
 
 		if match {
@@ -358,7 +377,8 @@ func (r *SnmptrapSnmpuserBindingResource) readSnmptrapSnmpuserBindingFromApi(ctx
 
 	// Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("snmptrap_snmpuser_binding not found with the provided ID attributes"))
+		// Binding not present in the returned set: signal removal via a null Id (see above).
+		data.Id = types.StringNull()
 		return
 	}
 

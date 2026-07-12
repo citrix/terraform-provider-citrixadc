@@ -85,6 +85,67 @@ const testAccVxlan_srcip_binding_basic_step2 = `
 	}
 `
 
+const testAccVxlan_srcip_binding_upgrade_basic = `
+	resource "citrixadc_nsip" "tf_srcip" {
+		ipaddress = "11.22.33.44"
+		type      = "SNIP"
+		netmask   = "255.255.255.0"
+	}
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_vxlan_srcip_binding" "tf_binding" {
+		vxlanid = citrixadc_vxlan.tf_vxlan.vxlanid
+		srcip   = citrixadc_nsip.tf_srcip.ipaddress
+	}
+`
+
+// TestAccVxlan_srcip_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (legacy comma-separated ID "123,11.22.33.44") is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0. Step 2
+// refreshes/plans/applies the same config through the Framework provider,
+// exercising ParseIdString on the legacy id; because the Framework recomputes the
+// id on Read (SetAttrFromGet), the id upgrades to the new "key:value" form.
+func TestAccVxlan_srcip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_vxlan_srcip_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVxlan_srcip_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVxlan_srcip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxlan_srcip_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "123,11.22.33.44"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVxlan_srcip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxlan_srcip_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "vxlanid:123,srcip:11.22.33.44"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVxlan_srcip_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -103,6 +164,19 @@ func TestAccVxlan_srcip_binding_basic(t *testing.T) {
 					testAccCheckVxlan_srcip_bindingNotExist("citrixadc_vxlan_srcip_binding.tf_binding", "123,11.22.33.44"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVxlan_srcip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vxlan_srcip_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlan_srcip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVxlan_srcip_binding_basic},
+			{Config: testAccVxlan_srcip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

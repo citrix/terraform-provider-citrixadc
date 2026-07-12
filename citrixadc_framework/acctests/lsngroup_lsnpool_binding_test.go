@@ -248,6 +248,79 @@ const testAccLsngroup_lsnpool_bindingDataSource_basic = `
   
 `
 
+// testAccLsngroup_lsnpool_binding_upgrade_basic is valid under BOTH the SDK v2
+// 2.2.0 schema and the current framework schema. It reuses the values from
+// testAccLsngroup_lsnpool_binding_basic and keeps the same resource labels so the
+// Exist/Destroy helpers and addresses match.
+const testAccLsngroup_lsnpool_binding_upgrade_basic = `
+
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
+	}
+
+	resource "citrixadc_lsngroup" "tf_lsngroup" {
+		groupname     = "my_lsngroup"
+		clientname    = resource.citrixadc_lsnclient.tf_lsnclient.clientname
+		logging       = "DISABLED"
+		nattype       = "DYNAMIC"
+		snmptraplimit = 50
+	}
+
+	resource "citrixadc_lsnpool" "tf_lsnpool" {
+		poolname            = "my_lsn_pool"
+		nattype             = "DYNAMIC"
+		portblockallocation = "DISABLED"
+		maxportrealloctmq   = 50
+		portrealloctimeout  = 50
+	}
+
+	resource "citrixadc_lsngroup_lsnpool_binding" "tf_lsngroup_lsnpool_binding" {
+		groupname = citrixadc_lsngroup.tf_lsngroup.groupname
+		poolname  = citrixadc_lsnpool.tf_lsnpool.poolname
+	}
+
+`
+
+// TestAccLsngroup_lsnpool_binding_sdkv2StateUpgrade verifies that a binding created
+// by the last SDK v2 release (which writes the legacy id "my_lsngroup,my_lsn_pool"
+// via d.SetId("groupname,poolname")) is correctly read/refreshed by the current
+// framework provider, which recomputes the id to the new
+// "groupname:...,poolname:..." format on Read (SetAttrFromGet).
+func TestAccLsngroup_lsnpool_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsngroup_lsnpool_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the LAST SDK v2 release from the registry.
+			// State is written with the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLsngroup_lsnpool_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsnpool_bindingExist("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "id", "my_lsngroup,my_lsn_pool"),
+				),
+			},
+			// Step 2: same config through the CURRENT (framework) provider. Terraform
+			// refreshes the legacy-id state (exercising ParseIdString on the legacy id),
+			// and the framework Read recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsngroup_lsnpool_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsnpool_bindingExist("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "id", "groupname:my_lsngroup,poolname:my_lsn_pool"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLsngroup_lsnpool_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -261,6 +334,19 @@ func TestAccLsngroup_lsnpool_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "poolname", "my_lsn_pool"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccLsngroup_lsnpool_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnpool_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsngroup_lsnpool_binding_basic},
+			{Config: testAccLsngroup_lsnpool_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

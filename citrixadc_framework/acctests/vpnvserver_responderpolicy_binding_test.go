@@ -82,6 +82,19 @@ func TestAccVpnvserver_responderpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnvserver_responderpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_responderpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_responderpolicy_binding_basic},
+			{Config: testAccVpnvserver_responderpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckVpnvserver_responderpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -253,6 +266,58 @@ func TestAccVpnvserver_responderpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_responderpolicy_binding.tf_bind", "name", "tf_examplevserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_responderpolicy_binding.tf_bind", "policy", "tf_responder_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_responderpolicy_binding.tf_bind", "priority", "200"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnvserver_responderpolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_examplevserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_responderpolicy" "tf_responder_policy" {
+		name   = "tf_responder_policy"
+		action = "DROP"
+		rule   = "TRUE"
+	}
+	resource "citrixadc_vpnvserver_responderpolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_responderpolicy.tf_responder_policy.name
+		priority  = 200
+	}
+`
+
+func TestAccVpnvserver_responderpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_responderpolicy_bindingExist("citrixadc_vpnvserver_responderpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_responderpolicy_binding.tf_bind", "id", "tf_examplevserver,tf_responder_policy"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_responderpolicy_bindingExist("citrixadc_vpnvserver_responderpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_responderpolicy_binding.tf_bind", "id", "name:tf_examplevserver,policy:tf_responder_policy"),
 				),
 			},
 		},

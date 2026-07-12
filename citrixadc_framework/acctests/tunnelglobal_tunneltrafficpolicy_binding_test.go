@@ -196,6 +196,55 @@ func testAccCheckTunnelglobal_tunneltrafficpolicy_bindingDestroy(s *terraform.St
 	return nil
 }
 
+const testAccTunnelglobal_tunneltrafficpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_tunneltrafficpolicy" "tf_tunneltrafficpolicy" {
+	name   = "my_tunneltrafficpolicy"
+	rule   = "true"
+	action = "COMPRESS"
+	}
+
+resource "citrixadc_tunnelglobal_tunneltrafficpolicy_binding" "tf_tunnelglobal_tunneltrafficpolicy_binding" {
+	priority   = 50
+	policyname = citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy.name
+	}
+`
+
+func TestAccTunnelglobal_tunneltrafficpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTunnelglobal_tunneltrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (plain policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccTunnelglobal_tunneltrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTunnelglobal_tunneltrafficpolicy_bindingExist("citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "id", "my_tunneltrafficpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read recomputes the canonical id, which for
+				// this single-key binding stays the plain policyname value.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTunnelglobal_tunneltrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTunnelglobal_tunneltrafficpolicy_bindingExist("citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "id", "my_tunneltrafficpolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccTunnelglobal_tunneltrafficpolicy_bindingDataSource_basic = `
 resource "citrixadc_tunneltrafficpolicy" "tf_tunneltrafficpolicy" {
 	name   = "my_tunneltrafficpolicy"
@@ -227,6 +276,19 @@ func TestAccTunnelglobal_tunneltrafficpolicy_bindingDataSource_basic(t *testing.
 					resource.TestCheckResourceAttr("data.citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "priority", "50"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccTunnelglobal_tunneltrafficpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTunnelglobal_tunneltrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTunnelglobal_tunneltrafficpolicy_binding_basic},
+			{Config: testAccTunnelglobal_tunneltrafficpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

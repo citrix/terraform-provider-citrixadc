@@ -96,6 +96,20 @@ func TestAccCsvserver_filterpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_filterpolicy_binding_import(t *testing.T) {
+	t.Skip("filterpolicy is not supported in 13.1")
+	const resAddr = "citrixadc_csvserver_filterpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_filterpolicy_binding_basic_step1},
+			{Config: testAccCsvserver_filterpolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckCsvserver_filterpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -154,6 +168,70 @@ func testAccCheckCsvserver_filterpolicy_bindingExist(n string, id *string) resou
 
 		return nil
 	}
+}
+
+const testAccCsvserver_filterpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_filterpolicy" "tf_filterpolicy" {
+    name = "tf_filterpolicy"
+    reqaction = "DROP"
+    rule = "REQ.HTTP.URL CONTAINS http://abc.com"
+}
+
+resource "citrixadc_csvserver_filterpolicy_binding" "tf_bind" {
+    name = citrixadc_csvserver.tf_csvserver.name
+    policyname = citrixadc_filterpolicy.tf_filterpolicy.name
+    priority = 100
+}
+
+`
+
+// TestAccCsvserver_filterpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 provider release (legacy comma-joined id) can be
+// refreshed/planned/applied by the current Plugin Framework provider. Step 1 creates
+// the resource with citrix/citrixadc 2.2.0 (writing the legacy id "name,policyname").
+// Step 2 runs the same config through the current framework provider, which exercises
+// ParseIdString on the legacy id during Read and recomputes the id to the new
+// "key:value" canonical format.
+func TestAccCsvserver_filterpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("filterpolicy is not supported in 13.1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy id "name,policyname"
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCsvserver_filterpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_filterpolicy_bindingExist("citrixadc_csvserver_filterpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_filterpolicy_binding.tf_bind", "id", "tf_csvserver,tf_filterpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply through the current framework provider.
+			// Read parses the legacy id and recomputes it to the new canonical format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_filterpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_filterpolicy_bindingExist("citrixadc_csvserver_filterpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_filterpolicy_binding.tf_bind", "id", "bindpoint:REQUEST,name:tf_csvserver,policyname:tf_filterpolicy"),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckCsvserver_filterpolicy_bindingDestroy(s *terraform.State) error {

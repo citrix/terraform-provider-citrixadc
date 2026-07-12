@@ -36,7 +36,6 @@ const testAccAaagroup_vpnintranetapplication_binding_basic = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
 		intranetapplication = "tf_vpnintranetapplication"
@@ -51,7 +50,6 @@ const testAccAaagroup_vpnintranetapplication_binding_basic_step2 = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
 		intranetapplication = "tf_vpnintranetapplication"
@@ -227,7 +225,6 @@ const testAccAaagroup_vpnintranetapplication_bindingDataSource_basic = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
 		intranetapplication = "tf_vpnintranetapplication"
@@ -255,6 +252,72 @@ func TestAccAaagroup_vpnintranetapplication_bindingDataSource_basic(t *testing.T
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnintranetapplication_binding.tf_aaagroup_vpnintranetapplication_binding", "intranetapplication", "tf_vpnintranetapplication"),
 				),
 			},
+		},
+	})
+}
+
+const testAccAaagroup_vpnintranetapplication_binding_upgrade_basic = `
+
+	resource "citrixadc_aaagroup_vpnintranetapplication_binding" "tf_aaagroup_vpnintranetapplication_binding" {
+		groupname           = citrixadc_aaagroup.tf_aaagroup.groupname
+		intranetapplication = citrixadc_vpnintranetapplication.tf_vpnintranetapplication.intranetapplication
+	}
+
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+	}
+	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+		intranetapplication = "tf_vpnintranetapplication"
+		protocol            = "UDP"
+		destip              = "2.3.6.5"
+		interception        = "TRANSPARENT"
+	}
+
+`
+
+func TestAccAaagroup_vpnintranetapplication_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaagroup_vpnintranetapplication_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaagroup_vpnintranetapplication_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_vpnintranetapplication_bindingExist("citrixadc_aaagroup_vpnintranetapplication_binding.tf_aaagroup_vpnintranetapplication_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup_vpnintranetapplication_binding.tf_aaagroup_vpnintranetapplication_binding", "id", "my_group,tf_vpnintranetapplication"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaagroup_vpnintranetapplication_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_vpnintranetapplication_bindingExist("citrixadc_aaagroup_vpnintranetapplication_binding.tf_aaagroup_vpnintranetapplication_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup_vpnintranetapplication_binding.tf_aaagroup_vpnintranetapplication_binding", "id", "groupname:my_group,intranetapplication:tf_vpnintranetapplication"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaagroup_vpnintranetapplication_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup_vpnintranetapplication_binding.tf_aaagroup_vpnintranetapplication_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_vpnintranetapplication_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaagroup_vpnintranetapplication_binding_basic},
+			{Config: testAccAaagroup_vpnintranetapplication_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

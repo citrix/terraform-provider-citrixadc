@@ -145,6 +145,22 @@ func TestAccSslservice_ecccurve_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslservice_ecccurve_binding_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservice_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslservice_ecccurve_binding_basic_step1},
+			{Config: testAccSslservice_ecccurve_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckSslservice_ecccurve_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -351,6 +367,68 @@ func TestAccSslservice_ecccurve_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding_ds", "servicename", "tf_service"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding_ds", "ecccurvename", "P_256"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSslservice_ecccurve_binding_upgrade_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	ipv46       = "10.10.10.44"
+	name        = "tf_lbvserver"
+	port        = 443
+	servicetype = "SSL"
+	sslprofile  = "ns_default_ssl_profile_frontend"
+}
+
+resource "citrixadc_service" "tf_service" {
+	name = "tf_service"
+	servicetype = "SSL"
+	port = 443
+	lbvserver = citrixadc_lbvserver.tf_lbvserver.name
+	ip = "10.77.33.22"
+}
+
+resource "citrixadc_sslservice_ecccurve_binding" "tf_sslservice_ecccurve_binding" {
+	ecccurvename = "P_256"
+	servicename = citrixadc_service.tf_service.name
+
+}
+`
+
+func TestAccSslservice_ecccurve_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslservice_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSslservice_ecccurve_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservice_ecccurve_bindingExist("citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding", "id", "tf_service,P_256"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslservice_ecccurve_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservice_ecccurve_bindingExist("citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_ecccurve_binding.tf_sslservice_ecccurve_binding", "id", "servicename:tf_service,ecccurvename:P_256"),
 				),
 			},
 		},

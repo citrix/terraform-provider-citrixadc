@@ -73,6 +73,19 @@ func TestAccBotglobal_botpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccBotglobal_botpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botglobal_botpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotglobal_botpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotglobal_botpolicy_binding_basic},
+			{Config: testAccBotglobal_botpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckBotglobal_botpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -229,6 +242,55 @@ func TestAccBotglobalBotpolicyBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_botglobal_botpolicy_binding.tf_binding", "policyname", "tf_botpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_botglobal_botpolicy_binding.tf_binding", "priority", "90"),
 					resource.TestCheckResourceAttr("data.citrixadc_botglobal_botpolicy_binding.tf_binding", "type", "REQ_OVERRIDE"),
+				),
+			},
+		},
+	})
+}
+
+const testAccBotglobal_botpolicy_binding_upgrade_basic = `
+	resource "citrixadc_botpolicy" "tf_botpolicy" {
+		name        = "tf_botpolicy"
+		profilename = "BOT_BYPASS"
+		rule        = "true"
+		comment     = "COMMENT FOR BOTPOLICY"
+	}
+	resource "citrixadc_botglobal_botpolicy_binding" "tf_binding" {
+		policyname = citrixadc_botpolicy.tf_botpolicy.name
+		priority   = 90
+		type       = "REQ_OVERRIDE"
+	}
+`
+
+func TestAccBotglobal_botpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotglobal_botpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccBotglobal_botpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotglobal_botpolicy_bindingExist("citrixadc_botglobal_botpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botglobal_botpolicy_binding.tf_binding", "id", "tf_botpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotglobal_botpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotglobal_botpolicy_bindingExist("citrixadc_botglobal_botpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botglobal_botpolicy_binding.tf_binding", "id", "policyname:tf_botpolicy,type:REQ_OVERRIDE"),
 				),
 			},
 		},

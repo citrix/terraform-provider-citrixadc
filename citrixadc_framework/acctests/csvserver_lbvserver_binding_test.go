@@ -25,6 +25,72 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+const testAccCsvserver_lbvserver_binding_upgrade_basic = `
+	resource "citrixadc_csvserver_lbvserver_binding" "tf_csvserver_lbvserver_binding" {
+        name = citrixadc_csvserver.tf_csvserver.name
+        lbvserver = citrixadc_lbvserver.tf_lbvserver.name
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name = "tf_csvserver"
+		servicetype = "HTTP"
+		ipv46 = "10.10.10.10"
+		port = 80
+		lifecycle {
+			ignore_changes = [lbvserverbinding]
+		}
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name = "tf_lbvserver"
+		servicetype = "HTTP"
+	}
+`
+
+// TestAccCsvserver_lbvserver_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (citrix/citrixadc 2.2.0) is correctly
+// upgraded when the same config is subsequently managed by the current provider.
+// Step 1 creates the binding with 2.2.0 (writes the legacy comma-separated id
+// "tf_csvserver,tf_lbvserver"). Step 2 refreshes/plans/applies the same config
+// through the current provider, exercising ParseIdString on the legacy id. This
+// resource's Create and SetAttrFromGet both derive the id as "name,lbvserver"
+// (Case 3 multi-key, plain comma-join -- not key:value), so the recomputed id on
+// Read is identical to the legacy id.
+func TestAccCsvserver_lbvserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_csvserver_lbvserver_binding.tf_csvserver_lbvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_lbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCsvserver_lbvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_lbvserver_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_csvserver,tf_lbvserver"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current provider.
+			// The legacy-id state is read via ParseIdString and the id is recomputed
+			// on Read to the resource canonical form (identical here).
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_lbvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_lbvserver_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_csvserver,tf_lbvserver"),
+				),
+			},
+		},
+	})
+}
+
 const testAccCsvserver_lbvserver_binding_basic = `
 	resource "citrixadc_csvserver_lbvserver_binding" "tf_csvserver_lbvserver_binding" {
         name = citrixadc_csvserver.tf_csvserver.name
@@ -270,6 +336,19 @@ func TestAcccsvserver_lbvserver_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.citrixadc_csvserver_lbvserver_binding.tf_csvserver_lbvserver_binding_ds_read", "id"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccCsvserver_lbvserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_lbvserver_binding.tf_csvserver_lbvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_lbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_lbvserver_binding_basic},
+			{Config: testAccCsvserver_lbvserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

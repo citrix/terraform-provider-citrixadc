@@ -323,3 +323,91 @@ func TestAcccrvserver_policymap_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccCrvserver_policymap_binding_upgrade_basic = `
+
+resource "citrixadc_crvserver" "crvserver" {
+	name        = "my_vserver"
+	servicetype = "HTTP"
+	ipv46       = "10.102.80.55"
+	port        = 8090
+	cachetype   = "REVERSE"
+	}
+  resource "citrixadc_policymap" "tf_policymap" {
+	mappolicyname = "ia_mappol123"
+	sd            = "amazon.com"
+	td            = "apple.com"
+	}
+  resource "citrixadc_lbvserver" "foo_lbvserver" {
+	name        = "test_lbvserver"
+	servicetype = "HTTP"
+	ipv46       = "192.122.3.31"
+	port        = 8000
+	comment     = "hello"
+	}
+  resource "citrixadc_service" "tf_service" {
+	lbvserver   = citrixadc_lbvserver.foo_lbvserver.name
+	name        = "tf_service"
+	port        = 8081
+	ip          = "10.33.4.5"
+	servicetype = "HTTP"
+	cachetype   = "TRANSPARENT"
+	}
+  resource "citrixadc_crvserver_policymap_binding" "crvserver_policymap_binding" {
+	name          = citrixadc_crvserver.crvserver.name
+	policyname    = citrixadc_policymap.tf_policymap.mappolicyname
+	targetvserver = citrixadc_lbvserver.foo_lbvserver.name
+	depends_on = [
+	  citrixadc_service.tf_service
+	]
+	}
+
+`
+
+func TestAccCrvserver_policymap_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_policymap_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCrvserver_policymap_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_policymap_bindingExist("citrixadc_crvserver_policymap_binding.crvserver_policymap_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_policymap_binding.crvserver_policymap_binding", "id", "my_vserver,ia_mappol123"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrvserver_policymap_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_policymap_bindingExist("citrixadc_crvserver_policymap_binding.crvserver_policymap_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_policymap_binding.crvserver_policymap_binding", "id", "name:my_vserver,policyname:ia_mappol123"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_policymap_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_policymap_binding.crvserver_policymap_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_policymap_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_policymap_binding_basic},
+			{Config: testAccCrvserver_policymap_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

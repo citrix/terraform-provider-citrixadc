@@ -286,3 +286,80 @@ func TestAccAuthenticationvserverTmsessionpolicyBindingDataSource_basic(t *testi
 		},
 	})
 }
+
+const testAccAuthenticationvserver_tmsessionpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "my_tmsession_action"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
+	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+		name   = "my_tmsession_policy"
+		rule   = "true"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
+	}
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+
+	resource "citrixadc_authenticationvserver_tmsessionpolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_tmsessionpolicy.tf_tmsessionpolicy.name
+		priority  = 90
+		bindpoint = "REQUEST"
+	}
+`
+
+func TestAccAuthenticationvserver_tmsessionpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_tmsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAuthenticationvserver_tmsessionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_tmsessionpolicy_bindingExist("citrixadc_authenticationvserver_tmsessionpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_tmsessionpolicy_binding.tf_bind", "id", "tf_authenticationvserver,my_tmsession_policy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationvserver_tmsessionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_tmsessionpolicy_bindingExist("citrixadc_authenticationvserver_tmsessionpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_tmsessionpolicy_binding.tf_bind", "id", "name:tf_authenticationvserver,policy:my_tmsession_policy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_tmsessionpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_tmsessionpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_tmsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_tmsessionpolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_tmsessionpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "priority"}},
+		},
+	})
+}

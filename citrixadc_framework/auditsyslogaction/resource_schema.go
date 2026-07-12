@@ -235,7 +235,11 @@ func (r *AuditsyslogactionResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes, but add
+					// UseStateForUnknown so the Computed value populated by the GET on refresh does not
+					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Transport type used to send auditlogs to syslog server. Default type is UDP.",
 			},

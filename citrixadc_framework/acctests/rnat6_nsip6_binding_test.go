@@ -258,3 +258,73 @@ func TestAccRnat6_nsip6_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccRnat6_nsip6_binding_upgrade_basic = `
+
+	resource "citrixadc_rnat6" "tf_rnat6" {
+		name             = "my_rnat6"
+		network          = "2003::/64"
+		srcippersistency = "ENABLED"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2001:db8:85a3::8a2e:370:7334/64"
+		type = "VIP"
+	}
+
+	resource "citrixadc_rnat6_nsip6_binding" "tf_rnat6_nsip6_binding" {
+		name 	= citrixadc_rnat6.tf_rnat6.name
+		natip6 	= "2001:db8:85a3::8a2e:370:7334"
+		depends_on = [
+			citrixadc_nsip6.tf_nsip6
+		]
+	}
+`
+
+// TestAccRnat6_nsip6_binding_sdkv2StateUpgrade verifies that state written by the last
+// SDK v2 release (with the legacy comma-joined id) is transparently upgraded to the new
+// key:value id format when refreshed through the current Framework provider.
+func TestAccRnat6_nsip6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRnat6_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release; state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccRnat6_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnat6_nsip6_bindingExist("citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "id", "my_rnat6,2001:db8:85a3::8a2e:370:7334"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current Framework provider.
+			// Read recomputes the id, upgrading it to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRnat6_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnat6_nsip6_bindingExist("citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "id", "name:my_rnat6,natip6:2001%3Adb8%3A85a3%3A%3A8a2e%3A370%3A7334"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRnat6_nsip6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRnat6_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRnat6_nsip6_binding_basic},
+			{Config: testAccRnat6_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

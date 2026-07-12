@@ -242,3 +242,79 @@ func TestAccAppfwprofile_cookieconsistency_bindingDataSource_basic(t *testing.T)
 		},
 	})
 }
+
+// testAccAppfwprofile_cookieconsistency_binding_upgrade_basic reuses the _basic config
+// (the binding + its appfwprofile prerequisite) with the same values. It is valid under
+// BOTH the SDK v2 2.2.0 schema and the current Framework schema because the migration
+// restored the SDK v2 attribute names (name, cookieconsistency).
+const testAccAppfwprofile_cookieconsistency_binding_upgrade_basic = `
+	resource citrixadc_appfwprofile_cookieconsistency_binding demo_binding1 {
+		name              = citrixadc_appfwprofile.demo_appfw.name
+		cookieconsistency = "^logon_[0-9A-Za-z]{2,15}$"
+	}
+
+	resource citrixadc_appfwprofile demo_appfw {
+		name = "demo_appfwprofile"
+		type = ["HTML"]
+	}
+`
+
+// TestAccAppfwprofile_cookieconsistency_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider.
+//
+// Step 1 creates the binding with citrix/citrixadc 2.2.0, which writes the legacy
+// comma-joined id (SDK v2 d.SetId(fmt.Sprintf("%s,%s", name, cookieconsistency)) =>
+// "demo_appfwprofile,^logon_[0-9A-Za-z]{2,15}$").
+// Step 2 refreshes/plans/applies the SAME config through the current Framework provider,
+// exercising ParseIdString on the legacy id. The Framework recomputes the id on Read
+// (appfwprofile_cookieconsistency_bindingSetAttrFromGet), so the id is upgraded to the
+// canonical new key:value format
+// "cookieconsistency:%5Elogon_%5B0-9A-Za-z%5D%7B2%2C15%7D%24,name:demo_appfwprofile".
+func TestAccAppfwprofile_cookieconsistency_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_cookieconsistency_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwprofile_cookieconsistency_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_cookieconsistency_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "demo_appfwprofile,^logon_[0-9A-Za-z]{2,15}$"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read to the canonical new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwprofile_cookieconsistency_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_cookieconsistency_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "cookieconsistency:%5Elogon_%5B0-9A-Za-z%5D%7B2%2C15%7D%24,name:demo_appfwprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_cookieconsistency_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_cookieconsistency_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1},
+			{Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

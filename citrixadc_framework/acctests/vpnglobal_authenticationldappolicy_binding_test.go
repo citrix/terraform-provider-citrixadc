@@ -83,6 +83,19 @@ func TestAccVpnglobal_authenticationldappolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnglobal_authenticationldappolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_authenticationldappolicy_binding_basic},
+			{Config: testAccVpnglobal_authenticationldappolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckVpnglobal_authenticationldappolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -235,6 +248,70 @@ func TestAccVpnglobal_authenticationldappolicy_bindingDataSource_basic(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", "policyname", "tf_ldappolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
+}
+
+// Config for the SDK v2 -> Framework state-upgrade test. Reuses the _basic
+// values and is valid under BOTH the last SDK v2 release (2.2.0) schema and the
+// current Framework schema (uses only SDK v2 attribute names).
+const testAccVpnglobal_authenticationldappolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "tf_ldapaction"
+		serverip      = "5.5.5.5"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_ldappolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+	resource "citrixadc_vpnglobal_authenticationldappolicy_binding" "tf_bind" {
+		policyname = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
+		priority = 20
+	}
+`
+
+// TestAccVpnglobal_authenticationldappolicy_binding_sdkv2StateUpgrade verifies that
+// state written by the last SDK v2 release is transparently upgraded by the current
+// Framework provider. This binding uses a single-key id (policyname), so the legacy
+// id and the recomputed Framework canonical id are identical ("tf_ldappolicy").
+// Step 1 creates the binding with citrix/citrixadc 2.2.0; step 2 refreshes/plans the
+// same config through the current Framework provider, whose Read parses the id and
+// recomputes it via SetAttrFromGet.
+func TestAccVpnglobal_authenticationldappolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_authenticationldappolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationldappolicy_bindingExist("citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", "id", "tf_ldappolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the id, then recomputes it
+				// via SetAttrFromGet. Single-key id => value is unchanged.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_authenticationldappolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationldappolicy_bindingExist("citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", "id", "tf_ldappolicy"),
 				),
 			},
 		},

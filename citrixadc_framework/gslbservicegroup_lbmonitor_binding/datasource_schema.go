@@ -24,11 +24,6 @@ func GslbservicegroupLbmonitorBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Monitor state.",
 			},
-			"order": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Order number to be assigned to the gslb servicegroup member",
-			},
 			"passive": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,

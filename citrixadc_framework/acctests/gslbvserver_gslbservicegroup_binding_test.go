@@ -308,3 +308,96 @@ func TestAccGslbvserver_gslbservicegroup_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccGslbvserver_gslbservicegroup_binding_upgrade_basic = `
+
+resource "citrixadc_gslbvserver_gslbservicegroup_binding" "tf_gslbvserver_gslbservicegroup_binding" {
+	name             = citrixadc_gslbvserver.tf_gslbvserver.name
+	servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
+	}
+
+  resource "citrixadc_gslbsite" "site_local" {
+	sitename        = "Site-Local"
+	siteipaddress   = "172.31.96.234"
+	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
+	}
+
+  resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+	dnsrecordtype = "A"
+	name          = "Gslbv_server"
+	servicetype   = "HTTP"
+	domain {
+	  domainname = "www.fooco.co"
+	  ttl        = "60"
+	}
+	domain {
+	  domainname = "www.barco.com"
+	  ttl        = "65"
+	}
+	}
+
+  resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+	servicegroupname = "tf_gslbvservicegroup"
+	servicetype      = "HTTP"
+	cip              = "DISABLED"
+	healthmonitor    = "NO"
+	sitename         = citrixadc_gslbsite.site_local.sitename
+	}
+`
+
+// TestAccGslbvserver_gslbservicegroup_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "Gslbv_server,tf_gslbvservicegroup"). Step 2 refreshes/plans/applies the
+// same config through the Framework provider, exercising ParseIdString on the legacy
+// id; because the Framework recomputes the id on Read (SetAttrFromGet), the id
+// upgrades to the new "key:value" form.
+func TestAccGslbvserver_gslbservicegroup_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_gslbvserver_gslbservicegroup_binding.tf_gslbvserver_gslbservicegroup_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbvserver_gslbservicegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccGslbvserver_gslbservicegroup_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_gslbservicegroup_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "Gslbv_server,tf_gslbvservicegroup"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbvserver_gslbservicegroup_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_gslbservicegroup_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:Gslbv_server,servicegroupname:tf_gslbvservicegroup"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGslbvserver_gslbservicegroup_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver_gslbservicegroup_binding.tf_gslbvserver_gslbservicegroup_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserver_gslbservicegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbvserver_gslbservicegroup_binding_basic},
+			{Config: testAccGslbvserver_gslbservicegroup_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

@@ -79,6 +79,68 @@ func TestAccVpnvserver_vpnportaltheme_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccVpnvserver_vpnportaltheme_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name           = "tf_exampleserver"
+		servicetype    = "SSL"
+		ipv46          = "3.3.3.3"
+		port           = 443
+	}
+	resource "citrixadc_vpnportaltheme" "tf_vpnportaltheme" {
+		name      = "tf_vpnportaltheme"
+		basetheme = "X1"
+	}
+	resource "citrixadc_vpnvserver_vpnportaltheme_binding" "tf_bind" {
+		name 		= citrixadc_vpnvserver.tf_vpnvserver.name
+		portaltheme = citrixadc_vpnportaltheme.tf_vpnportaltheme.name
+	}
+`
+
+func TestAccVpnvserver_vpnportaltheme_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_vpnportaltheme_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the resource with the last SDK v2 release (writes legacy id)
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_vpnportaltheme_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_vpnportaltheme_bindingExist("citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind", "id", "tf_exampleserver,tf_vpnportaltheme"),
+				),
+			},
+			{
+				// Step 2: Refresh/apply the legacy-id state through the current framework provider
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_vpnportaltheme_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_vpnportaltheme_bindingExist("citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind", "id", "name:tf_exampleserver,portaltheme:tf_vpnportaltheme"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_vpnportaltheme_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_vpnportaltheme_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_vpnportaltheme_binding_basic},
+			{Config: testAccVpnvserver_vpnportaltheme_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckVpnvserver_vpnportaltheme_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

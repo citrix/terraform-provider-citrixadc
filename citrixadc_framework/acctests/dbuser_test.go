@@ -44,7 +44,6 @@ const testAccDbuserDataSource_basic = `
 	
 	data "citrixadc_dbuser" "tf_dbuser_ds" {
 		username = citrixadc_dbuser.tf_dbuser.username
-		loggedin = false
 	}
 `
 
@@ -57,7 +56,6 @@ func TestAccDbuserDataSource_basic(t *testing.T) {
 				Config: testAccDbuserDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_dbuser.tf_dbuser_ds", "username", "user1"),
-					resource.TestCheckResourceAttr("data.citrixadc_dbuser.tf_dbuser_ds", "loggedin", "false"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_dbuser.tf_dbuser_ds", "id"),
 				),
 			},

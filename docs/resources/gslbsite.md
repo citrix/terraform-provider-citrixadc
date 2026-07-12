@@ -91,7 +91,7 @@ resource "citrixadc_gslbsite" "example" {
 * `backupparentlist` - (Optional) The list of backup gslb sites configured in preferred order. Need to be parent gsb sites.
 * `sitepassword` - (Optional, Sensitive) Password to be used for mep communication between gslb site nodes. The value is persisted in Terraform state (encrypted). See also `sitepassword_wo` for an ephemeral alternative.
 * `sitepassword_wo` - (Optional, Sensitive, WriteOnly) Same as `sitepassword`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `sitepassword_wo_version`. If both `sitepassword` and `sitepassword_wo` are set, `sitepassword_wo` takes precedence.
-* `sitepassword_wo_version` - (Optional) An integer version tracker for `sitepassword_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
+* `sitepassword_wo_version` - (Optional) An integer version tracker for `sitepassword_wo`. This value is user-managed; the provider does not assign a default. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger the resource to re-send the write-only secret, which forces the resource to be replaced.
 * `newname` - (Optional) New name for the GSLB site.
   
 ## Attribute Reference

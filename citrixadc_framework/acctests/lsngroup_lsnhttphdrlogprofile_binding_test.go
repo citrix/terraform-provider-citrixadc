@@ -248,3 +248,84 @@ func TestAccLsngroup_lsnhttphdrlogprofile_bindingDataSource_basic(t *testing.T) 
 		},
 	})
 }
+
+// testAccLsngroup_lsnhttphdrlogprofile_binding_upgrade_basic reuses the _basic config (binding +
+// all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0 schema and the current
+// Framework schema because the migration restored the SDK v2 attribute names. The terraform
+// resource label (tf_lsngroup_lsnhttphdrlogprofile_binding) is kept identical to _basic so the
+// Exist/Destroy helpers and resource addresses match.
+const testAccLsngroup_lsnhttphdrlogprofile_binding_upgrade_basic = `
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsn_client"
+}
+
+resource "citrixadc_lsngroup" "tf_lsngroup" {
+	groupname  = "my_lsn_group"
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+}
+
+resource "citrixadc_lsnhttphdrlogprofile" "tf_lsnhttphdrlogprofile" {
+	httphdrlogprofilename = "my_httplogprofile"
+}
+
+resource "citrixadc_lsngroup_lsnhttphdrlogprofile_binding" "tf_lsngroup_lsnhttphdrlogprofile_binding" {
+	groupname             = citrixadc_lsngroup.tf_lsngroup.groupname
+	httphdrlogprofilename = citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile.httphdrlogprofilename
+}
+`
+
+// TestAccLsngroup_lsnhttphdrlogprofile_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (legacy comma-separated ID) is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0 (writes the legacy id "my_lsn_group,my_httplogprofile"). Step 2
+// refreshes/plans/applies the same config through the Framework provider, exercising ParseIdString
+// on the legacy id; because the Framework recomputes the id on Read (SetAttrFromGet), the id
+// upgrades to the new "key:value" form
+// "groupname:my_lsn_group,httphdrlogprofilename:my_httplogprofile".
+func TestAccLsngroup_lsnhttphdrlogprofile_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_lsngroup_lsnhttphdrlogprofile_binding.tf_lsngroup_lsnhttphdrlogprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsngroup_lsnhttphdrlogprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLsngroup_lsnhttphdrlogprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsnhttphdrlogprofile_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "my_lsn_group,my_httplogprofile"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework provider.
+			// The legacy-id state is read via ParseIdString and the id is recomputed to the new
+			// key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsngroup_lsnhttphdrlogprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsnhttphdrlogprofile_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "groupname:my_lsn_group,httphdrlogprofilename:my_httplogprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLsngroup_lsnhttphdrlogprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_lsnhttphdrlogprofile_binding.tf_lsngroup_lsnhttphdrlogprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnhttphdrlogprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsngroup_lsnhttphdrlogprofile_binding_basic},
+			{Config: testAccLsngroup_lsnhttphdrlogprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

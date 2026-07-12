@@ -238,6 +238,63 @@ const testAccVpnglobal_authenticationtacacspolicy_bindingDataSource_basic = `
 	}
 `
 
+const testAccVpnglobal_authenticationtacacspolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
+		name            = "tf_tacacsaction"
+		serverip        = "1.2.3.4"
+		serverport      = 8080
+		authtimeout     = 5
+		authorization   = "ON"
+		accounting      = "ON"
+		auditfailedcmds = "ON"
+		groupattrname   = "group"
+	}
+	resource "citrixadc_authenticationtacacspolicy" "tf_tacacspolicy" {
+		name      = "tf_tacacspolicy"
+		rule      = "NS_FALSE"
+		reqaction = citrixadc_authenticationtacacsaction.tf_tacacsaction.name
+
+	}
+	resource "citrixadc_vpnglobal_authenticationtacacspolicy_binding" "tf_bind" {
+		policyname      = citrixadc_authenticationtacacspolicy.tf_tacacspolicy.name
+		priority        = 80
+		secondary       = false
+		groupextraction = false
+	}
+`
+
+func TestAccVpnglobal_authenticationtacacspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_authenticationtacacspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes legacy id)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_authenticationtacacspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationtacacspolicy_bindingExist("citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind", "id", "tf_tacacspolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework provider
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_authenticationtacacspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationtacacspolicy_bindingExist("citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind", "id", "tf_tacacspolicy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnglobal_authenticationtacacspolicy_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -250,6 +307,19 @@ func TestAccVpnglobal_authenticationtacacspolicy_bindingDataSource_basic(t *test
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind", "priority", "80"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnglobal_authenticationtacacspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationtacacspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_authenticationtacacspolicy_binding_basic},
+			{Config: testAccVpnglobal_authenticationtacacspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"groupextraction"}},
 		},
 	})
 }

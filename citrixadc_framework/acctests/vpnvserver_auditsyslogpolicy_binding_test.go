@@ -288,3 +288,78 @@ func TestAccVpnvserver_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccVpnvserver_auditsyslogpolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "tf_syslogaction"
+		serverip   = "10.78.60.33"
+		serverport = 514
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_policy" {
+		name   = "tf_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+	resource "citrixadc_vpnvserver_auditsyslogpolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_auditsyslogpolicy.tf_policy.name
+		priority  = 202
+		bindpoint = "RESPONSE"
+	}
+`
+
+func TestAccVpnvserver_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_auditsyslogpolicy_bindingExist("citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_auditsyslogpolicy"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_auditsyslogpolicy_bindingExist("citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind", "id", "name:tf_vpnvserver,policy:tf_auditsyslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_auditsyslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_auditsyslogpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_auditsyslogpolicy_binding_basic},
+			{Config: testAccVpnvserver_auditsyslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
+		},
+	})
+}

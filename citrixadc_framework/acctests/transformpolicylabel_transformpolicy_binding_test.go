@@ -84,6 +84,19 @@ func TestAccTransformpolicylabel_transformpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccTransformpolicylabel_transformpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformpolicylabel_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTransformpolicylabel_transformpolicy_binding_basic},
+			{Config: testAccTransformpolicylabel_transformpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckTransformpolicylabel_transformpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -255,6 +268,58 @@ func TestAccTransformpolicylabel_transformpolicy_bindingDataSource_basic(t *test
 					resource.TestCheckResourceAttr("data.citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", "labelname", "label_1"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", "policyname", "tf_trans_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", "priority", "2"),
+				),
+			},
+		},
+	})
+}
+
+const testAccTransformpolicylabel_transformpolicy_binding_upgrade_basic = `
+resource "citrixadc_transformprofile" "tf_trans_profile1" {
+	name = "pro_1"
+	}
+  resource "citrixadc_transformpolicy" "tf_trans_policy" {
+	  name = "tf_trans_policy"
+	  profilename = citrixadc_transformprofile.tf_trans_profile1.name
+	  rule = "http.REQ.URL.CONTAINS(\"test_url\")"
+	}
+  resource "citrixadc_transformpolicylabel" "transformpolicylabel" {
+	labelname = "label_1"
+	policylabeltype = "httpquic_req"
+	}
+  resource "citrixadc_transformpolicylabel_transformpolicy_binding" "transformpolicylabel_transformpolicy_binding"{
+	 policyname = citrixadc_transformpolicy.tf_trans_policy.name
+	  labelname = citrixadc_transformpolicylabel.transformpolicylabel.labelname
+	  priority = 2
+	}
+`
+
+func TestAccTransformpolicylabel_transformpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTransformpolicylabel_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes legacy id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccTransformpolicylabel_transformpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformpolicylabel_transformpolicy_bindingExist("citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", "id", "label_1,tf_trans_policy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework provider.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTransformpolicylabel_transformpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformpolicylabel_transformpolicy_bindingExist("citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", "id", "labelname:label_1,policyname:tf_trans_policy"),
 				),
 			},
 		},

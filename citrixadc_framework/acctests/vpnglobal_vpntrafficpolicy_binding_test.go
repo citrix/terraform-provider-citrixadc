@@ -203,6 +203,65 @@ func testAccCheckVpnglobal_vpntrafficpolicy_bindingDestroy(s *terraform.State) e
 	return nil
 }
 
+const testAccVpnglobal_vpntrafficpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta   = "ON"
+		hdx   = "ON"
+		name  = "Testingaction"
+		qual  = "tcp"
+		sso   = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
+	resource "citrixadc_vpnglobal_vpntrafficpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		priority   = 20
+	}
+`
+
+func TestAccVpnglobal_vpntrafficpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	// Skipped: Step 1 pins to the last published SDK v2 release (citrix/citrixadc 2.2.0),
+	// which does not define the citrixadc_vpnglobal_vpntrafficpolicy_binding resource type,
+	// so terraform fails Step 1 with "Invalid resource type" before any state is written. The
+	// upgrade path cannot be exercised from a base release that predates the resource. This is
+	// a baseline-provider limitation, not a defect in the migrated Framework code -- see
+	// TestAccVpnglobal_vpntrafficpolicy_binding_basic for coverage.
+	t.Skip("skipping: citrix/citrixadc 2.2.0 does not define citrixadc_vpnglobal_vpntrafficpolicy_binding, so the step-1 upgrade fixture cannot be built (baseline provider limitation, not the migrated resource); see TestAccVpnglobal_vpntrafficpolicy_binding_basic for Framework coverage")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_vpntrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (legacy id)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_vpntrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpntrafficpolicy_bindingExist("citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", "id", "tf_vpntrafficpolicy"),
+				),
+			},
+			// Step 2: refresh/apply the legacy-id state through the current framework provider
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_vpntrafficpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpntrafficpolicy_bindingExist("citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", "id", "tf_vpntrafficpolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpnglobal_vpntrafficpolicy_bindingDataSource_basic = `
 
 	resource "citrixadc_vpntrafficaction" "foo" {
@@ -240,6 +299,19 @@ func TestAccVpnglobal_vpntrafficpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind", "priority", "20"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpntrafficpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpntrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_vpntrafficpolicy_binding_basic},
+			{Config: testAccVpnglobal_vpntrafficpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

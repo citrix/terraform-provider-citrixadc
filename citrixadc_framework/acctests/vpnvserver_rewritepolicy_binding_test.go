@@ -217,6 +217,59 @@ func testAccCheckVpnvserver_rewritepolicy_bindingDestroy(s *terraform.State) err
 	return nil
 }
 
+const testAccVpnvserver_rewritepolicy_binding_upgrade_basic = `
+	resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+		name   = "tf_test_rewrite_policy"
+		action = "DROP"
+		rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_example_server"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_rewritepolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_rewritepolicy.tf_rewrite_policy.name
+		bindpoint = "REQUEST"
+		priority  = 200
+	}
+`
+
+func TestAccVpnvserver_rewritepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (writes state with the legacy id)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_rewritepolicy_bindingExist("citrixadc_vpnvserver_rewritepolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_rewritepolicy_binding.tf_bind", "id", "tf_example_server,tf_test_rewrite_policy"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current framework provider.
+			// The framework Read recomputes the id to the new canonical key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_rewritepolicy_bindingExist("citrixadc_vpnvserver_rewritepolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_rewritepolicy_binding.tf_bind", "id", "bindpoint:REQUEST,name:tf_example_server,policy:tf_test_rewrite_policy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpnvserver_rewritepolicy_bindingDataSource_basic = `
 	resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
 		name   = "tf_test_rewrite_policy"
@@ -257,6 +310,19 @@ func TestAccVpnvserver_rewritepolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_rewritepolicy_binding.tf_bind", "priority", "200"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnvserver_rewritepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_rewritepolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_rewritepolicy_binding_basic},
+			{Config: testAccVpnvserver_rewritepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

@@ -31,7 +31,6 @@ const testAccAaagroup_auditnslogpolicy_binding_basic = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
 		name     = "my_auditnslogaction"
@@ -57,7 +56,6 @@ const testAccAaagroup_auditnslogpolicy_binding_basic_step2 = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
 		name     = "my_auditnslogaction"
@@ -76,7 +74,6 @@ const testAccAaagroupAuditnslogpolicyBindingDataSource_basic = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
 		name     = "my_auditnslogaction"
@@ -139,6 +136,19 @@ func TestAccAaagroupAuditnslogpolicyBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_auditnslogpolicy_binding.tf_aaagroup_auditnslogpolicy_binding", "priority", "150"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAaagroup_auditnslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup_auditnslogpolicy_binding.tf_aaagroup_auditnslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaagroup_auditnslogpolicy_binding_basic},
+			{Config: testAccAaagroup_auditnslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
 		},
 	})
 }
@@ -275,4 +285,76 @@ func testAccCheckAaagroup_auditnslogpolicy_bindingDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+// testAccAaagroup_auditnslogpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccAaagroup_auditnslogpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+	}
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+
+	resource "citrixadc_aaagroup_auditnslogpolicy_binding" "tf_aaagroup_auditnslogpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+		type      = "REQUEST"
+		priority  = 150
+	}
+`
+
+// TestAccAaagroup_auditnslogpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "my_group,my_auditnslogpolicy"). Step 2 refreshes/plans/applies the same
+// config through the Framework provider, exercising ParseIdString on the legacy id;
+// because the Framework recomputes the id on Read (SetAttrFromGet), the id upgrades
+// to the new "key:value" form.
+func TestAccAaagroup_auditnslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_aaagroup_auditnslogpolicy_binding.tf_aaagroup_auditnslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaagroup_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaagroup_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "my_group,my_auditnslogpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaagroup_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "groupname:my_group,policy:my_auditnslogpolicy"),
+				),
+			},
+		},
+	})
 }

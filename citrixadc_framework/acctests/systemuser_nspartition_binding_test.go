@@ -249,6 +249,61 @@ data "citrixadc_systemuser_nspartition_binding" "tf_systemuser_nspartition_bindi
 }
 `
 
+const testAccSystemuser_nspartition_binding_upgrade_basic = `
+
+resource "citrixadc_systemuser_nspartition_binding" "tf_systemuser_nspartition_binding" {
+	username      = citrixadc_systemuser.user.username
+	partitionname = citrixadc_nspartition.tf_nspartition.partitionname
+	}
+
+  resource "citrixadc_nspartition" "tf_nspartition" {
+	partitionname = "tf_nspartition"
+	maxbandwidth  = 10240
+	minbandwidth  = 512
+	maxconn       = 512
+	maxmemlimit   = 11
+	}
+
+
+  resource "citrixadc_systemuser" "user" {
+	username = "george"
+	password = "12345"
+	timeout  = 900
+	}
+`
+
+func TestAccSystemuser_nspartition_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemuser_nspartition_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create with the last SDK v2 release (writes legacy id)
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSystemuser_nspartition_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuser_nspartition_bindingExist("citrixadc_systemuser_nspartition_binding.tf_systemuser_nspartition_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemuser_nspartition_binding.tf_systemuser_nspartition_binding", "id", "george,tf_nspartition"),
+				),
+			},
+			{
+				// Step 2: Refresh/plan/apply the legacy-id state through the current framework provider
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemuser_nspartition_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuser_nspartition_bindingExist("citrixadc_systemuser_nspartition_binding.tf_systemuser_nspartition_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemuser_nspartition_binding.tf_systemuser_nspartition_binding", "id", "partitionname:tf_nspartition,username:george"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSystemuser_nspartition_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -262,6 +317,19 @@ func TestAccSystemuser_nspartition_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_systemuser_nspartition_binding.tf_systemuser_nspartition_binding", "partitionname", "tf_nspartition"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccSystemuser_nspartition_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemuser_nspartition_binding.tf_systemuser_nspartition_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuser_nspartition_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemuser_nspartition_binding_basic},
+			{Config: testAccSystemuser_nspartition_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

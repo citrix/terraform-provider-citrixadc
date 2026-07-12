@@ -68,6 +68,19 @@ func TestAccLbmetrictable_metric_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbmetrictable_metric_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbmetrictable_metric_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmetrictable_metric_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbmetrictable_metric_binding_basic},
+			{Config: testAccLbmetrictable_metric_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbmetrictable_metric_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -231,6 +244,53 @@ func TestAccLbmetrictable_metric_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable_metric_binding.tf_bind", "metric", "2.3.6.4.5"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable_metric_binding.tf_bind", "metrictable", "Table-Custom"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable_metric_binding.tf_bind", "snmpoid", "1.2.3.6.5"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbmetrictable_metric_binding_upgrade_basic = `
+
+	resource "citrixadc_lbmetrictable" "Table" {
+		metrictable = "Table-Custom"
+	}
+	resource "citrixadc_lbmetrictable_metric_binding" "tf_bind" {
+		metric      = "2.3.6.4.5"
+		metrictable = citrixadc_lbmetrictable.Table.metrictable
+		snmpoid     = "1.2.3.6.5"
+	}
+`
+
+func TestAccLbmetrictable_metric_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbmetrictable_metric_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (2.2.0),
+			// which writes state with the legacy comma-separated ID.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbmetrictable_metric_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmetrictable_metric_bindingExist("citrixadc_lbmetrictable_metric_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmetrictable_metric_binding.tf_bind", "id", "Table-Custom,2.3.6.4.5"),
+				),
+			},
+			// Step 2: Refresh/plan/apply the legacy-ID state through the current
+			// (framework) provider. The framework Read exercises ParseIdString on
+			// the legacy ID and recomputes the ID to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbmetrictable_metric_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmetrictable_metric_bindingExist("citrixadc_lbmetrictable_metric_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmetrictable_metric_binding.tf_bind", "id", "metric:2.3.6.4.5,metrictable:Table-Custom"),
 				),
 			},
 		},

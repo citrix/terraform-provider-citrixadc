@@ -237,3 +237,70 @@ func TestAccAaaglobal_aaapreauthenticationpolicy_binding_DataSource_basic(t *tes
 		},
 	})
 }
+
+const testAccAaaglobal_aaapreauthenticationpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "my_action"
+		preauthenticationaction = "ALLOW"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
+	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
+		name      = "my_policy"
+		rule 	  = "REQ.VLANID == 5"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
+	}
+	resource "citrixadc_aaaglobal_aaapreauthenticationpolicy_binding" "tf_aaaglobal_aaapreauthenticationpolicy_binding" {
+		policy    = citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy.name
+		priority  = 50
+	}
+`
+
+func TestAccAaaglobal_aaapreauthenticationpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (d.SetId(policy)).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaaglobal_aaapreauthenticationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingExist("citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", "id", "my_policy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id. This is a single-key binding,
+				// so the canonical new id is the plain policy value (unchanged).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaaglobal_aaapreauthenticationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingExist("citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", "id", "my_policy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaaglobal_aaapreauthenticationpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaaglobal_aaapreauthenticationpolicy_binding_basic},
+			{Config: testAccAaaglobal_aaapreauthenticationpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

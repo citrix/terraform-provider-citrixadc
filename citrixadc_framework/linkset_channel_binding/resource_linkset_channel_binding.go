@@ -78,6 +78,14 @@ func (r *LinksetChannelBindingResource) Create(ctx context.Context, req resource
 	// Read the updated state back
 	r.readLinksetChannelBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "linkset_channel_binding not found on the ADC immediately after create")
+		return
+	}
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -95,6 +103,16 @@ func (r *LinksetChannelBindingResource) Read(ctx context.Context, req resource.R
 	tflog.Debug(ctx, "Reading linkset_channel_binding resource")
 
 	r.readLinksetChannelBindingFromApi(ctx, &data, &resp.Diagnostics)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -139,6 +157,14 @@ func (r *LinksetChannelBindingResource) Update(ctx context.Context, req resource
 	// Read the updated state back
 	r.readLinksetChannelBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "linkset_channel_binding not found on the ADC immediately after update")
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -170,7 +196,7 @@ func (r *LinksetChannelBindingResource) Delete(ctx context.Context, req resource
 
 	var argsMap map[string]string = make(map[string]string)
 	if val, ok := idMap["ifnum"]; ok && val != "" {
-		argsMap["ifnum"] = val
+		argsMap["ifnum"] = url.QueryEscape(val)
 	}
 
 	err = r.client.DeleteResourceWithArgsMap(service.Linkset_channel_binding.Type(), linkset_id_value, argsMap)
@@ -215,7 +241,9 @@ func (r *LinksetChannelBindingResource) readLinksetChannelBindingFromApi(ctx con
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "linkset_channel_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -247,7 +275,7 @@ func (r *LinksetChannelBindingResource) readLinksetChannelBindingFromApi(ctx con
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("linkset_channel_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

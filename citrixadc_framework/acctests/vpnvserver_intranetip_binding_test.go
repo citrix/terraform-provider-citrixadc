@@ -228,6 +228,67 @@ const testAccVpnvserver_intranetip_bindingDataSource_basic = `
 	}
 `
 
+const testAccVpnvserver_intranetip_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vserverexample"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_intranetip_binding" "tf_bind" {
+		name       = citrixadc_vpnvserver.tf_vpnvserver.name
+		intranetip = "2.3.4.5"
+		netmask    = "255.255.255.0"
+	}
+`
+
+func TestAccVpnvserver_intranetip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_intranetip_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (2.2.0),
+			// which writes state with the legacy comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_intranetip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_intranetip_bindingExist("citrixadc_vpnvserver_intranetip_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_intranetip_binding.tf_bind", "id", "tf_vserverexample,2.3.4.5"),
+				),
+			},
+			// Step 2: refresh/apply the legacy-id state through the current
+			// framework provider. Read recomputes the id to the new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_intranetip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_intranetip_bindingExist("citrixadc_vpnvserver_intranetip_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_intranetip_binding.tf_bind", "id", "name:tf_vserverexample,intranetip:2.3.4.5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_intranetip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_intranetip_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_intranetip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_intranetip_binding_basic},
+			{Config: testAccVpnvserver_intranetip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func TestAccVpnvserver_intranetip_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

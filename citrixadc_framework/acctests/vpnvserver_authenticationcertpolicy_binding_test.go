@@ -98,6 +98,89 @@ func TestAccVpnvserver_authenticationcertpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccVpnvserver_authenticationcertpolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vserver"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_authenticationcertaction" "tf_certaction" {
+		name                       = "tf_certaction"
+		twofactor                  = "ON"
+		defaultauthenticationgroup = "new_group"
+		usernamefield              = "Subject:CN"
+		groupnamefield             = "subject:grp"
+	}
+	resource "citrixadc_authenticationcertpolicy" "tf_certpolicy" {
+		name      = "tf_certpolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationcertaction.tf_certaction.name
+	}
+	resource "citrixadc_vpnvserver_authenticationcertpolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationcertpolicy.tf_certpolicy.name
+		priority  = 80
+		secondary = false
+		bindpoint = "REQUEST"
+	}
+`
+
+// TestAccVpnvserver_authenticationcertpolicy_binding_sdkv2StateUpgrade verifies that a
+// binding created with the last SDK v2 provider release (2.2.0, legacy comma-joined ID)
+// is refreshed and upgraded cleanly by the current framework provider, which recomputes
+// the ID into the new key:value format on Read.
+func TestAccVpnvserver_authenticationcertpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind"
+	legacyId := "tf_vserver,tf_certpolicy"
+	newId := "name:tf_vserver,policy:tf_certpolicy"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationcertpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release, writing legacy-id state.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationcertpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationcertpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", legacyId),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework
+			// provider. Read exercises ParseIdString on the legacy id and recomputes the
+			// canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_authenticationcertpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationcertpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", newId),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationcertpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationcertpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationcertpolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationcertpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
+		},
+	})
+}
+
 func testAccCheckVpnvserver_authenticationcertpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

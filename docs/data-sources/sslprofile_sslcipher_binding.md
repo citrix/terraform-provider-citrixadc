@@ -14,10 +14,6 @@ data "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
   ciphername = "HIGH"
 }
 
-output "cipheraliasname" {
-  value = data.citrixadc_sslprofile_sslcipher_binding.tf_binding.cipheraliasname
-}
-
 output "cipherpriority" {
   value = data.citrixadc_sslprofile_sslcipher_binding.tf_binding.cipherpriority
 }
@@ -32,7 +28,5 @@ output "cipherpriority" {
 
 In addition to the arguments, the following attributes are available:
 
-* `cipheraliasname` - The name of the cipher group/alias/individual cipher bindings.
 * `cipherpriority` - Cipher priority.
-* `description` - The cipher suite description.
 * `id` - The id of the sslprofile_sslcipher_binding. It is the concatenation of the `name` and `ciphername` attributes separated by a comma.

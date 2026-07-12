@@ -57,6 +57,45 @@ func TestAccVpnglobal_intranetip6_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccVpnglobal_intranetip6_binding_upgrade_basic = `
+	resource "citrixadc_vpnglobal_intranetip6_binding" "tf_bind" {
+		intranetip6 = "2.3.4.5"
+		numaddr     = "45"
+	}
+`
+
+func TestAccVpnglobal_intranetip6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (writes the legacy id)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_intranetip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_intranetip6_bindingExist("citrixadc_vpnglobal_intranetip6_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_intranetip6_binding.tf_bind", "id", "2.3.4.5"),
+				),
+			},
+			// Step 2: refresh/apply through the current framework provider (exercises ParseIdString on the legacy id)
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_intranetip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_intranetip6_bindingExist("citrixadc_vpnglobal_intranetip6_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_intranetip6_binding.tf_bind", "id", "2.3.4.5"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVpnglobal_intranetip6_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -199,6 +238,19 @@ func TestAccVpnglobal_intranetip6_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_intranetip6_binding.tf_bind", "numaddr", "45"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnglobal_intranetip6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_intranetip6_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_intranetip6_binding_basic},
+			{Config: testAccVpnglobal_intranetip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

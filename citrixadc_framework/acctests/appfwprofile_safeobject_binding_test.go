@@ -105,6 +105,61 @@ func TestAccAppfwprofile_safeobject_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccAppfwprofile_safeobject_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_safeobject_binding" "tf_binding1" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		safeobject     = "tf_safeobject"
+		as_expression  = "regularexpression"
+		maxmatchlength = 10
+		state          = "DISABLED"
+		alertonly      = "OFF"
+		isautodeployed = "AUTODEPLOYED"
+		comment        = "Example"
+		action         = ["block", "log"]
+	}
+`
+
+// TestAccAppfwprofile_safeobject_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (with the legacy comma-joined ID) is upgraded
+// correctly by the current Framework provider: the Framework Read recomputes the ID
+// into the new key:value format on refresh.
+func TestAccAppfwprofile_safeobject_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_safeobject_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release -> legacy comma-joined ID.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAppfwprofile_safeobject_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_safeobject_bindingExist("citrixadc_appfwprofile_safeobject_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "id", "tf_appfwprofile,tf_safeobject"),
+				),
+			},
+			{
+				// Step 2: same config through the current Framework provider. Read parses
+				// the legacy ID (ParseIdString) and recomputes it to the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwprofile_safeobject_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_safeobject_bindingExist("citrixadc_appfwprofile_safeobject_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "id", "name:tf_appfwprofile,safeobject:tf_safeobject"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwprofile_safeobject_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -279,6 +334,19 @@ func TestAccAppfwprofileSafeobjectBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_safeobject_binding.tf_binding1", "comment", "Example"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_safeobject_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_safeobject_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_safeobject_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_safeobject_binding_basic},
+			{Config: testAccAppfwprofile_safeobject_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"alertonly", "isautodeployed"}},
 		},
 	})
 }

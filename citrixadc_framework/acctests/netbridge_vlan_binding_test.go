@@ -72,6 +72,19 @@ func TestAccNetbridge_vlan_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccNetbridge_vlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_netbridge_vlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridge_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetbridge_vlan_binding_basic},
+			{Config: testAccNetbridge_vlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckNetbridge_vlan_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -235,6 +248,65 @@ func TestAccNetbridge_vlan_bindingDataSource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_netbridge_vlan_binding.tf_binding", "name", "tf_netbridge"),
 					resource.TestCheckResourceAttr("data.citrixadc_netbridge_vlan_binding.tf_binding", "vlan", "20"),
+				),
+			},
+		},
+	})
+}
+
+// Config for the SDK v2 -> Framework state-upgrade test. Reuses the _basic
+// config values (same terraform resource labels) so the Exist/Destroy helpers
+// and resource addresses match. It is valid under both the SDK v2 2.2.0 schema
+// and the current Framework schema.
+const testAccNetbridge_vlan_binding_upgrade_basic = `
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "tf_netbridge"
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_netbridge_vlan_binding" "tf_binding" {
+		name = citrixadc_netbridge.tf_netbridge.name
+		vlan = citrixadc_vlan.tf_vlan.vlanid
+	}
+`
+
+// TestAccNetbridge_vlan_binding_sdkv2StateUpgrade verifies that state written by
+// the last SDK v2 release (legacy comma-joined id "name,vlan") is transparently
+// upgraded by the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0 (legacy id "tf_netbridge,20"); step 2 refreshes/plans
+// the same config through the current Framework provider, whose Read parses the
+// legacy id and recomputes it to the new "name:<v>,vlan:<v>" canonical format
+// (SetAttrFromGet).
+func TestAccNetbridge_vlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetbridge_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNetbridge_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_vlan_bindingExist("citrixadc_netbridge_vlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge_vlan_binding.tf_binding", "id", "tf_netbridge,20"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNetbridge_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_vlan_bindingExist("citrixadc_netbridge_vlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge_vlan_binding.tf_binding", "id", "name:tf_netbridge,vlan:20"),
 				),
 			},
 		},

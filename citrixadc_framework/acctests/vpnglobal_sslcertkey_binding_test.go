@@ -86,6 +86,76 @@ func TestAccVpnglobal_sslcertkey_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnglobal_sslcertkey_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheckSslceriKey(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_sslcertkey_binding_basic},
+			{Config: testAccVpnglobal_sslcertkey_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+const testAccVpnglobal_sslcertkey_binding_upgrade_basic = `
+
+resource "citrixadc_sslcertkey" "foo" {
+	certkey = "sample_ssl_cert"
+	cert    = "/var/tmp/certificate1.crt"
+	key     = "/var/tmp/key1.pem"
+	}
+  resource "citrixadc_vpnglobal_sslcertkey_binding" "tf_vpnglobal_sslcertkey_binding" {
+	certkeyname = citrixadc_sslcertkey.foo.certkey
+	}
+`
+
+// TestAccVpnglobal_sslcertkey_binding_sdkv2StateUpgrade verifies that a resource
+// created by the LAST SDK v2 release (2.2.0) — which writes the legacy id (the
+// plain certkeyname value) — is refreshed and re-applied correctly by the CURRENT
+// framework provider. Step 2 exercises the framework Read on the legacy-id state.
+//
+// This is a single-key binding: the id is the plain certkeyname value in BOTH the
+// legacy SDK v2 format (d.SetId(certkeyname)) and the new canonical framework format
+// (SetAttrFromGet sets data.Id = data.Certkeyname). So the id is identical
+// ("sample_ssl_cert") before and after the upgrade and is asserted in both steps.
+func TestAccVpnglobal_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { PreCheckSslceriKey(t) },
+		CheckDestroy: testAccCheckVpnglobal_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY id (plain certkeyname value).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnglobal_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_sslcertkey_bindingExist("citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding", "id", "sample_ssl_cert"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read then plans/applies.
+			// The framework Read recomputes the id to the new canonical format, which for
+			// this single-key binding is the same plain certkeyname value.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnglobal_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_sslcertkey_bindingExist("citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding", "id", "sample_ssl_cert"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVpnglobal_sslcertkey_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

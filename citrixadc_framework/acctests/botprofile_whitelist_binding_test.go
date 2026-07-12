@@ -108,6 +108,74 @@ const testAccBotprofile_whitelist_bindingDataSource_basic = `
 	}
 `
 
+const testAccBotprofile_whitelist_binding_upgrade_basic = `
+
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_whitelist_binding" "tf_binding" {
+		name                  = citrixadc_botprofile.tf_botprofile.name
+		bot_whitelist         = "true"
+		bot_whitelist_type    = "IPv4"
+		bot_whitelist_value   = "1.2.1.2"
+		bot_bind_comment      = "TestingWhiteList"
+		bot_whitelist_enabled = "ON"
+		log                   = "ON"
+		logmessage            = "BotWhiteListAdded"
+	}
+`
+
+// TestAccBotprofile_whitelist_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (2.2.0), which uses the legacy comma-joined ID
+// "name,bot_whitelist_value", is correctly refreshed/planned/applied by the current
+// Framework provider. On Read the Framework recomputes the ID to the new key:value
+// format, so the ID upgrades from "tf_botprofile,1.2.1.2" to
+// "name:tf_botprofile,bot_whitelist_value:1.2.1.2".
+func TestAccBotprofile_whitelist_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofile_whitelist_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release (legacy comma ID).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccBotprofile_whitelist_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_whitelist_bindingExist("citrixadc_botprofile_whitelist_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_whitelist_binding.tf_binding", "id", "tf_botprofile,1.2.1.2"),
+				),
+			},
+			{
+				// Step 2: refresh/plan/apply the legacy-ID state through the current
+				// Framework provider. Read recomputes the ID to the new key:value format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotprofile_whitelist_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_whitelist_bindingExist("citrixadc_botprofile_whitelist_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_whitelist_binding.tf_binding", "id", "name:tf_botprofile,bot_whitelist_value:1.2.1.2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBotprofile_whitelist_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -286,4 +354,17 @@ func testAccCheckBotprofile_whitelist_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccBotprofile_whitelist_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_whitelist_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_whitelist_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_whitelist_binding_basic},
+			{Config: testAccBotprofile_whitelist_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
 }

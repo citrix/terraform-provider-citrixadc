@@ -86,6 +86,19 @@ func TestAccLbvserver_videooptimizationdetectionpolicy_binding_basic(t *testing.
 	})
 }
 
+func TestAccLbvserver_videooptimizationdetectionpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_videooptimizationdetectionpolicy_binding.tf_vopolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_videooptimizationdetectionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_videooptimizationdetectionpolicy_binding_basic},
+			{Config: testAccLbvserver_videooptimizationdetectionpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbvserver_videooptimizationdetectionpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -263,6 +276,73 @@ func TestAccLbvserver_videooptimizationdetectionpolicy_bindingDataSource_basic(t
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_videooptimizationdetectionpolicy_binding.tf_vopolicy_binding", "priority", "1"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_videooptimizationdetectionpolicy_binding.tf_vopolicy_binding", "gotopriorityexpression", "END"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_videooptimizationdetectionpolicy_binding.tf_vopolicy_binding", "bindpoint", "REQUEST"),
+				),
+			},
+		},
+	})
+}
+
+// testAccLbvserver_videooptimizationdetectionpolicy_binding_upgrade_basic is used by the
+// sdkv2 -> Framework state-upgrade test. It reuses the same config values as the _basic
+// test and MUST be valid under BOTH the SDK v2 2.2.0 schema (step 1) and the current
+// Framework schema (step 2). The resource label (tf_vopolicy_binding) is kept identical so
+// the Exist/Destroy helpers and resource addresses match.
+const testAccLbvserver_videooptimizationdetectionpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_videooptimizationdetectionpolicy" "tf_detectionpolicy" {
+		name   = "tf_vop"
+		rule   = "true"
+		action = "DETECT_ENCRYPTED_ABR"
+	}
+
+	resource "citrixadc_lbvserver_videooptimizationdetectionpolicy_binding" "tf_vopolicy_binding" {
+        bindpoint = "REQUEST"
+        gotopriorityexpression = "END"
+        name = citrixadc_lbvserver.tf_lbvserver.name
+        policyname = citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy.name
+        priority = 1
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+`
+
+// TestAccLbvserver_videooptimizationdetectionpolicy_binding_sdkv2StateUpgrade verifies that a
+// resource created with the last SDK v2 release (2.2.0), which writes the legacy comma-joined
+// ID (name,policyname), upgrades cleanly when refreshed/planned through the current Framework
+// provider. On the Framework Read the ID is recomputed into the new key:value format (see
+// lbvserver_videooptimizationdetectionpolicy_bindingSetAttrFromGet in resource_schema.go).
+func TestAccLbvserver_videooptimizationdetectionpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_videooptimizationdetectionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release; state holds the legacy ID.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_videooptimizationdetectionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_videooptimizationdetectionpolicy_bindingExist("citrixadc_lbvserver_videooptimizationdetectionpolicy_binding.tf_vopolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_videooptimizationdetectionpolicy_binding.tf_vopolicy_binding", "id", "tf_lbvserver,tf_vop"),
+				),
+			},
+			// Step 2: same config through the current Framework provider; Read recomputes
+			// the legacy ID into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_videooptimizationdetectionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_videooptimizationdetectionpolicy_bindingExist("citrixadc_lbvserver_videooptimizationdetectionpolicy_binding.tf_vopolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_videooptimizationdetectionpolicy_binding.tf_vopolicy_binding", "id", "bindpoint:REQUEST,name:tf_lbvserver,policyname:tf_vop"),
 				),
 			},
 		},

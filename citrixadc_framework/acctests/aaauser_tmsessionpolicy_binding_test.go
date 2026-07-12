@@ -94,6 +94,19 @@ func TestAccAaauser_tmsessionpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaauser_tmsessionpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_tmsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaauser_tmsessionpolicy_binding_basic},
+			{Config: testAccAaauser_tmsessionpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
+		},
+	})
+}
+
 func testAccCheckAaauser_tmsessionpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -272,6 +285,67 @@ func TestAccAaauser_tmsessionpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding", "username", "user1"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding", "policy", "my_tmsession_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding", "priority", "100"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAaauser_tmsessionpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "my_tmsession_action"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
+	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+		name   = "my_tmsession_policy"
+		rule   = "true"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
+	}
+
+	resource "citrixadc_aaauser_tmsessionpolicy_binding" "tf_aaauser_tmsessionpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy    = citrixadc_tmsessionpolicy.tf_tmsessionpolicy.name
+		type     = "REQUEST"
+		priority  = 100
+	}
+`
+
+func TestAccAaauser_tmsessionpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaauser_tmsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaauser_tmsessionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_tmsessionpolicy_bindingExist("citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding", "id", "user1,my_tmsession_policy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaauser_tmsessionpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_tmsessionpolicy_bindingExist("citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding", "id", "policy:my_tmsession_policy,username:user1"),
 				),
 			},
 		},

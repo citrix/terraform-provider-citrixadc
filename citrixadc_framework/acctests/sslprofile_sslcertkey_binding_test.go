@@ -267,3 +267,74 @@ func TestAccSslprofile_sslcertkey_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccsslprofile_sslcertkey_binding_upgrade_basic = `
+resource "citrixadc_sslprofile" "tfUnit_sslprofile-hello" {
+	name = "tfUnit_sslprofile-hello"
+
+	// ecccurvebindings is REQUIRED attribute.
+	// The default ecccurvebindings will be DELETED and only the explicitly given ecccurvebindings will be retained
+	// To unbind all the ecccurvebindings, an empty list [] is to be assinged to ecccurvebindings attribute
+
+	ecccurvebindings = ["P_256"]
+	sslinterception = "ENABLED"
+
+}
+
+resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+	  certkey = "tf_sslcertkey"
+	  cert = "/nsconfig/ssl/ns-root.cert"
+	  key = "/nsconfig/ssl/ns-root.key"
+}
+
+resource "citrixadc_sslprofile_sslcertkey_binding" "demo_sslprofile_sslcertkey_binding" {
+	  name = citrixadc_sslprofile.tfUnit_sslprofile-hello.name
+	  sslicacertkey = citrixadc_sslcertkey.tf_sslcertkey.certkey
+}
+  `
+
+func TestAccSslprofile_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslprofile_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes legacy-format id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccsslprofile_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_sslcertkey_bindingExist("citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding", "id", "tfUnit_sslprofile-hello,tf_sslcertkey"),
+				),
+			},
+			// Step 2: Refresh/apply the legacy-id state through the current (framework) provider.
+			// Read recomputes the id into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccsslprofile_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_sslcertkey_bindingExist("citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding", "id", "name:tfUnit_sslprofile-hello,sslicacertkey:tf_sslcertkey"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslprofile_sslcertkey_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofile_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslprofile_sslcertkey_binding_basic_step1},
+			{Config: testAccSslprofile_sslcertkey_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

@@ -232,3 +232,68 @@ func TestAccResponderglobal_responderpolicy_bindingDataSource_basic(t *testing.T
 		},
 	})
 }
+
+const testAccResponderglobal_responderpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_responderglobal_responderpolicy_binding" "tf_responderglobal_responderpolicy_binding" {
+		globalbindtype = "SYSTEM_GLOBAL"
+		priority   = 50
+		policyname =citrixadc_responderpolicy.tf_responderpolicy.name
+	}
+
+
+	resource "citrixadc_responderpolicy" "tf_responderpolicy" {
+		name    = "tf_responderpolicy"
+		action = "NOOP"
+		rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+	}
+`
+
+func TestAccResponderglobal_responderpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderglobal_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (plain policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccResponderglobal_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderglobal_responderpolicy_bindingExist("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "id", "tf_responderpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises the legacy id and SetAttrFromGet
+				// recomputes the id. This binding is single-key (policyname), so the
+				// canonical new id is the plain policyname value (== the legacy id).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccResponderglobal_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderglobal_responderpolicy_bindingExist("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "id", "tf_responderpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccResponderglobal_responderpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderglobal_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderglobal_responderpolicy_binding_basic},
+			{Config: testAccResponderglobal_responderpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

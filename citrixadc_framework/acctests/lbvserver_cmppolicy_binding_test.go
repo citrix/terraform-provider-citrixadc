@@ -236,3 +236,84 @@ func TestAccLbvserver_cmppolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// Config for the SDK v2 -> Framework state-upgrade test. Reuses the _basic_step1
+// values and is valid under BOTH the last SDK v2 release (2.2.0) schema and the
+// current Framework schema (uses only SDK v2 attribute names).
+const testAccLbvserver_cmppolicy_binding_upgrade_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_lbvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+
+resource "citrixadc_cmppolicy" "tf_cmppolicy" {
+    name = "tf_cmppolicy"
+    rule = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"
+    resaction = "COMPRESS"
+}
+
+resource "citrixadc_lbvserver_cmppolicy_binding" "tf_bind" {
+    name = citrixadc_lbvserver.tf_lbvserver.name
+    policyname = citrixadc_cmppolicy.tf_cmppolicy.name
+    priority = 100
+    bindpoint = "RESPONSE"
+    gotopriorityexpression = "END"
+}
+
+`
+
+func TestAccLbvserver_cmppolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_cmppolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_cmppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_cmppolicy_binding_basic_step1},
+			{Config: testAccLbvserver_cmppolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccLbvserver_cmppolicy_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (legacy comma-joined id) is transparently upgraded by
+// the current Framework provider. Step 1 creates the binding with citrix/citrixadc
+// 2.2.0 (legacy id "name,policyname"); step 2 refreshes/plans the same config
+// through the current Framework provider, whose Read parses the legacy id and
+// recomputes it to the new "name:<v>,policyname:<v>" format (SetAttrFromGet).
+func TestAccLbvserver_cmppolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_cmppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_cmppolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_cmppolicy_bindingExist("citrixadc_lbvserver_cmppolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_cmppolicy_binding.tf_bind", "id", "tf_lbvserver,tf_cmppolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_cmppolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_cmppolicy_bindingExist("citrixadc_lbvserver_cmppolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_cmppolicy_binding.tf_bind", "id", "name:tf_lbvserver,policyname:tf_cmppolicy"),
+				),
+			},
+		},
+	})
+}

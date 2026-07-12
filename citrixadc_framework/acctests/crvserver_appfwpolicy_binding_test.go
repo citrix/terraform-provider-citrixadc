@@ -278,6 +278,19 @@ func testAccCheckCrvserver_appfwpolicy_bindingDestroy(s *terraform.State) error 
 	return nil
 }
 
+func TestAccCrvserver_appfwpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_appfwpolicy_binding_basic},
+			{Config: testAccCrvserver_appfwpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 const testAccCrvserver_appfwpolicy_bindingDataSource_basic = `
 
 	resource "citrixadc_crvserver" "crvserver" {
@@ -315,6 +328,93 @@ func TestAcccrvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", "name", "my_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", "policyname", "tf_appfwpolicy_ds"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCrvserver_appfwpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_crvserver" "crvserver" {
+    name = "my_vserver"
+    servicetype = "HTTP"
+    arp = "OFF"
+}
+resource "citrixadc_appfwprofile" "demo_appfwprofile" {
+    name = "demo_appfwprofile"
+    bufferoverflowaction = ["none"]
+    contenttypeaction = ["none"]
+    cookieconsistencyaction = ["none"]
+    creditcard = ["none"]
+    creditcardaction = ["none"]
+    crosssitescriptingaction = ["none"]
+    csrftagaction = ["none"]
+    denyurlaction = ["none"]
+    dynamiclearning = ["none"]
+    fieldconsistencyaction = ["none"]
+    fieldformataction = ["none"]
+    fileuploadtypesaction = ["none"]
+    inspectcontenttypes = ["none"]
+    jsondosaction = ["none"]
+    jsonsqlinjectionaction = ["none"]
+    jsonxssaction = ["none"]
+    multipleheaderaction = ["none"]
+    sqlinjectionaction = ["none"]
+    starturlaction = ["none"]
+    type = ["HTML"]
+    xmlattachmentaction = ["none"]
+    xmldosaction = ["none"]
+    xmlformataction = ["none"]
+    xmlsoapfaultaction = ["none"]
+    xmlsqlinjectionaction = ["none"]
+    xmlvalidationaction = ["none"]
+    xmlwsiaction = ["none"]
+    xmlxssaction = ["none"]
+}
+
+resource "citrixadc_appfwpolicy" "demo_appfwpolicy1" {
+    name = "demo_appfwpolicy1"
+    profilename = citrixadc_appfwprofile.demo_appfwprofile.name
+    rule = "true"
+}
+
+resource "citrixadc_crvserver_appfwpolicy_binding" "crvserver_appfwpolicy_binding" {
+    name = citrixadc_crvserver.crvserver.name
+    policyname = citrixadc_appfwpolicy.demo_appfwpolicy1.name
+    priority = 20
+}
+`
+
+func TestAccCrvserver_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccCrvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_appfwpolicy_bindingExist("citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", "id", "my_vserver,demo_appfwpolicy1"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_appfwpolicy_bindingExist("citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", "id", "name:my_vserver,policyname:demo_appfwpolicy1"),
 				),
 			},
 		},

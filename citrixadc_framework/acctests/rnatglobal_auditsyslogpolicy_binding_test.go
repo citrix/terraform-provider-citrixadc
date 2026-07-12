@@ -244,3 +244,75 @@ func TestAccRnatglobalAuditsyslogpolicyBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccRnatglobal_auditsyslogpolicy_binding_upgrade_basic is valid under BOTH the
+// SDK v2 2.2.0 schema and the current framework schema (same attribute names).
+const testAccRnatglobal_auditsyslogpolicy_binding_upgrade_basic = `
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "tf_syslogaction"
+		serverip   = "10.78.60.33"
+		serverport = 514
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_policy" {
+		name   = "tf_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+	resource "citrixadc_rnatglobal_auditsyslogpolicy_binding" "tf_binding" {
+		policy   = citrixadc_auditsyslogpolicy.tf_policy.name
+		priority = 50
+	}
+`
+
+func TestAccRnatglobal_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRnatglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (plain policy value).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccRnatglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnatglobal_auditsyslogpolicy_bindingExist("citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", "id", "tf_auditsyslogpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises the legacy id and SetAttrFromGet
+				// recomputes the id. This binding is single-key (policy), so the
+				// canonical new id is the plain policy value (== the legacy id).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRnatglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnatglobal_auditsyslogpolicy_bindingExist("citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", "id", "tf_auditsyslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRnatglobal_auditsyslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRnatglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRnatglobal_auditsyslogpolicy_binding_basic},
+			{Config: testAccRnatglobal_auditsyslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

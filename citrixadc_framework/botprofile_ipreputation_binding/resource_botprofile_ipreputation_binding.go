@@ -78,6 +78,13 @@ func (r *BotprofileIpreputationBindingResource) Create(ctx context.Context, req 
 
 	// Read the updated state back
 	r.readBotprofileIpreputationBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "botprofile_ipreputation_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -96,6 +103,15 @@ func (r *BotprofileIpreputationBindingResource) Read(ctx context.Context, req re
 	tflog.Debug(ctx, "Reading botprofile_ipreputation_binding resource")
 
 	r.readBotprofileIpreputationBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -139,6 +155,13 @@ func (r *BotprofileIpreputationBindingResource) Update(ctx context.Context, req 
 
 	// Read the updated state back
 	r.readBotprofileIpreputationBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "botprofile_ipreputation_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -216,7 +239,9 @@ func (r *BotprofileIpreputationBindingResource) readBotprofileIpreputationBindin
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "botprofile_ipreputation_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -226,6 +251,9 @@ func (r *BotprofileIpreputationBindingResource) readBotprofileIpreputationBindin
 		match := true
 
 		// Check bot_ipreputation
+		// Backward-compat: legacy SDK v2 id omits "bot_ipreputation" while NITRO always
+		// returns it on the record, so a record carrying it must not be disqualified when
+		// the parsed legacy id lacks it (no else-if that rejects on presence).
 		if idVal, ok := idMap["bot_ipreputation"]; ok {
 			if val, ok := v["bot_ipreputation"].(bool); ok {
 				idValBool, _ := strconv.ParseBool(idVal)
@@ -237,9 +265,6 @@ func (r *BotprofileIpreputationBindingResource) readBotprofileIpreputationBindin
 				match = false
 				continue
 			}
-		} else if _, ok := v["bot_ipreputation"].(bool); ok {
-			match = false
-			continue
 		}
 
 		// Check category
@@ -265,7 +290,7 @@ func (r *BotprofileIpreputationBindingResource) readBotprofileIpreputationBindin
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("botprofile_ipreputation_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

@@ -98,6 +98,19 @@ func TestAccNstrafficdomain_vlan_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccNstrafficdomain_vlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nstrafficdomain_vlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomain_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNstrafficdomain_vlan_binding_basic},
+			{Config: testAccNstrafficdomain_vlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckNstrafficdomain_vlan_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -245,6 +258,65 @@ func TestAccNstrafficdomain_vlan_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_vlan_binding.tf_binding", "td", "2"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_vlan_binding.tf_binding", "vlan", "20"),
+				),
+			},
+		},
+	})
+}
+
+const testAccNstrafficdomain_vlan_binding_upgrade_basic = `
+	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
+		td        = 2
+		aliasname = "tf_trafficdomain"
+		vmac      = "DISABLED"
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_nstrafficdomain_vlan_binding" "tf_binding" {
+		td   = citrixadc_nstrafficdomain.tf_trafficdomain.td
+		vlan = citrixadc_vlan.tf_vlan.vlanid
+	}
+`
+
+// TestAccNstrafficdomain_vlan_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded when
+// the same config is subsequently managed by the current Framework provider. Step 1
+// creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id "2,20").
+// Step 2 refreshes/plans/applies the same config through the Framework provider,
+// exercising ParseIdString on the legacy id; because the Framework recomputes the id
+// on Read (SetAttrFromGet re-derives data.Id), the id upgrades to the new
+// "key:value" form "td:2,vlan:20".
+func TestAccNstrafficdomain_vlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_nstrafficdomain_vlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNstrafficdomain_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccNstrafficdomain_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstrafficdomain_vlan_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "2,20"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNstrafficdomain_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstrafficdomain_vlan_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "td:2,vlan:20"),
 				),
 			},
 		},

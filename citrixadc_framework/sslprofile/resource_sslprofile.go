@@ -152,287 +152,367 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	tflog.Debug(ctx, "Updating sslprofile resource")
 
+	// Delta-payload update. `full` is the complete payload built from the plan (handles
+	// value extraction/conversion and write-only secrets); `sslprofile` is a fresh payload
+	// seeded with only the identity (name). For each attribute that genuinely changed we copy
+	// just that field from `full` into `sslprofile`, so the PUT carries name + changed fields
+	// only. Rebuilding the whole struct instead re-sends context-dependent args and breaks both
+	// the v2 -> Framework upgrade (ec1094 "too few arguments" when computed attrs are unknown)
+	// and steady-state updates (ec1092/1093 prerequisite conflicts). sslprofiletype is create-only
+	// (ForceNew) and is never in the change set, so it can never leak into the update (ec278).
+	full := sslprofileGetThePayloadFromthePlan(ctx, &data)
+	sslprofileGetThePayloadFromtheConfig(ctx, &config, &full)
+	sslprofile := ssl.Sslprofile{Name: data.Name.ValueString()}
+
 	// Check if there are any changes in updateable attributes
 	hasChange := false
-	if !data.Allowextendedmastersecret.Equal(state.Allowextendedmastersecret) {
+	if !data.Allowextendedmastersecret.IsUnknown() && !data.Allowextendedmastersecret.IsNull() && !data.Allowextendedmastersecret.Equal(state.Allowextendedmastersecret) {
 		tflog.Debug(ctx, fmt.Sprintf("allowextendedmastersecret has changed for sslprofile"))
+		sslprofile.Allowextendedmastersecret = full.Allowextendedmastersecret
 		hasChange = true
 	}
-	if !data.Allowunknownsni.Equal(state.Allowunknownsni) {
+	if !data.Allowunknownsni.IsUnknown() && !data.Allowunknownsni.IsNull() && !data.Allowunknownsni.Equal(state.Allowunknownsni) {
 		tflog.Debug(ctx, fmt.Sprintf("allowunknownsni has changed for sslprofile"))
+		sslprofile.Allowunknownsni = full.Allowunknownsni
 		hasChange = true
 	}
-	if !data.Alpnprotocol.Equal(state.Alpnprotocol) {
+	if !data.Alpnprotocol.IsUnknown() && !data.Alpnprotocol.IsNull() && !data.Alpnprotocol.Equal(state.Alpnprotocol) {
 		tflog.Debug(ctx, fmt.Sprintf("alpnprotocol has changed for sslprofile"))
+		sslprofile.Alpnprotocol = full.Alpnprotocol
 		hasChange = true
 	}
-	if !data.Ciphername.Equal(state.Ciphername) {
+	if !data.Ciphername.IsUnknown() && !data.Ciphername.IsNull() && !data.Ciphername.Equal(state.Ciphername) {
 		tflog.Debug(ctx, fmt.Sprintf("ciphername has changed for sslprofile"))
+		sslprofile.Ciphername = full.Ciphername
 		hasChange = true
 	}
-	if !data.Cipherpriority.Equal(state.Cipherpriority) {
+	if !data.Cipherpriority.IsUnknown() && !data.Cipherpriority.IsNull() && !data.Cipherpriority.Equal(state.Cipherpriority) {
 		tflog.Debug(ctx, fmt.Sprintf("cipherpriority has changed for sslprofile"))
+		sslprofile.Cipherpriority = full.Cipherpriority
 		hasChange = true
 	}
-	if !data.Cipherredirect.Equal(state.Cipherredirect) {
+	if !data.Cipherredirect.IsUnknown() && !data.Cipherredirect.IsNull() && !data.Cipherredirect.Equal(state.Cipherredirect) {
 		tflog.Debug(ctx, fmt.Sprintf("cipherredirect has changed for sslprofile"))
+		sslprofile.Cipherredirect = full.Cipherredirect
 		hasChange = true
 	}
-	if !data.Cipherurl.Equal(state.Cipherurl) {
+	if !data.Cipherurl.IsUnknown() && !data.Cipherurl.IsNull() && !data.Cipherurl.Equal(state.Cipherurl) {
 		tflog.Debug(ctx, fmt.Sprintf("cipherurl has changed for sslprofile"))
+		sslprofile.Cipherurl = full.Cipherurl
 		hasChange = true
 	}
-	if !data.Cleartextport.Equal(state.Cleartextport) {
+	if !data.Cleartextport.IsUnknown() && !data.Cleartextport.IsNull() && !data.Cleartextport.Equal(state.Cleartextport) {
 		tflog.Debug(ctx, fmt.Sprintf("cleartextport has changed for sslprofile"))
+		sslprofile.Cleartextport = full.Cleartextport
 		hasChange = true
 	}
-	if !data.Clientauth.Equal(state.Clientauth) {
+	if !data.Clientauth.IsUnknown() && !data.Clientauth.IsNull() && !data.Clientauth.Equal(state.Clientauth) {
 		tflog.Debug(ctx, fmt.Sprintf("clientauth has changed for sslprofile"))
+		sslprofile.Clientauth = full.Clientauth
 		hasChange = true
 	}
-	if !data.Clientauthuseboundcachain.Equal(state.Clientauthuseboundcachain) {
+	if !data.Clientauthuseboundcachain.IsUnknown() && !data.Clientauthuseboundcachain.IsNull() && !data.Clientauthuseboundcachain.Equal(state.Clientauthuseboundcachain) {
 		tflog.Debug(ctx, fmt.Sprintf("clientauthuseboundcachain has changed for sslprofile"))
+		sslprofile.Clientauthuseboundcachain = full.Clientauthuseboundcachain
 		hasChange = true
 	}
-	if !data.Clientcert.Equal(state.Clientcert) {
+	if !data.Clientcert.IsUnknown() && !data.Clientcert.IsNull() && !data.Clientcert.Equal(state.Clientcert) {
 		tflog.Debug(ctx, fmt.Sprintf("clientcert has changed for sslprofile"))
+		sslprofile.Clientcert = full.Clientcert
 		hasChange = true
 	}
-	if !data.Commonname.Equal(state.Commonname) {
+	if !data.Commonname.IsUnknown() && !data.Commonname.IsNull() && !data.Commonname.Equal(state.Commonname) {
 		tflog.Debug(ctx, fmt.Sprintf("commonname has changed for sslprofile"))
+		sslprofile.Commonname = full.Commonname
 		hasChange = true
 	}
-	if !data.Defaultsni.Equal(state.Defaultsni) {
+	if !data.Defaultsni.IsUnknown() && !data.Defaultsni.IsNull() && !data.Defaultsni.Equal(state.Defaultsni) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultsni has changed for sslprofile"))
+		sslprofile.Defaultsni = full.Defaultsni
 		hasChange = true
 	}
-	if !data.Denysslreneg.Equal(state.Denysslreneg) {
+	if !data.Denysslreneg.IsUnknown() && !data.Denysslreneg.IsNull() && !data.Denysslreneg.Equal(state.Denysslreneg) {
 		tflog.Debug(ctx, fmt.Sprintf("denysslreneg has changed for sslprofile"))
+		sslprofile.Denysslreneg = full.Denysslreneg
 		hasChange = true
 	}
-	if !data.Dh.Equal(state.Dh) {
+	if !data.Dh.IsUnknown() && !data.Dh.IsNull() && !data.Dh.Equal(state.Dh) {
 		tflog.Debug(ctx, fmt.Sprintf("dh has changed for sslprofile"))
+		sslprofile.Dh = full.Dh
 		hasChange = true
 	}
-	if !data.Dhcount.Equal(state.Dhcount) {
+	if !data.Dhcount.IsUnknown() && !data.Dhcount.IsNull() && !data.Dhcount.Equal(state.Dhcount) {
 		tflog.Debug(ctx, fmt.Sprintf("dhcount has changed for sslprofile"))
+		sslprofile.Dhcount = full.Dhcount
 		hasChange = true
 	}
-	if !data.Dhekeyexchangewithpsk.Equal(state.Dhekeyexchangewithpsk) {
+	if !data.Dhekeyexchangewithpsk.IsUnknown() && !data.Dhekeyexchangewithpsk.IsNull() && !data.Dhekeyexchangewithpsk.Equal(state.Dhekeyexchangewithpsk) {
 		tflog.Debug(ctx, fmt.Sprintf("dhekeyexchangewithpsk has changed for sslprofile"))
+		sslprofile.Dhekeyexchangewithpsk = full.Dhekeyexchangewithpsk
 		hasChange = true
 	}
-	if !data.Dhfile.Equal(state.Dhfile) {
+	if !data.Dhfile.IsUnknown() && !data.Dhfile.IsNull() && !data.Dhfile.Equal(state.Dhfile) {
 		tflog.Debug(ctx, fmt.Sprintf("dhfile has changed for sslprofile"))
+		sslprofile.Dhfile = full.Dhfile
 		hasChange = true
 	}
-	if !data.Dhkeyexpsizelimit.Equal(state.Dhkeyexpsizelimit) {
+	if !data.Dhkeyexpsizelimit.IsUnknown() && !data.Dhkeyexpsizelimit.IsNull() && !data.Dhkeyexpsizelimit.Equal(state.Dhkeyexpsizelimit) {
 		tflog.Debug(ctx, fmt.Sprintf("dhkeyexpsizelimit has changed for sslprofile"))
+		sslprofile.Dhkeyexpsizelimit = full.Dhkeyexpsizelimit
 		hasChange = true
 	}
-	if !data.Dropreqwithnohostheader.Equal(state.Dropreqwithnohostheader) {
+	if !data.Dropreqwithnohostheader.IsUnknown() && !data.Dropreqwithnohostheader.IsNull() && !data.Dropreqwithnohostheader.Equal(state.Dropreqwithnohostheader) {
 		tflog.Debug(ctx, fmt.Sprintf("dropreqwithnohostheader has changed for sslprofile"))
+		sslprofile.Dropreqwithnohostheader = full.Dropreqwithnohostheader
 		hasChange = true
 	}
-	if !data.Encryptedclienthello.Equal(state.Encryptedclienthello) {
+	if !data.Encryptedclienthello.IsUnknown() && !data.Encryptedclienthello.IsNull() && !data.Encryptedclienthello.Equal(state.Encryptedclienthello) {
 		tflog.Debug(ctx, fmt.Sprintf("encryptedclienthello has changed for sslprofile"))
+		sslprofile.Encryptedclienthello = full.Encryptedclienthello
 		hasChange = true
 	}
-	if !data.Encrypttriggerpktcount.Equal(state.Encrypttriggerpktcount) {
+	if !data.Encrypttriggerpktcount.IsUnknown() && !data.Encrypttriggerpktcount.IsNull() && !data.Encrypttriggerpktcount.Equal(state.Encrypttriggerpktcount) {
 		tflog.Debug(ctx, fmt.Sprintf("encrypttriggerpktcount has changed for sslprofile"))
+		sslprofile.Encrypttriggerpktcount = full.Encrypttriggerpktcount
 		hasChange = true
 	}
-	if !data.Ersa.Equal(state.Ersa) {
+	if !data.Ersa.IsUnknown() && !data.Ersa.IsNull() && !data.Ersa.Equal(state.Ersa) {
 		tflog.Debug(ctx, fmt.Sprintf("ersa has changed for sslprofile"))
+		sslprofile.Ersa = full.Ersa
 		hasChange = true
 	}
-	if !data.Ersacount.Equal(state.Ersacount) {
+	if !data.Ersacount.IsUnknown() && !data.Ersacount.IsNull() && !data.Ersacount.Equal(state.Ersacount) {
 		tflog.Debug(ctx, fmt.Sprintf("ersacount has changed for sslprofile"))
+		sslprofile.Ersacount = full.Ersacount
 		hasChange = true
 	}
-	if !data.Hsts.Equal(state.Hsts) {
+	if !data.Hsts.IsUnknown() && !data.Hsts.IsNull() && !data.Hsts.Equal(state.Hsts) {
 		tflog.Debug(ctx, fmt.Sprintf("hsts has changed for sslprofile"))
+		sslprofile.Hsts = full.Hsts
 		hasChange = true
 	}
-	if !data.Includesubdomains.Equal(state.Includesubdomains) {
+	if !data.Includesubdomains.IsUnknown() && !data.Includesubdomains.IsNull() && !data.Includesubdomains.Equal(state.Includesubdomains) {
 		tflog.Debug(ctx, fmt.Sprintf("includesubdomains has changed for sslprofile"))
+		sslprofile.Includesubdomains = full.Includesubdomains
 		hasChange = true
 	}
-	if !data.Insertionencoding.Equal(state.Insertionencoding) {
+	if !data.Insertionencoding.IsUnknown() && !data.Insertionencoding.IsNull() && !data.Insertionencoding.Equal(state.Insertionencoding) {
 		tflog.Debug(ctx, fmt.Sprintf("insertionencoding has changed for sslprofile"))
+		sslprofile.Insertionencoding = full.Insertionencoding
 		hasChange = true
 	}
-	if !data.Maxage.Equal(state.Maxage) {
+	if !data.Maxage.IsUnknown() && !data.Maxage.IsNull() && !data.Maxage.Equal(state.Maxage) {
 		tflog.Debug(ctx, fmt.Sprintf("maxage has changed for sslprofile"))
+		sslprofile.Maxage = full.Maxage
 		hasChange = true
 	}
-	if !data.Maxrenegrate.Equal(state.Maxrenegrate) {
+	if !data.Maxrenegrate.IsUnknown() && !data.Maxrenegrate.IsNull() && !data.Maxrenegrate.Equal(state.Maxrenegrate) {
 		tflog.Debug(ctx, fmt.Sprintf("maxrenegrate has changed for sslprofile"))
+		sslprofile.Maxrenegrate = full.Maxrenegrate
 		hasChange = true
 	}
-	if !data.Nodefaultbindings.Equal(state.Nodefaultbindings) {
+	if !data.Nodefaultbindings.IsUnknown() && !data.Nodefaultbindings.IsNull() && !data.Nodefaultbindings.Equal(state.Nodefaultbindings) {
 		tflog.Debug(ctx, fmt.Sprintf("nodefaultbindings has changed for sslprofile"))
+		sslprofile.Nodefaultbindings = full.Nodefaultbindings
 		hasChange = true
 	}
-	if !data.Ocspstapling.Equal(state.Ocspstapling) {
+	if !data.Ocspstapling.IsUnknown() && !data.Ocspstapling.IsNull() && !data.Ocspstapling.Equal(state.Ocspstapling) {
 		tflog.Debug(ctx, fmt.Sprintf("ocspstapling has changed for sslprofile"))
+		sslprofile.Ocspstapling = full.Ocspstapling
 		hasChange = true
 	}
-	if !data.Preload.Equal(state.Preload) {
+	if !data.Preload.IsUnknown() && !data.Preload.IsNull() && !data.Preload.Equal(state.Preload) {
 		tflog.Debug(ctx, fmt.Sprintf("preload has changed for sslprofile"))
+		sslprofile.Preload = full.Preload
 		hasChange = true
 	}
-	if !data.Prevsessionkeylifetime.Equal(state.Prevsessionkeylifetime) {
+	if !data.Prevsessionkeylifetime.IsUnknown() && !data.Prevsessionkeylifetime.IsNull() && !data.Prevsessionkeylifetime.Equal(state.Prevsessionkeylifetime) {
 		tflog.Debug(ctx, fmt.Sprintf("prevsessionkeylifetime has changed for sslprofile"))
+		sslprofile.Prevsessionkeylifetime = full.Prevsessionkeylifetime
 		hasChange = true
 	}
-	if !data.Pushenctrigger.Equal(state.Pushenctrigger) {
+	if !data.Pushenctrigger.IsUnknown() && !data.Pushenctrigger.IsNull() && !data.Pushenctrigger.Equal(state.Pushenctrigger) {
 		tflog.Debug(ctx, fmt.Sprintf("pushenctrigger has changed for sslprofile"))
+		sslprofile.Pushenctrigger = full.Pushenctrigger
 		hasChange = true
 	}
-	if !data.Pushenctriggertimeout.Equal(state.Pushenctriggertimeout) {
+	if !data.Pushenctriggertimeout.IsUnknown() && !data.Pushenctriggertimeout.IsNull() && !data.Pushenctriggertimeout.Equal(state.Pushenctriggertimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("pushenctriggertimeout has changed for sslprofile"))
+		sslprofile.Pushenctriggertimeout = full.Pushenctriggertimeout
 		hasChange = true
 	}
-	if !data.Pushflag.Equal(state.Pushflag) {
+	if !data.Pushflag.IsUnknown() && !data.Pushflag.IsNull() && !data.Pushflag.Equal(state.Pushflag) {
 		tflog.Debug(ctx, fmt.Sprintf("pushflag has changed for sslprofile"))
+		sslprofile.Pushflag = full.Pushflag
 		hasChange = true
 	}
-	if !data.Quantumsize.Equal(state.Quantumsize) {
+	if !data.Quantumsize.IsUnknown() && !data.Quantumsize.IsNull() && !data.Quantumsize.Equal(state.Quantumsize) {
 		tflog.Debug(ctx, fmt.Sprintf("quantumsize has changed for sslprofile"))
+		sslprofile.Quantumsize = full.Quantumsize
 		hasChange = true
 	}
-	if !data.Redirectportrewrite.Equal(state.Redirectportrewrite) {
+	if !data.Redirectportrewrite.IsUnknown() && !data.Redirectportrewrite.IsNull() && !data.Redirectportrewrite.Equal(state.Redirectportrewrite) {
 		tflog.Debug(ctx, fmt.Sprintf("redirectportrewrite has changed for sslprofile"))
+		sslprofile.Redirectportrewrite = full.Redirectportrewrite
 		hasChange = true
 	}
-	if !data.Sendclosenotify.Equal(state.Sendclosenotify) {
+	if !data.Sendclosenotify.IsUnknown() && !data.Sendclosenotify.IsNull() && !data.Sendclosenotify.Equal(state.Sendclosenotify) {
 		tflog.Debug(ctx, fmt.Sprintf("sendclosenotify has changed for sslprofile"))
+		sslprofile.Sendclosenotify = full.Sendclosenotify
 		hasChange = true
 	}
-	if !data.Serverauth.Equal(state.Serverauth) {
+	if !data.Serverauth.IsUnknown() && !data.Serverauth.IsNull() && !data.Serverauth.Equal(state.Serverauth) {
 		tflog.Debug(ctx, fmt.Sprintf("serverauth has changed for sslprofile"))
+		sslprofile.Serverauth = full.Serverauth
 		hasChange = true
 	}
-	if !data.Sessionkeylifetime.Equal(state.Sessionkeylifetime) {
+	if !data.Sessionkeylifetime.IsUnknown() && !data.Sessionkeylifetime.IsNull() && !data.Sessionkeylifetime.Equal(state.Sessionkeylifetime) {
 		tflog.Debug(ctx, fmt.Sprintf("sessionkeylifetime has changed for sslprofile"))
+		sslprofile.Sessionkeylifetime = full.Sessionkeylifetime
 		hasChange = true
 	}
-	if !data.Sessionticket.Equal(state.Sessionticket) {
+	if !data.Sessionticket.IsUnknown() && !data.Sessionticket.IsNull() && !data.Sessionticket.Equal(state.Sessionticket) {
 		tflog.Debug(ctx, fmt.Sprintf("sessionticket has changed for sslprofile"))
+		sslprofile.Sessionticket = full.Sessionticket
 		hasChange = true
 	}
-	// Check secret attribute sessionticketkeydata or its version tracker
-	if !data.Sessionticketkeydata.Equal(state.Sessionticketkeydata) {
+	// Check secret attribute sessionticketkeydata or its version tracker. Only send the
+	// secret when the config actually supplies it (full.Sessionticketkeydata != ""): the
+	// plain value must be known+non-null, or the _wo_version bumped while a _wo value is
+	// present. This stops the legacy null/"" mismatch and the Default(1) _wo_version drift
+	// from firing a spurious update on the v2 -> Framework upgrade.
+	if !data.Sessionticketkeydata.IsUnknown() && !data.Sessionticketkeydata.IsNull() && !data.Sessionticketkeydata.Equal(state.Sessionticketkeydata) && full.Sessionticketkeydata != "" {
 		tflog.Debug(ctx, fmt.Sprintf("sessionticketkeydata has changed for sslprofile"))
+		sslprofile.Sessionticketkeydata = full.Sessionticketkeydata
 		hasChange = true
-	} else if !data.SessionticketkeydataWoVersion.Equal(state.SessionticketkeydataWoVersion) {
+	} else if !data.SessionticketkeydataWoVersion.Equal(state.SessionticketkeydataWoVersion) && full.Sessionticketkeydata != "" {
 		tflog.Debug(ctx, fmt.Sprintf("sessionticketkeydata_wo_version has changed for sslprofile"))
+		sslprofile.Sessionticketkeydata = full.Sessionticketkeydata
 		hasChange = true
 	}
-	if !data.Sessionticketkeyrefresh.Equal(state.Sessionticketkeyrefresh) {
+	if !data.Sessionticketkeyrefresh.IsUnknown() && !data.Sessionticketkeyrefresh.IsNull() && !data.Sessionticketkeyrefresh.Equal(state.Sessionticketkeyrefresh) {
 		tflog.Debug(ctx, fmt.Sprintf("sessionticketkeyrefresh has changed for sslprofile"))
+		sslprofile.Sessionticketkeyrefresh = full.Sessionticketkeyrefresh
 		hasChange = true
 	}
-	if !data.Sessionticketlifetime.Equal(state.Sessionticketlifetime) {
+	if !data.Sessionticketlifetime.IsUnknown() && !data.Sessionticketlifetime.IsNull() && !data.Sessionticketlifetime.Equal(state.Sessionticketlifetime) {
 		tflog.Debug(ctx, fmt.Sprintf("sessionticketlifetime has changed for sslprofile"))
+		sslprofile.Sessionticketlifetime = full.Sessionticketlifetime
 		hasChange = true
 	}
-	if !data.Sessreuse.Equal(state.Sessreuse) {
+	if !data.Sessreuse.IsUnknown() && !data.Sessreuse.IsNull() && !data.Sessreuse.Equal(state.Sessreuse) {
 		tflog.Debug(ctx, fmt.Sprintf("sessreuse has changed for sslprofile"))
+		sslprofile.Sessreuse = full.Sessreuse
 		hasChange = true
 	}
-	if !data.Sesstimeout.Equal(state.Sesstimeout) {
+	if !data.Sesstimeout.IsUnknown() && !data.Sesstimeout.IsNull() && !data.Sesstimeout.Equal(state.Sesstimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("sesstimeout has changed for sslprofile"))
+		sslprofile.Sesstimeout = full.Sesstimeout
 		hasChange = true
 	}
-	if !data.Skipclientcertpolicycheck.Equal(state.Skipclientcertpolicycheck) {
+	if !data.Skipclientcertpolicycheck.IsUnknown() && !data.Skipclientcertpolicycheck.IsNull() && !data.Skipclientcertpolicycheck.Equal(state.Skipclientcertpolicycheck) {
 		tflog.Debug(ctx, fmt.Sprintf("skipclientcertpolicycheck has changed for sslprofile"))
+		sslprofile.Skipclientcertpolicycheck = full.Skipclientcertpolicycheck
 		hasChange = true
 	}
-	if !data.Snienable.Equal(state.Snienable) {
+	if !data.Snienable.IsUnknown() && !data.Snienable.IsNull() && !data.Snienable.Equal(state.Snienable) {
 		tflog.Debug(ctx, fmt.Sprintf("snienable has changed for sslprofile"))
+		sslprofile.Snienable = full.Snienable
 		hasChange = true
 	}
-	if !data.Snihttphostmatch.Equal(state.Snihttphostmatch) {
+	if !data.Snihttphostmatch.IsUnknown() && !data.Snihttphostmatch.IsNull() && !data.Snihttphostmatch.Equal(state.Snihttphostmatch) {
 		tflog.Debug(ctx, fmt.Sprintf("snihttphostmatch has changed for sslprofile"))
+		sslprofile.Snihttphostmatch = full.Snihttphostmatch
 		hasChange = true
 	}
-	if !data.Ssl3.Equal(state.Ssl3) {
+	if !data.Ssl3.IsUnknown() && !data.Ssl3.IsNull() && !data.Ssl3.Equal(state.Ssl3) {
 		tflog.Debug(ctx, fmt.Sprintf("ssl3 has changed for sslprofile"))
+		sslprofile.Ssl3 = full.Ssl3
 		hasChange = true
 	}
-	if !data.Sslclientlogs.Equal(state.Sslclientlogs) {
+	if !data.Sslclientlogs.IsUnknown() && !data.Sslclientlogs.IsNull() && !data.Sslclientlogs.Equal(state.Sslclientlogs) {
 		tflog.Debug(ctx, fmt.Sprintf("sslclientlogs has changed for sslprofile"))
+		sslprofile.Sslclientlogs = full.Sslclientlogs
 		hasChange = true
 	}
-	if !data.Sslimaxsessperserver.Equal(state.Sslimaxsessperserver) {
+	if !data.Sslimaxsessperserver.IsUnknown() && !data.Sslimaxsessperserver.IsNull() && !data.Sslimaxsessperserver.Equal(state.Sslimaxsessperserver) {
 		tflog.Debug(ctx, fmt.Sprintf("sslimaxsessperserver has changed for sslprofile"))
+		sslprofile.Sslimaxsessperserver = full.Sslimaxsessperserver
 		hasChange = true
 	}
-	if !data.Sslinterception.Equal(state.Sslinterception) {
+	if !data.Sslinterception.IsUnknown() && !data.Sslinterception.IsNull() && !data.Sslinterception.Equal(state.Sslinterception) {
 		tflog.Debug(ctx, fmt.Sprintf("sslinterception has changed for sslprofile"))
+		sslprofile.Sslinterception = full.Sslinterception
 		hasChange = true
 	}
-	if !data.Ssliocspcheck.Equal(state.Ssliocspcheck) {
+	if !data.Ssliocspcheck.IsUnknown() && !data.Ssliocspcheck.IsNull() && !data.Ssliocspcheck.Equal(state.Ssliocspcheck) {
 		tflog.Debug(ctx, fmt.Sprintf("ssliocspcheck has changed for sslprofile"))
+		sslprofile.Ssliocspcheck = full.Ssliocspcheck
 		hasChange = true
 	}
-	if !data.Sslireneg.Equal(state.Sslireneg) {
+	if !data.Sslireneg.IsUnknown() && !data.Sslireneg.IsNull() && !data.Sslireneg.Equal(state.Sslireneg) {
 		tflog.Debug(ctx, fmt.Sprintf("sslireneg has changed for sslprofile"))
+		sslprofile.Sslireneg = full.Sslireneg
 		hasChange = true
 	}
-	if !data.Ssllogprofile.Equal(state.Ssllogprofile) {
+	if !data.Ssllogprofile.IsUnknown() && !data.Ssllogprofile.IsNull() && !data.Ssllogprofile.Equal(state.Ssllogprofile) {
 		tflog.Debug(ctx, fmt.Sprintf("ssllogprofile has changed for sslprofile"))
+		sslprofile.Ssllogprofile = full.Ssllogprofile
 		hasChange = true
 	}
-	if !data.Sslredirect.Equal(state.Sslredirect) {
+	if !data.Sslredirect.IsUnknown() && !data.Sslredirect.IsNull() && !data.Sslredirect.Equal(state.Sslredirect) {
 		tflog.Debug(ctx, fmt.Sprintf("sslredirect has changed for sslprofile"))
+		sslprofile.Sslredirect = full.Sslredirect
 		hasChange = true
 	}
-	if !data.Ssltriggertimeout.Equal(state.Ssltriggertimeout) {
+	if !data.Ssltriggertimeout.IsUnknown() && !data.Ssltriggertimeout.IsNull() && !data.Ssltriggertimeout.Equal(state.Ssltriggertimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("ssltriggertimeout has changed for sslprofile"))
+		sslprofile.Ssltriggertimeout = full.Ssltriggertimeout
 		hasChange = true
 	}
-	if !data.Strictcachecks.Equal(state.Strictcachecks) {
+	if !data.Strictcachecks.IsUnknown() && !data.Strictcachecks.IsNull() && !data.Strictcachecks.Equal(state.Strictcachecks) {
 		tflog.Debug(ctx, fmt.Sprintf("strictcachecks has changed for sslprofile"))
+		sslprofile.Strictcachecks = full.Strictcachecks
 		hasChange = true
 	}
-	if !data.Strictsigdigestcheck.Equal(state.Strictsigdigestcheck) {
+	if !data.Strictsigdigestcheck.IsUnknown() && !data.Strictsigdigestcheck.IsNull() && !data.Strictsigdigestcheck.Equal(state.Strictsigdigestcheck) {
 		tflog.Debug(ctx, fmt.Sprintf("strictsigdigestcheck has changed for sslprofile"))
+		sslprofile.Strictsigdigestcheck = full.Strictsigdigestcheck
 		hasChange = true
 	}
-	if !data.Tls1.Equal(state.Tls1) {
+	if !data.Tls1.IsUnknown() && !data.Tls1.IsNull() && !data.Tls1.Equal(state.Tls1) {
 		tflog.Debug(ctx, fmt.Sprintf("tls1 has changed for sslprofile"))
+		sslprofile.Tls1 = full.Tls1
 		hasChange = true
 	}
-	if !data.Tls11.Equal(state.Tls11) {
+	if !data.Tls11.IsUnknown() && !data.Tls11.IsNull() && !data.Tls11.Equal(state.Tls11) {
 		tflog.Debug(ctx, fmt.Sprintf("tls11 has changed for sslprofile"))
+		sslprofile.Tls11 = full.Tls11
 		hasChange = true
 	}
-	if !data.Tls12.Equal(state.Tls12) {
+	if !data.Tls12.IsUnknown() && !data.Tls12.IsNull() && !data.Tls12.Equal(state.Tls12) {
 		tflog.Debug(ctx, fmt.Sprintf("tls12 has changed for sslprofile"))
+		sslprofile.Tls12 = full.Tls12
 		hasChange = true
 	}
-	if !data.Tls13.Equal(state.Tls13) {
+	if !data.Tls13.IsUnknown() && !data.Tls13.IsNull() && !data.Tls13.Equal(state.Tls13) {
 		tflog.Debug(ctx, fmt.Sprintf("tls13 has changed for sslprofile"))
+		sslprofile.Tls13 = full.Tls13
 		hasChange = true
 	}
-	if !data.Tls13sessionticketsperauthcontext.Equal(state.Tls13sessionticketsperauthcontext) {
+	if !data.Tls13sessionticketsperauthcontext.IsUnknown() && !data.Tls13sessionticketsperauthcontext.IsNull() && !data.Tls13sessionticketsperauthcontext.Equal(state.Tls13sessionticketsperauthcontext) {
 		tflog.Debug(ctx, fmt.Sprintf("tls13sessionticketsperauthcontext has changed for sslprofile"))
+		sslprofile.Tls13sessionticketsperauthcontext = full.Tls13sessionticketsperauthcontext
 		hasChange = true
 	}
-	if !data.Zerorttearlydata.Equal(state.Zerorttearlydata) {
+	if !data.Zerorttearlydata.IsUnknown() && !data.Zerorttearlydata.IsNull() && !data.Zerorttearlydata.Equal(state.Zerorttearlydata) {
 		tflog.Debug(ctx, fmt.Sprintf("zerorttearlydata has changed for sslprofile"))
+		sslprofile.Zerorttearlydata = full.Zerorttearlydata
 		hasChange = true
 	}
 
 	if hasChange {
-		// Create API request body from the model
-		// Get payload from plan (regular attributes)
-		sslprofile := sslprofileGetThePayloadFromthePlan(ctx, &data)
-		// Add write-only attributes from config to the payload
-		sslprofileGetThePayloadFromtheConfig(ctx, &config, &sslprofile)
+		// `sslprofile` already holds name + only the changed fields (delta payload built above).
 		// Make API call
 		// Named resource - use UpdateResource
 		name_value := data.Name.ValueString()

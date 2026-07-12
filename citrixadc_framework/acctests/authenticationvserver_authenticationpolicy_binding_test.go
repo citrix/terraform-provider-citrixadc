@@ -282,3 +282,91 @@ func TestAccAuthenticationvserverAuthenticationpolicyBindingDataSource_basic(t *
 		},
 	})
 }
+
+// testAccAuthenticationvserver_authenticationpolicy_binding_upgrade_basic reuses the
+// _basic config (binding + all prerequisite resources). It is valid under BOTH the SDK
+// v2 2.2.0 schema and the current Framework schema because the migration restored the
+// SDK v2 attribute names.
+const testAccAuthenticationvserver_authenticationpolicy_binding_upgrade_basic = `
+
+		resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+			name           = "tf_authenticationvserver"
+			servicetype    = "SSL"
+			comment        = "new"
+			authentication = "ON"
+			state          = "DISABLED"
+	}
+		resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+			name          = "ldapaction"
+			serverip      = "1.2.3.4"
+			serverport    = 8080
+			authtimeout   = 1
+			ldaploginname = "username"
+	}
+		resource "citrixadc_authenticationpolicy" "tf_authenticationpolicy" {
+			name   = "tf_authenticationpolicy"
+			rule   = "true"
+			action = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+		resource "citrixadc_authenticationvserver_authenticationpolicy_binding" "tf_bind" {
+			name     = citrixadc_authenticationvserver.tf_authenticationvserver.name
+			policy   = citrixadc_authenticationpolicy.tf_authenticationpolicy.name
+			priority = 30
+	}
+`
+
+// TestAccAuthenticationvserver_authenticationpolicy_binding_sdkv2StateUpgrade verifies
+// that state written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_authenticationvserver,tf_authenticationpolicy"). Step 2 refreshes/plans/applies the
+// same config through the Framework provider, exercising ParseIdString on the legacy id;
+// because the Framework recomputes the id on Read (SetAttrFromGet), the id upgrades to the
+// new "key:value" form.
+func TestAccAuthenticationvserver_authenticationpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_authenticationpolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_authenticationpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_authenticationpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_authenticationvserver_authenticationpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_authenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAuthenticationvserver_authenticationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_authenticationvserver,tf_authenticationpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationvserver_authenticationpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_authenticationvserver,policy:tf_authenticationpolicy"),
+				),
+			},
+		},
+	})
+}

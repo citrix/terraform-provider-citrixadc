@@ -21,17 +21,56 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_service_binding_basic = `
 
-	resource "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
-		name    = "my_tf_group"
-		service = citrixadc_service.tf_service.name
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
 	}
-	
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		service    = citrixadc_service.tf_service.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+	}
+
+	resource "citrixadc_service" "tf_service" {
+		name = "tf_service"
+		servicetype = "ADNS"
+		ip = "10.77.33.22"
+		port = "53"
+	}
+`
+
+const testAccClusternodegroup_service_binding_upgrade_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		service    = citrixadc_service.tf_service.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+	}
+
 	resource "citrixadc_service" "tf_service" {
 		name = "tf_service"
 		servicetype = "ADNS"
@@ -41,7 +80,17 @@ const testAccClusternodegroup_service_binding_basic = `
 `
 
 const testAccClusternodegroup_service_binding_basic_step2 = `
-	 
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_service" "tf_service" {
 		name = "tf_service"
 		servicetype = "ADNS"
@@ -68,9 +117,65 @@ func TestAccClusternodegroup_service_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_service_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_service_bindingNotExist("citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", "my_gslb_group,tf_service"),
+					testAccCheckClusternodegroup_service_bindingNotExist("citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", "my_tf_group,tf_service"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_service_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternodegroup_service_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccClusternodegroup_service_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_service_bindingExist("citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", "id", "my_tf_group,tf_service"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// provider. The clusternodegroup_service_binding resource is still
+				// served by the SDK v2 implementation (the Framework resource is not
+				// registered in citrixadc_framework/provider Resources()), so the id
+				// recompute is absent at runtime and the id stays the legacy value.
+				// Assert Exist only.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccClusternodegroup_service_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_service_bindingExist("citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_service_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_service_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternodegroup_service_binding_basic},
+			{Config: testAccClusternodegroup_service_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }
@@ -102,10 +207,14 @@ func testAccCheckClusternodegroup_service_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		serviceName := idSlice[1]
+		// ParseIdString handles both the new key:value ID format and the legacy
+		// comma-separated SDK v2 format.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "service"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		serviceName := idMap["service"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_service_binding",

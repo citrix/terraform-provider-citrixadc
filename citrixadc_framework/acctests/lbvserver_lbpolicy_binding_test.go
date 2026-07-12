@@ -261,3 +261,70 @@ func TestAccLbvserver_lbpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccLbvserver_lbpolicy_binding_upgrade_basic = `
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		ipv46       = "10.10.10.33"
+		name        = "tf_lbvserver"
+		port        = 80
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_lbpolicy" "tf_pol" {
+		name   = "tf_pol"
+		rule   = "true"
+		action = "NOLBACTION"
+	}
+	resource "citrixadc_lbvserver_lbpolicy_binding" "tf_bind" {
+		name       = citrixadc_lbvserver.tf_lbvserver.name
+		policyname = citrixadc_lbpolicy.tf_pol.name
+		priority   = 10
+	}
+`
+
+func TestAccLbvserver_lbpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_lbpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id (name,policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbvserver_lbpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_lbpolicy_bindingExist("citrixadc_lbvserver_lbpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_lbpolicy_binding.tf_bind", "id", "tf_lbvserver,tf_pol"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_lbpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_lbpolicy_bindingExist("citrixadc_lbvserver_lbpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_lbpolicy_binding.tf_bind", "id", "name:tf_lbvserver,policyname:tf_pol"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_lbpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_lbpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_lbpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_lbpolicy_binding_basic},
+			{Config: testAccLbvserver_lbpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

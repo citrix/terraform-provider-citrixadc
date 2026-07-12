@@ -238,3 +238,68 @@ func TestAccLsnclient_nsacl6_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+const testAccLsnclient_nsacl6_binding_upgrade_basic = `
+
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsn_client"
+}
+
+resource "citrixadc_nsacl6" "tf_nsacl6" {
+	acl6name   = "my_acl6"
+	acl6action = "ALLOW"
+}
+
+resource "citrixadc_lsnclient_nsacl6_binding" "tf_lsnclient_nsacl6_binding" {
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+	acl6name   = citrixadc_nsacl6.tf_nsacl6.acl6name
+}
+`
+
+func TestAccLsnclient_nsacl6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnclient_nsacl6_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (2.2.0),
+			// which writes state using the legacy comma-separated ID format.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLsnclient_nsacl6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnclient_nsacl6_bindingExist("citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", "id", "my_lsn_client,my_acl6"),
+				),
+			},
+			// Step 2: refresh the legacy-ID state through the current (Framework)
+			// provider. Read parses the legacy ID via ParseIdString and recomputes
+			// the ID into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnclient_nsacl6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnclient_nsacl6_bindingExist("citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", "id", "acl6name:my_acl6,clientname:my_lsn_client"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLsnclient_nsacl6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclient_nsacl6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnclient_nsacl6_binding_basic},
+			{Config: testAccLsnclient_nsacl6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
